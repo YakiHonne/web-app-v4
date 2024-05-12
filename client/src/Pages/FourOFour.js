@@ -6,3 +6,4 @@ export default function FourOFour() {
     <PagePlaceholder page={"404"}/>
   )
 }
+
