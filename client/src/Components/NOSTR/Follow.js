@@ -1,0 +1,327 @@
+// import React, { useContext, useEffect, useMemo, useState } from "react";
+// import relaysOnPlatform from "../../Content/Relays";
+// import { Context } from "../../Context/Context";
+// import { filterRelays } from "../../Helpers/Encryptions";
+// import { publishPost } from "../../Helpers/NostrPublisher";
+// import LoadingDots from "../LoadingDots";
+// import LoginNOSTR from "./LoginNOSTR";
+
+// const FOLLOWING = "following";
+// const FOLLOW = "follow";
+
+// const checkFollowing = (list, toFollowKey) => {
+//   if (!list) return false;
+//   return list.find((people) => people === toFollowKey) ? true : false;
+// };
+
+// export default function Follow({
+//   toFollowKey,
+//   toFollowName,
+//   setTimestamp,
+//   bulk = false,
+//   bulkList = [],
+//   setBulkList = null,
+// }) {
+//   const {
+//     nostrUser,
+//     setNostrUser,
+//     nostrKeys,
+//     setToPublish,
+//     isPublishing,
+//     setToast,
+//   } = useContext(Context);
+//   const [login, setLogin] = useState(false);
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [tags, setTags] = useState([]);
+
+//   useEffect(() => {
+//     setTags(
+//       nostrUser
+//         ? [...nostrUser.following.map((item) => item[1]), ...bulkList.map(item => item.pubkey)]
+//         : [...bulkList.map(item => item.pubkey)]
+//     );
+//   }, [nostrUser, toFollowKey, bulkList]);
+
+//   const isFollowing = useMemo(() => {
+//     let memo = checkFollowing(tags, toFollowKey);
+//     if(memo) {
+//       let memo_2 = bulkList.find(item => item.pubkey === toFollowKey)
+//       if(memo_2) {
+//         return memo_2.to_follow
+//       }
+//       return true
+//     }
+//     return false
+//   }, [tags, toFollowKey]);
+
+//   const followUnfollow = async () => {
+//     try {
+//       if (isPublishing) {
+//         setToast({
+//           type: 3,
+//           desc: "An event publishing is in process!",
+//         });
+//         return;
+//       }
+//       setIsLoading(true);
+//       let tempTags = Array.from(nostrUser?.following || []);
+//       if (isFollowing) {
+//         let index = tempTags.findIndex((item) => item[1] === toFollowKey);
+//         tempTags.splice(index, 1);
+//       } else {
+//         tempTags.push([
+//           "p",
+//           toFollowKey,
+//           relaysOnPlatform[0],
+//           toFollowName || "yakihonne-user",
+//         ]);
+//       }
+//       setToPublish({
+//         nostrKeys: nostrKeys,
+//         kind: 3,
+//         content: "",
+//         tags: tempTags,
+//         allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
+//       });
+//       setTags(tempTags);
+//       setIsLoading(false);
+//       let tempUser = {
+//         ...nostrUser,
+//       };
+//       tempUser.following = tempTags;
+//       setNostrUser({ ...tempUser });
+//     } catch (err) {
+//       console.log(err);
+//       setIsLoading(false);
+//     }
+//   };
+
+//   const handleBulkList = () => {
+//     let item = bulkList.find((item) => item.pubkey === toFollowKey);
+//     if (item) {
+//       setBulkList(bulkList.filter((item) => item.pubkey !== toFollowKey));
+//       return;
+//     }
+//     setBulkList([
+//       ...bulkList,
+//       {
+//         pubkey: toFollowKey,
+//         name: toFollowName || "yakihonne-user",
+//         to_follow: !isFollowing,
+//       },
+//     ]);
+//   };
+
+//   if (!nostrUser)
+//     return (
+//       <>
+//         {login && <LoginNOSTR exit={() => setLogin(false)} />}
+//         <button
+//           className="btn btn-gst"
+//           disabled={isLoading}
+//           onClick={() => setLogin(true)}
+//         >
+//           {FOLLOW}
+//         </button>
+//       </>
+//     );
+//   if (!toFollowKey || toFollowKey === nostrKeys.pub)
+//     return (
+//       <button className="btn btn-disabled" disabled={isLoading}>
+//         {FOLLOW}
+//       </button>
+//     );
+//   if (bulk)
+//     return (
+//       <button
+//         className={`btn ${isFollowing ? "btn-normal" : "btn-gst"}`}
+//         disabled={isLoading}
+//         onClick={handleBulkList}
+//       >
+//         {isLoading ? <LoadingDots /> : isFollowing ? FOLLOWING : FOLLOW}
+//       </button>
+//     );
+//   return (
+//     <button
+//       className={`btn ${isFollowing ? "btn-normal" : "btn-gst"}`}
+//       disabled={isLoading}
+//       onClick={followUnfollow}
+//     >
+//       {isLoading ? <LoadingDots /> : isFollowing ? FOLLOWING : FOLLOW}
+//     </button>
+//   );
+// }
+
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import relaysOnPlatform from "../../Content/Relays";
+import { Context } from "../../Context/Context";
+import { filterRelays } from "../../Helpers/Encryptions";
+import { publishPost } from "../../Helpers/NostrPublisher";
+import LoadingDots from "../LoadingDots";
+import LoginNOSTR from "./LoginNOSTR";
+
+const FOLLOWING = "following";
+const FOLLOW = "follow";
+
+const checkFollowing = (list, toFollowKey) => {
+  if (!list) return false;
+  return list.find((people) => people === toFollowKey) ? true : false;
+};
+
+export default function Follow({
+  toFollowKey,
+  toFollowName,
+  setTimestamp,
+  bulk = false,
+  bulkList = [],
+  setBulkList = null,
+  size = "normal",
+}) {
+  const {
+    nostrUser,
+    setNostrUser,
+    nostrKeys,
+    setToPublish,
+    isPublishing,
+    setToast,
+  } = useContext(Context);
+  const [login, setLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [tags, setTags] = useState([]);
+
+  useEffect(() => {
+    setTags(
+      nostrUser
+        ? [
+            ...nostrUser.following.map((item) => item[1]),
+            ...bulkList.map((item) => item.pubkey),
+          ]
+        : [...bulkList.map((item) => item.pubkey)]
+    );
+  }, [nostrUser, toFollowKey, bulkList]);
+
+  const isFollowing = useMemo(() => {
+    let memo = checkFollowing(tags, toFollowKey);
+    if (memo) {
+      let memo_2 = bulkList.find((item) => item.pubkey === toFollowKey);
+      if (memo_2) {
+        return { status: memo_2.to_follow, bulk: true };
+      }
+      return { status: true, bulk: false };
+    }
+    return { status: false, bulk: false };
+  }, [tags, toFollowKey]);
+
+  const followUnfollow = async () => {
+    try {
+      if (isPublishing) {
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        });
+        return;
+      }
+      setIsLoading(true);
+      let tempTags = Array.from(nostrUser?.following || []);
+      if (isFollowing.status) {
+        let index = tempTags.findIndex((item) => item[1] === toFollowKey);
+        tempTags.splice(index, 1);
+      } else {
+        tempTags.push([
+          "p",
+          toFollowKey,
+          relaysOnPlatform[0],
+          toFollowName || "yakihonne-user",
+        ]);
+      }
+      setToPublish({
+        nostrKeys: nostrKeys,
+        kind: 3,
+        content: "",
+        tags: tempTags,
+        allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
+      });
+      setTags(tempTags);
+      setIsLoading(false);
+      let tempUser = {
+        ...nostrUser,
+      };
+      tempUser.following = tempTags;
+      setNostrUser({ ...tempUser });
+    } catch (err) {
+      console.log(err);
+      setIsLoading(false);
+    }
+  };
+
+  const handleBulkList = () => {
+    let item = bulkList.find((item) => item.pubkey === toFollowKey);
+    if (item) {
+      setBulkList(bulkList.filter((item) => item.pubkey !== toFollowKey));
+      return;
+    }
+    setBulkList([
+      ...bulkList,
+      {
+        pubkey: toFollowKey,
+        name: toFollowName || "yakihonne-user",
+        to_follow: !isFollowing.status,
+      },
+    ]);
+  };
+
+  if (!nostrUser)
+    return (
+      <>
+        {login && <LoginNOSTR exit={() => setLogin(false)} />}
+        <button
+          className={`btn btn-gst  ${size === "small" ? "btn-small" : ""}`}
+          disabled={isLoading}
+          onClick={() => setLogin(true)}
+        >
+          {FOLLOW}
+        </button>
+      </>
+    );
+  if (!toFollowKey || toFollowKey === nostrKeys.pub)
+    return (
+      <button className={`btn btn-disabled  ${size === "small" ? "btn-small" : ""}`} disabled={isLoading}>
+        {FOLLOW}
+      </button>
+    );
+  if (bulk)
+    return (
+      <button
+        className={`btn  ${size === "small" ? "btn-small" : ""} ${
+          isFollowing.bulk
+            ? `${isFollowing.status ? "btn-orange" : "btn-orange-gst"}`
+            : `${isFollowing.status ? "btn-normal" : "btn-gst"}`
+        }`}
+        disabled={isLoading}
+        onClick={handleBulkList}
+      >
+        {isLoading ? (
+          <LoadingDots />
+        ) : isFollowing.bulk ? (
+          `${
+            isFollowing.status ? "Pending (To follow)" : "Pending (To Unfollow)"
+          }`
+        ) : (
+          `${isFollowing.status ? FOLLOWING : FOLLOW}`
+        )}
+        {/* {isLoading ? <LoadingDots /> : isFollowing ? FOLLOWING : FOLLOW} */}
+      </button>
+    );
+
+  return (
+    <button
+      className={`btn ${isFollowing.status ? "btn-normal" : "btn-gst"} ${
+        size === "small" ? "btn-small" : ""
+      }`}
+      disabled={isLoading}
+      onClick={followUnfollow}
+    >
+      {isLoading ? <LoadingDots /> : isFollowing.status ? FOLLOWING : FOLLOW}
+    </button>
+  );
+}

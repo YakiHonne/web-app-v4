@@ -1,0 +1,1129 @@
+.arrow,
+.bold,
+.bounties,
+.code,
+.curation,
+.discord-logo,
+.edit,
+.facebook-logo,
+.filter,
+.home,
+.image,
+.instagram-logo,
+.italic,
+.link,
+.metamask-logo,
+.podcast,
+.posts,
+.quote,
+.search,
+.setting,
+.stories,
+.title,
+.trash,
+.twitter-logo,
+.video,
+.env,
+.warning,
+.info-flag,
+.success,
+.weechat-logo,
+.arrow-24,
+.bold-24,
+.bounties-24,
+.code-24,
+.curation-24,
+.discord-logo-24,
+.edit-24,
+.facebook-logo-24,
+.filter-24,
+.home-24,
+.image-24,
+.instagram-logo-24,
+.italic-24,
+.plain,
+.plain-24,
+.link-24,
+.metamask-logo-24,
+.podcast-24,
+.posts-24,
+.quote-24,
+.search-24,
+.setting-24,
+.stories-24,
+.title-24,
+.trash-24,
+.twitter-logo-24,
+.video-24,
+.admin,
+.admin-24,
+.views,
+.views-24,
+.polls,
+.polls-24,
+.categories,
+.categories-24,
+.comment-icon,
+.comment-24,
+.like,
+.like-24,
+.like-bold,
+.like-bold-24,
+.send,
+.send-24,
+.cancel,
+.cancel-24,
+.env-24,
+.logout,
+.logout-24,
+.weechat-logo-24,
+.warning-24,
+.info-flag-24,
+.success-24,
+.golden-medal,
+.silver-medal,
+.bronze-medal,
+.copy-24,
+.switch-arrows,
+.switch-arrows-24,
+.user,
+.user-24,
+.server-24,
+.server,
+.key-icon-24,
+.key-icon,
+.menu-24,
+.menu,
+.lightning,
+.lightning-24,
+.arrow-up,
+.arrow-up-bold,
+.bolt-24,
+.bolt,
+.checkmark,
+.checkmark-24,
+.flag,
+.upload-file,
+.upload-file-24,
+.bookmark,
+.bookmark-24,
+.bookmark-b,
+.bookmark-24-b,
+.bookmark-i,
+.bookmark-i-24,
+.bookmark-i-b,
+.bookmark-i-24-b,
+.report,
+.report-24,
+.fb-icon,
+.fb-icon-24,
+.whatsapp-icon,
+.whatsapp-icon-24,
+.in-icon,
+.in-icon-24,
+.share-icon,
+.share-icon-24,
+.share-icon-2,
+.share-icon-2-24,
+.add-curation,
+.add-curation-24,
+.nip05,
+.nip05-24,
+.content-s,
+.content-s-24,
+.news,
+.news-24,
+.mobile,
+.mobile-24,
+.play-b,
+.play-b-24,
+.globe,
+.globe-24,
+.calendar,
+.calendar-24,
+.note,
+.note-24,
+.cup,
+.cup-24,
+.thumbsup,
+.thumbsup-24,
+.thumbsdown,
+.thumbsdown-24,
+.msg-bubbles,
+.msg-bubbles-24,
+.medal,
+.medal-24,
+.add-note,
+.add-note-24,
+.checkmark-c1,
+.checkmark-c1-24,
+.telegram-logo,
+.telegram-logo-24,
+.msg-icon,
+.msg-icon-24,
+.nostr-icon,
+.nostr-icon-24,
+.ringbell,
+.ringbell-24,
+.protected,
+.protected-24,
+.unprotected,
+.unprotected-24,
+.buzz,
+.buzz-24,
+.folder,
+.folder-24,
+.write,
+.write-24,
+.play,
+.play-24,
+.play-vid,
+.play-vid-58,
+.download-file,
+.download-file-24,
+.connect,
+.connect-24,
+.ai-loader {
+    /* margin: .5rem; */
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    cursor: pointer;
+    transition: .2s ease-in-out;
+    /* filter: brightness(0) invert(); */
+}
+
+.ai-loader {
+    min-width: 72px;
+    min-height: 72px;
+    max-width: 72px;
+    max-height: 72px;
+    background-size: cover;
+    border-radius: 50%;
+    overflow: hidden;
+    filter: invert();
+}
+@media (prefers-color-scheme: dark) {
+
+    .arrow,
+    .bold,
+    .bounties,
+    .code,
+    .curation,
+    .discord-logo,
+    .edit,
+    .facebook-logo,
+    .filter,
+    .home,
+    .image,
+    .instagram-logo,
+    .italic,
+    .link,
+    .metamask-logo,
+    .podcast,
+    .posts,
+    .quote,
+    .search,
+    .setting,
+    .stories,
+    .title,
+    .trash,
+    .twitter-logo,
+    .video,
+    .env,
+    .warning,
+    .info-flag,
+    .success,
+    .weechat-logo,
+    .arrow-24,
+    .bold-24,
+    .bounties-24,
+    .code-24,
+    .curation-24,
+    .discord-logo-24,
+    .edit-24,
+    .facebook-logo-24,
+    .filter-24,
+    .home-24,
+    .image-24,
+    .instagram-logo-24,
+    .italic-24,
+    .plain,
+    .plain-24,
+    .link-24,
+    .metamask-logo-24,
+    .podcast-24,
+    .posts-24,
+    .quote-24,
+    .search-24,
+    .setting-24,
+    .stories-24,
+    .title-24,
+    .trash-24,
+    .twitter-logo-24,
+    .video-24,
+    .admin,
+    .admin-24,
+    .views,
+    .views-24,
+    .polls,
+    .polls-24,
+    .categories,
+    .categories-24,
+    .comment-icon,
+    .comment-24,
+    .like,
+    .like-24,
+    .like-bold,
+    .like-bold-24,
+    .send,
+    .send-24,
+    .cancel,
+    .cancel-24,
+    .env-24,
+    .logout,
+    .logout-24,
+    .weechat-logo-24,
+    .warning-24,
+    .info-flag-24,
+    .flag,
+    .flag-24,
+    .success-24,
+    .golden-medal,
+    .silver-medal,
+    .bronze-medal,
+    .copy-24,
+    .switch-arrows,
+    .switch-arrows-24,
+    .user,
+    .user-24,
+    .server-24,
+    .server,
+    .key-icon-24,
+    .key-icon,
+    .menu-24,
+    .menu,
+    .lightning,
+    .lightning-24,
+    .arrow-up,
+    .arrow-up-bold,
+    .bolt-24,
+    .bolt,
+    /* .checkmark,
+    .checkmark-24, */
+    .flag,
+    .upload-file,
+    .upload-file-24,
+    .bookmark,
+    .bookmark-24,
+    .bookmark-b,
+    .bookmark-24-b,
+    .bookmark-i,
+    .bookmark-i-24,
+    .bookmark-i-b,
+    .bookmark-i-24-b,
+    .report,
+    .report-24,
+    .fb-icon,
+    .fb-icon-24,
+    .whatsapp-icon,
+    .whatsapp-icon-24,
+    .in-icon,
+    .in-icon-24,
+    .share-icon,
+    .share-icon-24,
+    .share-icon-2,
+    .share-icon-2-24,
+    .add-curation,
+    .add-curation-24,
+    .nip05,
+    .nip05-24,
+    .content-s,
+    .content-s-24,
+    .news,
+    .news-24,
+    .mobile,
+    .mobile-24,
+    .play-b,
+    .play-b-24,
+    .globe,
+    .globe-24,
+    .calendar,
+    .calendar-24,
+    .note,
+    .note-24,
+    .cup,
+    .cup-24,
+    .thumbsup,
+    .thumbsup-24,
+    .thumbsdown,
+    .thumbsdown-24,
+    .msg-bubbles,
+    .msg-bubbles-24,
+    .medal,
+    .medal-24,
+    .add-note,
+    .add-note-24,
+    /* .checkmark-c1,
+    .checkmark-c1-24, */
+    .msg-icon,
+    .msg-icon-24,
+    .nostr-icon,
+    .nostr-icon-24,
+    .ringbell,
+    .ringbell-24,
+    .unprotected,
+    .unprotected-24,
+    .buzz,
+    .buzz-24,
+    .folder,
+    .folder-24,
+    .write,
+    .write-24,
+    .play,
+    .play-24,
+    .download-file,
+.download-file-24,
+.connect,
+.connect-24   {
+        /* margin: .5rem; */
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        cursor: pointer;
+        transition: .2s ease-in-out;
+        filter: brightness(0) invert();
+    }
+.ai-loader {
+    filter: none;
+    background-blend-mode: screen;
+    background-color: var(--white);
+ 
+}
+    .telegram-logo,
+    .telegram-logo-24 {
+        /* margin: .5rem; */
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        cursor: pointer;
+        transition: .2s ease-in-out;
+        filter: invert();
+    }
+}
+
+.arrow,
+.bold,
+.bounties,
+.code,
+.curation,
+.discord-logo,
+.edit,
+.facebook-logo,
+.filter,
+.home,
+.image,
+.instagram-logo,
+.italic,
+.plain,
+.link,
+.metamask-logo,
+.podcast,
+.posts,
+.quote,
+.search,
+.setting,
+.stories,
+.title,
+.trash,
+.twitter-logo,
+.video,
+.admin,
+.views,
+.polls,
+.categories,
+.comment-icon,
+.like,
+.like-bold,
+.send,
+.cancel,
+.env,
+.weechat-logo,
+.warning,
+.info-flag,
+.success,
+.logout,
+.switch-arrows,
+.user, .server,
+.key-icon,
+.menu,
+.bolt,
+.checkmark,
+.flag,
+.flag-24,
+.upload-file,
+.bookmark,
+.bookmark-b,
+.bookmark-i,
+.bookmark-i-b,
+.report,
+.fb-icon,
+.whatsapp-icon,
+.in-icon,
+.share-icon,
+.share-icon-2,
+.add-curation,
+.nip05,
+.content-s,
+.news,
+.mobile,
+.play-b,
+.globe,
+.calendar,
+.note,
+.cup,
+.thumbsup,
+.thumbsdown,
+.msg-bubbles,
+.medal,
+.add-note,
+.checkmark-c1,
+.telegram-logo,
+.msg-icon,
+.nostr-icon,
+.ringbell,
+.protected,
+.unprotected,
+.buzz ,
+.folder,
+.write,
+.play,
+.play-vid,
+.download-file,
+.connect{
+    min-width: 16px;
+    min-height: 16px;
+}
+
+.arrow-24,
+.bold-24,
+.bounties-24,
+.code-24,
+.curation-24,
+.discord-logo-24,
+.edit-24,
+.facebook-logo-24,
+.filter-24,
+.home-24,
+.image-24,
+.instagram-logo-24,
+.italic-24,
+.plain-24,
+.link-24,
+.metamask-logo-24,
+.podcast-24,
+.posts-24,
+.quote-24,
+.search-24,
+.setting-24,
+.stories-24,
+.title-24,
+.trash-24,
+.twitter-logo-24,
+.video-24,
+.admin-24,
+.views-24,
+.polls-24,
+.categories-24,
+.comment-24,
+.like-24,
+.like-bold-24,
+.cancel-24,
+.send-24,
+.env-24,
+.weechat-logo-24,
+.warning-24,
+.info-flag,
+.success-24,
+.golden-medal,
+.silver-medal,
+.bronze-medal,
+.logout-24,
+.copy-24,
+.switch-arrows-24,
+.user-24,
+.server-24,
+.key-icon-24,
+.menu-24,
+.lightning,
+.lightning-24,
+.arrow-up,
+.arrow-up-bold,
+.bolt-24,
+.checkmark-24,
+.upload-file-24,
+.bookmark-24,
+.bookmark-24-b,
+.bookmark-i-24,
+.bookmark-i-24-b,
+.report-24,
+.flag-24,
+.fb-icon-24,
+.whatsapp-icon-24,
+.in-icon-24,
+.share-icon-24,
+.share-icon-2-24,
+.add-curation-24,
+.nip05-24,
+.content-s-24,
+.news-24,
+.mobile-24,
+.play-b-24,
+.globe-24,
+.calendar-24,
+.note-24,
+.cup-24,
+.thumbsup-24,
+.thumbsdown-24,
+.msg-bubbles-24,
+.medal-24,
+.add-note-24,
+.checkmark-c1-24,
+.telegram-logo-24,
+.msg-icon-24,
+.nostr-icon-24,
+.ringbell-24,
+.protected-24,
+.unprotected-24,
+.buzz-24,
+.folder-24,
+.write-24,
+.play-24,
+.download-file-24 ,
+.connect-24  {
+    min-width: 24px;
+    min-height: 24px;
+}
+
+
+.play-vid-58 {
+    min-width: 58px;
+    min-height: 58px;
+}
+
+.ai-loader,
+.ai-loader-24 {
+    background-image: url('../media/icons/ai_loading.gif');
+}
+.connect,
+.connect-24 {
+    background-image: url('../media/icons/connect.svg');
+}
+.download-file,
+.download-file-24 {
+    background-image: url('../media/icons/download-file.svg');
+}
+.play-vid,
+.play-vid-58 {
+    background-image: url('../media/icons/play-vid.svg');
+}
+.play,
+.play-24 {
+    background-image: url('../media/icons/play.svg');
+}
+.like-bold,
+.like-bold-24 {
+    background-image: url('../media/icons/like-bold.svg');
+}
+.write,
+.write-24 {
+    background-image: url('../media/icons/write.svg');
+}
+.folder,
+.folder-24 {
+    background-image: url('../media/icons/folder.svg');
+}
+.buzz,
+.buzz-24 {
+    background-image: url('../media/icons/buzz.svg');
+}
+.unprotected,
+.unprotected-24 {
+    background-image: url('../media/icons/unprotected.svg');
+}
+
+.protected,
+.protected-24 {
+    background-image: url('../media/icons/protected.svg');
+}
+
+.ringbell,
+.ringbell-24 {
+    background-image: url('../media/icons/ringbell.svg');
+}
+
+.msg-icon,
+.msg-icon-24 {
+    background-image: url('../media/icons/msg-icon.svg');
+}
+
+.nostr-icon,
+.nostr-icon-24 {
+    background-image: url('../media/icons/nostr-icon.svg');
+}
+
+.telegram-logo,
+.telegram-logo-24 {
+    background-image: url('../media/icons/telegram-logo.svg');
+}
+
+.add-note,
+.add-note-24 {
+    background-image: url('../media/icons/add-note.svg');
+}
+
+.medal,
+.medal-24 {
+    background-image: url('../media/icons/medal.svg');
+}
+
+.msg-bubbles,
+.msg-bubbles-24 {
+    background-image: url('../media/icons/msg-bubbles.svg');
+}
+
+.thumbsup,
+.thumbsup-24 {
+    background-image: url('../media/icons/thumbsup.svg');
+}
+
+.thumbsdown,
+.thumbsdown-24 {
+    background-image: url('../media/icons/thumbsdown.svg');
+}
+
+.cup,
+.cup-24 {
+    background-image: url('../media/icons/cup.svg');
+}
+
+.note,
+.note-24 {
+    background-image: url('../media/icons/note.svg');
+}
+
+.calendar,
+.calendar-24 {
+    background-image: url('../media/icons/calendar.svg');
+}
+
+.globe,
+.globe-24 {
+    background-image: url('../media/icons/globe.svg');
+}
+
+.play-b,
+.play-b-24 {
+    background-image: url('../media/icons/play-b.svg');
+}
+
+.mobile,
+.mobile-24 {
+    background-image: url('../media/icons/mobile.svg');
+}
+
+.news,
+.news-24 {
+    background-image: url('../media/icons/news.svg');
+}
+
+.content-s,
+.content-s-24 {
+    background-image: url('../media/icons/content-s.svg');
+}
+
+.nip05,
+.nip05-24 {
+    background-image: url('../media/icons/nip05.svg');
+}
+
+.add-curation,
+.add-curation-24 {
+    background-image: url('../media/icons/add-curation.svg');
+}
+
+.share-icon,
+.share-icon-24 {
+    background-image: url('../media/icons/share.svg');
+}
+.share-icon-2,
+.share-icon-2-24 {
+    background-image: url('../media/icons/share-icon-2.svg');
+}
+
+.in-icon,
+.in-icon-24 {
+    background-image: url('../media/icons/in-icon.svg');
+}
+
+.whatsapp-icon,
+.whatsapp-icon-24 {
+    background-image: url('../media/icons/whatsapp-icon.svg');
+}
+
+.fb-icon,
+.fb-icon-24 {
+    background-image: url('../media/icons/fb-icon.svg');
+}
+
+.report,
+.report-24 {
+    background-image: url('../media/icons/report.svg');
+}
+
+.bookmark-b,
+.bookmark-24-b {
+    background-image: url('../media/icons/bookmark-checked-2.svg');
+}
+
+.bookmark,
+.bookmark-24 {
+    background-image: url('../media/icons/bookmark-add.svg');
+}
+
+.bookmark-i-b,
+.bookmark-i-24-b {
+    background-image: url('../media/icons/save-bookmark-b.svg');
+}
+
+.bookmark-i,
+.bookmark-i-24 {
+    background-image: url('../media/icons/save-bookmark.svg');
+}
+
+.upload-file, .upload-file-24 {
+    background-image: url('../media/icons/upload-file.svg');
+}
+
+.flag, .flag-24 {
+    cursor: pointer;
+    background-image: url('../media/icons/flag.svg');
+}
+
+.checkmark, .checkmark-24 {
+    background-image: url('../media/icons/checkmark.svg');
+}
+
+.checkmark-c1, .checkmark-c1-24 {
+    background-image: url('../media/icons/checkmark-c1.svg');
+}
+
+.bolt, .bolt-24 {
+    background-image: url('../media/icons/bolt.svg');
+}
+
+.bolt:hover, .bolt-24:hover {
+    background-image: url('../media/icons/bolt-bold-c1.svg');
+}
+
+.arrow-up {
+    background-image: url('../media/icons/arrow-up.svg');
+}
+
+.arrow-up:hover {
+    background-image: url('../media/icons/arrow-up-bold.svg');
+}
+
+.arrow-up-bold {
+    background-image: url('../media/icons/arrow-up-bold.svg');
+}
+
+.lightning, .lightning-24 {
+    background-image: url('../media/icons/lightning.svg');
+}
+
+
+.menu, .menu-24 {
+    background-image: url('../media/icons/menu.svg');
+}
+
+.user, .user-24 {
+    background-image: url('../media/icons/user.svg');
+}
+
+.server, .server-24 {
+    background-image: url('../media/icons/relay.svg');
+}
+
+.key-icon, .key-icon-24 {
+    background-image: url('../media/icons/keys.svg');
+}
+
+.copy-24 {
+    background-image: url('../media/icons/copy.svg');
+}
+
+.bronze-medal {
+    background-image: url('../media/icons/bronze-medal.svg');
+}
+
+.silver-medal {
+    background-image: url('../media/icons/silver-medal.svg');
+}
+
+.golden-medal {
+    background-image: url('../media/icons/golden-medal.svg');
+}
+
+.info-flag, .info-flag-24 {
+    background-image: url('../media/icons/info-flag.svg');
+}
+
+.warning, .warning-24 {
+    background-image: url('../media/icons/warning.svg');
+}
+
+.success, .success-24 {
+    background-image: url('../media/icons/success.svg');
+}
+
+.weechat-logo, .weechat-logo-24 {
+    background-image: url('../media/icons/weechat-logo.png');
+}
+
+.logout, .logout-24 {
+    background-image: url('../media/icons/logout.svg');
+}
+
+.switch-arrows, .switch-arrows-24 {
+    background-image: url('../media/icons/switch-arrows.svg');
+}
+
+.env, .env-24 {
+    background-image: url('../media/icons/env.svg');
+}
+
+.cancel, .cancel-24 {
+    background-image: url('../media/icons/cancel.svg');
+}
+
+.comment-icon, .comment-24 {
+    background-image: url('../media/icons/comment.svg');
+}
+
+.send, .send-24 {
+    background-image: url('../media/icons/send.svg');
+}
+
+.like, .like-24 {
+    background-image: url('../media/icons/like.svg');
+}
+
+.categories, .categories-24 {
+    background-image: url('../media/icons/categories.svg');
+}
+
+.polls, .polls-24 {
+    background-image: url('../media/icons/polls.svg');
+}
+
+.views, .views-24 {
+    background-image: url('../media/icons/views.svg');
+}
+
+.admin, .admin-24 {
+    background-image: url('../media/icons/admin.svg');
+}
+
+.arrow, .arrow-24 {
+    background-image: url('../media/icons/arrow.svg');
+}
+
+.bold, .bold-24 {
+    background-image: url('../media/icons/bold.svg');
+}
+
+.bounties, .bounties-24 {
+    background-image: url('../media/icons/bounties.svg');
+}
+
+.code, .code-24 {
+    background-image: url('../media/icons/code.svg');
+}
+
+.curation, .curation-24 {
+    background-image: url('../media/icons/curation.svg');
+}
+
+.discord-logo, .discord-logo-24 {
+    background-image: url('../media/icons/discord-logo.svg');
+}
+
+.edit, .edit-24 {
+    background-image: url('../media/icons/edit.svg');
+}
+
+.facebook-logo, .facebook-logo-24 {
+    background-image: url('../media/icons/facebook-logo.svg');
+}
+
+.filter, .filter-24 {
+    background-image: url('../media/icons/filter.svg');
+}
+
+.home, .home-24 {
+    background-image: url('../media/icons/home.svg');
+}
+
+.image, .image-24 {
+    background-image: url('../media/icons/image.svg');
+}
+
+.instagram-logo, .instagram-logo-24 {
+    background-image: url('../media/icons/instagram-logo.svg');
+}
+
+.italic, .italic-24 {
+    background-image: url('../media/icons/italic.svg');
+}
+
+.plain, .plain-24 {
+    background-image: url('../media/icons/plain.svg');
+}
+
+.link, .link-24 {
+    background-image: url('../media/icons/link.svg');
+}
+
+.metamask-logo, .metamask-logo-24 {
+    background-image: url('../media/icons/metamask-logo.svg');
+}
+
+.podcast, .podcast-24 {
+    background-image: url('../media/icons/podcast.svg');
+}
+
+.posts, .posts-24 {
+    background-image: url('../media/icons/posts.svg');
+}
+
+.quote, .quote-24 {
+    background-image: url('../media/icons/quote.svg');
+}
+
+.search, .search-24 {
+    background-image: url('../media/icons/search.svg');
+}
+
+.setting, .setting-24 {
+    background-image: url('../media/icons/setting.svg');
+}
+
+.stories, .stories-24 {
+    background-image: url('../media/icons/stories.svg');
+}
+
+.title, .title-24 {
+    background-image: url('../media/icons/title.svg');
+}
+
+.trash, .trash-24 {
+    background-image: url('../media/icons/trash.svg');
+}
+
+.twitter-logo, .twitter-logo-24 {
+    background-image: url('../media/icons/twitter-logo.svg');
+}
+
+.video, .video-24 {
+    background-image: url('../media/icons/video.svg');
+}
+
+.article .arrow,
+.article .bold,
+.article .bounties,
+.article .code,
+.article .curation,
+.article .discord-logo,
+.article .edit,
+.article .facebook-logo,
+.article .filter,
+.article .home,
+.article .image,
+.article .instagram-logo,
+.article .italic,
+.article .link,
+.article .metamask-logo,
+.article .podcast,
+.article .posts,
+.article .quote,
+.article .search,
+.article .setting,
+.article .stories,
+.article .title,
+.article .trash,
+.article .twitter-logo,
+.article .video,
+.article .env,
+.article .warning,
+.article .success,
+.article .weechat-logo,
+.article .arrow-24,
+.article .bold-24,
+.article .bounties-24,
+.article .code-24,
+.article .curation-24,
+.article .discord-logo-24,
+.article .edit-24,
+.article .facebook-logo-24,
+.article .filter-24,
+.article .home-24,
+.article .image-24,
+.article .instagram-logo-24,
+.article .italic-24,
+.article .plain,
+.article .plain-24,
+.article .link-24,
+.article .metamask-logo-24,
+.article .podcast-24,
+.article .posts-24,
+.article .quote-24,
+.article .search-24,
+.article .setting-24,
+.article .stories-24,
+.article .title-24,
+.article .trash-24,
+.article .twitter-logo-24,
+.article .video-24,
+.article .admin,
+.article .admin-24,
+.article .views,
+.article .views-24,
+.article .polls,
+.article .polls-24,
+.article .categories,
+.article .categories-24,
+.article .comment,
+.article .comment-24,
+.article .like,
+.article .like-24,
+.article .send,
+.article .send-24,
+.article .cancel,
+.article .cancel-24,
+.article .env-24,
+.article .logout,
+.article .logout-24,
+.article .weechat-logo-24,
+.article .warning-24,
+.article .success-24,
+.article .golden-medal,
+.article .silver-medal,
+.article .bronze-medal,
+.article .copy-24,
+.article .switch-arrows,
+.article .switch-arrows-24,
+.article .user,
+.article .user-24 {
+    background-image: none;
+}

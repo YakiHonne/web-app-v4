@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "JU5BUTKJC2.com.yakihonne.appyakihonne",
+        "paths": [
+          "/",
+          "/article/*",
+          "/videos/*",
+          "/users/*",
+          "/curations/*",
+          "/flash-news/*",
+          "/uncensored-notes/*",
+          "/buzz-feed/*"
+        ]
+      }
+    ]
+  }
+}
