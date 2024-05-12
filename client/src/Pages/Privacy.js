@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 export default function Privacy() {
   return (
-    <div
+    <div 
       className="fx-centered box-pad-h box-pad-v fx-start-v"
       style={{ backgroundColor: "black", minHeight: "100vh" }}
     >
