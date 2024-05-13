@@ -115,8 +115,9 @@ export default function NostrUser() {
           ? [
               ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
               "wss://nostr.wine",
+              "wss://nos.lol"
             ]
-          : [...relaysOnPlatform, "wss://nostr.wine"];
+          : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"];
         setIsLoaded(false);
         getSatsStats();
         getFollowerAndFollowing();
