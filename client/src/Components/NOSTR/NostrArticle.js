@@ -149,6 +149,7 @@ export default function NostrArticle() {
               kinds: [0],
               authors: [naddrData.pubkey],
             },
+            
           ],
           {
             onevent(event) {
