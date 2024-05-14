@@ -637,7 +637,7 @@ export default function NostrWriting() {
                                 },
                               }}
                             />
-                            <div
+                            {/* <div
                               style={{
                                 right: "1rem",
                                 bottom: "1rem",
@@ -654,7 +654,7 @@ export default function NostrWriting() {
                                 className="ai-loader"
                                 onClick={() => setShowGPT(!showGPT)}
                               ></div>
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </>

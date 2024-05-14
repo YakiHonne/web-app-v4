@@ -138,8 +138,9 @@ export default function NostrArticle() {
             ? [
                 ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
                 "wss://nostr.wine",
+                "wss://nos.lol",
               ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
+            : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"],
           [
             {
               kinds: [30023],
@@ -152,6 +153,7 @@ export default function NostrArticle() {
           ],
           {
             onevent(event) {
+      
               if (event.kind === 0) {
                 tempAuth = { ...event };
                 if (lastCreatedAtInUser < event.created_at) {
@@ -206,8 +208,9 @@ export default function NostrArticle() {
             ? [
                 ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
                 "wss://nostr.wine",
+                "wss://nos.lol",
               ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
+            : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"],
           [
             {
               kinds: [30023],
@@ -831,7 +834,12 @@ export default function NostrArticle() {
                             description={post.description}
                             path={getURLToShare()}
                             kind={30023}
-                            shareImgData={{ post, author, likes: upvoteReaction.length, dislikes: downvoteReaction.length }}
+                            shareImgData={{
+                              post,
+                              author,
+                              likes: upvoteReaction.length,
+                              dislikes: downvoteReaction.length,
+                            }}
                           />
                         </div>
                         <div
