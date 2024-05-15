@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import heroNostr from "../../media/images/nostr-login.png";
 import heroNostr2 from "../../media/images/nostr-login-2.png";
 import {
@@ -26,6 +26,7 @@ import hero from "../../media/images/end-init-hero.png";
 import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
 import s8e from "../../media/images/s8-e-yma.png";
+import { LoginToAPI } from "../../Helpers/Helpers";
 
 const pool = new SimplePool();
 
@@ -41,10 +42,11 @@ export default function LoginNOSTR({ exit }) {
   const [accountInit, setAccountInit] = useState(false);
   const [finishInit, setFinishInit] = useState(false);
   const [endInit, setEndInit] = useState(false);
+  const [showYakiChest, setShowYakiChest] = useState(true);
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const existScreen = () => {
+  const exitScreen = () => {
     if (nostrKeys) {
       onLogin(nostrKeys.sec);
       exit();
@@ -68,7 +70,7 @@ export default function LoginNOSTR({ exit }) {
           });
         }
 
-        exit();
+        // exit();
         return;
       } catch (err) {
         setToast({
@@ -90,7 +92,7 @@ export default function LoginNOSTR({ exit }) {
             });
           }
 
-          exit();
+          // exit();
           return;
         }
       } catch (err) {
@@ -110,7 +112,7 @@ export default function LoginNOSTR({ exit }) {
         });
       }
 
-      exit();
+      // exit();
       return;
     }
     setToast({
@@ -179,12 +181,20 @@ export default function LoginNOSTR({ exit }) {
     //   });
     // }
     setIsLoading(false);
-      setEndInit(true);
+    setEndInit(true);
   };
   const skipName = () => {
     setEndInit(true);
   };
+  const handleYakiChestExit = (e) => {
+    if (e) e.stopPropagation();
+    if (!login) {
+      setShowYakiChest(false);
+      return;
+    }
 
+    exit();
+  };
   return (
     <div
       style={{
@@ -198,9 +208,11 @@ export default function LoginNOSTR({ exit }) {
       className="sign-in-screen fx-centered box-pad-h"
       onClick={(e) => {
         e.stopPropagation();
-        existScreen();
+        exitScreen();
       }}
     >
+      {showYakiChest && <LoginWithAPI exit={handleYakiChestExit} />}
+      {console.log(login)}
       <section
         className="fx-scattered sc-s nostr-login-container"
         onClick={(e) => {
@@ -208,7 +220,7 @@ export default function LoginNOSTR({ exit }) {
         }}
         style={{ height: "85vh", border: "none" }}
       >
-        <div className="close" onClick={existScreen}>
+        <div className="close" onClick={exitScreen}>
           <div></div>
         </div>
         {endInit && (
@@ -244,7 +256,7 @@ export default function LoginNOSTR({ exit }) {
               <p className="gray-c p-centered p-big box-pad-v-m">
                 Enjoy the experience of owning your own data!
               </p>
-              <button className="btn btn-normal" onClick={existScreen}>
+              <button className="btn btn-normal" onClick={exitScreen}>
                 Let's go!
               </button>
             </div>
@@ -306,7 +318,8 @@ export default function LoginNOSTR({ exit }) {
                   {login && (
                     <Login
                       switchScreen={() => setLogin(false)}
-                      exit={existScreen}
+                      // exit={exitScreen}
+                      exit={() => null}
                     />
                   )}
                   {!login && (
@@ -476,6 +489,7 @@ const Login = ({ switchScreen, exit }) => {
       exit();
       return;
     } catch (err) {
+      console.log(err);
       setIsLoading(false);
       setToast({
         type: 2,
@@ -597,6 +611,66 @@ const Signup = ({ switchScreen, continueSignup }) => {
       <button className="btn btn-normal" onClick={switchScreen}>
         I have an account{" "}
       </button>
+    </div>
+  );
+};
+
+const LoginWithAPI = ({ exit }) => {
+  const { nostrKeys, setToast } = useContext(Context);
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    if (nostrKeys && !(nostrKeys.ext || nostrKeys.sec)) exit();
+  }, [nostrKeys]);
+
+  const connect = async (e) => {
+    try {
+      e.stopPropagation();
+      setIsLoading(true);
+      let secretKey = nostrKeys.ext ? false : nostrKeys.sec;
+      let data = await LoginToAPI(nostrKeys.pub, secretKey);
+      if (data) exit();
+      if (!data)
+        setToast({
+          type: 2,
+          desc: "An error occured while connecting, please try again.",
+        });
+      setIsLoading(false);
+    } catch (err) {
+      console.log(err)
+      setIsLoading(false);
+      setToast({
+        type: 2,
+        desc: "An error occured while connecting, please try again.",
+      });
+    }
+  };
+
+  if (!(nostrKeys && (nostrKeys.ext || nostrKeys.sec))) return;
+  return (
+    <div className="fixed-container fx-centered box-pad-h">
+      <div
+        className="sc-s-18  fx-centered fx-col"
+        style={{ width: "min(100%, 400px)", padding: "2rem" }}
+      >
+        <h4>Yakihonne's Chest!</h4>
+        <p className="gray-c p-centered">
+          Login to Yakihonne's chest, accumulate points by being active on the
+          platform and win precious awards!
+        </p>
+        <div className="chest"></div>
+        <button
+          className="btn btn-normal btn-full"
+          onClick={connect}
+          disabled={isLoading}
+        >
+          {isLoading ? <LoadingDots /> : "Log in"}
+        </button>
+        {!isLoading && (
+          <button className="btn btn-text btn-small" onClick={exit}>
+            No, I'm good
+          </button>
+        )}
+      </div>
     </div>
   );
 };
