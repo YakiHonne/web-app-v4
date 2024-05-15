@@ -179,6 +179,7 @@ export default function NostrCuration() {
                   ],
                   {
                     onevent(article) {
+                    
                       articles.push(article);
                       setArticlesOnCuration((_articles) => {
                         let post =
@@ -392,6 +393,7 @@ export default function NostrCuration() {
       d,
       naddr,
       artURL: naddr,
+      kind: 30023
     };
   };
 
@@ -574,6 +576,8 @@ export default function NostrCuration() {
       return `/curations/${id}`;
     }
   };
+
+  
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
