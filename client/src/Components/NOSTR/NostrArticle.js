@@ -172,6 +172,7 @@ export default function NostrArticle() {
                 setIsLoaded(true);
               }
             },
+            
             oneose() {
               if (!tempArt) {
                 setToast({
