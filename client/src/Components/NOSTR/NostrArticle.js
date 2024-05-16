@@ -183,6 +183,9 @@ export default function NostrArticle() {
                 }, 2000);
                 return;
               }
+              if(!tempAuth) {
+                setAuthor(getEmptyNostrUser(tempArt.pubkey))
+              }
               setIsLoaded(true);
             },
           }
