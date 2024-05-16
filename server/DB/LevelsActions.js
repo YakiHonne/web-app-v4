@@ -21,17 +21,17 @@ const levels = {
   },
   cover: {
     points: [5],
-    count: 1,
+    count: 5,
     cooldown: 0,
   },
   nip05: {
     points: [5],
-    count: 1,
+    count: 3,
     cooldown: 0,
   },
   luds: {
     points: [15],
-    count: 1,
+    count: 3,
     cooldown: 0,
   },
   relays_setup: {
@@ -140,5 +140,9 @@ const actions_keys = [
   "downvote",
   "comment_post",
 ];
+
+const tiers = {
+  
+}
 
 module.exports = { levels, actions_keys };

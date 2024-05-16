@@ -10,6 +10,8 @@ const SealedNotes = require("../Models/SealedNotes");
 const UserLevels = require("../Models/UserLevels");
 const { auth_user, user_login, user_tokenizing } = require("../Helpers/Auth");
 const { actions_keys, levels } = require("../DB/LevelsActions");
+const MongoStore = require("connect-mongo");
+const Users = require("../Models/Users");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -102,7 +104,10 @@ router.post("/api/v1/yaki-chest", async (req, res) => {
       return res.status(403).send({ message: "unsupported action key" });
 
     let action_details = levels[action_key];
-    let userLevels = await UserLevels.findOne({ pubkey });
+    let [userLevels, user] = await Promise.all([
+      UserLevels.findOne({ pubkey }),
+      Users.findOne({ pubkey }),
+    ]);
 
     if (!userLevels) {
       let new_action = {
@@ -125,7 +130,68 @@ router.post("/api/v1/yaki-chest", async (req, res) => {
       );
       return res.send(updated_user);
     }
-    res.send({message: "more to update!"})
+    let action_to_update = ["nip05", "luds"].includes
+      ? actionToUpdateV2(
+          user,
+          action_key,
+          action_details,
+          userLevels.actions,
+          last_updated
+        )
+      : actionToUpdate(
+          action_key,
+          action_details,
+          userLevels.actions,
+          last_updated
+        );
+    if (action_to_update === false) return res.send(userLevels);
+    let updated_user = await UserLevels.findOneAndUpdate(
+      { pubkey, "actions.action": action_key },
+      {
+        xp: userLevels.xp + action_to_update.points,
+        $set: {
+          "actions.$.action": action_to_update.action,
+          "actions.$.current_points": action_to_update.current_points,
+          "actions.$.count": action_to_update.count,
+          "actions.$.last_updated": action_to_update.last_updated,
+          "actions.$.all_time_points": action_to_update.all_time_points,
+          "actions.$.extra": action_to_update.extra,
+        },
+        last_updated,
+      },
+      { new: true }
+    );
+    if (updated_user) return res.send(updated_user);
+    let updated_user_2 = await UserLevels.findOneAndUpdate(
+      { pubkey },
+      {
+        xp: userLevels.xp + action_to_update.points,
+        $push: { actions: action_to_update },
+        last_updated,
+      },
+      { new: true }
+    );
+    return res.send(updated_user_2);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+});
+router.get("/api/v1/yaki-chest/stats", async (req, res) => {
+  try {
+    let last_updated = Math.floor(new Date().getTime() / 1000);
+    // let pubkey = req.user.pubkey;
+    let pubkey =
+      "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
+
+    let userLevels = await UserLevels.findOne({ pubkey }).select("-_id");
+
+    if (!userLevels)
+      return res.send({
+        user_stats: { pubkey, xp: 0, actions: [], last_updated },
+        platform_standards: levels,
+      });
+    res.send({ user_stats: userLevels, platform_standards: levels });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
@@ -237,5 +303,94 @@ router.get("/api/v1/user-impact", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
+const actionToUpdate = (
+  action_key,
+  action_details,
+  user_actions,
+  last_updated
+) => {
+  let user_action = user_actions.find((action) => action.action === action_key);
+  if (user_action) {
+    if (action_details.count > 0) {
+      if (user_action.count >= action_details.count) return false;
+      let action_to_update = {
+        current_points: user_action.current_points + action_details.points[0],
+        count: user_action.count + 1,
+        last_updated,
+        all_time_points: user_action.all_time_points + action_details.points[0],
+        extra: {},
+        points: action_details.points[0],
+      };
+      return action_to_update;
+    }
+    if (user_action.last_updated + action_details.cooldown >= last_updated)
+      return false;
+    let action_to_update = {
+      current_points: user_action.current_points + action_details.points[0],
+      count: 0,
+      last_updated,
+      all_time_points: user_action.all_time_points + action_details.points[0],
+      extra: {},
+      points: action_details.points[0],
+    };
+    return action_to_update;
+  }
+  let new_action = {
+    action: action_key,
+    current_points: action_details.points[0],
+    count: action_details.count > 0 ? 1 : 0,
+    extra: {},
+    all_time_points: action_details.points[0],
+    last_updated,
+    points: action_details.points[0],
+  };
+  return new_action;
+};
+
+const actionToUpdateV2 = async (
+  user,
+  action_key,
+  action_details,
+  user_actions,
+  last_updated
+) => {
+  let user_action = user_actions.find((action) => action.action === action_key);
+
+  let accountsNumber = 0;
+  let checkUser = user
+    ? (action_key === "nip05" && user.nip05) ||
+      (action_key === "luds" && user.lud16)
+    : false;
+  if (checkUser) {
+    accountsNumber =
+      action_key === "nip05"
+        ? await Users.find({ nip05: user.nip05 }).countDocuments()
+        : await Users.find({ lud16: user.lud16 }).countDocuments();
+  }
+  if (user_action) {
+    if (accountsNumber >= action_details.count || user_action.count >= action_details.count) return false;
+    let action_to_update = {
+      current_points: user_action.current_points + action_details.points[0],
+      count: user_action.count + 1,
+      last_updated,
+      all_time_points: user_action.all_time_points + action_details.points[0],
+      extra: {},
+      points: action_details.points[0],
+    };
+    return action_to_update;
+  }
+  if (accountsNumber >= action_details.count) return false;
+  let new_action = {
+    action: action_key,
+    current_points: action_details.points[0],
+    count: 1,
+    extra: {},
+    all_time_points: action_details.points[0],
+    last_updated,
+    points: action_details.points[0],
+  };
+  return new_action;
+};
 
 module.exports = router;
