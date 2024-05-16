@@ -46,6 +46,7 @@ import NostrMyVideos from "./Pages/NOSTR/NostrMyVideos";
 import BuzzFeed from "./Pages/NOSTR/BuzzFeed";
 import NostrBuzzFeed from "./Pages/NOSTR/NostrBuzzFeed";
 import BuzzFeedSource from "./Pages/NOSTR/BuzzFeedSource";
+import UserLevels from "./Pages/NOSTR/UserLevels";
 
 function App() {
   return (
@@ -100,6 +101,7 @@ function App() {
           />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/yaki-points" element={<UserLevels />} />
         </Routes>
       </Router>
     </ContextProvider>
