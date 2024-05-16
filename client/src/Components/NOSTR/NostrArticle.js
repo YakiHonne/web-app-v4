@@ -172,7 +172,6 @@ export default function NostrArticle() {
                 setIsLoaded(true);
               }
             },
-            
             oneose() {
               if (!tempArt) {
                 setToast({
@@ -183,6 +182,9 @@ export default function NostrArticle() {
                   window.location = "/";
                 }, 2000);
                 return;
+              }
+              if(!tempAuth) {
+                setAuthor(getEmptyNostrUser(tempArt.pubkey))
               }
               setIsLoaded(true);
             },
