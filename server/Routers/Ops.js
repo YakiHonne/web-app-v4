@@ -92,9 +92,9 @@ router.post("/api/v1/yaki-chest", async (req, res) => {
   try {
     let action_key = req.body.action_key;
     let last_updated = Math.floor(new Date().getTime() / 1000);
-    // let pubkey = req.user.pubkey;
-    let pubkey =
-      "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
+    let pubkey = req.user.pubkey;
+    // let pubkey =
+    //   "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
 
     if (!action_key || typeof action_key !== "string")
       return res
@@ -180,9 +180,9 @@ router.post("/api/v1/yaki-chest", async (req, res) => {
 router.get("/api/v1/yaki-chest/stats", async (req, res) => {
   try {
     let last_updated = Math.floor(new Date().getTime() / 1000);
-    // let pubkey = req.user.pubkey;
-    let pubkey =
-      "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
+    let pubkey = req.user.pubkey;
+    // let pubkey =
+    //   "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
 
     let userLevels = await UserLevels.findOne({ pubkey }).select("-_id");
 
