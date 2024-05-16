@@ -88,7 +88,7 @@ router.post("/api/v1/logout", auth_user, async (req, res) => {
   }
 });
 
-router.post("/api/v1/yaki-chest", async (req, res) => {
+router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
   try {
     let action_key = req.body.action_key;
     let last_updated = Math.floor(new Date().getTime() / 1000);
@@ -177,7 +177,7 @@ router.post("/api/v1/yaki-chest", async (req, res) => {
     res.status(500).send(err);
   }
 });
-router.get("/api/v1/yaki-chest/stats", async (req, res) => {
+router.get("/api/v1/yaki-chest/stats", auth_user, async (req, res) => {
   try {
     let last_updated = Math.floor(new Date().getTime() / 1000);
     let pubkey = req.user.pubkey;
@@ -394,3 +394,5 @@ const actionToUpdateV2 = async (
 };
 
 module.exports = router;
+
+
