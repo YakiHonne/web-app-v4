@@ -44,7 +44,7 @@ export default function NostrNotes() {
               <div className="box-pad-v">
                 <div className="loader"></div>
               </div>
-              <p className="gray-c">Comming soon...</p>
+              <p className="gray-c">Coming soon...</p>
             </div>
           </div>
         </main>

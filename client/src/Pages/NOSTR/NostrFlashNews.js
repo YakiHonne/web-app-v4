@@ -38,6 +38,7 @@ import FlashNewsCard from "../../Components/NOSTR/FlashNewsCard";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import HomeFN from "../../Components/NOSTR/HomeFN";
+import bannedList from "../../Content/BannedList";
 
 const pool = new SimplePool();
 const MAX_CHAR = 1000;
@@ -645,7 +646,9 @@ export default function NostrFlashNews() {
                       )}
                       {fn.news.map((news, index) => {
                         let ratingStats = getRatingStats(news.id);
-                        let isBanned = mutedList.includes(news.author.pubkey);
+                        let isBanned = [...bannedList, ...mutedList].includes(
+                          news.author.pubkey
+                        );
 
                         if (!onlyImportant && !isBanned)
                           return (
@@ -772,7 +775,7 @@ export default function NostrFlashNews() {
                 <h4>Important Flash News</h4>
                 <HomeFN flashnews={importantFN} />
               </div>
-          <Footer />
+              <Footer />
             </div>
           </div>
         </main>
