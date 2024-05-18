@@ -46,6 +46,7 @@ import NostrMyVideos from "./Pages/NOSTR/NostrMyVideos";
 import BuzzFeed from "./Pages/NOSTR/BuzzFeed";
 import NostrBuzzFeed from "./Pages/NOSTR/NostrBuzzFeed";
 import BuzzFeedSource from "./Pages/NOSTR/BuzzFeedSource";
+import NostrNotes from "./Pages/NOSTR/NostrNotes";
 
 function App() {
   return (
@@ -88,6 +89,7 @@ function App() {
             path="/videos/:AuthNip05/:VidIdentifier"
             element={<NostrVideo />}
           />
+          <Route path="/notes" element={<NostrNotes />} />
           <Route path="/messages" element={<DMS />} />
           <Route path="/buzz-feed" element={<BuzzFeed />} />
           <Route path="/buzz-feed/:nevent" element={<NostrBuzzFeed />} />
