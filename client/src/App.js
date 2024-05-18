@@ -90,6 +90,7 @@ function App() {
             element={<NostrVideo />}
           />
           <Route path="/notes" element={<NostrNotes />} />
+          <Route path="/notes/:nevent" element={<NostrNotes />} />
           <Route path="/messages" element={<DMS />} />
           <Route path="/buzz-feed" element={<BuzzFeed />} />
           <Route path="/buzz-feed/:nevent" element={<NostrBuzzFeed />} />
