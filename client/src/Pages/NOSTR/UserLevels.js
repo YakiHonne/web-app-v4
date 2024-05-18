@@ -8,6 +8,7 @@ import axiosInstance from "../../Helpers/HTTP_Client";
 export default function UserLevels() {
   const { nostrKeys } = useContext(Context);
   const [stats, setStats] = useState([]);
+  const [platformStandards, setPlatformStandards] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -22,6 +23,16 @@ export default function UserLevels() {
     };
     fetchData();
   }, []);
+
+  const levelCount = (nextLevel) => {
+    if (nextLevel === 1) return 0;
+    else return levelCount(nextLevel - 1) + (nextLevel - 1) * 50;
+  };
+  const getCurrentLevel = (points) => {
+    return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
+  };
+
+  console.log(levelCount(getCurrentLevel(63)), levelCount(getCurrentLevel(63)+1), getCurrentLevel(63));
 
   return (
     <div>
@@ -49,7 +60,27 @@ export default function UserLevels() {
       <div className="fit-container fx-centered">
         <SidebarNOSTR />
         <ArrowUp />
-        <main className={`main-page-nostr-container`}></main>
+        <main className={`main-page-nostr-container`}>
+          <div className="fit-container fx-centered fx-start-h">
+            <div
+              style={{ width: "min(100%,1400px)" }}
+              className="fx-centered fx-start-v fx-start-h"
+            >
+              <div
+                style={{ width: "min(100%, 600px)" }}
+                className={`fx-centered  fx-wrap box-pad-h`}
+              >
+                <div className="box-pad-v fit-container">
+                  <h4>Points system</h4>
+                </div>
+              </div>
+              <div
+                style={{ width: "min(100%, 400px)" }}
+                className={`fx-centered  fx-wrap box-pad-h`}
+              ></div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );

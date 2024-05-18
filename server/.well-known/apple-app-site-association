@@ -12,7 +12,8 @@
           "/curations/*",
           "/flash-news/*",
           "/uncensored-notes/*",
-          "/buzz-feed/*"
+          "/buzz-feed/*",
+          "/notes/*"
         ]
       }
     ]
