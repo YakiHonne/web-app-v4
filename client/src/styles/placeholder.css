@@ -170,3 +170,24 @@
     width: 350px;
     aspect-ratio: 16/9;
 }
+
+.bronze-tier, .silver-tier, .gold-tier {
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    border-radius: 0;
+    aspect-ratio: 1/1;
+    cursor: pointer;
+}
+
+.bronze-tier {
+    background-image: url(../media/images/bronze-tier.png);
+}
+
+.silver-tier {
+    background-image: url(../media/images/silver-tier.png);
+}
+
+.gold-tier {
+    background-image: url(../media/images/gold-tier.png);
+}

@@ -76,12 +76,13 @@ router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
 
 router.post("/api/v1/logout", auth_user, async (req, res) => {
   try {
-    let pubkey = req.body.pubkey;
-    if (pubkey === req.user.pubkey) {
-      delete res.session.user_token;
-      return res.send({ message: "Logged out!" });
-    }
-    return res.status(403).send({ message: "Cannot log out!" });
+    // let pubkey = req.body.pubkey;
+    // if (pubkey === req.user.pubkey) {
+
+    delete req.session.user_token;
+    return res.send({ message: "Logged out!" });
+    // }
+    // return res.status(403).send({ message: "Cannot log out!" });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
@@ -369,7 +370,11 @@ const actionToUpdateV2 = async (
         : await Users.find({ lud16: user.lud16 }).countDocuments();
   }
   if (user_action) {
-    if (accountsNumber >= action_details.count || user_action.count >= action_details.count) return false;
+    if (
+      accountsNumber >= action_details.count ||
+      user_action.count >= action_details.count
+    )
+      return false;
     let action_to_update = {
       current_points: user_action.current_points + action_details.points[0],
       count: user_action.count + 1,
@@ -394,5 +399,3 @@ const actionToUpdateV2 = async (
 };
 
 module.exports = router;
-
-

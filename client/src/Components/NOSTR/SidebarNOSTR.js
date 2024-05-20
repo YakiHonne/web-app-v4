@@ -526,12 +526,12 @@ export default function NavBar() {
                     className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
                     onClick={() => navigateTo(`/yaki-points`)}
                   >
-                    <div className="setting"></div>
+                    <div className="medal"></div>
                     <p>Yaki points</p>
                   </div>
                   <hr />
                   <div
-                    className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
+                    className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
                     onClick={() => navigateTo(`/settings`)}
                   >
                     <div className="setting"></div>

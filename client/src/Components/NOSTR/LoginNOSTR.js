@@ -627,6 +627,7 @@ const LoginWithAPI = ({ exit }) => {
       e.stopPropagation();
       setIsLoading(true);
       let secretKey = nostrKeys.ext ? false : nostrKeys.sec;
+
       let data = await LoginToAPI(nostrKeys.pub, secretKey);
       if (data) exit();
       if (!data)

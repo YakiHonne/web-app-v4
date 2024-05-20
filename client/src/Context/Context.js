@@ -11,6 +11,7 @@ import {
 import { getBech32 } from "../Helpers/Encryptions";
 import axios from "axios";
 import { getNoteTree } from "../Helpers/Helpers";
+import axiosInstance from "../Helpers/HTTP_Client";
 const Context = React.createContext();
 
 const pool = new SimplePool();
@@ -358,7 +359,7 @@ const ContextProvider = ({ children }) => {
     setNostrKeys(false);
   };
 
-  const nostrUserLogout = () => {
+  const nostrUserLogout = async () => {
     localStorage.removeItem("_nostruser");
     localStorage.removeItem("_nostruserkeys");
     localStorage.removeItem("comment-with-prefix");
@@ -420,6 +421,11 @@ const ContextProvider = ({ children }) => {
     setChatrooms([]);
     setMutedList([]);
     setLastMessageDate(undefined);
+    try {
+      const data = await axiosInstance.post("/api/v1/logout");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const getUserFromNOSTR = async (pubkey) => {

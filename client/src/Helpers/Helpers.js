@@ -23,6 +23,7 @@ const LoginToAPI = async (publicKey, secretKey) => {
 
 const getLoginsParams = async (publicKey, secretKey) => {
   try {
+    console.log(process.env.CHECKER_PUBKEY)
     let content = JSON.stringify({
       pubkey: publicKey,
       sent_at: Math.floor(new Date().getTime() / 1000),
@@ -32,7 +33,7 @@ const getLoginsParams = async (publicKey, secretKey) => {
           content,
           nip44.v2.utils.getConversationKey(
             secretKey,
-            process.env.CHECKER_PUBKEY
+            process.env.REACT_APP_CHECKER_PUBKEY
           )
         )
       : await window.nostr.nip44.encrypt(

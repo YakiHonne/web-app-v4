@@ -24,4 +24,19 @@ const actionKeys = [
   "comment_post",
 ];
 
-export default actionKeys;
+const chartActionKeys = [
+  "flashnews_draft",
+  "flashnews_post",
+  "un_write",
+  "un_rate",
+  "curation_post",
+  "article_post",
+  "article_draft",
+  "video_post",
+  "bookmark",
+  "zap",
+  "upvote",
+  "downvote",
+  "comment_post",
+];
+export { chartActionKeys, actionKeys };
