@@ -23,7 +23,6 @@ const LoginToAPI = async (publicKey, secretKey) => {
 
 const getLoginsParams = async (publicKey, secretKey) => {
   try {
-    console.log(process.env.CHECKER_PUBKEY)
     let content = JSON.stringify({
       pubkey: publicKey,
       sent_at: Math.floor(new Date().getTime() / 1000),
@@ -777,6 +776,15 @@ const formatMinutesToMMSS = (seconds) => {
   }
 };
 
+const levelCount = (nextLevel) => {
+  if (nextLevel === 1) return 0;
+  else return levelCount(nextLevel - 1) + (nextLevel - 1) * 50;
+};
+
+const getCurrentLevel = (points) => {
+  return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -789,4 +797,6 @@ export {
   shuffleArray,
   formatMinutesToMMSS,
   LoginToAPI,
+  levelCount,
+  getCurrentLevel,
 };

@@ -1830,11 +1830,11 @@ main {
 }
 
 .sidebar-user-settings-button {
-    padding: .5rem 0;
+    padding: .5rem;
 }
 
 .sidebar-user-settings-button:hover {
-    background: var(--dim-gray);
+    background: var(--c1-side);
     padding: .5rem;
     border-radius: var(--48);
 }

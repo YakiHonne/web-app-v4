@@ -27,6 +27,7 @@ import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
 import s8e from "../../media/images/s8-e-yma.png";
 import { LoginToAPI } from "../../Helpers/Helpers";
+import LoginWithAPI from "./LoginWithAPI";
 
 const pool = new SimplePool();
 
@@ -615,63 +616,67 @@ const Signup = ({ switchScreen, continueSignup }) => {
   );
 };
 
-const LoginWithAPI = ({ exit }) => {
-  const { nostrKeys, setToast } = useContext(Context);
-  const [isLoading, setIsLoading] = useState(false);
-  useEffect(() => {
-    if (nostrKeys && !(nostrKeys.ext || nostrKeys.sec)) exit();
-  }, [nostrKeys]);
+// const LoginWithAPI = ({ exit }) => {
+//   const { nostrKeys, setToast, setIsConnectedToYaki } = useContext(Context);
+//   const [isLoading, setIsLoading] = useState(false);
+//   useEffect(() => {
+//     if (nostrKeys && !(nostrKeys.ext || nostrKeys.sec)) exit();
+//   }, [nostrKeys]);
 
-  const connect = async (e) => {
-    try {
-      e.stopPropagation();
-      setIsLoading(true);
-      let secretKey = nostrKeys.ext ? false : nostrKeys.sec;
+//   const connect = async (e) => {
+//     try {
+//       e.stopPropagation();
+//       setIsLoading(true);
+//       let secretKey = nostrKeys.ext ? false : nostrKeys.sec;
 
-      let data = await LoginToAPI(nostrKeys.pub, secretKey);
-      if (data) exit();
-      if (!data)
-        setToast({
-          type: 2,
-          desc: "An error occured while connecting, please try again.",
-        });
-      setIsLoading(false);
-    } catch (err) {
-      console.log(err)
-      setIsLoading(false);
-      setToast({
-        type: 2,
-        desc: "An error occured while connecting, please try again.",
-      });
-    }
-  };
+//       let data = await LoginToAPI(nostrKeys.pub, secretKey);
+//       if (data) {
+//         localStorage.setItem("connect_yc", `${new Date().getTime()}`);
+//         setIsConnectedToYaki(true);
+//         exit();
+//       }
+//       if (!data)
+//         setToast({
+//           type: 2,
+//           desc: "An error occured while connecting, please try again.",
+//         });
+//       setIsLoading(false);
+//     } catch (err) {
+//       console.log(err);
+//       setIsLoading(false);
+//       setToast({
+//         type: 2,
+//         desc: "An error occured while connecting, please try again.",
+//       });
+//     }
+//   };
 
-  if (!(nostrKeys && (nostrKeys.ext || nostrKeys.sec))) return;
-  return (
-    <div className="fixed-container fx-centered box-pad-h">
-      <div
-        className="sc-s-18  fx-centered fx-col"
-        style={{ width: "min(100%, 400px)", padding: "2rem" }}
-      >
-        <h4>Yakihonne's Chest!</h4>
-        <p className="gray-c p-centered">
-          Login to Yakihonne's chest, accumulate points by being active on the
-          platform and win precious awards!
-        </p>
-        <div className="chest"></div>
-        <button
-          className="btn btn-normal btn-full"
-          onClick={connect}
-          disabled={isLoading}
-        >
-          {isLoading ? <LoadingDots /> : "Log in"}
-        </button>
-        {!isLoading && (
-          <button className="btn btn-text btn-small" onClick={exit}>
-            No, I'm good
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
+//   if (!(nostrKeys && (nostrKeys.ext || nostrKeys.sec))) return;
+//   return (
+//     <div className="fixed-container fx-centered box-pad-h">
+//       <div
+//         className="sc-s-18  fx-centered fx-col"
+//         style={{ width: "min(100%, 400px)", padding: "2rem" }}
+//       >
+//         <h4>Yakihonne's Chest!</h4>
+//         <p className="gray-c p-centered">
+//           Login to Yakihonne's chest, accumulate points by being active on the
+//           platform and win precious awards!
+//         </p>
+//         <div className="chest"></div>
+//         <button
+//           className="btn btn-normal btn-full"
+//           onClick={connect}
+//           disabled={isLoading}
+//         >
+//           {isLoading ? <LoadingDots /> : "Log in"}
+//         </button>
+//         {!isLoading && (
+//           <button className="btn btn-text btn-small" onClick={exit}>
+//             No, I'm good
+//           </button>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };

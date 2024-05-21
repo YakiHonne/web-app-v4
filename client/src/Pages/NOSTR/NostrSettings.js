@@ -26,6 +26,7 @@ import { Helmet } from "react-helmet";
 import TopicTagsSelection from "../../Components/TopicTagsSelection";
 import Footer from "../../Components/Footer";
 import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
+import LoginWithAPI from "../../Components/NOSTR/LoginWithAPI";
 
 // import {requestInvoice} from 'lnurl-pay'
 
@@ -58,6 +59,8 @@ export default function NostrSettings() {
     setToast,
     isPublishing,
     setToPublish,
+    yakiChestStats,
+    isYakiChestLoaded,
   } = useContext(Context);
   const [isLoading, setIsLoading] = useState(false);
   const [updatedProfilePic, setUpdatedProfilePic] = useState(false);
@@ -77,6 +80,7 @@ export default function NostrSettings() {
   const [lud06, setLud06] = useState("");
   const [lud16, setLud16] = useState("");
   const [isSave, setIsSave] = useState(checkForSavedCommentOptions());
+  const [showYakiChest, setShowYakiChest] = useState(false);
 
   const saveOption = () => {
     localStorage.setItem(
@@ -337,6 +341,7 @@ export default function NostrSettings() {
 
   return (
     <>
+      {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
       {showCoverUploader && (
         <CoverUploader
           exit={() => setCoverUploader(false)}
@@ -901,6 +906,40 @@ export default function NostrSettings() {
                                   </button>
                                 </div>
                               )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="fit-container sc-s-18 fx-scattered box-pad-h-m box-pad-v-m pointer">
+                          <div className="fx-centered fx-start-h">
+                            <div className="cup-24"></div>
+                            <p>Yaki chest</p>
+                          </div>
+                          {yakiChestStats && isYakiChestLoaded && (
+                            <div className="fx-centered">
+                              <p className="green-c p-medium">Connected</p>
+                              <div
+                                style={{
+                                  minWidth: "8px",
+                                  aspectRatio: "1/1",
+                                  backgroundColor: "var(--green-main)",
+                                  borderRadius: "var(--border-r-50)",
+                                }}
+                              ></div>
+                            </div>
+                          )}
+                          {!yakiChestStats && isYakiChestLoaded && (
+                            <div className="fx-centered">
+                              <button
+                                className="btn btn-small btn-normal"
+                                onClick={() => setShowYakiChest(true)}
+                              >
+                                Connect
+                              </button>
+                            </div>
+                          )}
+                          {!isYakiChestLoaded && (
+                            <div className="fx-centered">
+                              <LoadingDots />
                             </div>
                           )}
                         </div>
