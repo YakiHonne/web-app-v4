@@ -67,6 +67,28 @@ router.post("/api/v1/gpt", async (req, res) => {
 
 router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
   try {
+    let pubkey = req.user.pubkey;
+    let userLevels = await UserLevels.findOne({ pubkey });
+    let last_updated = Math.floor(new Date().getTime() / 1000);
+    if (!userLevels) {
+      let new_action = {
+        action: "new_account",
+        current_points: 50,
+        count: 1,
+        extra: {},
+        all_time_points: 50,
+        last_updated,
+      };
+      let updated_user = await UserLevels.findOneAndUpdate(
+        { pubkey },
+        {
+          xp: 50,
+          $push: { actions: new_action },
+          last_updated,
+        },
+        { upsert: true, new: true }
+      );
+    }
     res.send({ message: "Logged in!" });
   } catch (err) {
     console.log(err);

@@ -9,6 +9,10 @@ import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import { chartActionKeys } from "../../Content/ActionKeys";
 import { act } from "react";
 import Date_ from "../../Components/Date_";
+import ProgressCirc from "../../Components/ProgressCirc";
+import Footer from "../../Components/Footer";
+import { Link } from "react-router-dom";
+import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 
 let chart_ = [
   { action: "flashnews_draft", all_time_points: 0, last_updated: null },
@@ -26,9 +30,19 @@ let chart_ = [
   { action: "comment_post", all_time_points: 0, last_updated: null },
 ];
 
+const getCooldown = (userLastUpdated, cooldownTime) => {
+  let currentTime = Math.floor(new Date().getTime() / 1000);
+  let diffTime = userLastUpdated + cooldownTime - currentTime;
+  let cooldown = 0;
+  if (diffTime <= 0) return cooldown;
+
+  return Math.ceil(diffTime / 60);
+};
+
 export default function UserLevels() {
   const { nostrKeys } = useContext(Context);
-  const [stats, setStats] = useState([]);
+  const [oneTimeRewardStats, setOneTimeRewardStats] = useState([]);
+  const [repeatedRewardsStats, setRepeatedRewardsStats] = useState([]);
   const [platformStandards, setPlatformStandards] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [headerStats, setHeaderStats] = useState(false);
@@ -40,7 +54,6 @@ export default function UserLevels() {
       try {
         setIsLoaded(false);
         const data = await axiosInstance.get("/api/v1/yaki-chest/stats");
-
         let { user_stats, platform_standards } = data.data;
         console.log(platform_standards);
         let xp = user_stats.xp;
@@ -53,17 +66,14 @@ export default function UserLevels() {
         let remainingPointsToNextLevel =
           totalPointInLevel - inBetweenLevelPoints;
         let max = 0;
-
         let tempChart = [];
         for (let action of user_stats.actions) {
           if (chartActionKeys.includes(action.action)) {
             if (action.all_time_points > max) max = action.all_time_points;
-
             tempChart.push(action);
           }
         }
         let tempActionKeys = tempChart.map((action) => action.action);
-
         let tempStats = Object.entries(platform_standards).map((action) => {
           let user_stat = user_stats.actions.find(
             (_action) => _action.action === action[0]
@@ -74,7 +84,15 @@ export default function UserLevels() {
             user_stat,
           };
         });
-        setStats(tempStats);
+        setOneTimeRewardStats(
+          tempStats.filter((item) => item.cooldown === 0 && item.count > 0)
+        );
+        setRepeatedRewardsStats(
+          tempStats.filter(
+            (item) =>
+              item.cooldown > 0 || (item.cooldown === 0 && item.count === 0)
+          )
+        );
         setChart([
           ...tempChart,
           ...chart_.filter((action) => !tempActionKeys.includes(action.action)),
@@ -101,7 +119,8 @@ export default function UserLevels() {
 
   useEffect(() => {
     if (!nostrKeys) {
-      setStats([]);
+      setOneTimeRewardStats([]);
+      setRepeatedRewardsStats([]);
       setPlatformStandards({});
       setHeaderStats(false);
       setChart([]);
@@ -287,9 +306,9 @@ export default function UserLevels() {
                       // style={{ rowGap: "24px" }}
                     >
                       <div className="fit-container">
-                        <p className="p-big c1-c">Rewards details</p>
+                        <p className=" gray-c">One time rewards</p>
                       </div>
-                      {stats.map((item) => {
+                      {oneTimeRewardStats.map((item) => {
                         return (
                           <div
                             className="fit-container fx-col fx-centered sc-s-18 box-pad-h-m box-pad-v-s"
@@ -302,120 +321,123 @@ export default function UserLevels() {
                             <div className="fit-container fx-scattered">
                               <div>
                                 <p>{item.display_name}</p>
-                                {(item.cooldown > 0 ||
-                                  (item.cooldown === 0 &&
-                                    item.count === 0)) && (
-                                  <div className="fx-centered">
-                                    <p className="gray-c p-medium">
-                                      Gain{" "}
-                                      <span className="orange-c">
-                                        {" "}
-                                        {item.points[0] || 0} xp{" "}
-                                      </span>{" "}
-                                      for {item.display_name}
-                                    </p>
-                                  </div>
-                                )}
                               </div>
-                              {item.cooldown === 0 && item.count > 0 && (
-                                <div className="fx-centered">
-                                  <p className="orange-c">
-                                    {item.user_stat?.all_time_points || 0}
-                                    <span className="gray-c">
-                                      {" "}
-                                      /{" "}
-                                      {item.points[0] *
-                                        (item.user_stat?.count || 1)}
-                                    </span>
-                                  </p>
-                                  {(item.user_stat?.all_time_points || 0) ===
-                                    item.points[0] *
-                                      (item.user_stat?.count || 1) && (
-                                    <div className="checkmark"></div>
-                                  )}
-                                </div>
-                              )}
-                              {(item.cooldown > 0 ||
-                                (item.cooldown === 0 && item.count === 0)) && (
-                                <div className="fx-centered">
-                                  <p className="orange-c">
-                                    {item.user_stat?.all_time_points || 0}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                            {item.cooldown === 0 && item.count > 0 && (
-                              <div className="fit-container fx-centered fx-col fx-start-v">
-                                <ProgressBar
-                                  full={true}
-                                  total={item.points[0]}
-                                  current={item.user_stat?.all_time_points || 0}
-                                />
-                                <p className="gray-c p-medium">
-                                  Attempts remained{" "}
-                                  <span
-                                    className={
-                                      item.count -
-                                        (item.user_stat?.count || 0) ===
-                                      0
-                                        ? "red-c"
-                                        : "green-c"
-                                    }
-                                  >
-                                    ({item.count - (item.user_stat?.count || 0)}
-                                    )
+                              <div className="fx-centered">
+                                <p className="orange-c">
+                                  {item.user_stat?.all_time_points || 0}
+                                  <span className="gray-c">
+                                    {" "}
+                                    /{" "}
+                                    {item.points[0] *
+                                      (item.user_stat?.count || 1)}
                                   </span>
                                 </p>
+                                {(item.user_stat?.all_time_points || 0) ===
+                                  item.points[0] *
+                                    (item.user_stat?.count || 1) && (
+                                  <div className="checkmark"></div>
+                                )}
                               </div>
-                            )}
-                            {item.cooldown > 0 && (
-                              <div className="fit-container fx-centered fx-col">
-                                <div className="fit-container fx-scattered">
-                                  <p
-                                    className="gray-c p-medium"
-                                    style={{ minWidth: "max-content" }}
-                                  >
-                                    Cooldown to next point
-                                  </p>
-                                  <ProgressBar
-                                    full={true}
-                                    total={
-                                      item.user_stat
-                                        ? item.user_stat.last_updated +
-                                          item.cooldown
-                                        : item.cooldown
-                                    }
-                                    current={
-                                      item.user_stat
-                                        ? item.user_stat.last_updated
-                                        : 0
-                                    }
-                                  />
-                                  <p
-                                    className="gray-c p-medium"
-                                    style={{ minWidth: "max-content" }}
-                                  >
-                                    {!item.user_stat && "N/A"}
-                                    {item.user_stat &&
-                                      (item.user_stat.last_updated +
-                                        item.cooldown) *
-                                        1000 <
-                                        new Date().getTime() && (
-                                        // <div className="checkmark"></div>
-                                        <Date_
-                                          toConvert={
-                                            new Date(
-                                              item.user_stat.last_updated +
-                                                item.cooldown
-                                            ) * 1000
-                                          }
-                                          timeOnly={true}
-                                        />
-                                      )}
+                            </div>
+
+                            <div className="fit-container fx-centered fx-col fx-start-v">
+                              <ProgressBar
+                                full={true}
+                                total={item.points[0]}
+                                current={item.user_stat?.all_time_points || 0}
+                              />
+                              <p className="gray-c p-medium">
+                                Attempts remained{" "}
+                                <span
+                                  className={
+                                    item.count -
+                                      (item.user_stat?.count || 0) ===
+                                    0
+                                      ? "red-c"
+                                      : "green-c"
+                                  }
+                                >
+                                  ({item.count - (item.user_stat?.count || 0)})
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div className="fit-container">
+                        <p className="gray-c">Repeated rewards</p>
+                      </div>
+                      {repeatedRewardsStats.map((item) => {
+                        let cooldown = item.user_stat
+                          ? getCooldown(
+                              item.user_stat.last_updated,
+                              item.cooldown
+                            )
+                          : 0;
+                        return (
+                          <div
+                            className="fit-container  fx-centered sc-s-18 "
+                            style={{
+                              backgroundColor: "var(--c1-side)",
+                              border: "none",
+                              overflow: "visible",
+                            }}
+                            key={item.action}
+                          >
+                            <div className="fit-container fx-scattered box-pad-h-m">
+                              <div>
+                                <p>{item.display_name}</p>
+                                <div className="fx-centered">
+                                  <p className="gray-c p-medium">
+                                    Gain{" "}
+                                    <span className="orange-c">
+                                      {" "}
+                                      {item.points[0] || 0} xp{" "}
+                                    </span>{" "}
+                                    for {item.display_name}
                                   </p>
                                 </div>
                               </div>
-                            )}
+                              <div className="fx-centered">
+                                <ProgressCirc
+                                  size={54}
+                                  percentage={
+                                    item.cooldown > 0
+                                      ? Math.floor(
+                                          (cooldown * 100) / item.cooldown
+                                        )
+                                      : 100
+                                  }
+                                  inversed={item.cooldown > 0 ? true : false}
+                                  innerComp={
+                                    item.cooldown > 0 ? (
+                                      <p className="gray-c p-small">
+                                        {cooldown}mn
+                                      </p>
+                                    ) : (
+                                      <div className="infinity"></div>
+                                    )
+                                  }
+                                  tooltip={
+                                    item.cooldown > 0
+                                      ? "Until cooldown"
+                                      : "Unlimited gains"
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <div
+                              className=" box-pad-v-m box-pad-h-m fx-centered fx-col"
+                              style={{
+                                minWidth: "max-content",
+                                borderLeft: "1px solid var(--dim-gray)",
+                              }}
+                            >
+                              <h4 className="orange-c">
+                                {item.user_stat?.all_time_points || 0}
+                              </h4>
+                              <p className="gray-c p-small">points</p>
+                            </div>
                           </div>
                         );
                       })}
@@ -426,8 +448,129 @@ export default function UserLevels() {
 
               <div
                 style={{ width: "min(100%, 400px)" }}
-                className={`fx-centered  fx-wrap box-pad-h extras-homepage`}
-              ></div>
+                className={`fx-centered  fx-wrap box-pad-h extras-homepage box-pad-v sticky`}
+              >
+                <SearchbarNOSTR />
+                <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
+                  <h4>About Yaki chest</h4>
+                  <p className="gray-c">
+                    Accumulate points by being active on the platform and win
+                    precious awards!
+                  </p>
+                  <Link
+                    target="_blank"
+                    to={
+                      "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
+                    }
+                  >
+                    <button className="btn btn-normal">Read article</button>
+                  </Link>
+                </div>
+                <div className=" box-pad-v-m fit-container fx-centered fx-col fx-start-v box-marg-s">
+                  <h4>Most rewarded actions</h4>
+                  <div
+                    className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      border: "none",
+                      overflow: "visible",
+                    }}
+                  >
+                    <div>
+                      <p>Posting flash news</p>
+                      <div>
+                        <p className="gray-c p-medium">
+                          Gain <span className="orange-c"> {15} xp</span> each.
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Link
+                        to={"/my-flash-news"}
+                        state={{ addFN: true }}
+                        className="round-icon-small"
+                      >
+                        <p>+</p>
+                      </Link>
+                    </div>
+                  </div>
+                  <div
+                    className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      border: "none",
+                      overflow: "visible",
+                    }}
+                  >
+                    <div>
+                      <p>Posting articles</p>
+                      <div>
+                        <p className="gray-c p-medium">
+                          Gain <span className="orange-c"> {4} xp</span> each.
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Link to={"/write-article"} className="round-icon-small">
+                        <p>+</p>
+                      </Link>
+                    </div>
+                  </div>
+                  <div
+                    className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      border: "none",
+                      overflow: "visible",
+                    }}
+                  >
+                    <div>
+                      <p>Posting videos</p>
+                      <div>
+                        <p className="gray-c p-medium">
+                          Gain <span className="orange-c"> {3} xp</span> each.
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Link
+                        to={"/my-videos"}
+                        state={{ addVideo: true }}
+                        className="round-icon-small"
+                      >
+                        <p>+</p>
+                      </Link>
+                    </div>
+                  </div>
+                  <div
+                    className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      border: "none",
+                      overflow: "visible",
+                    }}
+                  >
+                    <div>
+                      <p>Posting curations</p>
+                      <div>
+                        <p className="gray-c p-medium">
+                          Gain <span className="orange-c"> {2} xp</span> each.
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Link
+                        to={"/my-curations"}
+                        state={{ addCuration: true }}
+                        className="round-icon-small"
+                      >
+                        <p>+</p>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+                <Footer />
+              </div>
             </div>
           </div>
         </main>
