@@ -1861,3 +1861,32 @@ main {
         height: 100dvh;
     }
 }
+
+.tooltip-on-hover .tooltip {
+    display: none;
+}
+
+
+.tooltip-on-hover:hover {
+    background-color: var(--c1-side);
+    border-radius: var(--10);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.tooltip-on-hover:hover .tooltip {
+    display: flex;
+    position: absolute;
+    left: 0;
+    /* transform: translateX(-100%); */
+    bottom: calc(100% + 5px);
+    border-radius: var(--10);
+    border-color: var(--green-main);
+    min-width: max-content;
+    width: 100%;
+    z-index: 100;
+}
+
+.tooltip-on-hover:hover .chart-bar{
+   border-color: var(--green-main);
+}

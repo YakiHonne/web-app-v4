@@ -581,7 +581,7 @@ export default function NavBar() {
                         <p className="gray-c p-small">Lvl {yakiChestStats.currentLevel}</p>
                       </div>
                     }
-                    tooltip={"Level 4"}
+                    tooltip={`Level ${yakiChestStats.currentLevel}`}
                   />
                 )}
                 {!isYakiChestLoaded && <LoadingDots />}

@@ -75,7 +75,10 @@ export default function UserLevels() {
         for (let action of user_stats.actions) {
           if (chartActionKeys.includes(action.action)) {
             if (action.all_time_points > max) max = action.all_time_points;
-            tempChart.push(action);
+            tempChart.push({
+              ...action,
+              display_name: platform_standards[action.action].display_name,
+            });
           }
         }
         let tempActionKeys = tempChart.map((action) => action.action);
@@ -89,6 +92,7 @@ export default function UserLevels() {
             user_stat,
           };
         });
+
         setOneTimeRewardStats(
           tempStats.filter((item) => item.cooldown === 0 && item.count > 0)
         );
@@ -100,7 +104,14 @@ export default function UserLevels() {
         );
         setChart([
           ...tempChart,
-          ...chart_.filter((action) => !tempActionKeys.includes(action.action)),
+          ...chart_
+            .filter((action) => !tempActionKeys.includes(action.action))
+            .map((action) => {
+              return {
+                ...action,
+                display_name: platform_standards[action.action].display_name,
+              };
+            }),
         ]);
         setMaxValueInChart(max);
         setHeaderStats({
@@ -252,6 +263,7 @@ export default function UserLevels() {
                               backgroundColor: "var(--c1-side)",
                               border: "none",
                               rowGap: "24px",
+                              overflow: "visible",
                             }}
                           >
                             <div
@@ -268,10 +280,11 @@ export default function UserLevels() {
                                 {chart.map((item, index) => {
                                   return (
                                     <div
-                                      className="fx-centered fx-col fx-end-h pointer"
+                                      className="fx-centered fx-col fx-end-h pointer tooltip-on-hover"
                                       style={{
                                         height: "100%",
                                         width: "calc(100% / 13)",
+                                        overflow: "visible",
                                       }}
                                       key={item.action}
                                     >
@@ -284,6 +297,7 @@ export default function UserLevels() {
                                             (item.all_time_points * 100) /
                                             maxValueInChart
                                           }%`,
+                                          minHeight: "5px",
                                           backgroundColor:
                                             item.all_time_points ===
                                             maxValueInChart
@@ -291,9 +305,55 @@ export default function UserLevels() {
                                               : "var(--c1-side)",
                                           borderBottomLeftRadius: "0",
                                           borderBottomRightRadius: "0",
+                                          overflow: "visible",
+                                          position: "relative",
+                                          borderBottom: "none",
                                         }}
-                                        className="fit-container sc-s-18"
-                                      ></div>
+                                        className="fit-container sc-s-18 chart-bar"
+                                      >
+                                        <div
+                                          className="fx-centered fx-start-v fx-col tooltip box-pad-h-m box-pad-v-s sc-s-18"
+                                          style={{
+                                            rowGap: 0,
+                                            left:
+                                              index + 4 > chart.length
+                                                ? "100%"
+                                                : "initial",
+                                            transform:
+                                              index + 4 > chart.length
+                                                ? "translateX(-100%)"
+                                                : "translateX(0)",
+                                          }}
+                                        >
+                                          <div className="fx-centered">
+                                            <p className="p-medium">
+                                              {item.display_name}
+                                            </p>
+                                            <p className="p-small gray-c">
+                                              &#9679;
+                                            </p>
+                                            <p className="orange-c p-medium">
+                                              {item.all_time_points}{" "}
+                                              <span className="gray-c">xp</span>
+                                            </p>
+                                          </div>
+                                          <p className="gray-c p-small">
+                                            Last gained{" "}
+                                            {!item.last_updated ? (
+                                              "N/A"
+                                            ) : (
+                                              <Date_
+                                                toConvert={
+                                                  new Date(
+                                                    item.last_updated * 1000
+                                                  )
+                                                }
+                                                time={true}
+                                              />
+                                            )}
+                                          </p>
+                                        </div>
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -409,9 +469,12 @@ export default function UserLevels() {
                                         size={54}
                                         percentage={
                                           item.cooldown > 0
-                                            ? Math.floor(
-                                                (cooldown * 100) / item.cooldown
-                                              )
+                                            ? 
+                                                Math.floor(
+                                                  (cooldown * 100) /
+                                                    (item.cooldown / 60)
+                                                )
+                                             
                                             : 100
                                         }
                                         inversed={

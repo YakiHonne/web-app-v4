@@ -40,6 +40,7 @@ export default function ProgressCirc({
   back_circ = true,
   tooltip = false,
 }) {
+
   const [progress, setProgress] = useState(0);
   const [color, setColor] = useState(
     inversed ? getInversedColor(percentage) : getColor(percentage)

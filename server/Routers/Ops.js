@@ -151,10 +151,10 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
         },
         { upsert: true, new: true }
       );
-      return res.send(updated_user);
+      return res.send({ user_stats: updated_user, platform_standards: levels, is_updated: true });
     }
-    let action_to_update = ["nip05", "luds"].includes
-      ? actionToUpdateV2(
+    let action_to_update = ["nip05", "luds"].includes(action_key)
+      ? await actionToUpdateV2(
           user,
           action_key,
           action_details,
@@ -167,7 +167,8 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
           userLevels.actions,
           last_updated
         );
-    if (action_to_update === false) return res.send(userLevels);
+    if (action_to_update === false) return res.send({ user_stats: userLevels, platform_standards: levels, is_updated: false });
+    console.log(action_to_update)
     let updated_user = await UserLevels.findOneAndUpdate(
       { pubkey, "actions.action": action_key },
       {
@@ -184,7 +185,7 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       },
       { new: true }
     );
-    if (updated_user) return res.send(updated_user);
+    if (updated_user) return res.send({ user_stats: updated_user, platform_standards: levels, is_updated: action_to_update });
     let updated_user_2 = await UserLevels.findOneAndUpdate(
       { pubkey },
       {
@@ -194,7 +195,7 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       },
       { new: true }
     );
-    return res.send(updated_user_2);
+    return res.send({ user_stats: updated_user_2, platform_standards: levels, is_updated: action_to_update });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);

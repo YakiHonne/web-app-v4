@@ -4,7 +4,25 @@ import { Context } from "../Context/Context";
 import LoadingDots from "./LoadingDots";
 import { SimplePool } from "nostr-tools";
 import LoadingBar from "./LoadingBar";
+import axiosInstance from "../Helpers/HTTP_Client";
 const pool = new SimplePool();
+
+const action_key_from_kind = {
+  10002: "relays_setup",
+  30078: "topics_setup",
+  1: "comment_post",
+  11: "flashnews_post",
+  111: "un_write",
+  7: "upvote",
+  77: "downvote",
+  777: "un_rate",
+  30003: "bookmark",
+  30004: "curation_post",
+  30005: "curation_post",
+  30023: "article_post",
+  30024: "article_draft",
+  34235: "video_post",
+};
 
 export default function Publishing() {
   const { toPublish, setToPublish, setToast, isPublishing, setPublishing } =
@@ -82,11 +100,14 @@ export default function Publishing() {
     };
   }, [toPublish]);
 
+  useEffect(() => {
+    if (isFinished && okRelays.length > 0) {
+      updateYakiChest();
+    }
+  }, [isFinished, okRelays]);
+
   const initPublishing = async (relays, event) => {
     try {
-      // let pubs = await Promise.all(pool.publish(relays, event));
-      // console.log(pubs)
-
       Promise.allSettled(pool.publish(relays, event))
         .then((results) =>
           results.forEach((result, index) => {
@@ -111,24 +132,7 @@ export default function Publishing() {
       console.log(err);
     }
 
-    // pubs.on("ok", (e) => {
-    //   setFailedRelays((prev) => {
-    //     let tempArray = Array.from(prev);
-    //     let index = tempArray.findIndex((item) => e === item);
-    //     if (index !== -1) {
-    //       tempArray.splice(index, 1);
-    //       return tempArray;
-    //     }
-    //     return prev;
-    //   });
-    //   setOkRelays((re) => [...re, e]);
-    //   if (timeoutP !== false) {
-    //     return;
-    //   }
-    // });
-
     let timeout = setTimeout(() => {
-      // pool.close(relays);
       setIsFinished(true);
       setPublishing(false);
     }, 4000);
@@ -152,6 +156,60 @@ export default function Publishing() {
     setIsFinished(false);
     setTimeoutP(false);
     initPublishing(failedRelays, signedEvent);
+  };
+
+  const updateYakiChest = async () => {
+    try {
+      let action_key = getActionKey();
+      console.log(action_key);
+      if(action_key) {
+
+        let data = await axiosInstance.post("/api/v1/yaki-chest", { action_key });
+        console.log(data.data)
+      }
+    } catch (err) {}
+  };
+
+  const getActionKey = () => {
+    let { kind, content, tags, eventInitEx } = toPublish;
+
+    if (eventInitEx) {
+      console.log("full");
+      let kind_ = eventInitEx.kind;
+      if (kind_ === 1) {
+        return action_key_from_kind[getKind1FromTags(eventInitEx.tags)];
+      }
+      if (kind_ === 7) {
+        return action_key_from_kind[
+          getKind7FromTags(eventInitEx.content, eventInitEx.tags)
+        ];
+      }
+      return action_key_from_kind[kind_];
+    }
+    console.log(kind);
+    if (kind === 1) {
+      return action_key_from_kind[getKind1FromTags(tags)];
+    }
+    if (kind === 7) {
+      return action_key_from_kind[getKind7FromTags(content, tags)];
+    }
+    return action_key_from_kind[kind];
+  };
+
+  const getKind1FromTags = (tags) => {
+    let l = tags.find((tag) => tag[0] === "l");
+    if (!l) return 1;
+    if (l[1] === "FLASH NEWS") return 11;
+    if (l[1] === "UNCENSORED NOTE") return 111;
+  };
+  const getKind7FromTags = (content, tags) => {
+    let l = tags.find((tag) => tag[0] === "l");
+    if (!l) {
+      if (content === "+") return 7;
+      if (content === "-") return 77;
+    }
+
+    if (l[1] === "UNCENSORED NOTE RATING") return 777;
   };
 
   if (!toPublish) return;
