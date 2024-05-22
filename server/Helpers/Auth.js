@@ -55,10 +55,10 @@ const user_login = (req, res, next) => {
 
       if (
         pubkey === parsed_cracked_password.pubkey &&
-        parsed_cracked_password?.sent_at < currentTime &&
+        parsed_cracked_password?.sent_at <= currentTime &&
         parsed_cracked_password?.sent_at + 8 >= currentTime
       ) {
-        req.user = {pubkey};
+        req.user = { pubkey };
         next();
         return;
       }
