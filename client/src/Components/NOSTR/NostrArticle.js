@@ -132,64 +132,85 @@ export default function NostrArticle() {
         let tempArt = false;
         let lastCreatedAtInUser = 0;
         let lastCreatedAtInArticle = 0;
-
-        let sub = pool.subscribeMany(
-          nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-                "wss://nos.lol",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"],
-          [
+        let authorsRelay = [];
+        let attempt = 1;
+        let sub = () => {
+          pool.subscribeMany(
+            nostrUser
+              ? [
+                  ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
+                  "wss://nostr.wine",
+                  "wss://nos.lol",
+                  ...authorsRelay,
+                ]
+              : [
+                  ...relaysOnPlatform,
+                  "wss://nostr.wine",
+                  "wss://nos.lol",
+                  ...authorsRelay,
+                ],
+            [
+              {
+                kinds: [30023],
+                "#d": [naddrData.identifier],
+              },
+              {
+                kinds: [0, 10002],
+                authors: [naddrData.pubkey],
+              },
+            ],
             {
-              kinds: [30023],
-              "#d": [naddrData.identifier],
-            },
-            {
-              kinds: [0],
-              authors: [naddrData.pubkey],
-            },
-          ],
-          {
-            onevent(event) {
-      
-              if (event.kind === 0) {
-                tempAuth = { ...event };
-                if (lastCreatedAtInUser < event.created_at) {
-                  lastCreatedAtInUser = event.created_at;
-                  setAuthor(getParsedAuthor(event));
+              onevent(event) {
+                if (event.kind === 10002) {
+                  authorsRelay = Array.from(
+                    event.tags
+                      .filter((tag) => tag[0] === "r")
+                      .map((tag) => tag[1])
+                  );
                 }
-              }
-              if (event.kind === 30023) {
-                tempArt = { ...event };
-                if (lastCreatedAtInArticle < event.created_at) {
-                  lastCreatedAtInArticle = event.created_at;
-                  setPost(getParsedPostBody(event));
+                if (event.kind === 0) {
+                  tempAuth = { ...event };
+                  if (lastCreatedAtInUser < event.created_at) {
+                    lastCreatedAtInUser = event.created_at;
+                    setAuthor(getParsedAuthor(event));
+                  }
                 }
-              }
-              if (tempArt && tempAuth) {
+                if (event.kind === 30023) {
+                  tempArt = { ...event };
+                  if (lastCreatedAtInArticle < event.created_at) {
+                    lastCreatedAtInArticle = event.created_at;
+                    setPost(getParsedPostBody(event));
+                  }
+                }
+                if (tempArt && tempAuth) {
+                  setIsLoaded(true);
+                }
+              },
+              oneose() {
+                if (!tempArt) {
+                  if (attempt === 1 && authorsRelay.length > 0) {
+                    sub();
+                    attempt = attempt + 1;
+                  } else {
+                    setToast({
+                      type: 2,
+                      desc: "An error has occured",
+                    });
+                    setTimeout(() => {
+                      window.location = "/";
+                    }, 2000);
+                  }
+                  return;
+                }
+                if (!tempAuth) {
+                  setAuthor(getEmptyNostrUser(tempArt.pubkey));
+                }
                 setIsLoaded(true);
-              }
-            },
-            oneose() {
-              if (!tempArt) {
-                setToast({
-                  type: 2,
-                  desc: "An error has occured",
-                });
-                setTimeout(() => {
-                  window.location = "/";
-                }, 2000);
-                return;
-              }
-              if(!tempAuth) {
-                setAuthor(getEmptyNostrUser(tempArt.pubkey))
-              }
-              setIsLoaded(true);
-            },
-          }
-        );
+              },
+            }
+          );
+        };
+        sub();
       } catch (err) {
         navigateTo("/");
       }

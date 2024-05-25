@@ -510,15 +510,15 @@ const CurationPreviewCard = ({ curation }) => {
             author_name: auth.name,
             author_pubkey: auth.pubkey,
           });
-          if (auth.nip05) {
-            let authPubkey = await getAuthPubkeyFromNip05(auth.nip05);
-            if (authPubkey)
-              setArtURL(
-                curation.kind === 30004
-                  ? "a" + `/${auth.nip05}/${curation.d}`
-                  : "v" + `/${auth.nip05}/${curation.d}`
-              );
-          }
+          // if (auth.nip05) {
+          //   let authPubkey = await getAuthPubkeyFromNip05(auth.nip05);
+          //   if (authPubkey)
+          //     setArtURL(
+          //       curation.kind === 30004
+          //         ? "a" + `/${auth.nip05}/${curation.d}`
+          //         : "v" + `/${auth.nip05}/${curation.d}`
+          //     );
+          // }
         }
         return;
       } catch (err) {

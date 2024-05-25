@@ -89,10 +89,10 @@ export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
             author_name: auth.name,
             author_pubkey: auth.pubkey,
           });
-          if (auth.nip05) {
-            let authPubkey = await getAuthPubkeyFromNip05(auth.nip05);
-            if (authPubkey) setArtURL(`${auth.nip05}/${item.d}`);
-          }
+          // if (auth.nip05) {
+          //   let authPubkey = await getAuthPubkeyFromNip05(auth.nip05);
+          //   if (authPubkey) setArtURL(`${auth.nip05}/${item.d}`);
+          // }
         }
         return;
       } catch (err) {
