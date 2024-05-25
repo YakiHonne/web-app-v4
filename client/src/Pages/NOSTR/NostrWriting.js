@@ -296,7 +296,7 @@ export default function NostrWriting() {
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,800px)" }} className="box-pad-h-m">
+              <div style={{ width: "min(100%,1000px)" }} className="box-pad-h-m">
                 {nostrKeys && (
                   <>
                     {(nostrKeys.sec || nostrKeys.ext) && (
