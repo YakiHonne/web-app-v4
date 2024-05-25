@@ -28,7 +28,8 @@ export default function NavBar() {
     chatrooms,
     isConnectedToYaki,
     yakiChestStats,
-    isYakiChestLoaded
+    isYakiChestLoaded,
+    updatedActionFromYakiChest,
   } = useContext(Context);
   const navigateTo = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
@@ -528,6 +529,7 @@ export default function NavBar() {
             </div> */}
               <div
                 className="fx-scattered fit-container sidebar-user-settings-button fx-wrap"
+                style={{overflow: "visible"}}
                 onClick={() => setShowSettings(!showSettings)}
               >
                 <div
@@ -560,7 +562,7 @@ export default function NavBar() {
 
                 {isYakiChestLoaded && !yakiChestStats && (
                   <div
-                    className="round-icon round-icon-tooltip"
+                    className="round-icon round-icon-tooltip purple-pulse"
                     data-tooltip={"Yaki chest"}
                     style={{ minWidth: "40px", minHeight: "40px" }}
                     onClick={(e) => {
@@ -572,17 +574,46 @@ export default function NavBar() {
                   </div>
                 )}
                 {isYakiChestLoaded && yakiChestStats && (
-                  <ProgressCirc
-                    size={54}
-                    percentage={yakiChestStats.inBetweenLevelPoints*100/yakiChestStats.totalPointInLevel}
-                    innerComp={
-                      <div className="fx-centered fx-col" style={{ rowGap: 0 }}>
-                        <p className="orange-c p-small mb-hide">{yakiChestStats.xp} xp</p>
-                        <p className="gray-c p-small">Lvl {yakiChestStats.currentLevel}</p>
-                      </div>
-                    }
-                    tooltip={`Level ${yakiChestStats.currentLevel}`}
-                  />
+                  <div style={{ position: "relative" }}>
+                    {updatedActionFromYakiChest && <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        bottom: "calc(100% + 5px)",
+                        width: "54px",
+                        aspectRatio: "1/1",
+                        borderRadius: "var(--border-r-50)",
+                        backgroundColor: "var(--c1-side)",
+                      }}
+                      className="fx-centered slide-up-down"
+                    >
+                      <p>
+                        {updatedActionFromYakiChest.points} <span className="gray-c p-medium">xp</span>
+                      </p>
+                    </div>}
+                    <ProgressCirc
+                      sidebar={true}
+                      size={54}
+                      percentage={
+                        (yakiChestStats.inBetweenLevelPoints * 100) /
+                        yakiChestStats.totalPointInLevel
+                      }
+                      innerComp={
+                        <div
+                          className="fx-centered fx-col"
+                          style={{ rowGap: 0 }}
+                        >
+                          <p className="orange-c p-small mb-hide">
+                            {yakiChestStats.xp} xp
+                          </p>
+                          <p className="gray-c p-small">
+                            Lvl {yakiChestStats.currentLevel}
+                          </p>
+                        </div>
+                      }
+                      tooltip={`Level ${yakiChestStats.currentLevel}`}
+                    />
+                  </div>
                 )}
                 {!isYakiChestLoaded && <LoadingDots />}
               </div>

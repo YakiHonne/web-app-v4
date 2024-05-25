@@ -22,11 +22,26 @@ const action_key_from_kind = {
   30023: "article_post",
   30024: "article_draft",
   34235: "video_post",
+  username: "username",
+  bio: "bio",
+  profile_picture: "profile_picture",
+  cover: "cover",
+  nip05: "nip05",
+  luds: "luds",
 };
 
 export default function Publishing() {
-  const { toPublish, setToPublish, setToast, isPublishing, setPublishing } =
-    useContext(Context);
+  const {
+    tempUserMeta,
+    setTempUserMeta,
+    toPublish,
+    setToPublish,
+    setToast,
+    isPublishing,
+    setPublishing,
+    updateYakiChestStats,
+    setUpdatedActionFromYakiChest,
+  } = useContext(Context);
   const [showDetails, setShowDetails] = useState(false);
   const [startPublishing, setStartPublishing] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -109,7 +124,8 @@ export default function Publishing() {
   const initPublishing = async (relays, event) => {
     try {
       Promise.allSettled(pool.publish(relays, event))
-        .then((results) =>
+        .then((results) => {
+          console.log(results);
           results.forEach((result, index) => {
             if (result.status === "fulfilled" && result.value === "") {
               setFailedRelays((prev) => {
@@ -125,8 +141,8 @@ export default function Publishing() {
               });
               setOkRelays((re) => [...re, relays[index]]);
             }
-          })
-        )
+          });
+        })
         .catch((err) => console.log(err));
     } catch (err) {
       console.log(err);
@@ -161,11 +177,17 @@ export default function Publishing() {
   const updateYakiChest = async () => {
     try {
       let action_key = getActionKey();
-      console.log(action_key);
-      if(action_key) {
 
-        let data = await axiosInstance.post("/api/v1/yaki-chest", { action_key });
-        console.log(data.data)
+      if (action_key) {
+        let data = await axiosInstance.post("/api/v1/yaki-chest", {
+          action_key,
+        });
+        let { user_stats, is_updated } = data.data;
+
+        if (is_updated) {
+          setUpdatedActionFromYakiChest(is_updated);
+          updateYakiChestStats(user_stats);
+        }
       }
     } catch (err) {}
   };
@@ -174,7 +196,6 @@ export default function Publishing() {
     let { kind, content, tags, eventInitEx } = toPublish;
 
     if (eventInitEx) {
-      console.log("full");
       let kind_ = eventInitEx.kind;
       if (kind_ === 1) {
         return action_key_from_kind[getKind1FromTags(eventInitEx.tags)];
@@ -186,12 +207,18 @@ export default function Publishing() {
       }
       return action_key_from_kind[kind_];
     }
-    console.log(kind);
+
     if (kind === 1) {
       return action_key_from_kind[getKind1FromTags(tags)];
     }
     if (kind === 7) {
       return action_key_from_kind[getKind7FromTags(content, tags)];
+    }
+    if (kind === 0) {
+      let updatedUserMeta = getUpdatedMetaProperty(content);
+      if (!updatedUserMeta) return false;
+      setTempUserMeta(JSON.parse(content));
+      return action_key_from_kind[updatedUserMeta];
     }
     return action_key_from_kind[kind];
   };
@@ -211,7 +238,25 @@ export default function Publishing() {
 
     if (l[1] === "UNCENSORED NOTE RATING") return 777;
   };
-
+  const getUpdatedMetaProperty = (content) => {
+    let tempUser = tempUserMeta;
+    let updatedUser = JSON.parse(content);
+    if (tempUser.about !== updatedUser.about) return "bio";
+    if (tempUser.banner !== updatedUser.banner) return "cover";
+    if (
+      tempUser.display_name !== updatedUser.display_name ||
+      tempUser.name !== updatedUser.name
+    )
+      return "username";
+    if (
+      tempUser.lud06 !== updatedUser.lud06 ||
+      tempUser.lud16 !== updatedUser.lud16
+    )
+      return "luds";
+    if (tempUser.nip05 !== updatedUser.nip05) return "nip05";
+    if (tempUser.picture !== updatedUser.picture) return "profile_picture";
+    return false;
+  };
   if (!toPublish) return;
   if (window.location.pathname === "/messages") return;
   if (showDetails)

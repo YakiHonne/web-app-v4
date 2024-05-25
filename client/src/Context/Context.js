@@ -82,7 +82,9 @@ const ContextProvider = ({ children }) => {
     localStorage.getItem("yaki-theme") || "0"
   );
   const [nostrUserImpact, setNostrUserImpact] = useState(false);
+  const [userFirstLoginYakiChest, setUserFirstLoginYakiChest] = useState(false);
   const [nostrUserBookmarks, setNostrUserBookmarks] = useState([]);
+  const [tempUserMeta, setTempUserMeta] = useState(false);
   const [nostrUserAbout, setNostrUserAbout] = useState(false);
   const [nostrUserTags, setNostrUserTags] = useState(false);
   const [nostrUserLoaded, setNostrUserLoaded] = useState(false);
@@ -110,6 +112,8 @@ const ContextProvider = ({ children }) => {
   );
   const [yakiChestStats, setYakiChestStats] = useState(false);
   const [isYakiChestLoaded, setIsYakiChestLoaded] = useState(false);
+  const [updatedActionFromYakiChest, setUpdatedActionFromYakiChest] =
+    useState(false);
 
   useEffect(() => {
     let fetchData = async () => {
@@ -266,26 +270,7 @@ const ContextProvider = ({ children }) => {
           return;
         }
         let { user_stats, platform_standards } = data.data;
-        let xp = user_stats.xp;
-        let currentLevel = getCurrentLevel(xp);
-        let nextLevel = currentLevel + 1;
-        let toCurrentLevelPoints = levelCount(currentLevel);
-        let toNextLevelPoints = levelCount(nextLevel);
-        let totalPointInLevel = toNextLevelPoints - toCurrentLevelPoints;
-        let inBetweenLevelPoints = xp - toCurrentLevelPoints;
-        let remainingPointsToNextLevel =
-          totalPointInLevel - inBetweenLevelPoints;
-
-        setYakiChestStats({
-          xp,
-          currentLevel,
-          nextLevel,
-          toCurrentLevelPoints,
-          toNextLevelPoints,
-          totalPointInLevel,
-          inBetweenLevelPoints,
-          remainingPointsToNextLevel,
-        });
+        updateYakiChestStats(user_stats);
         setIsYakiChestLoaded(true);
       } catch (err) {
         console.log(err);
@@ -386,6 +371,7 @@ const ContextProvider = ({ children }) => {
       setNostrUser(userData);
       setNostrUserTags(content.tags);
       setNostrUserAbout(userAbout);
+      setTempUserMeta(userAbout);
       getUserBookmarks(content.pubkey);
       // setNostrUserBookmarks(userBookmarks);
       setNostrUserTopics(userTopics);
@@ -411,7 +397,7 @@ const ContextProvider = ({ children }) => {
     localStorage.removeItem("comment-with-prefix");
     localStorage.removeItem("connect_yc");
     setIsConnectedToYaki(false);
-    setYakiChestStats(false)
+    setYakiChestStats(false);
     let openDB = window.indexedDB.open("yaki-nostr", 3);
     // let req = window.indexedDB.deleteDatabase("yaki-nostr");
 
@@ -463,6 +449,7 @@ const ContextProvider = ({ children }) => {
     setNostrUser(false);
     setNostrKeys(false);
     setNostrUserAbout(false);
+    setTempUserMeta(false);
     setNostrUserBookmarks([]);
     setNostrUserTopics([]);
     setNostrUserTags([]);
@@ -800,6 +787,49 @@ const ContextProvider = ({ children }) => {
     };
   };
 
+  const updateYakiChestStats = (user_stats) => {
+    let xp = user_stats.xp;
+    let currentLevel = getCurrentLevel(xp);
+    let nextLevel = currentLevel + 1;
+    let toCurrentLevelPoints = levelCount(currentLevel);
+    let toNextLevelPoints = levelCount(nextLevel);
+    let totalPointInLevel = toNextLevelPoints - toCurrentLevelPoints;
+    let inBetweenLevelPoints = xp - toCurrentLevelPoints;
+    let remainingPointsToNextLevel = totalPointInLevel - inBetweenLevelPoints;
+
+    setYakiChestStats({
+      xp,
+      currentLevel,
+      nextLevel,
+      toCurrentLevelPoints,
+      toNextLevelPoints,
+      totalPointInLevel,
+      inBetweenLevelPoints,
+      remainingPointsToNextLevel,
+    });
+  };
+  const initiFirstLoginStats = (user_stats) => {
+    let xp = user_stats.xp;
+    let lvl = getCurrentLevel(xp);
+    let nextLevel = lvl + 1;
+    let toCurrentLevelPoints = levelCount(lvl);
+    let toNextLevelPoints = levelCount(nextLevel);
+    let totalPointInLevel = toNextLevelPoints - toCurrentLevelPoints;
+    let inBetweenLevelPoints = xp - toCurrentLevelPoints;
+    let actions = user_stats.actions.map((item) => {
+      return {
+        ...item,
+        display_name: user_stats.platform_standards[item.action].display_name,
+      };
+    });
+
+    setUserFirstLoginYakiChest({
+      xp,
+      lvl,
+      percentage: (inBetweenLevelPoints * 100) / totalPointInLevel,
+      actions,
+    });
+  };
   return (
     <Context.Provider
       value={{
@@ -808,6 +838,8 @@ const ContextProvider = ({ children }) => {
         nostrUser,
         nostrUserAbout,
         setNostrUserAbout,
+        tempUserMeta,
+        setTempUserMeta,
         nostrUserTags,
         setNostrUserData,
         setNostrUser,
@@ -848,6 +880,12 @@ const ContextProvider = ({ children }) => {
         setIsConnectedToYaki,
         yakiChestStats,
         isYakiChestLoaded,
+        updateYakiChestStats,
+        userFirstLoginYakiChest,
+        setUserFirstLoginYakiChest,
+        initiFirstLoginStats,
+        updatedActionFromYakiChest,
+        setUpdatedActionFromYakiChest,
       }}
     >
       {children}

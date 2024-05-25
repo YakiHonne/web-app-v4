@@ -17,7 +17,6 @@ import PagePlaceholder from "../../Components/PagePlaceholder";
 import { getCurrentLevel, levelCount } from "../../Helpers/Helpers";
 
 let chart_ = [
-  { action: "flashnews_draft", all_time_points: 0, last_updated: null },
   { action: "flashnews_post", all_time_points: 0, last_updated: null },
   { action: "un_write", all_time_points: 0, last_updated: null },
   { action: "un_rate", all_time_points: 0, last_updated: null },
@@ -92,7 +91,6 @@ export default function UserLevels() {
             user_stat,
           };
         });
-
         setOneTimeRewardStats(
           tempStats.filter((item) => item.cooldown === 0 && item.count > 0)
         );
@@ -283,7 +281,7 @@ export default function UserLevels() {
                                       className="fx-centered fx-col fx-end-h pointer tooltip-on-hover"
                                       style={{
                                         height: "100%",
-                                        width: "calc(100% / 13)",
+                                        width: "calc(100% / 12)",
                                         overflow: "visible",
                                       }}
                                       key={item.action}
@@ -469,12 +467,10 @@ export default function UserLevels() {
                                         size={54}
                                         percentage={
                                           item.cooldown > 0
-                                            ? 
-                                                Math.floor(
-                                                  (cooldown * 100) /
-                                                    (item.cooldown / 60)
-                                                )
-                                             
+                                            ? Math.floor(
+                                                (cooldown * 100) /
+                                                  (item.cooldown / 60)
+                                              )
                                             : 100
                                         }
                                         inversed={

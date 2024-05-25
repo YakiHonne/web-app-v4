@@ -14,7 +14,7 @@ const LoginToAPI = async (publicKey, secretKey) => {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
     if (!(pubkey && password)) return;
     const data = await axios.post("/api/v1/login", { password, pubkey });
-    return true;
+    return data.data;
   } catch (err) {
     console.log(err);
     return false;

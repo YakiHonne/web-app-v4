@@ -4,7 +4,8 @@ import LoadingDots from "../LoadingDots";
 import { LoginToAPI } from "../../Helpers/Helpers";
 
 export default function LoginWithAPI({ exit }) {
-  const { nostrKeys, setToast, setIsConnectedToYaki } = useContext(Context);
+  const { nostrKeys, setToast, setIsConnectedToYaki, initiFirstLoginStats } =
+    useContext(Context);
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (nostrKeys && !(nostrKeys.ext || nostrKeys.sec)) exit();
@@ -19,6 +20,9 @@ export default function LoginWithAPI({ exit }) {
       let data = await LoginToAPI(nostrKeys.pub, secretKey);
       if (data) {
         localStorage.setItem("connect_yc", `${new Date().getTime()}`);
+        if (data.is_new) {
+          initiFirstLoginStats(data);
+        }
         setIsConnectedToYaki(true);
         exit();
       }

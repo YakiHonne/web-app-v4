@@ -59,12 +59,6 @@ const levels = {
     cooldown: 0,
     display_name: "Following Yakihonne official account"
   },
-  flashnews_draft: {
-    points: [4],
-    count: 0,
-    cooldown: 0,
-    display_name: "Flash news drafts"
-  },
   flashnews_post: {
     points: [15],
     count: 0,
@@ -149,7 +143,6 @@ const actions_keys = [
   "relays_setup",
   "topics_setup",
   "follow_yaki",
-  "flashnews_draft",
   "flashnews_post",
   "un_write",
   "un_rate",
@@ -164,8 +157,28 @@ const actions_keys = [
   "comment_post",
 ];
 
-const tiers = {
-  
-}
+const tiers = [
+  {
+    min: 0,
+    max: 50,
+    volume: 1
+  },
+  {
+    min: 51,
+    max: 100,
+    volume: 2
+  },
+  {
+    min: 101,
+    max: 500,
+    volume: 3
+  },
+  {
+    min: 501,
+    max: -1,
+    volume: 4
+  },
 
-module.exports = { levels, actions_keys };
+]
+
+module.exports = { levels, actions_keys, tiers };

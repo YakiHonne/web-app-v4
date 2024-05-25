@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { Context } from "../Context/Context";
 
 const getColor = (percentage) => {
   // if (percentage <= 12) return "#BE0202";
@@ -18,7 +19,7 @@ const getInversedColor = (percentage) => {
   // if (percentage <= 12) return "#BE0202";
   // if (percentage > 12 && percentage <= 25) return "#FF4A4A"; //
   if (percentage >= 0 && percentage <= 25) return "#00C04D"; //
-  
+
   if (percentage > 25 && percentage <= 50) return "#F8CC0B"; //
   if (percentage > 50 && percentage <= 75) return "#FF4A4A"; //
   // if (percentage > 25 && percentage <= 37) return "#FF9C08";
@@ -39,16 +40,18 @@ export default function ProgressCirc({
   width = 4,
   back_circ = true,
   tooltip = false,
+  sidebar = false
 }) {
-
+  const { setUpdatedActionFromYakiChest, updatedActionFromYakiChest} = useContext(Context);
   const [progress, setProgress] = useState(0);
+  const [initAnimation, setInitAnimation] = useState(false);
   const [color, setColor] = useState(
     inversed ? getInversedColor(percentage) : getColor(percentage)
   );
 
   useEffect(() => {
     setProgress(percentage);
-    setColor(   inversed ? getInversedColor(percentage) : getColor(percentage));
+    setColor(inversed ? getInversedColor(percentage) : getColor(percentage));
   }, [percentage]);
 
   const viewBox = `0 0 ${size} ${size}`;
@@ -56,12 +59,32 @@ export default function ProgressCirc({
   const circumference = radius * Math.PI * 2;
   const dash = (progress * circumference) / 100;
 
+  useEffect(() => {
+    let timeout = null
+    let timeout2 = null
+    
+    if (updatedActionFromYakiChest) {
+      timeout = setTimeout(() => {
+        setInitAnimation(true)
+      }, 1800)
+      timeout2 = setTimeout(() => {
+        setInitAnimation(false)
+        setUpdatedActionFromYakiChest(false)
+      }, 3300)
+    }
+    return () => {
+      clearTimeout(timeout)
+      clearTimeout(timeout2)
+    }
+  }, [updatedActionFromYakiChest]);
+
   return (
     <div
-      className={`progress-circle pointer ${
-        tooltip ? "round-icon-tooltip" : ""
-      }`}
+      className={`${
+        (initAnimation && sidebar) ? "purple-pulse" : ""
+      } progress-circle pointer ${tooltip ? "round-icon-tooltip" : ""}`}
       data-tooltip={tooltip ? tooltip : ""}
+      style={{ borderRadius: "var(--border-r-50)" }}
     >
       {/* {size > 70 ? (
         <div className="label fx-centered fx-col" style={{ rowGap: 0 }}>

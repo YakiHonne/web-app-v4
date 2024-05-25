@@ -48,12 +48,16 @@ import NostrBuzzFeed from "./Pages/NOSTR/NostrBuzzFeed";
 import BuzzFeedSource from "./Pages/NOSTR/BuzzFeedSource";
 import UserLevels from "./Pages/NOSTR/UserLevels";
 import NostrNotes from "./Pages/NOSTR/NostrNotes";
+import UserFirsLogin from "./Components/UserFirsLogin";
+import XPEarned from "./Components/XPEarned";
 
 function App() {
   return (
     <ContextProvider>
       <Publishing />
       <ToastMessages />
+      <UserFirsLogin />
+      {/* <XPEarned /> */}
       <Router>
         <NavbarNOSTR />
         <Routes>

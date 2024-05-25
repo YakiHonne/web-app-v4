@@ -9,12 +9,16 @@ const UNRatings = require("../Models/UNRatings");
 const SealedNotes = require("../Models/SealedNotes");
 const UserLevels = require("../Models/UserLevels");
 const { auth_user, user_login, user_tokenizing } = require("../Helpers/Auth");
-const { actions_keys, levels } = require("../DB/LevelsActions");
+const { actions_keys, levels, tiers } = require("../DB/LevelsActions");
 const MongoStore = require("connect-mongo");
 const Users = require("../Models/Users");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const getCurrentLevel = (points) => {
+  return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
+};
 
 router.get("/api/v1/yakihonne-topics", (req, res) => {
   res.send(topics);
@@ -68,10 +72,15 @@ router.post("/api/v1/gpt", async (req, res) => {
 router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
   try {
     let pubkey = req.user.pubkey;
-    let userLevels = await UserLevels.findOne({ pubkey });
+    let [userLevels, user] = await Promise.all([
+      UserLevels.findOne({ pubkey }),
+      Users.findOne({ pubkey }),
+    ]);
+    // let userLevels = await UserLevels.findOne({ pubkey });
     let last_updated = Math.floor(new Date().getTime() / 1000);
     if (!userLevels) {
-      let new_action = {
+      let actions = [];
+      let new_account = {
         action: "new_account",
         current_points: 50,
         count: 1,
@@ -79,15 +88,106 @@ router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
         all_time_points: 50,
         last_updated,
       };
+      actions.push(new_account);
+      if (user) {
+        if (user.name || user.display_name) {
+          let username = {
+            action: "username",
+            current_points: 5,
+            count: 1,
+            extra: {},
+            all_time_points: 5,
+            last_updated,
+          };
+          actions.push(username);
+        }
+        if (user.picture) {
+          let profile_picture = {
+            action: "profile_picture",
+            current_points: 5,
+            count: 1,
+            extra: {},
+            all_time_points: 5,
+            last_updated,
+          };
+          actions.push(profile_picture);
+        }
+        if (user.banner) {
+          let cover = {
+            action: "cover",
+            current_points: 5,
+            count: 1,
+            extra: {},
+            all_time_points: 5,
+            last_updated,
+          };
+          actions.push(cover);
+        }
+        if (user.about) {
+          let bio = {
+            action: "bio",
+            current_points: 5,
+            count: 1,
+            extra: {},
+            all_time_points: 5,
+            last_updated,
+          };
+          actions.push(bio);
+        }
+        if (user.lud06 || user.lud16) {
+          let check_luds = await Users.find({
+            lud16: user.lud16,
+          }).countDocuments();
+          if (check_luds <= 3) {
+            let luds = {
+              action: "luds",
+              current_points: 15,
+              count: 1,
+              extra: {},
+              all_time_points: 15,
+              last_updated,
+            };
+            actions.push(luds);
+          }
+        }
+
+        if (user.nip05) {
+          let check_nip05 = await Users.find({
+            nip05: user.nip05,
+          }).countDocuments();
+          if (check_nip05 <= 3) {
+            let nip05 = {
+              action: "nip05",
+              current_points: 5,
+              count: 1,
+              extra: {},
+              all_time_points: 5,
+              last_updated,
+            };
+            actions.push(nip05);
+          }
+        }
+      }
+      let xp = actions.reduce(
+        (total, item) => (total += item.all_time_points),
+        0
+      );
       let updated_user = await UserLevels.findOneAndUpdate(
         { pubkey },
         {
-          xp: 50,
-          $push: { actions: new_action },
+          xp,
+          actions,
           last_updated,
         },
         { upsert: true, new: true }
       );
+      return res.send({
+        message: "Logged in!",
+        is_new: true,
+        actions,
+        xp,
+        platform_standards: levels,
+      });
     }
     res.send({ message: "Logged in!" });
   } catch (err) {
@@ -151,24 +251,48 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
         },
         { upsert: true, new: true }
       );
-      return res.send({ user_stats: updated_user, platform_standards: levels, is_updated: true });
+      return res.send({
+        user_stats: updated_user,
+        platform_standards: levels,
+        is_updated: true,
+      });
     }
+    
+    let currentLevel = getCurrentLevel(userLevels.xp);
+    let currentVolumeTier = tiers.find((tier) => {
+      if (
+        tier.max > -1 &&
+        tier.min <= currentLevel &&
+        tier.max >= currentLevel
+      ) {
+        return tier;
+      }
+      if (tier.max == -1 && tier.min <= currentLevel) return tier;
+    }).volume;
+
     let action_to_update = ["nip05", "luds"].includes(action_key)
       ? await actionToUpdateV2(
           user,
           action_key,
           action_details,
           userLevels.actions,
-          last_updated
+          last_updated,
+          currentVolumeTier
         )
       : actionToUpdate(
           action_key,
           action_details,
           userLevels.actions,
-          last_updated
+          last_updated,
+          currentVolumeTier
         );
-    if (action_to_update === false) return res.send({ user_stats: userLevels, platform_standards: levels, is_updated: false });
-    console.log(action_to_update)
+    if (action_to_update === false)
+      return res.send({
+        user_stats: userLevels,
+        platform_standards: levels,
+        is_updated: false,
+      });
+
     let updated_user = await UserLevels.findOneAndUpdate(
       { pubkey, "actions.action": action_key },
       {
@@ -185,7 +309,13 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       },
       { new: true }
     );
-    if (updated_user) return res.send({ user_stats: updated_user, platform_standards: levels, is_updated: action_to_update });
+
+    if (updated_user)
+      return res.send({
+        user_stats: updated_user,
+        platform_standards: levels,
+        is_updated: action_to_update,
+      });
     let updated_user_2 = await UserLevels.findOneAndUpdate(
       { pubkey },
       {
@@ -195,7 +325,11 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       },
       { new: true }
     );
-    return res.send({ user_stats: updated_user_2, platform_standards: levels, is_updated: action_to_update });
+    return res.send({
+      user_stats: updated_user_2,
+      platform_standards: levels,
+      is_updated: action_to_update,
+    });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
@@ -332,42 +466,51 @@ const actionToUpdate = (
   action_key,
   action_details,
   user_actions,
-  last_updated
+  last_updated,
+  currentVolumeTier
 ) => {
   let user_action = user_actions.find((action) => action.action === action_key);
   if (user_action) {
     if (action_details.count > 0) {
       if (user_action.count >= action_details.count) return false;
       let action_to_update = {
-        current_points: user_action.current_points + action_details.points[0],
+        current_points:
+          user_action.current_points +
+          action_details.points[0] * currentVolumeTier,
         count: user_action.count + 1,
         last_updated,
-        all_time_points: user_action.all_time_points + action_details.points[0],
+        all_time_points:
+          user_action.all_time_points +
+          action_details.points[0] * currentVolumeTier,
         extra: {},
-        points: action_details.points[0],
+        points: action_details.points[0] * currentVolumeTier,
       };
       return action_to_update;
     }
     if (user_action.last_updated + action_details.cooldown >= last_updated)
       return false;
     let action_to_update = {
-      current_points: user_action.current_points + action_details.points[0],
+      current_points:
+        user_action.current_points +
+        action_details.points[0] * currentVolumeTier,
       count: 0,
       last_updated,
-      all_time_points: user_action.all_time_points + action_details.points[0],
+      all_time_points:
+        user_action.all_time_points +
+        action_details.points[0] * currentVolumeTier,
       extra: {},
-      points: action_details.points[0],
+      points: action_details.points[0] * currentVolumeTier,
     };
     return action_to_update;
   }
   let new_action = {
     action: action_key,
-    current_points: action_details.points[0],
+    current_points: action_details.points[0] * currentVolumeTier,
     count: action_details.count > 0 ? 1 : 0,
     extra: {},
-    all_time_points: action_details.points[0],
+    all_time_points: action_details.points[0] * currentVolumeTier,
     last_updated,
-    points: action_details.points[0],
+    points: action_details.points[0] * currentVolumeTier,
   };
   return new_action;
 };
@@ -377,7 +520,8 @@ const actionToUpdateV2 = async (
   action_key,
   action_details,
   user_actions,
-  last_updated
+  last_updated,
+  currentVolumeTier
 ) => {
   let user_action = user_actions.find((action) => action.action === action_key);
 
@@ -399,24 +543,28 @@ const actionToUpdateV2 = async (
     )
       return false;
     let action_to_update = {
-      current_points: user_action.current_points + action_details.points[0],
+      current_points:
+        user_action.current_points +
+        action_details.points[0] * currentVolumeTier,
       count: user_action.count + 1,
       last_updated,
-      all_time_points: user_action.all_time_points + action_details.points[0],
+      all_time_points:
+        user_action.all_time_points +
+        action_details.points[0] * currentVolumeTier,
       extra: {},
-      points: action_details.points[0],
+      points: action_details.points[0] * currentVolumeTier,
     };
     return action_to_update;
   }
   if (accountsNumber >= action_details.count) return false;
   let new_action = {
     action: action_key,
-    current_points: action_details.points[0],
+    current_points: action_details.points[0] * currentVolumeTier,
     count: 1,
     extra: {},
-    all_time_points: action_details.points[0],
+    all_time_points: action_details.points[0] * currentVolumeTier,
     last_updated,
-    points: action_details.points[0],
+    points: action_details.points[0] * currentVolumeTier,
   };
   return new_action;
 };
