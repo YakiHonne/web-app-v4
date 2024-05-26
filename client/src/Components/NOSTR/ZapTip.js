@@ -26,7 +26,7 @@ export default function ZapTip({
   eTag = "",
   forContent = "",
   onlyIcon = false,
-  smallIcon = false
+  smallIcon = false,
 }) {
   const { nostrKeys } = useContext(Context);
   const [callback, setCallback] = useState(false);
@@ -55,7 +55,12 @@ export default function ZapTip({
   )
     return (
       <>
-        {onlyIcon && <div className={smallIcon ? "bolt" : "bolt-24"} style={{ opacity: ".2" }}></div>}
+        {onlyIcon && (
+          <div
+            className={smallIcon ? "bolt" : "bolt-24"}
+            style={{ opacity: ".2" }}
+          ></div>
+        )}
         {!onlyIcon && (
           <button className="btn btn-disabled">
             <div
@@ -71,7 +76,10 @@ export default function ZapTip({
       <>
         {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />}
         {onlyIcon && (
-          <div className={smallIcon ? "bolt" : "bolt-24"}  onClick={() => setShowLogin(true)}></div>
+          <div
+            className={smallIcon ? "bolt" : "bolt-24"}
+            onClick={() => setShowLogin(true)}
+          ></div>
         )}
         {!onlyIcon && (
           <button className="btn btn-normal" onClick={() => setShowLogin(true)}>
@@ -96,7 +104,10 @@ export default function ZapTip({
         />
       )}
       {onlyIcon && (
-        <div className={smallIcon ? "bolt" : "bolt-24"}  onClick={() => setCashier(true)}></div>
+        <div
+          className={smallIcon ? "bolt" : "bolt-24"}
+          onClick={() => setCashier(true)}
+        ></div>
       )}
       {!onlyIcon && (
         <button className="btn btn-normal" onClick={() => setCashier(true)}>
@@ -118,7 +129,13 @@ const Cashier = ({
   exit,
   forContent,
 }) => {
-  const { nostrKeys, setToast, nostrUser } = useContext(Context);
+  const {
+    nostrKeys,
+    setToast,
+    nostrUser,
+    setUpdatedActionFromYakiChest,
+    updateYakiChestStats,
+  } = useContext(Context);
   const [amount, setAmount] = useState(1);
   const [message, setMessage] = useState("");
   const [invoice, setInvoice] = useState("");
@@ -190,6 +207,7 @@ const Cashier = ({
         ],
         {
           onevent(event) {
+            updateYakiChest();
             setConfirmation("confirmed");
           },
         }
@@ -205,6 +223,35 @@ const Cashier = ({
       type: 1,
       desc: `LNURL was copied! 👏`,
     });
+  };
+
+  const updateYakiChest = async () => {
+    try {
+      let action_key = getActionKey();
+console.log(action_key)
+      if (action_key) {
+        let data = await axiosInstance.post("/api/v1/yaki-chest", {
+          action_key,
+        });
+        console.log(data.data)
+        let { user_stats, is_updated } = data.data;
+
+        if (is_updated) {
+          setUpdatedActionFromYakiChest(is_updated);
+          updateYakiChestStats(user_stats);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getActionKey = () => {
+    if (amount > 0 && amount <= 20) return "zap-1";
+    if (amount <= 60) return "zap-20";
+    if (amount <= 100) return "zap-60";
+    if (amount > 100) return "zap-100";
+    return false;
   };
 
   return (

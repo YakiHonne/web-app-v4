@@ -20,6 +20,13 @@ const getCurrentLevel = (points) => {
   return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
 };
 
+const zaps_intervals = {
+  "zap-1": 0,
+  "zap-20": 1,
+  "zap-60": 2,
+  "zap-100": 3,
+};
+
 router.get("/api/v1/yakihonne-topics", (req, res) => {
   res.send(topics);
 });
@@ -226,7 +233,20 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
     if (!actions_keys.includes(action_key.toString()))
       return res.status(403).send({ message: "unsupported action key" });
 
-    let action_details = levels[action_key];
+    let point_index = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(
+      action_key
+    )
+      ? zaps_intervals[action_key]
+      : 0;
+    let action_details = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(
+      action_key
+    )
+      ? { ...levels[action_key.split("-")[0]], point_index }
+      : { ...levels[action_key], point_index };
+
+    action_key = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(action_key)
+      ? action_key.split("-")[0]
+      : action_key;
     let [userLevels, user] = await Promise.all([
       UserLevels.findOne({ pubkey }),
       Users.findOne({ pubkey }),
@@ -257,7 +277,7 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
         is_updated: true,
       });
     }
-    
+
     let currentLevel = getCurrentLevel(userLevels.xp);
     let currentVolumeTier = tiers.find((tier) => {
       if (
@@ -348,8 +368,9 @@ router.get("/api/v1/yaki-chest/stats", auth_user, async (req, res) => {
       return res.send({
         user_stats: { pubkey, xp: 0, actions: [], last_updated },
         platform_standards: levels,
+        tiers,
       });
-    res.send({ user_stats: userLevels, platform_standards: levels });
+    res.send({ user_stats: userLevels, platform_standards: levels, tiers });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
@@ -476,14 +497,15 @@ const actionToUpdate = (
       let action_to_update = {
         current_points:
           user_action.current_points +
-          action_details.points[0] * currentVolumeTier,
+          action_details.points[action_details.point_index] * currentVolumeTier,
         count: user_action.count + 1,
         last_updated,
         all_time_points:
           user_action.all_time_points +
-          action_details.points[0] * currentVolumeTier,
+          action_details.points[action_details.point_index] * currentVolumeTier,
         extra: {},
-        points: action_details.points[0] * currentVolumeTier,
+        points:
+          action_details.points[action_details.point_index] * currentVolumeTier,
       };
       return action_to_update;
     }
@@ -492,25 +514,29 @@ const actionToUpdate = (
     let action_to_update = {
       current_points:
         user_action.current_points +
-        action_details.points[0] * currentVolumeTier,
+        action_details.points[action_details.point_index] * currentVolumeTier,
       count: 0,
       last_updated,
       all_time_points:
         user_action.all_time_points +
-        action_details.points[0] * currentVolumeTier,
+        action_details.points[action_details.point_index] * currentVolumeTier,
       extra: {},
-      points: action_details.points[0] * currentVolumeTier,
+      points:
+        action_details.points[action_details.point_index] * currentVolumeTier,
     };
     return action_to_update;
   }
   let new_action = {
     action: action_key,
-    current_points: action_details.points[0] * currentVolumeTier,
+    current_points:
+      action_details.points[action_details.point_index] * currentVolumeTier,
     count: action_details.count > 0 ? 1 : 0,
     extra: {},
-    all_time_points: action_details.points[0] * currentVolumeTier,
+    all_time_points:
+      action_details.points[action_details.point_index] * currentVolumeTier,
     last_updated,
-    points: action_details.points[0] * currentVolumeTier,
+    points:
+      action_details.points[action_details.point_index] * currentVolumeTier,
   };
   return new_action;
 };

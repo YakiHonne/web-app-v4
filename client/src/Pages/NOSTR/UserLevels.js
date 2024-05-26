@@ -31,6 +31,8 @@ let chart_ = [
   { action: "comment_post", all_time_points: 0, last_updated: null },
 ];
 
+let tiersIcons = ["bronze-tier", "silver-tier", "gold-tier", "bronze-tier"];
+
 const getCooldown = (userLastUpdated, cooldownTime) => {
   let currentTime = Math.floor(new Date().getTime() / 1000);
   let diffTime = userLastUpdated + cooldownTime - currentTime;
@@ -38,6 +40,14 @@ const getCooldown = (userLastUpdated, cooldownTime) => {
   if (diffTime <= 0) return cooldown;
 
   return Math.ceil(diffTime / 60);
+};
+const orderChart = (array) => {
+  let tempArray = [];
+  for (let chart of chart_) {
+    let el = array.find((item) => item.action === chart.action);
+    tempArray.push(el);
+  }
+  return tempArray;
 };
 
 export default function UserLevels() {
@@ -48,6 +58,9 @@ export default function UserLevels() {
   const [headerStats, setHeaderStats] = useState(false);
   const [maxValueInChart, setMaxValueInChart] = useState(0);
   const [chart, setChart] = useState([]);
+  const [tiers, setTiers] = useState([]);
+  const [currentTier, setCurrentTier] = useState("");
+  const [showTier, setShowTier] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,7 +72,7 @@ export default function UserLevels() {
           setIsLoaded(false);
           return;
         }
-        let { user_stats, platform_standards } = data.data;
+        let { user_stats, platform_standards, tiers } = data.data;
         let xp = user_stats.xp;
         let currentLevel = getCurrentLevel(xp);
         let nextLevel = currentLevel + 1;
@@ -91,6 +104,18 @@ export default function UserLevels() {
             user_stat,
           };
         });
+        let currentTierDisplayName = tiers.find((tier) => {
+          if (
+            tier.max > -1 &&
+            tier.min <= currentLevel &&
+            tier.max >= currentLevel
+          ) {
+            return tier;
+          }
+          if (tier.max == -1 && tier.min <= currentLevel) return tier;
+        }).display_name;
+        setTiers(tiers);
+        setCurrentTier(currentTierDisplayName);
         setOneTimeRewardStats(
           tempStats.filter((item) => item.cooldown === 0 && item.count > 0)
         );
@@ -100,17 +125,19 @@ export default function UserLevels() {
               item.cooldown > 0 || (item.cooldown === 0 && item.count === 0)
           )
         );
-        setChart([
-          ...tempChart,
-          ...chart_
-            .filter((action) => !tempActionKeys.includes(action.action))
-            .map((action) => {
-              return {
-                ...action,
-                display_name: platform_standards[action.action].display_name,
-              };
-            }),
-        ]);
+        setChart(
+          orderChart([
+            ...tempChart,
+            ...chart_
+              .filter((action) => !tempActionKeys.includes(action.action))
+              .map((action) => {
+                return {
+                  ...action,
+                  display_name: platform_standards[action.action].display_name,
+                };
+              }),
+          ])
+        );
         setMaxValueInChart(max);
         setHeaderStats({
           xp,
@@ -163,6 +190,7 @@ export default function UserLevels() {
           content={"Check how you're doing with Yakihonne's points system"}
         />
       </Helmet>
+      {showTier && <TierDemo tier={showTier} exit={() => setShowTier(false)} />}
       <div className="fit-container fx-centered">
         <SidebarNOSTR />
         <ArrowUp />
@@ -193,6 +221,7 @@ export default function UserLevels() {
                               backgroundColor: "var(--c1-side)",
                               border: "none",
                               columnGap: "24px",
+                              overflow: "visible",
                             }}
                           >
                             <div>
@@ -217,18 +246,40 @@ export default function UserLevels() {
                                   </h3>
                                 </div>
                                 <div className="fx-centered ">
-                                  <div
-                                    className="gold-tier"
-                                    style={{ width: "28px" }}
-                                  ></div>
-                                  <div
-                                    className="silver-tier"
-                                    style={{ width: "28px" }}
-                                  ></div>
-                                  <div
-                                    className="bronze-tier"
-                                    style={{ width: "28px" }}
-                                  ></div>
+                                  {tiers.map((tier, index) => {
+                                    return (
+                                      <div
+                                        className="round-icon-tooltip"
+                                        data-tooltip={tier.display_name}
+                                        onClick={() =>
+                                          setShowTier({
+                                            ...tier,
+                                            currentLevel:
+                                              headerStats.currentLevel,
+                                            image: tiersIcons[index],
+                                            locked: !(
+                                              currentTier === tier.display_name
+                                            ),
+                                          })
+                                        }
+                                      >
+                                        <div
+                                          style={{
+                                            width: "28px",
+                                            filter:
+                                              currentTier === tier.display_name
+                                                ? ""
+                                                : "grayscale(100%)",
+                                            opacity:
+                                              currentTier === tier.display_name
+                                                ? 1
+                                                : 0.5,
+                                          }}
+                                          className={tiersIcons[index]}
+                                        ></div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
 
@@ -654,3 +705,55 @@ export default function UserLevels() {
     </div>
   );
 }
+
+const TierDemo = ({ tier, exit }) => {
+  return (
+    <div className="fixed-container fx-centered box-pad-h">
+      <div
+        className="box-pad-h box-pad-v sc-s fx-centered fx-col fx-start-h"
+        style={{ width: "min(100%, 400px)" }}
+      >
+        <div className="box-pad-h-s box-pad-v-s">
+          <div className={tier.image} style={{ width: "180px" }}></div>
+        </div>
+        <div className="fx-centered fx-col  fit-container">
+          {/* <h3>{tier.display_name}</h3> */}
+          <div
+            className="fx-centered fx-col fit-container"
+            style={{ rowGap: "5px" }}
+          >
+            {!tier.locked && <p style={{ fontSize: "30px" }}>🎉</p>}
+            {tier.locked && (
+              <div className="round-icon">
+                <p style={{ fontSize: "30px", filter: "grayscale(100%)" }}>
+                  🔒
+                </p>
+              </div>
+            )}
+
+            {!tier.locked && <p className="green-c">Unlocked</p>}
+            {tier.locked && <p className="gray-c">Locked</p>}
+            <h3>Level {tier.min}</h3>
+            {tier.locked && (
+              <div className="box-pad-h box-pad-v-s fit-container fx-centered fx-col">
+                <ProgressBar
+                  total={tier.min}
+                  current={tier.currentLevel}
+                  full={true}
+                />
+                <p className="orange-c p-medium">
+                  {tier.min - tier.currentLevel} levels required
+                </p>
+              </div>
+            )}
+          </div>
+          <p className="gray-c p-centered box-marg-s">{tier.description}</p>
+
+          <button className="btn btn-normal btn-full" onClick={exit}>
+            Got it!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -8,6 +8,7 @@ import axiosInstance from "../Helpers/HTTP_Client";
 const pool = new SimplePool();
 
 const action_key_from_kind = {
+  3: "follow_yaki",
   10002: "relays_setup",
   30078: "topics_setup",
   1: "comment_post",
@@ -41,6 +42,7 @@ export default function Publishing() {
     setPublishing,
     updateYakiChestStats,
     setUpdatedActionFromYakiChest,
+    nostrUser,
   } = useContext(Context);
   const [showDetails, setShowDetails] = useState(false);
   const [startPublishing, setStartPublishing] = useState(false);
@@ -125,7 +127,6 @@ export default function Publishing() {
     try {
       Promise.allSettled(pool.publish(relays, event))
         .then((results) => {
-          console.log(results);
           results.forEach((result, index) => {
             if (result.status === "fulfilled" && result.value === "") {
               setFailedRelays((prev) => {
@@ -189,7 +190,9 @@ export default function Publishing() {
           updateYakiChestStats(user_stats);
         }
       }
-    } catch (err) {}
+    } catch (err) {
+      console.log(err)
+    }
   };
 
   const getActionKey = () => {
@@ -213,6 +216,15 @@ export default function Publishing() {
     }
     if (kind === 7) {
       return action_key_from_kind[getKind7FromTags(content, tags)];
+    }
+    if (kind === 3) {
+      let checkYakiInFollowings = nostrUser.following.find(
+        (item) =>
+          item[1] ===
+          "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
+      );
+      if (checkYakiInFollowings) return action_key_from_kind[3];
+      if (!checkYakiInFollowings) return false;
     }
     if (kind === 0) {
       let updatedUserMeta = getUpdatedMetaProperty(content);

@@ -3,133 +3,133 @@ const levels = {
     points: [50],
     count: 1,
     cooldown: 0,
-    display_name: "Account creation"
+    display_name: "Account creation",
   },
   username: {
     points: [5],
     count: 5,
     cooldown: 0,
-    display_name: "Setting a username"
+    display_name: "Setting a username",
   },
   bio: {
     points: [5],
     count: 5,
     cooldown: 0,
-    display_name: "Setting a bio"
+    display_name: "Setting a bio",
   },
   profile_picture: {
     points: [5],
     count: 5,
     cooldown: 0,
-    display_name: "Setting a profile picture"
+    display_name: "Setting a profile picture",
   },
   cover: {
     points: [5],
     count: 5,
     cooldown: 0,
-    display_name: "Setting a profile cover"
+    display_name: "Setting a profile cover",
   },
   nip05: {
     points: [5],
     count: 3,
     cooldown: 0,
-    display_name: "Using a nip05"
+    display_name: "Using a nip05",
   },
   luds: {
     points: [15],
     count: 3,
     cooldown: 0,
-    display_name: "Using a lightning address"
+    display_name: "Using a lightning address",
   },
   relays_setup: {
     points: [10],
     count: 1,
     cooldown: 0,
-    display_name: "Setting favorite relays"
+    display_name: "Setting favorite relays",
   },
   topics_setup: {
     points: [10],
     count: 1,
     cooldown: 0,
-    display_name: "Choosing favorite topics"
+    display_name: "Choosing favorite topics",
   },
   follow_yaki: {
     points: [30],
     count: 1,
     cooldown: 0,
-    display_name: "Following Yakihonne official account"
+    display_name: "Following Yakihonne official account",
   },
   flashnews_post: {
     points: [15],
     count: 0,
     cooldown: 0,
-    display_name: "Posting flash news"
+    display_name: "Posting flash news",
   },
   un_write: {
     points: [2],
     count: 0,
     cooldown: 3600,
-    display_name: "Uncensored notes writing"
+    display_name: "Uncensored notes writing",
   },
   un_rate: {
     points: [1],
     count: 0,
     cooldown: 3600,
-    display_name: "Uncensored notes rating"
+    display_name: "Uncensored notes rating",
   },
   curation_post: {
     points: [2],
     count: 0,
     cooldown: 7200,
-    display_name: "Posting curations"
+    display_name: "Posting curations",
   },
   article_post: {
     points: [4],
     count: 0,
     cooldown: 3600,
-    display_name: "Posting articles" 
+    display_name: "Posting articles",
   },
   article_draft: {
     points: [2],
     count: 0,
     cooldown: 3600,
-    display_name: "Article drafts"
+    display_name: "Article drafts",
   },
   video_post: {
     points: [3],
     count: 0,
     cooldown: 7200,
-    display_name: "Posting videos"
+    display_name: "Posting videos",
   },
   bookmark: {
     points: [2],
     count: 0,
     cooldown: 0,
-    display_name: "Bookmarking"
+    display_name: "Bookmarking",
   },
   zap: {
     points: [1, 5, 10, 20],
     count: 0,
     cooldown: 0,
-    display_name: "Zapping"
+    display_name: "Zapping",
   },
   upvote: {
     points: [2],
     count: 0,
     cooldown: 0,
-    display_name: "Upvoting posts"
+    display_name: "Upvoting posts",
   },
   downvote: {
     points: [2],
     count: 0,
     cooldown: 0,
-    display_name: "Downvoting posts"
+    display_name: "Downvoting posts",
   },
   comment_post: {
     points: [2],
     count: 0,
     cooldown: 900,
-    display_name: "Posting comments"
+    display_name: "Posting comments",
   },
 };
 const actions_keys = [
@@ -151,7 +151,10 @@ const actions_keys = [
   "article_draft",
   "video_post",
   "bookmark",
-  "zap",
+  "zap-1",
+  "zap-20",
+  "zap-60",
+  "zap-100",
   "upvote",
   "downvote",
   "comment_post",
@@ -159,26 +162,37 @@ const actions_keys = [
 
 const tiers = [
   {
-    min: 0,
+    min: 1,
     max: 50,
-    volume: 1
+    volume: 1,
+    display_name: "Bronze",
+    description:
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
   },
   {
     min: 51,
     max: 100,
-    volume: 2
+    volume: 2,
+    display_name: "Silver",
+    description:
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
   },
   {
     min: 101,
     max: 500,
-    volume: 3
+    volume: 3,
+    display_name: "Gold",
+    description:
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
   },
   {
     min: 501,
     max: -1,
-    volume: 4
+    volume: 4,
+    display_name: "Platinum",
+    description:
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
   },
-
-]
+];
 
 module.exports = { levels, actions_keys, tiers };
