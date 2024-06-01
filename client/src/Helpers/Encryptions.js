@@ -132,14 +132,14 @@ const getParsedAuthor = (data) => {
   return tempAuthor;
 };
 const getParsed3000xContent = (tags) => {
-  
   try {
     let content = {
-      title: "",
+      title: "Untitled",
       description: "",
       image: "",
       published_at: "",
       d: "",
+      client: "",
       items: [],
     };
     for (let tag of tags) {
@@ -158,6 +158,14 @@ const getParsed3000xContent = (tags) => {
       if (tag[0] === "published_at") {
         content.published_at = tag[1];
       }
+      if (tag[0] === "client") {
+        
+        if (tag.length >= 3 && tag[2].includes("31990")) {
+          content.client = tag[2];
+        }
+        if ((tag.length >= 3 && !tag[2].includes("31990")) || tag.length < 3)
+          content.client = tag[1];
+      }
       if (
         tag[0] === "a" ||
         tag[0] === "e" ||
@@ -168,11 +176,11 @@ const getParsed3000xContent = (tags) => {
       }
     }
     if (
-      !content.image 
+      !content.image
       // !/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg))/i.test(content.image)
     )
       content.image = getImagePlaceholder();
-      
+
     return content;
   } catch {
     return false;
@@ -312,31 +320,34 @@ const decrypt04 = async (event, nostrkeys) => {
 
 const unwrapGiftWrap = async (event, secret) => {
   try {
-   
-    let decryptedEvent13 = secret ? nip44.v2.decrypt(
-      event.content,
-      nip44.v2.utils.getConversationKey(secret, event.pubkey)
-    ) : await window.nostr.nip44.decrypt(event.pubkey, event.content);
-      
+    let decryptedEvent13 = secret
+      ? nip44.v2.decrypt(
+          event.content,
+          nip44.v2.utils.getConversationKey(secret, event.pubkey)
+        )
+      : await window.nostr.nip44.decrypt(event.pubkey, event.content);
+
     let { pubkey, content } = JSON.parse(decryptedEvent13);
-  
-    let decryptedEvent14 = secret ? nip44.v2.decrypt(
-      content,
-      nip44.v2.utils.getConversationKey(secret, pubkey)
-    ): await window.nostr.nip44.decrypt(pubkey,content);
+
+    let decryptedEvent14 = secret
+      ? nip44.v2.decrypt(
+          content,
+          nip44.v2.utils.getConversationKey(secret, pubkey)
+        )
+      : await window.nostr.nip44.decrypt(pubkey, content);
     return JSON.parse(decryptedEvent14);
-  } catch (err){
-    console.log(err)
+  } catch (err) {
+    console.log(err);
     return false;
   }
 };
 
 const encodeBase64URL = (string) => {
   return btoa(string)
-  .replace(/\+/g, '-')
-  .replace(/\//g, '_')
-  .replace(/=+$/, '');
-}
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+};
 
 export {
   getBech32,
@@ -361,6 +372,5 @@ export {
   bytesTohex,
   decrypt04,
   unwrapGiftWrap,
-  encodeBase64URL
-
+  encodeBase64URL,
 };

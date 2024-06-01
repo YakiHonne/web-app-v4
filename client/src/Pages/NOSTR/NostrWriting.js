@@ -116,23 +116,6 @@ export default function NostrWriting() {
     }
   };
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       console.log(post_id);
-  //       let sub = pool.get(nostrUser.relays, [{ kinds: "30023" }]);
-  //       let relaysForEvent = pool.seenOn(post_id);
-
-  //       setSeenOn(relaysForEvent);
-  //       console.log(relaysForEvent);
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   };
-
-  //   if (post_id) fetchData();
-  // }, [post_id]);
-
   const execute = () => {
     return new Promise((resolve, reject) => {
       const input = document.createElement("input");
@@ -659,7 +642,6 @@ export default function NostrWriting() {
                         </div>
                       </>
                     )}
-
                     {!nostrKeys.sec && !nostrKeys.ext && (
                       <PagePlaceholder page={"nostr-unauthorized"} />
                     )}

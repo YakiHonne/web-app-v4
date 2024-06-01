@@ -16,7 +16,7 @@ export default function ToPublishDraftsNOSTR({
   tags,
   edit = false,
   exit,
-  warning = false
+  warning = false,
 }) {
   const { setToast, nostrKeys, nostrUser, setToPublish } = useContext(Context);
   const navigateTo = useNavigate();
@@ -32,17 +32,27 @@ export default function ToPublishDraftsNOSTR({
       if (relaysToPublish.length === 0) return;
       setIsLoading(true);
       let tags = [
-        ["client", "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747"],
+        [
+          "client",
+          "Yakihonne",
+          "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+        ],
         ["published_at", `${Date.now()}`],
         ["d", edit || nanoid()],
         ["image", ""],
         ["title", postTitle],
         ["summary", ""],
       ];
-      setToPublish({ nostrKeys: nostrKeys, kind: kind, content: postContent, tags: tags, allRelays: relaysToPublish });
-      navigateTo("/my-articles")
+      setToPublish({
+        nostrKeys: nostrKeys,
+        kind: kind,
+        content: postContent,
+        tags: tags,
+        allRelays: relaysToPublish,
+      });
+      navigateTo("/my-articles");
       exit();
-      return
+      return;
       // let temPublishingState = await publishPost(
       //   nostrKeys,
       //   kind,
@@ -50,7 +60,6 @@ export default function ToPublishDraftsNOSTR({
       //   tags,
       //   relaysToPublish
       // );
-
 
       // setIsLoading(false);
       // if (!temPublishingState) {
@@ -122,10 +131,15 @@ export default function ToPublishDraftsNOSTR({
               (for more custom relays, check your settings)
             </p>
           </div>
-          {warning && <div className="sc-s-18 box-pad-v-s box-pad-h-s">
-            <p className="orange-c p-medium p-centered">Warning</p>
-            <p className="gray-c p-medium p-centered">Your article contains HTML elements which most likely will not be rendered on some clients or platforms.</p>
-          </div>}
+          {warning && (
+            <div className="sc-s-18 box-pad-v-s box-pad-h-s">
+              <p className="orange-c p-medium p-centered">Warning</p>
+              <p className="gray-c p-medium p-centered">
+                Your article contains HTML elements which most likely will not
+                be rendered on some clients or platforms.
+              </p>
+            </div>
+          )}
           <div
             className="fit-container fx-centered fx-wrap"
             style={{ maxHeight: "40vh", overflow: "scroll" }}

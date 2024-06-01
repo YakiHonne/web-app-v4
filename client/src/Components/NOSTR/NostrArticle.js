@@ -13,6 +13,7 @@ import {
   filterRelays,
   getBolt11,
   getEmptyNostrUser,
+  getParsed3000xContent,
   getZapper,
 } from "../../Helpers/Encryptions";
 import Markdown from "markdown-to-jsx";
@@ -155,12 +156,32 @@ export default function NostrArticle() {
                 "#d": [naddrData.identifier],
               },
               {
+                kinds: [30004],
+                "#a": [`30023:${naddrData.pubkey}:${naddrData.identifier}`],
+              },
+              {
                 kinds: [0, 10002],
                 authors: [naddrData.pubkey],
               },
             ],
             {
               onevent(event) {
+                if (event.kind === 30004) {
+                  setCurationsOf((prev) => {
+                    let parsedEvent = getParsed3000xContent(event.tags);
+                    parsedEvent.naddr = nip19.naddrEncode({
+                      identifier: parsedEvent.d,
+                      pubkey: event.pubkey,
+                      kind: 30004,
+                    });
+
+                    let check_cur = prev.find(
+                      (cur) => cur.title === parsedEvent.title
+                    );
+                    if (!check_cur) return [...prev, parsedEvent];
+                    else return prev;
+                  });
+                }
                 if (event.kind === 10002) {
                   authorsRelay = Array.from(
                     event.tags
@@ -329,10 +350,17 @@ export default function NostrArticle() {
       if (tag[0] === "image") tempPost.image = tag[1];
       if (tag[0] === "title") tempPost.title = tag[1];
       if (tag[0] === "summary") tempPost.description = tag[1];
-      if (tag[0] === "client") tempPost.client = tag[1];
+      if (tag[0] === "client") {
+        if (tag.length >= 3 && tag[2].includes("31990")) {
+          tempPost.client = tag[2];
+        }
+        if ((tag.length >= 3 && !tag[2].includes("31990")) || tag.length < 3)
+          tempPost.client = tag[1];
+      }
       if (tag[0] === "t") tags.push(tag[1]);
       if (tag[0] === "d") d = tag[1];
     }
+    console.log(data.tags);
     tempPost.tags = Array.from(tags);
     tempPost.d = d;
     tempPost.author_pubkey = data.pubkey;
@@ -1073,10 +1101,69 @@ export default function NostrArticle() {
                     backgroundColor: "var(--c1-side)",
                     border: "none",
                     rowGap: "16px",
+                  }}
+                >
+                  <p className="gray-c">Related curations</p>
+                  <div className="fx-centered fx-wrap fit-container">
+                    {curationsOf.map((post) => {
+                      return (
+                        <Link
+                          className="fit-container fx-scattered"
+                          key={post.id}
+                          to={`/curations/${post.naddr}`}
+                          target="_blank"
+                        >
+                          <div className="fx-centered">
+                            {post.image && (
+                              <div
+                                className=" bg-img cover-bg sc-s-18 "
+                                style={{
+                                  backgroundImage: `url(${post.image})`,
+                                  minWidth: "24px",
+                                  aspectRatio: "1/1",
+                                  borderRadius: "var(--border-r-50)",
+                                  border: "none",
+                                }}
+                              ></div>
+                            )}
+                            <div>
+                              <p className="orange-c p-one-line">{post.title}</p>
+                              {/* <p className="gray-c p-medium">
+                                <Date_
+                                  toConvert={new Date(post.published_at * 1000)}
+                                />
+                              </p> */}
+                            </div>
+                          </div>
+                          <div className="share-icon"></div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  {curationsOf.length === 0 && isLoading && (
+                    <div
+                      style={{ height: "40vh" }}
+                      className="fit-container fx-centered"
+                    >
+                      <LoadingDots />
+                    </div>
+                  )}
+                  {curationsOf.length === 0 && !isLoading && (
+                    <p className="gray-c p-medium p-italic">
+                      This article does not belong to any curation.
+                    </p>
+                  )}
+                </div>
+                <div
+                  className="extras-homepage fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-h-m box-pad-v-m sc-s-18"
+                  style={{
+                    backgroundColor: "var(--c1-side)",
+                    border: "none",
+                    rowGap: "16px",
                     minHeight: "20vh",
                   }}
                 >
-                  <h4>Read also</h4>
+                  <p className="gray-c">Read also</p>
                   <div className="fx-centered fx-wrap fit-container">
                     {readMore.map((post) => {
                       return (

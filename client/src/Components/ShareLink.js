@@ -83,17 +83,17 @@ export default function ShareLink({
     fetchData();
   }, []);
 
-  const copyLink = (toCopy) => {
+  const copyLink = (toCopy, type = "URL") => {
     navigator.clipboard.writeText(toCopy);
     setToast({
       type: 1,
-      desc: `URL was copied! 👏`,
+      desc: `${type} was copied! 👏`,
     });
   };
   const handleSharing = async (e) => {
     e.stopPropagation();
     let isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    let isTouchScreen = window.matchMedia("(pointer: coarse)").matches
+    let isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
     if (navigator.share && isTouchScreen) {
       setIsMobile(true);
       setShowSharing(true);
@@ -232,6 +232,13 @@ export default function ShareLink({
                       <div className="link-24 "></div>
                     </div>
                   )}
+                  <div
+                    className="icon-tooltip"
+                    data-tooltip="Copy n*"
+                    onClick={() => copyLink(nostrURL.split("nostr:")[1], "n*")}
+                  >
+                    <div className="copy-24"></div>
+                  </div>
                 </>
               )}
             </div>
@@ -406,7 +413,10 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                       className="fit-container fx-centered box-pad-h-m box-pad-v-s"
                       style={{ rowGap: "0px" }}
                     >
-                      <p className="p-medium p-centered" style={{ color: "white" }}>
+                      <p
+                        className="p-medium p-centered"
+                        style={{ color: "white" }}
+                      >
                         Help us provide more decentralized insights to review
                         this flash news.
                       </p>
@@ -636,7 +646,11 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
     );
   if ([30023, 34235, 30004].includes(kind))
     return (
-      <div className="box-pad-h box-pad-v fx-centered fx-col" id="to-print" style={{maxHeight: "70dvh"}}>
+      <div
+        className="box-pad-h box-pad-v fx-centered fx-col"
+        id="to-print"
+        style={{ maxHeight: "70dvh" }}
+      >
         <div
           className="fx-centered sc-s-18"
           style={{

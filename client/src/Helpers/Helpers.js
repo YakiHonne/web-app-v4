@@ -218,8 +218,15 @@ const getNoteTree = async (note, is_important = false) => {
         //   }
         // });
       }
-    } else if (el.includes("nostr:")) {
-      const nip19add = el.split("nostr:")[1];
+    } else if (
+      el.includes("nostr:") ||
+      el.includes("naddr") ||
+      el.includes("nprofile") ||
+      el.includes("npub") ||
+      el.includes("nevent")
+    ) {
+      const nip19add = el.replace("nostr:", "").replace("@", "").replace(".", "").replace(",", "");
+      // const nip19add = el.split("nostr:")[1].replace(".", "").replace(",", "");
       const url = getLinkFromAddr(nip19add);
       finalTree.push(
         <Link
@@ -281,6 +288,7 @@ const getLinkFromAddr = (addr) => {
     return addr;
   }
 };
+
 // const getLinkFromAddr = (addr) => {
 //   try {
 //     if (addr.includes("naddr")) {
@@ -322,7 +330,7 @@ const getNIP21FromURL = (url) => {
 };
 
 const getComponent = (children) => {
-  if(!children) return <></>
+  if (!children) return <></>;
   let res = [];
   for (let i = 0; i < children.length; i++) {
     if (typeof children[i] === "string") {

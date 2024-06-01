@@ -28,14 +28,7 @@ const randomColors = Array(100)
   });
 
 export default function NostrMyCurations() {
-  const {
-    nostrKeys,
-    nostrUser,
-    nostrUserLoaded,
-    setToast,
-    setToPublish,
-    isPublishing,
-  } = useContext(Context);
+  const { nostrKeys, nostrUser, nostrUserLoaded } = useContext(Context);
   const { state } = useLocation();
   const navigateTo = useNavigate();
   const [curations, setCurations] = useState([]);
@@ -230,9 +223,14 @@ export default function NostrMyCurations() {
             setShowAddCuration(false);
             setCurationToEdit(false);
           }}
-          curation={{...curationToEdit.curation, kind: curationToEdit.kind}}
+          curation={{ ...curationToEdit.curation, kind: curationToEdit.kind }}
           tags={curationToEdit.tags}
-          relaysToPublish={curationToEdit.relays}
+          relaysToPublish={
+            curationToEdit.relays ||
+            (activeRelay == ""
+              ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
+              : [activeRelay])
+          }
         />
       )}
       {postToDelete && (

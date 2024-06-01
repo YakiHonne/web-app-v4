@@ -105,7 +105,7 @@ export default function UN({
   setTimestamp,
   state = "nmh",
   action = true,
-  scaled = false
+  scaled = false,
 }) {
   const { nostrUser, nostrKeys, setToPublish, setToast } = useContext(Context);
   const [content, setContent] = useState("");
@@ -150,7 +150,7 @@ export default function UN({
   useEffect(() => {
     const parseContent = async () => {
       let res = await getNoteTree(data.content);
-      setContent(res)
+      setContent(res);
     };
     parseContent();
   }, [data]);
@@ -231,7 +231,7 @@ export default function UN({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec)
+        event = finalizeEvent(event, nostrKeys.sec);
       }
 
       setToPublish({
@@ -283,7 +283,7 @@ export default function UN({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec)
+        event = finalizeEvent(event, nostrKeys.sec);
       }
 
       setToPublish({
@@ -409,7 +409,9 @@ export default function UN({
             )}
           </div>
           <div
-            className={`fx-centered fx-start-h fx-wrap ${scaled ? "p-medium" : ""}`}
+            className={`fx-centered fx-start-h fx-wrap ${
+              scaled ? "p-medium" : ""
+            }`}
             style={{ rowGap: 0, columnGap: "4px" }}
           >
             {content}
@@ -596,16 +598,18 @@ export default function UN({
                     : "Rated not helpful for"
                 }
               ></div>
-              <div className="fx-centered fx-start-h fx-wrap" style={{columnGap: "8px", rowGap: 0}}>
-
-              {sealedCauses.map((cause, index) => {
-                return (
-                  <Fragment key={`${cause}-${index}`}>
-                    <p className={scaled ? "p-small" : "p-medium"}>{cause}</p>
-                    {index + 1 < sealedCauses.length && <span>&#x2022;</span>}
-                  </Fragment>
-                );
-              })}
+              <div
+                className="fx-centered fx-start-h fx-wrap"
+                style={{ columnGap: "8px", rowGap: 0 }}
+              >
+                {sealedCauses.map((cause, index) => {
+                  return (
+                    <Fragment key={`${cause}-${index}`}>
+                      <p className={scaled ? "p-small" : "p-medium"}>{cause}</p>
+                      {index + 1 < sealedCauses.length && <span>&#x2022;</span>}
+                    </Fragment>
+                  );
+                })}
               </div>
             </div>
           </>

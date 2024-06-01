@@ -164,6 +164,7 @@ export default function NostrSettings() {
       });
       return;
     }
+    saveInKind10002()
     setSelectedTab("");
   };
 

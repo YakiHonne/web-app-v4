@@ -37,6 +37,7 @@ import { getAuthPubkeyFromNip05, getVideoContent } from "../../Helpers/Helpers";
 import ShareLink from "../ShareLink";
 import Footer from "../Footer";
 import VideosPreviewCards from "./VideosPreviewCards";
+import CheckNOSTRClient from "./CheckNOSTRClient";
 const pool = new SimplePool();
 
 const filterRootComments = (all) => {
@@ -179,7 +180,6 @@ export default function NostrCuration() {
                   ],
                   {
                     onevent(article) {
-                    
                       articles.push(article);
                       setArticlesOnCuration((_articles) => {
                         let post =
@@ -311,7 +311,6 @@ export default function NostrCuration() {
             } else {
               return tempArticle;
             }
-            
           })
         );
 
@@ -394,7 +393,7 @@ export default function NostrCuration() {
       d,
       naddr,
       artURL: naddr,
-      kind: 30023
+      kind: 30023,
     };
   };
 
@@ -578,7 +577,6 @@ export default function NostrCuration() {
     }
   };
 
-  
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
@@ -677,6 +675,16 @@ export default function NostrCuration() {
                           Last modified{" "}
                           <Date_ toConvert={curationDet.modified_date} />
                         </p>
+                        <p className="gray-c p-medium">|</p>
+                        <p className="gray-c">
+                          Posted from{" "}
+                          <span className="orange-c">
+                            {" "}
+                            <CheckNOSTRClient
+                              client={curationDet.client}
+                            />{" "}
+                          </span>
+                        </p>
                       </div>
                       <h3>{curationDet.title}</h3>
                       <p
@@ -686,19 +694,18 @@ export default function NostrCuration() {
                         {curationDet.description}
                       </p>
                     </div>
-             
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip={"Bookmark curation"}
-                      >
-                        <SaveArticleAsBookmark
-                          pubkey={curationDet.naddrData.pubkey}
-                          kind={curationDet.naddrData.kind}
-                          d={curationDet.naddrData.identifier}
-                          image={curationDet.image}
-                        />
-                      </div>
-                   
+
+                    <div
+                      className="round-icon round-icon-tooltip"
+                      data-tooltip={"Bookmark curation"}
+                    >
+                      <SaveArticleAsBookmark
+                        pubkey={curationDet.naddrData.pubkey}
+                        kind={curationDet.naddrData.kind}
+                        d={curationDet.naddrData.identifier}
+                        image={curationDet.image}
+                      />
+                    </div>
                   </div>
                   <div className="fit-container fx-centered fx-start-h">
                     <div

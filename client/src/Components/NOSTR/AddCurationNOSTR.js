@@ -40,7 +40,7 @@ export default function AddCurationNOSTR({
     try {
       setIsLoading(true);
 
-      if (!selectedRelays.length) {
+      if (!selectedRelays || !selectedRelays.length) {
         setIsLoading(false);
         setToast({
           type: 3,
@@ -81,6 +81,11 @@ export default function AddCurationNOSTR({
       }
     }
     if (!checkStatus) {
+      tempTags.push([
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ]);
       tempTags.push(["published_at", `${Math.floor(Date.now() / 1000)}`]);
       tempTags.push(["d", nanoid()]);
       tempTags.push(["title", title]);
@@ -280,7 +285,11 @@ export default function AddCurationNOSTR({
               onChange={(e) => setExcerpt(e.target.value)}
               style={{ height: "100px", paddingTop: "1rem" }}
             />
-            <div className={`fx-scattered  if ifs-full ${mandatoryKind ? "if-disabled" : ""}`}>
+            <div
+              className={`fx-scattered  if ifs-full ${
+                mandatoryKind ? "if-disabled" : ""
+              }`}
+            >
               {kind === 30004 && (
                 <p className="p-medium green-c slide-left">Articles curation</p>
               )}

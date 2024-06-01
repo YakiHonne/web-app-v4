@@ -30,8 +30,7 @@ export default function BookmarksPicker({
   };
   const isBookmarked = (bookmark) => {
     return (
-      bookmark.tags.filter((item) => item[1] === itemTypes[itemType])
-        .length > 0
+      bookmark.tags.filter((item) => item[1] === itemTypes[itemType]).length > 0
     );
   };
   const bookmarkArticle = (status, bookmark) => {
@@ -61,7 +60,11 @@ export default function BookmarksPicker({
         kind: 30003,
         content: "",
         tags: [
-          ["d", bookmarkD],
+          [
+            "client",
+            "Yakihonne",
+            "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+          ][("d", bookmarkD)],
           ["image", bookmarkImg],
           ...bookmark.tags.filter((item) => {
             if (
@@ -83,7 +86,11 @@ export default function BookmarksPicker({
         kind: 30003,
         content: "",
         tags: [
-          ["d", bookmarkD],
+          [
+            "client",
+            "Yakihonne",
+            "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+          ][("d", bookmarkD)],
           ["image", bookmarkImg],
           ...bookmark.tags.filter((item) => {
             if (item[0] !== "d" && item[0] !== "image") return item;

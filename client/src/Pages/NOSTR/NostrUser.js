@@ -51,6 +51,7 @@ import Footer from "../../Components/Footer";
 import VideosPreviewCards from "../../Components/NOSTR/VideosPreviewCards";
 import LoadingDots from "../../Components/LoadingDots";
 import ShareLink from "../../Components/ShareLink";
+import InitiConvo from "../../Components/NOSTR/InitConvo";
 
 const pool = new SimplePool();
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
@@ -87,6 +88,7 @@ export default function NostrUser() {
   const [timestamp, setTimestamp] = useState(new Date().getTime());
   const [userImpact, setUserImpact] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [initConv, setInitConv] = useState(false);
   const optionsRef = useRef(null);
 
   const isMuted = useMemo(() => {
@@ -115,7 +117,7 @@ export default function NostrUser() {
           ? [
               ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
               "wss://nostr.wine",
-              "wss://nos.lol"
+              "wss://nos.lol",
             ]
           : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"];
         setIsLoaded(false);
@@ -459,6 +461,7 @@ export default function NostrUser() {
           exit={() => setShowRatingImpact(false)}
         />
       )}
+      {initConv && <InitiConvo exit={() => setInitConv(false)} receiver={id} />}
       {/* <ShareUserImg user={{ ...user, followers, following }} /> */}
       <div>
         <Helmet>
@@ -534,6 +537,12 @@ export default function NostrUser() {
                         </div>
                       </div>
                       <div className="fx-centered">
+                        <Follow
+                          toFollowKey={user.pubkey}
+                          toFollowName={user.name}
+                          setTimestamp={setTimestamp}
+                          bulkList={[]}
+                        />
                         <ZapTip
                           recipientLNURL={checkForLUDS(user.lud06, user.lud16)}
                           // recipientLNURL={user.lud06 || user.lud16}
@@ -544,12 +553,17 @@ export default function NostrUser() {
                             picture: user.picture,
                           }}
                         />
-                        <Follow
-                          toFollowKey={user.pubkey}
-                          toFollowName={user.name}
-                          setTimestamp={setTimestamp}
-                          bulkList={[]}
-                        />
+                        <div
+                          className="round-icon round-icon-tooltip"
+                          data-tooltip={`Message ${
+                            user.name || "this profile"
+                          }`}
+                          onClick={() => {
+                            setInitConv(true);
+                          }}
+                        >
+                          <div className="env-edit-24"></div>
+                        </div>
 
                         <div style={{ position: "relative" }} ref={optionsRef}>
                           <div
@@ -601,7 +615,7 @@ export default function NostrUser() {
                               <div className="fit-container fx-centered fx-start-h pointer">
                                 <ShareLink
                                   label={"Share profile"}
-                                  path={`/users/${id}`}
+                                  path={`/users/${user_id}`}
                                   title={user.display_name || user.name}
                                   description={user.about || ""}
                                   kind={0}
@@ -1340,7 +1354,7 @@ export default function NostrUser() {
 }
 
 const UserFollowers = ({ id }) => {
-  const {tempChannel, setTempChannel} = useContext(Context)
+  const { tempChannel, setTempChannel } = useContext(Context);
   const [followers, setFollowers] = useState([]);
   const [showPeople, setShowPeople] = useState(false);
   useEffect(() => {
@@ -1365,7 +1379,7 @@ const UserFollowers = ({ id }) => {
               )
                 return item;
             });
-            setTempChannel(netF)
+            setTempChannel(netF);
             return netF;
           });
         },
