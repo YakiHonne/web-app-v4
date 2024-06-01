@@ -279,8 +279,10 @@ export default function NostrHome() {
       },
     });
     if (checkTopicInList(contentFrom)?.bfs) return;
+    console.log(arts_relaysToFetchFrom)
     let sub_1 = pool.subscribeMany(arts_relaysToFetchFrom, arts_filter, {
       async onevent(event) {
+        console.log(event)
         if (![...bannedList, ...mutedList].includes(event.pubkey)) {
           let parsedEvent = onArticlesEvent(event);
           events.push(parsedEvent);
@@ -783,13 +785,13 @@ export default function NostrHome() {
         ].splice(0, 30)
       );
     }
-    if (activeRelay) pool.close([activeRelay]);
-    if (!activeRelay)
-      pool.close(
-        !nostrUser
-          ? relaysOnPlatform
-          : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-      );
+    // if (activeRelay) pool.close([activeRelay]);
+    // if (!activeRelay)
+    //   pool.close(
+    //     !nostrUser
+    //       ? relaysOnPlatform
+    //       : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
+    //   );
     setIsLoaded(true);
     setIsLoading(false);
     // relaySub.close();
@@ -797,13 +799,13 @@ export default function NostrHome() {
   const switchContentSource = (source) => {
     if (source === contentFrom) return;
 
-    if (activeRelay) pool.close([activeRelay]);
-    if (!activeRelay)
-      pool.close(
-        !nostrUser
-          ? relaysOnPlatform
-          : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-      );
+    // if (activeRelay) pool.close([activeRelay]);
+    // if (!activeRelay)
+    //   pool.close(
+    //     !nostrUser
+    //       ? relaysOnPlatform
+    //       : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
+    //   );
     if (sub1) sub1.close();
     if (sub2) sub2.close();
     if (sub3) sub3.close();
@@ -836,6 +838,8 @@ export default function NostrHome() {
     setArtsLastEventTime(undefined);
     setFnLastEventTime(undefined);
   };
+
+  // console.log(posts)
 
   const checkTopicInList = (topic) => {
     let isBFS = buzzFeedSources.find((item) => item.name === topic);
@@ -974,7 +978,7 @@ export default function NostrHome() {
                           <div className="home"></div>
                           Timeline
                         </div>
-                        <div
+                        {/* <div
                           className={`list-item fx-centered fx-shrink ${
                             contentFrom.includes("main-")
                               ? "selected-list-item"
@@ -994,7 +998,7 @@ export default function NostrHome() {
                             }}
                           ></div>
                           What's up
-                        </div>
+                        </div> */}
                         <div
                           className={`list-item fx-centered fx-shrink ${
                             contentFrom === "follows"

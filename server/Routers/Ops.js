@@ -183,6 +183,10 @@ router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
         { pubkey },
         {
           xp,
+          current_points: {
+            points: xp,
+            last_updated,
+          },
           actions,
           last_updated,
         },
@@ -193,6 +197,10 @@ router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
         is_new: true,
         actions,
         xp,
+        current_points: {
+          points: xp,
+          last_updated,
+        },
         platform_standards: levels,
       });
     }
@@ -252,31 +260,32 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       Users.findOne({ pubkey }),
     ]);
 
-    if (!userLevels) {
-      let new_action = {
-        action: action_key,
-        current_points: action_details.points[0],
-        count: action_details.count > 0 ? 1 : 0,
-        extra: {},
-        all_time_points: action_details.points[0],
-        last_updated,
-      };
-      let updated_user = await UserLevels.findOneAndUpdate(
-        { pubkey },
-        {
-          xp:
-            50 + (action_key === "new_account" ? 0 : action_details.points[0]),
-          $push: { actions: new_action },
-          last_updated,
-        },
-        { upsert: true, new: true }
-      );
-      return res.send({
-        user_stats: updated_user,
-        platform_standards: levels,
-        is_updated: true,
-      });
-    }
+    // if (!userLevels) {
+    //   let new_action = {
+    //     action: action_key,
+    //     current_points: action_details.points[0],
+    //     count: action_details.count > 0 ? 1 : 0,
+    //     extra: {},
+    //     all_time_points: action_details.points[0],
+    //     last_updated,
+    //   };
+    //   let updated_user = await UserLevels.findOneAndUpdate(
+    //     { pubkey },
+    //     {
+    //       xp:
+    //         50 + (action_key === "new_account" ? 0 : action_details.points[0]),
+    //       $push: { actions: new_action },
+    //       last_updated,
+    //     },
+    //     { upsert: true, new: true }
+    //   );
+    //   return res.send({
+    //     user_stats: updated_user,
+    //     platform_standards: levels,
+    //     is_updated: true,
+    //     tiers,
+    //   });
+    // }
 
     let currentLevel = getCurrentLevel(userLevels.xp);
     let currentVolumeTier = tiers.find((tier) => {
@@ -311,12 +320,17 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
         user_stats: userLevels,
         platform_standards: levels,
         is_updated: false,
+        tiers,
       });
 
     let updated_user = await UserLevels.findOneAndUpdate(
       { pubkey, "actions.action": action_key },
       {
         xp: userLevels.xp + action_to_update.points,
+        current_points: {
+          points: userLevels.current_points.points + action_to_update.points,
+          last_updated,
+        },
         $set: {
           "actions.$.action": action_to_update.action,
           "actions.$.current_points": action_to_update.current_points,
@@ -335,11 +349,16 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
         user_stats: updated_user,
         platform_standards: levels,
         is_updated: action_to_update,
+        tiers,
       });
     let updated_user_2 = await UserLevels.findOneAndUpdate(
       { pubkey },
       {
         xp: userLevels.xp + action_to_update.points,
+        current_points: {
+          points: userLevels.current_points.points + action_to_update.points,
+          last_updated,
+        },
         $push: { actions: action_to_update },
         last_updated,
       },
@@ -349,6 +368,7 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       user_stats: updated_user_2,
       platform_standards: levels,
       is_updated: action_to_update,
+      tiers,
     });
   } catch (err) {
     console.log(err);

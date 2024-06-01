@@ -156,6 +156,11 @@ export default function NostrUNEvent() {
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
 
+      tags.push([
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ]);
       tags.push(["e", parsedData.data.id]);
       tags.push(["l", "UNCENSORED NOTE"]);
       tags.push(["yaki_flash_news", encryptEventData(`${created_at}`)]);

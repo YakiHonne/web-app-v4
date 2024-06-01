@@ -19,8 +19,9 @@ const actionKeys = [
   "video_post",
   "bookmark",
   "zap",
-  "upvote",
-  "downvote",
+  "reaction",
+  // "upvote",
+  // "downvote",
   "comment_post",
 ];
 
@@ -35,8 +36,9 @@ const chartActionKeys = [
   "video_post",
   "bookmark",
   "zap",
-  "upvote",
-  "downvote",
+  "reaction",
+  // "upvote",
+  // "downvote",
   "comment_post",
 ];
 export { chartActionKeys, actionKeys };

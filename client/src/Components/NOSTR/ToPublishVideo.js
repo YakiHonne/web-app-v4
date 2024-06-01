@@ -72,6 +72,11 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
       }
       tags_.push(["thumb", thumbnailUrl]);
       tags_.push(["image", thumbnailUrl]);
+      tags_.push( [
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ]);
 
       setToPublish({
         nostrKeys: nostrKeys,

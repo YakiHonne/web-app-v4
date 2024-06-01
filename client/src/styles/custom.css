@@ -1888,6 +1888,22 @@ main {
     z-index: 100;
 }
 
-.tooltip-on-hover:hover .chart-bar{
-   border-color: var(--green-main);
+.tooltip-on-hover:hover .chart-bar {
+    border-color: var(--green-main);
 }
+
+.corner-icon {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform: translate(-30%, 20%);
+}
+
+.carousel .carousel-arrows {
+    display: none;
+}
+
+.carousel:hover .carousel-arrows {
+    display: flex;
+}
+

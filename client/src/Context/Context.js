@@ -274,7 +274,8 @@ const ContextProvider = ({ children }) => {
         setIsYakiChestLoaded(true);
       } catch (err) {
         console.log(err);
-        setIsYakiChestLoaded(false);
+        localStorage.removeItem("connect_yc");
+        setIsYakiChestLoaded(true);
       }
     };
     if (nostrKeys && isConnectedToYaki) fetchData();

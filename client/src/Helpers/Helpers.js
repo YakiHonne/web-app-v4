@@ -242,8 +242,15 @@ const getNoteTree = async (note, is_important = false) => {
         //   }
         // });
       }
-    } else if (el.includes("nostr:")) {
-      const nip19add = el.split("nostr:")[1];
+    } else if (
+      el.includes("nostr:") ||
+      el.includes("naddr") ||
+      el.includes("nprofile") ||
+      el.includes("npub") ||
+      el.includes("nevent")
+    ) {
+      const nip19add = el.replace("nostr:", "").replace("@", "").replace(".", "").replace(",", "");
+      // const nip19add = el.split("nostr:")[1].replace(".", "").replace(",", "");
       const url = getLinkFromAddr(nip19add);
       finalTree.push(
         <Link
@@ -305,6 +312,34 @@ const getLinkFromAddr = (addr) => {
     return addr;
   }
 };
+
+// const getLinkFromAddr = (addr) => {
+//   try {
+//     if (addr.includes("naddr")) {
+//       let data = nip19.decode(addr);
+//       return data.data.kind === 30023
+//         ? `/article/${addr}`
+//         : `/curations/${addr}`;
+//     }
+//     if (addr.includes("nprofile")) {
+//       return `/users/${addr}`;
+//     }
+//     if (addr.includes("npub")) {
+//       let hex = getHex(addr);
+//       return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
+//     }
+//     if (addr.includes("nevent")) {
+//       let data = nip19.decode(addr);
+//       return `/flashnews/${nip19.neventEncode({
+//         author: data.data.author,
+//         id: data.data.id,
+//       })}`;
+//     }
+//     return addr;
+//   } catch (err) {
+//     return addr;
+//   }
+// };
 
 const getNIP21FromURL = (url) => {
   const regex = /n(event|profile|pub|addr)([^\s\W]*)/;

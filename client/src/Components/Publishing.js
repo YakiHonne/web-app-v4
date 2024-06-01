@@ -14,8 +14,8 @@ const action_key_from_kind = {
   1: "comment_post",
   11: "flashnews_post",
   111: "un_write",
-  7: "upvote",
-  77: "downvote",
+  7: "reaction",
+  77: "reaction",
   777: "un_rate",
   30003: "bookmark",
   30004: "curation_post",
@@ -191,7 +191,7 @@ export default function Publishing() {
         }
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   };
 

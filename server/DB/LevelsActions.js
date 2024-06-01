@@ -113,18 +113,24 @@ const levels = {
     cooldown: 0,
     display_name: "Zapping",
   },
-  upvote: {
+  reaction: {
     points: [2],
     count: 0,
     cooldown: 0,
-    display_name: "Upvoting posts",
+    display_name: "Upvoting or downvote posts",
   },
-  downvote: {
-    points: [2],
-    count: 0,
-    cooldown: 0,
-    display_name: "Downvoting posts",
-  },
+  // upvote: {
+  //   points: [2],
+  //   count: 0,
+  //   cooldown: 0,
+  //   display_name: "Upvoting posts",
+  // },
+  // downvote: {
+  //   points: [2],
+  //   count: 0,
+  //   cooldown: 0,
+  //   display_name: "Downvoting posts",
+  // },
   comment_post: {
     points: [2],
     count: 0,
@@ -155,8 +161,9 @@ const actions_keys = [
   "zap-20",
   "zap-60",
   "zap-100",
-  "upvote",
-  "downvote",
+  "reaction",
+  // "upvote",
+  // "downvote",
   "comment_post",
 ];
 
@@ -166,24 +173,36 @@ const tiers = [
     max: 50,
     volume: 1,
     display_name: "Bronze",
-    description:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
+    description: [
+      "Starter Pack",
+      "1x rewards gains",
+      "Unique Bronze Tier Badge",
+      "Random SATs Lucky Draw",
+    ],
   },
   {
     min: 51,
     max: 100,
     volume: 2,
     display_name: "Silver",
-    description:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
+    description: [
+      "2x rewards gains",
+      "Unique Silver Tier Badge",
+      "Scheduled SATs Lucky Draw",
+    ],
   },
   {
     min: 101,
     max: 500,
     volume: 3,
     display_name: "Gold",
-    description:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
+    description: [
+      "3x rewards gains",
+      "Unique Gold Tier Badge",
+      "Scheduled SATs Draw",
+      "Become a Guest on The YakiHonne Podcast",
+      "High rate of content awareness"
+    ],
   },
   {
     min: 501,
@@ -191,7 +210,13 @@ const tiers = [
     volume: 4,
     display_name: "Platinum",
     description:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio at nemo exercitationem quod. Molestias architecto, sapiente nemo facere delectus"
+    [
+      "4x rewards gains",
+      "Unique Platinum Tier Badge",
+      "Scheduled SATs Draw",
+      "Exlusive Events invitations",
+      "Become a Part of YakiHonne Grants Program"
+    ]
   },
 ];
 

@@ -8,7 +8,6 @@ export default function CheckNOSTRClient({ client }) {
 
   useEffect(() => {
     try {
-      
       if (!client || client.split(":").length < 1) return;
       let pubkey = client.split(":")[1];
       let tempClient = nostrClients.find((item) => item.pubkey === pubkey);

@@ -51,6 +51,11 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
       }
     }
     if (!checkStatus) {
+      tempTags.push([
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ]);
       tempTags.push(["published_at", `${Math.floor(Date.now() / 1000)}`]);
       tempTags.push(["d", nanoid()]);
       tempTags.push(["title", title]);
@@ -130,7 +135,13 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
         <hr />
         <div className="box-pad-v-m">
           <button className="btn btn-normal" onClick={handleShowRelaysPicker}>
-            {isLoading ? <LoadingDots /> : bookmark ? <>Update bookmark</> : <>Create bookmark</>}
+            {isLoading ? (
+              <LoadingDots />
+            ) : bookmark ? (
+              <>Update bookmark</>
+            ) : (
+              <>Create bookmark</>
+            )}
           </button>
         </div>
       </section>

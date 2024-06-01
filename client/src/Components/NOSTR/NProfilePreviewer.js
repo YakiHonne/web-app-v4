@@ -16,6 +16,7 @@ export default function NProfilePreviewer({
   pubkey,
   margin = true,
   close = false,
+  showSharing = true,
   onClose,
 }) {
   const { nostrUser } = useContext(Context);
@@ -66,7 +67,7 @@ export default function NProfilePreviewer({
           </p>
         </div>
       </div>
-      {!close && (
+      {!close && showSharing &&(
         <Link to={`/users/${nip19.nprofileEncode({ pubkey })}`} target="_blank">
           <div className="share-icon-24"></div>
         </Link>

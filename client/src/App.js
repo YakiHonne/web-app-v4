@@ -49,7 +49,8 @@ import BuzzFeedSource from "./Pages/NOSTR/BuzzFeedSource";
 import UserLevels from "./Pages/NOSTR/UserLevels";
 import NostrNotes from "./Pages/NOSTR/NostrNotes";
 import UserFirsLogin from "./Components/UserFirsLogin";
-import XPEarned from "./Components/XPEarned";
+import YakiNewFeatureIntro from "./Components/YakiNewFeatureIntro";
+import YakiLevelingFeature from "./Pages/YakiLevelingFeature";
 
 function App() {
   return (
@@ -57,7 +58,7 @@ function App() {
       <Publishing />
       <ToastMessages />
       <UserFirsLogin />
-      {/* <XPEarned /> */}
+      <YakiNewFeatureIntro />
       <Router>
         <NavbarNOSTR />
         <Routes>
@@ -109,6 +110,7 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/yaki-points" element={<UserLevels />} />
+          <Route path="/points-system" element={<YakiLevelingFeature />} />
         </Routes>
       </Router>
     </ContextProvider>

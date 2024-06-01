@@ -9,6 +9,13 @@ const UserLevelsSchema = mongoose.Schema({
     type: Number,
     default: 0,
   },
+  current_points: {
+    type: Object,
+    default: {
+      points: 0,
+      last_updated: Math.floor(new Date().getTime() / 1000),
+    },
+  },
   actions: {
     type: [
       {
@@ -21,7 +28,7 @@ const UserLevelsSchema = mongoose.Schema({
           type: Number,
           default: Math.floor(new Date().getTime() / 1000),
         },
-        _id: false
+        _id: false,
       },
     ],
     default: [],

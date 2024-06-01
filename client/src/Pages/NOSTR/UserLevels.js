@@ -26,12 +26,13 @@ let chart_ = [
   { action: "video_post", all_time_points: 0, last_updated: null },
   { action: "bookmark", all_time_points: 0, last_updated: null },
   { action: "zap", all_time_points: 0, last_updated: null },
-  { action: "upvote", all_time_points: 0, last_updated: null },
-  { action: "downvote", all_time_points: 0, last_updated: null },
+  // { action: "upvote", all_time_points: 0, last_updated: null },
+  // { action: "downvote", all_time_points: 0, last_updated: null },
+  { action: "reaction", all_time_points: 0, last_updated: null },
   { action: "comment_post", all_time_points: 0, last_updated: null },
 ];
 
-let tiersIcons = ["bronze-tier", "silver-tier", "gold-tier", "bronze-tier"];
+let tiersIcons = ["bronze-tier", "silver-tier", "gold-tier", "platinum-tier"];
 
 const getCooldown = (userLastUpdated, cooldownTime) => {
   let currentTime = Math.floor(new Date().getTime() / 1000);
@@ -119,6 +120,7 @@ export default function UserLevels() {
         setOneTimeRewardStats(
           tempStats.filter((item) => item.cooldown === 0 && item.count > 0)
         );
+
         setRepeatedRewardsStats(
           tempStats.filter(
             (item) =>
@@ -141,6 +143,8 @@ export default function UserLevels() {
         setMaxValueInChart(max);
         setHeaderStats({
           xp,
+          consumablePoints: user_stats.current_points.points,
+          consumablePointsLU: user_stats.current_points.last_updated,
           currentLevel,
           nextLevel,
           toCurrentLevelPoints,
@@ -307,6 +311,61 @@ export default function UserLevels() {
                             </div>
                           </div>
                           <div
+                            className="fit-container fx-centered  fx-col sc-s-18 box-pad-h box-pad-v"
+                            style={{
+                              backgroundColor: "var(--c1-side)",
+                              border: "none",
+                              rowGap: "24px",
+                              overflow: "visible",
+                            }}
+                          >
+                            <div className="fit-container fx-scattered">
+                              <div>
+                                <div className="fx-centered fx-start-h">
+                                  <h3>
+                                    {headerStats.consumablePoints}{" "}
+                                    <span className="gray-c">
+                                      / {headerStats.xp}
+                                    </span>{" "}
+                                  </h3>
+                                  <p className="gray-c">points</p>
+                                </div>
+                              </div>
+                              <div>
+                                <button className="btn btn-gst btn-small">
+                                  What's this?
+                                </button>
+                              </div>
+                            </div>
+                            <div className="fx-centered fit-container fx-wrap">
+                              <ProgressBar
+                                full={true}
+                                total={headerStats.xp}
+                                current={headerStats.consumablePoints}
+                              />
+                              <div className="fit-container fx-scattered">
+                                <p className="gray-c p-medium">
+                                  Consumable points
+                                </p>
+                                <p className="gray-c p-medium">
+                                  Last used{" "}
+                                  {headerStats.xp ===
+                                  headerStats.consumablePoints ? (
+                                    "N/A"
+                                  ) : (
+                                    <Date_
+                                      toConvert={
+                                        new Date(
+                                          headerStats.consumablePointsLU * 1000
+                                        )
+                                      }
+                                    />
+                                  )}{" "}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div
                             className="fit-container fx-centered fx-col sc-s-18 box-pad-h box-pad-v"
                             style={{
                               backgroundColor: "var(--c1-side)",
@@ -332,7 +391,7 @@ export default function UserLevels() {
                                       className="fx-centered fx-col fx-end-h pointer tooltip-on-hover"
                                       style={{
                                         height: "100%",
-                                        width: "calc(100% / 12)",
+                                        width: `calc(100% / ${chart_.length})`,
                                         overflow: "visible",
                                       }}
                                       key={item.action}
@@ -408,7 +467,7 @@ export default function UserLevels() {
                                 })}
                               </div>
                             </div>
-                            <h4 className="gray-c">Most active</h4>
+                            <h4 className="gray-c">Engagement chart</h4>
                           </div>
                           <div
                             className="fit-container fx-centered fx-col box-marg-s"
@@ -711,7 +770,7 @@ const TierDemo = ({ tier, exit }) => {
     <div className="fixed-container fx-centered box-pad-h">
       <div
         className="box-pad-h box-pad-v sc-s fx-centered fx-col fx-start-h"
-        style={{ width: "min(100%, 400px)" }}
+        style={{ width: "min(100%, 450px)" }}
       >
         <div className="box-pad-h-s box-pad-v-s">
           <div className={tier.image} style={{ width: "180px" }}></div>
@@ -747,7 +806,15 @@ const TierDemo = ({ tier, exit }) => {
               </div>
             )}
           </div>
-          <p className="gray-c p-centered box-marg-s">{tier.description}</p>
+          <ul className="box-marg-s">
+            {tier.description.map((description, index) => {
+              return (
+                <p className="gray-c p-centered" key={index}>
+                  {description}
+                </p>
+              );
+            })}
+          </ul>
 
           <button className="btn btn-normal btn-full" onClick={exit}>
             Got it!

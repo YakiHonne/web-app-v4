@@ -11,7 +11,7 @@ import AddCurationNOSTR from "./AddCurationNOSTR";
 import PublishRelaysPicker from "./PublishRelaysPicker";
 const pool = new SimplePool();
 pool.trackRelays = true;
-export default function AddArticleToCuration({kind = 30004 ,d, exit }) {
+export default function AddArticleToCuration({ kind = 30004, d, exit }) {
   const {
     nostrKeys,
     nostrUserLoaded,
@@ -119,7 +119,13 @@ export default function AddArticleToCuration({kind = 30004 ,d, exit }) {
       });
       return;
     }
-    let tempTags = [];
+    let tempTags = [
+      [
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ],
+    ];
     let is_published_at = curation.tags.find(
       (item) => item[0] === "published_at"
     );
@@ -183,7 +189,10 @@ export default function AddArticleToCuration({kind = 30004 ,d, exit }) {
   return (
     <>
       {showAddCuration && (
-        <AddCurationNOSTR exit={() => setShowAddCuration(false)} mandatoryKind={kind}/>
+        <AddCurationNOSTR
+          exit={() => setShowAddCuration(false)}
+          mandatoryKind={kind}
+        />
       )}
       {/* {showRelaysPicker && (
         <PublishRelaysPicker

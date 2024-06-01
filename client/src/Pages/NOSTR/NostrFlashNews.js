@@ -965,6 +965,11 @@ const AddNews = ({ exit }) => {
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
       if (flag) tags.push(["important", `${created_at}`]);
+      tags.push( [
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ]);
       tags.push(["source", source]);
       tags.push(["l", "FLASH NEWS"]);
       tags.push(["yaki_flash_news", encryptEventData(`${created_at}`)]);

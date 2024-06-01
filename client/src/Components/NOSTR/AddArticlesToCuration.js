@@ -178,7 +178,13 @@ export default function AddArticlesToCuration({
       });
       return;
     }
-    let tempTags = [];
+    let tempTags = [
+      [
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ],
+    ];
     let is_published_at = tags.find((item) => item[0] === "published_at");
     let published_at = is_published_at
       ? is_published_at[1]
