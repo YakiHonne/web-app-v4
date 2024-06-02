@@ -353,8 +353,8 @@ export default function NostrUser() {
 
     for (let tag of post.tags) {
       if (tag[0] === "published_at") {
-        published_at = tag[1] || post.created_at;
-
+        published_at = parseInt(tag[1]) > 0 ? parseInt(tag[1]) :  post.created_at;
+     
         added_date =
           published_at.length > 10
             ? new Date(parseInt(published_at)).toISOString()
