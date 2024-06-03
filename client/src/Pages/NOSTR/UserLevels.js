@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import { getCurrentLevel, levelCount } from "../../Helpers/Helpers";
+import {HashLink} from 'react-router-hash-link'
 
 let chart_ = [
   { action: "flashnews_post", all_time_points: 0, last_updated: null },
@@ -29,6 +30,8 @@ let chart_ = [
   // { action: "upvote", all_time_points: 0, last_updated: null },
   // { action: "downvote", all_time_points: 0, last_updated: null },
   { action: "reaction", all_time_points: 0, last_updated: null },
+  { action: "dms", all_time_points: 0, last_updated: null },
+  { action: "user_impact", all_time_points: 0, last_updated: null },
   { action: "comment_post", all_time_points: 0, last_updated: null },
 ];
 
@@ -105,6 +108,7 @@ export default function UserLevels() {
             user_stat,
           };
         });
+
         let currentTierDisplayName = tiers.find((tier) => {
           if (
             tier.max > -1 &&
@@ -255,6 +259,7 @@ export default function UserLevels() {
                                       <div
                                         className="round-icon-tooltip"
                                         data-tooltip={tier.display_name}
+                                        key={index}
                                         onClick={() =>
                                           setShowTier({
                                             ...tier,
@@ -648,8 +653,8 @@ export default function UserLevels() {
                     Accumulate points by being active on the platform and win
                     precious awards!
                   </p>
-                  <Link target="_blank" to={"/article/to-come"}>
-                    <button className="btn btn-normal">Read article</button>
+                  <Link target="_blank" to={"/points-system"}>
+                    <button className="btn btn-normal">Read more</button>
                   </Link>
                 </div>
                 <div className=" box-pad-v-m fit-container fx-centered fx-col fx-start-v box-marg-s">
@@ -806,7 +811,7 @@ const TierDemo = ({ tier, exit }) => {
               </div>
             )}
           </div>
-          <ul className="box-marg-s">
+          <ul>
             {tier.description.map((description, index) => {
               return (
                 <p className="gray-c p-centered" key={index}>
@@ -815,7 +820,9 @@ const TierDemo = ({ tier, exit }) => {
               );
             })}
           </ul>
-
+          <HashLink to={`/points-system#${tier.display_name.toLowerCase()}`}>
+            <button className="btn btn-small btn-text-gray">see more</button>
+          </HashLink>
           <button className="btn btn-normal btn-full" onClick={exit}>
             Got it!
           </button>

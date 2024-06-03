@@ -24,7 +24,7 @@ export default function YakiNewFeatureIntro() {
     <div className="fixed-container fx-centered fx-col box-pad-h">
       <div
         className="sc-s fx-centered carousel"
-        style={{ width: "min(100%, 1000px)", columnGap: 0, maxHeight: "60vh" }}
+        style={{ width: "min(100%, 1000px)", columnGap: 0, maxHeight: "560px" }}
       >
         {/* <div
           className="carousel-arrows fx-scattered fit-container fit-height box-pad-h-s"

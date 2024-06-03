@@ -537,7 +537,7 @@ export default function NavBar() {
                   style={{ columnGap: "16px" }}
                 >
                   <UserProfilePicNOSTR
-                    size={40}
+                    size={50}
                     mainAccountUser={true}
                     allowClick={false}
                     ring={false}
@@ -593,7 +593,7 @@ export default function NavBar() {
                     </div>}
                     <ProgressCirc
                       sidebar={true}
-                      size={54}
+                      size={50}
                       percentage={
                         (yakiChestStats.inBetweenLevelPoints * 100) /
                         yakiChestStats.totalPointInLevel
@@ -622,7 +622,8 @@ export default function NavBar() {
                   className="sc-s-18 fx-centered fx-start-v fx-col pointer slide-left"
                   style={{
                     position: "absolute",
-                    bottom: "70px",
+                    bottom: "110%",
+                    left: "0",
                     // right: "-230px",
                     width: "220px",
                     height: "max-content",

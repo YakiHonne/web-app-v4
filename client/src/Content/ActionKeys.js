@@ -39,6 +39,8 @@ const chartActionKeys = [
   "reaction",
   // "upvote",
   // "downvote",
+  "dms",
+  "user_impact",
   "comment_post",
 ];
 export { chartActionKeys, actionKeys };

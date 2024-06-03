@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import screenOne from "../media/images/NewFeature/Leveling/screen-1.png";
@@ -14,6 +14,12 @@ import screenSevenTwo from "../media/images/NewFeature/Leveling/screen-7-2.png";
 import ProgressBar from "../Components/ProgressBar";
 
 export default function YakiLevelingFeature() {
+  const [showRewards, setShowRewards] = useState(
+    window.location.hash
+      ? window.location.hash.replace("#", "")
+      : false
+  );
+  
   const LevelingSystem = [
     <ScreenOne />,
     <ScreenTwo />,
@@ -21,8 +27,8 @@ export default function YakiLevelingFeature() {
     <ScreenFour />,
     <ScreenSeven />,
     <ScreenFive />,
-    <ScreenEight />,
-    <ScreenSix />,
+    // <ScreenEight />,
+    // <ScreenSix />,
   ];
   return (
     <div
@@ -62,7 +68,7 @@ export default function YakiLevelingFeature() {
             className="box-pad-h-s box-pad-v-s sc-s-18 fit-container fx-centered"
             style={{
               backgroundColor: "#202020",
-              position: "sticky",
+            //   position:  "sticky",
               border: "none",
               top: "1rem",
               zIndex: 100,
@@ -89,6 +95,256 @@ export default function YakiLevelingFeature() {
                 </div>
               );
             })}
+            <div
+              className="fit-container fit-height fx-centered box-pad-h fx-wrap sc-s fx-col"
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                padding: "2rem 1rem",
+              }}
+              id="bronze"
+            >
+              <div className="fit-container fx-col fx-centered fx-start-v"  >
+                <div className="fx-centerd fx-col fit-container"  >
+                  <div
+                    className="fx-centered fit-container pointer"
+                    style={{ columnGap: "16px" }}
+                    onClick={() =>
+                      showRewards === "bronze"
+                        ? setShowRewards(false)
+                        : setShowRewards("bronze")
+                    }
+                 
+                  >
+                    <div
+                      className="bronze-tier"
+                      style={{ minWidth: "90px", aspectRatio: "1/1" }}
+                    ></div>
+                    <div className="fx-centered fx-col fx-start-v fit-container">
+                      <h4>Bronze tier</h4>
+                      <div className="fx-centered fx-start-h">
+                        <p className="gray-c ">
+                          Starter Pack{" "}
+                          <span className="p-small gray-c">&#9679;</span>
+                          {"  "}
+                          1x rewards gains{"  "}
+                          <span className="p-small gray-c">&#9679;</span> Unique
+                          Bronze Tier Badge{" "}
+                          <span className="p-small gray-c">&#9679;</span> Random
+                          SATs Lucky Draw{"  "}
+                        </p>
+                      </div>
+                      <div style={{ width: "25%" }} className="fx-centered">
+                        <ProgressBar total={100} current={100} full={true} />
+                        <div style={{ minWidth: "max-content" }}>
+                          <p className="orange-c p-medium">(1 - 50) level</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="round-icon"
+                      style={{
+                        rotate: showRewards === "bronze" ? "-180deg" : "0deg",
+                      }}
+                    >
+                      <div className="arrow"></div>
+                    </div>
+                  </div>
+                  <div
+                    className="fit-container"
+                    style={{
+                      maxHeight: showRewards === "bronze" ? "3000px" : "0",
+                      overflow: "hidden",
+                      transition: ".5s ease-in-out",
+                    }}
+                  >
+                    {" "}
+                    <Rewards />
+                  </div>
+                  {/* {showRewards === "bronze" && <Rewards />} */}
+                </div>
+                <hr style={{ margin: "1rem auto" }}   id="silver"/>
+                <div className="fx-centerd fx-col fit-container">
+                  <div
+                    className="fx-centered fit-container pointer"
+                    style={{ columnGap: "16px" }}
+                  
+                    onClick={() =>
+                      showRewards === "silver"
+                        ? setShowRewards(false)
+                        : setShowRewards("silver")
+                    }
+                  >
+                    <div
+                      className="silver-tier"
+                      style={{ minWidth: "90px", aspectRatio: "1/1" }}
+                    ></div>
+                    <div className="fx-centered fx-col fx-start-v fit-container">
+                      <h4>Silver tier</h4>
+                      <div className="fx-centered fx-start-h">
+                        <p className="gray-c ">
+                          2x rewards gains{" "}
+                          <span className="p-small gray-c">&#9679;</span>
+                          {"  "}
+                          Unique Silver Tier Badge{"  "}
+                          <span className="p-small gray-c">&#9679;</span>{" "}
+                          Scheduled SATs Lucky Draw
+                        </p>
+                      </div>
+                      <div style={{ width: "50%" }} className="fx-centered">
+                        <ProgressBar total={100} current={100} full={true} />
+                        <div style={{ minWidth: "max-content" }}>
+                          <p className="orange-c p-medium">(51 - 100) level</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="round-icon"
+                      style={{
+                        rotate: showRewards === "silver" ? "-180deg" : "0deg",
+                      }}
+                    >
+                      <div className="arrow"></div>
+                    </div>
+                  </div>
+                  <div
+                    className="fit-container"
+                    style={{
+                      maxHeight: showRewards === "silver" ? "3000px" : "0",
+                      overflow: "hidden",
+                      transition: ".5s ease-in-out",
+                    }}
+                  >
+                    <Rewards volume={2} />
+                  </div>
+                  {/* {showRewards === "silver" && <Rewards volume={2} />} */}
+                </div>
+                <hr style={{ margin: "1rem auto" }}   id="gold"/>
+                <div className="fx-centerd fx-col fit-container">
+                  <div
+                    className="fx-centered fit-container pointer"
+                    style={{ columnGap: "16px" }}
+                  
+                    onClick={() =>
+                      showRewards === "gold"
+                        ? setShowRewards(false)
+                        : setShowRewards("gold")
+                    }
+                  >
+                    <div
+                      className="gold-tier"
+                      style={{ minWidth: "90px", aspectRatio: "1/1" }}
+                    ></div>
+                    <div className="fx-centered fx-col fx-start-v fit-container">
+                      <h4>Gold tier</h4>
+                      <div className="fx-centered fx-start-h">
+                        <p className="gray-c ">
+                          3x rewards gains{" "}
+                          <span className="p-small gray-c">&#9679;</span>
+                          {"  "}
+                          Unique Gold Tier Badge{"  "}
+                          <span className="p-small gray-c">&#9679;</span>{" "}
+                          Scheduled SATs Draw{" "}
+                          <span className="p-small gray-c">&#9679;</span> Become
+                          a Guest on The YakiHonne Podcast{"  "}
+                          <span className="p-small gray-c">&#9679;</span> High
+                          rate of content awareness
+                        </p>
+                      </div>
+                      <div style={{ width: "75%" }} className="fx-centered">
+                        <ProgressBar total={100} current={100} full={true} />
+                        <div style={{ minWidth: "max-content" }}>
+                          <p className="orange-c p-medium">(101 - 500) level</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="round-icon"
+                      style={{
+                        rotate: showRewards === "gold" ? "-180deg" : "0deg",
+                      }}
+                    >
+                      <div className="arrow"></div>
+                    </div>
+                  </div>
+                  <div
+                    className="fit-container"
+                    style={{
+                      maxHeight: showRewards === "gold" ? "3000px" : "0",
+                      overflow: "hidden",
+                      transition: ".5s ease-in-out",
+                    }}
+                  >
+                    {" "}
+                    <Rewards volume={3} />
+                  </div>
+                  {/* {showRewards === "gold" && <Rewards volume={3} />} */}
+                </div>
+                <hr style={{ margin: "1rem auto" }}       id="platinum"/>
+                <div className="fx-centerd fx-col fit-container">
+                  <div
+                    className="fx-centered fit-container pointer"
+                    style={{ columnGap: "16px" }}
+              
+                    onClick={() =>
+                      showRewards === "platinum"
+                        ? setShowRewards(false)
+                        : setShowRewards("platinum")
+                    }
+                  >
+                    <div
+                      className="platinum-tier"
+                      style={{ minWidth: "90px", aspectRatio: "1/1" }}
+                    ></div>
+                    <div className="fx-centered fx-col fx-start-v fit-container">
+                      <h4>Platinum tier</h4>
+                      <div className="fx-centered fx-start-h">
+                        <p className="gray-c ">
+                          3x rewards gains{" "}
+                          <span className="p-small gray-c">&#9679;</span>
+                          {"  "}
+                          Unique Platinum Tier Badge{"  "}
+                          <span className="p-small gray-c">&#9679;</span>{" "}
+                          Scheduled SATs Draw{" "}
+                          <span className="p-small gray-c">&#9679;</span>{" "}
+                          Exlusive Events invitations{"  "}
+                          <span className="p-small gray-c">&#9679;</span> Become
+                          a Part of YakiHonne Grants Program
+                        </p>
+                      </div>
+                      <div style={{ width: "100%" }} className="fx-centered">
+                        <ProgressBar total={100} current={100} full={true} />
+                        <div style={{ minWidth: "max-content" }}>
+                          <p className="orange-c p-medium">
+                            (501 and above) level
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="round-icon"
+                      style={{
+                        rotate: showRewards === "platinum" ? "-180deg" : "0deg",
+                      }}
+                    >
+                      <div className="arrow"></div>
+                    </div>
+                  </div>
+                  <div
+                    className="fit-container"
+                    style={{
+                      maxHeight: showRewards === "platinum" ? "3000px" : "0",
+                      overflow: "hidden",
+                      transition: ".5s ease-in-out",
+                    }}
+                  >
+                    <Rewards volume={4} />
+                  </div>
+                  {/* {showRewards === "platinum" && <Rewards volume={4}/>} */}
+                </div>
+              </div>
+            </div>
+            <ScreenSix />
           </div>
         </div>
       </div>
@@ -498,145 +754,428 @@ const ScreenSix = () => {
   );
 };
 
-const ScreenEight = () => {
+// const ScreenEight = () => {
+
+//   return (
+//     <div
+//       className="fit-container fit-height fx-centered box-pad-h fx-wrap sc-s fx-col"
+//       style={{
+//         position: "relative",
+//         overflow: "hidden",
+//         padding: "2rem 1rem",
+//       }}
+//     >
+//       <div className="fit-container fx-col fx-centered fx-start-v">
+//         <div className="fx-centerd fx-col fit-container">
+//           <div
+//             className="fx-centered fit-container pointer"
+//             style={{ columnGap: "16px" }}
+//             id="bronze"
+//             onClick={() =>
+//               showRewards === "bronze"
+//                 ? setShowRewards(false)
+//                 : setShowRewards("bronze")
+//             }
+//           >
+//             <div
+//               className="bronze-tier"
+//               style={{ minWidth: "90px", aspectRatio: "1/1" }}
+//             ></div>
+//             <div className="fx-centered fx-col fx-start-v fit-container">
+//               <h4>Bronze tier</h4>
+//               <div className="fx-centered fx-start-h">
+//                 <p className="gray-c ">
+//                   Starter Pack <span className="p-small gray-c">&#9679;</span>
+//                   {"  "}
+//                   1x rewards gains{"  "}
+//                   <span className="p-small gray-c">&#9679;</span> Unique Bronze
+//                   Tier Badge <span className="p-small gray-c">&#9679;</span>{" "}
+//                   Random SATs Lucky Draw{"  "}
+//                 </p>
+//               </div>
+//               <div style={{ width: "25%" }} className="fx-centered">
+//                 <ProgressBar total={100} current={100} full={true} />
+//                 <div style={{ minWidth: "max-content" }}>
+//                   <p className="orange-c p-medium">(1 - 50) level</p>
+//                 </div>
+//               </div>
+//             </div>
+//             <div
+//               className="round-icon"
+//               style={{ rotate: showRewards === "bronze" ? "-180deg" : "0deg" }}
+//             >
+//               <div className="arrow"></div>
+//             </div>
+//           </div>
+//           <div
+//             className="fit-container"
+//             style={{
+//               maxHeight: showRewards === "bronze" ? "3000px" : "0",
+//               overflow: "hidden",
+//               transition: ".5s ease-in-out",
+//             }}
+//           >
+//             {" "}
+//             <Rewards />
+//           </div>
+//           {/* {showRewards === "bronze" && <Rewards />} */}
+//         </div>
+//         <hr style={{ margin: "1rem auto" }} />
+//         <div className="fx-centerd fx-col fit-container">
+//           <div
+//             className="fx-centered fit-container pointer"
+//             style={{ columnGap: "16px" }}
+//             id="silver"
+//             onClick={() =>
+//               showRewards === "silver"
+//                 ? setShowRewards(false)
+//                 : setShowRewards("silver")
+//             }
+//           >
+//             <div
+//               className="silver-tier"
+//               style={{ minWidth: "90px", aspectRatio: "1/1" }}
+//             ></div>
+//             <div className="fx-centered fx-col fx-start-v fit-container">
+//               <h4>Silver tier</h4>
+//               <div className="fx-centered fx-start-h">
+//                 <p className="gray-c ">
+//                   2x rewards gains{" "}
+//                   <span className="p-small gray-c">&#9679;</span>
+//                   {"  "}
+//                   Unique Silver Tier Badge{"  "}
+//                   <span className="p-small gray-c">&#9679;</span> Scheduled SATs
+//                   Lucky Draw
+//                 </p>
+//               </div>
+//               <div style={{ width: "50%" }} className="fx-centered">
+//                 <ProgressBar total={100} current={100} full={true} />
+//                 <div style={{ minWidth: "max-content" }}>
+//                   <p className="orange-c p-medium">(51 - 100) level</p>
+//                 </div>
+//               </div>
+//             </div>
+//             <div
+//               className="round-icon"
+//               style={{ rotate: showRewards === "silver" ? "-180deg" : "0deg" }}
+//             >
+//               <div className="arrow"></div>
+//             </div>
+//           </div>
+//           <div
+//             className="fit-container"
+//             style={{
+//               maxHeight: showRewards === "silver" ? "3000px" : "0",
+//               overflow: "hidden",
+//               transition: ".5s ease-in-out",
+//             }}
+//           >
+//             <Rewards volume={2} />
+//           </div>
+//           {/* {showRewards === "silver" && <Rewards volume={2} />} */}
+//         </div>
+//         <hr style={{ margin: "1rem auto" }} />
+//         <div className="fx-centerd fx-col fit-container">
+//           <div
+//             className="fx-centered fit-container pointer"
+//             style={{ columnGap: "16px" }}
+//             id="gold"
+//             onClick={() =>
+//               showRewards === "gold"
+//                 ? setShowRewards(false)
+//                 : setShowRewards("gold")
+//             }
+//           >
+//             <div
+//               className="gold-tier"
+//               style={{ minWidth: "90px", aspectRatio: "1/1" }}
+//             ></div>
+//             <div className="fx-centered fx-col fx-start-v fit-container">
+//               <h4>Gold tier</h4>
+//               <div className="fx-centered fx-start-h">
+//                 <p className="gray-c ">
+//                   3x rewards gains{" "}
+//                   <span className="p-small gray-c">&#9679;</span>
+//                   {"  "}
+//                   Unique Gold Tier Badge{"  "}
+//                   <span className="p-small gray-c">&#9679;</span> Scheduled SATs
+//                   Draw <span className="p-small gray-c">&#9679;</span> Become a
+//                   Guest on The YakiHonne Podcast{"  "}
+//                   <span className="p-small gray-c">&#9679;</span> High rate of
+//                   content awareness
+//                 </p>
+//               </div>
+//               <div style={{ width: "75%" }} className="fx-centered">
+//                 <ProgressBar total={100} current={100} full={true} />
+//                 <div style={{ minWidth: "max-content" }}>
+//                   <p className="orange-c p-medium">(101 - 500) level</p>
+//                 </div>
+//               </div>
+//             </div>
+//             <div
+//               className="round-icon"
+//               style={{ rotate: showRewards === "gold" ? "-180deg" : "0deg" }}
+//             >
+//               <div className="arrow"></div>
+//             </div>
+//           </div>
+//           <div
+//             className="fit-container"
+//             style={{
+//               maxHeight: showRewards === "gold" ? "3000px" : "0",
+//               overflow: "hidden",
+//               transition: ".5s ease-in-out",
+//             }}
+//           >
+//             {" "}
+//             <Rewards volume={3} />
+//           </div>
+//           {/* {showRewards === "gold" && <Rewards volume={3} />} */}
+//         </div>
+//         <hr style={{ margin: "1rem auto" }} />
+//         <div className="fx-centerd fx-col fit-container">
+//           <div
+//             className="fx-centered fit-container pointer"
+//             style={{ columnGap: "16px" }}
+//             id="platinum"
+//             onClick={() =>
+//               showRewards === "platinum"
+//                 ? setShowRewards(false)
+//                 : setShowRewards("platinum")
+//             }
+//           >
+//             <div
+//               className="platinum-tier"
+//               style={{ minWidth: "90px", aspectRatio: "1/1" }}
+//             ></div>
+//             <div className="fx-centered fx-col fx-start-v fit-container">
+//               <h4>Platinum tier</h4>
+//               <div className="fx-centered fx-start-h">
+//                 <p className="gray-c ">
+//                   3x rewards gains{" "}
+//                   <span className="p-small gray-c">&#9679;</span>
+//                   {"  "}
+//                   Unique Platinum Tier Badge{"  "}
+//                   <span className="p-small gray-c">&#9679;</span> Scheduled SATs
+//                   Draw <span className="p-small gray-c">&#9679;</span> Exlusive
+//                   Events invitations{"  "}
+//                   <span className="p-small gray-c">&#9679;</span> Become a Part
+//                   of YakiHonne Grants Program
+//                 </p>
+//               </div>
+//               <div style={{ width: "100%" }} className="fx-centered">
+//                 <ProgressBar total={100} current={100} full={true} />
+//                 <div style={{ minWidth: "max-content" }}>
+//                   <p className="orange-c p-medium">(501 and above) level</p>
+//                 </div>
+//               </div>
+//             </div>
+//             <div
+//               className="round-icon"
+//               style={{
+//                 rotate: showRewards === "platinum" ? "-180deg" : "0deg",
+//               }}
+//             >
+//               <div className="arrow"></div>
+//             </div>
+//           </div>
+//           <div
+//             className="fit-container"
+//             style={{
+//               maxHeight: showRewards === "platinum" ? "3000px" : "0",
+//               overflow: "hidden",
+//               transition: ".5s ease-in-out",
+//             }}
+//           >
+//             <Rewards volume={4} />
+//           </div>
+//           {/* {showRewards === "platinum" && <Rewards volume={4}/>} */}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+const Rewards = ({ volume = false }) => {
   return (
-    <div
-      className="fit-container fit-height fx-centered box-pad-h fx-wrap sc-s fx-col"
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        padding: "2rem 1rem",
-        // height: "50vh",
-      }}
-    >
-      {/* <div className="fit-container fx-centered">
-        <h3>Tiers</h3>
-      </div> */}
-      <div className="fit-container fx-col fx-centered fx-start-v">
-        <div
-          className="fx-centered fit-container"
-          style={{ columnGap: "16px" }}
-        >
+    <div className="fit-container fx-centered fx-wrap fx-stretch box-pad-v">
+      {levels.map((reward, index) => {
+        return (
           <div
-            className="bronze-tier"
-            style={{ minWidth: "90px", aspectRatio: "1/1" }}
-          ></div>
-          <div className="fx-centered fx-col fx-start-v fit-container">
-            <h4>Bronze tier</h4>
-            <div className="fx-centered fx-start-h">
-              <p className="gray-c ">
-                Starter Pack <span className="p-small gray-c">&#9679;</span>
-                {"  "}
-                1x rewards gains{"  "}
-                <span className="p-small gray-c">&#9679;</span> Unique Bronze
-                Tier Badge <span className="p-small gray-c">&#9679;</span>{" "}
-                Random SATs Lucky Draw{"  "}
-              </p>
+            key={index}
+            className="box-pad-h box-pad-v-m sc-s fx-centered fx-col option"
+            style={{ width: "24%" }}
+          >
+            <div
+              className={reward.icon}
+              style={{ minWidth: "32px", minHeight: "32px" }}
+            ></div>
+            <div className="fx-centered ">
+              <h4>{reward.points[0]}</h4>
+              <p className="gray-c">xp</p>
+              {volume && <p className="p-big orange-c">x{volume}</p>}
             </div>
-            <div style={{ width: "25%" }} className="fx-centered">
-              <ProgressBar total={100} current={100} full={true} />
-              <div style={{ minWidth: "max-content" }}>
-                <p className="orange-c p-medium">(1 - 50) level</p>
-              </div>
-            </div>
+            <p className="p-centered gray-c p-medium">{reward.display_name}</p>
           </div>
-        </div>
-        <hr style={{ margin: "1rem auto" }} />
-        <div
-          className="fx-centered fit-container"
-          style={{ columnGap: "16px" }}
-        >
-          <div
-            className="silver-tier"
-            style={{ minWidth: "90px", aspectRatio: "1/1" }}
-          ></div>
-          <div className="fx-centered fx-col fx-start-v fit-container">
-            <h4>Silver tier</h4>
-            <div className="fx-centered fx-start-h">
-              <p className="gray-c ">
-                2x rewards gains <span className="p-small gray-c">&#9679;</span>
-                {"  "}
-                Unique Silver Tier Badge{"  "}
-                <span className="p-small gray-c">&#9679;</span> Scheduled SATs
-                Lucky Draw
-              </p>
-              {/* <p className="gray-c">2x rewards gains</p>
-              <p className="p-small gray-c">&#9679;</p>
-              <p className="gray-c">Unique Silver Tier Badge</p>
-              <p className="p-small gray-c">&#9679;</p>
-              <p className="gray-c">Scheduled SATs Lucky Draw</p> */}
-            </div>
-            <div style={{ width: "50%" }} className="fx-centered">
-              <ProgressBar total={100} current={100} full={true} />
-              <div style={{ minWidth: "max-content" }}>
-                <p className="orange-c p-medium">(51 - 100) level</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <hr style={{ margin: "1rem auto" }} />
-        <div
-          className="fx-centered fit-container"
-          style={{ columnGap: "16px" }}
-        >
-          <div
-            className="gold-tier"
-            style={{ minWidth: "90px", aspectRatio: "1/1" }}
-          ></div>
-          <div className="fx-centered fx-col fx-start-v fit-container">
-            <h4>Gold tier</h4>
-            <div className="fx-centered fx-start-h">
-              <p className="gray-c ">
-                3x rewards gains <span className="p-small gray-c">&#9679;</span>
-                {"  "}
-                Unique Gold Tier Badge{"  "}
-                <span className="p-small gray-c">&#9679;</span> Scheduled SATs
-                Draw <span className="p-small gray-c">&#9679;</span> Become a
-                Guest on The YakiHonne Podcast{"  "}
-                <span className="p-small gray-c">&#9679;</span> High rate of
-                content awareness
-              </p>
-            </div>
-            <div style={{ width: "75%" }} className="fx-centered">
-              <ProgressBar total={100} current={100} full={true} />
-              <div style={{ minWidth: "max-content" }}>
-                <p className="orange-c p-medium">(101 - 500) level</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <hr style={{ margin: "1rem auto" }} />
-        <div
-          className="fx-centered fit-container"
-          style={{ columnGap: "16px" }}
-        >
-          <div
-            className="platinum-tier"
-            style={{ minWidth: "90px", aspectRatio: "1/1" }}
-          ></div>
-          <div className="fx-centered fx-col fx-start-v fit-container">
-            <h4>Platinum tier</h4>
-            <div className="fx-centered fx-start-h">
-              <p className="gray-c ">
-                3x rewards gains <span className="p-small gray-c">&#9679;</span>
-                {"  "}
-                Unique Platinum Tier Badge{"  "}
-                <span className="p-small gray-c">&#9679;</span> Scheduled SATs
-                Draw <span className="p-small gray-c">&#9679;</span> Exlusive
-                Events invitations{"  "}
-                <span className="p-small gray-c">&#9679;</span> Become a Part of
-                YakiHonne Grants Program
-              </p>
-            </div>
-            <div style={{ width: "100%" }} className="fx-centered">
-              <ProgressBar total={100} current={100} full={true} />
-              <div style={{ minWidth: "max-content" }}>
-                <p className="orange-c p-medium">(501 and above) level</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        );
+      })}
     </div>
   );
 };
+
+const levels = [
+  {
+    points: [50],
+    count: 1,
+    cooldown: 0,
+    display_name: "Account creation",
+    icon: "user-24",
+  },
+  {
+    points: [5],
+    count: 5,
+    cooldown: 0,
+    display_name: "Setting a username",
+    icon: "user-24",
+  },
+  {
+    points: [5],
+    count: 5,
+    cooldown: 0,
+    display_name: "Setting a bio",
+    icon: "user-24",
+  },
+  {
+    points: [5],
+    count: 5,
+    cooldown: 0,
+    display_name: "Setting a profile picture",
+    icon: "image-24",
+  },
+  {
+    points: [5],
+    count: 5,
+    cooldown: 0,
+    display_name: "Setting a profile cover",
+    icon: "image-24",
+  },
+  {
+    points: [5],
+    count: 3,
+    cooldown: 0,
+    display_name: "Using a nip05",
+    icon: "nip05-24",
+  },
+  {
+    points: [15],
+    count: 3,
+    cooldown: 0,
+    display_name: "Using a lightning address",
+    icon: "lightning",
+  },
+  {
+    points: [10],
+    count: 1,
+    cooldown: 0,
+    display_name: "Setting favorite relays",
+    icon: "server-24",
+  },
+  {
+    points: [10],
+    count: 1,
+    cooldown: 0,
+    display_name: "Choosing favorite topics",
+    icon: "comment-24",
+  },
+  {
+    points: [30],
+    count: 1,
+    cooldown: 0,
+    display_name: "Following Yakihonne official account",
+    icon: "user-24",
+  },
+  {
+    points: [15],
+    count: 0,
+    cooldown: 0,
+    display_name: "Posting flash news",
+    icon: "news-24",
+  },
+  {
+    points: [2],
+    count: 0,
+    cooldown: 3600,
+    display_name: "Uncensored notes writing",
+    icon: "note-24",
+  },
+  {
+    points: [1],
+    count: 0,
+    cooldown: 3600,
+    display_name: "Uncensored notes rating",
+    icon: "like-24",
+  },
+  {
+    points: [2],
+    count: 0,
+    cooldown: 7200,
+    display_name: "Posting curations",
+    icon: "curation-24",
+  },
+  {
+    points: [4],
+    count: 0,
+    cooldown: 3600,
+    display_name: "Posting articles",
+    icon: "posts-24",
+  },
+  {
+    points: [2],
+    count: 0,
+    cooldown: 3600,
+    display_name: "Article drafts",
+    icon: "posts-24",
+  },
+  {
+    points: [3],
+    count: 0,
+    cooldown: 7200,
+    display_name: "Posting videos",
+    icon: "play-24",
+  },
+  {
+    points: [2],
+    count: 0,
+    cooldown: 0,
+    display_name: "Bookmarking",
+    icon: "bookmark-24",
+  },
+  {
+    points: [1, 5, 10, 20],
+    count: 0,
+    cooldown: 0,
+    display_name: "Zapping",
+    icon: "bolt-24",
+  },
+  {
+    points: [2],
+    count: 0,
+    cooldown: 0,
+    display_name: "Reactions",
+    icon: "like-24",
+  },
+  {
+    points: [5, 10],
+    count: 0,
+    cooldown: 3600,
+    display_name: "Sending messages",
+    icon: "env-24",
+  },
+  {
+    points: [2],
+    count: 0,
+    cooldown: 900,
+    display_name: "Posting comments",
+    icon: "comment-24",
+  },
+];

@@ -462,7 +462,8 @@ main {
     position: absolute;
     min-width: max-content;
     /* width: 60px; */
-    top: -30px;
+    top: 105%;
+    /* top:-30px; */
     left: 50%;
     transform: translateX(-50%);
     content: attr(data-tooltip);

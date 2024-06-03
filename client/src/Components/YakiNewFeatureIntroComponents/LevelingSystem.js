@@ -30,7 +30,7 @@ const ScreenOne = () => {
         style={{ flex: "1.5 1 350px" }}
       >
         <div
-          className="fit-container sc-s box-pad-v"
+          className="fit-container sc-s box-pad-v box-pad-h"
           style={{ background: "#EEBB6B" }}
         >
           <img src={screenOne} className="fit-container" />
@@ -63,7 +63,7 @@ const ScreenTwo = () => {
         style={{ flex: "1.5 1 350px" }}
       >
         <div
-          className="fit-container sc-s box-pad-v"
+          className="fit-container sc-s box-pad-v box-pad-h"
           style={{ background: "var(--c1)" }}
         >
           <img src={screenTwo} className="fit-container" />

@@ -23,6 +23,10 @@ const action_key_from_kind = {
   30023: "article_post",
   30024: "article_draft",
   34235: "video_post",
+  4: "dms-5",
+  44: "dms-10",
+  1059: "dms-5",
+  10599: "dms-10",
   username: "username",
   bio: "bio",
   profile_picture: "profile_picture",
@@ -152,7 +156,7 @@ export default function Publishing() {
     let timeout = setTimeout(() => {
       setIsFinished(true);
       setPublishing(false);
-    }, 4000);
+    }, 6000);
     setTimeoutP(timeout);
   };
 
@@ -208,6 +212,9 @@ export default function Publishing() {
           getKind7FromTags(eventInitEx.content, eventInitEx.tags)
         ];
       }
+      if (kind === 4) {
+        return action_key_from_kind[getKind4FromEvent(eventInitEx.tags)];
+      }
       return action_key_from_kind[kind_];
     }
 
@@ -216,6 +223,9 @@ export default function Publishing() {
     }
     if (kind === 7) {
       return action_key_from_kind[getKind7FromTags(content, tags)];
+    }
+    if (kind === 4) {
+      return action_key_from_kind[getKind4FromEvent(tags)];
     }
     if (kind === 3) {
       let checkYakiInFollowings = nostrUser.following.find(
@@ -235,6 +245,12 @@ export default function Publishing() {
     return action_key_from_kind[kind];
   };
 
+  const getKind4FromEvent = (tags) => {
+    let receiver = tags.find((tag) => tag[0] === "p" && tag[1] === "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3");
+    if (receiver) return 44;
+    return 4;
+ 
+  };
   const getKind1FromTags = (tags) => {
     let l = tags.find((tag) => tag[0] === "l");
     if (!l) return 1;

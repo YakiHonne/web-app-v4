@@ -117,20 +117,20 @@ const levels = {
     points: [2],
     count: 0,
     cooldown: 0,
-    display_name: "Upvoting or downvote posts",
+    display_name: "Reactions",
   },
-  // upvote: {
-  //   points: [2],
-  //   count: 0,
-  //   cooldown: 0,
-  //   display_name: "Upvoting posts",
-  // },
-  // downvote: {
-  //   points: [2],
-  //   count: 0,
-  //   cooldown: 0,
-  //   display_name: "Downvoting posts",
-  // },
+  dms: {
+    points: [5, 10],
+    count: 0,
+    cooldown: 3600,
+    display_name: "Sending messages",
+  },
+  user_impact: {
+    points: [20],
+    count: 0,
+    cooldown: 0,
+    display_name: "User writing/rating impacts increase",
+  },
   comment_post: {
     points: [2],
     count: 0,
@@ -138,6 +138,7 @@ const levels = {
     display_name: "Posting comments",
   },
 };
+
 const actions_keys = [
   "new_account",
   "username",
@@ -162,6 +163,8 @@ const actions_keys = [
   "zap-60",
   "zap-100",
   "reaction",
+  "dms-5",
+  "dms-10",
   // "upvote",
   // "downvote",
   "comment_post",
@@ -201,7 +204,7 @@ const tiers = [
       "Unique Gold Tier Badge",
       "Scheduled SATs Draw",
       "Become a Guest on The YakiHonne Podcast",
-      "High rate of content awareness"
+      "High rate of content awareness",
     ],
   },
   {
@@ -209,14 +212,13 @@ const tiers = [
     max: -1,
     volume: 4,
     display_name: "Platinum",
-    description:
-    [
+    description: [
       "4x rewards gains",
       "Unique Platinum Tier Badge",
       "Scheduled SATs Draw",
       "Exlusive Events invitations",
-      "Become a Part of YakiHonne Grants Program"
-    ]
+      "Become a Part of YakiHonne Grants Program",
+    ],
   },
 ];
 
