@@ -36,6 +36,7 @@ import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
 import UserSearchBar from "../../Components/UserSearchBar";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/NOSTR/InitConvo";
+import axiosInstance from "../../Helpers/HTTP_Client";
 const pool = new SimplePool();
 
 const aggregateUsers = (convo) => {
@@ -698,8 +699,14 @@ export default function DMS() {
 }
 
 const ConversationBox = ({ convo, back }) => {
-  const { nostrKeys, nostrUser, setToPublish, isDarkMode } =
-    useContext(Context);
+  const {
+    nostrKeys,
+    nostrUser,
+    setToPublish,
+    isDarkMode,
+    setUpdatedActionFromYakiChest,
+    updateYakiChestStats,
+  } = useContext(Context);
   const convoContainerRef = useRef(null);
   const inputFieldRef = useRef(null);
   const [message, setMessage] = useState("");
@@ -774,11 +781,40 @@ const ConversationBox = ({ convo, back }) => {
     }
     if (!legacy) {
       let { sender_event, receiver_event } = await getGiftWrap();
-      initPublishing(relaysToPublish, sender_event, receiver_event);
+      let response = await initPublishing(
+        relaysToPublish,
+        sender_event,
+        receiver_event
+      );
+
+      if (response) {
+        let action_key =
+          convo.pubkey ===
+          "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
+            ? "dms-10"
+            : "dms-5";
+        updateYakiChest(action_key);
+      }
     }
     setMessage("");
     setReplayOn(false);
     setShowProgress(true);
+  };
+
+  const updateYakiChest = async (action_key) => {
+    try {
+      let data = await axiosInstance.post("/api/v1/yaki-chest", {
+        action_key,
+      });
+      let { user_stats, is_updated } = data.data;
+
+      if (is_updated) {
+        setUpdatedActionFromYakiChest(is_updated);
+        updateYakiChestStats(user_stats);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const getGiftWrap = async () => {
@@ -1203,8 +1239,12 @@ const initPublishing = async (relays, event1, event2) => {
     let pool_ev1 = new SimplePool();
     let pool_ev2 = new SimplePool();
 
-    let res1 = pool_ev1.publish(relays, event1);
-    let res2 = pool_ev2.publish(relays, event2);
+    let [res1, res2] = await Promise.all([
+      Promise.allSettled(pool_ev1.publish(relays, event1)),
+      Promise.allSettled(pool_ev2.publish(relays, event2)),
+    ]);
+
+    return res1.find((item) => item.status === "fulfilled") ? true : false;
   } catch (err) {
     console.log(err);
   }

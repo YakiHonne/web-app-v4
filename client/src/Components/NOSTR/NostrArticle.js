@@ -704,7 +704,7 @@ export default function NostrArticle() {
                             )}
                             // recipientLNURL={author.lud06 || author.lud16}
                             recipientPubkey={author.pubkey}
-                            senderPubkey={nostrUser.pubkey}
+                            senderPubkey={nostrKeys.pub}
                             recipientInfo={{
                               name: author.name,
                               img: author.picture,
@@ -760,7 +760,7 @@ export default function NostrArticle() {
                                 )}
                                 // recipientLNURL={author.lud06 || author.lud16}
                                 recipientPubkey={author.pubkey}
-                                senderPubkey={nostrUser.pubkey}
+                                senderPubkey={nostrKeys.pub}
                                 recipientInfo={{
                                   name: author.name,
                                   img: author.picture,

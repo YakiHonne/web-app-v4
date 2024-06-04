@@ -449,7 +449,7 @@ export default function NostrFlashNewsEvent() {
                   // }}
                 >
                   <div className="fx-centered fit-container fx-start-h">
-                    {console.log(author)}
+               
                     <UserProfilePicNOSTR
                       img={author.picture}
                       size={64}
@@ -784,7 +784,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
     };
     parsedCom();
   }, [comments]);
-  console.log(netComments);
+
   //   useEffect(() => {
   //     // setMainComments(comments);
   //     addNostrAuthors(comments.map((item) => item.pubkey));

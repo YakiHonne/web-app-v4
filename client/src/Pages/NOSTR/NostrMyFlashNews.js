@@ -963,7 +963,7 @@ const AddNews = ({ exit }) => {
             localStorage.setItem("fn_yaki_flag", `${false}`);
             setTimeout(() => {
               window.location.href = "/my-flash-news";
-            }, 3000);
+            }, 6000);
           },
         }
       );

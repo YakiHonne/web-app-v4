@@ -10,14 +10,17 @@ import HeroNostrNoUN from "../media/images/un-hero.png";
 import HeroNostrunauthorizedMessages from "../media/images/unauthorized-messages.png";
 import HeroDMS from "../media/images/DMS.png";
 import HeroDMSWaiting from "../media/images/DMS-waiting.gif";
+import HeroYakiChest from "../media/images/trophy.png";
 import LoginNOSTR from "./NOSTR/LoginNOSTR";
 import { useContext } from "react";
 import { Context } from "../Context/Context";
 import { Link } from "react-router-dom";
+import LoginWithAPI from "./NOSTR/LoginWithAPI";
 
 export default function PagePlaceholder({ page, onClick = null }) {
-  const { nostrUserLogout } = useContext(Context);
+  const { nostrUserLogout, nostrKeys } = useContext(Context);
   const [triggerLogin, setTriggerLogin] = useState(false);
+  const [showYakiChest, setShowYakiChest] = useState(false);
 
   if (page === "404")
     return (
@@ -279,5 +282,34 @@ export default function PagePlaceholder({ page, onClick = null }) {
           ></div>
         </div>
       </div>
+    );
+  if (page === "nostr-yaki-chest")
+    return (
+      <>
+      {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
+        <div className="fit-container">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroYakiChest})`,
+                width: "min(300px, 500px)",
+                height: "300px",
+              }}
+            ></div>
+            <h3 className="box-marg-s p-centered">Yakihonne point system</h3>
+            <p
+              className="p-centered gray-c box-marg-s "
+              style={{ maxWidth: "450px" }}
+            >
+              You need to connect to Yakihonne point system in order to gain
+              points and win rewards.
+            </p>
+            {nostrKeys && (nostrKeys.ext || nostrKeys.sec) && (
+              <button className="btn btn-normal" onClick={() => setShowYakiChest(true)}>Connect to Yaki chest</button>
+            )}
+          </div>
+        </div>
+      </>
     );
 }

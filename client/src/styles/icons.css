@@ -184,6 +184,8 @@
 .connect,
 .connect-24,
 .ai-loader,
+.infinity,
+.infinity-24,
 .env-edit-24,
 .env-edit {
     /* margin: .5rem; */
@@ -389,6 +391,8 @@
     .download-file-24,
     .connect,
     .connect-24,
+    .infinity,
+    .infinity-24,
     .env-edit-24,
     .env-edit {
         /* margin: .5rem; */
@@ -508,6 +512,7 @@
 .play-vid,
 .download-file,
 .connect,
+.infinity,
 .env-edit  {
     min-width: 16px;
     min-height: 16px;
@@ -608,6 +613,8 @@
 .write-24,
 .play-24,
 .download-file-24,
+.connect-24,
+.infinity-24,
 .connect-24 ,
 .env-edit-24{
     min-width: 24px;
@@ -620,10 +627,20 @@
     min-height: 58px;
 }
 
+.infinity,
+.infinity-24 {
+    background-image: url('../media/icons/infinity.svg');
+}
 .ai-loader,
 .ai-loader-24 {
     background-image: url('../media/icons/ai_loading.gif');
 }
+
+.connect,
+.connect-24 {
+    background-image: url('../media/icons/connect.svg');
+}
+
 .ai-loader,
 .ai-loader-24 {
     background-image: url('../media/icons/ai_loading.gif');

@@ -4,11 +4,50 @@ import { Context } from "../Context/Context";
 import LoadingDots from "./LoadingDots";
 import { SimplePool } from "nostr-tools";
 import LoadingBar from "./LoadingBar";
+import axiosInstance from "../Helpers/HTTP_Client";
 const pool = new SimplePool();
 
+const action_key_from_kind = {
+  3: "follow_yaki",
+  10002: "relays_setup",
+  30078: "topics_setup",
+  1: "comment_post",
+  11: "flashnews_post",
+  111: "un_write",
+  7: "reaction",
+  77: "reaction",
+  777: "un_rate",
+  30003: "bookmark",
+  30004: "curation_post",
+  30005: "curation_post",
+  30023: "article_post",
+  30024: "article_draft",
+  34235: "video_post",
+  4: "dms-5",
+  44: "dms-10",
+  1059: "dms-5",
+  10599: "dms-10",
+  username: "username",
+  bio: "bio",
+  profile_picture: "profile_picture",
+  cover: "cover",
+  nip05: "nip05",
+  luds: "luds",
+};
+
 export default function Publishing() {
-  const { toPublish, setToPublish, setToast, isPublishing, setPublishing } =
-    useContext(Context);
+  const {
+    tempUserMeta,
+    setTempUserMeta,
+    toPublish,
+    setToPublish,
+    setToast,
+    isPublishing,
+    setPublishing,
+    updateYakiChestStats,
+    setUpdatedActionFromYakiChest,
+    nostrUser,
+  } = useContext(Context);
   const [showDetails, setShowDetails] = useState(false);
   const [startPublishing, setStartPublishing] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -82,13 +121,16 @@ export default function Publishing() {
     };
   }, [toPublish]);
 
+  useEffect(() => {
+    if (isFinished && okRelays.length > 0) {
+      updateYakiChest();
+    }
+  }, [isFinished, okRelays]);
+
   const initPublishing = async (relays, event) => {
     try {
-      // let pubs = await Promise.all(pool.publish(relays, event));
-      // console.log(pubs)
-
       Promise.allSettled(pool.publish(relays, event))
-        .then((results) =>
+        .then((results) => {
           results.forEach((result, index) => {
             if (result.status === "fulfilled" && result.value === "") {
               setFailedRelays((prev) => {
@@ -104,34 +146,17 @@ export default function Publishing() {
               });
               setOkRelays((re) => [...re, relays[index]]);
             }
-          })
-        )
+          });
+        })
         .catch((err) => console.log(err));
     } catch (err) {
       console.log(err);
     }
 
-    // pubs.on("ok", (e) => {
-    //   setFailedRelays((prev) => {
-    //     let tempArray = Array.from(prev);
-    //     let index = tempArray.findIndex((item) => e === item);
-    //     if (index !== -1) {
-    //       tempArray.splice(index, 1);
-    //       return tempArray;
-    //     }
-    //     return prev;
-    //   });
-    //   setOkRelays((re) => [...re, e]);
-    //   if (timeoutP !== false) {
-    //     return;
-    //   }
-    // });
-
     let timeout = setTimeout(() => {
-      // pool.close(relays);
       setIsFinished(true);
       setPublishing(false);
-    }, 4000);
+    }, 6000);
     setTimeoutP(timeout);
   };
 
@@ -154,6 +179,112 @@ export default function Publishing() {
     initPublishing(failedRelays, signedEvent);
   };
 
+  const updateYakiChest = async () => {
+    try {
+      let action_key = getActionKey();
+
+      if (action_key) {
+        let data = await axiosInstance.post("/api/v1/yaki-chest", {
+          action_key,
+        });
+        let { user_stats, is_updated } = data.data;
+
+        if (is_updated) {
+          setUpdatedActionFromYakiChest(is_updated);
+          updateYakiChestStats(user_stats);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getActionKey = () => {
+    let { kind, content, tags, eventInitEx } = toPublish;
+
+    if (eventInitEx) {
+      let kind_ = eventInitEx.kind;
+      if (kind_ === 1) {
+        return action_key_from_kind[getKind1FromTags(eventInitEx.tags)];
+      }
+      if (kind_ === 7) {
+        return action_key_from_kind[
+          getKind7FromTags(eventInitEx.content, eventInitEx.tags)
+        ];
+      }
+      if (kind === 4) {
+        return action_key_from_kind[getKind4FromEvent(eventInitEx.tags)];
+      }
+      return action_key_from_kind[kind_];
+    }
+
+    if (kind === 1) {
+      return action_key_from_kind[getKind1FromTags(tags)];
+    }
+    if (kind === 7) {
+      return action_key_from_kind[getKind7FromTags(content, tags)];
+    }
+    if (kind === 4) {
+      return action_key_from_kind[getKind4FromEvent(tags)];
+    }
+    if (kind === 3) {
+      let checkYakiInFollowings = nostrUser.following.find(
+        (item) =>
+          item[1] ===
+          "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
+      );
+      if (checkYakiInFollowings) return action_key_from_kind[3];
+      if (!checkYakiInFollowings) return false;
+    }
+    if (kind === 0) {
+      let updatedUserMeta = getUpdatedMetaProperty(content);
+      if (!updatedUserMeta) return false;
+      setTempUserMeta(JSON.parse(content));
+      return action_key_from_kind[updatedUserMeta];
+    }
+    return action_key_from_kind[kind];
+  };
+
+  const getKind4FromEvent = (tags) => {
+    let receiver = tags.find((tag) => tag[0] === "p" && tag[1] === "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3");
+    if (receiver) return 44;
+    return 4;
+ 
+  };
+  const getKind1FromTags = (tags) => {
+    let l = tags.find((tag) => tag[0] === "l");
+    if (!l) return 1;
+    if (l[1] === "FLASH NEWS") return 11;
+    if (l[1] === "UNCENSORED NOTE") return 111;
+  };
+  const getKind7FromTags = (content, tags) => {
+    let l = tags.find((tag) => tag[0] === "l");
+    if (!l) {
+      if (content === "+") return 7;
+      if (content === "-") return 77;
+    }
+
+    if (l[1] === "UNCENSORED NOTE RATING") return 777;
+  };
+  const getUpdatedMetaProperty = (content) => {
+    let tempUser = tempUserMeta;
+    let updatedUser = JSON.parse(content);
+    if (tempUser.about !== updatedUser.about) return "bio";
+    if (tempUser.banner !== updatedUser.banner) return "cover";
+    if (
+      tempUser.display_name !== updatedUser.display_name ||
+      tempUser.name !== updatedUser.name
+    )
+      return "username";
+    if (
+      tempUser.lud06 !== updatedUser.lud06 ||
+      tempUser.lud16 !== updatedUser.lud16
+    )
+      return "luds";
+    if (tempUser.nip05 !== updatedUser.nip05) return "nip05";
+    if (tempUser.picture !== updatedUser.picture) return "profile_picture";
+    return false;
+  };
   if (!toPublish) return;
   if (window.location.pathname === "/messages") return;
   if (showDetails)

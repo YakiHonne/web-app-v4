@@ -1,4 +1,4 @@
-import { nip19 } from "nostr-tools";
+import { nip19, nip44 } from "nostr-tools";
 import { Link } from "react-router-dom";
 import { decryptEventData, getHex } from "./Encryptions";
 import NEventPreviewer from "../Components/NOSTR/NEventPreviewer";
@@ -8,6 +8,44 @@ import IMGElement from "../Components/NOSTR/IMGElement";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
+
+const LoginToAPI = async (publicKey, secretKey) => {
+  try {
+    let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
+    if (!(pubkey && password)) return;
+    const data = await axios.post("/api/v1/login", { password, pubkey });
+    return data.data;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+const getLoginsParams = async (publicKey, secretKey) => {
+  try {
+    let content = JSON.stringify({
+      pubkey: publicKey,
+      sent_at: Math.floor(new Date().getTime() / 1000),
+    });
+    let password = secretKey
+      ? nip44.default.v2.encrypt(
+          content,
+          nip44.v2.utils.getConversationKey(
+            secretKey,
+            process.env.REACT_APP_CHECKER_PUBKEY
+          )
+        )
+      : await window.nostr.nip44.encrypt(
+          process.env.REACT_APP_CHECKER_PUBKEY,
+          content
+        );
+
+    return { password, pubkey: publicKey };
+  } catch (err) {
+    console.log(err);
+    return { password: false, pubkey: false };
+  }
+};
 
 const isVid = (url) => {
   const regex =
@@ -37,20 +75,6 @@ const isVid = (url) => {
   }
   return false;
 };
-
-// const isYTVid = (url) => {
-//   const regex =
-//     /(?:https?:\/\/)?(?:www\.)?youtu(?:\.be|be\.com)\/(?:watch\?v=|embed\/)?([^\?&]+)(?:\?[&]?\w+=[^&]*)?/;
-
-//   const match = url.match(regex);
-
-//   if (match) {
-//     const videoId = match[1]; // Extract the video ID from the first capture group
-//     return videoId; // Output: dQw4w9WgXcQ
-//   } else {
-//     return false;
-//   }
-// };
 
 const isImageUrl = async (url) => {
   try {
@@ -787,6 +811,15 @@ const formatMinutesToMMSS = (seconds) => {
   }
 };
 
+const levelCount = (nextLevel) => {
+  if (nextLevel === 1) return 0;
+  else return levelCount(nextLevel - 1) + (nextLevel - 1) * 50;
+};
+
+const getCurrentLevel = (points) => {
+  return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -798,4 +831,7 @@ export {
   getVideoFromURL,
   shuffleArray,
   formatMinutesToMMSS,
+  LoginToAPI,
+  levelCount,
+  getCurrentLevel,
 };

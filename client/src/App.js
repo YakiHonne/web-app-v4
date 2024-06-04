@@ -46,13 +46,19 @@ import NostrMyVideos from "./Pages/NOSTR/NostrMyVideos";
 import BuzzFeed from "./Pages/NOSTR/BuzzFeed";
 import NostrBuzzFeed from "./Pages/NOSTR/NostrBuzzFeed";
 import BuzzFeedSource from "./Pages/NOSTR/BuzzFeedSource";
+import UserLevels from "./Pages/NOSTR/UserLevels";
 import NostrNotes from "./Pages/NOSTR/NostrNotes";
+import UserFirsLogin from "./Components/UserFirsLogin";
+import YakiNewFeatureIntro from "./Components/YakiNewFeatureIntro";
+import YakiLevelingFeature from "./Pages/YakiLevelingFeature";
 
 function App() {
   return (
     <ContextProvider>
       <Publishing />
       <ToastMessages />
+      <UserFirsLogin />
+      <YakiNewFeatureIntro />
       <Router>
         <NavbarNOSTR />
         <Routes>
@@ -103,6 +109,8 @@ function App() {
           />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/yaki-points" element={<UserLevels />} />
+          <Route path="/points-system" element={<YakiLevelingFeature />} />
         </Routes>
       </Router>
     </ContextProvider>

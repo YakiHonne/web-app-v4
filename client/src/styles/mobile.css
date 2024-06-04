@@ -225,7 +225,9 @@
   html {
     font-size: 12px;
   }
-
+  .carousel .carousel-arrows {
+    display: flex;
+}
   .home-fn-mobile {
     display: flex;
   }

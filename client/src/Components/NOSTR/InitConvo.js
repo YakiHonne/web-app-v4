@@ -13,9 +13,17 @@ import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../../Components/LoadingDots";
 import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
 import UserSearchBar from "../../Components/UserSearchBar";
+import axiosInstance from "../../Helpers/HTTP_Client";
 
 export default function InitiConvo({ exit, receiver = false }) {
-  const { nostrKeys, nostrUser, setToPublish, setToast } = useContext(Context);
+  const {
+    nostrKeys,
+    nostrUser,
+    setToPublish,
+    setToast,
+    setUpdatedActionFromYakiChest,
+    updateYakiChestStats,
+  } = useContext(Context);
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(
@@ -76,10 +84,42 @@ export default function InitiConvo({ exit, receiver = false }) {
     }
     if (!legacy) {
       let { sender_event, receiver_event } = await getGiftWrap();
-      initPublishing(relaysToPublish, sender_event, receiver_event);
-    }
+      setIsLoading(true);
+      let response = await initPublishing(
+        relaysToPublish,
+        sender_event,
+        receiver_event
+      );
 
-    setIsLoading(true);
+      if (response) {
+        let action_key =
+          selectedPerson ===
+          "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
+            ? "dms-10"
+            : "dms-5";
+        updateYakiChest(action_key);
+      } else {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const updateYakiChest = async (action_key) => {
+    try {
+      let data = await axiosInstance.post("/api/v1/yaki-chest", {
+        action_key,
+      });
+      let { user_stats, is_updated } = data.data;
+
+      if (is_updated) {
+        setUpdatedActionFromYakiChest(is_updated);
+        updateYakiChestStats(user_stats);
+      }
+      exit();
+    } catch (err) {
+      console.log(err);
+      exit();
+    }
   };
 
   const getGiftWrap = async () => {
@@ -160,19 +200,7 @@ export default function InitiConvo({ exit, receiver = false }) {
       let pool_ev1 = new SimplePool();
       let pool_ev2 = new SimplePool();
 
-      Promise.allSettled(pool_ev1.publish(relays, event1)).then((results) => {
-        if (receiver) {
-          setToast({
-            type: 1,
-            desc: "Message sent!",
-          });
-          exit();
-        }
-      });
-
-      //   let res1 = pool_ev1.publish(relays, event1);
-      let res2 = pool_ev2.publish(relays, event2);
-
+      // Promise.allSettled(pool_ev1.publish(relays, event1)).then((results) => {
       //   if (receiver) {
       //     setToast({
       //       type: 1,
@@ -180,6 +208,22 @@ export default function InitiConvo({ exit, receiver = false }) {
       //     });
       //     exit();
       //   }
+      // });
+
+      // let res2 = pool_ev2.publish(relays, event2);
+
+      let [res1, res2] = await Promise.all([
+        Promise.allSettled(pool_ev1.publish(relays, event1)),
+        Promise.allSettled(pool_ev2.publish(relays, event2)),
+      ]);
+      let check_publishing = res1.find((item) => item.status === "fulfilled");
+      if (receiver && check_publishing) {
+        setToast({
+          type: 1,
+          desc: "Message sent!",
+        });
+      }
+      return check_publishing ? true : false;
     } catch (err) {
       console.log(err);
       setToast({
