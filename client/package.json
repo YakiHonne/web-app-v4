@@ -52,7 +52,7 @@
     "util": "^0.12.5"
   },
   "scripts": {
-    "start": "PORT=3200 react-scripts start",
+    "start": "PORT=3400 react-scripts start",
     "build": "react-scripts build",
     "postbuild": "rimraf build/static/**/*.map",
     "test": "react-scripts test",
@@ -76,5 +76,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:4000"
+  "proxy": "http://localhost:4300"
 }

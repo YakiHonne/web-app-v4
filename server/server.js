@@ -7,7 +7,7 @@ const Ops = require("./Routers/Ops");
 const fileupload = require("express-fileupload");
 
 // const { RelayPool } = require("nostr");
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4300;
 
 app.use(express.json());
 app.use(fileupload());
