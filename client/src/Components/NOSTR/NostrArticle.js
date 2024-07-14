@@ -582,6 +582,7 @@ export default function NostrArticle() {
         />
       )}
       <div className="fit-container fx-centered">
+      <div className="main-container">
         <SidebarNOSTR />
         <main className="main-page-nostr-container">
           <ArrowUp />
@@ -1220,6 +1221,7 @@ export default function NostrArticle() {
             </div>
           </div>
         </main>
+      </div>
       </div>
     </div>
   );

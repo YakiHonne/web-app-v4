@@ -25,20 +25,25 @@ export default function NProfilePreviewer({
 
   useEffect(() => {
     let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
+    let last_created_at = 0;
     const sub = pool.subscribeMany(
       relaysToUse,
       [{ kinds: [0], authors: [pubkey] }],
       {
         onevent(event) {
-          let content = JSON.parse(event.content);
-          setAuthor({
-            picture: content.picture || "",
-            name:
-              content.name || getBech32("npub", event.pubkey).substring(0, 10),
-            display_name:
-              content.display_name ||
-              getBech32("npub", event.pubkey).substring(0, 10),
-          });
+          if (event.created_at > last_created_at) {
+            last_created_at = event.created_at
+            let content = JSON.parse(event.content);
+            setAuthor({
+              picture: content.picture || "",
+              name:
+                content.name ||
+                getBech32("npub", event.pubkey).substring(0, 10),
+              display_name:
+                content.display_name ||
+                getBech32("npub", event.pubkey).substring(0, 10),
+            });
+          }
         },
         oneose() {
           sub.close();
@@ -47,6 +52,7 @@ export default function NProfilePreviewer({
       }
     );
   }, []);
+
   return (
     <div
       className={`fit-container sc-s-18 fx-scattered  box-pad-h-m box-pad-v-m ${
@@ -67,7 +73,7 @@ export default function NProfilePreviewer({
           </p>
         </div>
       </div>
-      {!close && showSharing &&(
+      {!close && showSharing && (
         <Link to={`/users/${nip19.nprofileEncode({ pubkey })}`} target="_blank">
           <div className="share-icon-24"></div>
         </Link>

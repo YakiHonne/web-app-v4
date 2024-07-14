@@ -31,6 +31,22 @@
     width: 98px;
   }
 
+  .link-items {
+    overflow: visible;
+  }
+
+  .link-items .slide-left {
+    position: absolute;
+    top: 0;
+    right: -230px;
+    width: 220px;
+    overflow: hidden;
+    border-radius: var(--border-r-18);
+    border: 1px solid var(--pale-gray);
+    background-color: var(--white);
+
+  }
+
   .sidebar-logo {
     width: 200px;
     transform: rotate(-90deg) translateX(-80px);
@@ -49,7 +65,7 @@
     position: relative;
     flex: auto;
     width: 80px;
-    padding: .5rem;
+    padding: .5rem .5rem .5rem 0;
   }
 
   .link-items {
@@ -58,6 +74,14 @@
 
   .mb-hide {
     display: none;
+  }
+
+  .sidebar-user-settings-button {
+    justify-content: center;
+  }
+
+  .mb-show {
+    display: flex;
   }
 
   .yakihonne-logo-128 {
@@ -73,6 +97,7 @@
     transform-origin: top left;
     /* Set transform origin to top left */
     transform: rotate(-90deg) translateY(100%);
+
   }
 
   .nostr-sidebar .link-label {
@@ -225,9 +250,11 @@
   html {
     font-size: 12px;
   }
+
   .carousel .carousel-arrows {
     display: flex;
-}
+  }
+
   .home-fn-mobile {
     display: flex;
   }
@@ -264,6 +291,7 @@
     display: flex;
   }
 
+
   .mb-hide-800 {
     display: none;
   }
@@ -271,6 +299,10 @@
   .DM-container {
     height: calc(100dvh - 84px);
     overflow: hidden;
+  }
+
+  .main-container {
+    padding: 0;
   }
 
 }

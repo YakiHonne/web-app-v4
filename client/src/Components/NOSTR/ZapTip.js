@@ -14,8 +14,20 @@ import { Context } from "../../Context/Context";
 import { SimplePool } from "nostr-tools";
 import LoadingDots from "../LoadingDots";
 import LoginNOSTR from "./LoginNOSTR";
+import { webln } from "@getalby/sdk";
 
 const pool = new SimplePool();
+
+const getWallets = () => {
+  let wallets = localStorage.getItem("yaki-wallets");
+  if (!wallets) return [];
+  try {
+    wallets = JSON.parse(wallets);
+    return wallets;
+  } catch (err) {
+    return [];
+  }
+};
 
 export default function ZapTip({
   recipientLNURL,
@@ -62,12 +74,14 @@ export default function ZapTip({
           ></div>
         )}
         {!onlyIcon && (
-          <button className="btn btn-disabled">
-            <div
-              className="lightning if-disabled"
-              style={{ filter: "invert()" }}
-            ></div>
-          </button>
+          <div
+            className={`${
+              smallIcon ? "round-icon-small" : "round-icon"
+            }  round-icon-tooltip if-disabled`}
+            data-tooltip="Zap"
+          >
+            <div className={smallIcon ? "lightning" : "lightning-24"} style={{ cursor: "not-allowed" }}></div>
+          </div>
         )}
       </>
     );
@@ -82,9 +96,15 @@ export default function ZapTip({
           ></div>
         )}
         {!onlyIcon && (
-          <button className="btn btn-normal" onClick={() => setShowLogin(true)}>
-            <div className="lightning" style={{ filter: "invert()" }}></div>
-          </button>
+          <div
+            className={`${
+              smallIcon ? "round-icon-small" : "round-icon"
+            }  round-icon-tooltip`}
+            onClick={() => setShowLogin(true)}
+            data-tooltip="Zap"
+          >
+            <div className={smallIcon ? "lightning" : "lightning-24"}></div>
+          </div>
         )}
       </>
     );
@@ -110,9 +130,15 @@ export default function ZapTip({
         ></div>
       )}
       {!onlyIcon && (
-        <button className="btn btn-normal" onClick={() => setCashier(true)}>
-          <div className="lightning" style={{ filter: "invert()" }}></div>
-        </button>
+        <div
+          className={`${
+            smallIcon ? "round-icon-small" : "round-icon"
+          }  round-icon-tooltip`}
+          data-tooltip="Zap"
+          onClick={() => setCashier(true)}
+        >
+          <div className={smallIcon ? "lightning" : "lightning-24"}></div>
+        </div>
       )}
     </>
   );
@@ -139,9 +165,27 @@ const Cashier = ({
   const [amount, setAmount] = useState(1);
   const [message, setMessage] = useState("");
   const [invoice, setInvoice] = useState("");
+  const [wallets, setWallets] = useState(getWallets());
   // const [confirmation, setConfirmation] = useState("confirmed");
+  const [selectedWallet, setSelectedWallet] = useState(
+    wallets.find((wallet) => wallet.active)
+  );
   const [confirmation, setConfirmation] = useState("initiated");
-  const canvas = useRef(null);
+  const [showWalletsList, setShowWalletList] = useState(false);
+  const walletListRef = useRef(null);
+
+  useEffect(() => {
+    let handleOffClick = (e) => {
+      if (walletListRef.current && !walletListRef.current.contains(e.target)) {
+        setShowWalletList(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [walletListRef]);
 
   const predefined_amounts = [
     { amount: 500, entitle: "500" },
@@ -186,21 +230,22 @@ const Cashier = ({
       }
       setInvoice(res.data.pr);
       setConfirmation("in_progress");
-      const { webln } = window;
-      if (webln) {
-        await webln.enable();
-        try {
-          webln.sendPayment(res.data.pr);
-        } catch (err) {
-          console.log(err);
-        }
-      }
+      // const { webln } = window;
+      // if (webln) {
+      //   await webln.enable();
+      //   try {
+      //     webln.sendPayment(res.data.pr);
+      //   } catch (err) {
+      //     console.log(err);
+      //   }
+      // }
+      await sendPayment(res.data.pr);
+
       let sub = pool.subscribeMany(
         relaysOnPlatform,
         [
           {
             kinds: [9735],
-            // authors: [senderPubkey],
             "#p": [recipientPubkey],
             since: Math.floor(Date.now() / 1000 - 10),
           },
@@ -217,6 +262,62 @@ const Cashier = ({
     }
   };
 
+  const sendPayment = async (addr) => {
+    if (selectedWallet.kind === 1) sendWithWebLN(addr);
+    if (selectedWallet.kind === 2) {
+      let checkTokens = await checkAlbyToken(wallets, selectedWallet);
+      setWallets(checkTokens.wallets);
+      sendWithAlby(addr, checkTokens.activeWallet.data.access_token);
+    }
+    if (selectedWallet.kind === 3) sendWithNWC(addr);
+  };
+
+  const sendWithWebLN = async (addr_) => {
+    try {
+      await window.webln?.enable();
+      let res = await window.webln.sendPayment(addr_);
+      return;
+    } catch (err) {
+      if (err.includes("User rejected")) return;
+      setToast({
+        type: 2,
+        desc: "An error has occured",
+      });
+    }
+  };
+  const sendWithNWC = async (addr_) => {
+    try {
+      const nwc = new webln.NWC({ nostrWalletConnectUrl: selectedWallet.data });
+      await nwc.enable();
+      const res = await nwc.sendPayment(addr_);
+      nwc.close();
+      return;
+    } catch (err) {
+      console.log(err);
+
+      setToast({
+        type: 2,
+        desc: "An error has occured",
+      });
+    }
+  };
+  const sendWithAlby = async (addr_, code) => {
+    try {
+      const data = await axios.post(
+        "https://api.getalby.com/payments/bolt11",
+        { invoice: addr_ },
+        {
+          headers: {
+            Authorization: `Bearer ${code}`,
+          },
+        }
+      );
+      return;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const copyKey = (key) => {
     navigator.clipboard.writeText(key);
     setToast({
@@ -228,12 +329,11 @@ const Cashier = ({
   const updateYakiChest = async () => {
     try {
       let action_key = getActionKey();
-console.log(action_key)
       if (action_key) {
         let data = await axiosInstance.post("/api/v1/yaki-chest", {
           action_key,
         });
-        console.log(data.data)
+        console.log(data.data);
         let { user_stats, is_updated } = data.data;
 
         if (is_updated) {
@@ -252,6 +352,22 @@ console.log(action_key)
     if (amount <= 100) return "zap-60";
     if (amount > 100) return "zap-100";
     return false;
+  };
+
+  const handleSelectWallet = (walletID) => {
+    // let walletID = e.target.value;
+    let index = wallets.findIndex((wallet) => wallet.id == walletID);
+
+    let tempWallets = Array.from(wallets);
+    tempWallets = tempWallets.map((wallet) => {
+      let w = { ...wallet };
+      w.active = false;
+      return w;
+    });
+    tempWallets[index].active = true;
+    setSelectedWallet(wallets[index]);
+    setWallets(tempWallets);
+    setShowWalletList(false);
   };
 
   return (
@@ -278,11 +394,16 @@ console.log(action_key)
         >
           <div></div>
         </div>
-        <div
+        {/* <div
           className="fx-centered fit-container box-marg-s fx-start-h"
           style={{ columnGap: "24px" }}
         >
-          <UserProfilePicNOSTR size={75} img={recipientInfo.picture} />
+          <UserProfilePicNOSTR
+            size={75}
+            img={recipientInfo.img || recipientInfo.picture}
+            mainAccountUser={false}
+            ring={false}
+          />
           <div className="fx-centered fx-col fx-start-v">
             <h5>Pay a tip</h5>
             <p>
@@ -297,10 +418,123 @@ console.log(action_key)
               </p>
             )}
           </div>
+        </div> */}
+        <div className="fx-centered box-marg-s">
+          <div className="fx-centered fx-col">
+            <UserProfilePicNOSTR
+              size={54}
+              mainAccountUser={true}
+              ring={false}
+            />
+            <p className="gray-c p-medium">{nostrUser.name}</p>
+          </div>
+          <div style={{ position: "relative", width: "30%" }}>
+            {confirmation === "confirmed" && (
+              <div
+                className="checkmark slide-left"
+                style={{ scale: "3" }}
+              ></div>
+            )}
+            {confirmation !== "confirmed" && (
+              <div className="arrows-animated">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            )}
+          </div>
+          <div className="fx-centered fx-col">
+            <UserProfilePicNOSTR
+              size={54}
+              img={recipientInfo.img || recipientInfo.picture}
+              mainAccountUser={false}
+              ring={false}
+            />
+            <p className="gray-c p-medium">{recipientInfo.name}</p>
+          </div>
         </div>
+
         {/* <hr style={{ margin: "1rem auto" }} /> */}
         {confirmation === "initiated" && (
           <div className="fx-centered fx-col fit-container fx-start-v">
+            {forContent && (
+              <div className="fit-container sc-s-18 box-pad-h-m box-pad-v-m">
+                <p>
+                  <span className="gray-c">For </span>
+                  {forContent}
+                </p>
+              </div>
+            )}
+            <div
+              style={{ position: "relative" }}
+              className="fit-container"
+              ref={walletListRef}
+            >
+              {selectedWallet && (
+                <div
+                  className="if fx-scattered option pointer fit-container"
+                  onClick={() => setShowWalletList(!showWalletsList)}
+                >
+                  <div>
+                    <p className="gray-c p-medium">Send with</p>
+                    <p>{selectedWallet.entitle}</p>
+                  </div>
+                  <div className="arrow"></div>
+                </div>
+              )}
+              {showWalletsList && (
+                <div
+                  className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v fx-start-h fit-container"
+                  style={{
+                    // width: "400px",
+                    backgroundColor: "var(--c1-side)",
+                    position: "absolute",
+                    right: "0",
+                    top: "calc(100% + 5px)",
+                    rowGap: 0,
+                    overflow: "scroll",
+                    maxHeight: "300px",
+                    zIndex: 100,
+                  }}
+                >
+                  <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
+                    Connected wallets
+                  </p>
+                  {wallets.map((wallet) => {
+                    return (
+                      <div
+                        key={wallet.id}
+                        className="option-no-scale fit-container fx-scattered sc-s-18 pointer box-pad-h-m box-pad-v-s"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectWallet(wallet.id);
+                        }}
+                        style={{
+                          border: "none",
+                          overflow: "visible",
+                        }}
+                      >
+                        <div className="fx-centered">
+                          {wallet.active && (
+                            <div
+                              style={{
+                                minWidth: "8px",
+                                aspectRatio: "1/1",
+                                backgroundColor: "var(--green-main)",
+                                borderRadius: "var(--border-r-50)",
+                              }}
+                            ></div>
+                          )}
+                          <p className={wallet.active ? "green-c" : ""}>
+                            {wallet.entitle}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <div className="fit-container" style={{ position: "relative" }}>
               <input
                 type="number"
@@ -320,16 +554,18 @@ console.log(action_key)
               {predefined_amounts.map((item, index) => {
                 return (
                   <button
-                    className={`fx btn ${
-                      amount === item.amount ? "btn-normal" : "btn-gst"
-                    }`}
+                    className={`fx  btn sc-s-18 `}
                     key={index}
+                    style={{
+                      borderColor: amount === item.amount ? "var(--black)" : "",
+                      color: "var(--black)",
+                    }}
                     onClick={() => setAmount(item.amount)}
                   >
-                    {item.entitle} {index === 0 && <span>😀</span>}
                     {index === 1 && <span>🥳</span>}
                     {index === 2 && <span>🤩</span>}
                     {index === 3 && <span>🤯</span>}
+                    {index === 0 && <span>😀</span>} {item.entitle}
                   </button>
                 );
               })}
@@ -389,4 +625,51 @@ console.log(action_key)
       </section>
     </div>
   );
+};
+
+const checkAlbyToken = async (wallets, activeWallet) => {
+  let tokenExpiry = activeWallet.data.created_at + activeWallet.data.expires_in;
+  let currentTime = Math.floor(Date.now() / 1000);
+  if (tokenExpiry > currentTime)
+    return {
+      wallets,
+      activeWallet,
+    };
+  try {
+    let fd = new FormData();
+    fd.append("refresh_token", activeWallet.data.refresh_token);
+    fd.append("grant_type", "refresh_token");
+    const access_token = await axios.post(
+      "https://api.getalby.com/oauth/token",
+      fd,
+      {
+        auth: {
+          username: process.env.REACT_APP_ALBY_CLIENT_ID,
+          password: process.env.REACT_APP_ALBY_SECRET_ID,
+        },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    let tempWallet = { ...activeWallet };
+    tempWallet.data = {
+      ...access_token.data,
+      created_at: Math.floor(Date.now() / 1000),
+    };
+    let tempWallets = Array.from(wallets);
+    let index = wallets.findIndex((item) => item.id === activeWallet.id);
+    tempWallets[index] = tempWallet;
+    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    return {
+      wallets: tempWallets,
+      activeWallet: tempWallet,
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      wallets,
+      activeWallet,
+    };
+  }
 };

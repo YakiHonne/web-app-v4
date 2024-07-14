@@ -17,6 +17,9 @@ import { getCurrentLevel, levelCount } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import LoginWithAPI from "./LoginWithAPI";
+import WriteNew from "./WriteNew";
+import UserBalance from "./UserBalance";
+import NumberShrink from "../NumberShrink";
 
 export default function NavBar() {
   const {
@@ -32,15 +35,15 @@ export default function NavBar() {
     updatedActionFromYakiChest,
   } = useContext(Context);
   const navigateTo = useNavigate();
-  const [showLogout, setShowLogout] = useState(false);
-  // const [isLoaded, setIsLoaded] = useState(false);
   const [triggerLogin, setTriggerLogin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMyContent, setShowMyContent] = useState(false);
   const [showWritingOptions, setShowWritingOptions] = useState(false);
+  const [showMedia, setShowMedia] = useState(false);
   const settingsRef = useRef(null);
   const myContentRef = useRef(null);
-  const writingOpt = useRef(null);
+  const mediaRef = useRef(null);
+  const writingOptRef = useRef(null);
   const mainFrame = useRef(null);
   const [isActive, setIsActive] = useState(false);
   const [showYakiChest, setShowYakiChest] = useState(false);
@@ -64,7 +67,7 @@ export default function NavBar() {
     };
   }, [settingsRef]);
   useEffect(() => {
-    const handleOffClick = (e) => {
+    let handleOffClick = (e) => {
       if (myContentRef.current && !myContentRef.current.contains(e.target))
         setShowMyContent(false);
     };
@@ -74,17 +77,17 @@ export default function NavBar() {
     };
   }, [myContentRef]);
   useEffect(() => {
-    const handleOffClick = (e) => {
-      if (writingOpt.current && !writingOpt.current.contains(e.target))
+    let handleOffClick = (e) => {
+      if (writingOptRef.current && !writingOptRef.current.contains(e.target))
         setShowWritingOptions(false);
     };
     document.addEventListener("mousedown", handleOffClick);
     return () => {
       document.removeEventListener("mousedown", handleOffClick);
     };
-  }, [writingOpt]);
+  }, [writingOptRef]);
   useEffect(() => {
-    const handleOffClick = (e) => {
+    let handleOffClick = (e) => {
       if (mainFrame.current && !mainFrame.current.contains(e.target))
         setIsActive(false);
     };
@@ -94,204 +97,106 @@ export default function NavBar() {
     };
   }, [mainFrame]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setIsLoaded(false);
-  //       const data = await axiosInstance.get("/api/v1/yaki-chest/stats");
-  //       if (data.data.user_stats.pubkey !== nostrKeys.pub) {
-  //         nostrUserLogout();
-  //         setIsLoaded(false);
-  //         return;
-  //       }
-  //       let { user_stats, platform_standards } = data.data;
-  //       let xp = user_stats.xp;
-  //       let currentLevel = getCurrentLevel(xp);
-  //       let nextLevel = currentLevel + 1;
-  //       let toCurrentLevelPoints = levelCount(currentLevel);
-  //       let toNextLevelPoints = levelCount(nextLevel);
-  //       let totalPointInLevel = toNextLevelPoints - toCurrentLevelPoints;
-  //       let inBetweenLevelPoints = xp - toCurrentLevelPoints;
-  //       let remainingPointsToNextLevel =
-  //         totalPointInLevel - inBetweenLevelPoints;
+  useEffect(() => {
+    let handleOffClick = (e) => {
+      if (mediaRef.current && !mediaRef.current.contains(e.target)) {
+        setShowMedia(false);
+      }
+    };
 
-  //       setYakiChestStats({
-  //         xp,
-  //         currentLevel,
-  //         nextLevel,
-  //         toCurrentLevelPoints,
-  //         toNextLevelPoints,
-  //         totalPointInLevel,
-  //         inBetweenLevelPoints,
-  //         remainingPointsToNextLevel,
-  //       });
-  //       setIsLoaded(true);
-  //     } catch (err) {
-  //       console.log(err);
-  //       setIsLoaded(false);
-  //     }
-  //   };
-  //   if (nostrKeys && isConnectedToYaki) fetchData();
-  //   if (nostrKeys && !isConnectedToYaki) setIsLoaded(true);
-  // }, [nostrKeys, isConnectedToYaki]);
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [mediaRef]);
 
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
       <div
-        className="fx-scattered fx-end-v nostr-sidebar box-pad-v-m box-pad-h fx-col "
-        style={{ paddingBottom: "1em", zIndex: isActive ? 1000 : 200 }}
+        className="fx-scattered fx-end-v nostr-sidebar box-pad-v-m fx-col "
+        style={{
+          paddingBottom: "1em",
+          paddingRight: ".5rem",
+          zIndex: isActive ? 1000 : 200,
+        }}
         onClick={() => setIsActive(true)}
         ref={mainFrame}
       >
         {triggerLogin && <LoginNOSTR exit={() => setTriggerLogin(false)} />}
         <div
-          className="fx-scattered fx-end-v fx-col"
+          className="fx-scattered fx-start-v fx-col fit-container"
           style={{ height: "100%" }}
         >
-          <div className="fx-centered fx-start-h fit-container">
-            <div
-              className="yakihonne-logo-128"
-              onClick={() => navigateTo("/")}
-            ></div>
-          </div>
-
-          <div
-            className="fit-container link-items fx-scattered fx-col fx-start-v"
-            style={{ rowGap: 0 }}
-          >
-            <div
-              onClick={() => navigateTo("/")}
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                isPage("/") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="home-24"></div>
-              <div className="link-label">Home</div>
-            </div>
-            <div
-              onClick={() => navigateTo("/articles")}
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                isPage("/articles") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="posts-24"></div>
-              <div className="link-label">Articles</div>
-            </div>
-            <div
-              onClick={() => navigateTo("/curations")}
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                isPage("/curations") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="curation-24"></div>
-              <div className="link-label">Curations</div>
-            </div>
-            <div
-              onClick={() => navigateTo("/flash-news")}
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                isPage("/flash-news") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="news-24"></div>
-              <div className="link-label">Flash news</div>
-            </div>
-            <div
-              onClick={() => navigateTo("/uncensored-notes")}
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                isPage("/uncensored-notes") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="note-24"></div>
-              <div className="link-label">Uncensored notes</div>
-            </div>
-            <div
-              onClick={() => navigateTo("/buzz-feed")}
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                isPage("/buzz-feed") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="buzz-24"></div>
-              <div className="link-label">Buzz feed</div>
-            </div>
-            <div
-              onClick={() => navigateTo("/videos")}
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                isPage("/videos") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="play-24"></div>
-              <div className="link-label">Videos</div>
-            </div>
-            <div
-              onClick={() => navigateTo("/messages")}
-              className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                isPage("/messages") ? "active-link" : "inactive-link"
-              }`}
-            >
-              <div className="fx-centered">
-                <div className="env-24"></div>
-                <div className="link-label">Messages</div>
-              </div>
-              {isNewMsg && (
-                <div
-                  style={{
-                    minWidth: "8px",
-                    aspectRatio: "1/1",
-                    backgroundColor: "var(--green-main)",
-                    borderRadius: "var(--border-r-50)",
-                  }}
-                ></div>
-              )}
-            </div>
-            <NotificationCenter />
-            {/* <div
-            onClick={() => navigateTo("/my-curations")}
-            className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-              isPage("/my-curations") ? "active-link" : "inactive-link"
-            }`}
-          >
-            <div className="stories-24"></div>
-            <div className="link-label">My curations</div>
-          </div> */}
-            {/* <Link
-            to={"/my-articles"}
-            className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-              isPage("/my-articles") ? "active-link" : "inactive-link"
-            }`}
-            style={{ position: "relative" }}
-          >
-            <div className="posts-24"></div>
-            <div className="link-label">My articles</div>
-          </Link> */}
-            {nostrKeys && (
+          <div className="fx-start-h fx-centered fx-col fit-container">
+            <div className="fx-centered fx-start-h fit-container">
               <div
+                className="yakihonne-logo-128"
+                onClick={() => navigateTo("/")}
+              ></div>
+            </div>
+            <div className="mb-show" style={{ height: "200px" }}></div>
+            <UserBalance />
+            <div
+              className="fit-container link-items fx-scattered fx-col fx-start-v "
+              style={{ rowGap: 0, maxHeight: "71vh" }}
+            >
+              <div
+                onClick={() => {
+                  navigateTo("/");
+                }}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                  showMyContent ||
-                  isPage("/my-flash-news") ||
-                  isPage("/my-curations") ||
-                  isPage("/my-articles") ||
-                  isPage("/bookmarks")
-                    ? "active-link"
-                    : "inactive-link"
+                  isPage("/") ? "active-link" : "inactive-link"
                 }`}
-                style={{ position: "relative" }}
-                onClick={() => setShowMyContent(!showMyContent)}
-                ref={myContentRef}
               >
-                <div className="folder-24"></div>
-                <div className="link-label">My content</div>
-                {showMyContent && (
+                <div className={isPage("/") ? "home-bold-24" : "home-24"}></div>
+                <div className="link-label">Home</div>
+              </div>
+              <div
+                className="fit-container fx-centered fx-col fx-end-v"
+                ref={mediaRef}
+                style={{
+                  position: "relative",
+                }}
+              >
+                <div
+                  className={`pointer fit-container  fx-scattered box-pad-h-s box-pad-v-s ${
+                    showMedia ||
+                    isPage("/flash-news") ||
+                    isPage("/curations") ||
+                    isPage("/articles") ||
+                    isPage("/uncensored-notes") ||
+                    isPage("/videos")
+                      ? "active-link"
+                      : "inactive-link"
+                  }`}
+                  onClick={() => setShowMedia(!showMedia)}
+                >
+                  <div className="fx-centered">
+                    <div
+                      className={
+                        showMedia ||
+                        isPage("/flash-news") ||
+                        isPage("/curations") ||
+                        isPage("/articles") ||
+                        isPage("/uncensored-notes") ||
+                        isPage("/videos")
+                          ? "media-bold-24"
+                          : "media-24"
+                      }
+                    ></div>
+                    <div className="link-label">Media</div>
+                  </div>
+                  <div className="link-label arrow"></div>
+                </div>
+                {showMedia && (
                   <div
-                    className="sc-s-18 fx-centered fx-start-v fx-col pointer slide-left"
+                    className="fx-centered fx-start-v fx-col pointer slide-left"
                     style={{
-                      position: "absolute",
-                      bottom: "0",
-                      right: "-230px",
-                      width: "220px",
                       height: "max-content",
                       zIndex: "900",
                       rowGap: 0,
+                      zIndex: 200,
                     }}
                   >
                     <div
@@ -299,249 +204,440 @@ export default function NavBar() {
                       style={{ rowGap: "0" }}
                     >
                       <div
-                        onClick={() => navigateTo("/my-flash-news")}
+                        onClick={() => navigateTo("/articles")}
                         className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                          isPage("/my-flash-news")
+                          isPage("/articles") ? "active-link" : "inactive-link"
+                        }`}
+                        style={{ borderRadius: 0 }}
+                      >
+                        <div
+                          className={
+                            isPage("/articles") ? "posts-bold-24" : "posts-24"
+                          }
+                        ></div>
+                        <div>Articles</div>
+                      </div>
+                      <div
+                        onClick={() => navigateTo("/flash-news")}
+                        className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                          isPage("/flash-news")
                             ? "active-link"
                             : "inactive-link"
                         }`}
                         style={{ borderRadius: 0 }}
                       >
-                        <div className="news-24"></div>
-                        <div>My flash news</div>
+                        <div
+                          className={
+                            isPage("/flash-news") ? "news-bold-24" : "news-24"
+                          }
+                        ></div>
+                        <div>Flash news</div>
                       </div>
-                      <hr />
-
                       <div
-                        onClick={() => navigateTo("/my-curations")}
+                        onClick={() => navigateTo("/uncensored-notes")}
                         className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                          isPage("/my-curations")
+                          isPage("/uncensored-notes")
                             ? "active-link"
                             : "inactive-link"
                         }`}
                         style={{ borderRadius: 0 }}
                       >
-                        <div className="stories-24"></div>
-                        <div>My curations</div>
+                        <div
+                          className={
+                            isPage("/uncensored-notes")
+                              ? "note-bold-24"
+                              : "note-24"
+                          }
+                        ></div>
+                        <div>Uncensored notes</div>
                       </div>
-                      <hr />
                       <div
-                        onClick={() => navigateTo("/my-articles")}
+                        onClick={() => navigateTo("/videos")}
                         className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                          isPage("/my-articles")
-                            ? "active-link"
-                            : "inactive-link"
+                          isPage("/videos") ? "active-link" : "inactive-link"
                         }`}
                         style={{ borderRadius: 0 }}
                       >
-                        <div className="posts-24"></div>
-                        <div>My articles</div>
+                        <div
+                          className={
+                            isPage("/videos") ? "play-bold-24" : "play-24"
+                          }
+                        ></div>
+                        <div>Videos</div>
                       </div>
-                      <hr />
                       <div
-                        onClick={() => navigateTo("/my-videos")}
+                        onClick={() => navigateTo("/curations")}
                         className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                          isPage("/my-videos") ? "active-link" : "inactive-link"
+                          isPage("/curations") ? "active-link" : "inactive-link"
                         }`}
                         style={{ borderRadius: 0 }}
                       >
-                        <div className="play-24"></div>
-                        <div>My videos</div>
-                      </div>
-                      <hr />
-                      <div
-                        onClick={() => navigateTo("/bookmarks")}
-                        className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                          isPage("/bookmarks") ? "active-link" : "inactive-link"
-                        }`}
-                        style={{ borderRadius: 0 }}
-                      >
-                        <div className="bookmark-i-24"></div>
-                        <div>My bookmarks</div>
+                        <div
+                          className={
+                            isPage("/curations")
+                              ? "curation-bold-24"
+                              : "curation-24"
+                          }
+                        ></div>
+                        <div>Curations</div>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
-            )}
-            {/* {nostrUser && ( */}
-            <div
-              className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                showWritingOptions ? "active-link" : "inactive-link"
-              }`}
-              style={{ position: "relative" }}
-              onClick={() =>
-                nostrKeys
-                  ? setShowWritingOptions(!showWritingOptions)
-                  : setTriggerLogin(true)
-              }
-              ref={writingOpt}
-            >
-              <div className="write-24"></div>
-              <div className="link-label">Write</div>
-              {showWritingOptions && (
+              <div
+                onClick={() => {
+                  navigateTo("/notes");
+                }}
+                className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                  isPage("/notes") ? "active-link" : "inactive-link"
+                }`}
+              >
                 <div
-                  className="sc-s-18 fx-centered fx-start-v fx-col pointer slide-left"
+                  className={isPage("/notes") ? "note-2-bold-24" : "note-2-24"}
+                ></div>
+                <div className="link-label">Notes</div>
+              </div>
+              {!(showMedia || showMyContent || showWritingOptions) && (
+                <>
+                  <div
+                    onClick={() => navigateTo("/buzz-feed")}
+                    className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                      isPage("/buzz-feed") ? "active-link" : "inactive-link"
+                    }`}
+                  >
+                    <div
+                      className={
+                        isPage("/buzz-feed") ? "buzz-bold-24" : "buzz-24"
+                      }
+                    ></div>
+                    <div className="link-label">Buzz feed</div>
+                  </div>
+                  <div
+                    onClick={() => navigateTo("/messages")}
+                    className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
+                      isPage("/messages") ? "active-link" : "inactive-link"
+                    }`}
+                  >
+                    <div className="fx-centered">
+                      <div
+                        className={
+                          isPage("/messages") ? "env-bold-24" : "env-24"
+                        }
+                      ></div>
+                      <div className="link-label">Messages</div>
+                    </div>
+                    {isNewMsg && (
+                      <div
+                        style={{
+                          minWidth: "8px",
+                          aspectRatio: "1/1",
+                          backgroundColor: "var(--red-main)",
+                          borderRadius: "var(--border-r-50)",
+                        }}
+                      ></div>
+                    )}
+                  </div>
+                  <NotificationCenter />
+                </>
+              )}
+              {nostrKeys && (
+                <div
+                  className="fit-container fx-centered fx-col fx-end-v"
+                  ref={myContentRef}
                   style={{
-                    position: "absolute",
-                    bottom: "0",
-                    right: "-230px",
-                    width: "220px",
-                    height: "max-content",
-                    zIndex: "900",
-                    rowGap: 0,
+                    position: "relative",
                   }}
                 >
                   <div
-                    className="fx-centered fx-col fx-start-v fit-container"
-                    style={{ rowGap: "0" }}
+                    className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
+                      showMyContent ||
+                      isPage("/my-flash-news") ||
+                      isPage("/my-curations") ||
+                      isPage("/my-articles") ||
+                      isPage("/bookmarks")
+                        ? "active-link"
+                        : "inactive-link"
+                    }`}
+                    onClick={() => setShowMyContent(!showMyContent)}
                   >
-                    <Link
-                      // onClick={() => navigateTo("/my-flash-news")}
-
-                      to={"/my-flash-news"}
-                      state={{ addFN: true }}
-                      className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                        "inactive-link"
-                        // isPage("/my-flash-news") ? "active-link" : "inactive-link"
-                      }`}
-                      style={{ borderRadius: 0 }}
-                    >
-                      <div className="fx-centered">
-                        <div className="news-24"></div>
-                        <div>Flash news</div>{" "}
-                      </div>
-                      <p className="p-big">+</p>
-                    </Link>
-                    <hr />
-                    <Link
-                      to={"/my-curations"}
-                      state={{ addCuration: true }}
-                      // onClick={() => navigateTo("/my-curations")}
-                      className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                        // isPage("/my-curations") ? "active-link" : "inactive-link"
-                        "inactive-link"
-                      }`}
-                      style={{ borderRadius: 0 }}
-                    >
-                      <div className="fx-centered">
-                        <div className="stories-24"></div>
-                        <div>Curation</div>
-                      </div>
-                      <p className="p-big">+</p>
-                    </Link>
-                    <hr />
-                    <div
-                      onClick={() => navigateTo("/write-article")}
-                      className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                        "inactive-link"
-                        // isPage("/write-article") ? "active-link" : "inactive-link"
-                      }`}
-                      style={{ borderRadius: 0 }}
-                    >
-                      <div className="fx-centered">
-                        <div className="posts-24"></div>
-                        <div>Article</div>
-                      </div>
-                      <p className="p-big">+</p>
+                    <div className="fx-centered">
+                      <div
+                        className={
+                          showMyContent ||
+                          isPage("/my-flash-news") ||
+                          isPage("/my-curations") ||
+                          isPage("/my-articles") ||
+                          isPage("/my-videos") ||
+                          isPage("/bookmarks")
+                            ? "folder-bold-24"
+                            : "folder-24"
+                        }
+                      ></div>
+                      <div className="link-label">My content</div>
                     </div>
-                    <hr />
-                    <Link
-                      to={"/my-videos"}
-                      state={{ addVideo: true }}
-                      className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                        "inactive-link"
-                        // isPage("/write-article") ? "active-link" : "inactive-link"
-                      }`}
-                      style={{ borderRadius: 0 }}
-                    >
-                      <div className="fx-centered">
-                        <div className="play-24"></div>
-                        <div>Video</div>
-                      </div>
-                      <p className="p-big">+</p>
-                    </Link>
+                    <div className="link-label arrow"></div>
                   </div>
+                  {showMyContent && (
+                    <div
+                      className="fx-centered fx-start-v fx-col pointer slide-left"
+                      style={{
+                        height: "max-content",
+                        zIndex: "900",
+                        rowGap: 0,
+                        zIndex: 200,
+                      }}
+                    >
+                      <div
+                        className="fx-centered fx-col fx-start-v fit-container"
+                        style={{ rowGap: "0" }}
+                      >
+                        <div
+                          onClick={() => navigateTo("/my-flash-news")}
+                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                            isPage("/my-flash-news")
+                              ? "active-link"
+                              : "inactive-link"
+                          }`}
+                          style={{ borderRadius: 0 }}
+                        >
+                          <div
+                            className={
+                              isPage("/my-flash-news")
+                                ? "news-bold-24"
+                                : "news-24"
+                            }
+                          ></div>
+                          <div>My flash news</div>
+                        </div>
+                        <div
+                          onClick={() => navigateTo("/my-curations")}
+                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                            isPage("/my-curations")
+                              ? "active-link"
+                              : "inactive-link"
+                          }`}
+                          style={{ borderRadius: 0 }}
+                        >
+                          <div
+                            className={
+                              isPage("/my-curations")
+                                ? "curation-bold-24"
+                                : "curation-24"
+                            }
+                          ></div>
+                          <div>My curations</div>
+                        </div>
+                        <div
+                          onClick={() => navigateTo("/my-articles")}
+                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                            isPage("/my-articles")
+                              ? "active-link"
+                              : "inactive-link"
+                          }`}
+                          style={{ borderRadius: 0 }}
+                        >
+                          <div
+                            className={
+                              isPage("/my-articles")
+                                ? "posts-bold-24"
+                                : "posts-24"
+                            }
+                          ></div>
+                          <div>My articles</div>
+                        </div>
+                        <div
+                          onClick={() => navigateTo("/my-videos")}
+                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                            isPage("/my-videos")
+                              ? "active-link"
+                              : "inactive-link"
+                          }`}
+                          style={{ borderRadius: 0 }}
+                        >
+                          <div
+                            className={
+                              isPage("/my-videos") ? "play-bold-24" : "play-24"
+                            }
+                          ></div>
+                          <div>My videos</div>
+                        </div>
+                        <div
+                          onClick={() => navigateTo("/bookmarks")}
+                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                            isPage("/bookmarks")
+                              ? "active-link"
+                              : "inactive-link"
+                          }`}
+                          style={{ borderRadius: 0 }}
+                        >
+                          <div
+                            className={
+                              isPage("/bookmarks")
+                                ? "bookmark-i-bold-24"
+                                : "bookmark-i-24"
+                            }
+                          ></div>
+                          <div>My bookmarks</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-            {/* )} */}
-            {/*                
-        <div className="fx-centered" style={{ position: "relative" }}>
-          <Link
-            className="pointer box-pad-h-s box-pad-v-s 
-               active-link"
-            style={{ backgroundColor: "var(--c1-side)" }}
-            to={"/yakihonne-mobile-app"}
-            target={"_blank"}
-          >
-            <div className="tooltip-sidebar-hover">Get the app</div>
-            <div
-              className="mobile-24"
-              // style={{ filter: "invert()" }}
-            ></div>
-          </Link>
-        </div> */}
-            <div>
-              <div
-                className="pointer fx-centered
-               inactive-link"
+              {!nostrKeys &&
+                !(showMedia || showMyContent || showWritingOptions) && (
+                  <div>
+                    <div className="pointer fx-centered inactive-link">
+                      <DtoLToggleButton />
+                    </div>
+                  </div>
+                )}
+              <div style={{ height: ".5rem" }}></div>
+              <WriteNew exit={() => null} />
+              {/* <div
+                className="fit-container fx-centered fx-col fx-end-v"
+                ref={writingOptRef}
+                style={{
+                  position: "relative",
+                }}
               >
-                <DtoLToggleButton />
-                {/* <div className="link-label">Switch theme</div> */}
-              </div>
+                <div
+                  className={`pointer fit-container  fx-scattered box-pad-h-s box-pad-v-s ${
+                    showWritingOptions ? "active-link" : "inactive-link"
+                  }`}
+                  style={{ position: "relative" }}
+                  onClick={() =>
+                    nostrKeys
+                      ? setShowWritingOptions(!showWritingOptions)
+                      : setTriggerLogin(true)
+                  }
+                >
+                  <div className="fx-centered">
+                    <div className="write-24"></div>
+                    <div className="link-label">Write</div>
+                  </div>
+                  <div className="link-label arrow"></div>
+                </div>
+                {showWritingOptions && (
+                  <div
+                    className="fx-centered fx-start-v fx-col pointer slide-left"
+                    style={{
+                      height: "max-content",
+                      zIndex: "900",
+                      rowGap: 0,
+                      zIndex: 200,
+                    }}
+                  >
+                    <div
+                      className="fx-centered fx-col fx-start-v fit-container"
+                      style={{ rowGap: "0" }}
+                    >
+                      <Link
+                        to={"/my-flash-news"}
+                        state={{ addFN: true }}
+                        className={`pointer fit-container fx-scattered box-pad-h-s  ${"inactive-link"}`}
+                        style={{ borderRadius: 0 }}
+                      >
+                        <div className="fx-centered">
+                          <div className="news-24"></div>
+                          <div>Flash news</div>{" "}
+                        </div>
+                        <p className="p-big">+</p>
+                      </Link>
+
+                      <Link
+                        to={"/my-curations"}
+                        state={{ addCuration: true }}
+                        className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
+                        style={{ borderRadius: 0 }}
+                      >
+                        <div className="fx-centered">
+                          <div className="stories-24"></div>
+                          <div>Curation</div>
+                        </div>
+                        <p className="p-big">+</p>
+                      </Link>
+
+                      <div
+                        onClick={() => navigateTo("/write-article")}
+                        className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
+                        style={{ borderRadius: 0 }}
+                      >
+                        <div className="fx-centered">
+                          <div className="posts-24"></div>
+                          <div>Article</div>
+                        </div>
+                        <p className="p-big">+</p>
+                      </div>
+
+                      <Link
+                        to={"/my-videos"}
+                        state={{ addVideo: true }}
+                        className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
+                        style={{ borderRadius: 0 }}
+                      >
+                        <div className="fx-centered">
+                          <div className="play-24"></div>
+                          <div>Video</div>
+                        </div>
+                        <p className="p-big">+</p>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div> */}
             </div>
+            {(showMedia || showMyContent || showWritingOptions) && (
+              <div className="fit-container fx-start-h fx-centered box-pad-h-s">
+                <div
+                  className="fx-centered fx-col round-icon"
+                  style={{ rowGap: 0, rotate: "-90deg" }}
+                >
+                  <p className="gray-c fx-centered" style={{ height: "6px" }}>
+                    &#x2022;
+                  </p>
+                  <p className="gray-c fx-centered" style={{ height: "6px" }}>
+                    &#x2022;
+                  </p>
+                  <p className="gray-c fx-centered" style={{ height: "6px" }}>
+                    &#x2022;
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-          {/* {nostrUser && nostrUserLoaded && (
-        <div className="fx-centered" style={{ position: "relative" }}>
-          <div
-            className="pointer box-pad-h-s box-pad-v-s 
-               active-link"
-            onClick={nostrUserLogout}
-          >
-            <div className="switch-arrows-24"></div>
-          </div>
-        </div>
-      )} */}
           {nostrKeys && (
             <div
               className="fx-scattered fx-col fit-container sidebar-user-settings "
-              style={{ columnGap: "0", position: "relative", zIndex: 100 }}
-              // ref={ref}
+              style={{ position: "relative" }}
               ref={settingsRef}
             >
-              {/* <div className="fit-container fx-centered fx-col box-pad-h-m box-marg-s">
-              <div className="fit-container fx-scattered">
-                <div className="fx-centered fx-start-h" style={{columnGap: "3px"}}>
- 
-                  <p className="orange-c p-medium">4</p>
-                  <p className="gray-c p-medium">xp</p>
-                  <p className="gray-c p-medium">LvL</p>
-                
-                  <p className="gray-c p-medium">4</p>
-                </div>
-                <div>
-                  <p className="orange-c p-medium">5</p>
-
-                </div>
-              </div>
-              <ProgressBar total={100} current={40} full={true}/>
-            </div> */}
               <div
-                className="fx-scattered fit-container sidebar-user-settings-button fx-wrap"
-                style={{overflow: "visible"}}
+                className="fit-container sidebar-user-settings-button fx-wrap"
+                style={{ overflow: "visible" }}
                 onClick={() => setShowSettings(!showSettings)}
               >
                 <div
-                  className="fx-centered fx-start-h  pointer"
+                  className="fx-centered fx-start-h pointer"
                   style={{ columnGap: "16px" }}
                 >
-                  <UserProfilePicNOSTR
-                    size={50}
-                    mainAccountUser={true}
-                    allowClick={false}
-                    ring={false}
-                  />
+                  <div className="mb-hide">
+                    <UserProfilePicNOSTR
+                      size={50}
+                      mainAccountUser={true}
+                      allowClick={false}
+                      ring={false}
+                    />
+                  </div>
+                  <div className="mb-show">
+                    <UserProfilePicNOSTR
+                      size={40}
+                      mainAccountUser={true}
+                      allowClick={false}
+                      ring={false}
+                    />
+                  </div>
                   <div className="mb-hide">
                     <p>
                       {nostrUserAbout.display_name ||
@@ -556,10 +652,6 @@ export default function NavBar() {
                     </p>
                   </div>
                 </div>
-                {/* <div className="box-pad-h-s pointer mb-hide">
-                <div>&#8942;</div>
-              </div> */}
-
                 {isYakiChestLoaded && !yakiChestStats && (
                   <div
                     className="round-icon round-icon-tooltip purple-pulse"
@@ -575,22 +667,28 @@ export default function NavBar() {
                 )}
                 {isYakiChestLoaded && yakiChestStats && (
                   <div style={{ position: "relative" }}>
-                    {updatedActionFromYakiChest && <div
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        bottom: "calc(100% + 5px)",
-                        width: "54px",
-                        aspectRatio: "1/1",
-                        borderRadius: "var(--border-r-50)",
-                        backgroundColor: "var(--c1-side)",
-                      }}
-                      className="fx-centered slide-up-down"
-                    >
-                      <p>
-                        {updatedActionFromYakiChest.points} <span className="gray-c p-medium">xp</span>
-                      </p>
-                    </div>}
+                    {updatedActionFromYakiChest && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          bottom: "calc(100% + 5px)",
+                          width: "54px",
+                          aspectRatio: "1/1",
+                          borderRadius: "var(--border-r-50)",
+                          backgroundColor: "var(--c1-side)",
+                        }}
+                        className="fx-centered slide-up-down"
+                      >
+                        <p>
+                          <NumberShrink
+                            value={updatedActionFromYakiChest.points}
+                          />
+
+                          <span className="gray-c p-medium">xp</span>
+                        </p>
+                      </div>
+                    )}
                     <ProgressCirc
                       sidebar={true}
                       size={50}
@@ -624,9 +722,9 @@ export default function NavBar() {
                     position: "absolute",
                     bottom: "110%",
                     left: "0",
-                    // right: "-230px",
                     width: "220px",
                     height: "max-content",
+                    backgroundColor: "var(--very-dim-gray)",
                     zIndex: "900",
                     rowGap: 0,
                   }}
@@ -649,15 +747,6 @@ export default function NavBar() {
                       <div className="user"></div>
                       <p>Profile</p>
                     </div>
-                    {/* <hr />
-
-                  <div
-                    className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
-                    onClick={() => navigateTo(`/bookmarks`)}
-                  >
-                    <div className="bookmark-i"></div>
-                    <p>Bookmarks</p>
-                  </div> */}
                     <hr />
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
@@ -673,6 +762,10 @@ export default function NavBar() {
                     >
                       <div className="setting"></div>
                       <p>Settings</p>
+                    </div>
+                    <hr />
+                    <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link">
+                      <DtoLToggleButton small={true} />
                     </div>
                     <hr />
                     <div

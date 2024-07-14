@@ -114,6 +114,7 @@ const ContextProvider = ({ children }) => {
   const [isYakiChestLoaded, setIsYakiChestLoaded] = useState(false);
   const [updatedActionFromYakiChest, setUpdatedActionFromYakiChest] =
     useState(false);
+  const [balance, setBalance] = useState("N/A");
 
   useEffect(() => {
     let fetchData = async () => {
@@ -397,6 +398,7 @@ const ContextProvider = ({ children }) => {
     localStorage.removeItem("_nostruserkeys");
     localStorage.removeItem("comment-with-prefix");
     localStorage.removeItem("connect_yc");
+    localStorage.removeItem("yaki-wallets");
     setIsConnectedToYaki(false);
     setYakiChestStats(false);
     let openDB = window.indexedDB.open("yaki-nostr", 3);
@@ -532,7 +534,6 @@ const ContextProvider = ({ children }) => {
           {
             kinds: [30003],
             authors: [pubkey],
-            // "#d": ["MyYakihonneBookmarkedArticles"],
           },
         ],
         {
@@ -598,9 +599,18 @@ const ContextProvider = ({ children }) => {
     });
     let res = data.data;
     if (res.length === 0 && pubkeys.length === 1)
-      setNostrAuthors([...nostrAuthors, getEmptyNostrUser(pubkeys[0])]);
+      setNostrAuthors((prev) => [...prev, getEmptyNostrUser(pubkeys[0])]);
 
-    setNostrAuthors([...nostrAuthors, ...res]);
+    setNostrAuthors((prev) => {
+      return [...prev, ...res].filter((item, index) => {
+        if (
+          [...prev, ...res].findIndex(
+            (item_) => item_.pubkey === item.pubkey
+          ) === index
+        )
+          return item;
+      });
+    });
     let openDB = indexedDB.open("yaki-nostr", 3);
     openDB.onsuccess = (event) => {
       let db = openDB.result;
@@ -698,7 +708,7 @@ const ContextProvider = ({ children }) => {
         };
         userFollowings_.onsuccess = () => {
           if (userFollowings_.result)
-            setUserFollowings(userFollowings_.result[0]);
+            setUserFollowings(userFollowings_.result[0] || []);
         };
         muted.onsuccess = () => {
           if (muted?.result?.length > 0) setMutedList(muted.result[0]);
@@ -887,6 +897,9 @@ const ContextProvider = ({ children }) => {
         initiFirstLoginStats,
         updatedActionFromYakiChest,
         setUpdatedActionFromYakiChest,
+        balance,
+        setBalance,
+        setNostrAuthors
       }}
     >
       {children}

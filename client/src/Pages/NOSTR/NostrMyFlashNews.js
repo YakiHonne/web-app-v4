@@ -36,6 +36,8 @@ import SaveArticleAsBookmark from "../../Components/NOSTR/SaveArticleAsBookmark"
 import { getNoteTree } from "../../Helpers/Helpers";
 import FlashNewsCard from "../../Components/NOSTR/FlashNewsCard";
 import Footer from "../../Components/Footer";
+import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
+import HomeFN from "../../Components/NOSTR/HomeFN";
 
 const pool = new SimplePool();
 const MAX_CHAR = 1000;
@@ -119,6 +121,7 @@ export default function NostrMyFlashNews() {
   const [isLoading, setIsLoading] = useState(false);
   const [specificDate, setSpecificDate] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [importantFN, setImportantFN] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(false);
   const [page, setPage] = useState(0);
@@ -312,6 +315,23 @@ export default function NostrMyFlashNews() {
     setFirstEventTime(timeInit.since);
     setLastEventTime(timeInit.until);
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [important] = await Promise.all([
+          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
+        ]);
+
+        setImportantFN(important.data);
+
+        // setIsLoaded(true);
+      } catch (err) {
+        // setIsLoaded(true)
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, []);
   const refreshMyFlashNews = () => {
     let tempFlashNews = Array.from(flashNews);
     tempFlashNews[noteToDelete.index_1].news.splice(noteToDelete.index_2, 1);
@@ -377,10 +397,11 @@ export default function NostrMyFlashNews() {
         />
       )}
       <div className="fit-container fx-centered">
-        <SidebarNOSTR />
-        <main className="main-page-nostr-container">
-          <ArrowUp />
-          {/* {(nostrKeys?.sec || nostrKeys?.ext) && (
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main className="main-page-nostr-container">
+            <ArrowUp />
+            {/* {(nostrKeys?.sec || nostrKeys?.ext) && (
             <div
               style={{
                 position: "fixed",
@@ -398,275 +419,308 @@ export default function NostrMyFlashNews() {
               <p className="p-big white-c">&#xFF0B;</p>
             </div>
           )} */}
-          {/* <NavbarNOSTR /> */}
-          <div className="fx-centered fit-container box-pad-h fx-start-h">
-            <div style={{ width: "min(100%,600px)" }}>
-              <div
-                className="fit-container fx-scattered"
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  backgroundColor: "var(--white)",
-                  paddingTop: "1.5rem",
-                  zIndex: "101",
-                }}
-              >
-                <h4 className="c1-c">My flash news</h4>
+            {/* <NavbarNOSTR /> */}
+            <div className="fx-centered fit-container box-pad-h fx-start-v">
+              <div style={{ flex: 1.5 }}>
+                <div
+                  className="fit-container fx-scattered"
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    backgroundColor: "var(--white)",
+                    paddingTop: "1.5rem",
+                    zIndex: "101",
+                  }}
+                >
+                  <h4 className="c1-c">My flash news</h4>
 
-                <div className="fx-centered">
                   <div className="fx-centered">
                     <div className="fx-centered">
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip="Show only days with news"
-                        style={{
-                          backgroundColor: onlyHasNews ? "var(--dim-gray)" : "",
-                        }}
-                        onClick={() => {
-                          setOnlyHasNews(!onlyHasNews);
-                        }}
-                      >
-                        <div className="news-24"></div>
-                      </div>
-                      <div
-                        className="round-icon-tooltip round-icon"
-                        style={{
-                          backgroundColor: onlyImportant ? "var(--c1)" : "",
-                        }}
-                        data-tooltip="Show only importants"
-                        onClick={() => setOnlyImportant(!onlyImportant)}
-                      >
-                        <svg
-                          viewBox="0 0 14 13"
-                          xmlns="http://www.w3.org/2000/svg"
+                      <div className="fx-centered">
+                        <div
+                          className="round-icon round-icon-tooltip"
+                          data-tooltip="Show only days with news"
                           style={{
-                            fill: onlyImportant
-                              ? "var(--white)"
-                              : "var(--gray)",
-                            height: "24px",
-                            width: "24px",
-                            margin: 0,
+                            backgroundColor: onlyHasNews
+                              ? "var(--dim-gray)"
+                              : "",
                           }}
-                          className="hot"
+                          onClick={() => {
+                            setOnlyHasNews(!onlyHasNews);
+                          }}
                         >
-                          <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
-                        </svg>
+                          <div className="news-24"></div>
+                        </div>
+                        <div
+                          className="round-icon-tooltip round-icon"
+                          style={{
+                            backgroundColor: onlyImportant ? "var(--c1)" : "",
+                          }}
+                          data-tooltip="Show only importants"
+                          onClick={() => setOnlyImportant(!onlyImportant)}
+                        >
+                          <svg
+                            viewBox="0 0 14 13"
+                            xmlns="http://www.w3.org/2000/svg"
+                            style={{
+                              fill: onlyImportant
+                                ? "var(--white)"
+                                : "var(--gray)",
+                              height: "24px",
+                              width: "24px",
+                              margin: 0,
+                            }}
+                            className="hot"
+                          >
+                            <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
+                          </svg>
+                        </div>
                       </div>
-                    </div>
-                    <div className="days-picker">
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip="Choose date"
-                        onClick={() => {
-                          setShowCalendar(!showCalendar);
-                          setShowOptions(false);
-                        }}
-                      >
-                        <div className="calendar"></div>
+                      <div className="days-picker">
+                        <div
+                          className="round-icon round-icon-tooltip"
+                          data-tooltip="Choose date"
+                          onClick={() => {
+                            setShowCalendar(!showCalendar);
+                            setShowOptions(false);
+                          }}
+                        >
+                          <div className="calendar"></div>
+                        </div>
+                        {showCalendar && (
+                          <>
+                            <Calendar
+                              selected_day={
+                                specificDate
+                                  ? new Date(firstEventTime * 1000)
+                                  : null
+                              }
+                              onClick={handleSelectingDates}
+                              clear={clearDates}
+                            />
+                          </>
+                        )}
                       </div>
-                      {showCalendar && (
-                        <>
-                          <Calendar
-                            selected_day={
-                              specificDate
-                                ? new Date(firstEventTime * 1000)
-                                : null
-                            }
-                            onClick={handleSelectingDates}
-                            clear={clearDates}
-                          />
-                        </>
-                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-              <div
-                className="fx-centered fit-container fx-col fx-start-v fx-start-h"
-                style={{ rowGap: 0 }}
-              >
-                {flashNews.map((fn, fnIndex) => {
-                  return (
-                    <div
-                      key={`${fn.date}-${fnIndex}`}
-                      className="fit-container"
-                    >
-                      {((specificDate && fn.news.length > 1) ||
-                        (!specificDate && onlyHasNews && fn.news.length > 0) ||
-                        (!specificDate && !onlyHasNews)) && (
-                        <div
-                          className="fit-container box-pad-v fx-scattered"
-                          style={{
-                            position: "sticky",
-                            top: "50px",
-                            backgroundColor: "var(--white)",
-                            zIndex: "100",
-                          }}
-                        >
-                          <h4 className="gray-c">
-                            <Date_
-                              toConvert={new Date(fn.date * 1000).toISOString()}
-                            />
-                          </h4>
-                        </div>
-                      )}
-                      {fn.news.map((news, index) => {
-                        let ratingStats = getRatingStats(news.id);
-                        if (!onlyImportant)
-                          return (
-                            <div
-                              className="fx-centered fx-start-v fx-stretch fit-container"
-                              style={{ columnGap: "10px" }}
-                              key={news.id}
-                            >
-                              <div
-                                className="fx-centered fx-start-v"
-                                // style={{ minWidth: "64px" }}
-                              >
-                                <div
-                                  className="fx-centered fx-col fx-start-h"
-                                  style={{ rowGap: 0, height: "100%" }}
-                                >
-                                  <h4 className="gray-c">&#x2022;</h4>
-                                  {/* {index + 1 !== fn.news.length && (
-                                    <div
-                                      style={{
-                                        backgroundColor: "var(--dim-gray)",
-                                        width: "2px",
-                                        height: "100%",
-                                      }}
-                                    ></div>
-                                  )} */}
-                                </div>
-                                {/* <p className="gray-c">
-                                <Date_
-                                  toConvert={new Date(
-                                    news.created_at * 1000
-                                  ).toISOString()}
-                                  timeOnly={true}
-                                />
-                              </p> */}
-                              </div>
-                              <FlashNewsCard
-                                newsContent={news}
-                                self={!(contentType === "all")}
-                                upvoteReaction={ratingStats.upvotes}
-                                downvoteReaction={ratingStats.downvotes}
-                                refreshRating={refreshRating}
+                <div
+                  className="fx-centered fit-container fx-col fx-start-v fx-start-h"
+                  style={{ rowGap: 0 }}
+                >
+                  {flashNews.map((fn, fnIndex) => {
+                    return (
+                      <div
+                        key={`${fn.date}-${fnIndex}`}
+                        className="fit-container"
+                      >
+                        {((specificDate && fn.news.length > 1) ||
+                          (!specificDate &&
+                            onlyHasNews &&
+                            fn.news.length > 0) ||
+                          (!specificDate && !onlyHasNews)) && (
+                          <div
+                            className="fit-container box-pad-v fx-scattered"
+                            style={{
+                              position: "sticky",
+                              top: "50px",
+                              backgroundColor: "var(--white)",
+                              zIndex: "100",
+                            }}
+                          >
+                            <h4 className="gray-c">
+                              <Date_
+                                toConvert={new Date(
+                                  fn.date * 1000
+                                ).toISOString()}
                               />
-                              {contentType === "self" && (
-                                <div>
-                                  <div
-                                    className="round-icon"
-                                    onClick={() => {
-                                      setNoteToDelete({
-                                        id: news.id,
-                                        content: news.content,
-                                        index_1: fnIndex,
-                                        index_2: index,
-                                      });
-                                    }}
-                                  >
-                                    <div className="trash"></div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        if (
-                          (onlyImportant === news.is_important) === true &&
-                          news.is_authentic
-                        )
-                          return (
-                            <div
-                              className="fx-centered fx-start-v fx-stretch fit-container"
-                              style={{ columnGap: "10px" }}
-                              key={news.id}
-                            >
-                              <div
-                                className="fx-centered fx-start-v"
-                                // style={{ minWidth: "64px" }}
-                              >
-                                <div
-                                  className="fx-centered fx-col fx-start-h"
-                                  style={{ rowGap: 0, height: "100%" }}
-                                >
-                                  <h4 className="gray-c h4-big">&#x2022;</h4>
-                                  {/* {index + 1 !== fn.news.length && (
-                                    <div
-                                      style={{
-                                        backgroundColor: "var(--dim-gray)",
-                                        width: "2px",
-                                        height: "100%",
-                                      }}
-                                    ></div>
-                                  )} */}
-                                </div>
-                                {/* <p className="gray-c">
-                                <Date_
-                                  toConvert={new Date(
-                                    news.created_at * 1000
-                                  ).toISOString()}
-                                  timeOnly={true}
-                                />
-                              </p> */}
-                              </div>
-                              <FlashNewsCard
-                                newsContent={news}
-                                self={!(contentType === "all")}
-                                upvoteReaction={ratingStats.upvotes}
-                                downvoteReaction={ratingStats.downvotes}
-                                refreshRating={refreshRating}
-                              />
-                              {contentType === "self" && (
-                                <div>
-                                  <div
-                                    className="round-icon"
-                                    onClick={() => {
-                                      setNoteToDelete({
-                                        id: news.id,
-                                        content: news.content,
-                                        index_1: fnIndex,
-                                        index_2: index,
-                                      });
-                                    }}
-                                  >
-                                    <div className="trash"></div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                      })}
-                      {!specificDate &&
-                        !onlyHasNews &&
-                        fn.news.length === 0 && (
-                          <div className="fit-container fx-centered fx-start-h">
-                            <p className="gray-c">No news on this day</p>
+                            </h4>
                           </div>
                         )}
+                        {fn.news.map((news, index) => {
+                          let ratingStats = getRatingStats(news.id);
+                          if (!onlyImportant)
+                            return (
+                              <div
+                                className="fx-centered fx-start-v fx-stretch fit-container"
+                                style={{ columnGap: "10px" }}
+                                key={news.id}
+                              >
+                                <div
+                                  className="fx-centered fx-start-v"
+                                  // style={{ minWidth: "64px" }}
+                                >
+                                  <div
+                                    className="fx-centered fx-col fx-start-h"
+                                    style={{ rowGap: 0, height: "100%" }}
+                                  >
+                                    <h4 className="gray-c">&#x2022;</h4>
+                                    {/* {index + 1 !== fn.news.length && (
+                                    <div
+                                      style={{
+                                        backgroundColor: "var(--dim-gray)",
+                                        width: "2px",
+                                        height: "100%",
+                                      }}
+                                    ></div>
+                                  )} */}
+                                  </div>
+                                  {/* <p className="gray-c">
+                                <Date_
+                                  toConvert={new Date(
+                                    news.created_at * 1000
+                                  ).toISOString()}
+                                  timeOnly={true}
+                                />
+                              </p> */}
+                                </div>
+                                <FlashNewsCard
+                                  newsContent={news}
+                                  self={!(contentType === "all")}
+                                  upvoteReaction={ratingStats.upvotes}
+                                  downvoteReaction={ratingStats.downvotes}
+                                  refreshRating={refreshRating}
+                                />
+                                {contentType === "self" && (
+                                  <div>
+                                    <div
+                                      className="round-icon"
+                                      onClick={() => {
+                                        setNoteToDelete({
+                                          id: news.id,
+                                          content: news.content,
+                                          index_1: fnIndex,
+                                          index_2: index,
+                                        });
+                                      }}
+                                    >
+                                      <div className="trash"></div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          if (
+                            (onlyImportant === news.is_important) === true &&
+                            news.is_authentic
+                          )
+                            return (
+                              <div
+                                className="fx-centered fx-start-v fx-stretch fit-container"
+                                style={{ columnGap: "10px" }}
+                                key={news.id}
+                              >
+                                <div
+                                  className="fx-centered fx-start-v"
+                                  // style={{ minWidth: "64px" }}
+                                >
+                                  <div
+                                    className="fx-centered fx-col fx-start-h"
+                                    style={{ rowGap: 0, height: "100%" }}
+                                  >
+                                    <h4 className="gray-c h4-big">&#x2022;</h4>
+                                    {/* {index + 1 !== fn.news.length && (
+                                    <div
+                                      style={{
+                                        backgroundColor: "var(--dim-gray)",
+                                        width: "2px",
+                                        height: "100%",
+                                      }}
+                                    ></div>
+                                  )} */}
+                                  </div>
+                                  {/* <p className="gray-c">
+                                <Date_
+                                  toConvert={new Date(
+                                    news.created_at * 1000
+                                  ).toISOString()}
+                                  timeOnly={true}
+                                />
+                              </p> */}
+                                </div>
+                                <FlashNewsCard
+                                  newsContent={news}
+                                  self={!(contentType === "all")}
+                                  upvoteReaction={ratingStats.upvotes}
+                                  downvoteReaction={ratingStats.downvotes}
+                                  refreshRating={refreshRating}
+                                />
+                                {contentType === "self" && (
+                                  <div>
+                                    <div
+                                      className="round-icon"
+                                      onClick={() => {
+                                        setNoteToDelete({
+                                          id: news.id,
+                                          content: news.content,
+                                          index_1: fnIndex,
+                                          index_2: index,
+                                        });
+                                      }}
+                                    >
+                                      <div className="trash"></div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                        })}
+                        {!specificDate &&
+                          !onlyHasNews &&
+                          fn.news.length === 0 && (
+                            <div className="fit-container fx-centered fx-start-h">
+                              <p className="gray-c">No news on this day</p>
+                            </div>
+                          )}
+                      </div>
+                    );
+                  })}
+                  {!isLoading &&
+                    specificDate &&
+                    flashNews[0]?.news?.length === 0 && (
+                      <PagePlaceholder page={"nostr-news"} />
+                    )}
+                  {isLoading && (
+                    <div
+                      className="fit-container fx-centered box-marg"
+                      style={{ height: "30vh" }}
+                    >
+                      <p className="gray-c">Loading</p>
+                      <LoadingDots />
                     </div>
-                  );
-                })}
-                {!isLoading &&
-                  specificDate &&
-                  flashNews[0]?.news?.length === 0 && (
-                    <PagePlaceholder page={"nostr-news"} />
                   )}
-                {isLoading && (
-                  <div
-                    className="fit-container fx-centered box-marg"
-                    style={{ height: "30vh" }}
-                  >
-                    <p className="gray-c">Loading</p>
-                    <LoadingDots />
-                  </div>
-                )}
+                </div>
+              </div>
+              <div
+                className=" fx-centered fx-col fx-start-v extras-homepage"
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  // backgroundColor: "var(--white)",
+                  zIndex: "100",
+                  flex: 1,
+                }}
+              >
+                <div className="sticky fit-container">
+                  <SearchbarNOSTR />
+                </div>
+                <div
+                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                  style={{
+                    backgroundColor: "var(--c1-side)",
+                    rowGap: "24px",
+                    border: "none",
+                  }}
+                >
+                  <h4>Important Flash News</h4>
+                  <HomeFN flashnews={importantFN} />
+                </div>
+                <Footer />
               </div>
             </div>
-          </div>
-          {/* <Footer /> */}
-        </main>
+            {/* <Footer /> */}
+          </main>
+        </div>
       </div>
     </div>
   );
@@ -821,7 +875,7 @@ const AddNews = ({ exit }) => {
 
   const handlePublishing = async () => {
     try {
-      if (currentWordsCount === 0) {
+      if (currentWordsCount === 0 && !note) {
         setToast({
           type: 3,
           desc: "Your note is empty!",

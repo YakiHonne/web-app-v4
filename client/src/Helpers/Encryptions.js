@@ -204,7 +204,7 @@ const getZapper = (event) => {
   let sats = decodeBolt11(getBolt11(event));
   for (let tag of event.tags) {
     if (tag[0] === "description")
-      return { ...JSON.parse(tag[1]), amount: sats };
+      return { ...JSON.parse(tag[1]), amount: sats, message: event.content };
   }
   return "";
 };

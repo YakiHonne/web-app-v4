@@ -193,13 +193,14 @@ export default function NostrUN() {
         />
       </Helmet>
       <div className="fit-container fx-centered">
+      <div className="main-container">
         <SidebarNOSTR />
         <main className="main-page-nostr-container">
           <ArrowUp />
           {/* <NavbarNOSTR /> */}
           {toLogin && <LoginNOSTR exit={() => setToLogin(false)} />}{" "}
           <div className="fit-container fx-centered fx-start-v fx-start-h box-pad-h-m">
-            <div style={{ width: "min(100%,600px)" }} className="box-pad-h-m">
+            <div style={{ flex: 2 }} className="box-pad-h-m">
               <div
                 className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h un-banner"
                 style={{
@@ -241,52 +242,52 @@ export default function NostrUN() {
                   zIndex: "100",
                 }}
               >
-                <div className="fx-centered" style={{ columnGap: 0 }}>
+                <div className="fx-centered" style={{ columnGap: '16px' }}>
                   <div
-                    style={{
-                      padding: ".5rem 1rem",
-                      borderBottom: `2px solid ${
-                        contentType == "new" ? "var(--c1)" : "var(--dim-gray)"
-                      }`,
-                    }}
+                    // style={{
+                    //   padding: ".5rem 1rem",
+                    //   borderBottom: `2px solid ${
+                    //     contentType == "new" ? "var(--c1)" : "var(--dim-gray)"
+                    //   }`,
+                    // }}
                     onClick={() => handleContentType("new")}
-                    className="pointer"
+                    className={`list-item ${contentType == "new" ? "selected-list-item" : ""}`}
                   >
-                    <span className={contentType === "new" ? "c1-c" : "gray-c"}>
+                    {/* <span className={contentType === "new" ? "c1-c" : "gray-c"}> */}
                       New
-                    </span>
+                    {/* </span> */}
                   </div>
                   <div
-                    style={{
-                      padding: ".5rem 1rem",
-                      borderBottom: `2px solid ${
-                        contentType == "nmh" ? "var(--c1)" : "var(--dim-gray)"
-                      }`,
-                    }}
+                    // style={{
+                    //   padding: ".5rem 1rem",
+                    //   borderBottom: `2px solid ${
+                    //     contentType == "nmh" ? "var(--c1)" : "var(--dim-gray)"
+                    //   }`,
+                    // }}
                     onClick={() => handleContentType("nmh")}
-                    className="pointer"
+                    className={`list-item ${contentType == "nmh" ? "selected-list-item" : ""}`}
                   >
-                    <span className={contentType === "nmh" ? "c1-c" : "gray-c"}>
+                    {/* <span className={contentType === "nmh" ? "c1-c" : "gray-c"}> */}
                       Needs your help
-                    </span>
+                    {/* </span> */}
                   </div>
                   <div
-                    style={{
-                      padding: ".5rem 1rem",
-                      borderBottom: `2px solid ${
-                        contentType == "sealed"
-                          ? "var(--c1)"
-                          : "var(--dim-gray)"
-                      }`,
-                    }}
+                    // style={{
+                    //   padding: ".5rem 1rem",
+                    //   borderBottom: `2px solid ${
+                    //     contentType == "sealed"
+                    //       ? "var(--c1)"
+                    //       : "var(--dim-gray)"
+                    //   }`,
+                    // }}
                     onClick={() => handleContentType("sealed")}
-                    className="pointer"
+                    className={`list-item ${contentType == "sealed" ? "selected-list-item" : ""}`}
                   >
-                    <span
+                    {/* <span
                       className={contentType === "sealed" ? "c1-c" : "gray-c"}
-                    >
+                    > */}
                       Rated helpful
-                    </span>
+                    {/* </span> */}
                   </div>
                 </div>
                 <div className="fx-centered">
@@ -309,7 +310,7 @@ export default function NostrUN() {
                 </div>
               </div>
               {contentType && (
-                <div className="fit-container fx-centered fx-col box-pad-v">
+                <div className="fit-container fx-centered fx-col ">
                   {flashNews.map((fn) => {
                     if (!mutedList.includes(fn.author.pubkey))
                       return (
@@ -323,7 +324,7 @@ export default function NostrUN() {
                 </div>
               )}
               {!contentType && (
-                <div className="fit-container fx-centered fx-col box-pad-v">
+                <div className="fit-container fx-centered fx-col ">
                   {myRewards.map((myrw) => {
                     return (
                       <MyRewardedItem
@@ -400,7 +401,7 @@ export default function NostrUN() {
             </div>
             <div
               style={{
-                width: "400px",
+                flex: 1,
                 position: "sticky",
                 top: 0,
               }}
@@ -484,6 +485,7 @@ export default function NostrUN() {
           </div>
         </main>
       </div>
+      </div>
     </div>
   );
 }
@@ -514,6 +516,7 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
           size={38}
           user_id={data.author.pubkey}
           ring={false}
+          metadata={data.author}
         />
       </div>
       <div

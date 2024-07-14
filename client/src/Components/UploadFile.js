@@ -9,9 +9,10 @@ import axios from "axios";
 export default function UploadFile({
   kind = "image/*",
   round = false,
+  small = false,
   setImageURL,
   setIsUploadsLoading,
-  setFileMetadata
+  setFileMetadata,
 }) {
   const { nostrKeys, setToast } = useContext(Context);
   const [method, setMethod] = useState("nostr.build");
@@ -27,7 +28,7 @@ export default function UploadFile({
       });
       return;
     }
-    setFileMetadata(file)
+    setFileMetadata(file);
     if (method === "yakihonne") {
       setIsLoading(true);
       setIsUploadsLoading(true);
@@ -104,7 +105,7 @@ export default function UploadFile({
   return (
     <label
       htmlFor="file-upload"
-      className={round ? "round-icon" : ""}
+      className={round ? (small ? "round-icon-small" : "round-icon") : ""}
       style={{
         position: "relative",
         pointerEvents: isLoading ? "none" : "auto",
@@ -125,7 +126,15 @@ export default function UploadFile({
         onChange={Upload}
         disabled={isLoading}
       />
-      {isLoading ? <LoadingDots /> : <div className="upload-file-24"></div>}
+      {isLoading ? (
+        small ? (
+          <div style={{scale: ".6"}}> <LoadingDots /></div>
+        ) : (
+          <LoadingDots />
+        )
+      ) : (
+        <div className={small ? "upload-file" : "upload-file-24"}></div>
+      )}
     </label>
   );
 }

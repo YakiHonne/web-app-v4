@@ -5,11 +5,20 @@ export default function IMGElement({ src }) {
   return (
     <>
       {resize && (
-        <div className="fixed-container box-pad-h box-pad-v fx-centered"  onClick={(e) => {
+        <div
+          className="fixed-container box-pad-h box-pad-v fx-centered"
+          onClick={(e) => {
             e.stopPropagation();
             setResize(false);
-          }}>
-          <div style={{ position: "relative", maxWidth: "800px", maxHeight: "80vh" }}>
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              maxWidth: "800px",
+              maxHeight: "80vh",
+            }}
+          >
             <div
               className="close"
               onClick={(e) => {
@@ -22,8 +31,7 @@ export default function IMGElement({ src }) {
             <img
               className="sc-s-18"
               width={"100%"}
-            
-              style={{objectFit: "contain", maxHeight: "80vh"}}
+              style={{ objectFit: "contain", maxHeight: "80vh" }}
               src={src}
               alt="el"
               loading="lazy"
@@ -38,7 +46,12 @@ export default function IMGElement({ src }) {
         }}
         className="sc-s-18"
         // style={{  cursor: "zoom-in" }}
-        style={{ margin: ".5rem auto 0", cursor: "zoom-in" }}
+        style={{
+          margin: ".5rem auto 0",
+          cursor: "zoom-in",
+          aspectRatio: "16/9",
+          objectFit: "cover",
+        }}
         width={"100%"}
         src={src}
         alt="el"

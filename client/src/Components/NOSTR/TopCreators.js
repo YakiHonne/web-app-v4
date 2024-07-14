@@ -43,6 +43,7 @@ export default function TopCreators({ top_creators = [], kind = "articles" }) {
             style={{ columnGap: "16px" }}
           >
             <AuthorPreview author={creator} kind={kind} />
+
             <Follow
               size="small"
               toFollowKey={creator.pubkey}
@@ -58,9 +59,7 @@ export default function TopCreators({ top_creators = [], kind = "articles" }) {
 
 const AuthorPreview = ({ author, kind }) => {
   const [authorData, setAuthorData] = useState("");
-
-  const { relayConnect, addNostrAuthors, getNostrAuthor, nostrAuthors } =
-    useContext(Context);
+  const { getNostrAuthor, nostrAuthors } = useContext(Context);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,12 +77,13 @@ const AuthorPreview = ({ author, kind }) => {
 
   if (!authorData)
     return (
-      <div className="fx-centered" style={{ maxWidth: "60%" }}>
+      <div className="fx-centered">
         <UserProfilePicNOSTR
           img={author.picture}
           size={32}
           user_id={author.pubkey}
           ring={false}
+          metadata={author}
         />
         <div>
           <p>{author.name}</p>
@@ -96,12 +96,13 @@ const AuthorPreview = ({ author, kind }) => {
       </div>
     );
   return (
-    <div className="fx-centered" style={{ maxWidth: "60%" }}>
+    <div className="fx-centered">
       <UserProfilePicNOSTR
         img={authorData.picture}
         size={32}
         user_id={author.pubkey}
         ring={false}
+        metadata={authorData}
       />
       <div>
         <p>{authorData.display_name || authorData.name}</p>

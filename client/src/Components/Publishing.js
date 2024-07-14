@@ -122,6 +122,11 @@ export default function Publishing() {
   }, [toPublish]);
 
   useEffect(() => {
+    let { allRelays } = toPublish;
+    if (failedRelays.length === 0) {
+      setIsFinished(true);
+      setPublishing(false);
+    }
     if (isFinished && okRelays.length > 0) {
       updateYakiChest();
     }
@@ -144,6 +149,10 @@ export default function Publishing() {
                 }
                 return prev;
               });
+              if (["article_post", "article_draft"].includes(getActionKey())) {
+                localStorage.removeItem("yai-last-article-content");
+                localStorage.removeItem("yai-last-article-title");
+              }
               setOkRelays((re) => [...re, relays[index]]);
             }
           });
@@ -156,7 +165,7 @@ export default function Publishing() {
     let timeout = setTimeout(() => {
       setIsFinished(true);
       setPublishing(false);
-    }, 6000);
+    }, 7000);
     setTimeoutP(timeout);
   };
 
@@ -246,10 +255,14 @@ export default function Publishing() {
   };
 
   const getKind4FromEvent = (tags) => {
-    let receiver = tags.find((tag) => tag[0] === "p" && tag[1] === "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3");
+    let receiver = tags.find(
+      (tag) =>
+        tag[0] === "p" &&
+        tag[1] ===
+          "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
+    );
     if (receiver) return 44;
     return 4;
- 
   };
   const getKind1FromTags = (tags) => {
     let l = tags.find((tag) => tag[0] === "l");

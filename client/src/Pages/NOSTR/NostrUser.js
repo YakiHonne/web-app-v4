@@ -19,6 +19,7 @@ import {
   getHex,
   getParsed3000xContent,
   getParsedAuthor,
+  shortenKey,
 } from "../../Helpers/Encryptions";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
@@ -52,6 +53,13 @@ import VideosPreviewCards from "../../Components/NOSTR/VideosPreviewCards";
 import LoadingDots from "../../Components/LoadingDots";
 import ShareLink from "../../Components/ShareLink";
 import InitiConvo from "../../Components/NOSTR/InitConvo";
+import KindOne from "../../Components/NOSTR/KindOne";
+import KindSix from "../../Components/NOSTR/KindSix";
+import Slider from "../../Components/Slider";
+import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
+import HomeFN from "../../Components/NOSTR/HomeFN";
+import TopCreators from "../../Components/NOSTR/TopCreators";
+import QRCode from "react-qr-code";
 
 const pool = new SimplePool();
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
@@ -75,11 +83,13 @@ export default function NostrUser() {
   const [curations, setCurations] = useState([]);
   const [flashNews, setFlashNews] = useState([]);
   const [videos, setVideos] = useState([]);
-  const [contentType, setContentType] = useState("p");
+  const [trendingProfiles, setTrendingProfiles] = useState([]);
+  const [contentType, setContentType] = useState("np");
+  const [importantFN, setImportantFN] = useState(false);
   const [followers, setFollowers] = useState([]);
   const [following, setFollowings] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
-
+  const [notes, setNotes] = useState([]);
   const [showPeople, setShowPeople] = useState(false);
   const [showWritingImpact, setShowWritingImpact] = useState(false);
   const [showRatingImpact, setShowRatingImpact] = useState(false);
@@ -89,7 +99,9 @@ export default function NostrUser() {
   const [userImpact, setUserImpact] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [initConv, setInitConv] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const optionsRef = useRef(null);
+  const extrasRef = useRef(null);
 
   const isMuted = useMemo(() => {
     let checkProfile = () => {
@@ -111,6 +123,10 @@ export default function NostrUser() {
         setPosts([]);
         setSatsRec([]);
         setSatsSent(0);
+        setFlashNews([]);
+        setVideos([]);
+        setNotes([]);
+        setContentType("np");
         let isUser = false;
         let lastCreatedAtInUser = 0;
         let relaysToFetchFrom = nostrUser
@@ -121,13 +137,13 @@ export default function NostrUser() {
             ]
           : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"];
         setIsLoaded(false);
-        getSatsStats();
+        // getSatsStats();
         getFollowerAndFollowing();
         let sub = pool.subscribeMany(
           relaysToFetchFrom,
-          [{ kinds: [30004, 0, 30023, 34235], authors: [id] }],
+          [{ kinds: [30004, 0, 30023, 34235, 1, 6], authors: [id] }],
           {
-            onevent(event) {
+            async onevent(event) {
               if (event.kind === 30023)
                 setPosts((_posts) => {
                   let d = event.tags.find((tag) => tag[0] === "d");
@@ -242,10 +258,19 @@ export default function NostrUser() {
                 });
                 // }
               }
+              if ([1, 6].includes(event.kind)) {
+                let tempEvent = await getKindOneSix(event);
+                if (tempEvent)
+                  setNotes((prev) => {
+                    let existed = prev.find((note) => note.id === event.id);
+                    if (existed) return prev;
+                    else return [...prev, tempEvent];
+                  });
+              }
             },
             oneose() {
               if (!isUser) setUser(getEmptyNostrUser(id));
-
+              sub.close();
               setIsLoaded(true);
             },
           }
@@ -256,7 +281,7 @@ export default function NostrUser() {
       }
     };
     if (id) {
-      getFlashNews();
+      // getExternalData();
       dataFetching();
     }
   }, [id, timestamp]);
@@ -278,16 +303,68 @@ export default function NostrUser() {
     getID();
   }, [user_id]);
 
-  const getFlashNews = async () => {
+  const getKindOneSix = async (event) => {
     try {
-      var data = await axios.get(API_BASE_URL + "/api/v1/flashnews", {
-        params: { pubkey: id },
+      let checkForComment = event.tags.find(
+        (tag) => tag[0] === "e" || tag[0] === "a"
+      );
+      let checkForLabel = event.tags.find((tag) => tag[0] === "l");
+      if (
+        checkForLabel &&
+        ["UNCENSORED NOTE", "FLASH NEWS"].includes(checkForLabel[1])
+      )
+        return false;
+
+      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
+      if (checkForComment && checkForComment[0] === "a" && event.kind === 1)
+        return false;
+      let author_img = "";
+      let author_name = getBech32("npub", event.pubkey).substring(0, 10);
+      let author_pubkey = event.pubkey;
+      let nEvent = nip19.neventEncode({
+        id: event.id,
+        author: event.pubkey,
       });
-      setFlashNews(data.data);
+      if (event.kind === 1) {
+        let note_tree = await getNoteTree(event.content);
+        return {
+          ...event,
+          note_tree,
+          checkForQuote:
+            checkForQuote && !event.content.includes("nostr:nevent")
+              ? checkForQuote[1]
+              : "",
+          author_img,
+          author_name,
+          author_pubkey,
+          checkForComment: checkForComment ? checkForComment[1] : "",
+          stringifiedEvent: JSON.stringify(event),
+          nEvent,
+        };
+      }
+
+      let relatedEvent = await getKindOneSix(JSON.parse(event.content));
+      if (!relatedEvent) return false;
+      return {
+        ...event,
+        relatedEvent,
+      };
     } catch (err) {
       console.log(err);
+      return false;
     }
   };
+
+  // const getExternalData = async () => {
+  //   try {
+  //     var fn = await axios.get(API_BASE_URL + "/api/v1/flashnews", {
+  //       params: { pubkey: id },
+  //     });
+  //     setFlashNews(fn.data);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   const getFollowerAndFollowing = () => {
     try {
@@ -320,21 +397,21 @@ export default function NostrUser() {
     }
   };
 
-  const getSatsStats = async () => {
-    try {
-      let [SATS_STATS, USER_IMPACT] = await Promise.all([
-        axios.get("https://api.nostr.band/v0/stats/profile/" + id),
-        axios.get(API_BASE_URL + "/api/v1/user-impact", {
-          params: { pubkey: id },
-        }),
-      ]);
+  // const getSatsStats = async () => {
+  //   try {
+  //     let [SATS_STATS, USER_IMPACT] = await Promise.all([
+  //       axios.get("https://api.nostr.band/v0/stats/profile/" + id),
+  //       axios.get(API_BASE_URL + "/api/v1/user-impact", {
+  //         params: { pubkey: id },
+  //       }),
+  //     ]);
 
-      setSatsSent((SATS_STATS.data.stats[id]?.zaps_sent?.msats || 0) / 1000);
-      setUserImpact(USER_IMPACT.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  //     setSatsSent((SATS_STATS.data.stats[id]?.zaps_sent?.msats || 0) / 1000);
+  //     setUserImpact(USER_IMPACT.data);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   const getPost = (post) => {
     let author_img = "";
@@ -353,8 +430,9 @@ export default function NostrUser() {
 
     for (let tag of post.tags) {
       if (tag[0] === "published_at") {
-        published_at = parseInt(tag[1]) > 0 ? parseInt(tag[1]) :  post.created_at;
-     
+        published_at =
+          parseInt(tag[1]) > 0 ? parseInt(tag[1]) : post.created_at;
+
         added_date =
           published_at.length > 10
             ? new Date(parseInt(published_at)).toISOString()
@@ -409,6 +487,46 @@ export default function NostrUser() {
     };
   }, [optionsRef]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoaded(false);
+
+        const [important, nostrBandProfiles, SATS_STATS, USER_IMPACT, fn] =
+          await Promise.all([
+            axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
+            axios.get("https://api.nostr.band/v0/trending/profiles"),
+            axios.get("https://api.nostr.band/v0/stats/profile/" + id),
+            axios.get(API_BASE_URL + "/api/v1/user-impact", {
+              params: { pubkey: id },
+            }),
+            axios.get(API_BASE_URL + "/api/v1/flashnews", {
+              params: { pubkey: id },
+            }),
+          ]);
+        setFlashNews(fn.data);
+        setSatsSent((SATS_STATS.data.stats[id]?.zaps_sent?.msats || 0) / 1000);
+        setUserImpact(USER_IMPACT.data);
+        let profiles = nostrBandProfiles.data.profiles
+          ? nostrBandProfiles.data.profiles.map((profile) => {
+              return {
+                pubkey: profile.profile.pubkey,
+                articles_number: profile.new_followers_count,
+                ...JSON.parse(profile.profile.content),
+              };
+            })
+          : [];
+        setImportantFN(important.data);
+        setTrendingProfiles(profiles.slice(0, 6));
+        // setIsLoaded(true);
+      } catch (err) {
+        // setIsLoaded(true)
+        console.log(err);
+      }
+    };
+    if (id) fetchData();
+  }, [id]);
+
   const muteUnmute = async () => {
     try {
       if (!Array.isArray(mutedList)) return;
@@ -438,7 +556,20 @@ export default function NostrUser() {
       console.log(err);
     }
   };
+  const copyID = (e, pubkey) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(pubkey);
+    setToast({
+      type: 1,
+      desc: `Pubkey was copied! 👏`,
+    });
+  };
 
+  const handleInitConvo = () => {
+    if (nostrKeys && (nostrKeys.sec || nostrKeys.ext)) {
+      setInitConv(true);
+    }
+  };
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
@@ -462,7 +593,7 @@ export default function NostrUser() {
         />
       )}
       {initConv && <InitiConvo exit={() => setInitConv(false)} receiver={id} />}
-      {/* <ShareUserImg user={{ ...user, followers, following }} /> */}
+      {showQR && <QRSharing user={user} exit={() => setShowQR(false)} />}
       <div>
         <Helmet>
           <title>Yakihonne | {user.name || "<Anonymous>"}</title>
@@ -489,868 +620,655 @@ export default function NostrUser() {
           <meta property="twitter:image" content={user.picture} />
         </Helmet>
         <div className="fit-container fx-centered">
-          <SidebarNOSTR />
-          <main className="main-page-nostr-container">
-            <ArrowUp />
-            {/* <NavbarNOSTR /> */}
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div
-                style={{ width: "min(100%,720px)" }}
-                className="box-pad-h-m box-pad-v-m"
-              >
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main className="main-page-nostr-container">
+              <ArrowUp />
+              {/* <NavbarNOSTR /> */}
+              <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div
-                  className="fit-container sc-s-18 fx-centered fx-end-h  fx-col bg-img cover-bg"
-                  style={{
-                    height: "20vh",
-                    position: "relative",
-                    backgroundImage: user.cover ? `url(${user.cover})` : "",
-                    backgroundColor: "var(--very-dim-gray)",
-                  }}
-                ></div>
-                <div className="fx-centered fit-container box-pad-v-m ">
+                  style={{ flex: 1.5, maxWidth: "700px" }}
+                  className="box-pad-h-m box-pad-v-m"
+                >
                   <div
-                    className="fx-centered fx-col fx-start-v"
-                    style={{ width: "min(100%, 800px)" }}
+                    className="fit-container sc-s-18 fx-centered fx-end-h fx-start-v box-pad-h-s box-pad-v-s bg-img cover-bg"
+                    style={{
+                      height: "20vh",
+                      position: "relative",
+                      backgroundImage: user.cover ? `url(${user.cover})` : "",
+                      backgroundColor: "var(--very-dim-gray)",
+                      overflow: "visible",
+                    }}
                   >
-                    <div className="fx-scattered fit-container">
+                    <div style={{ position: "relative" }} ref={optionsRef}>
                       <div
-                        className="fx-centered"
-                        style={{ columnGap: "16px" }}
+                        className="round-icon round-icon-tooltip"
+                        data-tooltip="Options"
+                        onClick={() => {
+                          setShowOptions(!showOptions);
+                        }}
                       >
-                        <UserProfilePicNOSTR
-                          size={64}
-                          ring={false}
-                          img={user.picture}
-                          mainAccountUser={false}
-                          allowClick={false}
-                          user_id={user.pubkey}
-                        />
-                        <div className="fx-centered fx-col fx-start-v">
-                          <div className="fx-centered fx-wrap fx-start-h">
-                            <h4 className="p-caps">{user.name}</h4>
-                            <ShortenKey id={user.pubkeyhashed} />
-                          </div>
-                          <CheckNIP05
-                            address={user.nip05}
-                            pubkey={user.pubkey}
-                          />
+                        <div
+                          className="fx-centered fx-col"
+                          style={{ rowGap: 0 }}
+                        >
+                          <p
+                            className="gray-c fx-centered"
+                            style={{ height: "6px" }}
+                          >
+                            &#x2022;
+                          </p>
+                          <p
+                            className="gray-c fx-centered"
+                            style={{ height: "6px" }}
+                          >
+                            &#x2022;
+                          </p>
+                          <p
+                            className="gray-c fx-centered"
+                            style={{ height: "6px" }}
+                          >
+                            &#x2022;
+                          </p>
                         </div>
                       </div>
-                      <div className="fx-centered">
-                        <Follow
-                          toFollowKey={user.pubkey}
-                          toFollowName={user.name}
-                          setTimestamp={setTimestamp}
-                          bulkList={[]}
-                        />
-                        <ZapTip
-                          recipientLNURL={checkForLUDS(user.lud06, user.lud16)}
-                          // recipientLNURL={user.lud06 || user.lud16}
-                          recipientPubkey={user.pubkey}
-                          senderPubkey={nostrKeys.pub}
-                          recipientInfo={{
-                            name: user.name,
-                            picture: user.picture,
-                          }}
-                        />
+                      {showOptions && (
                         <div
-                          className="round-icon round-icon-tooltip"
-                          data-tooltip={`Message ${
-                            user.name || "this profile"
-                          }`}
-                          onClick={() => {
-                            setInitConv(true);
+                          style={{
+                            position: "absolute",
+                            right: 0,
+                            top: "110%",
+                            backgroundColor: "var(--dim-gray)",
+                            border: "none",
+                            minWidth: "200px",
+                            zIndex: 1000,
+                            rowGap: "12px",
                           }}
+                          className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
                         >
-                          <div className="env-edit-24"></div>
-                        </div>
-
-                        <div style={{ position: "relative" }} ref={optionsRef}>
                           <div
-                            className="round-icon round-icon-tooltip"
-                            data-tooltip="Options"
-                            onClick={() => {
-                              setShowOptions(!showOptions);
-                            }}
+                            className="fit-container fx-centered fx-start-h pointer"
+                            onClick={(e) => copyID(e, user.pubkeyhashed)}
                           >
-                            <div
-                              className="fx-centered fx-col"
-                              style={{ rowGap: 0 }}
-                            >
-                              <p
-                                className="gray-c fx-centered"
-                                style={{ height: "6px" }}
-                              >
-                                &#x2022;
-                              </p>
-                              <p
-                                className="gray-c fx-centered"
-                                style={{ height: "6px" }}
-                              >
-                                &#x2022;
-                              </p>
-                              <p
-                                className="gray-c fx-centered"
-                                style={{ height: "6px" }}
-                              >
-                                &#x2022;
-                              </p>
-                            </div>
+                            <p className="fx-centered">Copy user pubkey</p>
                           </div>
-                          {showOptions && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                right: 0,
-                                top: "110%",
-                                backgroundColor: "var(--dim-gray)",
-                                border: "none",
-                                // transform: "translateY(100%)",
-                                minWidth: "200px",
-                                zIndex: 1000,
-                                rowGap: "12px",
+                          <div className="fit-container fx-centered fx-start-h pointer">
+                            <ShareLink
+                              label={"Share profile"}
+                              path={`/users/${user_id}`}
+                              title={user.display_name || user.name}
+                              description={user.about || ""}
+                              kind={0}
+                              shareImgData={{
+                                post: { image: user.cover },
+                                author: user,
+                                followings: following.length,
                               }}
-                              className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                            />
+                          </div>
+                          {nostrKeys && nostrKeys.pub !== user.pubkey && (
+                            <div
+                              className="fit-container fx-scattered  pointer"
+                              onClick={isPublishing ? null : muteUnmute}
                             >
-                              <div className="fit-container fx-centered fx-start-h pointer">
-                                <ShareLink
-                                  label={"Share profile"}
-                                  path={`/users/${user_id}`}
-                                  title={user.display_name || user.name}
-                                  description={user.about || ""}
-                                  kind={0}
-                                  shareImgData={{
-                                    post: { image: user.cover },
-                                    author: user,
-                                    followings: following.length,
-                                  }}
-                                />
-                              </div>
-                              {nostrKeys && nostrKeys.pub !== user.pubkey && (
-                                <div
-                                  className="fit-container fx-centered fx-start-h pointer"
-                                  onClick={isPublishing ? null : muteUnmute}
-                                >
-                                  <p
-                                    className="red-c"
-                                    style={{ opacity: isPublishing ? 0.5 : 1 }}
-                                  >
-                                    {isMuted ? "Unmute" : "Mute"} profile
-                                  </p>
-                                </div>
+                              <p
+                                className="red-c"
+                                style={{
+                                  opacity: isPublishing ? 0.5 : 1,
+                                }}
+                              >
+                                {isMuted ? "Unmute" : "Mute"} profile
+                              </p>
+                              {isMuted ? (
+                                <div className="unmute-24"></div>
+                              ) : (
+                                <div className="mute-24"></div>
                               )}
                             </div>
                           )}
                         </div>
-                      </div>
+                      )}
                     </div>
+                  </div>
+                  <div className="fx-centered fit-container box-pad-v-m ">
                     <div
-                      className="fx-centered fx-start-v "
-                      style={{ columnGap: "24px" }}
+                      className="fx-centered fx-col fx-start-v"
+                      style={{ width: "min(100%, 800px)" }}
                     >
-                      <div className="box-pad-v-s fx-centered fx-start-v fx-col">
-                        {user.about && (
-                          <p
-                            className="p-centered p-medium p-left"
-                            style={{ maxWidth: "400px" }}
-                          >
-                            {user.about}
-                          </p>
-                        )}
+                      <div className="fx-scattered fit-container">
+                        <div
+                          className="fx-centered"
+                          style={{ columnGap: "16px" }}
+                        >
+                          <UserProfilePicNOSTR
+                            size={72}
+                            ring={false}
+                            img={user.picture}
+                            mainAccountUser={false}
+                            allowClick={false}
+                            user_id={user.pubkey}
+                          />
+                          <div className="fx-centered fx-col fx-start-v">
+                            <div className="fx-centered fx-wrap fx-start-h">
+                              <h4 className="p-caps">{user.name}</h4>
+                            </div>
+                            <CheckNIP05
+                              address={user.nip05}
+                              pubkey={user.pubkey}
+                            />
+                          </div>
+                        </div>
                         <div className="fx-centered">
                           <div
-                            className="fx-centered"
-                            style={{ columnGap: "10px" }}
+                            className="round-icon round-icon-tooltip"
+                            data-tooltip="Scan QR code"
+                            onClick={() => setShowQR(true)}
                           >
-                            <div className="user"></div>
-                            <div
-                              className="pointer"
-                              onClick={() =>
-                                following.length !== 0
-                                  ? setShowPeople("following")
-                                  : null
-                              }
+                            <div className="qrcode-24"></div>
+                          </div>
+                          <Follow
+                            toFollowKey={user.pubkey}
+                            toFollowName={user.name}
+                            setTimestamp={setTimestamp}
+                            bulkList={[]}
+                          />
+                          <ZapTip
+                            recipientLNURL={checkForLUDS(
+                              user.lud06,
+                              user.lud16
+                            )}
+                            recipientPubkey={user.pubkey}
+                            senderPubkey={nostrKeys.pub}
+                            recipientInfo={{
+                              name: user.name,
+                              picture: user.picture,
+                            }}
+                          />
+                          <div
+                            className="round-icon round-icon-tooltip"
+                            data-tooltip={
+                              nostrKeys && (nostrKeys.sec || nostrKeys.ext)
+                                ? `Message ${user.name || "this profile"}`
+                                : `Login to message ${
+                                    user.name || "this profile"
+                                  }`
+                            }
+                            onClick={handleInitConvo}
+                          >
+                            <div className="env-edit-24"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className="fx-centered fx-start-v "
+                        style={{ columnGap: "24px" }}
+                      >
+                        <div className="box-pad-v-s fx-centered fx-start-v fx-col">
+                          {user.about && (
+                            <p
+                              className="p-centered p-medium p-left"
+                              style={{ maxWidth: "400px" }}
                             >
-                              <p className="p-medium">
-                                {following.length}{" "}
-                                <span className="gray-c">Following</span>
-                              </p>
+                              {user.about}
+                            </p>
+                          )}
+                          <div className="fx-centered">
+                            <div
+                              className="fx-centered"
+                              style={{ columnGap: "10px" }}
+                            >
+                              <div className="user"></div>
+                              <div
+                                className="pointer"
+                                onClick={() =>
+                                  following.length !== 0
+                                    ? setShowPeople("following")
+                                    : null
+                                }
+                              >
+                                <p className="p-medium">
+                                  {following.length}{" "}
+                                  <span className="gray-c">Following</span>
+                                </p>
+                              </div>
+                              <UserFollowers id={id} />
                             </div>
-                            <UserFollowers id={id} />
+                            <div
+                              className="fx-centered"
+                              style={{ columnGap: "10px" }}
+                            >
+                              <div className="bolt"></div>
+                              <div>
+                                <p className="p-medium">
+                                  <NumberShrink value={satsSent} />{" "}
+                                  <span className="gray-c">Sent</span>
+                                </p>
+                              </div>
+                              <SatsReceived id={id} />
+                            </div>
                           </div>
+                        </div>
+                      </div>
+                      {userImpact && (
+                        <div className="fx-centered fit-container">
                           <div
-                            className="fx-centered"
-                            style={{ columnGap: "10px" }}
+                            className="round-icon round-icon-tooltip"
+                            data-tooltip="User impact"
                           >
-                            <div className="bolt"></div>
-                            <div>
-                              <p className="p-medium">
-                                <NumberShrink value={satsSent} />{" "}
-                                <span className="gray-c">Sent</span>
+                            <div className="medal-24"></div>
+                          </div>
+                          <div
+                            className="fx-scattered fx option sc-s-18 pointer box-pad-h-m box-pad-v-m"
+                            style={{
+                              border: "none",
+                              backgroundColor: "var(--very-dim-gray)",
+                            }}
+                            onClick={() => setShowWritingImpact(true)}
+                          >
+                            <div className="fx-centered">
+                              <p>
+                                <span className="p-bold">
+                                  {userImpact.writing_impact.writing_impact}{" "}
+                                </span>
+                                <span className="gray-c p-medium">
+                                  Writing impact
+                                </span>
                               </p>
                             </div>
-                            <SatsReceived id={id} />
+                            <div
+                              className="arrow"
+                              style={{ transform: "rotate(-90deg)" }}
+                            ></div>
+                          </div>
+                          <div
+                            className="fx-scattered fx option sc-s-18 pointer box-pad-h-m box-pad-v-m"
+                            style={{
+                              border: "none",
+                              backgroundColor: "var(--very-dim-gray)",
+                            }}
+                            onClick={() => setShowRatingImpact(true)}
+                          >
+                            <div className="fx-centered">
+                              <p>
+                                <span className="p-bold">
+                                  {userImpact.rating_impact.rating_impact}{" "}
+                                </span>
+                                <span className="gray-c p-medium">
+                                  Rating impact
+                                </span>
+                              </p>
+                            </div>
+                            <div
+                              className="arrow"
+                              style={{ transform: "rotate(-90deg)" }}
+                            ></div>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
-                    {userImpact && (
-                      <div className="fx-centered fit-container">
-                        <div
-                          className="round-icon round-icon-tooltip"
-                          data-tooltip="User impact"
-                        >
-                          <div className="medal-24"></div>
+                  </div>
+                  <div
+                    className="fx-centered"
+                    style={{
+                      marginTop: "1rem",
+                    }}
+                  >
+                    <div
+                      className=" fx-col  fit-container"
+                      style={{ width: "min(100%,700px)" }}
+                    >
+                      <div className="fit-container fx-centered fx-start-h">
+                        <Slider
+                          items={[
+                            <div
+                              className={`list-item fx-centered fx-shrink ${
+                                contentType === "np" ? "selected-list-item" : ""
+                              }`}
+                              onClick={() => switchContentType("np")}
+                            >
+                              {contentType === "np" && (
+                                <div className="note"></div>
+                              )}
+                              Notes & replies
+                            </div>,
+                            <div
+                              className={`list-item fx-centered fx-shrink ${
+                                contentType === "p" ? "selected-list-item" : ""
+                              }`}
+                              onClick={() => switchContentType("p")}
+                            >
+                              {contentType === "p" && (
+                                <div className="posts"></div>
+                              )}
+                              Articles
+                            </div>,
+                            <div
+                              className={`list-item fx-centered fx-shrink ${
+                                contentType === "c" ? "selected-list-item" : ""
+                              }`}
+                              onClick={() => switchContentType("c")}
+                            >
+                              {contentType === "c" && (
+                                <div className="curation"></div>
+                              )}
+                              Curations
+                            </div>,
+                            <div
+                              className={`list-item fx-centered fx-shrink ${
+                                contentType === "f" ? "selected-list-item" : ""
+                              }`}
+                              onClick={() => switchContentType("f")}
+                            >
+                              {contentType === "f" && (
+                                <div className="news"></div>
+                              )}
+                              Flash news
+                            </div>,
+                            <div
+                              className={`list-item fx-centered fx-shrink ${
+                                contentType === "v" ? "selected-list-item" : ""
+                              }`}
+                              onClick={() => switchContentType("v")}
+                            >
+                              {contentType === "v" && (
+                                <div className="play"></div>
+                              )}
+                              Videos
+                            </div>,
+                          ]}
+                        />
+                      </div>
+
+                      {contentType === "np" && notes.length > 0 && (
+                        <div className="box-pad-v fx-centered fx-start-h fit-container">
+                          <h4>{notes.length} Notes & replies</h4>
                         </div>
-                        <div
-                          className="fx-scattered fx option if pointer"
-                          style={{
-                            border: "none",
-                            backgroundColor: "var(--very-dim-gray)",
-                          }}
-                          onClick={() => setShowWritingImpact(true)}
-                        >
-                          <div className="fx-centered">
-                            <p>
-                              <span className="p-bold">
-                                {userImpact.writing_impact.writing_impact}{" "}
-                              </span>
-                              <span className="gray-c p-medium">
-                                Writing impact
-                              </span>
-                            </p>
-                          </div>
+                      )}
+                      {contentType === "c" && curations.length > 0 && (
+                        <div className="box-pad-v fx-centered fx-start-h fit-container">
+                          <h4>{curations.length} Curations</h4>
+                        </div>
+                      )}
+                      {contentType === "p" && posts.length > 0 && (
+                        <div className="box-pad-v fx-centered fx-start-h fit-container">
+                          <h4>{posts.length} Articles</h4>
+                        </div>
+                      )}
+                      {contentType === "f" && flashNews.length > 0 && (
+                        <div className="box-pad-v fx-centered fx-start-h fit-container">
+                          <h4>{flashNews.length} Flash news</h4>
+                        </div>
+                      )}
+                      {contentType === "v" && videos.length > 0 && (
+                        <div className="box-pad-v fx-centered fx-start-h fit-container">
+                          <h4>{videos.length} Videos</h4>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    className="it-container fx-centered fx-col "
+                    style={{ position: "relative" }}
+                  >
+                    {contentType === "np" && (
+                      <div className="fit-container fx-centered fx-col">
+                        {notes.length > 0 && (
+                          <>
+                            <div
+                              style={{ width: "min(100%,800px)" }}
+                              className="fx-around fx-wrap posts-cards"
+                            >
+                              {notes.map((note) => {
+                                if (note.kind === 6)
+                                  return <KindSix event={note} key={note.id} />;
+                                if (note.kind === 1 && note.checkForComment)
+                                  return (
+                                    <KindOneComments
+                                      event={note}
+                                      key={note.id}
+                                      author={user}
+                                    />
+                                  );
+                                return <KindOne event={note} key={note.id} />;
+                              })}
+                            </div>
+                          </>
+                        )}
+                        {notes.length === 0 && (
                           <div
-                            className="arrow"
-                            style={{ transform: "rotate(-90deg)" }}
-                          ></div>
-                        </div>
-                        <div
-                          className="fx-scattered fx option if pointer"
-                          style={{
-                            border: "none",
-                            backgroundColor: "var(--very-dim-gray)",
-                          }}
-                          onClick={() => setShowRatingImpact(true)}
-                        >
-                          <div className="fx-centered">
-                            <p>
-                              <span className="p-bold">
-                                {userImpact.rating_impact.rating_impact}{" "}
-                              </span>
-                              <span className="gray-c p-medium">
-                                Rating impact
-                              </span>
+                            className="fx-centered fx-col box-pad-v"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>Oops! Nothing to show here!</h4>
+                            <p className="gray-c">
+                              {user.name} hasn't written any notes or replies
                             </p>
+                            <div
+                              className="note-2-24"
+                              style={{ width: "48px", height: "48px" }}
+                            ></div>
                           </div>
+                        )}
+                      </div>
+                    )}
+                    {contentType === "c" && (
+                      <div className="fit-container fx-centered fx-col">
+                        {curations.length > 0 && (
+                          <>
+                            <div
+                              style={{ width: "min(100%,800px)" }}
+                              className="fx-around fx-wrap posts-cards"
+                            >
+                              {curations.map((item) => {
+                                return (
+                                  <TopicElementNOSTR
+                                    key={item.id}
+                                    topic={item}
+                                    full={true}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                        {curations.length === 0 && (
                           <div
-                            className="arrow"
-                            style={{ transform: "rotate(-90deg)" }}
-                          ></div>
-                        </div>
+                            className="fx-centered fx-col box-pad-v"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>Oops! Nothing to show here!</h4>
+                            <p className="gray-c">
+                              {user.name} has no curations
+                            </p>
+                            <div
+                              className="curation-24"
+                              style={{ width: "48px", height: "48px" }}
+                            ></div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {contentType === "f" && (
+                      <div className="fit-container fx-centered fx-col">
+                        {flashNews.length === 0 && (
+                          <div
+                            className="fx-centered fx-col box-pad-v"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>Oops! Nothing to read here!</h4>
+                            <p className="gray-c">
+                              {user.name} hasn't written any flash news yet
+                            </p>
+                            <div
+                              className="news"
+                              style={{ width: "48px", height: "48px" }}
+                            ></div>
+                          </div>
+                        )}
+                        {flashNews.length > 0 && (
+                          <>
+                            <div
+                              style={{ width: "min(100%,800px)" }}
+                              className="fx-around fx-wrap posts-cards"
+                            >
+                              {flashNews.map((news) => {
+                                return (
+                                  <Fragment key={news.id}>
+                                    <FlashNewsCard
+                                      newsContent={news}
+                                      self={false}
+                                    />
+                                    <hr style={{ margin: "1rem auto" }} />
+                                  </Fragment>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {contentType === "p" && (
+                      <div className="fit-container fx-centered fx-col">
+                        {posts.length === 0 && (
+                          <div
+                            className="fx-centered fx-col box-pad-v"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>Oops! Nothing to read here!</h4>
+                            <p className="gray-c">
+                              {user.name} hasn't written any article yet
+                            </p>
+                            <div
+                              className="posts"
+                              style={{ width: "48px", height: "48px" }}
+                            ></div>
+                          </div>
+                        )}
+                        {posts.length > 0 && (
+                          <>
+                            <div
+                              style={{ width: "min(100%,800px)" }}
+                              className="fx-around fx-wrap posts-cards"
+                            >
+                              {posts.map((post) => {
+                                let fullPost = {
+                                  ...post,
+                                  author_img: user.picture,
+                                };
+                                return (
+                                  <div
+                                    key={post.id}
+                                    className="fx-centered fit-container"
+                                  >
+                                    <PostPreviewCardNOSTR item={fullPost} />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {contentType === "v" && (
+                      <div className="fit-container fx-centered fx-col">
+                        {videos.length === 0 && (
+                          <div
+                            className="fx-centered fx-col box-pad-v"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>Oops! Nothing to read here!</h4>
+                            <p className="gray-c">
+                              {user.name} hasn't posted any videos yet
+                            </p>
+                            <div
+                              className="play-24"
+                              style={{ width: "48px", height: "48px" }}
+                            ></div>
+                          </div>
+                        )}
+                        {videos.length > 0 && (
+                          <>
+                            <div
+                              style={{ width: "min(100%,800px)" }}
+                              className="fx-around fx-wrap posts-cards"
+                            >
+                              {videos.map((video) => {
+                                return (
+                                  <div
+                                    key={video.id}
+                                    className="fx-centered fit-container"
+                                  >
+                                    <VideosPreviewCards item={video} />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
+                  {/* )} */}
                 </div>
-
                 <div
-                  className="fx-centered box-pad-h-m"
+                  className=" fx-centered fx-col fx-start-v extras-homepage"
                   style={{
-                    marginTop: "1rem",
+                    position: "sticky",
+                    top:
+                      extrasRef.current?.getBoundingClientRect().height >=
+                      window.innerHeight
+                        ? `calc(95vh - ${
+                            extrasRef.current?.getBoundingClientRect().height ||
+                            0
+                          }px)`
+                        : 0,
+                    zIndex: "100",
+                    flex: 1,
                   }}
+                  ref={extrasRef}
                 >
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
                   <div
-                    className=" fx-col  fit-container"
-                    style={{ width: "min(100%,800px)" }}
+                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v "
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      rowGap: "24px",
+                      border: "none",
+                    }}
                   >
-                    <div className="fit-container fx-centered fx-start-h">
-                      <button
-                        className={`btn  fx-centered fx-shrink ${
-                          contentType === "p" ? "btn-normal-gray" : "btn-gst-nc"
-                        }`}
-                        onClick={() => switchContentType("p")}
-                      >
-                        Articles
-                      </button>
-                      <button
-                        className={`btn  fx-centered fx-shrink ${
-                          contentType === "c" ? "btn-normal-gray" : "btn-gst-nc"
-                        }`}
-                        onClick={() => switchContentType("c")}
-                      >
-                        Curations
-                      </button>
-                      <button
-                        className={`btn  fx-centered fx-shrink ${
-                          contentType === "f" ? "btn-normal-gray" : "btn-gst-nc"
-                        }`}
-                        onClick={() => switchContentType("f")}
-                      >
-                        Flash news
-                      </button>
-                      <button
-                        className={`btn  fx-centered fx-shrink ${
-                          contentType === "v" ? "btn-normal-gray" : "btn-gst-nc"
-                        }`}
-                        onClick={() => switchContentType("v")}
-                      >
-                        Videos
-                      </button>
+                    <h4>Important Flash News</h4>
+                    <HomeFN flashnews={importantFN} />
+                  </div>
+                  {trendingProfiles.length > 0 && (
+                    <div
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
+                      style={{
+                        backgroundColor: "var(--c1-side)",
+                        rowGap: "24px",
+                        border: "none",
+                        overflow: "visible",
+                      }}
+                    >
+                      <div className="fx-centered fx-start-h fx-col">
+                        <h4>Trending users</h4>
+                      </div>
+                      <TopCreators
+                        top_creators={trendingProfiles}
+                        kind="Followers"
+                      />
                     </div>
-
-                    {contentType === "c" && curations.length > 0 && (
-                      <div className="box-pad-v fx-centered fx-start-h fit-container">
-                        <h4>{curations.length} Curations</h4>
-                      </div>
-                    )}
-                    {contentType === "p" && posts.length > 0 && (
-                      <div className="box-pad-v fx-centered fx-start-h fit-container">
-                        <h4>{posts.length} Articles</h4>
-                      </div>
-                    )}
-                    {contentType === "f" && flashNews.length > 0 && (
-                      <div className="box-pad-v fx-centered fx-start-h fit-container">
-                        <h4>{flashNews.length} Flash news</h4>
-                      </div>
-                    )}
-                    {contentType === "v" && videos.length > 0 && (
-                      <div className="box-pad-v fx-centered fx-start-h fit-container">
-                        <h4>{videos.length} Videos</h4>
-                      </div>
-                    )}
-                  </div>
+                  )}
+                  <Footer />
                 </div>
-
-                <div
-                  className="box-pad-v fit-container fx-centered fx-col box-pad-h-m"
-                  style={{ position: "relative" }}
-                >
-                  <div
-                    className="fit-container fx-centered fx-col"
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      width: "100%",
-                      opacity: contentType === "c" ? 1 : 0,
-                      height: contentType === "c" ? "auto" : "min(40vh)",
-                      pointerEvents: contentType === "c" ? "auto" : "none",
-                      overflow: contentType === "c" ? "auto" : "hidden",
-                      paddingBottom: "3rem",
-                    }}
-                  >
-                    {curations.length > 0 && (
-                      <>
-                        <div
-                          style={{ width: "min(100%,800px)" }}
-                          className="fx-around fx-wrap posts-cards"
-                        >
-                          {curations.map((item) => {
-                            return (
-                              <TopicElementNOSTR
-                                key={item.id}
-                                topic={item}
-                                full={true}
-                              />
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-                    {curations.length === 0 && (
-                      <div
-                        className="fx-centered fx-col box-pad-v"
-                        style={{ height: "30vh" }}
-                      >
-                        <h4>Oops! Nothing to show here!</h4>
-                        <p className="gray-c">{user.name} has no curations</p>
-                        <div
-                          className="curation-24"
-                          style={{ width: "48px", height: "48px" }}
-                        ></div>
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className="fit-container fx-centered fx-col"
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      width: "100%",
-                      opacity: contentType === "f" ? 1 : 0,
-                      height: contentType === "f" ? "auto" : "min(40vh)",
-                      pointerEvents: contentType === "f" ? "auto" : "none",
-                      overflow: contentType === "f" ? "auto" : "hidden",
-                      paddingBottom: "3rem",
-                    }}
-                  >
-                    {flashNews.length === 0 && (
-                      <div
-                        className="fx-centered fx-col box-pad-v"
-                        style={{ height: "30vh" }}
-                      >
-                        <h4>Oops! Nothing to read here!</h4>
-                        <p className="gray-c">
-                          {user.name} hasn't written any flash news yet
-                        </p>
-                        <div
-                          className="news"
-                          style={{ width: "48px", height: "48px" }}
-                        ></div>
-                      </div>
-                    )}
-                    {flashNews.length > 0 && (
-                      <>
-                        <div
-                          style={{ width: "min(100%,800px)" }}
-                          className="fx-around fx-wrap posts-cards"
-                        >
-                          {flashNews.map((news) => {
-                            return (
-                              <Fragment key={news.id}>
-                                <FlashNewsCard
-                                  newsContent={news}
-                                  self={false}
-                                />
-                                <hr style={{ margin: "1rem auto" }} />
-                              </Fragment>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div
-                    className="fit-container fx-centered fx-col"
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      width: "100%",
-                      opacity: contentType === "p" ? 1 : 0,
-                      height: contentType === "p" ? "auto" : "min(40vh)",
-                      pointerEvents: contentType === "p" ? "auto" : "none",
-                      overflow: contentType === "p" ? "auto" : "hidden",
-                      paddingBottom: "3rem",
-                    }}
-                  >
-                    {posts.length === 0 && (
-                      <div
-                        className="fx-centered fx-col box-pad-v"
-                        style={{ height: "30vh" }}
-                      >
-                        <h4>Oops! Nothing to read here!</h4>
-                        <p className="gray-c">
-                          {user.name} hasn't written any article yet
-                        </p>
-                        <div
-                          className="posts"
-                          style={{ width: "48px", height: "48px" }}
-                        ></div>
-                      </div>
-                    )}
-                    {posts.length > 0 && (
-                      <>
-                        <div
-                          style={{ width: "min(100%,800px)" }}
-                          className="fx-around fx-wrap posts-cards"
-                        >
-                          {posts.map((post) => {
-                            let fullPost = {
-                              ...post,
-                              author_img: user.picture,
-                            };
-                            return (
-                              <div
-                                key={post.id}
-                                // style={{ flex: "1 1 200px" }}
-                                className="fx-centered fit-container"
-                              >
-                                <PostPreviewCardNOSTR item={fullPost} />
-                              </div>
-                            );
-                          })}
-                          {/* <Placeholder /> */}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div
-                    className="fit-container fx-centered fx-col"
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      width: "100%",
-                      opacity: contentType === "v" ? 1 : 0,
-                      height: contentType === "v" ? "auto" : "min(40vh)",
-                      pointerEvents: contentType === "v" ? "auto" : "none",
-                      overflow: contentType === "v" ? "auto" : "hidden",
-                      paddingBottom: "3rem",
-                    }}
-                  >
-                    {videos.length === 0 && (
-                      <div
-                        className="fx-centered fx-col box-pad-v"
-                        style={{ height: "30vh" }}
-                      >
-                        <h4>Oops! Nothing to read here!</h4>
-                        <p className="gray-c">
-                          {user.name} hasn't posted any videos yet
-                        </p>
-                        <div
-                          className="play-24"
-                          style={{ width: "48px", height: "48px" }}
-                        ></div>
-                      </div>
-                    )}
-                    {videos.length > 0 && (
-                      <>
-                        <div
-                          style={{ width: "min(100%,800px)" }}
-                          className="fx-around fx-wrap posts-cards"
-                        >
-                          {videos.map((video) => {
-                            let fullPost = {
-                              ...video,
-                              author_img: user.picture,
-                            };
-                            return (
-                              <div
-                                key={video.id}
-                                // style={{ flex: "1 1 200px" }}
-                                className="fx-centered fit-container"
-                              >
-                                <VideosPreviewCards item={video} />
-                              </div>
-                            );
-                          })}
-                          {/* <Placeholder /> */}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {/* )} */}
               </div>
-            </div>
-            {/* <Footer /> */}
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </>
   );
-
-  // return (
-  //   <>
-  //     {showPeople === "following" && (
-  //       <ShowPeople
-  //         exit={() => setShowPeople(false)}
-  //         list={following}
-  //         type={showPeople}
-  //       />
-  //     )}
-  //     <div>
-  //       <Helmet>
-  //         <title>Yakihonne | {user.name || "<Anonymous>"}</title>
-  //         <meta name="description" content={user.about} />
-  //         <meta property="og:description" content={user.about} />
-  //         <meta property="og:image" content={user.picture} />
-  //         <meta
-  //           property="og:url"
-  //           content={`https://yakihonne.com/user/${user_id}`}
-  //         />
-  //         <meta property="og:type" content="website" />
-  //         <meta property="og:site_name" content="Yakihonne" />
-  //         <meta
-  //           property="og:title"
-  //           content={`Yakihonne | ${user.name || "<Anonymous>"}`}
-  //         />
-  //         <meta
-  //           property="twitter:title"
-  //           content={`Yakihonne | ${user.name || "<Anonymous>"}`}
-  //         />
-  //         <meta property="twitter:description" content={user.about} />
-  //         <meta property="twitter:image" content={user.picture} />
-  //       </Helmet>
-  //       <SidebarNOSTR />
-  //       <main className="main-page-nostr-container">
-  //         <ArrowUp />
-  //         <NavbarNOSTR />
-  //         <div className="fit-container">
-  //           <div
-  //             className="fit-container sc-s profile-cover fx-centered fx-end-h  fx-col bg-img cover-bg"
-  //             style={{
-  //               height: "40vh",
-  //               position: "relative",
-  //               backgroundImage: user.cover ? `url(${user.cover})` : "",
-  //               backgroundColor: "var(--very-dim-gray)",
-  //             }}
-  //           ></div>
-  //           <div
-  //             className="fx-centered fx-start-v"
-  //             style={{ columnGap: "24px" }}
-  //           >
-  //             <div
-  //               style={{
-  //                 border: "6px solid var(--white)",
-  //                 borderRadius: "var(--border-r-50)",
-  //               }}
-  //             >
-  //               <UserProfilePicNOSTR
-  //                 size={100}
-  //                 ring={false}
-  //                 img={user.picture}
-  //                 mainAccountUser={false}
-  //                 allowClick={false}
-  //                 user_id={user.pubkey}
-  //               />
-  //             </div>
-  //             <div className="box-pad-v-s fx-centered fx-start-v fx-col">
-  //               <p className="gray-c p-medium">
-  //                 <Date_ toConvert={user.joining_date} />
-  //               </p>
-  //               <div className="fx-centered">
-  //                 <h4 className="p-caps">{user.name}</h4>
-  //                 <ShortenKey id={user.pubkeyhashed} />
-  //               </div>
-  //               <CheckNIP05 address={user.nip05} pubkey={user.pubkey} />
-  //               {/* {user.nip05 && <p className="c1-c p-medium">{user.nip05}</p>} */}
-  //               {user.about && (
-  //                 <p
-  //                   className="p-centered p-medium p-left"
-  //                   style={{ maxWidth: "400px" }}
-  //                 >
-  //                   {user.about}
-  //                 </p>
-  //               )}
-  //               <div className="fx-centered" style={{ columnGap: "16px" }}>
-  //                 <div className="user"></div>
-  //                 <div
-  //                   className="pointer"
-  //                   onClick={() =>
-  //                     following.length !== 0 ? setShowPeople("following") : null
-  //                   }
-  //                 >
-  //                   <p className="p-medium">
-  //                     {following.length}{" "}
-  //                     <span className="gray-c">Following</span>
-  //                   </p>
-  //                 </div>
-  //                 <UserFollowers id={id} />
-  //               </div>
-  //               <div className="fx-centered" style={{ columnGap: "16px" }}>
-  //                 <div className="bolt"></div>
-  //                 <div>
-  //                   <p className="p-medium">
-  //                     <NumberShrink value={satsSent} />{" "}
-  //                     <span className="gray-c">Sent</span>
-  //                   </p>
-  //                 </div>
-  //                 <SatsReceived id={id} />
-  //               </div>
-
-  //               <div className="fx-centered">
-  //                 <Follow
-  //                   toFollowKey={user.pubkey}
-  //                   toFollowName={user.name}
-  //                   setTimestamp={setTimestamp}
-  //                   bulkList={[]}
-  //                 />
-  //                 <ZapTip
-  //                   recipientLNURL={checkForLUDS(user.lud06, user.lud16)}
-  //                   // recipientLNURL={user.lud06 || user.lud16}
-  //                   recipientPubkey={user.pubkey}
-  //                   senderPubkey={nostrUser.pubkey}
-  //                   recipientInfo={{ name: user.name, picture: user.picture }}
-  //                 />
-  //               </div>
-  //             </div>
-  //           </div>
-  //           {(posts.length > 0 || curations.length > 0) && (
-  //             <div
-  //               className="fx-centered  fit-container box-pad-h"
-  //               style={{
-  //                 marginTop: "2rem",
-  //               }}
-  //             >
-  //               <div
-  //                 className="fx-scattered"
-  //                 style={{ width: "min(100%,800px)" }}
-  //               >
-  //                 {contentType === "c" && (
-  //                   <div className="box-pad-v fx-col fx-centered">
-  //                     <h3>{curations.length} Curations</h3>
-  //                   </div>
-  //                 )}
-  //                 {contentType === "p" && (
-  //                   <div className="box-pad-v fx-col fx-centered">
-  //                     <h3>{posts.length} Articles</h3>
-  //                   </div>
-  //                 )}
-  //                 <div
-  //                   className="fx-scattered sc-s pointer profile-switcher"
-  //                   style={{
-  //                     position: "relative",
-  //                     width: "150px",
-  //                     height: "45px",
-  //                     border: "none",
-  //                     backgroundColor: "var(--dim-gray)",
-  //                     columnGap: 0,
-  //                   }}
-  //                   onClick={switchContentType}
-  //                 >
-  //                   <div
-  //                     style={{
-  //                       position: "absolute",
-  //                       left: 0,
-  //                       top: 0,
-  //                       transform:
-  //                         contentType !== "p" ? "translateX(100%)" : "",
-  //                       transition: ".2s ease-in-out",
-  //                       height: "100%",
-  //                       width: "50%",
-  //                       backgroundColor: "var(--c1)",
-  //                       borderRadius: "var(--border-r-32)",
-  //                     }}
-  //                   ></div>
-  //                   <p
-  //                     className={`p-medium fx p-centered pointer ${
-  //                       contentType !== "p" ? "" : "white-c"
-  //                     }`}
-  //                     style={{
-  //                       position: "relative",
-  //                       zIndex: 10,
-  //                       transition: ".2s ease-in-out",
-  //                     }}
-  //                   >
-  //                     Articles
-  //                   </p>
-  //                   <p
-  //                     className={`p-medium fx p-centered pointer ${
-  //                       contentType !== "p" ? "white-c" : ""
-  //                     }`}
-  //                     style={{
-  //                       position: "relative",
-  //                       zIndex: 10,
-  //                       transition: ".2s ease-in-out",
-  //                     }}
-  //                   >
-  //                     Curations
-  //                   </p>
-  //                 </div>
-  //               </div>
-  //             </div>
-  //           )}
-
-  //           <div
-  //             className="box-pad-v fit-container fx-centered fx-col"
-  //             style={{ position: "relative" }}
-  //           >
-  //             <div
-  //               className="fit-container fx-centered fx-col"
-  //               style={{
-  //                 position: "absolute",
-  //                 left: 0,
-  //                 top: 0,
-  //                 width: "100%",
-  //                 opacity: contentType === "c" ? 1 : 0,
-  //                 height: contentType === "c" ? "auto" : "0",
-  //                 pointerEvents: contentType === "c" ? "auto" : "none",
-  //                 overflow: contentType === "c" ? "auto" : "hidden",
-  //               }}
-  //             >
-  //               {curations.length > 0 && (
-  //                 <>
-  //                   <div
-  //                     style={{ width: "min(100%,800px)" }}
-  //                     className="fx-around fx-wrap posts-cards"
-  //                   >
-  //                     {curations.map((item) => {
-  //                       return (
-  //                         <TopicElementNOSTR
-  //                           key={item.id}
-  //                           topic={item}
-  //                           full={true}
-  //                         />
-  //                       );
-  //                     })}
-  //                   </div>
-  //                 </>
-  //               )}
-  //               {curations.length === 0 && (
-  //                 <div className="fx-centered fx-col box-pad-v">
-  //                   <h4>Oops! Nothing to show here!</h4>
-  //                   <p className="gray-c">{user.name} has no curations</p>
-  //                   <div
-  //                     className="posts"
-  //                     style={{ width: "48px", height: "48px" }}
-  //                   ></div>
-  //                 </div>
-  //               )}
-  //             </div>
-  //             {/* )} */}
-  //             {/* {contentType === "p" && ( */}
-  //             <div
-  //               className="fit-container fx-centered fx-col"
-  //               style={{
-  //                 position: "absolute",
-  //                 left: 0,
-  //                 top: 0,
-  //                 width: "100%",
-  //                 opacity: contentType === "p" ? 1 : 0,
-  //                 height: contentType === "p" ? "auto" : "0",
-  //                 pointerEvents: contentType === "p" ? "auto" : "none",
-  //                 overflow: contentType === "p" ? "auto" : "hidden",
-  //               }}
-  //             >
-  //               {posts.length === 0 && (
-  //                 <div className="fx-centered fx-col box-pad-v">
-  //                   <h4>Oops! Nothing to read here!</h4>
-  //                   <p className="gray-c">
-  //                     {user.name} hasn't written any article yet
-  //                   </p>
-  //                   <div
-  //                     className="posts"
-  //                     style={{ width: "48px", height: "48px" }}
-  //                   ></div>
-  //                 </div>
-  //               )}
-
-  //               {posts.length > 0 && (
-  //                 <>
-  //                   <div
-  //                     style={{ width: "min(100%,800px)" }}
-  //                     className="fx-around fx-wrap posts-cards"
-  //                   >
-  //                     {posts.map((post) => {
-  //                       let fullPost = { ...post, author_img: user.picture };
-  //                       return (
-  //                         <div
-  //                           key={post.id}
-  //                           // style={{ flex: "1 1 200px" }}
-  //                           className="fx-centered fit-container"
-  //                         >
-  //                           <PostPreviewCardNOSTR
-  //                             key={post.id}
-  //                             item={fullPost}
-  //                           />
-  //                         </div>
-  //                       );
-  //                     })}
-  //                     {/* <Placeholder /> */}
-  //                   </div>
-  //                 </>
-  //               )}
-  //             </div>
-  //             {/* )} */}
-  //           </div>
-  //         </div>
-  //       </main>
-  //     </div>
-  //   </>
-  // );
 }
 
 const UserFollowers = ({ id }) => {
@@ -2030,5 +1948,246 @@ const FlashNewsCard = ({ self, newsContent }) => {
         )}
       </div>
     </>
+  );
+};
+
+const KindOneComments = ({ event, author }) => {
+  const { nostrUser } = useContext(Context);
+  const [user, setUser] = useState(author || getEmptyNostrUser(event.pubkey));
+  const [relatedEvent, setRelatedEvent] = useState(false);
+  const [isRelatedEventLoaded, setIsRelatedEventLoaded] = useState(false);
+
+  useEffect(() => {
+    setUser(author);
+  }, [author]);
+
+  useEffect(() => {
+    if (!relatedEvent) {
+      let pool = new SimplePool();
+      let relaysToFetchFrom = !nostrUser
+        ? relaysOnPlatform
+        : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
+
+      pool.subscribeMany(
+        relaysToFetchFrom,
+        [{ kinds: [1], ids: [event.checkForComment] }],
+        {
+          async onevent(event_) {
+            setRelatedEvent(await onEvent(event_));
+          },
+          oneose() {
+            setIsRelatedEventLoaded(true);
+          },
+        }
+      );
+    }
+  }, []);
+
+  const onEvent = async (event) => {
+    try {
+      let checkForComment = event.tags.find(
+        (tag) => tag[0] === "e" || tag[0] === "a"
+      );
+      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
+      if (checkForComment && event.kind === 1) return false;
+      let author_img = "";
+      let author_name = getBech32("npub", event.pubkey).substring(0, 10);
+      let author_pubkey = event.pubkey;
+      let nEvent = nip19.neventEncode({
+        id: event.id,
+        author: event.pubkey,
+      });
+      if (event.kind === 1) {
+        let note_tree = await getNoteTree(event.content);
+        return {
+          ...event,
+          note_tree,
+          checkForQuote: checkForQuote ? checkForQuote[1] : "",
+          author_img,
+          author_name,
+          author_pubkey,
+          stringifiedEvent: JSON.stringify(event),
+          nEvent,
+        };
+      }
+
+      let relatedEvent = await onEvent(JSON.parse(event.content));
+      if (!relatedEvent) return false;
+      return {
+        ...event,
+        relatedEvent,
+      };
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  };
+  return (
+    <div
+      className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v fit-container"
+      style={{
+        backgroundColor: "var(--c1-side)",
+        rowGap: "10px",
+        overflow: "visible",
+      }}
+    >
+      <div
+        className="fx-centered fx-start-h  round-icon-tooltip pointer"
+        style={{ overflow: "visible" }}
+        data-tooltip={`commented on ${new Date(
+          event.created_at * 1000
+        ).toLocaleDateString()}`}
+      >
+        <UserProfilePicNOSTR
+          size={20}
+          mainAccountUser={false}
+          ring={false}
+          user_id={user.pubkey}
+          img={user.picture}
+        />
+        <div>
+          <p className="p-medium">
+            {user.display_name || user.name}{" "}
+            <span className="orange-c">Commented on this</span>
+          </p>
+        </div>
+      </div>
+      {relatedEvent && (
+        <div className="fit-container">
+          <KindOne event={relatedEvent} />
+        </div>
+      )}
+      {!isRelatedEventLoaded && !relatedEvent && (
+        <div
+          style={{ backgroundColor: "var(--c1-side)" }}
+          className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
+        >
+          <p className="p-medium gray-c">Loading note</p>
+          <LoadingDots />
+        </div>
+      )}
+
+      {isRelatedEventLoaded && !relatedEvent && (
+        <div
+          style={{ backgroundColor: "var(--c1-side)" }}
+          className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
+        >
+          <p className="p-medium orange-c p-italic">
+            The note does not seem to be found
+          </p>
+        </div>
+      )}
+      <div className="fit-container fx-centered fx-end-h">
+        <div
+          className="fx-centered fx-start-v fx-start-h box-pad-h-m box-pad-v-m sc-s-18"
+          style={{ backgroundColor: "var(--c1-side)", width: "95%" }}
+        >
+          <UserProfilePicNOSTR
+            size={20}
+            mainAccountUser={false}
+            ring={false}
+            user_id={user.pubkey}
+            img={user.picture}
+          />
+          <div className="fit-container p-medium">{event.note_tree}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QRSharing = ({ user, exit }) => {
+  const { setToast } = useContext(Context);
+  const [selectedTab, setSelectedTab] = useState("pk");
+  const copyKey = (keyType, key) => {
+    navigator.clipboard.writeText(key);
+    setToast({
+      type: 1,
+      desc: `${keyType} was copied! 👏`,
+    });
+  };
+
+  return (
+    <div className="fixed-container box-pad-h fx-centered">
+      <div
+        className="sc-s box-pad-h box-pad-v"
+        style={{
+          width: "min(100%,400px)",
+          position: "relative",
+          // background:
+          //   "linear-gradient(180deg, rgba(156,39,176,1) 0%, rgba(41,121,255,1) 100%)",
+        }}
+      >
+        <div className="close" onClick={exit}>
+          <div></div>
+        </div>
+        <div className="fx-centered fx-col">
+          <UserProfilePicNOSTR
+            user_id={user.pubkey}
+            mainAccountUser={false}
+            size={100}
+            ring={false}
+            img={user.picture}
+          />
+          <h4>{user.display_name || user.name}</h4>
+          <p className="gray-c">@{user.name || user.display_name}</p>
+        </div>
+        <div className="fx-centered box-pad-v-m">
+          <div
+            className={`list-item ${
+              selectedTab === "pk" ? "selected-list-item" : ""
+            }`}
+            onClick={() => setSelectedTab("pk")}
+          >
+            Pubkey
+          </div>
+          {user.lud16 && (
+            <div
+              className={`list-item ${
+                selectedTab === "ln" ? "selected-list-item" : ""
+              }`}
+              onClick={() => setSelectedTab("ln")}
+            >
+              Lightning address
+            </div>
+          )}
+        </div>
+        <div className="fx-centered fit-container box-marg-s">
+          <div
+            className="box-pad-v-m box-pad-h-m sc-s-18"
+            style={{ backgroundColor: "white" }}
+          >
+            {selectedTab === "pk" && (
+              <QRCode size={200} value={getBech32("npub", user.pubkey)} />
+            )}
+            {selectedTab === "ln" && <QRCode size={200} value={user.lud16} />}
+          </div>
+        </div>
+        <div className="fit-container fx-col fx-centered">
+          <div
+            className={"fx-scattered if pointer fit-container dashed-onH"}
+            style={{ borderStyle: "dashed" }}
+            onClick={() =>
+              copyKey("The pubkey", getBech32("npub", user.pubkey))
+            }
+          >
+            <div className="key-icon-24"></div>
+            <p>{shortenKey(getBech32("npub", user.pubkey))}</p>
+            <div className="copy-24"></div>
+          </div>
+          {user.lud16 && (
+            <div
+              className={"fx-scattered if pointer fit-container dashed-onH"}
+              style={{ borderStyle: "dashed" }}
+              onClick={() => copyKey("The lightning address", user.lud16)}
+            >
+              <div className="bolt-24"></div>
+              <p>{user.lud16}</p>
+              <div className="copy-24"></div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };

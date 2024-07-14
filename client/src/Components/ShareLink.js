@@ -48,6 +48,7 @@ let kind1BG = {
   fn: "linear-gradient(45deg, #6a3093, #a044ff)",
   un: "linear-gradient(45deg, #DA4453, #89216B)",
   bf: "linear-gradient(45deg, #a8c0ff, #3f2b96)",
+  nt: "linear-gradient(45deg, #3a3400, #a8ccaf)",
 };
 
 export default function ShareLink({
@@ -295,7 +296,7 @@ export default function ShareLink({
         onClick={handleSharing}
       >
         {label && <p>{label}</p>}
-        <div className="share-icon-24"></div>
+        <div className="share-v2-24"></div>
       </div>
     </>
   );
@@ -332,6 +333,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
     if (data.label.toLowerCase() === "flash news") return kind1BG.fn;
     if (data.label.toLowerCase() === "uncensored note") return kind1BG.un;
     if (data.label.toLowerCase() === "buzz feed") return kind1BG.bf;
+    if (data.label.toLowerCase() === "note") return kind1BG.nt;
   };
 
   if (kind === 1)
@@ -363,9 +365,17 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
           </div>
           <div style={{ backgroundColor: "white" }} className="fit-container">
             <div className="fit-container box-pad-h-m box-pad-v-m ">
-              <p style={{ color: "black" }} className="p-six-lines p-medium">
+              <p
+                style={{
+                  color: "black",
+                  maxHeight: "250px",
+                  overflow: "hidden",
+                }}
+                className=" p-medium gray-c"
+              >
                 {data.post.content}
               </p>
+              <p style={{ color: "black" }}>...</p>
               {data.post.description && (
                 <p className="p-three-lines p-medium gray-c">
                   {data.post.description}
@@ -425,6 +435,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 </div>
               )}
             </div>
+            <div style={{height: "50px"}}></div>
             <div className="fx-centered fx-start-h box-pad-h-m box-pad-v-s ">
               <UserProfilePicNOSTR
                 mainAccountUser={false}
@@ -600,7 +611,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
               </p>
               {data.author.nip05 && (
                 <div className="fx-centered  box-pad-h-m">
-                  <p className="c1-c p-medium p-centered">
+                  <p className="orange-c p-medium p-centered">
                     {data.author.nip05}
                   </p>
                   <div className="checkmark-c1"></div>

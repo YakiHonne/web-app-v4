@@ -2,46 +2,39 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Date_ from "../Date_";
 import { Context } from "../../Context/Context";
+import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
+import ShareLink from "../ShareLink";
 
 export default function BuzzFeedPreviewCard({ item }) {
   const [artURL, setArtURL] = useState(`${item.nEvent}`);
+  const optionsRef = useRef(null);
+  const [showOptions, setShowOptions] = useState(false);
+
+  useEffect(() => {
+    const handleOffClick = (e) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target))
+        setShowOptions(false);
+    };
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [optionsRef]);
 
   return (
     <div
-      className={"fit-container fx-scattered sc-s-18 "}
+      className={"fit-container fx-scattered sc-s-18 box-pad-h-m"}
       onClick={(e) => e.stopPropagation()}
       style={{
+        border: "none",
         position: "relative",
+        overflow: "visible",
         columnGap: "16px",
       }}
     >
-      <Link
-        key={item.id}
-        style={{
-          backgroundImage: `url(${item.image})`,
-        }}
-        to={`/buzz-feed/${item.nEvent}`}
-        className="fit-container fx-scattered fx-col bg-img cover-bg pointer"
-      >
-        <div style={{ height: "50px" }}></div>
-        <div
-          className="fit-container fx-centered fx-start-h fx-wrap box-pad-h-m box-pad-v-m"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 87%)",
-          }}
-        >
-          {/* <div className="fit-container box-marg-full"></div> */}
-          {/* <div className="fit-container box-marg-full"></div> */}
-          <div>
-            <p className="fit-container p-medium gray-c left-p">
-              <Date_ toConvert={new Date(item.published_at * 1000)} time={true}/>
-            </p>
-            <p className="fit-container left-p" style={{ color: "white" }}>
-              {item.title}
-            </p>
-          </div>
-          <div className="fit-container fx-scattered">
+      <div className="fit-container pointer">
+        <div className="fit-container fx-scattered box-pad-v-m">
+          <div className=" fx-centered">
             <a
               className="fx-centered"
               href={item.source_domain}
@@ -49,28 +42,284 @@ export default function BuzzFeedPreviewCard({ item }) {
             >
               <div
                 style={{
-                  minWidth: "20px",
-                  minHeight: "20px",
+                  minWidth: "40px",
+                  minHeight: "40px",
                   borderRadius: "var(--border-r-50)",
                   backgroundImage: `url(${item.source_icon})`,
                 }}
                 className="bg-img cover-bg"
               ></div>
-              <p className="p-medium">{item.source_name}</p>
+              <div>
+                <p className="p-bold">{item.source_name}</p>
+                <p className="p-medium gray-c">
+                  {item.source_domain.split("//")[1]}
+                </p>
+              </div>
             </a>
-            <a
+            {/* <a
               href={item.source_url}
               target="_blank"
               className="round-icon-tooltip"
               data-tooltip="source"
             >
               <div className="share-icon"></div>
-            </a>
+            </a> */}
+          </div>
+          <p className="p-medium gray-c left-p">
+            <Date_ toConvert={new Date(item.published_at * 1000)} time={true} />
+          </p>
+        </div>
+        <Link className="fit-container fx-scattered" style={{columnGap: "16px"}} to={`/buzz-feed/${item.nEvent}`}>
+          <div style={{ width: "max(70%, 800px)" }}>
+            <p className="left-p p-big p-bold">
+              {item.title}
+            </p>
+          </div>
+          <div
+            className=" bg-img cover-bg sc-s-18 "
+            style={{
+              backgroundImage: `url(${item.image})`,
+              width: "max(30%,400px)",
+              aspectRatio: "16/9",
+              border: "none",
+            }}
+          ></div>
+        </Link>
+        <div className="fit-container fx-scattered box-pad-v-m">
+          <div className="fx-centered">
+            <div
+              className="round-icon-small round-icon-tooltip"
+              data-tooltip="Buzz feed"
+            >
+              <div className="buzz"></div>
+            </div>
+          </div>
+          <div style={{ position: "relative" }} ref={optionsRef}>
+            <div
+              className="round-icon-small round-icon-tooltip"
+              style={{ border: "none" }}
+              data-tooltip="Options"
+              onClick={() => {
+                setShowOptions(!showOptions);
+              }}
+            >
+              <div className="fx-centered fx-col" style={{ rowGap: 0 }}>
+                <p className="gray-c fx-centered" style={{ height: "6px" }}>
+                  &#x2022;
+                </p>
+                <p className="gray-c fx-centered" style={{ height: "6px" }}>
+                  &#x2022;
+                </p>
+                <p className="gray-c fx-centered" style={{ height: "6px" }}>
+                  &#x2022;
+                </p>
+              </div>
+            </div>
+            {showOptions && (
+              <div
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: "110%",
+                  backgroundColor: "var(--dim-gray)",
+                  border: "none",
+                  // transform: "translateY(100%)",
+                  minWidth: "200px",
+                  width: "max-content",
+                  zIndex: 1000,
+                  rowGap: "12px",
+                }}
+                className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+              >
+                <a href={item.source_url}>Go to source</a>
+                <SaveArticleAsBookmark
+                  label="Bookmark article"
+                  pubkey={item.id}
+                  itemType="e"
+                  kind="1"
+                />
+                <div className="fit-container fx-centered fx-start-h pointer">
+                  <ShareLink
+                    label="Share buzz feed"
+                    // path={`/article/${artURL}`}
+                    // title={authorData.author_name}
+                    // description={item.title}
+                    // kind={30023}
+                    // shareImgData={{
+                    //   post: { ...item, image: item.thumbnail },
+                    //   author: {
+                    //     pubkey: authorData.author_pubkey,
+                    //     picture: authorData.author_img,
+                    //     display_name: authorData.author_name,
+                    //   },
+                    //   label: "Article",
+                    // }}
+
+                    path={`/buzz-feed/${item.nEvent}`}
+                    title={item.source_name}
+                    description={item.content}
+                    kind={1}
+                    shareImgData={{
+                      post: {
+                        content: item.title,
+                        description: item.description,
+                        image: item.image,
+                        created_at: item.published_at,
+                      },
+                      author: {
+                        display_name: item.source_name,
+                        picture: item.source_icon,
+                      },
+                      label: "Buzz feed",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </Link>
+      </div>
     </div>
   );
+  // return (
+  //   <div
+  //     className={"fit-container fx-scattered sc-s-18 "}
+  //     onClick={(e) => e.stopPropagation()}
+  //     style={{
+  //       position: "relative",
+  //       columnGap: "16px",
+  //       border: "none"
+  //     }}
+  //   >
+  //     <div
+  //       // style={{
+  //       //   backgroundImage: `url(${item.image})`,
+  //       // }}
+  //       // to={`/buzz-feed/${item.nEvent}`}
+  //       className="fit-container fit-height fx-scattered fx-col bg-img cover-bg pointer"
+  //     >
+  //       {/* <div style={{ height: "50px" }}></div> */}
+  //       <div className="fit-container fx-centered fx-start-h fx-wrap box-pad-h-m box-pad-v-m">
+  //       <div className="fit-container fx-centered fx-start-h">
+  //           <a
+  //             className="fx-centered"
+  //             href={item.source_domain}
+  //             target="_blank"
+  //           >
+  //             <div
+  //               style={{
+  //                 minWidth: "20px",
+  //                 minHeight: "20px",
+  //                 borderRadius: "var(--border-r-50)",
+  //                 backgroundImage: `url(${item.source_icon})`,
+  //               }}
+  //               className="bg-img cover-bg"
+  //             ></div>
+  //             <p className="p-medium">{item.source_name}</p>
+  //           </a>
+  //           <a
+  //             href={item.source_url}
+  //             target="_blank"
+  //             className="round-icon-tooltip"
+  //             data-tooltip="source"
+  //           >
+  //             <div className="share-icon"></div>
+  //           </a>
+  //         </div>
+  //         <div>
+  //           <p className="fit-container p-medium gray-c left-p">
+  //             <Date_
+  //               toConvert={new Date(item.published_at * 1000)}
+  //               time={true}
+  //             />
+  //           </p>
+  //           <p className="fit-container left-p" style={{ color: "white" }}>
+  //             {item.title}
+  //           </p>
+  //         </div>
+
+  //       </div>
+  //     </div>
+  //     <div className="box-pad-h-m box-pad-v-m">
+  //       <div
+  //         className=" bg-img cover-bg sc-s "
+  //         style={{
+  //           backgroundImage: `url(${item.image})`,
+  //           minWidth: "100px",
+  //           aspectRatio: "1/1",
+  //           // borderRadius: "var(--border-r-50)",
+  //           border: "none",
+  //         }}
+  //       ></div>
+  //     </div>
+  //   </div>
+  // );
+  // return (
+  //   <div
+  //     className={"fit-container fx-scattered sc-s-18 "}
+  //     onClick={(e) => e.stopPropagation()}
+  //     style={{
+  //       position: "relative",
+  //       columnGap: "16px",
+  //     }}
+  //   >
+  //     <Link
+  //       key={item.id}
+  //       style={{
+  //         backgroundImage: `url(${item.image})`,
+  //       }}
+  //       to={`/buzz-feed/${item.nEvent}`}
+  //       className="fit-container fx-scattered fx-col bg-img cover-bg pointer"
+  //     >
+  //       <div style={{ height: "50px" }}></div>
+  //       <div
+  //         className="fit-container fx-centered fx-start-h fx-wrap box-pad-h-m box-pad-v-m"
+  //         style={{
+  //           background:
+  //             "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 87%)",
+  //         }}
+  //       >
+  //         <div>
+  //           <p className="fit-container p-medium gray-c left-p">
+  //             <Date_
+  //               toConvert={new Date(item.published_at * 1000)}
+  //               time={true}
+  //             />
+  //           </p>
+  //           <p className="fit-container left-p" style={{ color: "white" }}>
+  //             {item.title}
+  //           </p>
+  //         </div>
+  //         <div className="fit-container fx-scattered">
+  //           <a
+  //             className="fx-centered"
+  //             href={item.source_domain}
+  //             target="_blank"
+  //           >
+  //             <div
+  //               style={{
+  //                 minWidth: "20px",
+  //                 minHeight: "20px",
+  //                 borderRadius: "var(--border-r-50)",
+  //                 backgroundImage: `url(${item.source_icon})`,
+  //               }}
+  //               className="bg-img cover-bg"
+  //             ></div>
+  //             <p className="p-medium">{item.source_name}</p>
+  //           </a>
+  //           <a
+  //             href={item.source_url}
+  //             target="_blank"
+  //             className="round-icon-tooltip"
+  //             data-tooltip="source"
+  //           >
+  //             <div className="share-icon"></div>
+  //           </a>
+  //         </div>
+  //       </div>
+  //     </Link>
+  //   </div>
+  // );
   //   return (
   //     <div
   //       className={"posts-card fx-scattered sc-s-18 box-pad-h-m"}

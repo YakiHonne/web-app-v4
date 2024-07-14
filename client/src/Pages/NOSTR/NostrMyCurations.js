@@ -16,6 +16,9 @@ import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
 import LoadingDots from "../../Components/LoadingDots";
 import { useLocation, useNavigate } from "react-router-dom";
 import Footer from "../../Components/Footer";
+import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
+import HomeFN from "../../Components/NOSTR/HomeFN";
+import axios from "axios";
 var pool = new SimplePool();
 
 const randomColors = Array(100)
@@ -39,8 +42,7 @@ export default function NostrMyCurations() {
   const [showAddCuration, setShowAddCuration] = useState(
     state?.addCuration ? true : false
   );
-  const [showMigrationPrompt, setShowMigrationPrompt] = useState(false);
-  const [selectedCuration, setSelectedCuration] = useState(false);
+  const [importantFN, setImportantFN] = useState(false);
   const [curationToEdit, setCurationToEdit] = useState(false);
   const [postToDelete, setPostToDelete] = useState(false);
   const [showAddArticlesToCuration, setShowAddArticlesToCuration] =
@@ -48,14 +50,30 @@ export default function NostrMyCurations() {
   const [showRelaysList, setShowRelaysList] = useState(false);
   const [activeRelay, setActiveRelay] = useState("");
   const [relays, setRelays] = useState(relaysOnPlatform);
-  // const [selectedKind, setSelectedKind] = useState(30001);
-  const curationsNumber = useMemo(() => {
-    // const filteredCurations = curations.filter(
-    //   (item) => item.kind === selectedKind
-    // );
 
+  const curationsNumber = useMemo(() => {
     return curations.length >= 10 ? curations.length : `0${curations.length}`;
   }, [curations]);
+
+  const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [important] = await Promise.all([
+          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
+        ]);
+
+        setImportantFN(important.data);
+
+        // setIsLoaded(true);
+      } catch (err) {
+        // setIsLoaded(true)
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -223,7 +241,7 @@ export default function NostrMyCurations() {
             setShowAddCuration(false);
             setCurationToEdit(false);
           }}
-          curation={{ ...curationToEdit.curation, kind: curationToEdit.kind }}
+          curation={curationToEdit ? { ...curationToEdit.curation, kind: curationToEdit.kind } : null}
           tags={curationToEdit.tags}
           relaysToPublish={
             curationToEdit.relays ||
@@ -307,324 +325,332 @@ export default function NostrMyCurations() {
           />
         </Helmet>
         <div className="fit-container fx-centered">
-          <SidebarNOSTR />
-          <main
-            className={`main-page-nostr-container`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowRelaysList(false);
-            }}
-          >
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,700px)" }} className="box-pad-h-m">
-                {/* <NavbarNOSTR /> */}
-                {nostrUser && (
-                  <>
-                    {(nostrKeys.sec || (!nostrKeys.sec && nostrKeys.ext)) && (
-                      <>
-                        {(curations.length > 0 ||
-                          (curations.length === 0 && activeRelay)) && (
-                          <div
-                            className="fit-container fx-scattered box-pad-v-m"
-                            style={{ position: "relative", zIndex: "99" }}
-                          >
-                            <div className="fx-centered fx-start-v fx-col">
-                              <h4>{curationsNumber} curations</h4>
-                              {activeRelay && (
-                                <p className="orange-c">
-                                  Switch to all relays to edit curations
-                                </p>
-                              )}
-                            </div>
-                            <div className="fx-centered">
-                              <div style={{ position: "relative" }}>
-                                <div
-                                  style={{ position: "relative" }}
-                                  className="round-icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowRelaysList(!showRelaysList);
-                                  }}
-                                >
-                                  <div className="server"></div>
-                                </div>
-                                {showRelaysList && (
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      right: 0,
-                                      bottom: "-5px",
-                                      backgroundColor: "var(--dim-gray)",
-                                      border: "none",
-                                      transform: "translateY(100%)",
-                                      maxWidth: "300px",
-                                      rowGap: "12px",
-                                    }}
-                                    className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                                  >
-                                    <h5>Relays</h5>
-                                    <button
-                                      className={`btn-text-gray pointer fx-centered`}
-                                      style={{
-                                        width: "max-content",
-                                        fontSize: "1rem",
-                                        textDecoration: "none",
-                                        color:
-                                          activeRelay === "" ? "var(--c1)" : "",
-                                        transition: ".4s ease-in-out",
-                                      }}
-                                      onClick={() => {
-                                        switchActiveRelay("");
-                                        setShowRelaysList(false);
-                                      }}
-                                    >
-                                      {isLoading && activeRelay === "" ? (
-                                        <>Connecting...</>
-                                      ) : (
-                                        "All relays"
-                                      )}
-                                    </button>
-                                    {nostrUser &&
-                                      nostrUser.relays.length > 0 &&
-                                      nostrUser.relays.map((relay) => {
-                                        return (
-                                          <button
-                                            key={relay}
-                                            className={`btn-text-gray pointer fx-centered `}
-                                            style={{
-                                              width: "max-content",
-                                              fontSize: "1rem",
-                                              textDecoration: "none",
-                                              color:
-                                                activeRelay === relay
-                                                  ? "var(--c1)"
-                                                  : "",
-                                              transition: ".4s ease-in-out",
-                                            }}
-                                            onClick={() => {
-                                              switchActiveRelay(relay);
-                                              setShowRelaysList(false);
-                                            }}
-                                          >
-                                            {isLoading &&
-                                            relay === activeRelay ? (
-                                              <>Connecting...</>
-                                            ) : (
-                                              relay.split("wss://")[1]
-                                            )}
-                                          </button>
-                                        );
-                                      })}
-                                    {(!nostrUser ||
-                                      (nostrUser &&
-                                        nostrUser.relays.length === 0)) &&
-                                      relays.map((relay) => {
-                                        return (
-                                          <button
-                                            key={relay}
-                                            className={`btn-text-gray pointer fx-centered`}
-                                            style={{
-                                              width: "max-content",
-                                              fontSize: "1rem",
-                                              textDecoration: "none",
-                                              color:
-                                                activeRelay === relay
-                                                  ? "var(--c1)"
-                                                  : "",
-                                              transition: ".4s ease-in-out",
-                                            }}
-                                            onClick={() => {
-                                              switchActiveRelay(relay);
-                                              setShowRelaysList(false);
-                                            }}
-                                          >
-                                            {isLoading &&
-                                            relay === activeRelay ? (
-                                              <>Connecting..</>
-                                            ) : (
-                                              relay.split("wss://")[1]
-                                            )}
-                                          </button>
-                                        );
-                                      })}
-                                  </div>
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main
+              className={`main-page-nostr-container`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowRelaysList(false);
+              }}
+            >
+              <div className="fx-centered fit-container fx-start-h fx-start-v">
+                <div style={{ flex: 1.75 }} className="box-pad-h-m">
+                  {/* <NavbarNOSTR /> */}
+                  {nostrUser && (
+                    <>
+                      {(nostrKeys.sec || (!nostrKeys.sec && nostrKeys.ext)) && (
+                        <>
+                          {(curations.length > 0 ||
+                            (curations.length === 0 && activeRelay)) && (
+                            <div
+                              className="fit-container fx-scattered box-pad-v-m"
+                              style={{ position: "relative", zIndex: "99" }}
+                            >
+                              <div className="fx-centered fx-start-v fx-col">
+                                <h4>{curationsNumber} curations</h4>
+                                {activeRelay && (
+                                  <p className="orange-c">
+                                    Switch to all relays to edit curations
+                                  </p>
                                 )}
                               </div>
-                              <div
-                                className="round-icon round-icon-tooltip"
-                                data-tooltip={"Add curation"}
-                                onClick={() => setShowAddCuration(true)}
-                              >
-                                <p className="p-big">&#xFF0B;</p>
+                              <div className="fx-centered">
+                                <div style={{ position: "relative" }}>
+                                  <div
+                                    style={{ position: "relative" }}
+                                    className="round-icon"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowRelaysList(!showRelaysList);
+                                    }}
+                                  >
+                                    <div className="server"></div>
+                                  </div>
+                                  {showRelaysList && (
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        right: 0,
+                                        bottom: "-5px",
+                                        backgroundColor: "var(--dim-gray)",
+                                        border: "none",
+                                        transform: "translateY(100%)",
+                                        maxWidth: "300px",
+                                        rowGap: "12px",
+                                      }}
+                                      className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                                    >
+                                      <h5>Relays</h5>
+                                      <button
+                                        className={`btn-text-gray pointer fx-centered`}
+                                        style={{
+                                          width: "max-content",
+                                          fontSize: "1rem",
+                                          textDecoration: "none",
+                                          color:
+                                            activeRelay === ""
+                                              ? "var(--c1)"
+                                              : "",
+                                          transition: ".4s ease-in-out",
+                                        }}
+                                        onClick={() => {
+                                          switchActiveRelay("");
+                                          setShowRelaysList(false);
+                                        }}
+                                      >
+                                        {isLoading && activeRelay === "" ? (
+                                          <>Connecting...</>
+                                        ) : (
+                                          "All relays"
+                                        )}
+                                      </button>
+                                      {nostrUser &&
+                                        nostrUser.relays.length > 0 &&
+                                        nostrUser.relays.map((relay) => {
+                                          return (
+                                            <button
+                                              key={relay}
+                                              className={`btn-text-gray pointer fx-centered `}
+                                              style={{
+                                                width: "max-content",
+                                                fontSize: "1rem",
+                                                textDecoration: "none",
+                                                color:
+                                                  activeRelay === relay
+                                                    ? "var(--c1)"
+                                                    : "",
+                                                transition: ".4s ease-in-out",
+                                              }}
+                                              onClick={() => {
+                                                switchActiveRelay(relay);
+                                                setShowRelaysList(false);
+                                              }}
+                                            >
+                                              {isLoading &&
+                                              relay === activeRelay ? (
+                                                <>Connecting...</>
+                                              ) : (
+                                                relay.split("wss://")[1]
+                                              )}
+                                            </button>
+                                          );
+                                        })}
+                                      {(!nostrUser ||
+                                        (nostrUser &&
+                                          nostrUser.relays.length === 0)) &&
+                                        relays.map((relay) => {
+                                          return (
+                                            <button
+                                              key={relay}
+                                              className={`btn-text-gray pointer fx-centered`}
+                                              style={{
+                                                width: "max-content",
+                                                fontSize: "1rem",
+                                                textDecoration: "none",
+                                                color:
+                                                  activeRelay === relay
+                                                    ? "var(--c1)"
+                                                    : "",
+                                                transition: ".4s ease-in-out",
+                                              }}
+                                              onClick={() => {
+                                                switchActiveRelay(relay);
+                                                setShowRelaysList(false);
+                                              }}
+                                            >
+                                              {isLoading &&
+                                              relay === activeRelay ? (
+                                                <>Connecting..</>
+                                              ) : (
+                                                relay.split("wss://")[1]
+                                              )}
+                                            </button>
+                                          );
+                                        })}
+                                    </div>
+                                  )}
+                                </div>
+                                <div
+                                  className="round-icon round-icon-tooltip"
+                                  data-tooltip={"Add curation"}
+                                  onClick={() => setShowAddCuration(true)}
+                                >
+                                  <p className="p-big">&#xFF0B;</p>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        )}
-                        <div className="fit-container nostr-article">
-                          {curations.length === 0 &&
-                            !isLoading &&
-                            activeRelay && (
-                              <div
-                                className="fit-container fx-centered fx-col"
-                                style={{ height: "40vh" }}
-                              >
-                                <h4>No curations were found!</h4>
-                                <p className="gray-c p-centered">
-                                  No curations were found in this relay
-                                </p>
-                              </div>
-                            )}
-                          {curations.length === 0 &&
-                            !isLoading &&
-                            !activeRelay && (
-                              <PagePlaceholder
-                                page={"nostr-curations"}
-                                onClick={() => setShowAddCuration(true)}
-                              />
-                            )}
-                          {isLoading && curations.length === 0 && (
-                            <div
-                              className="fit-container fx-centered fx-col"
-                              style={{ height: "50vh" }}
-                            >
-                              <p>Loading curations</p>
-                              <LoadingDots />
                             </div>
                           )}
-                          {curations.length > 0 && (
-                            <div className="fit-container">
-                              <div className="fit-container fx-centered fx-start-h fx-stretch fx-wrap box-pad-v">
-                                {curations.map((curation) => {
-                                  let seenOn = checkSeenOn(curation.d);
+                          <div className="fit-container nostr-article">
+                            {curations.length === 0 &&
+                              !isLoading &&
+                              activeRelay && (
+                                <div
+                                  className="fit-container fx-centered fx-col"
+                                  style={{ height: "40vh" }}
+                                >
+                                  <h4>No curations were found!</h4>
+                                  <p className="gray-c p-centered">
+                                    No curations were found in this relay
+                                  </p>
+                                </div>
+                              )}
+                            {curations.length === 0 &&
+                              !isLoading &&
+                              !activeRelay && (
+                                <PagePlaceholder
+                                  page={"nostr-curations"}
+                                  onClick={() => setShowAddCuration(true)}
+                                />
+                              )}
+                            {isLoading && curations.length === 0 && (
+                              <div
+                                className="fit-container fx-centered fx-col"
+                                style={{ height: "50vh" }}
+                              >
+                                <p>Loading curations</p>
+                                <LoadingDots />
+                              </div>
+                            )}
+                            {curations.length > 0 && (
+                              <div className="fit-container">
+                                <div className="fit-container fx-centered fx-start-h fx-stretch fx-wrap box-pad-v">
+                                  {curations.map((curation) => {
+                                    let seenOn = checkSeenOn(curation.d);
 
-                                  let numberorArticles = getDRef(curation.tags);
-                                  numberorArticles =
-                                    numberorArticles.length >= 10
-                                      ? numberorArticles.length
-                                      : `0${numberorArticles.length}`;
+                                    let numberorArticles = getDRef(
+                                      curation.tags
+                                    );
+                                    numberorArticles =
+                                      numberorArticles.length >= 10
+                                        ? numberorArticles.length
+                                        : `0${numberorArticles.length}`;
 
-                                  return (
-                                    <div
-                                      key={curation.id}
-                                      className="sc-s-18 fx-scattered fx-col pointer"
-                                      style={{
-                                        width: "min(100%, 330px)",
-                                        position: "relative",
-                                        overflow: "visible",
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigateTo(
-                                          `/curations/${curation.naddr}`
-                                        );
-                                      }}
-                                    >
+                                    return (
                                       <div
+                                        key={curation.id}
+                                        className="sc-s-18 fx-scattered fx-col pointer"
                                         style={{
-                                          position: "absolute",
-                                          right: "16px",
-                                          top: "16px",
+                                          width: "min(100%, 330px)",
+                                          position: "relative",
+                                          overflow: "visible",
                                         }}
-                                        className="fx-centered"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigateTo(
+                                            `/curations/${curation.naddr}`
+                                          );
+                                        }}
                                       >
-                                        {!activeRelay && (
-                                          <>
-                                            <div
-                                              style={{
-                                                width: "48px",
-                                                height: "48px",
-                                                backgroundColor:
-                                                  "var(--dim-gray)",
-                                                borderRadius:
-                                                  "var(--border-r-50)",
-                                              }}
-                                              className="fx-centered pointer"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowAddArticlesToCuration(
-                                                  true
-                                                );
-                                                setCurationToEdit({
-                                                  curation: curation.content,
-                                                  kind: curation.kind,
-                                                  tags: curation.tags,
-                                                  relays: seenOn,
-                                                });
-                                              }}
-                                            >
-                                              <div className="add-curation-24"></div>
-                                            </div>
-                                            <div
-                                              style={{
-                                                width: "48px",
-                                                height: "48px",
-                                                backgroundColor:
-                                                  "var(--dim-gray)",
-                                                borderRadius:
-                                                  "var(--border-r-50)",
-                                              }}
-                                              className="fx-centered pointer"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowAddCuration(true);
-                                                setCurationToEdit({
-                                                  curation: curation.content,
-                                                  tags: curation.tags,
-                                                  kind: curation.kind,
-                                                  relays: seenOn,
-                                                });
-                                              }}
-                                            >
-                                              <div className="write-24"></div>
-                                            </div>
-                                          </>
-                                        )}
-
                                         <div
                                           style={{
-                                            width: "48px",
-                                            height: "48px",
-                                            backgroundColor: "var(--dim-gray)",
-                                            borderRadius: "var(--border-r-50)",
+                                            position: "absolute",
+                                            right: "16px",
+                                            top: "16px",
                                           }}
-                                          className="fx-centered pointer"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setPostToDelete({
-                                              id: curation.id,
-                                              title: curation.content.title,
-                                              thumbnail: curation.content.image,
-                                            });
-                                          }}
+                                          className="fx-centered"
                                         >
-                                          <div className="trash-24"></div>
+                                          {!activeRelay && (
+                                            <>
+                                              <div
+                                                style={{
+                                                  width: "48px",
+                                                  height: "48px",
+                                                  backgroundColor:
+                                                    "var(--dim-gray)",
+                                                  borderRadius:
+                                                    "var(--border-r-50)",
+                                                }}
+                                                className="fx-centered pointer"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setShowAddArticlesToCuration(
+                                                    true
+                                                  );
+                                                  setCurationToEdit({
+                                                    curation: curation.content,
+                                                    kind: curation.kind,
+                                                    tags: curation.tags,
+                                                    relays: seenOn,
+                                                  });
+                                                }}
+                                              >
+                                                <div className="add-curation-24"></div>
+                                              </div>
+                                              <div
+                                                style={{
+                                                  width: "48px",
+                                                  height: "48px",
+                                                  backgroundColor:
+                                                    "var(--dim-gray)",
+                                                  borderRadius:
+                                                    "var(--border-r-50)",
+                                                }}
+                                                className="fx-centered pointer"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setShowAddCuration(true);
+                                                  setCurationToEdit({
+                                                    curation: curation.content,
+                                                    tags: curation.tags,
+                                                    kind: curation.kind,
+                                                    relays: seenOn,
+                                                  });
+                                                }}
+                                              >
+                                                <div className="write-24"></div>
+                                              </div>
+                                            </>
+                                          )}
+
+                                          <div
+                                            style={{
+                                              width: "48px",
+                                              height: "48px",
+                                              backgroundColor:
+                                                "var(--dim-gray)",
+                                              borderRadius:
+                                                "var(--border-r-50)",
+                                            }}
+                                            className="fx-centered pointer"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setPostToDelete({
+                                                id: curation.id,
+                                                title: curation.content.title,
+                                                thumbnail:
+                                                  curation.content.image,
+                                              });
+                                            }}
+                                          >
+                                            <div className="trash-24"></div>
+                                          </div>
                                         </div>
-                                      </div>
-                                      <div className="fit-container">
-                                        <div
-                                          className="bg-img cover-bg fit-container"
-                                          style={{
-                                            backgroundImage: `url(${curation.content.image})`,
-                                            height: "150px",
-                                            borderTopLeftRadius: "18px",
-                                            borderTopRightRadius: "18px",
-                                          }}
-                                        ></div>
-                                        <div className="fit-container box-pad-v box-pad-h">
-                                          <div className="fit-container fx-centered fx-start-v fx-col">
-                                            {curation.kind === 30004 && (
-                                              <div className="sticker sticker-normal sticker-green">
-                                                Article
-                                              </div>
-                                            )}
-                                            {curation.kind === 30005 && (
-                                              <div className="sticker sticker-normal sticker-orange">
-                                                Video
-                                              </div>
-                                            )}
-                                            <div className="fx-centered fx-start-h">
-                                              <div className="fx-start-h fx-centered">
-                                                {/* <p className="p-medium gray-c">
+                                        <div className="fit-container">
+                                          <div
+                                            className="bg-img cover-bg fit-container"
+                                            style={{
+                                              backgroundImage: `url(${curation.content.image})`,
+                                              height: "150px",
+                                              borderTopLeftRadius: "18px",
+                                              borderTopRightRadius: "18px",
+                                            }}
+                                          ></div>
+                                          <div className="fit-container box-pad-v box-pad-h">
+                                            <div className="fit-container fx-centered fx-start-v fx-col">
+                                              {curation.kind === 30004 && (
+                                                <div className="sticker sticker-normal sticker-green">
+                                                  Article
+                                                </div>
+                                              )}
+                                              {curation.kind === 30005 && (
+                                                <div className="sticker sticker-normal sticker-orange">
+                                                  Video
+                                                </div>
+                                              )}
+                                              <div className="fx-centered fx-start-h">
+                                                <div className="fx-start-h fx-centered">
+                                                  {/* <p className="p-medium gray-c">
                                                   <Date_
                                                     toConvert={
                                                       curation.added_date
@@ -645,100 +671,129 @@ export default function NostrMyCurations() {
                                                 >
                                                   <div className="edit"></div>
                                                 </div> */}
-                                                <p
-                                                  className="pointer p-medium gray-c round-icon-tooltip"
-                                                  data-tooltip={`created at ${
-                                                    curation.added_date.split(
-                                                      "T"
-                                                    )[0]
-                                                  }, edited on ${
-                                                    curation.modified_date.split(
-                                                      "T"
-                                                    )[0]
-                                                  }`}
-                                                >
-                                                  Last modified{" "}
-                                                  <Date_
-                                                    toConvert={
-                                                      curation.modified_date
-                                                    }
-                                                  />
+                                                  <p
+                                                    className="pointer p-medium gray-c round-icon-tooltip"
+                                                    data-tooltip={`created at ${
+                                                      curation.added_date.split(
+                                                        "T"
+                                                      )[0]
+                                                    }, edited on ${
+                                                      curation.modified_date.split(
+                                                        "T"
+                                                      )[0]
+                                                    }`}
+                                                  >
+                                                    Last modified{" "}
+                                                    <Date_
+                                                      toConvert={
+                                                        curation.modified_date
+                                                      }
+                                                    />
+                                                  </p>
+                                                </div>
+                                                <p className="gray-c p-medium">
+                                                  &#9679;
+                                                </p>
+                                                <div className="posts"></div>
+                                                <p className="gray-c p-medium">
+                                                  {numberorArticles} arts.{" "}
                                                 </p>
                                               </div>
-                                              <p className="gray-c p-medium">
-                                                &#9679;
-                                              </p>
-                                              <div className="posts"></div>
-                                              <p className="gray-c p-medium">
-                                                {numberorArticles} arts.{" "}
+
+                                              <h4 className="p-maj">
+                                                {curation.content.title}
+                                              </h4>
+                                              <p className="p-three-lines">
+                                                {curation.content.description}
                                               </p>
                                             </div>
-
-                                            <h4 className="p-maj">
-                                              {curation.content.title}
-                                            </h4>
-                                            <p className="p-three-lines">
-                                              {curation.content.description}
+                                          </div>
+                                        </div>
+                                        <div className="fit-container">
+                                          <hr />
+                                          <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m pointer">
+                                            <p className="gray-c p-medium">
+                                              Posted on
                                             </p>
+                                            <div className="fx-centered">
+                                              {seenOn.map((relay, index) => {
+                                                return (
+                                                  <div
+                                                    style={{
+                                                      backgroundColor:
+                                                        randomColors[index],
+                                                      minWidth: "10px",
+                                                      aspectRatio: "1/1",
+                                                      borderRadius:
+                                                        "var(--border-r-50)",
+                                                    }}
+                                                    className="pointer round-icon-tooltip"
+                                                    data-tooltip={relay}
+                                                    key={relay}
+                                                  ></div>
+                                                );
+                                              })}
+                                              {isLoading && <LoadingDots />}
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
-                                      <div className="fit-container">
-                                        <hr />
-                                        <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m pointer">
-                                          <p className="gray-c p-medium">
-                                            Posted on
-                                          </p>
-                                          <div className="fx-centered">
-                                            {seenOn.map((relay, index) => {
-                                              return (
-                                                <div
-                                                  style={{
-                                                    backgroundColor:
-                                                      randomColors[index],
-                                                    minWidth: "10px",
-                                                    aspectRatio: "1/1",
-                                                    borderRadius:
-                                                      "var(--border-r-50)",
-                                                  }}
-                                                  className="pointer round-icon-tooltip"
-                                                  data-tooltip={relay}
-                                                  key={relay}
-                                                ></div>
-                                              );
-                                            })}
-                                            {isLoading && <LoadingDots />}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                                <div
-                                  style={{ width: "min(100%, 330px)" }}
-                                ></div>
-                                <div
-                                  style={{ width: "min(100%, 330px)" }}
-                                ></div>
-                                <div
-                                  style={{ width: "min(100%, 330px)" }}
-                                ></div>
+                                    );
+                                  })}
+                                  <div
+                                    style={{ width: "min(100%, 330px)" }}
+                                  ></div>
+                                  <div
+                                    style={{ width: "min(100%, 330px)" }}
+                                  ></div>
+                                  <div
+                                    style={{ width: "min(100%, 330px)" }}
+                                  ></div>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                    {!nostrKeys.sec && !nostrKeys.ext && (
-                      <PagePlaceholder page={"nostr-unauthorized"} />
-                    )}
-                  </>
-                )}
-                {!nostrUser && <PagePlaceholder page={"nostr-not-connected"} />}
+                            )}
+                          </div>
+                        </>
+                      )}
+                      {!nostrKeys.sec && !nostrKeys.ext && (
+                        <PagePlaceholder page={"nostr-unauthorized"} />
+                      )}
+                    </>
+                  )}
+                  {!nostrUser && (
+                    <PagePlaceholder page={"nostr-not-connected"} />
+                  )}
+                </div>
+                <div
+                  className=" fx-centered fx-col fx-start-v extras-homepage"
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    // backgroundColor: "var(--white)",
+                    zIndex: "100",
+                    flex: 1,
+                  }}
+                >
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
+                  <div
+                    className=" fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      rowGap: "24px",
+                      border: "none",
+                    }}
+                  >
+                    <h4>Important Flash News</h4>
+                    <HomeFN flashnews={importantFN} />
+                  </div>
+                  <Footer />
+                </div>
               </div>
-            </div>
-            {/* <Footer /> */}
-          </main>
+              {/* <Footer /> */}
+            </main>
+          </div>
         </div>
       </div>
     </>

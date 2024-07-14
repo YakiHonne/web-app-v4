@@ -8,6 +8,7 @@ import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import DtoLToggleButton from "../DtoLToggleButton";
 import { useMemo } from "react";
+import WriteNew from "./WriteNew";
 
 export default function MenuMobile({ toggleLogin, exit }) {
   const { nostrUser, nostrUserLoaded, nostrUserLogout, nostrKeys, chatrooms } =
@@ -343,7 +344,10 @@ export default function MenuMobile({ toggleLogin, exit }) {
             </div>
           )}
         </div>
-        <div
+
+        <WriteNew exit={dismiss} />
+
+        {/* <div
           className="fx-start-h fx-centered fit-container fx-col"
           ref={writingOpt}
         >
@@ -431,7 +435,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
         {/*        
         <div className="fx-centered" style={{ position: "relative" }}>
           <div

@@ -219,7 +219,7 @@ export default function LoginNOSTR({ exit }) {
         onClick={(e) => {
           e.stopPropagation();
         }}
-        style={{ height: "85vh", border: "none" }}
+        style={{ height: "85vh", border: "none", backgroundColor: "var(--white)" }}
       >
         <div className="close" onClick={exitScreen}>
           <div></div>
@@ -348,7 +348,7 @@ export default function LoginNOSTR({ exit }) {
                       className="fx-centered fx-col box-pad-v"
                       style={{ rowGap: "5px" }}
                     >
-                      <p className="white-c">Stay signed-in</p>
+                      <p style={{color: "white"}}>Stay signed-in</p>
                       <p className="gray-c p-medium p-centered">
                         Download the YakiHonne app for Android or iOS
                       </p>
@@ -485,6 +485,16 @@ const Login = ({ switchScreen, exit }) => {
           pub: key,
           ext: true,
         });
+        let extWallet = [
+          {
+            id: Date.now(),
+            kind: 1,
+            entitle: "WebLN",
+            active: true,
+            data: "",
+          },
+        ];
+        localStorage.setItem("yaki-wallets", JSON.stringify(extWallet));
       }
       setIsLoading(false);
       exit();

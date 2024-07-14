@@ -8,6 +8,9 @@ import IMGElement from "../Components/NOSTR/IMGElement";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
+import React from "react";
+import Carousel from "../Components/NOSTR/Carousel";
+import Nip19Parsing from "../Components/NOSTR/Nip19Parsing";
 
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
@@ -109,6 +112,7 @@ const isImageUrlSync = (url) => {
 };
 
 const getNoteTree = async (note, is_important = false) => {
+  if (!note) return "";
   let tree = note.split(/(\s|\n)+/).filter(Boolean);
   // let tree = note.split(/\s/);
 
@@ -179,7 +183,7 @@ const getNoteTree = async (note, is_important = false) => {
                 name="media"
                 width={"100%"}
                 className="sc-s-18"
-                style={{ margin: "1rem auto" }}
+                style={{ margin: "1rem auto", aspectRatio: "16/9" }}
               >
                 <source src={el} type="video/mp4" />
               </video>
@@ -188,7 +192,7 @@ const getNoteTree = async (note, is_important = false) => {
         } else {
           finalTree.push(
             <a
-              style={{ wordBreak: "break-word" }}
+              style={{ wordBreak: "break-word" , color: "var(--orange-main)"}}
               href={el}
               className="btn-text-gray"
               key={key}
@@ -243,25 +247,43 @@ const getNoteTree = async (note, is_important = false) => {
         // });
       }
     } else if (
-      el.includes("nostr:") ||
-      el.includes("naddr") ||
-      el.includes("nprofile") ||
-      el.includes("npub") ||
-      el.includes("nevent")
+      (el.includes("nostr:") ||
+        el.includes("naddr") ||
+        el.includes("nprofile") ||
+        el.includes("npub") ||
+        el.includes("nevent")) &&
+      el.length > 30
     ) {
-      const nip19add = el.replace("nostr:", "").replace("@", "").replace(".", "").replace(",", "");
+      const nip19add = el
+        .replace("nostr:", "")
+        .replace("@", "")
+        .replace(".", "")
+        .replace(",", "");
       // const nip19add = el.split("nostr:")[1].replace(".", "").replace(",", "");
       const url = getLinkFromAddr(nip19add);
       finalTree.push(
-        <Link
-          to={url}
+        // <Link
+        //   to={url}
+        //   className="btn-text-gray"
+        //   target={"_blank"}
+        //   key={key}
+        //   onClick={(e) => e.stopPropagation()}
+        // >
+        //   @{nip19add.substring(0, 10)}
+        // </Link>
+        <Nip19Parsing addr={nip19add} key={key} />
+      );
+    } else if (el.startsWith("#")) {
+      finalTree.push(
+        <a
+          style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+          href={`/tags/${el.replace("#", "")}`}
           className="btn-text-gray"
-          target={"_blank"}
           key={key}
           onClick={(e) => e.stopPropagation()}
         >
-          @{nip19add.substring(0, 10)}
-        </Link>
+          {el}
+        </a>
       );
     } else {
       finalTree.push(
@@ -429,6 +451,7 @@ const getComponent = (children) => {
             src={children[i].props?.href}
             alt="el"
             loading="lazy"
+            key={key}
           />
         );
       }
@@ -520,20 +543,88 @@ const getComponent = (children) => {
   );
 };
 
+// function mergeConsecutivePElements(arr) {
+//   const result = [];
+//   let currentElement = null;
+
+//   for (const element of arr) {
+//     if (["p", "span"].includes(element.type)) {
+//       if (!currentElement) {
+//         currentElement = { ...element };
+//         currentElement.props = {
+//           ...element.props,
+//           children: [element.props.children],
+//         };
+//       } else {
+//         let tempPrevChildren = currentElement.props.children;
+//         if (typeof element.props.children !== "string") {
+//           tempPrevChildren.push(element.props.children);
+//         }
+//         if (
+//           typeof tempPrevChildren[tempPrevChildren.length - 1] === "string" &&
+//           typeof element.props.children === "string"
+//         ) {
+//           tempPrevChildren[tempPrevChildren.length - 1] = `${
+//             tempPrevChildren[tempPrevChildren.length - 1]
+//           } ${element.props.children}`;
+//         }
+//         if (
+//           typeof tempPrevChildren[tempPrevChildren.length - 1] !== "string" &&
+//           typeof element.props.children === "string"
+//         ) {
+//           tempPrevChildren.push(` ${element.props.children}`);
+//         }
+//         currentElement = {
+//           ...currentElement,
+//           props: {
+//             ...currentElement.props,
+//             children: tempPrevChildren,
+//           },
+//         };
+//       }
+//     } else {
+//       if (currentElement) {
+//         result.push(currentElement);
+//         currentElement = null;
+//       }
+
+//       result.push(element);
+//     }
+//   }
+//   if (currentElement) {
+//     result.push(currentElement);
+//   }
+//   return result;
+// }
 function mergeConsecutivePElements(arr) {
   const result = [];
-  let currentElement = null;
+  let currentTextElement = null;
+  let currentImages = [];
+  let tempArray = [];
+  for (let i = 0; i < arr.length; i++) {
+    if (
+      !(
+        i - 1 > 0 &&
+        i + 1 < arr.length &&
+        arr[i].type === "br" &&
+        ["IMGElement", "Kp"].includes(arr[i - 1].type?.name) &&
+        ["IMGElement", "Kp"].includes(arr[i + 1].type?.name)
+      )
+    ) {
+      tempArray.push(arr[i]);
+    }
+  }
 
-  for (const element of arr) {
+  for (const element of tempArray) {
     if (["p", "span"].includes(element.type)) {
-      if (!currentElement) {
-        currentElement = { ...element };
-        currentElement.props = {
+      if (!currentTextElement) {
+        currentTextElement = { ...element };
+        currentTextElement.props = {
           ...element.props,
           children: [element.props.children],
         };
       } else {
-        let tempPrevChildren = currentElement.props.children;
+        let tempPrevChildren = currentTextElement.props.children;
         if (typeof element.props.children !== "string") {
           tempPrevChildren.push(element.props.children);
         }
@@ -551,28 +642,74 @@ function mergeConsecutivePElements(arr) {
         ) {
           tempPrevChildren.push(` ${element.props.children}`);
         }
-        currentElement = {
-          ...currentElement,
+        currentTextElement = {
+          ...currentTextElement,
           props: {
-            ...currentElement.props,
+            ...currentTextElement.props,
             children: tempPrevChildren,
           },
         };
       }
-    } else {
-      if (currentElement) {
-        result.push(currentElement);
-        currentElement = null;
+    } else if (["IMGElement", "Kp"].includes(element.type?.name)) {
+      if (currentTextElement) {
+        result.push(currentTextElement);
+        currentTextElement = null;
       }
-
+      currentImages.push(element);
+      // if (currentImages.length === 3) {
+      //   result.push(createImageGrid(currentImages));
+      //   currentImages = [];
+      // }
+    } else {
+      if (currentTextElement) {
+        result.push(currentTextElement);
+        currentTextElement = null;
+      }
+      if (currentImages.length > 0) {
+        result.push(createImageGrid(currentImages));
+        currentImages = [];
+      }
       result.push(element);
     }
   }
-  if (currentElement) {
-    result.push(currentElement);
+
+  if (currentTextElement) {
+    result.push(currentTextElement);
   }
+  if (currentImages.length > 0) {
+    result.push(createImageGrid(currentImages));
+  }
+
   return result;
 }
+
+function createImageGrid(images) {
+  if (images.length === 1)
+    return (
+      <div className="image-grid" key={Math.random()}>
+        {images.map((image, index) =>
+          React.cloneElement(image, { key: index })
+        )}
+      </div>
+    );
+  let images_ = images.map((image) => image.props.src);
+  return <Carousel imgs={images_} />;
+}
+
+// function createImageGrid(images) {
+// console.log(images)
+//   return {
+//     $$typeof: "Symbol(react.element)",
+//     type: "div",
+//     props: {
+//       className: "image-grid",
+//       children: images.map((image, index) => ({
+//         ...image,
+//         key: index, // Ensure each image has a unique key
+//       })),
+//     },
+//   };
+// }
 
 const getAuthPubkeyFromNip05 = async (nip05Addr) => {
   try {

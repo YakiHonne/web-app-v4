@@ -370,6 +370,7 @@ export default function NostrBuzzFeed() {
         </Helmet>
 
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
+        <div className="main-container">
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             <ArrowUp />
@@ -630,6 +631,7 @@ export default function NostrBuzzFeed() {
               )}
             </div>
           </main>
+        </div>
         </div>
       </div>
     </>

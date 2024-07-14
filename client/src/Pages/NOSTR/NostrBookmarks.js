@@ -94,11 +94,12 @@ export default function NostrBookmarks() {
       )}
 
       <div className="fit-container fx-centered">
+      <div className="main-container">
         <SidebarNOSTR />
         <main className="main-page-nostr-container">
           <ArrowUp />
           <div className="fx-centered fit-container fx-start-h fx-start-v">
-            <div style={{ width: "min(100%,700px)" }}>
+            <div style={{ flex: 1 }}>
               {!nostrKeys && <PagePlaceholder page={"nostr-not-connected"} />}
               {nostrKeys && (
                 <div className="fit-container box-pad-h-m box-pad-v">
@@ -214,6 +215,7 @@ export default function NostrBookmarks() {
           </div>
         </main>
       </div>
+      </div>
     </div>
   );
 }
@@ -319,7 +321,7 @@ const BookmarkContent = ({
         setShowFilter(false);
       }}
     >
-      <div style={{ width: "min(100%,1000px)" }}>
+      <div style={{ flex: 1 }}>
         <div className="fit-container fx-scattered box-marg-s">
           <div className="fx-centered fx-start-h pointer" onClick={exit}>
             <div className="round-icon">

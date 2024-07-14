@@ -31,14 +31,17 @@ import LoginNOSTR from "./LoginNOSTR";
 import NOSTRComments from "./NOSTRComments";
 import ShowUsersList from "./ShowUsersList";
 import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
-import NostrBookmarks from "../../Pages/NOSTR/NostrBookmarks";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import { getAuthPubkeyFromNip05, getVideoContent } from "../../Helpers/Helpers";
 import ShareLink from "../ShareLink";
 import Footer from "../Footer";
 import VideosPreviewCards from "./VideosPreviewCards";
 import CheckNOSTRClient from "./CheckNOSTRClient";
+import SearchbarNOSTR from "./SearchbarNOSTR";
+import HomeFN from "./HomeFN";
+import axios from "axios";
 const pool = new SimplePool();
+const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 const filterRootComments = (all) => {
   let temp = [];
@@ -95,6 +98,7 @@ export default function NostrCuration() {
   const [zappers, setZappers] = useState([]);
   const [showComments, setShowComments] = useState(false);
   const [usersList, setUsersList] = useState(false);
+  const [importantFN, setImportantFN] = useState(false);
   const isVoted = useMemo(() => {
     return nostrKeys
       ? upvoteReaction
@@ -324,6 +328,25 @@ export default function NostrCuration() {
     }
   }, [isArtsLoaded]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoaded(false);
+        const [important] = await Promise.all([
+          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
+        ]);
+
+        setImportantFN(important.data);
+
+        // setIsLoaded(true);
+      } catch (err) {
+        // setIsLoaded(true)
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const checkURL = async () => {
     try {
       if (AuthNip05 && ArtIdentifier) {
@@ -403,31 +426,6 @@ export default function NostrCuration() {
       tempArray.push(toSort.find((item) => item.d === post));
     }
     return tempArray.filter((item) => item);
-  };
-
-  const handleSharing = async () => {
-    if (navigator.share) {
-      try {
-        let shareDetails = {
-          url: `${window.location.protocol}//${window.location.hostname}/curations/${curation.naddr}`,
-          title: curation.title,
-          text: curationDet.description,
-        };
-        await navigator
-          .share(shareDetails)
-          .then(() =>
-            console.log("Hooray! Your content was shared to tha world")
-          );
-      } catch (error) {
-        console.log(`Oops! I couldn't share to the world because: ${error}`);
-      }
-    } else {
-      // fallback code
-      setShowSharing(true);
-      console.log(
-        "Web share is currently not supported on this browser. Please provide a callback"
-      );
-    }
   };
 
   const upvoteCuration = async () => {
@@ -565,6 +563,7 @@ export default function NostrCuration() {
     tempArray.splice(index, 1);
     setComments(tempArray);
   };
+
   const getURLToShare = () => {
     if (AuthNip05 && ArtIdentifier) {
       return `/curations/${AuthNip05}/${ArtIdentifier}`;
@@ -630,13 +629,14 @@ export default function NostrCuration() {
           <meta property="twitter:image" content={curationDet.image} />
         </Helmet>
         <div className="fit-container fx-centered">
+          <div className="main-container">
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             {/* <NavbarNOSTR /> */}
-            <div className="fit-container fx-centered fx-start-h">
+            <div className="fit-container fx-centered fx-start-h fx-start-v">
               <div
                 className="fit-container fx-centered fx-start-v fx-col box-pad-h-m box-pad-v-m"
-                style={{ columnGap: "32px", width: "min(100%,800px)" }}
+                style={{ columnGap: "32px", flex: 2 }}
               >
                 <div
                   className="fit-container sc-s-18 bg-img cover-bg fx-centered fx-end-v box-marg-s"
@@ -977,8 +977,35 @@ export default function NostrCuration() {
                   {/* )} */}
                 </div>
               </div>
+              <div
+                  className=" fx-centered fx-col fx-start-v extras-homepage"
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    // backgroundColor: "var(--white)",
+                    zIndex: "100",
+                    flex: 1,
+                  }}
+                >
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
+                  <div
+                    className=" fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      rowGap: "24px",
+                      border: "none",
+                    }}
+                  >
+                    <h4>Important Flash News</h4>
+                    <HomeFN flashnews={importantFN} />
+                  </div>
+                  <Footer />
+                </div>
             </div>
           </main>
+        </div>
         </div>
       </div>
     </>

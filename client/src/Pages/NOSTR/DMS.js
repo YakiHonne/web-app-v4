@@ -30,42 +30,10 @@ import { useRef } from "react";
 import LoadingDots from "../../Components/LoadingDots";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import EmojisList from "../../Components/EmojisList";
-import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
-import axios from "axios";
-import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
-import UserSearchBar from "../../Components/UserSearchBar";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/NOSTR/InitConvo";
 import axiosInstance from "../../Helpers/HTTP_Client";
 const pool = new SimplePool();
-
-const aggregateUsers = (convo) => {
-  const arr2 = [];
-
-  const map = new Map();
-  convo.forEach((item) => {
-    let pubkey = item.peer || item.pubkey;
-    if (map.has(pubkey)) {
-      let sortedConvo = [...map.get(pubkey).convo, item].sort(
-        (convo_1, convo_2) => convo_1.created_at - convo_2.created_at
-      );
-      map.get(pubkey).convo = sortedConvo;
-      map.get(pubkey).last_message =
-        sortedConvo[sortedConvo.length - 1].created_at;
-    } else {
-      map.set(pubkey, {
-        pubkey,
-        last_message: item.created_at,
-        convo: [item],
-        id: `${pubkey}-${item.created_at}`,
-      });
-    }
-  });
-
-  arr2.push(...map.values());
-  arr2.sort((convo_1, convo_2) => convo_2.last_message - convo_1.last_message);
-  return arr2;
-};
 
 export default function DMS() {
   const {
@@ -89,6 +57,7 @@ export default function DMS() {
     known: 0,
     unknown: 0,
   });
+  
   const [mbHide, setMbHide] = useState(true);
 
   useEffect(() => {
@@ -115,7 +84,6 @@ export default function DMS() {
       if (isFollowing) followings = followings + 1;
       if (isUnknown) unknown = unknown + 1;
       if (isKnown) known = known + 1;
-
       if (contact)
         return {
           ...contact,
@@ -223,6 +191,7 @@ export default function DMS() {
     if (type === contentType) return;
     setContentType(type);
   };
+
   const handleShowSearch = () => {
     if (showSearch) {
       setShowSearch(false);
@@ -292,6 +261,7 @@ export default function DMS() {
           />
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
+        <div className="main-container">
           <SidebarNOSTR />
           <main
             className="main-page-nostr-container"
@@ -299,6 +269,7 @@ export default function DMS() {
           >
             <PagePlaceholder page={"nostr-not-connected"} />
           </main>
+        </div>
         </div>
       </div>
     );
@@ -328,6 +299,7 @@ export default function DMS() {
           />
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
+        <div className="main-container">
           <SidebarNOSTR />
           <main
             className="main-page-nostr-container"
@@ -335,6 +307,7 @@ export default function DMS() {
           >
             <PagePlaceholder page={"nostr-unauthorized-messages"} />
           </main>
+        </div>
         </div>
       </div>
     );
@@ -364,6 +337,7 @@ export default function DMS() {
           />
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
+        <div className="main-container">
           <SidebarNOSTR />
           <main
             className="main-page-nostr-container"
@@ -371,6 +345,7 @@ export default function DMS() {
           >
             <PagePlaceholder page={"nostr-DMS-waiting"} />
           </main>
+        </div>
         </div>
       </div>
     );
@@ -400,6 +375,7 @@ export default function DMS() {
         className="fit-container fx-centered"
         style={{ columnGap: 0, overflow: "hidden" }}
       >
+        <div className="main-container">
         <SidebarNOSTR />
         <main
           className="main-page-nostr-container"
@@ -585,7 +561,7 @@ export default function DMS() {
                               style={{
                                 minWidth: "8px",
                                 aspectRatio: "1/1",
-                                backgroundColor: "var(--blue-main)",
+                                backgroundColor: "var(--red-main)",
                                 borderRadius: "var(--border-r-50)",
                               }}
                             ></div>
@@ -595,7 +571,7 @@ export default function DMS() {
                   })}
                 {keyword &&
                   searchedConvos.map((convo) => {
-                    let contact = getContactInfo(convo.pubkey);
+                    // let contact = getContactInfo(convo.pubkey);
                     return (
                       <div
                         className="fit-container fx-scattered box-pad-h option box-pad-v-s pointer"
@@ -644,7 +620,7 @@ export default function DMS() {
                             style={{
                               minWidth: "8px",
                               aspectRatio: "1/1",
-                              backgroundColor: "var(--blue-main)",
+                              backgroundColor: "var(--red-main)",
                               borderRadius: "var(--border-r-50)",
                             }}
                           ></div>
@@ -693,6 +669,7 @@ export default function DMS() {
             </div>
           </div>
         </main>
+      </div>
       </div>
     </div>
   );

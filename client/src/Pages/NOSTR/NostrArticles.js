@@ -26,7 +26,7 @@ import PostPreviewCardNOSTR from "../../Components/NOSTR/PostPreviewCardNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import TopCreators from "../../Components/NOSTR/TopCreators";
-
+import { getEmptyNostrUser } from "../../Helpers/Encryptions";
 var pool = new SimplePool();
 
 const getTopCreators = (posts) => {
@@ -41,9 +41,10 @@ const getTopCreators = (posts) => {
   for (let creator of netCreators) {
     let stats = getCreatorStats(creator.pubkey, posts);
     tempCreators.push({
-      pubkey: creator.pubkey,
-      name: creator.author_name,
-      img: creator.author_img,
+      // pubkey: creator.pubkey,
+      // name: creator.author_name,
+      // img: creator.author_img,
+      ...getEmptyNostrUser(creator.pubkey),
       articles_number: stats.articles_number,
     });
   }
@@ -115,7 +116,6 @@ export default function NostrArticles() {
   }, [artsLastEventTime, activeRelay, mutedList]);
 
   useEffect(() => {
-    console.log(document.querySelector(".main-page-nostr-container"));
     const handleScroll = () => {
       if (posts.length === 0) return;
       if (
@@ -356,219 +356,229 @@ export default function NostrArticles() {
           />
         </Helmet>
         <div className="fit-container fx-centered">
-          <SidebarNOSTR />
-          <ArrowUp />
-          <main
-            className={`main-page-nostr-container`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowRelaysList(false);
-              setShowFilter(false);
-            }}
-          >
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,700px)" }} className="box-pad-h-m">
+          <div className="main-container">
+            <SidebarNOSTR />
+            <ArrowUp />
+            <main
+              className={`main-page-nostr-container`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowRelaysList(false);
+                setShowFilter(false);
+              }}
+            >
+              <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div
-                  className="box-pad-v-m fit-container fx-scattered sticky"
-                  //   style={{
-                  //     position: "relative",
-                  //     zIndex: "100",
-                  //   }}
+                  style={{ width: "min(100%,700px)" }}
+                  className="box-pad-h-m"
                 >
-                  <div className="fx-centered fx-col fx-start-v">
-                    <div className="fx-centered">
-                      <h4>{posts.length} Articles</h4>
-                    </div>
-                    <p className="gray-c p-medium">
-                      (In{" "}
-                      {activeRelay === ""
-                        ? "all relays"
-                        : activeRelay.split("wss://")[1]}
-                      )
-                    </p>
-                  </div>
-                  <div className="fx-centered">
-                    <div style={{ position: "relative" }}>
-                      <div
-                        style={{ position: "relative" }}
-                        className="round-icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowRelaysList(!showRelaysList);
-                          setShowFilter(false);
-                        }}
-                      >
-                        <div className="server"></div>
+                  <div
+                    className="box-pad-v-m fit-container fx-scattered sticky"
+                    //   style={{
+                    //     position: "relative",
+                    //     zIndex: "100",
+                    //   }}
+                  >
+                    <div className="fx-centered fx-col fx-start-v">
+                      <div className="fx-centered">
+                        <h4>{posts.length} Articles</h4>
                       </div>
-                      {showRelaysList && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: 0,
-                            bottom: "-5px",
-                            backgroundColor: "var(--dim-gray)",
-                            border: "none",
-                            transform: "translateY(100%)",
-                            maxWidth: "300px",
-                            rowGap: "12px",
-                          }}
-                          className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                        >
-                          <h5>Relays</h5>
-                          <button
-                            className={`btn-text-gray pointer fx-centered`}
-                            style={{
-                              width: "max-content",
-                              fontSize: "1rem",
-                              textDecoration: "none",
-                              color: activeRelay === "" ? "var(--c1)" : "",
-                              transition: ".4s ease-in-out",
-                            }}
-                            onClick={() => {
-                              switchActiveRelay("");
-                              setShowRelaysList(false);
-                            }}
-                          >
-                            {isLoading && activeRelay === "" ? (
-                              <>Connecting...</>
-                            ) : (
-                              "All relays"
-                            )}
-                          </button>
-                          {nostrUser &&
-                            nostrUser.relays.length > 0 &&
-                            nostrUser.relays.map((relay) => {
-                              return (
-                                <button
-                                  key={relay}
-                                  className={`btn-text-gray pointer fx-centered `}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === relay ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay(relay);
-                                    setShowRelaysList(false);
-                                  }}
-                                >
-                                  {isLoading && relay === activeRelay ? (
-                                    <>Connecting...</>
-                                  ) : (
-                                    relay.split("wss://")[1]
-                                  )}
-                                </button>
-                              );
-                            })}
-                          {(!nostrUser ||
-                            (nostrUser && nostrUser.relays.length === 0)) &&
-                            relays.map((relay) => {
-                              return (
-                                <button
-                                  key={relay}
-                                  className={`btn-text-gray pointer fx-centered`}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === relay ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay(relay);
-                                    setShowRelaysList(false);
-                                  }}
-                                >
-                                  {isLoading && relay === activeRelay ? (
-                                    <>Connecting..</>
-                                  ) : (
-                                    relay.split("wss://")[1]
-                                  )}
-                                </button>
-                              );
-                            })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="fit-container fx-scattered fx-wrap fx-stretch">
-                  {posts.length > 0 && (
-                    <>
-                      {posts.map((post) => {
-                        if (post.kind === 30023 && post.title)
-                          return (
-                            <div
-                              key={post.id}
-                              className="fit-container fx-centered "
-                            >
-                              <PostPreviewCardNOSTR item={post} />
-                            </div>
-                          );
-                      })}
-                      <div style={{ flex: "1 1 400px" }}></div>
-                      <div style={{ flex: "1 1 400px" }}></div>
-                      <div style={{ flex: "1 1 400px" }}></div>
-                    </>
-                  )}
-                  {isLoading && (
-                    <div
-                      className="fit-container fx-centered fx-col"
-                      style={{ height: "20vh" }}
-                    >
-                      <p>Loading articles</p>
-                      <LoadingDots />
-                    </div>
-                  )}
-                  {posts.length === 0 && !isLoading && (
-                    <div
-                      className="fit-container fx-centered fx-col"
-                      style={{ height: "40vh" }}
-                    >
-                      <h4>No articles were found!</h4>
-                      <p className="gray-c p-centered">
-                        No articles were found in this relay
+                      <p className="gray-c p-medium">
+                        (In{" "}
+                        {activeRelay === ""
+                          ? "all relays"
+                          : activeRelay.split("wss://")[1]}
+                        )
                       </p>
                     </div>
-                  )}
-                </div>
-              </div>
-              <div
-                className="box-pad-h-s fx-centered fx-col fx-start-v sticky extras-homepage"
-                style={{
-                  position: "sticky",
-
-                  zIndex: "100",
-                  width: "min(100%, 400px)",
-                }}
-              >
-                <div className="sticky fit-container">
-                  <SearchbarNOSTR />
-                </div>
-                <div
-                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                  style={{
-                    backgroundColor: "var(--c1-side)",
-                    rowGap: "24px",
-                    border: "none",
-                  }}
-                >
-                  <div className="fx-centered fx-start-h">
-                    <h4>Top creators</h4>
+                    <div className="fx-centered">
+                      <div style={{ position: "relative" }}>
+                        <div
+                          style={{ position: "relative" }}
+                          className="round-icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowRelaysList(!showRelaysList);
+                            setShowFilter(false);
+                          }}
+                        >
+                          <div className="server"></div>
+                        </div>
+                        {showRelaysList && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              right: 0,
+                              bottom: "-5px",
+                              backgroundColor: "var(--dim-gray)",
+                              border: "none",
+                              transform: "translateY(100%)",
+                              maxWidth: "300px",
+                              rowGap: "12px",
+                            }}
+                            className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                          >
+                            <h5>Relays</h5>
+                            <button
+                              className={`btn-text-gray pointer fx-centered`}
+                              style={{
+                                width: "max-content",
+                                fontSize: "1rem",
+                                textDecoration: "none",
+                                color: activeRelay === "" ? "var(--c1)" : "",
+                                transition: ".4s ease-in-out",
+                              }}
+                              onClick={() => {
+                                switchActiveRelay("");
+                                setShowRelaysList(false);
+                              }}
+                            >
+                              {isLoading && activeRelay === "" ? (
+                                <>Connecting...</>
+                              ) : (
+                                "All relays"
+                              )}
+                            </button>
+                            {nostrUser &&
+                              nostrUser.relays.length > 0 &&
+                              nostrUser.relays.map((relay) => {
+                                return (
+                                  <button
+                                    key={relay}
+                                    className={`btn-text-gray pointer fx-centered `}
+                                    style={{
+                                      width: "max-content",
+                                      fontSize: "1rem",
+                                      textDecoration: "none",
+                                      color:
+                                        activeRelay === relay
+                                          ? "var(--c1)"
+                                          : "",
+                                      transition: ".4s ease-in-out",
+                                    }}
+                                    onClick={() => {
+                                      switchActiveRelay(relay);
+                                      setShowRelaysList(false);
+                                    }}
+                                  >
+                                    {isLoading && relay === activeRelay ? (
+                                      <>Connecting...</>
+                                    ) : (
+                                      relay.split("wss://")[1]
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            {(!nostrUser ||
+                              (nostrUser && nostrUser.relays.length === 0)) &&
+                              relays.map((relay) => {
+                                return (
+                                  <button
+                                    key={relay}
+                                    className={`btn-text-gray pointer fx-centered`}
+                                    style={{
+                                      width: "max-content",
+                                      fontSize: "1rem",
+                                      textDecoration: "none",
+                                      color:
+                                        activeRelay === relay
+                                          ? "var(--c1)"
+                                          : "",
+                                      transition: ".4s ease-in-out",
+                                    }}
+                                    onClick={() => {
+                                      switchActiveRelay(relay);
+                                      setShowRelaysList(false);
+                                    }}
+                                  >
+                                    {isLoading && relay === activeRelay ? (
+                                      <>Connecting..</>
+                                    ) : (
+                                      relay.split("wss://")[1]
+                                    )}
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="fit-container fx-scattered fx-wrap fx-stretch">
+                    {posts.length > 0 && (
+                      <>
+                        {posts.map((post) => {
+                          if (post.kind === 30023 && post.title)
+                            return (
+                              <div
+                                key={post.id}
+                                className="fit-container fx-centered "
+                              >
+                                <PostPreviewCardNOSTR item={post} />
+                              </div>
+                            );
+                        })}
+                        <div style={{ flex: "1 1 400px" }}></div>
+                        <div style={{ flex: "1 1 400px" }}></div>
+                        <div style={{ flex: "1 1 400px" }}></div>
+                      </>
+                    )}
                     {isLoading && (
-                      <p className="gray-c p-medium">(Getting stats...)</p>
+                      <div
+                        className="fit-container fx-centered fx-col"
+                        style={{ height: "20vh" }}
+                      >
+                        <p>Loading articles</p>
+                        <LoadingDots />
+                      </div>
+                    )}
+                    {posts.length === 0 && !isLoading && (
+                      <div
+                        className="fit-container fx-centered fx-col"
+                        style={{ height: "40vh" }}
+                      >
+                        <h4>No articles were found!</h4>
+                        <p className="gray-c p-centered">
+                          No articles were found in this relay
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <TopCreators top_creators={topCreators} />
                 </div>
-                <Footer />
+                <div
+                  className="box-pad-h-s fx-centered fx-col fx-start-v sticky extras-homepage"
+                  style={{
+                    position: "sticky",
+
+                    zIndex: "100",
+                    width: "min(100%, 400px)",
+                  }}
+                >
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
+                  <div
+                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      rowGap: "24px",
+                      border: "none",
+                      overflow: "visible"
+                    }}
+                  >
+                    <div className="fx-centered fx-start-h">
+                      <h4>Top creators</h4>
+                      {isLoading && (
+                        <p className="gray-c p-medium">(Getting stats...)</p>
+                      )}
+                    </div>
+                    <TopCreators top_creators={topCreators} />
+                  </div>
+                  <Footer />
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </>

@@ -11,6 +11,7 @@ import HeroNostrunauthorizedMessages from "../media/images/unauthorized-messages
 import HeroDMS from "../media/images/DMS.png";
 import HeroDMSWaiting from "../media/images/DMS-waiting.gif";
 import HeroYakiChest from "../media/images/trophy.png";
+import HeroWallet from "../media/images/wallet.png";
 import LoginNOSTR from "./NOSTR/LoginNOSTR";
 import { useContext } from "react";
 import { Context } from "../Context/Context";
@@ -286,7 +287,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
   if (page === "nostr-yaki-chest")
     return (
       <>
-      {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
+        {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
         <div className="fit-container">
           <div className="fx-centered fx-col" style={{ height: "80vh" }}>
             <div
@@ -306,8 +307,44 @@ export default function PagePlaceholder({ page, onClick = null }) {
               points and win rewards.
             </p>
             {nostrKeys && (nostrKeys.ext || nostrKeys.sec) && (
-              <button className="btn btn-normal" onClick={() => setShowYakiChest(true)}>Connect to Yaki chest</button>
+              <button
+                className="btn btn-normal"
+                onClick={() => setShowYakiChest(true)}
+              >
+                Connect to Yaki chest
+              </button>
             )}
+          </div>
+        </div>
+      </>
+    );
+  if (page === "nostr-wallet")
+    return (
+      <>
+        {triggerLogin && <LoginNOSTR exit={() => setTriggerLogin(false)} />}
+        <div className="fit-container fx-centered">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroWallet})`,
+                width: "min(300px, 500px)",
+                height: "300px",
+              }}
+            ></div>
+            <h3 className=" p-centered">Full connection is required</h3>
+            <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
+              It seems that you're not connected using an extension nor a secret
+              key, please reconnect using either methods to access this page
+            </p>
+            <button
+              className="btn btn-normal"
+              onClick={() =>
+                nostrKeys ? nostrUserLogout() : setTriggerLogin(true)
+              }
+            >
+              {nostrKeys ? "reconnect" : "Login"}
+            </button>
           </div>
         </div>
       </>

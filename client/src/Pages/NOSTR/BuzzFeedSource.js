@@ -189,6 +189,7 @@ export default function BuzzFeedSource() {
         />
       </Helmet>
       <div className="fit-container fx-centered">
+      <div className="main-container">
         <SidebarNOSTR />
         <main className="main-page-nostr-container" style={{ padding: 0 }}>
           <ArrowUp />
@@ -406,6 +407,7 @@ export default function BuzzFeedSource() {
             </div>
           </div>
         </main>
+      </div>
       </div>
     </div>
   );

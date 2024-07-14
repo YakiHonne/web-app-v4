@@ -51,6 +51,11 @@ import NostrNotes from "./Pages/NOSTR/NostrNotes";
 import UserFirsLogin from "./Components/UserFirsLogin";
 import YakiNewFeatureIntro from "./Components/YakiNewFeatureIntro";
 import YakiLevelingFeature from "./Pages/YakiLevelingFeature";
+import NostrNote from "./Pages/NOSTR/NostrNote";
+import NostrMyNotes from "./Pages/NOSTR/NostrMyNotes";
+import Wallet from "./Pages/NOSTR/Wallet";
+import WalletAlby from "./Pages/NOSTR/WalletAlby";
+import WalletNWC from "./Pages/NOSTR/WalletNWC";
 
 function App() {
   return (
@@ -96,17 +101,24 @@ function App() {
             element={<NostrVideo />}
           />
           <Route path="/notes" element={<NostrNotes />} />
-          <Route path="/notes/:nevent" element={<NostrNotes />} />
+          <Route path="/notes/:nevent" element={<NostrNote />} />
+          <Route path="/my-notes" element={<NostrMyNotes />} />
           <Route path="/messages" element={<DMS />} />
           <Route path="/buzz-feed" element={<BuzzFeed />} />
           <Route path="/buzz-feed/:nevent" element={<NostrBuzzFeed />} />
-          <Route path="/buzz-feed/source/:source" element={<BuzzFeedSource />} />
+          <Route
+            path="/buzz-feed/source/:source"
+            element={<BuzzFeedSource />}
+          />
           <Route path="/yakihonne-mobile-app" element={<YakiMobileApp />} />
           <Route path="/yakihonne-flash-news" element={<YakiFN />} />
           <Route
             path="/yakihonne-mobile-app-links"
             element={<YMARedirection />}
           />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/wallet/alby" element={<WalletAlby />} />
+          <Route path="/wallet/nwc" element={<WalletNWC />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/yaki-points" element={<UserLevels />} />

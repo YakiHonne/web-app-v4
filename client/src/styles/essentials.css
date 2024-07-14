@@ -9,7 +9,17 @@
 }
 
 
-*:not(main) {
+* {
+    scrollbar-width: none;
+    overflow: -moz-scrollbars-none;
+}
+
+*:-webkit-scrollbar {
+    display: none;
+    appearance: none;
+}
+
+/* *:not(main) {
     scrollbar-width: none;
     overflow: -moz-scrollbars-none;
 }
@@ -17,7 +27,7 @@
 *:not(main):-webkit-scrollbar {
     display: none;
     appearance: none;
-}
+} */
 
 /* width */
 ::-webkit-scrollbar {
@@ -109,7 +119,7 @@ p {
 
 .p-big {
     font-size: var(--20);
-    line-height: 150%;
+    line-height: 120%;
 }
 
 .p-medium {
@@ -344,7 +354,7 @@ hr:last-child {
 
 .sticker-orange {
     background: var(--orange-main);
-    color: var(--white);
+    color: white
 }
 
 .sticker-black {
@@ -454,7 +464,13 @@ hr:last-child {
 .btn-gst {
     background-color: transparent;
     border: 1px solid var(--c1);
-    color: var(--c1);
+    color: var(--black);
+}
+
+.btn-gray {
+    background-color: #3c3c3c;
+    border: none;
+    color: white;
 }
 
 .btn-gst:hover {
@@ -468,8 +484,8 @@ hr:last-child {
     color: white;
 }
 
-.btn-orange:hover {
-    opacity: .6;
+.btn-orange:hover, .btn-gray:hover {
+    opacity: .8;
 }
 
 .btn-orange-gst {
@@ -947,6 +963,7 @@ label {
     flex-wrap: wrap;
     row-gap: 12px;
 }
+
 .fx-wrap-r {
     flex-wrap: wrap-reverse;
     row-gap: 12px;
@@ -1035,6 +1052,15 @@ label {
 a {
     text-decoration: none;
     color: var(--primary);
+    transition: .2 ease-in-out;
+}
+
+a:hover {
+    opacity: .8;
+}
+
+.a-no-hover:hover {
+    opacity: 1;
 }
 
 .pointer {
@@ -1254,14 +1280,14 @@ a {
     overflow: hidden;
     border-radius: var(--border-r-32);
     border: 1px solid var(--pale-gray);
-    background-color: var(--white);
+    background-color: var(--c1-side);
 }
 
 .sc-s-18 {
     overflow: hidden;
     border-radius: var(--border-r-18);
     border: 1px solid var(--pale-gray);
-    background-color: var(--white);
+    background-color: var(--c1-side);
 }
 
 .sc-s-t {
@@ -1503,4 +1529,12 @@ textarea::placeholder {
     border-left: 5px solid var(--c1);
     line-height: 150%;
     word-break: break-word;
+}
+
+.image-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-items: stretch;
+    column-gap: 8px;
 }
