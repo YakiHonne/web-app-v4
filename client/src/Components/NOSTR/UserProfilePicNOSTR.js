@@ -14,6 +14,7 @@ import {
   getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
 import ZapTip from "./ZapTip";
+import LoadingDots from "../LoadingDots";
 
 const pool = new SimplePool();
 
@@ -66,6 +67,7 @@ export default function UserProfilePicNOSTR({
   // }, [userFollowers]);
   const [mutualFollows, setMutualFollows] = useState([]);
   const [subStart, setSubStart] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [initConv, setInitConv] = useState(false);
   // const containerRef = useRef(null);
   const navigateTo = useNavigate();
@@ -130,6 +132,7 @@ export default function UserProfilePicNOSTR({
             let authors = getMutualFollows(events, userFollowings);
             addNostrAuthors(authors.map((author) => author.pubkey));
             setMutualFollows(authors);
+            setIsLoading(false);
             sub.close();
           },
         }
@@ -313,7 +316,10 @@ export default function UserProfilePicNOSTR({
               <p className="p-medium ">{userFollowers.length} Followers</p>
             </div>
 
-            <DisplayMutualFollows users={mutualFollows} />
+            {!isLoading && <DisplayMutualFollows users={mutualFollows} />}
+            {isLoading && (
+              <p className="orange-c p-italic p-medium">Loading mutuals...</p>
+            )}
           </div>
         )}
       </div>
