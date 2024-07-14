@@ -125,7 +125,6 @@ export default function NostrHome() {
     nostrUser,
     nostrUserLoaded,
     addNostrAuthors,
-
     setNostrAuthors,
     nostrUserTopics,
     mutedList,

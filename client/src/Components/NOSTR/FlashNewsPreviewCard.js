@@ -5,8 +5,7 @@ import Date_ from "../Date_";
 import { Context } from "../../Context/Context";
 
 import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
-import { getBech32 } from "../../Helpers/Encryptions";
-import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
+import { getBech32, getEmptyNostrUser } from "../../Helpers/Encryptions";
 import ShareLink from "../ShareLink";
 
 const checkFollowing = (list, toFollowKey) => {
@@ -16,7 +15,7 @@ const checkFollowing = (list, toFollowKey) => {
 
 export default function FlashNewsPreviewCard({ item }) {
   const { nostrUser, getNostrAuthor, nostrAuthors } = useContext(Context);
-  const [authorData, setAuthorData] = useState(getAuthPubkeyFromNip05(item.pubkey));
+  const [authorData, setAuthorData] = useState(getEmptyNostrUser(item.pubkey));
   const [artURL, setArtURL] = useState(`${item.nEvent}`);
   const optionsRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
