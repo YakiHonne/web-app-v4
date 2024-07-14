@@ -42,8 +42,7 @@ export default function AddWallet({ exit }) {
         <div
           className="fit-container fx-scattered sc-s-18 box-pad-h-s box-pad-v-s option pointer"
           onClick={() =>
-            (window.location.href =
-              "https://getalby.com/oauth?client_id=w6PgKjdnhk&response_type=code&redirect_uri=http://localhost:3400/wallet/alby&scope=account:read%20invoices:create%20invoices:read%20transactions:read%20balance:read%20payments:send")
+            (window.location.href = process.env.REACT_APP_ALBY_ALBY_CONNECT)
           }
         >
           <div className="fx-centered">
