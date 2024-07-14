@@ -192,7 +192,7 @@ const getNoteTree = async (note, is_important = false) => {
         } else {
           finalTree.push(
             <a
-              style={{ wordBreak: "break-word" , color: "var(--orange-main)"}}
+              style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
               href={el}
               className="btn-text-gray"
               key={key}
@@ -601,14 +601,17 @@ function mergeConsecutivePElements(arr) {
   let currentTextElement = null;
   let currentImages = [];
   let tempArray = [];
+
   for (let i = 0; i < arr.length; i++) {
     if (
       !(
         i - 1 > 0 &&
         i + 1 < arr.length &&
         arr[i].type === "br" &&
-        ["IMGElement", "Kp"].includes(arr[i - 1].type?.name) &&
-        ["IMGElement", "Kp"].includes(arr[i + 1].type?.name)
+        (typeof arr[i - 1].type === "function" ||
+          ["IMGElement"].includes(arr[i - 1].type?.name)) &&
+        (typeof arr[i + 1].type === "function" ||
+          ["IMGElement", "Kp"].includes(arr[i + 1].type?.name))
       )
     ) {
       tempArray.push(arr[i]);
@@ -650,7 +653,10 @@ function mergeConsecutivePElements(arr) {
           },
         };
       }
-    } else if (["IMGElement", "Kp"].includes(element.type?.name)) {
+    } else if (
+      typeof element.type === "function" ||
+      ["IMGElement", "Kp"].includes(element.type?.name)
+    ) {
       if (currentTextElement) {
         result.push(currentTextElement);
         currentTextElement = null;

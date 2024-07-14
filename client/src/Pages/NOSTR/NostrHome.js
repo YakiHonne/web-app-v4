@@ -370,7 +370,7 @@ export default function NostrHome() {
           return getEmptyNostrUser(note.pubkey);
         }
       });
-      console.log(trendingNotesAuthors)
+   
       setNostrAuthors((prev) => [...prev, ...trendingNotesAuthors]);
       tempTrendingNotes = tempTrendingNotes.filter((note) => note);
       setTrendingNotes(tempTrendingNotes);
