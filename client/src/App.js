@@ -12,13 +12,13 @@ import { ContextProvider } from "./Context/Context";
 
 import NostrHome from "./Pages/NOSTR/NostrHome";
 import NostrWriting from "./Pages/NOSTR/NostrWriting";
-import NostrArticle from "./Components/NOSTR/NostrArticle";
+import NostrArticle from "./Pages/NOSTR/NostrArticle";
 import NostrCurations from "./Pages/NOSTR/NostrCurations";
 import NostrSettings from "./Pages/NOSTR/NostrSettings";
 import NostrUser from "./Pages/NOSTR/NostrUser";
 import NostrMyPosts from "./Pages/NOSTR/NostrMyPosts";
 import NostrMyCurations from "./Pages/NOSTR/NostrMyCurations";
-import NostrCuration from "./Components/NOSTR/NostrCuration";
+import NostrCuration from "./Pages/NOSTR/NostrCuration";
 import ToastMessages from "./Components/ToastMessages";
 import FourOFour from "./Pages/FourOFour";
 import NostrSearchTag from "./Pages/NOSTR/NostrSearchTag";

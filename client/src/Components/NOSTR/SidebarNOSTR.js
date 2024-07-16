@@ -18,7 +18,7 @@ import WriteNew from "./WriteNew";
 import UserBalance from "./UserBalance";
 import NumberShrink from "../NumberShrink";
 
-export default function NavBar() {
+export default function SidebarNOSTR() {
   const {
     nostrKeys,
     nostrUserAbout,

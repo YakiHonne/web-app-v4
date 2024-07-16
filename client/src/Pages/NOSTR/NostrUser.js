@@ -355,17 +355,6 @@ export default function NostrUser() {
     }
   };
 
-  // const getExternalData = async () => {
-  //   try {
-  //     var fn = await axios.get(API_BASE_URL + "/api/v1/flashnews", {
-  //       params: { pubkey: id },
-  //     });
-  //     setFlashNews(fn.data);
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
-
   const getFollowerAndFollowing = () => {
     try {
       setFollowings([]);
@@ -396,22 +385,6 @@ export default function NostrUser() {
       console.log(err);
     }
   };
-
-  // const getSatsStats = async () => {
-  //   try {
-  //     let [SATS_STATS, USER_IMPACT] = await Promise.all([
-  //       axios.get("https://api.nostr.band/v0/stats/profile/" + id),
-  //       axios.get(API_BASE_URL + "/api/v1/user-impact", {
-  //         params: { pubkey: id },
-  //       }),
-  //     ]);
-
-  //     setSatsSent((SATS_STATS.data.stats[id]?.zaps_sent?.msats || 0) / 1000);
-  //     setUserImpact(USER_IMPACT.data);
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
 
   const getPost = (post) => {
     let author_img = "";
@@ -556,9 +529,10 @@ export default function NostrUser() {
       console.log(err);
     }
   };
+
   const copyID = (e, pubkey) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(pubkey);
+    navigator?.clipboard?.writeText(pubkey);
     setToast({
       type: 1,
       desc: `Pubkey was copied! 👏`,
@@ -627,7 +601,11 @@ export default function NostrUser() {
               {/* <NavbarNOSTR /> */}
               <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div
-                  style={{ flex: 1.5, maxWidth: "700px", width: "min(100%, 700px)" }}
+                  style={{
+                    flex: 1.5,
+                    maxWidth: "700px",
+                    width: "min(100%, 700px)",
+                  }}
                   className="box-pad-h-m box-pad-v-m"
                 >
                   <div
@@ -642,11 +620,12 @@ export default function NostrUser() {
                   >
                     <div style={{ position: "relative" }} ref={optionsRef}>
                       <div
-                        className="round-icon round-icon-tooltip"
+                        className="round-icon-small round-icon-tooltip"
                         data-tooltip="Options"
                         onClick={() => {
                           setShowOptions(!showOptions);
                         }}
+                        style={{ backgroundColor: "var(--pale-gray)" }}
                       >
                         <div
                           className="fx-centered fx-col"
