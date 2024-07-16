@@ -17,6 +17,7 @@ import {
   decodeUrlOrAddress,
   encodeLud06,
   filterRelays,
+  getBech32,
   getBolt11,
   getEmptyNostrUser,
   getHex,
@@ -76,7 +77,11 @@ export default function Wallet() {
 
   useEffect(() => {
     try {
-      if (!nostrKeys) return;
+      if (!nostrKeys) {
+        setWallets([]);
+        setSelectedWallet(false);
+        return;
+      }
       let authors = [];
       let sub = pool.subscribeMany(
         nostrUser
@@ -193,12 +198,24 @@ export default function Wallet() {
           Authorization: `Bearer ${code}`,
         },
       });
+      let sendersMetadata = data.data
+        .filter((event) => {
+          if (event.metadata?.zap_request) return event;
+        })
+        .map((event) => {
+          return event.metadata.zap_request.pubkey;
+        });
+      sendersMetadata = [...new Set(sendersMetadata)];
+      addNostrAuthors(sendersMetadata);
+      console.log(data.data);
+
       return data.data;
     } catch (err) {
       console.log(err);
       return 0;
     }
   };
+
   const getNWCData = async (activeWallet) => {
     try {
       setIsLoading(true);
@@ -213,7 +230,15 @@ export default function Wallet() {
         until: Math.ceil(new Date().getTime() / 1000),
         limit: 50,
       });
-
+      let sendersMetadata = transactions_.transactions
+        .filter((event) => {
+          if (event.metadata?.zap_request) return event;
+        })
+        .map((event) => {
+          return event.metadata.zap_request.pubkey;
+        });
+      sendersMetadata = [...new Set(sendersMetadata)];
+      addNostrAuthors(sendersMetadata);
       setWalletTransactions(transactions_.transactions);
       setIsLoading(false);
       nwc.close();
@@ -222,6 +247,7 @@ export default function Wallet() {
       setIsLoading(false);
     }
   };
+
   const handleSelectWallet = (walletID) => {
     // let walletID = e.target.value;
     let index = wallets.findIndex((wallet) => wallet.id == walletID);
@@ -311,7 +337,10 @@ export default function Wallet() {
                   {!(nostrKeys.ext || nostrKeys.sec) && (
                     <PagePlaceholder page={"nostr-wallet"} />
                   )}
-                  {(nostrKeys.ext || nostrKeys.sec) && (
+                  {nostrKeys.sec && wallets.length === 0 && (
+                    <PagePlaceholder page={"nostr-add-wallet"} />
+                  )}
+                  {(nostrKeys.ext || nostrKeys.sec) && wallets.length > 0 && (
                     <div>
                       <div
                         className="fit-container box-pad-v-m fx-scattered"
@@ -507,17 +536,36 @@ export default function Wallet() {
                                     <div
                                       key={transaction.id}
                                       className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
-                                      style={{ border: "none" }}
+                                      style={{
+                                        border: "none",
+                                        overflow: "visible",
+                                      }}
                                     >
                                       <div className="fit-container fx-scattered">
                                         <div className="fx-centered fx-start-h">
-                                          <UserProfilePicNOSTR
-                                            mainAccountUser={false}
-                                            user_id={author.pubkey}
-                                            size={32}
-                                            img={author.picture}
-                                            ring={false}
-                                          />
+                                          <div style={{ position: "relative" }}>
+                                            <UserProfilePicNOSTR
+                                              mainAccountUser={false}
+                                              user_id={author.pubkey}
+                                              size={48}
+                                              img={author.picture}
+                                              ring={false}
+                                            />
+                                            <div
+                                              className="round-icon-small round-icon-tooltip"
+                                              data-tooltip="Incoming"
+                                              style={{
+                                                position: "absolute",
+                                                scale: ".65",
+                                                backgroundColor:
+                                                  "var(--pale-gray)",
+                                                right: "-5px",
+                                                bottom: "-10px",
+                                              }}
+                                            >
+                                              <p className="green-c">&#8601;</p>
+                                            </div>
+                                          </div>
                                           <div>
                                             <p className="gray-c p-medium">
                                               On{" "}
@@ -538,10 +586,11 @@ export default function Wallet() {
                                                   0,
                                                   10
                                                 )}{" "}
-                                              <span className="gray-c">
-                                                sent you
-                                              </span>{" "}
+                                              {/* <span className="gray-c"> */}
+                                              sent you
+                                              {/* </span>{" "} */}
                                               <span className="orange-c">
+                                                {" "}
                                                 {transaction.amount}{" "}
                                                 <span className="gray-c">
                                                   Sats
@@ -552,7 +601,8 @@ export default function Wallet() {
                                         </div>
                                         {transaction.message && (
                                           <div
-                                            className="comment-not-24"
+                                            className="round-icon-small round-icon-tooltip"
+                                            data-tooltip="Invoice message"
                                             onClick={() =>
                                               displayMessage === transaction.id
                                                 ? setDisplayMessage(false)
@@ -560,7 +610,9 @@ export default function Wallet() {
                                                     transaction.id
                                                   )
                                             }
-                                          ></div>
+                                          >
+                                            <div className="comment-not"></div>
+                                          </div>
                                         )}
                                       </div>
                                       {transaction.message &&
@@ -602,6 +654,15 @@ export default function Wallet() {
                               <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
                                 <p className="gray-c">Transactions</p>
                                 {walletTransactions.map((transaction) => {
+                                  let isZap = transaction.metadata?.zap_request;
+                                  let author = isZap
+                                    ? nostrAuthors.find(
+                                        (author) =>
+                                          author.pubkey ===
+                                          transaction.metadata.zap_request
+                                            .pubkey
+                                      )
+                                    : false;
                                   return (
                                     <div
                                       key={transaction.identifier}
@@ -613,22 +674,73 @@ export default function Wallet() {
                                     >
                                       <div className="fit-container fx-scattered">
                                         <div className="fx-centered fx-start-h">
-                                          {transaction.type === "outgoing" && (
-                                            <div
-                                              className="round-icon round-icon-tooltip"
-                                              data-tooltip="Outgoing"
-                                            >
-                                              <p className="green-c">&#8599;</p>
-                                            </div>
+                                          {(!isZap ||
+                                            (isZap &&
+                                              transaction.type ===
+                                                "outgoing")) && (
+                                            <>
+                                              {transaction.type ===
+                                                "outgoing" && (
+                                                <div
+                                                  className="round-icon round-icon-tooltip"
+                                                  data-tooltip="Outgoing"
+                                                >
+                                                  <p className="red-c">
+                                                    &#8599;
+                                                  </p>
+                                                </div>
+                                              )}
+                                              {transaction.type !==
+                                                "outgoing" && (
+                                                <div
+                                                  className="round-icon round-icon-tooltip"
+                                                  data-tooltip="Incoming"
+                                                >
+                                                  <p className="green-c">
+                                                    &#8601;
+                                                  </p>
+                                                </div>
+                                              )}
+                                            </>
                                           )}
-                                          {transaction.type !== "outgoing" && (
-                                            <div
-                                              className="round-icon round-icon-tooltip"
-                                              data-tooltip="Incoming"
-                                            >
-                                              <p className="red-c">&#8601;</p>
-                                            </div>
-                                          )}
+                                          {isZap &&
+                                            transaction.type !== "outgoing" && (
+                                              <>
+                                                <div
+                                                  style={{
+                                                    position: "relative",
+                                                  }}
+                                                >
+                                                  <UserProfilePicNOSTR
+                                                    mainAccountUser={false}
+                                                    size={48}
+                                                    user_id={isZap.pubkey}
+                                                    ring={false}
+                                                    img={
+                                                      author
+                                                        ? author.picture
+                                                        : ""
+                                                    }
+                                                  />
+                                                  <div
+                                                    className="round-icon-small round-icon-tooltip"
+                                                    data-tooltip="Incoming"
+                                                    style={{
+                                                      position: "absolute",
+                                                      scale: ".65",
+                                                      backgroundColor:
+                                                        "var(--pale-gray)",
+                                                      right: "-5px",
+                                                      bottom: "-10px",
+                                                    }}
+                                                  >
+                                                    <p className="green-c">
+                                                      &#8601;
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </>
+                                            )}
                                           <div>
                                             <p className="gray-c p-medium">
                                               On{" "}
@@ -643,9 +755,33 @@ export default function Wallet() {
                                               />
                                             </p>
                                             <p className="p-medium">
-                                              {transaction.type === "outgoing"
-                                                ? "You sent"
-                                                : "You received"}
+                                              {(!isZap ||
+                                                (isZap &&
+                                                  transaction.type ===
+                                                    "outgoing")) && (
+                                                <>
+                                                  {transaction.type ===
+                                                  "outgoing"
+                                                    ? "You sent"
+                                                    : "You received"}
+                                                </>
+                                              )}
+                                              {(isZap ||
+                                                (isZap &&
+                                                  transaction.type !==
+                                                    "outgoing")) && (
+                                                <>
+                                                  {`${
+                                                    author
+                                                      ? author.display_name ||
+                                                        author.name
+                                                      : getBech32(
+                                                          "npub",
+                                                          isZap.pubkey
+                                                        ).substring(0, 10)
+                                                  } sent you`}
+                                                </>
+                                              )}
 
                                               <span className="orange-c">
                                                 {" "}
@@ -657,7 +793,8 @@ export default function Wallet() {
                                             </p>
                                           </div>
                                         </div>
-                                        {transaction.memo && (
+                                        {(transaction.memo ||
+                                          transaction.comment) && (
                                           <div
                                             className="round-icon-small round-icon-tooltip"
                                             data-tooltip="Invoice message"
@@ -674,7 +811,8 @@ export default function Wallet() {
                                           </div>
                                         )}
                                       </div>
-                                      {transaction.memo &&
+                                      {(transaction.memo ||
+                                        transaction.comment) &&
                                         displayMessage ===
                                           transaction.identifier && (
                                           <div
@@ -688,7 +826,8 @@ export default function Wallet() {
                                               Comment
                                             </p>
                                             <p className="p-medium">
-                                              {transaction.memo}
+                                              {transaction.memo ||
+                                                transaction.comment}
                                             </p>
                                           </div>
                                         )}
@@ -716,6 +855,16 @@ export default function Wallet() {
                                 <p className="gray-c">Transactions</p>
                                 {walletTransactions.map(
                                   (transaction, index) => {
+                                    let isZap =
+                                      transaction.metadata?.zap_request;
+                                    let author = isZap
+                                      ? nostrAuthors.find(
+                                          (author) =>
+                                            author.pubkey ===
+                                            transaction.metadata.zap_request
+                                              .pubkey
+                                        )
+                                      : false;
                                     return (
                                       <div
                                         key={`${transaction.invoice}-${index}`}
@@ -726,7 +875,7 @@ export default function Wallet() {
                                         }}
                                       >
                                         <div className="fit-container fx-scattered">
-                                          <div className="fx-centered fx-start-h">
+                                          {/* <div className="fx-centered fx-start-h">
                                             {transaction.type ===
                                               "outgoing" && (
                                               <div
@@ -764,6 +913,127 @@ export default function Wallet() {
                                                 {transaction.type === "outgoing"
                                                   ? "You sent"
                                                   : "You received"}
+
+                                                <span className="orange-c">
+                                                  {" "}
+                                                  {transaction.amount}{" "}
+                                                  <span className="gray-c">
+                                                    Sats
+                                                  </span>
+                                                </span>
+                                              </p>
+                                            </div>
+                                          </div> */}
+                                          <div className="fx-centered fx-start-h">
+                                            {(!isZap ||
+                                              (isZap &&
+                                                transaction.type ===
+                                                  "outgoing")) && (
+                                              <>
+                                                {transaction.type ===
+                                                  "outgoing" && (
+                                                  <div
+                                                    className="round-icon round-icon-tooltip"
+                                                    data-tooltip="Outgoing"
+                                                  >
+                                                    <p className="red-c">
+                                                      &#8599;
+                                                    </p>
+                                                  </div>
+                                                )}
+                                                {transaction.type !==
+                                                  "outgoing" && (
+                                                  <div
+                                                    className="round-icon round-icon-tooltip"
+                                                    data-tooltip="Incoming"
+                                                  >
+                                                    <p className="green-c">
+                                                      &#8601;
+                                                    </p>
+                                                  </div>
+                                                )}
+                                              </>
+                                            )}
+                                            {isZap &&
+                                              transaction.type !==
+                                                "outgoing" && (
+                                                <>
+                                                  <div
+                                                    style={{
+                                                      position: "relative",
+                                                    }}
+                                                  >
+                                                    <UserProfilePicNOSTR
+                                                      mainAccountUser={false}
+                                                      size={48}
+                                                      user_id={isZap.pubkey}
+                                                      ring={false}
+                                                      img={
+                                                        author
+                                                          ? author.picture
+                                                          : ""
+                                                      }
+                                                    />
+                                                    <div
+                                                      className="round-icon-small round-icon-tooltip"
+                                                      data-tooltip="Incoming"
+                                                      style={{
+                                                        position: "absolute",
+                                                        scale: ".65",
+                                                        backgroundColor:
+                                                          "var(--pale-gray)",
+                                                        right: "-5px",
+                                                        bottom: "-10px",
+                                                      }}
+                                                    >
+                                                      <p className="green-c">
+                                                        &#8601;
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                </>
+                                              )}
+                                            <div>
+                                              <p className="gray-c p-medium">
+                                                On{" "}
+                                                <Date_
+                                                  toConvert={
+                                                    new Date(
+                                                      transaction.created_at *
+                                                        1000
+                                                    )
+                                                  }
+                                                  time={true}
+                                                />
+                                              </p>
+                                              <p className="p-medium">
+                                                {(!isZap ||
+                                                  (isZap &&
+                                                    transaction.type ===
+                                                      "outgoing")) && (
+                                                  <>
+                                                    {transaction.type ===
+                                                    "outgoing"
+                                                      ? "You sent"
+                                                      : "You received"}
+                                                  </>
+                                                )}
+                                                {(isZap ||
+                                                  (isZap &&
+                                                    transaction.type !==
+                                                      "outgoing")) && (
+                                                  <>
+                                                    {`${
+                                                      author
+                                                        ? author.display_name ||
+                                                          author.name
+                                                        : getBech32(
+                                                            "npub",
+                                                            isZap.pubkey
+                                                          ).substring(0, 10)
+                                                    } sent you`}
+                                                  </>
+                                                )}
 
                                                 <span className="orange-c">
                                                   {" "}
@@ -1047,7 +1317,6 @@ const SendPayment = ({
       if (selectedWallet.kind === 3) sendWithNWC(addr);
     }
   };
-
   const reInitParams = () => {
     setIsZap(false);
     setInvoicedata(true);
@@ -1068,6 +1337,12 @@ const SendPayment = ({
       ? await getZapEventRequest(nostrKeys, comment, tags)
       : {};
     return event;
+  };
+
+  const handleUserMetadata = (data) => {
+    if (data.lud16) {
+      setAddr(data.lud16);
+    }
   };
 
   return (
@@ -1130,6 +1405,7 @@ const SendPayment = ({
               close={true}
               showSharing={false}
               onClose={() => setPubkey("")}
+              setMetataData={handleUserMetadata}
             />
           )}
         </>

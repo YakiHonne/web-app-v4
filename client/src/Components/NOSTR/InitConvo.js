@@ -27,7 +27,8 @@ export default function InitiConvo({ exit, receiver = false }) {
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(
-    nostrKeys.sec || window?.nostr?.nip44 ? false : true
+    // nostrKeys.sec || window?.nostr?.nip44 ? false : true
+    true
   );
   const [isLoading, setIsLoading] = useState(false);
 

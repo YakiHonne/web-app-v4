@@ -279,7 +279,9 @@
 .unmute,
 .unmute-24,
 .qrcode,
-.qrcode-24 {
+.qrcode-24,
+.wallet-add,
+.wallet-add-24 {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -559,7 +561,9 @@
     .wallet,
     .wallet-24,
     .qrcode,
-    .qrcode-24 {
+    .qrcode-24,
+    .wallet-add,
+    .wallet-add-24 {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -725,7 +729,8 @@
 .webln-logo,
 .mute,
 .unmute,
-.qrcode {
+.qrcode,
+.wallet-add {
     min-width: 16px;
     min-height: 16px;
 }
@@ -873,7 +878,8 @@
 .webln-logo-24,
 .mute-24,
 .unmute-24,
-.qrcode-24 {
+.qrcode-24,
+.wallet-add-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -881,6 +887,11 @@
 .play-vid-58 {
     min-width: 48px;
     min-height: 48px;
+}
+
+.wallet-add,
+.wallet-add-24 {
+    background-image: url('../media/icons/wallet-add.svg');
 }
 
 .qrcode,

@@ -11,11 +11,8 @@ import { useMemo } from "react";
 import NotificationCenter from "./NotificationCenter";
 import { useEffect } from "react";
 import { useRef } from "react";
-import ProgressBar from "../ProgressBar";
 import ProgressCirc from "../ProgressCirc";
-import { getCurrentLevel, levelCount } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import LoginWithAPI from "./LoginWithAPI";
 import WriteNew from "./WriteNew";
 import UserBalance from "./UserBalance";
@@ -23,13 +20,10 @@ import NumberShrink from "../NumberShrink";
 
 export default function NavBar() {
   const {
-    nostrUser,
     nostrKeys,
-    nostrUserLoaded,
     nostrUserAbout,
     nostrUserLogout,
     chatrooms,
-    isConnectedToYaki,
     yakiChestStats,
     isYakiChestLoaded,
     updatedActionFromYakiChest,
@@ -66,6 +60,7 @@ export default function NavBar() {
       document.removeEventListener("mousedown", handleOffClick);
     };
   }, [settingsRef]);
+  
   useEffect(() => {
     let handleOffClick = (e) => {
       if (myContentRef.current && !myContentRef.current.contains(e.target))
@@ -76,6 +71,7 @@ export default function NavBar() {
       document.removeEventListener("mousedown", handleOffClick);
     };
   }, [myContentRef]);
+
   useEffect(() => {
     let handleOffClick = (e) => {
       if (writingOptRef.current && !writingOptRef.current.contains(e.target))
@@ -86,6 +82,7 @@ export default function NavBar() {
       document.removeEventListener("mousedown", handleOffClick);
     };
   }, [writingOptRef]);
+
   useEffect(() => {
     let handleOffClick = (e) => {
       if (mainFrame.current && !mainFrame.current.contains(e.target))
@@ -103,7 +100,6 @@ export default function NavBar() {
         setShowMedia(false);
       }
     };
-
     document.addEventListener("mousedown", handleOffClick);
     return () => {
       document.removeEventListener("mousedown", handleOffClick);
@@ -355,6 +351,7 @@ export default function NavBar() {
                       isPage("/my-flash-news") ||
                       isPage("/my-curations") ||
                       isPage("/my-articles") ||
+                      isPage("/my-notes") ||
                       isPage("/bookmarks")
                         ? "active-link"
                         : "inactive-link"
@@ -369,6 +366,7 @@ export default function NavBar() {
                           isPage("/my-curations") ||
                           isPage("/my-articles") ||
                           isPage("/my-videos") ||
+                          isPage("/my-notes") ||
                           isPage("/bookmarks")
                             ? "folder-bold-24"
                             : "folder-24"
@@ -393,9 +391,9 @@ export default function NavBar() {
                         style={{ rowGap: "0" }}
                       >
                         <div
-                          onClick={() => navigateTo("/my-flash-news")}
+                          onClick={() => navigateTo("/my-notes")}
                           className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                            isPage("/my-flash-news")
+                            isPage("/my-notes")
                               ? "active-link"
                               : "inactive-link"
                           }`}
@@ -403,30 +401,10 @@ export default function NavBar() {
                         >
                           <div
                             className={
-                              isPage("/my-flash-news")
-                                ? "news-bold-24"
-                                : "news-24"
+                              isPage("/my-notes") ? "note-bold-24" : "note-24"
                             }
                           ></div>
-                          <div>My flash news</div>
-                        </div>
-                        <div
-                          onClick={() => navigateTo("/my-curations")}
-                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                            isPage("/my-curations")
-                              ? "active-link"
-                              : "inactive-link"
-                          }`}
-                          style={{ borderRadius: 0 }}
-                        >
-                          <div
-                            className={
-                              isPage("/my-curations")
-                                ? "curation-bold-24"
-                                : "curation-24"
-                            }
-                          ></div>
-                          <div>My curations</div>
+                          <div>Notes</div>
                         </div>
                         <div
                           onClick={() => navigateTo("/my-articles")}
@@ -444,7 +422,25 @@ export default function NavBar() {
                                 : "posts-24"
                             }
                           ></div>
-                          <div>My articles</div>
+                          <div>Articles</div>
+                        </div>
+                        <div
+                          onClick={() => navigateTo("/my-flash-news")}
+                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                            isPage("/my-flash-news")
+                              ? "active-link"
+                              : "inactive-link"
+                          }`}
+                          style={{ borderRadius: 0 }}
+                        >
+                          <div
+                            className={
+                              isPage("/my-flash-news")
+                                ? "news-bold-24"
+                                : "news-24"
+                            }
+                          ></div>
+                          <div>Flash news</div>
                         </div>
                         <div
                           onClick={() => navigateTo("/my-videos")}
@@ -460,7 +456,25 @@ export default function NavBar() {
                               isPage("/my-videos") ? "play-bold-24" : "play-24"
                             }
                           ></div>
-                          <div>My videos</div>
+                          <div>Videos</div>
+                        </div>
+                        <div
+                          onClick={() => navigateTo("/my-curations")}
+                          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                            isPage("/my-curations")
+                              ? "active-link"
+                              : "inactive-link"
+                          }`}
+                          style={{ borderRadius: 0 }}
+                        >
+                          <div
+                            className={
+                              isPage("/my-curations")
+                                ? "curation-bold-24"
+                                : "curation-24"
+                            }
+                          ></div>
+                          <div>Curations</div>
                         </div>
                         <div
                           onClick={() => navigateTo("/bookmarks")}
@@ -478,7 +492,7 @@ export default function NavBar() {
                                 : "bookmark-i-24"
                             }
                           ></div>
-                          <div>My bookmarks</div>
+                          <div>Bookmarks</div>
                         </div>
                       </div>
                     </div>

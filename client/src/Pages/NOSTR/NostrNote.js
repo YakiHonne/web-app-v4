@@ -166,6 +166,7 @@ export default function NostrNote() {
     try {
       const id = nip19.decode(nevent)?.data.id;
       const auth_pubkey = nip19.decode(nevent)?.data.author;
+
       setAuthor(getEmptyNostrUser(auth_pubkey));
       let sub = pool.subscribeMany(
         nostrUser

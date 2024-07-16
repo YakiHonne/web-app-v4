@@ -38,6 +38,7 @@ export default function FlashNewsPreviewCard({ item }) {
     };
     fetchData();
   }, [nostrAuthors]);
+
   useEffect(() => {
     const handleOffClick = (e) => {
       if (optionsRef.current && !optionsRef.current.contains(e.target))
@@ -48,6 +49,7 @@ export default function FlashNewsPreviewCard({ item }) {
       document.removeEventListener("mousedown", handleOffClick);
     };
   }, [optionsRef]);
+  
   return (
     <div
       className={"fit-container fx-scattered sc-s-18 box-pad-h-m"}

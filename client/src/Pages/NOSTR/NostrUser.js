@@ -627,7 +627,7 @@ export default function NostrUser() {
               {/* <NavbarNOSTR /> */}
               <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div
-                  style={{ flex: 1.5, maxWidth: "700px" }}
+                  style={{ flex: 1.5, maxWidth: "700px", width: "min(100%, 700px)" }}
                   className="box-pad-h-m box-pad-v-m"
                 >
                   <div

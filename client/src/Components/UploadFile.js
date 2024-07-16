@@ -128,7 +128,10 @@ export default function UploadFile({
       />
       {isLoading ? (
         small ? (
-          <div style={{scale: ".6"}}> <LoadingDots /></div>
+          <div style={{ scale: ".6" }}>
+            {" "}
+            <LoadingDots />
+          </div>
         ) : (
           <LoadingDots />
         )

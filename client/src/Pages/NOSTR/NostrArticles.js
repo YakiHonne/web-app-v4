@@ -563,7 +563,7 @@ export default function NostrArticles() {
                       backgroundColor: "var(--c1-side)",
                       rowGap: "24px",
                       border: "none",
-                      overflow: "visible"
+                      overflow: "visible",
                     }}
                   >
                     <div className="fx-centered fx-start-h">

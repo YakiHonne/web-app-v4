@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import SatsToUSD from "./SatsToUSD";
 import { Context } from "../../Context/Context";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { webln } from "@getalby/sdk";
 import LoadingDots from "../LoadingDots";
@@ -54,7 +54,7 @@ export default function UserBalance() {
   }, [nostrKeys, selectedWallet]);
 
   useEffect(() => {
-    if (tempChannel && !window.location.pathname.includes('users')) {
+    if (tempChannel && !window.location.pathname.includes("users")) {
       let tempWallets = getWallets();
       setWallets(tempWallets);
       setSelectedWallet(tempWallets.find((wallet) => wallet.active));
@@ -133,6 +133,24 @@ export default function UserBalance() {
   };
 
   if (!(nostrKeys && (nostrKeys?.ext || nostrKeys?.sec))) return;
+  if (nostrKeys?.sec && balance == "N/A")
+    return (
+      // <Link
+      //   to={"/wallet"}
+      //   className={`link-label pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
+      //   style={{backgroundColor: "#ff9c0811"}}
+      // >
+      //   <div className="wallet-24"></div> My wallets
+      // </Link>
+      <Link
+        className="fit-container fx-centered fx-start-h box-pad-h-m balance-container mb-hide"
+        style={{ borderLeft: "2px solid var(--orange-main)", margin: ".75rem" }}
+        to={"/wallet"}
+      >
+        <div className="wallet-add" style={{ width: "32px", height: "32px" }}></div>
+        <p>Add wallet</p>
+      </Link>
+    );
   return (
     <div
       className="fit-container fx-scattered box-pad-h-m balance-container mb-hide"

@@ -59,6 +59,7 @@ export default function AddWallet({ exit }) {
             <div className="plus-sign"></div>
           </div>
         </div>
+        <p className="gray-c p-medium p-centered">Note: All the data related to your wallet will be safely and securely stored locally and are never shared outside the confines of the application.</p>
       </div>
     </div>
   );

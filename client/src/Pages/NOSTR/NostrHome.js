@@ -363,13 +363,13 @@ export default function NostrHome() {
       );
       let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
         try {
-          return {...JSON.parse(note.author.content), pubkey: note.pubkey};
+          return { ...JSON.parse(note.author.content), pubkey: note.pubkey };
         } catch (err) {
           console.log(err);
           return getEmptyNostrUser(note.pubkey);
         }
       });
-   
+
       setNostrAuthors((prev) => [...prev, ...trendingNotesAuthors]);
       tempTrendingNotes = tempTrendingNotes.filter((note) => note);
       setTrendingNotes(tempTrendingNotes);
@@ -1086,7 +1086,7 @@ export default function NostrHome() {
               <HomeFNMobile flashnews={flashNews} />
             </div>
             <div className="fit-container fx-centered fx-start-h fx-start-v">
-              <div className="fx-centered fx-start-v fx-start-h">
+              <div className="fit-container fx-centered fx-start-v fx-start-h">
                 <div
                   style={{ flex: 2 }}
                   className={`fx-centered  fx-wrap box-pad-h`}

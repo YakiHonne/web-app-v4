@@ -17,11 +17,13 @@ import { useContext } from "react";
 import { Context } from "../Context/Context";
 import { Link } from "react-router-dom";
 import LoginWithAPI from "./NOSTR/LoginWithAPI";
+import AddWallet from "./NOSTR/AddWallet";
 
 export default function PagePlaceholder({ page, onClick = null }) {
   const { nostrUserLogout, nostrKeys } = useContext(Context);
   const [triggerLogin, setTriggerLogin] = useState(false);
   const [showYakiChest, setShowYakiChest] = useState(false);
+  const [showAddWallet, setShowAddWallet] = useState(false);
 
   if (page === "404")
     return (
@@ -344,6 +346,68 @@ export default function PagePlaceholder({ page, onClick = null }) {
               }
             >
               {nostrKeys ? "reconnect" : "Login"}
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  if (page === "nostr-add-wallet")
+    return (
+      <>
+        {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} />}
+        <div className="fit-container fx-centered">
+          <div
+            className="fx-centered fx-col"
+            style={{ height: "80vh", rowGap: "24px" }}
+          >
+            <div style={{ position: "relative" }}>
+              <div className="round-icon" style={{ width: "140px" }}>
+                <div
+                  className="wallet-add"
+                  style={{ width: "60px", height: "60px" }}
+                ></div>
+              </div>
+              <div
+                className="box-pad-h-s box-pad-v-s"
+                style={{
+                  borderRadius: "var(--border-r-50)",
+                  backgroundColor: "var(--white)",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                }}
+              >
+                <div
+                  className="alby-logo-24"
+                  style={{ width: "32px", height: "32px" }}
+                ></div>
+              </div>
+              <div
+                className="box-pad-h-s box-pad-v-s"
+                style={{
+                  borderRadius: "var(--border-r-50)",
+                  backgroundColor: "var(--white)",
+                  position: "absolute",
+                  right: 0,
+                  bottom: 0,
+                }}
+              >
+                <div
+                  className="nwc-logo-24"
+                  style={{ width: "32px", height: "32px" }}
+                ></div>
+              </div>
+            </div>
+
+            <p className="p-centered gray-c" style={{ maxWidth: "400px" }}>
+              To be able to send zaps, please make sure to connect your bitcoin
+              lightning wallet.
+            </p>
+            <button
+              className="btn btn-orange fx-centered"
+              onClick={() => setShowAddWallet(!showAddWallet)}
+            >
+              <div className="plus-sign"></div> Add wallet
             </button>
           </div>
         </div>

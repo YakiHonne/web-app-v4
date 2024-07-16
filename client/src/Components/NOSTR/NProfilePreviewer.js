@@ -18,6 +18,7 @@ export default function NProfilePreviewer({
   close = false,
   showSharing = true,
   onClose,
+  setMetataData = () => null,
 }) {
   const { nostrUser } = useContext(Context);
   const [note, setNote] = useState("");
@@ -32,8 +33,9 @@ export default function NProfilePreviewer({
       {
         onevent(event) {
           if (event.created_at > last_created_at) {
-            last_created_at = event.created_at
+            last_created_at = event.created_at;
             let content = JSON.parse(event.content);
+            setMetataData(content);
             setAuthor({
               picture: content.picture || "",
               name:

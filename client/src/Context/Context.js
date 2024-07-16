@@ -401,6 +401,7 @@ const ContextProvider = ({ children }) => {
     localStorage.removeItem("yaki-wallets");
     setIsConnectedToYaki(false);
     setYakiChestStats(false);
+    setBalance("N/A")
     let openDB = window.indexedDB.open("yaki-nostr", 3);
     // let req = window.indexedDB.deleteDatabase("yaki-nostr");
 

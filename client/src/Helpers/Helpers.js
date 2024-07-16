@@ -601,17 +601,21 @@ function mergeConsecutivePElements(arr) {
   let currentTextElement = null;
   let currentImages = [];
   let tempArray = [];
-
+  // console.log(arr);
   for (let i = 0; i < arr.length; i++) {
     if (
       !(
         i - 1 > 0 &&
         i + 1 < arr.length &&
         arr[i].type === "br" &&
-        (typeof arr[i - 1].type === "function" ||
-          ["IMGElement"].includes(arr[i - 1].type?.name)) &&
-        (typeof arr[i + 1].type === "function" ||
-          ["IMGElement", "Kp"].includes(arr[i + 1].type?.name))
+        typeof arr[i - 1].type !== "string" &&
+        arr[i - 1].props?.src &&
+        // (typeof arr[i - 1].type === "function" ||
+        //   ["IMGElement"].includes(arr[i - 1].type?.name)) &&
+        // (typeof arr[i + 1].type === "function" ||
+        //   ["IMGElement", "Kp"].includes(arr[i + 1].type?.name))
+        typeof arr[i + 1].type !== "string" &&
+        arr[i + 1].props?.src
       )
     ) {
       tempArray.push(arr[i]);
@@ -654,8 +658,9 @@ function mergeConsecutivePElements(arr) {
         };
       }
     } else if (
-      typeof element.type === "function" ||
-      ["IMGElement", "Kp"].includes(element.type?.name)
+      typeof element.type !== "string" &&
+      element.props?.src
+      // ["IMGElement", "Kp"].includes(element.type?.name)
     ) {
       if (currentTextElement) {
         result.push(currentTextElement);

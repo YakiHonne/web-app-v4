@@ -129,6 +129,7 @@ export default function Publishing() {
     }
     if (isFinished && okRelays.length > 0) {
       updateYakiChest();
+      if (window.location.pathname === "/messages") setToPublish(false)
     }
   }, [isFinished, okRelays]);
 
@@ -298,6 +299,7 @@ export default function Publishing() {
     if (tempUser.picture !== updatedUser.picture) return "profile_picture";
     return false;
   };
+
   if (!toPublish) return;
   if (window.location.pathname === "/messages") return;
   if (showDetails)

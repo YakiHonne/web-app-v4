@@ -440,7 +440,6 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      
       let eventToFetch = event.tags.filter((tag) => tag[0] === "e");
       eventToFetch = eventToFetch ? eventToFetch.reverse()[0][1] : false;
       if (!eventToFetch) return;
@@ -654,6 +653,14 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
                       <div className="share-icon"></div>
                     </Link>
                   )}
+                  {type.type === "comments" && (
+                    <Link
+                      target="_blank"
+                      to={`/notes/${relatedEvent.nEvent}`}
+                    >
+                      <div className="share-icon"></div>
+                    </Link>
+                  )}
                   {type.type === "arts" && (
                     <Link
                       target="_blank"
@@ -706,9 +713,7 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
                         position: "relative",
                       }}
                     >
-                      <p className="p-two-lines">
-                        {relatedEvent.title}
-                      </p>
+                      <p className="p-two-lines">{relatedEvent.title}</p>
                       <div className="fit-container fx-scattered">
                         <div className="fx-centered">
                           <p className="gray-c p-medium">
@@ -799,6 +804,17 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
                         <div className="share-icon"></div>
                       </Link>
                     )}
+                    {type.type !== "fn" && (
+                      <Link
+                        target="_blank"
+                        to={`/notes/${nip19.neventEncode({
+                          author: event.pubkey,
+                          id: event.id,
+                        })}`}
+                      >
+                        <div className="share-icon"></div>
+                      </Link>
+                    )}
                   </div>
                 )}
                 {!type.show_profile && (
@@ -829,24 +845,35 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
                 className="box-pad-h-m box-pad-v-m sc-s-18 fit-container"
                 style={{ backgroundColor: "var(--white-transparent)" }}
               >
-                <div className="fx-centered fx-start-h fit-container box-marg-s">
-                  <UserProfilePicNOSTR
-                    size={24}
-                    mainAccountUser={false}
-                    ring={false}
-                    user_id={event.pubkey}
-                    img={relatedEvent.author.picture}
-                  />
-                  <div>
-                    <p className="p-medium">
-                      {relatedEvent.author.display_name ||
-                        relatedEvent.author.name}
-                    </p>
-                    <p className="p-medium gray-c">
-                      {relatedEvent.author.name ||
-                        relatedEvent.author.display_name}
-                    </p>
+                <div className="fx-scattered fit-container box-marg-s">
+                  <div className="fx-centered">
+                    <UserProfilePicNOSTR
+                      size={24}
+                      mainAccountUser={false}
+                      ring={false}
+                      user_id={event.pubkey}
+                      img={relatedEvent.author.picture}
+                    />
+                    <div>
+                      <p className="p-medium">
+                        {relatedEvent.author.display_name ||
+                          relatedEvent.author.name}
+                      </p>
+                      <p className="p-medium gray-c">
+                        {relatedEvent.author.name ||
+                          relatedEvent.author.display_name}
+                      </p>
+                    </div>
                   </div>
+                  <Link
+                    target="_blank"
+                    to={`/notes/${nip19.neventEncode({
+                      author: relatedEvent.pubkey,
+                      id: relatedEvent.id,
+                    })}`}
+                  >
+                    <div className="share-icon"></div>
+                  </Link>
                 </div>
                 <p className="p-medium">{relatedEvent.content}</p>
               </div>

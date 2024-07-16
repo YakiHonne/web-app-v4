@@ -1833,10 +1833,19 @@ main {
     border-radius: var(--border-r-18);
 }
 
-.list-item:hover {
-    background-color: var(--c1-side);
-    color: var(--black);
-    padding: .5rem 1rem;
+
+@media (hover: hover) {
+    .list-item:hover {
+        background-color: var(--c1-side);
+        color: var(--black);
+        padding: .5rem 1rem;
+    }
+
+    .selected-list-item:hover {
+        background-color: var(--pale-gray);
+        font-weight: 400;
+        color: var(--black);
+    }
 }
 
 /* .selected-list-item {
@@ -1851,11 +1860,7 @@ main {
     color: var(--black);
 }
 
-.selected-list-item:hover {
-    background-color: var(--pale-gray);
-    font-weight: 400;
-    color: var(--black);
-}
+
 
 .sticky {
     position: sticky;
