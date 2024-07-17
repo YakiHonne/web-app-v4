@@ -68,6 +68,7 @@ export default function NostrUser() {
   const { user_id } = useParams();
   const {
     nostrUser,
+    getNostrAuthor,
     addNostrAuthors,
     nostrKeys,
     mutedList,
@@ -118,6 +119,7 @@ export default function NostrUser() {
   useEffect(() => {
     const dataFetching = async () => {
       try {
+        setIsLoaded(false);
         setShowPeople(false);
         setCurations([]);
         setPosts([]);
@@ -127,7 +129,13 @@ export default function NostrUser() {
         setVideos([]);
         setNotes([]);
         setContentType("np");
-        let isUser = false;
+        let checkAuthorInCache = getNostrAuthor(id);
+
+        if (checkAuthorInCache) {
+          setUser(checkAuthorInCache);
+          setIsLoaded(true);
+        }
+        let isUser = checkAuthorInCache ? true : false;
         let lastCreatedAtInUser = 0;
         let relaysToFetchFrom = nostrUser
           ? [
@@ -136,12 +144,15 @@ export default function NostrUser() {
               "wss://nos.lol",
             ]
           : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"];
-        setIsLoaded(false);
+
         // getSatsStats();
         getFollowerAndFollowing();
         let sub = pool.subscribeMany(
           relaysToFetchFrom,
-          [{ kinds: [30004, 0, 30023, 34235, 1, 6], authors: [id] }],
+          [
+            { kinds: [0], authors: [id] },
+            { kinds: [30004, 30023, 34235, 1, 6], authors: [id] },
+          ],
           {
             async onevent(event) {
               if (event.kind === 30023)
@@ -236,7 +247,7 @@ export default function NostrUser() {
                   });
                 }
               }
-              if (event.kind === 0) {
+              if (!isUser && event.kind === 0) {
                 isUser = true;
                 if (lastCreatedAtInUser < event.created_at) {
                   lastCreatedAtInUser = event.created_at;
@@ -358,12 +369,12 @@ export default function NostrUser() {
   const getFollowerAndFollowing = () => {
     try {
       setFollowings([]);
-
+      let pool2 = new SimplePool();
       let lastFollowingCreated = 0;
       let relaysToFetchFrom = nostrUser
         ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
         : relaysOnPlatform;
-      let sub_2 = pool.subscribeMany(
+      let sub_2 = pool2.subscribeMany(
         relaysToFetchFrom,
         [
           {
@@ -463,8 +474,6 @@ export default function NostrUser() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoaded(false);
-
         const [important, nostrBandProfiles, SATS_STATS, USER_IMPACT, fn] =
           await Promise.all([
             axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
@@ -715,26 +724,27 @@ export default function NostrUser() {
                       style={{ width: "min(100%, 800px)" }}
                     >
                       <div className="fx-scattered fit-container">
-                        <div
-                          className="fx-centered"
-                          style={{ columnGap: "16px" }}
-                        >
-                          <UserProfilePicNOSTR
-                            size={72}
-                            ring={false}
-                            img={user.picture}
-                            mainAccountUser={false}
-                            allowClick={false}
-                            user_id={user.pubkey}
-                          />
-                          <div className="fx-centered fx-col fx-start-v">
-                            <div className="fx-centered fx-wrap fx-start-h">
-                              <h4 className="p-caps">{user.name}</h4>
-                            </div>
-                            <CheckNIP05
-                              address={user.nip05}
-                              pubkey={user.pubkey}
+                        <div className="fx-centered fx-col fx-start-v">
+                          <div
+                            className="fx-centered"
+                            style={{ columnGap: "16px" }}
+                          >
+                            <UserProfilePicNOSTR
+                              size={72}
+                              ring={false}
+                              img={user.picture}
+                              mainAccountUser={false}
+                              allowClick={false}
+                              user_id={user.pubkey}
                             />
+                            <div className="fx-centered fx-col fx-start-v">
+                              <h4 className="p-caps">
+                                {user.display_name || user.name}
+                              </h4>
+                              <p className="p-caps gray-c">
+                                @{user.name || user.display_name}
+                              </p>
+                            </div>
                           </div>
                         </div>
                         <div className="fx-centered">
@@ -777,6 +787,35 @@ export default function NostrUser() {
                             <div className="env-edit-24"></div>
                           </div>
                         </div>
+                      </div>
+                      <div className="fx-centered">
+                        <div className="nip05"></div>{" "}
+                        {user.nip05 && (
+                          <CheckNIP05
+                            address={user.nip05}
+                            pubkey={user.pubkey}
+                          />
+                        )}
+                        {!user.nip05 && <p className="p-medium">N/A</p>}
+                      </div>
+
+                      <div className="fx-centered fx-start-h">
+                        <div className="link"></div>
+
+                        {!user.website && <p className="p-medium">N/A</p>}
+                        {user.website && (
+                          <a
+                            className="p-medium"
+                            href={
+                              user.website.toLowerCase().includes("http")
+                                ? user.website
+                                : `https://${user.website}`
+                            }
+                            target="_blank"
+                          >
+                            {user.website || "N/A"}
+                          </a>
+                        )}
                       </div>
                       <div
                         className="fx-centered fx-start-v "
@@ -1256,7 +1295,8 @@ const UserFollowers = ({ id }) => {
   const [showPeople, setShowPeople] = useState(false);
   useEffect(() => {
     let _followers = [];
-    let sub = pool.subscribeMany(
+    let pool3 = new SimplePool();
+    let sub = pool3.subscribeMany(
       [...relaysOnPlatform, "wss://nos.lol", "wss://nostr-pub.wellorder.net"],
       [
         {
@@ -1310,7 +1350,8 @@ const UserFollowers = ({ id }) => {
 const SatsReceived = ({ id }) => {
   const [satsRec, setSatsRec] = useState([]);
   useEffect(() => {
-    let sub_inv = pool.subscribeMany(
+    let pool4 = new SimplePool();
+    let sub_inv = pool4.subscribeMany(
       [...relaysOnPlatform, "wss://nostr.wine"],
       [
         {
@@ -1942,12 +1983,12 @@ const KindOneComments = ({ event, author }) => {
 
   useEffect(() => {
     if (!relatedEvent) {
-      let pool = new SimplePool();
+      let pool5 = new SimplePool();
       let relaysToFetchFrom = !nostrUser
         ? relaysOnPlatform
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
 
-      pool.subscribeMany(
+      pool5.subscribeMany(
         relaysToFetchFrom,
         [{ kinds: [1], ids: [event.checkForComment] }],
         {

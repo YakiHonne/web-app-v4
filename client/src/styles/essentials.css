@@ -1053,6 +1053,8 @@ a {
     text-decoration: none;
     color: var(--primary);
     transition: .2 ease-in-out;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 a:hover {
@@ -1188,7 +1190,7 @@ a:hover {
     top: 0;
     height: 100%;
     border-radius: var(--border-r-18);
-    background: linear-gradient(270deg, #6F1D75 0%, #F2AAF8 100%);
+    background: linear-gradient(270deg, var(--orange-main) 0%, var(--orange-main) 100%);
     transition: .2s ease-in;
 }
 
@@ -1208,7 +1210,7 @@ a:hover {
     top: 0;
     height: 100%;
     border-radius: var(--border-r-18);
-    background: linear-gradient(270deg, #6F1D75 0%, #F2AAF8 100%);
+    background: linear-gradient(270deg, var(--orange-main) 0%, var(--orange-main) 100%);
     transition: .2s ease-in;
 }
 

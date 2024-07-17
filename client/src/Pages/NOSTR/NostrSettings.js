@@ -77,9 +77,12 @@ export default function NostrSettings() {
   } = useContext(Context);
   const [isLoading, setIsLoading] = useState(false);
   const [timestamp, setTimestamp] = useState(false);
+  const [userDisplayName, setUserDisplayName] = useState(false);
   const [userName, setUserName] = useState(false);
   const [userAbout, setUserAbout] = useState(false);
+  const [userWebsite, setUserWebsite] = useState(false);
   const [userNIP05, setUserNIP05] = useState(false);
+  const [isOnEdit, setIsOnEdit] = useState(false);
   const [showProfilePicChanger, setShowProfilePicChanger] = useState(false);
   const [showRelaysUpdater, setShowRelaysUpdater] = useState(false);
   const [showCoverUploader, setCoverUploader] = useState(false);
@@ -141,9 +144,12 @@ export default function NostrSettings() {
   const updateInfos = async () => {
     let content = { ...nostrUserAbout };
     content.name = userName !== false ? userName : content.name;
-    content.display_name = userName !== false ? userName : content.name;
+    content.display_name =
+      userDisplayName !== false ? userDisplayName : content.display_name;
     content.about = userAbout !== false ? userAbout : content.about || "";
     content.nip05 = userNIP05 !== false ? userNIP05 : content.nip05 || "";
+    content.website =
+      userWebsite !== false ? userWebsite : content.website || "";
 
     if (isPublishing) {
       setToast({
@@ -161,8 +167,11 @@ export default function NostrSettings() {
       allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
     });
 
-    setUserAbout(false);
-    setUserName(false);
+    // setUserAbout(false);
+    // setUserName(false);
+    // setUserDisplayName(false);
+    // setUserWebsite(false);
+    triggerCancelEdit();
     setSelectedTab("");
     setNostrUserAbout(content);
   };
@@ -296,6 +305,7 @@ export default function NostrSettings() {
       console.log(err);
     }
   };
+
   const getUserContent = (banner) => {
     let content = {
       ...nostrUserAbout,
@@ -303,6 +313,7 @@ export default function NostrSettings() {
     content.banner = banner;
     return JSON.stringify(content);
   };
+
   const deleteFromS3 = async (img) => {
     if (img.includes("yakihonne.s3")) {
       let data = await axiosInstance.delete("/api/v1/file-upload", {
@@ -386,6 +397,21 @@ export default function NostrSettings() {
     setTempChannel(Date.now());
   };
 
+  const triggerEdit = () => {
+    setUserName(nostrUserAbout.name);
+    setUserDisplayName(nostrUserAbout.display_name);
+    setUserWebsite(nostrUserAbout.website);
+    setUserAbout(nostrUserAbout.about);
+    setIsOnEdit(true);
+  };
+  const triggerCancelEdit = () => {
+    setUserName(false);
+    setUserDisplayName(false);
+    setUserWebsite(false);
+    setUserAbout(false);
+    setIsOnEdit(false);
+  };
+
   if (!nostrUserLoaded) return <LoadingScreen />;
   return (
     <>
@@ -442,8 +468,6 @@ export default function NostrSettings() {
               }`}
               style={{
                 pointerEvents: isLoading ? "none" : "auto",
-                // paddingBottom: "3rem",
-                // overflow: "visible",
               }}
             >
               <div className="fx-centered fit-container fx-start-h fx-start-v">
@@ -522,7 +546,39 @@ export default function NostrSettings() {
                               </>
                             )}
                             <div
-                              className="fx-centered"
+                              className="fx-centered fit-container"
+                              style={{ columnGap: "10px" }}
+                            >
+                              {userDisplayName !== false ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    updateInfos();
+                                  }}
+                                  className="fit-container fx-centered"
+                                >
+                                  <input
+                                    className="if ifs-full"
+                                    placeholder="Name"
+                                    value={userDisplayName}
+                                    onChange={(e) =>
+                                      setUserDisplayName(e.target.value)
+                                    }
+                                  />
+                                </form>
+                              ) : (
+                                <>
+                                  {nostrUserAbout.display_name && (
+                                    <h4>{nostrUserAbout.display_name}</h4>
+                                  )}
+                                  {!nostrUserAbout.display_name && (
+                                    <h4 className="p-italic gray-c">Name</h4>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            <div
+                              className="fx-centered fit-container"
                               style={{ columnGap: "10px" }}
                             >
                               {userName !== false ? (
@@ -534,40 +590,23 @@ export default function NostrSettings() {
                                   className="fit-container fx-centered"
                                 >
                                   <input
-                                    className="if"
-                                    placeholder="your name"
+                                    className="if ifs-full"
+                                    placeholder="Username"
                                     value={userName}
                                     onChange={(e) =>
                                       setUserName(e.target.value)
                                     }
                                   />
-                                  <div
-                                    className="send-24"
-                                    role="submit"
-                                    onClick={updateInfos}
-                                  ></div>
-                                  <div
-                                    className="cancel-24"
-                                    onClick={() => setUserName(false)}
-                                  ></div>
                                 </form>
                               ) : (
                                 <>
-                                  <h3>{nostrUserAbout.name}</h3>
-                                  {!nostrUserAbout.name && (
-                                    <span className="gray-c italic-txt">
-                                      Name yourself
-                                    </span>
-                                  )}
-                                  <div
-                                    className="edit-24"
-                                    onClick={() =>
-                                      setUserName(nostrUserAbout.name)
-                                    }
-                                  ></div>
+                                  <p className="gray-c">
+                                    @{nostrUserAbout.name || "Username"}
+                                  </p>
                                 </>
                               )}
                             </div>
+
                             <div
                               className="fx-centered fit-container"
                               style={{ columnGap: "10px" }}
@@ -578,7 +617,7 @@ export default function NostrSettings() {
                                     e.preventDefault();
                                     updateInfos();
                                   }}
-                                  className="fit-container fx-centered fx-col"
+                                  className="fit-container fx-centered "
                                 >
                                   <textarea
                                     className="txt-area box-pad-v-m ifs-full"
@@ -588,24 +627,12 @@ export default function NostrSettings() {
                                     onChange={(e) =>
                                       setUserAbout(e.target.value)
                                     }
-                                    style={{ maxWidth: "400px" }}
                                   />
-                                  <div className="fx-centered">
-                                    <div
-                                      className="send-24"
-                                      role="submit"
-                                      onClick={updateInfos}
-                                    ></div>
-                                    <div
-                                      className="cancel-24"
-                                      onClick={() => setUserAbout(false)}
-                                    ></div>
-                                  </div>
                                 </form>
                               ) : (
                                 <>
                                   <p
-                                    style={{ maxWidth: "400px" }}
+                                    style={{ maxWidth: "600px" }}
                                     className="p-centered"
                                   >
                                     {nostrUserAbout.about || (
@@ -614,15 +641,83 @@ export default function NostrSettings() {
                                       </span>
                                     )}
                                   </p>
-                                  <div
-                                    className="edit-24"
-                                    onClick={() =>
-                                      setUserAbout(nostrUserAbout.about)
-                                    }
-                                  ></div>
                                 </>
                               )}
                             </div>
+                            <div
+                              className="fx-centered fit-container"
+                              style={{ columnGap: "10px" }}
+                            >
+                              {userWebsite !== false ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    updateInfos();
+                                  }}
+                                  className="fit-container fx-centered"
+                                >
+                                  <input
+                                    className="if ifs-full"
+                                    placeholder="website"
+                                    value={userWebsite}
+                                    onChange={(e) =>
+                                      setUserWebsite(e.target.value)
+                                    }
+                                  />
+                                </form>
+                              ) : (
+                                <>
+                                  {nostrUserAbout.website && (
+                                    <div className="fx-centered fx-start-h">
+                                      <div className="link"></div>
+                                      <a
+                                        href={
+                                          nostrUserAbout.website
+                                            .toLowerCase()
+                                            .includes("http")
+                                            ? nostrUserAbout.website
+                                            : `https://${nostrUserAbout.website}`
+                                        }
+                                        className="orange-c"
+                                        target="_blank"
+                                      >
+                                        {nostrUserAbout.website || "N/A"}
+                                      </a>
+                                    </div>
+                                  )}
+                                  {!nostrUserAbout.website && (
+                                    <p className="gray-c italic-txt">
+                                      Your website
+                                    </p>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            {!isOnEdit && (
+                              <div
+                                className="round-icon round-icon-tooltip"
+                                data-tooltip="Edit profile"
+                                onClick={triggerEdit}
+                              >
+                                <div className="edit-24"></div>
+                              </div>
+                            )}
+                            {isOnEdit && (
+                              <div className="fx-centered fit-container">
+                                <button
+                                  className="btn btn-normal fx"
+                                  onClick={updateInfos}
+                                >
+                                  Update
+                                </button>
+                                <button
+                                  className="btn btn-gst-red fx"
+                                  onClick={triggerCancelEdit}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div

@@ -45,7 +45,7 @@ const AuthorPreview = ({ author, pubkey }) => {
         ring={false}
         metadata={author}
       />
-      <p className="p-medium gray-c">{author?.name}</p>
+      <p className="p-medium gray-c">{author?.display_name || author?.name}</p>
     </div>
   );
 };

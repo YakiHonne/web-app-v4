@@ -299,7 +299,11 @@ export default function UserProfilePicNOSTR({
                 <div className="link"></div>
                 <a
                   className="p-medium "
-                  href={metadata.website}
+                  href={
+                    metadata.website.toLowerCase().includes("http")
+                      ? metadata.website
+                      : `https://${metadata.website}`
+                  }
                   target="_blank"
                 >
                   {metadata.website || "N/A"}

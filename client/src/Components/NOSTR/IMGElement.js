@@ -15,8 +15,9 @@ export default function IMGElement({ src }) {
           <div
             style={{
               position: "relative",
-              maxWidth: "800px",
-              maxHeight: "80vh",
+              // maxWidth: "800px",
+              // maxHeight: "80vh",
+              width: "min(100%, 1000px)"
             }}
           >
             <div
