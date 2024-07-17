@@ -233,7 +233,7 @@ export default function UserProfilePicNOSTR({
               backgroundColor: "var(--very-dim-gray)",
               // borderRadius: "var(--border-r-6)"
             }}
-            className="fx-centered fx-col fx-start-h fx-start-v sc-s-18 box-pad-h-s box-pad-v-s slide-left"
+            className="fx-centered fx-col fx-start-h fx-start-v sc-s-18 box-pad-h-s box-pad-v-s"
           >
             <div className="fit-container fx-scattered">
               <div className="fx-centered">

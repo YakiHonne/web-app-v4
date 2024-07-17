@@ -80,7 +80,10 @@ export default function ZapTip({
             }  round-icon-tooltip if-disabled`}
             data-tooltip="Zap"
           >
-            <div className={smallIcon ? "lightning" : "lightning-24"} style={{ cursor: "not-allowed" }}></div>
+            <div
+              className={smallIcon ? "lightning" : "lightning-24"}
+              style={{ cursor: "not-allowed" }}
+            ></div>
           </div>
         )}
       </>
@@ -394,31 +397,6 @@ const Cashier = ({
         >
           <div></div>
         </div>
-        {/* <div
-          className="fx-centered fit-container box-marg-s fx-start-h"
-          style={{ columnGap: "24px" }}
-        >
-          <UserProfilePicNOSTR
-            size={75}
-            img={recipientInfo.img || recipientInfo.picture}
-            mainAccountUser={false}
-            ring={false}
-          />
-          <div className="fx-centered fx-col fx-start-v">
-            <h5>Pay a tip</h5>
-            <p>
-              From: <span className="c1-c">{nostrUser.name}</span>
-            </p>
-            <p>
-              To: <span className="c1-c">{recipientInfo.name}</span>
-            </p>
-            {forContent && (
-              <p>
-                For: <span className="c1-c">{forContent}</span>
-              </p>
-            )}
-          </div>
-        </div> */}
         <div className="fx-centered box-marg-s">
           <div className="fx-centered fx-col">
             <UserProfilePicNOSTR
