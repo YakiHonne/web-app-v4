@@ -952,16 +952,12 @@ export default function NostrArticle() {
                             )}
                           </div>
                         </div>
-                        <div
-                          // data-color-mode="dark"
-                          className="article fit-container box-pad-h-m"
-                        >
+                        <div className="article fit-container box-pad-h-m">
                           <MarkdownPreview
                             wrapperElement={{
                               "data-color-mode":
                                 isDarkMode === "0" ? "dark" : "light",
                             }}
-                            // data-color-mode={isDarkMode === "0" ? "dark" : "light"}
                             source={post.content}
                             rehypeRewrite={(node, index, parent) => {
                               if (
@@ -976,9 +972,6 @@ export default function NostrArticle() {
                               p: ({ children }) => {
                                 return <>{getComponent(children)}</>;
                               },
-                              // p: ({ children }) => {
-                              //   return <p dir="auto">{children}</p>;
-                              // },
                               h1: ({ children }) => {
                                 return <h1 dir="auto">{children}</h1>;
                               },
@@ -1051,12 +1044,8 @@ export default function NostrArticle() {
                                     />
                                   );
                                 }
-                                // let tempText = "";
-                                // for (let child of children)
-                                //   tempText = tempText + child.props.children[0];
-                                // console.log(children)
+
                                 return (
-                                  // <code dangerouslySetInnerHTML={{ __html: tempText }}/>
                                   <code className={String(className)}>
                                     {children}
                                   </code>

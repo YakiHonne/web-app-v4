@@ -1801,7 +1801,6 @@ main {
     }
 }
 
-
 .convo-message .round-icon {
     display: none;
 }
@@ -1833,6 +1832,9 @@ main {
     border-radius: var(--border-r-18);
 }
 
+.preview-icon {
+    display: none;
+}
 
 @media (hover: hover) {
     .list-item:hover {
@@ -1845,6 +1847,10 @@ main {
         background-color: var(--pale-gray);
         font-weight: 400;
         color: var(--black);
+    }
+
+    .mediacard:hover .preview-icon {
+        display: flex;
     }
 }
 
