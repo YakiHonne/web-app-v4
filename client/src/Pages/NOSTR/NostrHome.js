@@ -1,17 +1,15 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import { Relay, SimplePool, relayInit } from "nostr-tools";
+import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import PostPreviewCardNOSTR from "../../Components/NOSTR/PostPreviewCardNOSTR";
-import LoadingScreen from "../../Components/LoadingScreen";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import HomeCarouselNOSTR from "../../Components/NOSTR/HomeCarouselNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
 import { Context } from "../../Context/Context";
 import {
-  decryptEventData,
   filterRelays,
   getBech32,
+  getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
 import { nip19 } from "nostr-tools";
 import TopCurators from "../../Components/NOSTR/TopCurators";
@@ -20,12 +18,10 @@ import TopCreators from "../../Components/NOSTR/TopCreators";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import YakiIntro from "../../Components/YakiIntro";
-import Date_ from "../../Components/Date_";
 import TopicTagsSelection from "../../Components/TopicTagsSelection";
 import TopicsTags from "../../Content/TopicsTags";
 import LoginNOSTR from "../../Components/NOSTR/LoginNOSTR";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
-import BannedList from "../../Content/BannedList";
 import axios from "axios";
 import HomeFN from "../../Components/NOSTR/HomeFN";
 import {
@@ -39,11 +35,11 @@ import Footer from "../../Components/Footer";
 import HomeFNMobile from "../../Components/NOSTR/HomeFNMobile";
 import bannedList from "../../Content/BannedList";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
-import FlashNewsCard from "../../Components/NOSTR/FlashNewsCard";
 import FlashNewsPreviewCard from "../../Components/NOSTR/FlashNewsPreviewCard";
 import BuzzFeedPreviewCard from "../../Components/NOSTR/BuzzFeedPreviewCard";
 import VideosPreviewCards from "../../Components/NOSTR/VideosPreviewCards";
-// import { useToPng } from '@hugocxl/react-to-image'
+import KindSix from "../../Components/NOSTR/KindSix";
+import KindOne from "../../Components/NOSTR/KindOne";
 const defaultTopicIcon =
   "https://yakihonne.s3.ap-east-1.amazonaws.com/topics_icons/default.png";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
@@ -128,8 +124,8 @@ export default function NostrHome() {
     buzzFeedSources,
     nostrUser,
     nostrUserLoaded,
-    nostrAuthors,
     addNostrAuthors,
+    setNostrAuthors,
     nostrUserTopics,
     mutedList,
   } = useContext(Context);
@@ -137,6 +133,7 @@ export default function NostrHome() {
   const [flashnews, setFlashnews] = useState([]);
   const [buzzFeed, setBuzzFeed] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [relays, setRelays] = useState(relaysOnPlatform);
   const [activeRelay, setActiveRelay] = useState("");
   const [usersRelays, setUsersRelays] = useState([...relaysOnPlatform]);
@@ -144,14 +141,19 @@ export default function NostrHome() {
   const [isLoading, setIsLoading] = useState(false);
   const [recentTags, setRecentTags] = useState([]);
   const [flashNews, setFlashNews] = useState([]);
-  const topCreators = useMemo(() => {
-    return getTopCreators(posts);
-  }, [posts]);
-  const [contentFrom, setContentFrom] = useState("HOMEFEED");
+  const [topCreators, setTopCreators] = useState([]);
+  const [trendingNotes, setTrendingNotes] = useState([]);
+  // const topCreators = useMemo(() => {
+  //   return getTopCreators(posts);
+  // }, [posts]);
+  const [mediaContentFrom, setMediaContentFrom] = useState("HOMEFEED");
+  const [notesContentFrom, setNotesContentFrom] = useState("trending");
+  const [contentSource, setContentSource] = useState("media");
   const [artsLastEventTime, setArtsLastEventTime] = useState(undefined);
   const [fnLastEventTime, setFnLastEventTime] = useState(undefined);
   const [bfLastEventTime, setBfLastEventTime] = useState(undefined);
   const [videosLastEventTime, setVideosLastEventTime] = useState(undefined);
+  const [notesLastEventTime, setNotesLastEventTime] = useState(undefined);
   const [showTopicsPicker, setShowTopicsPicker] = useState(
     !localStorage.getItem("topic-popup") && nostrUser
   );
@@ -169,21 +171,17 @@ export default function NostrHome() {
   const mixedContent = useMemo(() => {
     return MixEvents(posts, flashnews, buzzFeed, videos);
   }, [posts, flashnews, buzzFeed, videos]);
-  // const [state, convert] = useToPng({
-  //   selector: '#to-print',
-  //   onSuccess: data => console.log('Converted #to-print to PNG!', data),
-  // })
 
   useEffect(() => {
     setIsLoaded(false);
     if (!Array.isArray(mutedList)) return;
     initSub();
-    getFlashNews();
+    getExternalData();
     if (!localStorage.getItem("topic-popup") && nostrUser)
       setShowTopicsPicker(true);
   }, [
     activeRelay,
-    contentFrom,
+    mediaContentFrom,
     artsLastEventTime,
     fnLastEventTime,
     bfLastEventTime,
@@ -194,7 +192,10 @@ export default function NostrHome() {
   useEffect(() => {
     let carousel_container = document.querySelector(".slider-list");
     let carousel = document.querySelector(".slider-list .no-scrollbar");
-    if (carousel_container.clientWidth < carousel.scrollWidth) {
+    if (
+      carousel_container &&
+      carousel_container.clientWidth < carousel.scrollWidth
+    ) {
       setShowArrows(true);
       setScrollPX(0);
     } else {
@@ -206,22 +207,25 @@ export default function NostrHome() {
   useEffect(() => {
     const handleScroll = () => {
       if (mixedContent.length === 0) return;
+      let container = document.querySelector(".main-page-nostr-container");
+      if (!container) return;
       if (
-        document.querySelector(".main-page-nostr-container").scrollHeight -
-          document.querySelector(".main-page-nostr-container").scrollTop -
-          60 >
+        container.scrollHeight - container.scrollTop - 60 >
         document.documentElement.offsetHeight
       ) {
         return;
       }
       setArtsLastEventTime(posts[posts.length - 1]?.created_at || undefined);
-      setArtsLastEventTime(posts[posts.length - 1]?.created_at || undefined);
+      setFnLastEventTime(
+        flashNews[flashNews.length - 1]?.created_at || undefined
+      );
       setVideosLastEventTime(
         videos[videos.length - 1]?.created_at || undefined
       );
       setBfLastEventTime(
         buzzFeed[buzzFeed.length - 1]?.created_at || undefined
       );
+      setNotesLastEventTime(notes[notes.length - 1].created_at);
     };
     document
       .querySelector(".main-page-nostr-container")
@@ -232,18 +236,150 @@ export default function NostrHome() {
         ?.removeEventListener("scroll", handleScroll);
   }, [recentTags]);
 
-  const getFlashNews = async () => {
-    try {
-      let data = await axios.get(
-        API_BASE_URL + "/api/v1/mb/flashnews/important"
-      );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoaded(false);
+        setIsLoading(true);
+        let events = [];
 
+        let { filter, relaysToFetchFrom } = getNotesFilter();
+        let sub_ = pool.subscribeMany(relaysToFetchFrom, filter, {
+          async onevent(event) {
+            if (![...bannedList, ...mutedList].includes(event.pubkey)) {
+              events.push(event.pubkey);
+              let event_ = await onNotesReceived(event);
+              if (event_) {
+                if (event.kind === 6) {
+                  events.push(event_.repostPubkey);
+                }
+                setNotes((prev) => {
+                  let existed = prev.find((note) => note.id === event.id);
+                  if (existed) return prev;
+                  else return [...prev, event_];
+                });
+                setIsLoading(false);
+              }
+            }
+          },
+          oneose() {
+            addNostrAuthors(events);
+            setIsLoading(false);
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        setIsLoading(false);
+      }
+    };
+
+    if (Array.isArray(mutedList)) fetchData();
+  }, [notesLastEventTime, mutedList, notesContentFrom]);
+
+  useEffect(() => {
+    if (!nostrKeys) setNotesContentFrom("trending");
+  }, [nostrKeys]);
+
+  const onNotesReceived = async (event) => {
+    try {
+      let checkForComment = event.tags.find(
+        (tag) => tag[0] === "e" || tag[0] === "a"
+      );
+      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
+      let checkForLabel = event.tags.find((tag) => tag[0] === "l");
+      if (
+        checkForLabel &&
+        ["UNCENSORED NOTE", "FLASH NEWS"].includes(checkForLabel[1])
+      )
+        return false;
+      if (checkForComment && event.kind === 1) return false;
+      let author_img = "";
+      let author_name = getBech32("npub", event.pubkey).substring(0, 10);
+      let author_pubkey = event.pubkey;
+      let nEvent = nip19.neventEncode({
+        id: event.id,
+        author: event.pubkey,
+      });
+      if (event.kind === 1) {
+        let note_tree = await getNoteTree(event.content);
+        return {
+          ...event,
+          note_tree,
+          checkForQuote:
+            checkForQuote && !event.content.includes("nostr:nevent")
+              ? checkForQuote[1]
+              : "",
+          author_img,
+          author_name,
+          author_pubkey,
+          stringifiedEvent: JSON.stringify(event),
+          nEvent,
+        };
+      }
+
+      let relatedEvent = await onNotesReceived(JSON.parse(event.content));
+      if (!relatedEvent) return false;
+      return {
+        ...event,
+        relatedEvent,
+      };
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  };
+  const getExternalData = async () => {
+    try {
+      let [data, nostrBandNotes, nostrBandProfiles] = await Promise.all([
+        axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
+        axios.get("https://api.nostr.band/v0/trending/notes"),
+        axios.get("https://api.nostr.band/v0/trending/profiles"),
+      ]);
+
+      let tags = nostrBandNotes.data.notes
+        ? nostrBandNotes.data.notes
+            .map((note) =>
+              note.event.tags
+                .filter((tag) => tag[0] === "t")
+                .map((tag) => tag[1].toLowerCase())
+            )
+            .flat()
+        : [];
+
+      let profiles = nostrBandProfiles.data.profiles
+        ? nostrBandProfiles.data.profiles.map((profile) => {
+            return {
+              pubkey: profile.profile.pubkey,
+              articles_number: profile.new_followers_count,
+              ...JSON.parse(profile.profile.content),
+            };
+          })
+        : [];
+      let tempTrendingNotes = await Promise.all(
+        nostrBandNotes.data.notes.map(async (note) => {
+          let note_ = await onNotesReceived(note.event);
+          return note_;
+        })
+      );
+      let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
+        try {
+          return { ...JSON.parse(note.author.content), pubkey: note.pubkey };
+        } catch (err) {
+          console.log(err);
+          return getEmptyNostrUser(note.pubkey);
+        }
+      });
+
+      setNostrAuthors((prev) => [...prev, ...trendingNotesAuthors]);
+      tempTrendingNotes = tempTrendingNotes.filter((note) => note);
+      setTrendingNotes(tempTrendingNotes);
+      setTopCreators(profiles.slice(0, 6));
+      setRecentTags([...new Set(tags)]);
       setFlashNews(data.data);
     } catch (err) {
       console.log(err);
     }
   };
-
   const initSub = async () => {
     var sub = null;
     let events = [];
@@ -278,11 +414,10 @@ export default function NostrHome() {
         onEOSE(events);
       },
     });
-    if (checkTopicInList(contentFrom)?.bfs) return;
-    console.log(arts_relaysToFetchFrom)
+    if (checkTopicInList(mediaContentFrom)?.bfs) return;
+
     let sub_1 = pool.subscribeMany(arts_relaysToFetchFrom, arts_filter, {
       async onevent(event) {
-        console.log(event)
         if (![...bannedList, ...mutedList].includes(event.pubkey)) {
           let parsedEvent = onArticlesEvent(event);
           events.push(parsedEvent);
@@ -355,14 +490,14 @@ export default function NostrHome() {
         ? relaysOnPlatform
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
 
-    if (contentFrom === "HOMEFEED") {
+    if (mediaContentFrom === "HOMEFEED") {
       filter = [{ kinds: [30023], limit: 20, until: artsLastEventTime }];
       return {
         relaysToFetchFrom,
         filter,
       };
     }
-    if (contentFrom.includes("main-")) {
+    if (mediaContentFrom.includes("main-")) {
       filter = [
         { kinds: [30023], limit: 20, until: artsLastEventTime, "#t": tags },
       ];
@@ -371,7 +506,7 @@ export default function NostrHome() {
         filter,
       };
     }
-    if (contentFrom === "follows") {
+    if (mediaContentFrom === "follows") {
       let authors =
           nostrUser && nostrUser.following.length > 0
             ? [...nostrUser.following.map((item) => item[1])]
@@ -415,7 +550,7 @@ export default function NostrHome() {
         ? relaysOnPlatform
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
 
-    if (contentFrom === "HOMEFEED") {
+    if (mediaContentFrom === "HOMEFEED") {
       filter = [
         {
           kinds: [1],
@@ -429,7 +564,7 @@ export default function NostrHome() {
         filter,
       };
     }
-    if (contentFrom.includes("main-")) {
+    if (mediaContentFrom.includes("main-")) {
       filter = [
         {
           kinds: [1],
@@ -444,7 +579,7 @@ export default function NostrHome() {
         filter,
       };
     }
-    if (contentFrom === "follows") {
+    if (mediaContentFrom === "follows") {
       let authors =
           nostrUser && nostrUser.following.length > 0
             ? [...nostrUser.following.map((item) => item[1])]
@@ -490,7 +625,7 @@ export default function NostrHome() {
         ? relaysOnPlatform
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
 
-    if (contentFrom === "HOMEFEED") {
+    if (mediaContentFrom === "HOMEFEED") {
       filter = [
         {
           kinds: [1],
@@ -504,7 +639,7 @@ export default function NostrHome() {
         filter,
       };
     }
-    if (contentFrom.includes("main-")) {
+    if (mediaContentFrom.includes("main-")) {
       filter = [
         {
           kinds: [1],
@@ -544,7 +679,7 @@ export default function NostrHome() {
         ? relaysOnPlatform
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
 
-    if (contentFrom === "HOMEFEED") {
+    if (mediaContentFrom === "HOMEFEED") {
       filter = [
         {
           kinds: [34235],
@@ -557,7 +692,7 @@ export default function NostrHome() {
         filter,
       };
     }
-    if (contentFrom.includes("main-")) {
+    if (mediaContentFrom.includes("main-")) {
       filter = [
         {
           kinds: [34235],
@@ -572,7 +707,7 @@ export default function NostrHome() {
         filter,
       };
     }
-    if (contentFrom === "follows") {
+    if (mediaContentFrom === "follows") {
       let authors =
           nostrUser && nostrUser.following.length > 0
             ? [...nostrUser.following.map((item) => item[1])]
@@ -606,28 +741,56 @@ export default function NostrHome() {
       filter,
     };
   };
+  const getNotesFilter = () => {
+    let relaysToFetchFrom;
+    let filter;
+
+    // if (activeRelay) relaysToFetchFrom = [activeRelay];
+    // if (!activeRelay)
+    relaysToFetchFrom = !nostrUser
+      ? relaysOnPlatform
+      : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
+    if (notesContentFrom === "followings") {
+      let authors =
+        nostrUser && nostrUser.following.length > 0
+          ? [...nostrUser.following.map((item) => item[1])]
+          : [];
+      filter = [
+        { authors, kinds: [1, 6], limit: 10, until: notesLastEventTime },
+      ];
+      return {
+        relaysToFetchFrom,
+        filter,
+      };
+    }
+    filter = [{ kinds: [1, 6], limit: 10, until: notesLastEventTime }];
+    return {
+      relaysToFetchFrom,
+      filter,
+    };
+  };
   const getTags = () => {
-    if (contentFrom.includes("main-")) {
+    if (mediaContentFrom.includes("main-")) {
       let tempArray = shuffleArray(TopicsTags);
       let tempArray_2 = tempArray.splice(0, 5);
       return shuffleArray(
         tempArray_2.map((item) => [item.main_tag, ...item.sub_tags]).flat()
       );
     }
-    if (contentFrom === "follows") {
+    if (mediaContentFrom === "follows") {
       return [];
     }
-    if (contentFrom === "HOMEFEED") {
+    if (mediaContentFrom === "HOMEFEED") {
       let searchedTag = TopicsTags.find(
-        (item) => item.main_tag === contentFrom
+        (item) => item.main_tag === mediaContentFrom
       );
 
       if (searchedTag) {
         return [searchedTag.main_tag, ...searchedTag.sub_tags];
       }
-      return [contentFrom];
+      return [mediaContentFrom];
     }
-    let isBFS = checkTopicInList(contentFrom);
+    let isBFS = checkTopicInList(mediaContentFrom);
 
     if (isBFS && !isBFS.bfs) {
       return [isBFS.main_tag, ...isBFS.sub_tags];
@@ -635,7 +798,7 @@ export default function NostrHome() {
     if (isBFS && isBFS.bfs) {
       return [isBFS.name];
     }
-    return [contentFrom];
+    return [mediaContentFrom];
   };
   const onArticlesEvent = (event) => {
     if (bannedList.includes(event.pubkey)) return;
@@ -686,6 +849,7 @@ export default function NostrHome() {
             id: event.id,
             pubkey: event.pubkey,
             kind: event.kind,
+            content: event.content,
             thumbnail: thumbnail || getImagePlaceholder(),
             summary,
             author_img,
@@ -710,6 +874,7 @@ export default function NostrHome() {
             id: event.id,
             pubkey: event.pubkey,
             kind: event.kind,
+            content: event.content,
             thumbnail: thumbnail,
             summary,
             author_img,
@@ -772,18 +937,18 @@ export default function NostrHome() {
     if (events) {
       let filteredEvents = events.filter((event) => event);
       addNostrAuthors(filteredEvents.map((item) => item.pubkey));
-      setRecentTags(
-        [
-          ...new Set(
-            [
-              ...filteredEvents
-                .filter((item) => item.kind === 30023)
-                .map((item) => item.postTags.flat()),
-              ...recentTags,
-            ].flat()
-          ),
-        ].splice(0, 30)
-      );
+      // setRecentTags(
+      //   [
+      //     ...new Set(
+      //       [
+      //         ...filteredEvents
+      //           .filter((item) => item.kind === 30023)
+      //           .map((item) => item.postTags.flat()),
+      //         ...recentTags,
+      //       ].flat()
+      //     ),
+      //   ].splice(0, 30)
+      // );
     }
     // if (activeRelay) pool.close([activeRelay]);
     // if (!activeRelay)
@@ -797,15 +962,7 @@ export default function NostrHome() {
     // relaySub.close();
   };
   const switchContentSource = (source) => {
-    if (source === contentFrom) return;
-
-    // if (activeRelay) pool.close([activeRelay]);
-    // if (!activeRelay)
-    //   pool.close(
-    //     !nostrUser
-    //       ? relaysOnPlatform
-    //       : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-    //   );
+    if (source === mediaContentFrom) return;
     if (sub1) sub1.close();
     if (sub2) sub2.close();
     if (sub3) sub3.close();
@@ -815,11 +972,11 @@ export default function NostrHome() {
     setBuzzFeed([]);
     setVideos([]);
     setIsLoading(true);
-    setRecentTags([]);
+    // setRecentTags([]);
     setArtsLastEventTime(undefined);
     setFnLastEventTime(undefined);
     setBfLastEventTime(undefined);
-    setContentFrom(source);
+    setMediaContentFrom(source);
   };
   const switchActiveRelay = (source) => {
     if (source === activeRelay) return;
@@ -832,15 +989,12 @@ export default function NostrHome() {
     setFlashnews([]);
     setBuzzFeed([]);
     setVideos([]);
-    setRecentTags([]);
+    // setRecentTags([]);
     setActiveRelay(source);
     setBfLastEventTime(undefined);
     setArtsLastEventTime(undefined);
     setFnLastEventTime(undefined);
   };
-
-  // console.log(posts)
-
   const checkTopicInList = (topic) => {
     let isBFS = buzzFeedSources.find((item) => item.name === topic);
     if (isBFS) {
@@ -849,11 +1003,9 @@ export default function NostrHome() {
     }
     return TopicsTags.find((item) => item.main_tag === topic);
   };
-
   const slideRight = () => {
     let carousel_container = document.querySelector(".slider-list");
     let carousel = document.querySelector(".slider-list .no-scrollbar");
-    // console.log(carousel_container.clientWidth, scrollPX, carousel.scrollWidth);
     let pxToSlide =
       scrollPX + 100 < carousel.scrollWidth - carousel_container.clientWidth
         ? scrollPX + 100
@@ -861,15 +1013,33 @@ export default function NostrHome() {
     setScrollPX(pxToSlide);
   };
   const slideLeft = () => {
-    let carousel_container = document.querySelector(".slider-list");
-    let carousel = document.querySelector(".slider-list .no-scrollbar");
-    // console.log(carousel_container.clientWidth, scrollPX);
     let pxToSlide = scrollPX - 100 > 0 ? scrollPX - 100 : 0;
     setScrollPX(pxToSlide);
   };
+  const handleContentSource = (source) => {
+    const straightUp = () => {
+      let el = document.querySelector(".main-page-nostr-container");
+      if (!el) return;
+      el.scrollTop = 0;
+    };
+    straightUp();
+    setContentSource(source);
+  };
+  const handleNotesContentFrom = (from) => {
+    if (from === notesContentFrom) return;
+    const straightUp = () => {
+      let el = document.querySelector(".main-page-nostr-container");
+      if (!el) return;
+      el.scrollTop = 0;
+    };
+    straightUp();
+
+    setNotes([]);
+    setNotesContentFrom(from);
+  };
 
   return (
-    <div style={{ overflow: "auto" }} id="to-print">
+    <div style={{ overflow: "auto" }}>
       <Helmet>
         <title>Yakihonne | Home</title>
         <meta
@@ -898,1573 +1068,582 @@ export default function NostrHome() {
         />
       </Helmet>
       <div className="fit-container fx-centered">
-        <SidebarNOSTR />
-
-        <main
-          className="main-page-nostr-container"
-          onClick={(e) => {
-            e.stopPropagation();
-            // toggleColorScheme()
-            setShowRelaysList(false);
-          }}
-          style={{ padding: 0 }}
-        >
-          {showTopicsPicker && (
-            <TopicTagsSelection exit={() => setShowTopicsPicker(false)} />
-          )}
-          {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />}
-          <YakiIntro />
-          <ArrowUp />
-          {/* <div className="fit-container box-marg-s"> */}
-          <HomeCarouselNOSTR />
-          {/* </div> */}
-          {/* <NavbarNOSTR /> */}
-          <div className="fit-container fx-centered">
-            <HomeFNMobile flashnews={flashNews} />
-          </div>
-          <div className="fit-container fx-centered fx-start-h">
-            <div
-              style={{ width: "min(100%,1400px)" }}
-              className="fx-centered fx-start-v fx-start-h"
-            >
-              <div
-                style={{ width: "min(100%, 600px)" }}
-                className={`fx-centered  fx-wrap box-pad-h`}
-              >
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main
+            className="main-page-nostr-container"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowRelaysList(false);
+            }}
+            style={{ padding: 0 }}
+          >
+            {showTopicsPicker && (
+              <TopicTagsSelection exit={() => setShowTopicsPicker(false)} />
+            )}
+            {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />}
+            <YakiIntro />
+            <ArrowUp />
+            <div className="fit-container fx-centered">
+              <HomeFNMobile flashnews={flashNews} />
+            </div>
+            <div className="fit-container fx-centered fx-start-h fx-start-v">
+              <div className="fit-container fx-centered fx-start-v fx-start-h">
                 <div
-                  className="fit-container fx-centered box-pad-v sticky"
-                  style={{
-                    position: "sticky",
-                    top: "-1px",
-                    backgroundColor: "var(--white)",
-                    zIndex: "1000",
-                  }}
+                  style={{ flex: 2 }}
+                  className={`fx-centered  fx-wrap box-pad-h`}
                 >
-                  <div className="fit-container fx-scattered">
-                    {showArrows && (
+                  <div
+                    className="fit-container sticky fx-centered fx-col"
+                    style={{ rowGap: "16px" }}
+                  >
+                    <div className="fit-container fx-centered ">
                       <div
-                        className="box-pad-h-s pointer slide-right"
-                        onClick={slideLeft}
+                        className={`list-item fx-centered fx ${
+                          contentSource === "media" ? "selected-list-item" : ""
+                        }`}
+                        onClick={() => handleContentSource("media")}
                       >
-                        <div
-                          className="arrow"
-                          style={{ transform: "rotate(90deg)" }}
-                        ></div>
+                        {contentSource !== "media" && (
+                          <div className="wiggle">
+                            <div className="media-24"></div>
+                          </div>
+                        )}
+                        <p>Media</p>
                       </div>
-                    )}
-                    <div
-                      className="fx-centered fx-start-h no-scrollbar slider-list"
-                      style={{
-                        overflow: "hidden",
-                        // borderBottom: "1px solid #444444",
-                      }}
-                    >
                       <div
-                        className="fx-centered fx-start-h no-scrollbar"
-                        style={{
-                          transform: `translateX(-${scrollPX}px)`,
-                          transition: ".3s ease-in-out",
-                          columnGap: "32px",
-                        }}
+                        className={`list-item fx-centered fx ${
+                          contentSource === "notes" ? "selected-list-item" : ""
+                        }`}
+                        onClick={() => handleContentSource("notes")}
                       >
-                        <div
-                          className={`list-item fx-centered fx-shrink ${
-                            contentFrom === "HOMEFEED"
-                              ? "selected-list-item"
-                              : ""
-                          }`}
-                          onClick={() => switchContentSource("HOMEFEED")}
-                        >
-                          <div className="home"></div>
-                          Timeline
-                        </div>
-                        {/* <div
-                          className={`list-item fx-centered fx-shrink ${
-                            contentFrom.includes("main-")
-                              ? "selected-list-item"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            switchContentSource(`main-${Date.now()}`)
-                          }
-                        >
-                          <div
-                            className="switch-arrows"
-                            style={{
-                              transform: contentFrom.includes("main-")
-                                ? "rotate(720deg)"
-                                : "",
-                              transition: ".5s ease-in-out",
-                            }}
-                          ></div>
-                          What's up
-                        </div> */}
-                        <div
-                          className={`list-item fx-centered fx-shrink ${
-                            contentFrom === "follows"
-                              ? "selected-list-item"
-                              : ""
-                          }`}
-                          onClick={() => switchContentSource("follows")}
-                        >
-                          <div className="user"></div>
-                          Follows
-                        </div>
-                        {nostrUserTopics.map((item, index) => {
-                          let status = checkTopicInList(item);
-                          return (
-                            <div
-                              className={`list-item fx-centered fx-shrink ${
-                                item === contentFrom ? "selected-list-item" : ""
-                              }`}
-                              onClick={() => {
-                                switchContentSource(item);
-                              }}
-                              key={`${item}-${index}`}
-                            >
-                              {status && (
-                                <img
-                                  width="16"
-                                  height="16"
-                                  src={status.icon}
-                                  alt={item}
-                                />
-                              )}
-                              {!status && (
-                                <img
-                                  width="16"
-                                  height="16"
-                                  src={defaultTopicIcon}
-                                  alt={item}
-                                />
-                              )}
-                              {item}
-                            </div>
-                          );
-                        })}
+                        {contentSource !== "notes" && (
+                          <div className="wiggle">
+                            <div className="note-2-24"></div>
+                          </div>
+                        )}
+                        <p>Notes</p>
                       </div>
                     </div>
-                    <div className="fx-centered">
-                      {showArrows && (
-                        <div
-                          className="box-pad-h-s pointer slide-left"
-                          onClick={slideRight}
-                          style={{
-                            background:
-                              "linear-gradient(to left,var(--white) 20%,rgba(255,255,255,0) 100%)",
-                          }}
-                        >
+                    {contentSource === "media" && (
+                      <div
+                        className="fit-container fx-centered  sticky"
+                        style={{
+                          padding: 0,
+                        }}
+                      >
+                        <div className="fit-container fx-scattered">
+                          {showArrows && (
+                            <div
+                              className="box-pad-h-s pointer slide-right"
+                              onClick={slideLeft}
+                            >
+                              <div
+                                className="arrow"
+                                style={{ transform: "rotate(90deg)" }}
+                              ></div>
+                            </div>
+                          )}
                           <div
-                            className="arrow"
-                            style={{ transform: "rotate(-90deg)" }}
-                          ></div>
-                        </div>
-                      )}
-                      {showTabsSettings && (
-                        <>
-                          <div
-                            className="round-icon-small round-icon-tooltip slide-right"
-                            data-tooltip={"customize topics"}
-                            onClick={() =>
-                              nostrUserLoaded && nostrUser
-                                ? setShowTopicsPicker(true)
-                                : setShowLogin(true)
-                            }
-                          >
-                            <p>&#xFF0B;</p>
-                          </div>
-                          <div
-                            style={{ position: "relative" }}
-                            className="slide-right"
+                            className="fx-centered fx-start-h no-scrollbar slider-list fit-container"
+                            style={{
+                              overflow: "hidden",
+                            }}
                           >
                             <div
-                              style={{ position: "relative" }}
-                              className="round-icon-small round-icon-tooltip"
-                              data-tooltip={
-                                activeRelay
-                                  ? `${activeRelay} is ${
-                                      isLoading ? "connecting" : "connected"
-                                    }`
-                                  : "All relays"
-                              }
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowRelaysList(!showRelaysList);
+                              className="fx-centered fx-start-h no-scrollbar fit-container"
+                              style={{
+                                transform: `translateX(-${scrollPX}px)`,
+                                transition: ".3s ease-in-out",
+                                columnGap: "20px",
+                                width: "100px",
                               }}
                             >
-                              <div className="server"></div>
-                            </div>
-                            {showRelaysList && (
                               <div
-                                style={{
-                                  position: "absolute",
-                                  right: 0,
-                                  bottom: "-5px",
-                                  backgroundColor: "var(--dim-gray)",
-                                  border: "none",
-                                  transform: "translateY(100%)",
-                                  maxWidth: "300px",
-                                  rowGap: "12px",
-                                }}
-                                className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                                className={`list-item fx-centered fx-shrink ${
+                                  mediaContentFrom === "HOMEFEED"
+                                    ? "selected-list-item"
+                                    : ""
+                                }`}
+                                onClick={() => switchContentSource("HOMEFEED")}
                               >
-                                <h5>Relays</h5>
-                                <button
-                                  className={`btn-text-gray pointer fx-centered`}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === "" ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay("");
-                                    setShowRelaysList(false);
-                                  }}
+                                <div className="timeline"></div>
+                                Timeline
+                              </div>
+                              <div
+                                className={`list-item fx-centered fx-shrink ${
+                                  mediaContentFrom === "follows"
+                                    ? "selected-list-item"
+                                    : ""
+                                }`}
+                                onClick={() => switchContentSource("follows")}
+                              >
+                                <div className="followings"></div>
+                                Followings
+                              </div>
+                              {nostrUserTopics.map((item, index) => {
+                                let status = checkTopicInList(item);
+                                return (
+                                  <div
+                                    className={`list-item fx-centered fx-shrink ${
+                                      item === mediaContentFrom
+                                        ? "selected-list-item"
+                                        : ""
+                                    }`}
+                                    onClick={() => {
+                                      switchContentSource(item);
+                                    }}
+                                    key={`${item}-${index}`}
+                                  >
+                                    {status && (
+                                      <img
+                                        width="16"
+                                        height="16"
+                                        src={status.icon}
+                                        alt={item}
+                                      />
+                                    )}
+                                    {!status && (
+                                      <img
+                                        width="16"
+                                        height="16"
+                                        src={defaultTopicIcon}
+                                        alt={item}
+                                      />
+                                    )}
+                                    {item}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="fx-centered">
+                            {showArrows && (
+                              <div
+                                className="box-pad-h-s pointer slide-left"
+                                onClick={slideRight}
+                                style={{
+                                  background:
+                                    "linear-gradient(to left,var(--white) 20%,rgba(255,255,255,0) 100%)",
+                                }}
+                              >
+                                <div
+                                  className="arrow"
+                                  style={{ transform: "rotate(-90deg)" }}
+                                ></div>
+                              </div>
+                            )}
+                            {showTabsSettings && (
+                              <>
+                                <div
+                                  className="round-icon-small round-icon-tooltip slide-right"
+                                  data-tooltip={"customize topics"}
+                                  onClick={() =>
+                                    nostrUserLoaded && nostrUser
+                                      ? setShowTopicsPicker(true)
+                                      : setShowLogin(true)
+                                  }
                                 >
-                                  {isLoading && activeRelay === "" ? (
-                                    <>Connecting...</>
-                                  ) : (
-                                    "All relays"
-                                  )}
-                                </button>
-                                {nostrUser &&
-                                  nostrUser.relays.length > 0 &&
-                                  nostrUser.relays.map((relay) => {
-                                    return (
+                                  <p>&#xFF0B;</p>
+                                </div>
+                                <div
+                                  style={{ position: "relative" }}
+                                  className="slide-right"
+                                >
+                                  <div
+                                    style={{ position: "relative" }}
+                                    className="round-icon-small round-icon-tooltip"
+                                    data-tooltip={
+                                      activeRelay
+                                        ? `${activeRelay} is ${
+                                            isLoading
+                                              ? "connecting"
+                                              : "connected"
+                                          }`
+                                        : "All relays"
+                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowRelaysList(!showRelaysList);
+                                    }}
+                                  >
+                                    <div className="server"></div>
+                                  </div>
+                                  {showRelaysList && (
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        right: 0,
+                                        bottom: "-5px",
+                                        backgroundColor: "var(--dim-gray)",
+                                        border: "none",
+                                        transform: "translateY(100%)",
+                                        maxWidth: "300px",
+                                        rowGap: "12px",
+                                      }}
+                                      className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                                    >
+                                      <h5>Relays</h5>
                                       <button
-                                        key={relay}
-                                        className={`btn-text-gray pointer fx-centered `}
-                                        style={{
-                                          width: "max-content",
-                                          fontSize: "1rem",
-                                          textDecoration: "none",
-                                          color:
-                                            activeRelay === relay
-                                              ? "var(--c1)"
-                                              : "",
-                                          transition: ".4s ease-in-out",
-                                        }}
-                                        onClick={() => {
-                                          switchActiveRelay(relay);
-                                          setShowRelaysList(false);
-                                        }}
-                                      >
-                                        {isLoading && relay === activeRelay ? (
-                                          <>Connecting...</>
-                                        ) : (
-                                          relay.split("wss://")[1]
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                {(!nostrUser ||
-                                  (nostrUser &&
-                                    nostrUser.relays.length === 0)) &&
-                                  relays.map((relay) => {
-                                    return (
-                                      <button
-                                        key={relay}
                                         className={`btn-text-gray pointer fx-centered`}
                                         style={{
                                           width: "max-content",
                                           fontSize: "1rem",
                                           textDecoration: "none",
                                           color:
-                                            activeRelay === relay
+                                            activeRelay === ""
                                               ? "var(--c1)"
                                               : "",
                                           transition: ".4s ease-in-out",
                                         }}
                                         onClick={() => {
-                                          switchActiveRelay(relay);
+                                          switchActiveRelay("");
                                           setShowRelaysList(false);
                                         }}
                                       >
-                                        {isLoading && relay === activeRelay ? (
-                                          <>Connecting..</>
+                                        {isLoading && activeRelay === "" ? (
+                                          <>Connecting...</>
                                         ) : (
-                                          relay.split("wss://")[1]
+                                          "All relays"
                                         )}
                                       </button>
-                                    );
-                                  })}
-                              </div>
+                                      {nostrUser &&
+                                        nostrUser.relays.length > 0 &&
+                                        nostrUser.relays.map((relay) => {
+                                          return (
+                                            <button
+                                              key={relay}
+                                              className={`btn-text-gray pointer fx-centered `}
+                                              style={{
+                                                width: "max-content",
+                                                fontSize: "1rem",
+                                                textDecoration: "none",
+                                                color:
+                                                  activeRelay === relay
+                                                    ? "var(--c1)"
+                                                    : "",
+                                                transition: ".4s ease-in-out",
+                                              }}
+                                              onClick={() => {
+                                                switchActiveRelay(relay);
+                                                setShowRelaysList(false);
+                                              }}
+                                            >
+                                              {isLoading &&
+                                              relay === activeRelay ? (
+                                                <>Connecting...</>
+                                              ) : (
+                                                relay.split("wss://")[1]
+                                              )}
+                                            </button>
+                                          );
+                                        })}
+                                      {(!nostrUser ||
+                                        (nostrUser &&
+                                          nostrUser.relays.length === 0)) &&
+                                        relays.map((relay) => {
+                                          return (
+                                            <button
+                                              key={relay}
+                                              className={`btn-text-gray pointer fx-centered`}
+                                              style={{
+                                                width: "max-content",
+                                                fontSize: "1rem",
+                                                textDecoration: "none",
+                                                color:
+                                                  activeRelay === relay
+                                                    ? "var(--c1)"
+                                                    : "",
+                                                transition: ".4s ease-in-out",
+                                              }}
+                                              onClick={() => {
+                                                switchActiveRelay(relay);
+                                                setShowRelaysList(false);
+                                              }}
+                                            >
+                                              {isLoading &&
+                                              relay === activeRelay ? (
+                                                <>Connecting..</>
+                                              ) : (
+                                                relay.split("wss://")[1]
+                                              )}
+                                            </button>
+                                          );
+                                        })}
+                                    </div>
+                                  )}
+                                </div>
+                              </>
                             )}
+                            <div
+                              className="setting-24"
+                              onClick={() =>
+                                setShowTabsSettings(!showTabsSettings)
+                              }
+                              style={{
+                                rotate: showTabsSettings ? "45deg" : "initial",
+                              }}
+                            ></div>
                           </div>
-                        </>
-                      )}
-                      <div
-                        className="setting-24"
-                        onClick={() => setShowTabsSettings(!showTabsSettings)}
-                        style={{
-                          rotate: showTabsSettings ? "45deg" : "initial",
-                        }}
-                      ></div>
-                      {/* {showTabsSettings && <div className="close" style={{position: "static"}} onClick={() =>  setShowTabsSettings(false)}><div></div></div>} */}
-                    </div>
-                  </div>
-                </div>
-                {isLoading && (
-                  <>
-                    <div
-                      className="fit-container fx-centered sc-s skeleton-container posts-card"
-                      style={{
-                        height: "200px",
-                        backgroundColor: "var(--dim-gray)",
-                        border: "none",
-                      }}
-                    ></div>
-                    <div
-                      className="fit-container fx-centered sc-s skeleton-container posts-card"
-                      style={{
-                        height: "200px",
-                        backgroundColor: "var(--dim-gray)",
-                        border: "none",
-                      }}
-                    ></div>
-                  </>
-                )}
-
-                {!isLoading &&
-                  mixedContent.map((item, index) => {
-                    // if (index === 5)
-                    //   return (
-                    //     <div
-                    //       key={index}
-                    //       className="fit-container fx-centered fx-col  box-pad-v-m"
-                    //     >
-                    //       <h4 className="fit-container fx-start-h fx-centered box-pad-h">
-                    //         Recommended curations
-                    //       </h4>
-                    //       <HomeCarouselNOSTR />
-                    //     </div>
-                    //   );
-                    if (item.kind === 30023 && item.title)
-                      return (
-                        <div
-                          key={item.id}
-                          className="fit-container fx-centered "
-                        >
-                          <PostPreviewCardNOSTR item={item} />
                         </div>
-                      );
-                    if (item.l === "FLASH NEWS")
-                      return (
-                        <div
-                          key={item.id}
-                          className="fit-container fx-centered "
-                        >
-                          <FlashNewsPreviewCard item={item} />
-                        </div>
-                      );
-                    if (item.l === "YAKI AI FEED")
-                      return (
-                        <div
-                          key={item.id}
-                          className="fit-container fx-centered "
-                        >
-                          <BuzzFeedPreviewCard item={item} />
-                        </div>
-                      );
-                    if (item.kind === 34235)
-                      return (
-                        <div
-                          key={item.id}
-                          className="fit-container fx-centered "
-                        >
-                          <VideosPreviewCards item={item} />
-                        </div>
-                      );
-                  })}
-
-                {!isLoaded && (
-                  <div className="fit-container box-pad-v fx-centered fx-col">
-                    <p className="gray-c">Loading</p>
-                    <LoadingDots />
-                  </div>
-                )}
-                {!isLoading &&
-                  isLoaded &&
-                  posts.length === 0 &&
-                  videos.length === 0 &&
-                  flashnews.length === 0 &&
-                  buzzFeed.length === 0 && (
-                    <div
-                      className="fit-container fx-centered fx-col"
-                      style={{ height: "30vh" }}
-                    >
-                      <h4>No content to show!</h4>
-                      <p
-                        className="gray-c p-centered"
-                        style={{ maxWidth: "500px" }}
-                      >
-                        There's no feeds on this :(
-                      </p>
-                    </div>
-                  )}
-              </div>
-              <div
-                className="box-pad-h-s fx-centered fx-col fx-start-v extras-homepage"
-                style={{
-                  position: "sticky",
-                  top: `calc(95vh - ${
-                    extrasRef.current?.getBoundingClientRect().height || 0
-                  }px)`,
-
-                  zIndex: "100",
-                  width: "min(100%, 400px)",
-                }}
-                ref={extrasRef}
-              >
-                <div className="sticky fit-container">
-                  <SearchbarNOSTR />
-                </div>
-                <div
-                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-                  style={{
-                    backgroundColor: "var(--c1-side)",
-                    rowGap: "24px",
-                    border: "none",
-                  }}
-                >
-                  <h4>Important Flash News</h4>
-                  <HomeFN flashnews={flashNews} />
-                </div>
-                <div
-                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-                  style={{
-                    backgroundColor: "var(--c1-side)",
-                    rowGap: "24px",
-                    border: "none",
-                  }}
-                >
-                  <h4>Top curators</h4>
-                  <TopCurators />
-                </div>
-                {topCreators.length > 0 && (
-                  <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
-                    }}
-                  >
-                    <div className="fx-centered fx-start-h fx-col">
-                      <h4>Top creators</h4>
-                      <div className="fx-centered fx-start-h fit-container">
-                        {!contentFrom.includes("main-") && (
-                          <p className="c1-c p-medium">
-                            (From{" "}
-                            {contentFrom === "HOMEFEED"
-                              ? "Timeline"
-                              : contentFrom}
-                            )
-                          </p>
-                        )}
                       </div>
-                    </div>
-                    <TopCreators top_creators={topCreators} />
-                  </div>
-                )}
-                {recentTags.length > 0 && (
-                  <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
-                    }}
-                  >
-                    <h4>Latest tags</h4>
-                    <div className="fx-centered fx-start-h fx-wrap">
-                      {recentTags.map((tag, index) => {
-                        return (
-                          <Link
-                            key={index}
-                            className="sticker sticker-small sticker-c1 pointer"
-                            to={`/tags/${tag?.replace("#", "%23")}`}
-                          >
-                            {tag}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                    {recentTags.length === 0 && (
+                    )}
+                    {contentSource === "notes" && (
                       <div
-                        className="fit-container fx-centered sc-s posts-card"
+                        className="fit-container fx-centered"
                         style={{
-                          height: "200px",
-                          backgroundColor: "transparent",
-                          border: "none",
+                          padding: 0,
                         }}
                       >
-                        <LoadingDots />
+                        <div
+                          className={`list-item fx-centered fx ${
+                            notesContentFrom === "trending"
+                              ? "selected-list-item"
+                              : ""
+                          }`}
+                          onClick={() => handleNotesContentFrom("trending")}
+                        >
+                          <div className="trending-up"></div>
+                          Trending notes
+                        </div>
+                        <div
+                          className={`list-item fx-centered fx ${
+                            notesContentFrom === "universal"
+                              ? "selected-list-item"
+                              : ""
+                          }`}
+                          onClick={() => handleNotesContentFrom("universal")}
+                        >
+                          <div className="globe"></div>
+                          Universal
+                        </div>
+                        {nostrKeys && (nostrKeys.sec || nostrKeys.ext) && (
+                          <div
+                            className={`list-item fx-centered fx ${
+                              notesContentFrom === "followings"
+                                ? "selected-list-item"
+                                : ""
+                            }`}
+                            onClick={() => handleNotesContentFrom("followings")}
+                          >
+                            <div className="followings"></div>
+                            Followings
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-                <div className="fx-centered box-pad-v-s fx-col fx-start-v">
-                  {recentTags.length > 0 && sideContentType === "2" && (
-                    <div className="fx-centered fx-start-h fx-wrap">
-                      {recentTags.map((tag, index) => {
-                        return (
-                          <Link
-                            key={index}
-                            className="sticker sticker-small sticker-gray-gray pointer"
-                            to={`/tags/${tag?.replace("#", "%23")}`}
+
+                  {contentSource === "media" && (
+                    <>
+                      {!isLoading &&
+                        mixedContent.map((item, index) => {
+                          if (item.kind === 30023 && item.title)
+                            return (
+                              <div
+                                key={item.id}
+                                className="fit-container fx-centered "
+                              >
+                                <PostPreviewCardNOSTR item={item} />
+                              </div>
+                            );
+                          if (item.l === "FLASH NEWS")
+                            return (
+                              <div
+                                key={item.id}
+                                className="fit-container fx-centered "
+                              >
+                                <FlashNewsPreviewCard item={item} />
+                              </div>
+                            );
+                          if (item.l === "YAKI AI FEED")
+                            return (
+                              <div
+                                key={item.id}
+                                className="fit-container fx-centered "
+                              >
+                                <BuzzFeedPreviewCard item={item} />
+                              </div>
+                            );
+                          if (item.kind === 34235)
+                            return (
+                              <div
+                                key={item.id}
+                                className="fit-container fx-centered "
+                              >
+                                <VideosPreviewCards item={item} />
+                              </div>
+                            );
+                        })}
+
+                      {!isLoaded && (
+                        <div className="fit-container box-pad-v fx-centered fx-col">
+                          <p className="gray-c">Loading</p>
+                          <LoadingDots />
+                        </div>
+                      )}
+
+                      {!isLoading &&
+                        isLoaded &&
+                        posts.length === 0 &&
+                        videos.length === 0 &&
+                        flashnews.length === 0 &&
+                        buzzFeed.length === 0 && (
+                          <div
+                            className="fit-container fx-centered fx-col"
+                            style={{ height: "30vh" }}
                           >
-                            {tag}
-                          </Link>
-                        );
-                      })}
+                            <h4>No content to show!</h4>
+                            <p
+                              className="gray-c p-centered"
+                              style={{ maxWidth: "500px" }}
+                            >
+                              There's no feeds on this :(
+                            </p>
+                          </div>
+                        )}
+                    </>
+                  )}
+                  {contentSource === "notes" && (
+                    <div className={`fx-centered  fx-wrap `}>
+                      {notesContentFrom === "trending" &&
+                        trendingNotes.map((note) => {
+                          if (note.kind === 6)
+                            return <KindSix event={note} key={note.id} />;
+                          return <KindOne event={note} key={note.id} />;
+                        })}
+                      {["universal", "followings"].includes(notesContentFrom) &&
+                        notes.map((note) => {
+                          if (note.kind === 6)
+                            return <KindSix event={note} key={note.id} />;
+                          return <KindOne event={note} key={note.id} />;
+                        })}
                     </div>
                   )}
                 </div>
-                <Footer />
+                <div
+                  className="box-pad-h-s fx-centered fx-col fx-start-v extras-homepage"
+                  style={{
+                    position: "sticky",
+                    top:
+                      extrasRef.current?.getBoundingClientRect().height >=
+                      window.innerHeight
+                        ? `calc(95vh - ${
+                            extrasRef.current?.getBoundingClientRect().height ||
+                            0
+                          }px)`
+                        : 0,
+                    zIndex: "100",
+                    flex: 1,
+                  }}
+                  ref={extrasRef}
+                >
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
+                  <div
+                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      rowGap: "24px",
+                      border: "none",
+                    }}
+                  >
+                    <h4>Important Flash News</h4>
+                    <HomeFN flashnews={flashNews} />
+                  </div>
+                  {topCreators.length > 0 && (
+                    <div
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
+                      style={{
+                        backgroundColor: "var(--c1-side)",
+                        rowGap: "24px",
+                        border: "none",
+                        overflow: "visible",
+                      }}
+                    >
+                      <div className="fx-centered fx-start-h fx-col">
+                        <h4>Trending users</h4>
+                      </div>
+                      <TopCreators
+                        top_creators={topCreators}
+                        kind="Followers"
+                      />
+                    </div>
+                  )}
+                  {/* <div
+                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      rowGap: "24px",
+                      border: "none",
+                    }}
+                  >
+                    <h4>Top curators</h4>
+                    <TopCurators />
+                  </div> */}
+
+                  {recentTags.length > 0 && (
+                    <div
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
+                      style={{
+                        backgroundColor: "var(--c1-side)",
+                        rowGap: "24px",
+                        border: "none",
+                      }}
+                    >
+                      <h4>Trending tags</h4>
+                      <div className="fx-centered fx-start-h fx-wrap">
+                        {recentTags.map((tag, index) => {
+                          return (
+                            <Link
+                              key={index}
+                              className="sticker sticker-small sticker-c1 pointer"
+                              to={`/tags/${tag?.replace("#", "%23")}`}
+                            >
+                              {tag}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                      {recentTags.length === 0 && (
+                        <div
+                          className="fit-container fx-centered sc-s posts-card"
+                          style={{
+                            height: "200px",
+                            backgroundColor: "transparent",
+                            border: "none",
+                          }}
+                        >
+                          <LoadingDots />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="fx-centered box-pad-v-s fx-col fx-start-v">
+                    {recentTags.length > 0 && sideContentType === "2" && (
+                      <div className="fx-centered fx-start-h fx-wrap">
+                        {recentTags.map((tag, index) => {
+                          return (
+                            <Link
+                              key={index}
+                              className="sticker sticker-small sticker-gray-gray pointer"
+                              to={`/tags/${tag?.replace("#", "%23")}`}
+                            >
+                              {tag}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <Footer />
+                </div>
               </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );
 }
-
-// export default function NostrHome() {
-//   const {
-//     nostrKeys,
-//     nostrUser,
-//     nostrUserLoaded,
-//     nostrAuthors,
-//     addNostrAuthors,
-//     nostrUserTopics,
-//   } = useContext(Context);
-//   const [posts, setPosts] = useState([]);
-//   const [relays, setRelays] = useState(relaysOnPlatform);
-//   const [activeRelay, setActiveRelay] = useState("");
-//   const [usersRelays, setUsersRelays] = useState([...relaysOnPlatform]);
-//   const [isLoaded, setIsLoaded] = useState(false);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [recentTags, setRecentTags] = useState([]);
-//   const [flashNews, setFlashNews] = useState([]);
-//   const topCreators = useMemo(() => {
-//     return getTopCreators(posts);
-//   }, [posts]);
-//   const [contentFrom, setContentFrom] = useState("HOMEFEED");
-//   const [artsLastEventTime, setArtsLastEventTime] = useState(undefined);
-//   const [showTopicsPicker, setShowTopicsPicker] = useState(
-//     !localStorage.getItem("topic-popup") && nostrUser
-//   );
-//   const [relaySub, setRelaySub] = useState(false);
-//   const [showRelaysList, setShowRelaysList] = useState(false);
-//   const [showLogin, setShowLogin] = useState(false);
-//   const [showArrows, setShowArrows] = useState(false);
-//   const [scrollPX, setScrollPX] = useState(0);
-//   const [sideContentType, setSideContentType] = useState("0");
-//   const extrasRef = useRef(null);
-
-//   useEffect(() => {
-//     setIsLoaded(false);
-//     initSub();
-//     getFlashNews();
-//     if (!localStorage.getItem("topic-popup") && nostrUser)
-//       setShowTopicsPicker(true);
-//   }, [activeRelay, contentFrom, artsLastEventTime, nostrUser]);
-
-//   useEffect(() => {
-//     let carousel_container = document.querySelector(".slider-list");
-//     let carousel = document.querySelector(".slider-list .no-scrollbar");
-//     if (carousel_container.clientWidth < carousel.scrollWidth) {
-//       setShowArrows(true);
-//       setScrollPX(0);
-//     } else {
-//       setShowArrows(false);
-//       setScrollPX(0);
-//     }
-//   }, [nostrUserTopics]);
-
-//   useEffect(() => {
-//     const handleScroll = () => {
-//       if (posts.length === 0) return;
-//       if (
-//         document.querySelector(".main-page-nostr-container").scrollHeight -
-//           document.querySelector(".main-page-nostr-container").scrollTop -
-//           60 >
-//         document.documentElement.offsetHeight
-//       ) {
-//         return;
-//       }
-//       setArtsLastEventTime(posts[posts.length - 1].created_at);
-//     };
-//     document
-//       .querySelector(".main-page-nostr-container")
-//       ?.addEventListener("scroll", handleScroll);
-//     return () =>
-//       document
-//         .querySelector(".main-page-nostr-container")
-//         ?.removeEventListener("scroll", handleScroll);
-//   }, [recentTags]);
-
-//   const getFlashNews = async () => {
-//     try {
-//       // let NEW_PATH = "/api/v1/flashnews/new";
-//       // let NMH_PATH = "/api/v1/flashnews/needs-more-help";
-//       // let SEALED_PATH = "/api/v1/flashnews/sealed";
-
-//       // let [NEW_FN, NMH_FN, SEALED_FN] = await Promise.all([
-//       //   axios.get(API_BASE_URL + NEW_PATH, {params: {page: 0, elPerPage: 4}}),
-//       //   axios.get(API_BASE_URL + NMH_PATH, {params: {page: 0, elPerPage: 4}}),
-//       //   axios.get(API_BASE_URL + SEALED_PATH, {params: {page: 0, elPerPage: 4}}),
-//       // ]);
-//       // setFlashNews(
-//       //   [
-//       //     ...NEW_FN.data.flashnews,
-//       //     ...NMH_FN.data.flashnews,
-//       //     ...SEALED_FN.data.flashnews,
-//       //   ].sort(
-//       //     (item1, item2) =>
-//       //       item2.flashnews.created_at - item1.flashnews.created_at
-//       //   )
-//       // );
-//       let data = await axios.get(
-//         API_BASE_URL + "/api/v1/mb/flashnews/important"
-//       );
-
-//       setFlashNews(data.data);
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   };
-
-//   const initSub = async () => {
-//     var sub = null;
-//     let tags = getTags();
-//     let events = [];
-//     if (contentFrom === "HOMEFEED") {
-//       if (activeRelay) {
-//         const relay = await Relay.connect(activeRelay);
-//         sub = relay.subscribe(
-//           [{ kinds: [30023], limit: 20, until: artsLastEventTime }],
-//           {
-//             onevent(event) {
-//               events.push(onArticlesEvent(event));
-//             },
-//             oneose() {
-//               onEOSE(events);
-//             },
-//           }
-//         );
-//       } else {
-//         sub = pool.subscribeMany(
-//           nostrUser?.relays || relaysOnPlatform,
-//           [{ kinds: [30023], limit: 20, until: artsLastEventTime }],
-//           {
-//             async onevent(event) {
-//               if (event.kind === 30023) events.push(onArticlesEvent(event));
-//               if (event.kind === 1) {
-//                 let note_tree = await getNoteTree(event.content);
-//                 events.push({ ...event, note_tree });
-//               }
-//             },
-//             oneose() {
-//               onEOSE(events);
-//             },
-//           }
-//         );
-//       }
-//       setRelaySub(sub);
-//       return;
-//     }
-
-//     if (contentFrom.includes("main-")) {
-//       if (activeRelay) {
-//         const relay = await Relay.connect(activeRelay);
-//         sub = relay.subscribe(
-//           [{ kinds: [30023], limit: 20, until: artsLastEventTime, "#t": tags }],
-//           {
-//             onevent(event) {
-//               events.push(onArticlesEvent(event));
-//             },
-//             oneose() {
-//               onEOSE(events);
-//             },
-//           }
-//         );
-//       } else {
-//         sub = pool.subscribeMany(
-//           !nostrUser
-//             ? relaysOnPlatform
-//             : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-//           [{ kinds: [30023], limit: 20, until: artsLastEventTime, "#t": tags }],
-//           {
-//             onevent(event) {
-//               events.push(onArticlesEvent(event));
-//             },
-//             oneose() {
-//               onEOSE(events);
-//             },
-//           }
-//         );
-//       }
-//       setRelaySub(sub);
-//       return;
-//     }
-
-//     if (contentFrom === "follows") {
-//       if (activeRelay) {
-//         const relay = await Relay.connect(activeRelay);
-//         sub = relay.subscribe(
-//           [
-//             {
-//               kinds: [30023],
-//               authors:
-//                 nostrUser && nostrUser.following.length > 0
-//                   ? [...nostrUser.following.map((item) => item[1])]
-//                   : [
-//                       "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3",
-//                     ],
-//               limit: 20,
-//               until: artsLastEventTime,
-//             },
-//           ],
-//           {
-//             onevent(event) {
-//               events.push(onArticlesEvent(event));
-//             },
-//             oneose() {
-//               onEOSE(events);
-//             },
-//           }
-//         );
-//       } else {
-//         sub = pool.subscribeMany(
-//           !nostrUser
-//             ? relaysOnPlatform
-//             : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-//           [
-//             {
-//               kinds: [30023],
-//               authors:
-//                 nostrUser && nostrUser.following.length > 0
-//                   ? [...nostrUser.following.map((item) => item[1])]
-//                   : [
-//                       "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3",
-//                     ],
-//               limit: 20,
-//               until: artsLastEventTime,
-//             },
-//           ],
-//           {
-//             onevent(event) {
-//               events.push(onArticlesEvent(event));
-//             },
-//             oneose() {
-//               onEOSE(events);
-//             },
-//           }
-//         );
-//         setRelaySub(sub);
-
-//         return;
-//       }
-
-//       sub = pool.subscribeMany(
-//         !nostrUser
-//           ? relaysOnPlatform
-//           : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-//         [
-//           {
-//             kinds: [30023],
-//             authors:
-//               nostrUser && nostrUser.following.length > 0
-//                 ? [...nostrUser.following.map((item) => item[1])]
-//                 : [
-//                     "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3",
-//                   ],
-//             limit: 20,
-//             until: artsLastEventTime,
-//           },
-//         ],
-//         {
-//           onevent(event) {
-//             events.push(onArticlesEvent(event));
-//           },
-//           oneose() {
-//             onEOSE(events);
-//           },
-//         }
-//       );
-//       setRelaySub(sub);
-
-//       return;
-//     }
-
-//     if (activeRelay) {
-//       const relay = await Relay.connect(activeRelay);
-
-//       sub = relay.subscribe(
-//         [
-//           {
-//             kinds: [30023],
-//             limit: 20,
-//             until: artsLastEventTime,
-//             "#t": tags,
-//           },
-//         ],
-//         {
-//           onevent(event) {
-//             events.push(onArticlesEvent(event));
-//           },
-//           oneose() {
-//             onEOSE(events);
-//           },
-//         }
-//       );
-//     } else {
-//       sub = pool.subscribeMany(
-//         !nostrUser
-//           ? relaysOnPlatform
-//           : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-//         [{ kinds: [30023], limit: 20, until: artsLastEventTime, "#t": tags }],
-//         {
-//           onevent(event) {
-//             events.push(onArticlesEvent(event));
-//           },
-//           oneose() {
-//             onEOSE(events);
-//           },
-//         }
-//       );
-//     }
-//     setRelaySub(sub);
-//     return;
-//   };
-//   const getTags = () => {
-//     if (contentFrom.includes("main-")) {
-//       let tempArray = shuffleArray(TopicsTags);
-//       let tempArray_2 = tempArray.splice(0, 5);
-//       // return tempArray_2
-//       //   .map((item) => item.main_tag)
-//       //   .flat()
-//       return shuffleArray(
-//         tempArray_2.map((item) => [item.main_tag, ...item.sub_tags]).flat()
-//       );
-//     }
-//     if (contentFrom === "follows") {
-//       return [];
-//     }
-//     let searchedTag = TopicsTags.find(
-//       (item) => item.main_tag === contentFrom
-//       // item.main_tag === contentFrom ||
-//       // item.sub_tags.find((item_) => item_ === contentFrom)
-//     );
-//     if (searchedTag) {
-//       return [searchedTag.main_tag, ...searchedTag.sub_tags];
-//     }
-//     return [contentFrom];
-//   };
-//   const onArticlesEvent = (event) => {
-//     if (bannedList.includes(event.pubkey)) return;
-//     let author_img = "";
-//     let author_name = getBech32("npub", event.pubkey).substring(0, 10);
-//     let author_pubkey = event.pubkey;
-//     let thumbnail = "";
-//     let title = "";
-//     let summary = "";
-//     let from = "";
-//     let contentSensitive = false;
-//     let postTags = [];
-//     let d = "";
-//     let modified_date = new Date(event.created_at * 1000).toISOString();
-//     let added_date = new Date(event.created_at * 1000).toISOString();
-//     let published_at = event.created_at;
-//     for (let tag of event.tags) {
-//       if (tag[0] === "published_at") {
-//         published_at = tag[1];
-//         added_date =
-//           tag[1].length > 10
-//             ? new Date(parseInt(tag[1])).toISOString()
-//             : new Date(parseInt(tag[1]) * 1000).toISOString();
-//       }
-//       if (tag[0] === "image") thumbnail = tag[1];
-//       if (tag[0] === "client") from = tag[1];
-//       if (tag[0] === "title") title = tag[1];
-//       if (tag[0] === "summary") summary = tag[1];
-//       if (tag[0] === "t") postTags.push(tag[1]);
-//       if (tag[0] === "L" && tag[1] === "content-warning")
-//         contentSensitive = true;
-//       if (tag[0] === "d") d = tag[1];
-//     }
-
-//     let naddr = nip19.naddrEncode({
-//       identifier: d,
-//       pubkey: author_pubkey,
-//       kind: 30023,
-//     });
-
-//     setPosts((_posts) => {
-//       let index = _posts.findIndex((item) => item.d === d);
-//       let newP = Array.from(_posts);
-//       if (index === -1)
-//         newP = [
-//           ...newP,
-//           {
-//             id: event.id,
-//             thumbnail: thumbnail || getImagePlaceholder(),
-//             summary,
-//             author_img,
-//             author_pubkey,
-//             author_name,
-//             title,
-//             added_date,
-//             created_at: event.created_at,
-//             modified_date,
-//             published_at,
-//             postTags,
-//             naddr,
-//             d,
-//             contentSensitive,
-//             from: from || "N/A",
-//           },
-//         ];
-//       if (index !== -1) {
-//         if (_posts[index].created_at < event.created_at) {
-//           newP.splice(index, 1);
-//           newP.push({
-//             id: event.id,
-//             thumbnail: thumbnail || getImagePlaceholder(),
-//             summary,
-//             author_img,
-//             author_pubkey,
-//             author_name,
-//             title,
-//             added_date,
-//             created_at: event.created_at,
-//             modified_date,
-//             published_at,
-//             postTags,
-//             naddr,
-//             d,
-//             contentSensitive,
-//             from: from || "N/A",
-//           });
-//         }
-//       }
-
-//       newP = newP.sort(
-//         (item_1, item_2) => item_2.created_at - item_1.created_at
-//       );
-
-//       return newP;
-//     });
-//     setIsLoading(false);
-//     return {
-//       id: event.id,
-//       thumbnail: thumbnail || getImagePlaceholder(),
-//       summary,
-//       author_img,
-//       author_pubkey,
-//       author_name,
-//       title,
-//       added_date,
-//       created_at: event.created_at,
-//       modified_date,
-//       published_at,
-//       postTags,
-//       naddr,
-//       d,
-//       contentSensitive,
-//       from: from || "N/A",
-//     };
-//   };
-//   const onEOSE = (events) => {
-//     if (events) {
-//       let filteredEvents = events.filter((event) => event);
-//       addNostrAuthors(filteredEvents.map((item) => item.author_pubkey));
-//       setRecentTags(
-//         [
-//           ...new Set(
-//             [
-//               ...filteredEvents.map((item) => item.postTags.flat()),
-//               ...recentTags,
-//             ].flat()
-//           ),
-//         ].splice(0, 30)
-//       );
-//     }
-//     if (activeRelay) pool.close([activeRelay]);
-//     if (!activeRelay)
-//       pool.close(
-//         !nostrUser
-//           ? relaysOnPlatform
-//           : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-//       );
-//     setIsLoaded(true);
-//     setIsLoading(false);
-//     // relaySub.close();
-//   };
-
-//   const switchContentSource = (source) => {
-//     // if (!isLoaded) return;
-//     if (source === contentFrom) return;
-//     // relaySub.close();
-//     if (activeRelay) pool.close([activeRelay]);
-//     if (!activeRelay)
-//       pool.close(
-//         !nostrUser
-//           ? relaysOnPlatform
-//           : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-//       );
-//     setPosts([]);
-//     setIsLoading(true);
-//     setRecentTags([]);
-//     setArtsLastEventTime(undefined);
-//     setContentFrom(source);
-//   };
-//   const switchActiveRelay = (source) => {
-//     // if (!isLoaded) return;
-//     if (source === activeRelay) return;
-//     // relaySub.close();
-//     setIsLoading(true);
-//     setPosts([]);
-//     setRecentTags([]);
-//     setActiveRelay(source);
-
-//     setArtsLastEventTime(undefined);
-//   };
-//   const handleRelaySelection = (e) => {
-//     document.querySelector(".main-page-nostr-container").scrollTo(0, 0);
-//     setActiveRelay(e.target.value);
-//     setArtsLastEventTime(undefined);
-//     setIsLoading(true);
-//     setPosts([]);
-//     setRecentTags([]);
-//   };
-//   const checkTopicInList = (topic) => {
-//     return TopicsTags.find((item) => item.main_tag === topic);
-//   };
-
-//   const slideRight = () => {
-//     let carousel_container = document.querySelector(".slider-list");
-//     let carousel = document.querySelector(".slider-list .no-scrollbar");
-//     // console.log(carousel_container.clientWidth, scrollPX, carousel.scrollWidth);
-//     let pxToSlide =
-//       scrollPX + 100 < carousel.scrollWidth - carousel_container.clientWidth
-//         ? scrollPX + 100
-//         : carousel.scrollWidth - carousel_container.clientWidth;
-//     setScrollPX(pxToSlide);
-//   };
-//   const slideLeft = () => {
-//     let carousel_container = document.querySelector(".slider-list");
-//     let carousel = document.querySelector(".slider-list .no-scrollbar");
-//     // console.log(carousel_container.clientWidth, scrollPX);
-//     let pxToSlide = scrollPX - 100 > 0 ? scrollPX - 100 : 0;
-//     setScrollPX(pxToSlide);
-//   };
-//   return (
-//     <div style={{ overflow: "auto" }}>
-//       <Helmet>
-//         <title>Yakihonne | Home</title>
-//         <meta
-//           name="description"
-//           content={
-//             "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
-//           }
-//         />
-//         <meta
-//           property="og:description"
-//           content={
-//             "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
-//           }
-//         />
-
-//         <meta property="og:url" content={`https://yakihonne.com`} />
-//         <meta property="og:type" content="website" />
-//         <meta property="og:site_name" content="Yakihonne" />
-//         <meta property="og:title" content="Yakihonne | Home" />
-//         <meta property="twitter:title" content="Yakihonne | Home" />
-//         <meta
-//           property="twitter:description"
-//           content={
-//             "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
-//           }
-//         />
-//       </Helmet>
-//       <div className="fit-container fx-centered">
-//         <SidebarNOSTR />
-//         <main
-//           className="main-page-nostr-container"
-//           onClick={(e) => {
-//             e.stopPropagation();
-//             // toggleColorScheme()
-//             setShowRelaysList(false);
-//           }}
-//           style={{ padding: 0 }}
-//         >
-//           {showTopicsPicker && (
-//             <TopicTagsSelection exit={() => setShowTopicsPicker(false)} />
-//           )}
-//           {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />}
-//           <YakiIntro />
-//           <ArrowUp />
-//           {/* <div className="fit-container box-marg-s"> */}
-//           <HomeCarouselNOSTR />
-//           {/* </div> */}
-//           {/* <NavbarNOSTR /> */}
-//           {/* <div className="fit-container box-marg-s">
-//           <HomeFNMobile flashnews={flashNews} />
-//         </div> */}
-//           <div className="fit-container fx-centered fx-start-h">
-//             <div
-//               style={{ width: "min(100%,1400px)" }}
-//               className="fx-centered fx-start-v fx-start-h"
-//             >
-//               <div
-//                 style={{ width: "min(100%, 600px)" }}
-//                 className={`fx-centered  fx-wrap `}
-//               >
-//                 <div
-//                   className="fit-container fx-centered box-pad-v box-pad-h-m sticky"
-//                   style={{
-//                     position: "sticky",
-//                     // top: "-34px",
-//                     backgroundColor: "var(--white)",
-//                     zIndex: "1000",
-//                   }}
-//                 >
-//                   <div className="fit-container fx-scattered">
-//                     {showArrows && (
-//                       <div
-//                         className="box-pad-h-s pointer slide-right"
-//                         onClick={slideLeft}
-//                       >
-//                         <div
-//                           className="arrow"
-//                           style={{ transform: "rotate(90deg)" }}
-//                         ></div>
-//                       </div>
-//                     )}
-//                     <div
-//                       className="fx-centered fx-start-h no-scrollbar slider-list"
-//                       style={{
-//                         overflow: "hidden",
-//                         borderBottom: "1px solid #444444",
-//                       }}
-//                     >
-//                       <div
-//                         className="fx-centered fx-start-h no-scrollbar"
-//                         style={{
-//                           transform: `translateX(-${scrollPX}px)`,
-//                           transition: ".3s ease-in-out",
-//                           columnGap: "32px",
-//                         }}
-//                       >
-//                         <div
-//                           className={`list-item fx-centered fx-shrink ${
-//                             contentFrom.includes("main-")
-//                               ? "selected-list-item"
-//                               : ""
-//                           }`}
-//                           onClick={() =>
-//                             switchContentSource(`main-${Date.now()}`)
-//                           }
-//                         >
-//                           <div
-//                             className="switch-arrows"
-//                             style={{
-//                               // filter: "invert()",
-//                               transform: contentFrom.includes("main-")
-//                                 ? "rotate(720deg)"
-//                                 : "",
-//                               transition: ".5s ease-in-out",
-//                             }}
-//                           ></div>
-//                           What's up
-//                         </div>
-//                         <div
-//                           className={`list-item fx-centered fx-shrink ${
-//                             contentFrom === "HOMEFEED"
-//                               ? "selected-list-item"
-//                               : ""
-//                           }`}
-//                           onClick={() => switchContentSource("HOMEFEED")}
-//                         >
-//                           {/* <div className="home"></div> */}
-//                           Timeline
-//                         </div>
-
-//                         <div
-//                           className={`list-item fx-centered fx-shrink ${
-//                             contentFrom === "follows"
-//                               ? "selected-list-item"
-//                               : ""
-//                           }`}
-//                           onClick={() => switchContentSource("follows")}
-//                         >
-//                           {/* <div className="user"></div> */}
-//                           Follows
-//                         </div>
-//                         {nostrUserTopics.map((item, index) => {
-//                           let status = checkTopicInList(item);
-//                           return (
-//                             <div
-//                               className={`list-item fx-centered fx-shrink ${
-//                                 item === contentFrom ? "selected-list-item" : ""
-//                               }`}
-//                               onClick={() => {
-//                                 switchContentSource(item);
-//                               }}
-//                               key={`${item}-${index}`}
-//                             >
-//                               {/* {status && (
-//                             <img
-//                               width="16"
-//                               height="16"
-//                               src={status.icon}
-//                               alt={item}
-//                             />
-//                           )}
-//                           {!status && (
-//                             <img
-//                               width="16"
-//                               height="16"
-//                               src={defaultTopicIcon}
-//                               alt={item}
-//                             />
-//                           )} */}
-//                               {item}
-//                             </div>
-//                           );
-//                         })}
-//                       </div>
-//                     </div>
-//                     <div className="fx-centered">
-//                       {showArrows && (
-//                         <div
-//                           className="box-pad-h-s pointer slide-left"
-//                           onClick={slideRight}
-//                           style={{
-//                             background:
-//                               "linear-gradient(to left,var(--white) 20%,rgba(255,255,255,0) 100%)",
-//                           }}
-//                         >
-//                           <div
-//                             className="arrow"
-//                             style={{ transform: "rotate(-90deg)" }}
-//                           ></div>
-//                         </div>
-//                       )}
-//                       <div
-//                         className="round-icon-small round-icon-tooltip"
-//                         data-tooltip={"customize topics"}
-//                         onClick={() =>
-//                           nostrUserLoaded && nostrUser
-//                             ? setShowTopicsPicker(true)
-//                             : setShowLogin(true)
-//                         }
-//                       >
-//                         <p>&#xFF0B;</p>
-//                       </div>
-//                       <div style={{ position: "relative" }}>
-//                         <div
-//                           style={{ position: "relative" }}
-//                           className="round-icon-small round-icon-tooltip"
-//                           data-tooltip={
-//                             activeRelay
-//                               ? `${activeRelay} is ${
-//                                   isLoading ? "connecting" : "connected"
-//                                 }`
-//                               : "All relays"
-//                           }
-//                           onClick={(e) => {
-//                             e.stopPropagation();
-//                             setShowRelaysList(!showRelaysList);
-//                           }}
-//                         >
-//                           <div className="server"></div>
-//                         </div>
-//                         {showRelaysList && (
-//                           <div
-//                             style={{
-//                               position: "absolute",
-//                               right: 0,
-//                               bottom: "-5px",
-//                               backgroundColor: "var(--dim-gray)",
-//                               border: "none",
-//                               transform: "translateY(100%)",
-//                               maxWidth: "300px",
-//                               rowGap: "12px",
-//                             }}
-//                             className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-//                           >
-//                             <h5>Relays</h5>
-//                             <button
-//                               className={`btn-text-gray pointer fx-centered`}
-//                               style={{
-//                                 width: "max-content",
-//                                 fontSize: "1rem",
-//                                 textDecoration: "none",
-//                                 color: activeRelay === "" ? "var(--c1)" : "",
-//                                 transition: ".4s ease-in-out",
-//                               }}
-//                               onClick={() => {
-//                                 switchActiveRelay("");
-//                                 setShowRelaysList(false);
-//                               }}
-//                             >
-//                               {isLoading && activeRelay === "" ? (
-//                                 <>Connecting...</>
-//                               ) : (
-//                                 "All relays"
-//                               )}
-//                             </button>
-//                             {nostrUser &&
-//                               nostrUser.relays.length > 0 &&
-//                               nostrUser.relays.map((relay) => {
-//                                 return (
-//                                   <button
-//                                     key={relay}
-//                                     className={`btn-text-gray pointer fx-centered `}
-//                                     style={{
-//                                       width: "max-content",
-//                                       fontSize: "1rem",
-//                                       textDecoration: "none",
-//                                       color:
-//                                         activeRelay === relay
-//                                           ? "var(--c1)"
-//                                           : "",
-//                                       transition: ".4s ease-in-out",
-//                                     }}
-//                                     onClick={() => {
-//                                       switchActiveRelay(relay);
-//                                       setShowRelaysList(false);
-//                                     }}
-//                                   >
-//                                     {isLoading && relay === activeRelay ? (
-//                                       <>Connecting...</>
-//                                     ) : (
-//                                       relay.split("wss://")[1]
-//                                     )}
-//                                   </button>
-//                                 );
-//                               })}
-//                             {(!nostrUser ||
-//                               (nostrUser && nostrUser.relays.length === 0)) &&
-//                               relays.map((relay) => {
-//                                 return (
-//                                   <button
-//                                     key={relay}
-//                                     className={`btn-text-gray pointer fx-centered`}
-//                                     style={{
-//                                       width: "max-content",
-//                                       fontSize: "1rem",
-//                                       textDecoration: "none",
-//                                       color:
-//                                         activeRelay === relay
-//                                           ? "var(--c1)"
-//                                           : "",
-//                                       transition: ".4s ease-in-out",
-//                                     }}
-//                                     onClick={() => {
-//                                       switchActiveRelay(relay);
-//                                       setShowRelaysList(false);
-//                                     }}
-//                                   >
-//                                     {isLoading && relay === activeRelay ? (
-//                                       <>Connecting..</>
-//                                     ) : (
-//                                       relay.split("wss://")[1]
-//                                     )}
-//                                   </button>
-//                                 );
-//                               })}
-//                           </div>
-//                         )}
-//                       </div>
-//                       {/* <div className="setting-24"></div> */}
-//                     </div>
-//                   </div>
-//                 </div>
-//                 {isLoading && (
-//                   <>
-//                     <div
-//                       className="fit-container fx-centered sc-s skeleton-container posts-card"
-//                       style={{
-//                         height: "200px",
-//                         backgroundColor: "var(--dim-gray)",
-//                         border: "none",
-//                       }}
-//                     ></div>
-//                     <div
-//                       className="fit-container fx-centered sc-s skeleton-container posts-card"
-//                       style={{
-//                         height: "200px",
-//                         backgroundColor: "var(--dim-gray)",
-//                         border: "none",
-//                       }}
-//                     ></div>
-//                   </>
-//                 )}
-
-//                 {!isLoading &&
-//                   posts.map((item) => {
-//                     if (item.title)
-//                       return (
-//                         <div
-//                           key={item.id}
-//                           className="fit-container fx-centered "
-//                         >
-//                           <PostPreviewCardNOSTR item={item} />
-//                         </div>
-//                       );
-//                   })}
-
-//                 {!isLoaded && (
-//                   <div className="fit-container box-pad-v fx-centered fx-col">
-//                     <p className="gray-c">Loading</p>
-//                     <LoadingDots />
-//                   </div>
-//                 )}
-//                 {!isLoading && isLoaded && posts.length === 0 && (
-//                   <div
-//                     className="fit-container fx-centered fx-col"
-//                     style={{ height: "30vh" }}
-//                   >
-//                     <h4>No content to show!</h4>
-//                     <p
-//                       className="gray-c p-centered"
-//                       style={{ maxWidth: "500px" }}
-//                     >
-//                       There's no article on this :(
-//                     </p>
-//                   </div>
-//                 )}
-//               </div>
-//               <div
-//                 className="box-pad-h-m fx-centered fx-col fx-start-v extras-homepage"
-//                 style={{
-//                   position: "sticky",
-//                   top: `calc(95vh - ${
-//                     extrasRef.current?.getBoundingClientRect().height || 0
-//                   }px)`,
-//                   // backgroundColor: "var(--white)",
-//                   zIndex: "100",
-//                   width: "min(100%, 400px)",
-//                 }}
-//                 ref={extrasRef}
-//               >
-//                 <div className="sticky fit-container">
-//                   <SearchbarNOSTR />
-//                 </div>
-//                 <div
-//                   className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-//                   style={{
-//                     backgroundColor: "var(--c1-side)",
-//                     rowGap: "24px",
-//                     border: "none",
-//                   }}
-//                 >
-//                   <h4>Important Flash News</h4>
-//                   <HomeFN flashnews={flashNews} />
-//                 </div>
-//                 <div
-//                   className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-//                   style={{
-//                     backgroundColor: "var(--c1-side)",
-//                     rowGap: "24px",
-//                     border: "none",
-//                   }}
-//                 >
-//                   <h4>Top curators</h4>
-//                   <TopCurators />
-//                 </div>
-//                 <div
-//                   className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-//                   style={{
-//                     backgroundColor: "var(--c1-side)",
-//                     rowGap: "24px",
-//                     border: "none",
-//                   }}
-//                 >
-//                   <div className="fx-centered fx-start-h fx-col">
-//                     <h4>Top creators</h4>
-//                     <div className="fx-centered fx-start-h fit-container">
-//                       {!contentFrom.includes("main-") && (
-//                         <p className="c1-c p-medium">
-//                           (From{" "}
-//                           {contentFrom === "HOMEFEED"
-//                             ? "Timeline"
-//                             : contentFrom}
-//                           )
-//                         </p>
-//                       )}
-//                     </div>
-//                   </div>
-//                   <TopCreators top_creators={topCreators} />
-//                 </div>
-//                 <div
-//                   className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-//                   style={{
-//                     backgroundColor: "var(--c1-side)",
-//                     rowGap: "24px",
-//                     border: "none",
-//                   }}
-//                 >
-//                   <h4>Latest tags</h4>
-//                   <div className="fx-centered fx-start-h fx-wrap">
-//                     {recentTags.map((tag, index) => {
-//                       return (
-//                         <Link
-//                           key={index}
-//                           className="sticker sticker-small sticker-c1 pointer"
-//                           to={`/tags/${tag?.replace("#", "%23")}`}
-//                         >
-//                           {tag}
-//                         </Link>
-//                       );
-//                     })}
-//                   </div>
-
-//                   {recentTags.length === 0 && (
-//                     <div
-//                       className="fit-container fx-centered sc-s posts-card"
-//                       style={{
-//                         height: "200px",
-//                         backgroundColor: "transparent",
-//                         border: "none",
-//                       }}
-//                     >
-//                       <LoadingDots />
-//                     </div>
-//                   )}
-//                 </div>
-//                 <div className="fx-centered box-pad-v-s fx-col fx-start-v">
-//                   {recentTags.length > 0 && sideContentType === "2" && (
-//                     <div className="fx-centered fx-start-h fx-wrap">
-//                       {recentTags.map((tag, index) => {
-//                         return (
-//                           <Link
-//                             key={index}
-//                             className="sticker sticker-small sticker-gray-gray pointer"
-//                             to={`/tags/${tag?.replace("#", "%23")}`}
-//                           >
-//                             {tag}
-//                           </Link>
-//                         );
-//                       })}
-//                     </div>
-//                   )}
-//                 </div>
-//                 <Footer />
-//               </div>
-//             </div>
-//           </div>
-//         </main>
-//       </div>
-//     </div>
-//   );
-// }

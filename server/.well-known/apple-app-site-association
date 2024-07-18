@@ -7,13 +7,14 @@
         "paths": [
           "/",
           "/article/*",
+          "/notes/*",
           "/videos/*",
           "/users/*",
           "/curations/*",
           "/flash-news/*",
           "/uncensored-notes/*",
           "/buzz-feed/*",
-          "/notes/*"
+          "/wallet/*"
         ]
       }
     ]

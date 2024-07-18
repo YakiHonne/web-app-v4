@@ -17,7 +17,7 @@ const getBulkListStats = (list) => {
   return { toFollow, toUnfollow };
 };
 
-export default function ShowPeople({ exit, list, title, extras }) {
+export default function ShowUsersList({ exit, list, title, extras }) {
   const {
     nostrUser,
     setNostrUser,

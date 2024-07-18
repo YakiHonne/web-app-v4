@@ -50,6 +50,7 @@ export default function Slider({ items = [] }) {
           style={{
             transform: `translateX(-${scrollPX}px)`,
             transition: ".3s ease-in-out",
+            columnGap: "10px"
           }}
           ref={noScrollBarContainer}
         >

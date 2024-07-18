@@ -94,11 +94,12 @@ export default function NostrBookmarks() {
       )}
 
       <div className="fit-container fx-centered">
+      <div className="main-container">
         <SidebarNOSTR />
         <main className="main-page-nostr-container">
           <ArrowUp />
           <div className="fx-centered fit-container fx-start-h fx-start-v">
-            <div style={{ width: "min(100%,700px)" }}>
+            <div style={{ flex: 1 }}>
               {!nostrKeys && <PagePlaceholder page={"nostr-not-connected"} />}
               {nostrKeys && (
                 <div className="fit-container box-pad-h-m box-pad-v">
@@ -214,6 +215,7 @@ export default function NostrBookmarks() {
           </div>
         </main>
       </div>
+      </div>
     </div>
   );
 }
@@ -291,7 +293,7 @@ const BookmarkContent = ({
               ? event.kind === 1 && l[1] === "FLASH NEWS"
                 ? 1
                 : 11
-              : 1;
+              : 111;
             let tempEvent = { ...event };
             tempEvent.kind = kind;
             let newP = content.find((item) => item.id === tempEvent.id)
@@ -311,6 +313,10 @@ const BookmarkContent = ({
     );
   }, []);
 
+  const getKind = (l) => {
+    
+  }
+
   return (
     <div
       className="fit-container fx-centered"
@@ -319,7 +325,7 @@ const BookmarkContent = ({
         setShowFilter(false);
       }}
     >
-      <div style={{ width: "min(100%,1000px)" }}>
+      <div style={{ flex: 1 }}>
         <div className="fit-container fx-scattered box-marg-s">
           <div className="fx-centered fx-start-h pointer" onClick={exit}>
             <div className="round-icon">
@@ -484,6 +490,19 @@ const BookmarkContent = ({
                       </span>
                     </label>
                     <label
+                      htmlFor="radio-bf"
+                      className="fit-container fx-centered fx-start-h"
+                    >
+                      <input
+                        type="radio"
+                        name="filter"
+                        id="radio-bf"
+                        checked={postKind === 111}
+                        onChange={() => setPostKind(111)}
+                      />{" "}
+                      <span style={{ width: "max-content" }}>Notes</span>
+                    </label>
+                    <label
                       htmlFor="radio-fn"
                       className="fit-container fx-centered fx-start-h"
                     >
@@ -546,9 +565,9 @@ const BookmarkContent = ({
                     kind: item.kind,
                   })
                 : "";
-              let nEvent = [1, 11].includes(item.kind)
+              let nEvent = [1, 11, 111].includes(item.kind)
                 ? nip19.neventEncode({
-                    pubkey: item.pubkey,
+                    author: item.pubkey,
                     id: item.id,
                   })
                 : "";
@@ -762,7 +781,64 @@ const BookmarkContent = ({
                       </Link>
                       <SaveArticleAsBookmark
                         pubkey={item.id}
-                        kind={item.kind}
+                        kind={1}
+                        itemType="e"
+                      />
+                    </div>
+                  </div>
+                );
+              if (
+                (!postKind && item.kind === 111) ||
+                (postKind && postKind === 111 && item.kind === 111)
+              )
+                return (
+                  <div
+                    className="sc-s-18 fit-container fx-scattered box-pad-h-s box-pad-v-s"
+                    style={{ position: "relative" }}
+                    key={item.id}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        padding: "0 1rem",
+                        left: "-1.4rem",
+                        top: "50%",
+                        transform: "translateY(-50%) rotate(-90deg)",
+                        transformOrigin: "center",
+                        backgroundColor: "var(--blue-main)",
+                        color: "white",
+                        borderRadius: "var(--border-r-18)",
+                      }}
+                    >
+                      <p className="p-small">Note</p>
+                    </div>
+                    <div className="fx-centered box-pad-h-m">
+                      <div
+                        className="bg-img cover-bg sc-s-18"
+                        style={{
+                          aspectRatio: "1 / 1",
+                          minWidth: "64px",
+                          backgroundImage: `url(${content.image})`,
+                          backgroundColor: "var(--dim-gray)",
+                        }}
+                      ></div>
+                      <div>
+                        <p className="p-one-line">
+                          {item.content.substring(0, 100)}
+                        </p>
+                        <p className="p-medium gray-c">
+                          Edited on{" "}
+                          <Date_ toConvert={new Date(item.created_at * 1000)} />
+                        </p>
+                      </div>
+                    </div>
+                    <div className="box-pad-h-s fx-centered">
+                      <Link target={"_blank"} to={`/notes/${nEvent}`}>
+                        <div className="share-icon-24"></div>
+                      </Link>
+                      <SaveArticleAsBookmark
+                        pubkey={item.id}
+                        kind={1}
                         itemType="e"
                       />
                     </div>

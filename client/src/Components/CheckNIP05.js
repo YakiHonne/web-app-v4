@@ -21,7 +21,7 @@ export default function CheckNIP05({ address = "", pubkey = "" }) {
   return (
     <div className="fx-centered">
       {!isChecked && <div className="gray-c p-medium">{address}</div>}
-      {isChecked && <div className="c1-c p-medium">{address}</div>}
+      {isChecked && <div className="orange-c p-medium">{address}</div>}
       {isChecked && <div className="checkmark-c1"></div>}
     </div>
   );

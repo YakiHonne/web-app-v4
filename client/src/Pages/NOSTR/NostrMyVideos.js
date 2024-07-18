@@ -15,6 +15,10 @@ import { getVideoContent, getVideoFromURL } from "../../Helpers/Helpers";
 import UploadFile from "../../Components/UploadFile";
 import { nanoid } from "nanoid";
 import ToPublishVideo from "../../Components/NOSTR/ToPublishVideo";
+import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
+import axios from "axios";
+import HomeFN from "../../Components/NOSTR/HomeFN";
+import Footer from "../../Components/Footer";
 
 var pool = new SimplePool();
 
@@ -24,7 +28,7 @@ export default function NostrMyVideos() {
   const [relays, setRelays] = useState(relaysOnPlatform);
   const [activeRelay, setActiveRelay] = useState("");
   const [videos, setVideos] = useState([]);
-  const [tempPosts, setTempPosts] = useState([]);
+  const [importantFN, setImportantFN] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [postToDelete, setPostToDelete] = useState(false);
   const [showRelaysList, setShowRelaysList] = useState(false);
@@ -42,7 +46,6 @@ export default function NostrMyVideos() {
       try {
         setIsLoading(true);
         setVideos([]);
-        setTempPosts([]);
 
         let relaysToFetchFrom =
           activeRelay == ""
@@ -82,7 +85,26 @@ export default function NostrMyVideos() {
       return;
     }
   }, [nostrKeys, activeRelay]);
+  const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        
+        const [important] = await Promise.all([
+          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
+        ]);
+
+        setImportantFN(important.data);
+
+        // setIsLoaded(true);
+      } catch (err) {
+        // setIsLoaded(true)
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, []);
   const initDeletedPost = (state) => {
     if (!state) {
       setPostToDelete(false);
@@ -152,243 +174,275 @@ export default function NostrMyVideos() {
           />
         </Helmet>
         <div className="fit-container fx-centered">
-          <SidebarNOSTR />
-          <main
-            className={`main-page-nostr-container`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowRelaysList(false);
-              setShowFilter(false);
-            }}
-          >
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,700px)" }} className="box-pad-h-m">
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main
+              className={`main-page-nostr-container`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowRelaysList(false);
+                setShowFilter(false);
+              }}
+            >
+              <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div
-                  className="box-pad-v-m fit-container fx-scattered"
-                  style={{
-                    position: "relative",
-                    zIndex: "100",
-                  }}
+                  style={{ width: "min(100%,700px)" }}
+                  className="box-pad-h-m"
                 >
-                  <div className="fx-centered fx-col fx-start-v">
-                    <div className="fx-centered">
-                      <h4>{videos.length} Videos</h4>
-                      <p className="gray-c p-medium">
-                        (In{" "}
-                        {activeRelay === ""
-                          ? "all relays"
-                          : activeRelay.split("wss://")[1]}
-                        )
-                      </p>
-                    </div>
-                    <p className="orange-c">
-                      {activeRelay && "(Switch to all relays to edit)"}
-                    </p>
-                  </div>
-                  <div className="fx-centered">
-                    <div style={{ position: "relative" }}>
-                      <div
-                        style={{ position: "relative" }}
-                        className="round-icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowRelaysList(!showRelaysList);
-                          setShowFilter(false);
-                        }}
-                      >
-                        <div className="server"></div>
-                      </div>
-                      {showRelaysList && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: 0,
-                            bottom: "-5px",
-                            backgroundColor: "var(--dim-gray)",
-                            border: "none",
-                            transform: "translateY(100%)",
-                            maxWidth: "300px",
-                            rowGap: "12px",
-                          }}
-                          className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                        >
-                          <h5>Relays</h5>
-                          <button
-                            className={`btn-text-gray pointer fx-centered`}
-                            style={{
-                              width: "max-content",
-                              fontSize: "1rem",
-                              textDecoration: "none",
-                              color: activeRelay === "" ? "var(--c1)" : "",
-                              transition: ".4s ease-in-out",
-                            }}
-                            onClick={() => {
-                              switchActiveRelay("");
-                              setShowRelaysList(false);
-                            }}
-                          >
-                            {isLoading && activeRelay === "" ? (
-                              <>Connecting...</>
-                            ) : (
-                              "All relays"
-                            )}
-                          </button>
-                          {nostrUser &&
-                            nostrUser.relays.length > 0 &&
-                            nostrUser.relays.map((relay) => {
-                              return (
-                                <button
-                                  key={relay}
-                                  className={`btn-text-gray pointer fx-centered `}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === relay ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay(relay);
-                                    setShowRelaysList(false);
-                                  }}
-                                >
-                                  {isLoading && relay === activeRelay ? (
-                                    <>Connecting...</>
-                                  ) : (
-                                    relay.split("wss://")[1]
-                                  )}
-                                </button>
-                              );
-                            })}
-                          {(!nostrUser ||
-                            (nostrUser && nostrUser.relays.length === 0)) &&
-                            relays.map((relay) => {
-                              return (
-                                <button
-                                  key={relay}
-                                  className={`btn-text-gray pointer fx-centered`}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === relay ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay(relay);
-                                    setShowRelaysList(false);
-                                  }}
-                                >
-                                  {isLoading && relay === activeRelay ? (
-                                    <>Connecting..</>
-                                  ) : (
-                                    relay.split("wss://")[1]
-                                  )}
-                                </button>
-                              );
-                            })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {isLoading && videos.length === 0 && (
                   <div
-                    className="fit-container fx-centered fx-col"
-                    style={{ height: "50vh" }}
+                    className="box-pad-v-m fit-container fx-scattered"
+                    style={{
+                      position: "relative",
+                      zIndex: "100",
+                    }}
                   >
-                    <p>Loading videos</p>
-                    <LoadingDots />
-                  </div>
-                )}
-                {/* )} */}
-                <div className="fit-container fx-scattered fx-wrap fx-stretch">
-                  {videos.map((video) => {
-                    return (
-                      <div
-                        key={video.id}
-                        className=" fx-start-h fx-start-v fx-centered fx-col"
-                        style={{ flexBasis: "48%" }}
-                      >
-                        <Link
-                          className="sc-s-18 bg-img cover-bg fit-container fx-centered fx-end-h fx-end-v box-pad-h-s box-pad-v-s"
-                          style={{
-                            aspectRatio: "16/9",
-                            backgroundImage: `url(${video.image})`,
-                            backgroundColor: "black",
-                            border: "none",
-                          }}
-                          to={`/videos/${video.naddr}`}
-                          target="_blank"
-                        >
-                          <div
-                            className="sticker sticker-small"
-                            style={{
-                              backgroundColor: "black",
-                              color: "white",
-                            }}
-                          >
-                            {video.duration}
-                          </div>
-                        </Link>
-                        <div className="fit-container fx-scattered">
-                          <div>
-                            <p className="p-two-lines">{video.title}</p>
-                            <div className="fit-container fx-centered fx-start-h">
-                              <p className="gray-c p-medium">
-                                <Date_
-                                  toConvert={
-                                    new Date(video.published_at * 1000)
-                                  }
-                                />
-                              </p>
-                            </div>
-                          </div>
-                          <div
-                            style={{
-                              minWidth: "48px",
-                              minHeight: "48px",
-                              backgroundColor: "var(--dim-gray)",
-                              borderRadius: "var(--border-r-50)",
-                            }}
-                            className="fx-centered pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              !isPublishing
-                                ? setPostToDelete({
-                                    id: video.id,
-                                    title: video.title,
-                                    thumbnail: video.thumbnail,
-                                  })
-                                : setToast({
-                                    type: 3,
-                                    desc: "An event publishing is in process!",
-                                  });
-                            }}
-                          >
-                            <div className="trash-24"></div>
-                          </div>
-                        </div>
+                    <div className="fx-centered fx-col fx-start-v">
+                      <div className="fx-centered">
+                        <h4>{videos.length} Videos</h4>
+                        <p className="gray-c p-medium">
+                          (In{" "}
+                          {activeRelay === ""
+                            ? "all relays"
+                            : activeRelay.split("wss://")[1]}
+                          )
+                        </p>
                       </div>
-                    );
-                  })}
-                  {videos.length === 0 && !isLoading && (
+                    </div>
+                    <div className="fx-centered">
+                      <div style={{ position: "relative" }}>
+                        <div
+                          style={{ position: "relative" }}
+                          className="round-icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowRelaysList(!showRelaysList);
+                            setShowFilter(false);
+                          }}
+                        >
+                          <div className="server"></div>
+                        </div>
+                        {showRelaysList && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              right: 0,
+                              bottom: "-5px",
+                              backgroundColor: "var(--dim-gray)",
+                              border: "none",
+                              transform: "translateY(100%)",
+                              maxWidth: "300px",
+                              rowGap: "12px",
+                            }}
+                            className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                          >
+                            <h5>Relays</h5>
+                            <button
+                              className={`btn-text-gray pointer fx-centered`}
+                              style={{
+                                width: "max-content",
+                                fontSize: "1rem",
+                                textDecoration: "none",
+                                color: activeRelay === "" ? "var(--c1)" : "",
+                                transition: ".4s ease-in-out",
+                              }}
+                              onClick={() => {
+                                switchActiveRelay("");
+                                setShowRelaysList(false);
+                              }}
+                            >
+                              {isLoading && activeRelay === "" ? (
+                                <>Connecting...</>
+                              ) : (
+                                "All relays"
+                              )}
+                            </button>
+                            {nostrUser &&
+                              nostrUser.relays.length > 0 &&
+                              nostrUser.relays.map((relay) => {
+                                return (
+                                  <button
+                                    key={relay}
+                                    className={`btn-text-gray pointer fx-centered `}
+                                    style={{
+                                      width: "max-content",
+                                      fontSize: "1rem",
+                                      textDecoration: "none",
+                                      color:
+                                        activeRelay === relay
+                                          ? "var(--c1)"
+                                          : "",
+                                      transition: ".4s ease-in-out",
+                                    }}
+                                    onClick={() => {
+                                      switchActiveRelay(relay);
+                                      setShowRelaysList(false);
+                                    }}
+                                  >
+                                    {isLoading && relay === activeRelay ? (
+                                      <>Connecting...</>
+                                    ) : (
+                                      relay.split("wss://")[1]
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            {(!nostrUser ||
+                              (nostrUser && nostrUser.relays.length === 0)) &&
+                              relays.map((relay) => {
+                                return (
+                                  <button
+                                    key={relay}
+                                    className={`btn-text-gray pointer fx-centered`}
+                                    style={{
+                                      width: "max-content",
+                                      fontSize: "1rem",
+                                      textDecoration: "none",
+                                      color:
+                                        activeRelay === relay
+                                          ? "var(--c1)"
+                                          : "",
+                                      transition: ".4s ease-in-out",
+                                    }}
+                                    onClick={() => {
+                                      switchActiveRelay(relay);
+                                      setShowRelaysList(false);
+                                    }}
+                                  >
+                                    {isLoading && relay === activeRelay ? (
+                                      <>Connecting..</>
+                                    ) : (
+                                      relay.split("wss://")[1]
+                                    )}
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {isLoading && videos.length === 0 && (
                     <div
                       className="fit-container fx-centered fx-col"
-                      style={{ height: "40vh" }}
+                      style={{ height: "50vh" }}
                     >
-                      <h4>No videos were found!</h4>
-                      <p className="gray-c p-centered">
-                        No videos were found in this relay
-                      </p>
+                      <p>Loading videos</p>
+                      <LoadingDots />
                     </div>
                   )}
+                  {/* )} */}
+                  <div className="fit-container fx-scattered fx-wrap fx-stretch">
+                    {videos.map((video) => {
+                      return (
+                        <div
+                          key={video.id}
+                          className=" fx-start-h fx-start-v fx-centered fx-col"
+                          style={{ flexBasis: "48%" }}
+                        >
+                          <Link
+                            className="sc-s-18 bg-img cover-bg fit-container fx-centered fx-end-h fx-end-v box-pad-h-s box-pad-v-s"
+                            style={{
+                              aspectRatio: "16/9",
+                              backgroundImage: `url(${video.image})`,
+                              backgroundColor: "black",
+                              border: "none",
+                            }}
+                            to={`/videos/${video.naddr}`}
+                            target="_blank"
+                          >
+                            <div
+                              className="sticker sticker-small"
+                              style={{
+                                backgroundColor: "black",
+                                color: "white",
+                              }}
+                            >
+                              {video.duration}
+                            </div>
+                          </Link>
+                          <div className="fit-container fx-scattered">
+                            <div>
+                              <p className="p-two-lines">{video.title}</p>
+                              <div className="fit-container fx-centered fx-start-h">
+                                <p className="gray-c p-medium">
+                                  <Date_
+                                    toConvert={
+                                      new Date(video.published_at * 1000)
+                                    }
+                                  />
+                                </p>
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                minWidth: "48px",
+                                minHeight: "48px",
+                                backgroundColor: "var(--dim-gray)",
+                                borderRadius: "var(--border-r-50)",
+                              }}
+                              className="fx-centered pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                !isPublishing
+                                  ? setPostToDelete({
+                                      id: video.id,
+                                      title: video.title,
+                                      thumbnail: video.thumbnail,
+                                    })
+                                  : setToast({
+                                      type: 3,
+                                      desc: "An event publishing is in process!",
+                                    });
+                              }}
+                            >
+                              <div className="trash-24"></div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {videos.length === 0 && !isLoading && (
+                      <div
+                        className="fit-container fx-centered fx-col"
+                        style={{ height: "40vh" }}
+                      >
+                        <h4>No videos were found!</h4>
+                        <p className="gray-c p-centered">
+                          No videos were found in this relay
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </main>
+              <div
+                  className=" fx-centered fx-col fx-start-v extras-homepage"
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    // backgroundColor: "var(--white)",
+                    zIndex: "100",
+                    flex: 1,
+                  }}
+                >
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
+                  <div
+                    className=" fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                    style={{
+                      backgroundColor: "var(--c1-side)",
+                      rowGap: "24px",
+                      border: "none",
+                    }}
+                  >
+                    <h4>Important Flash News</h4>
+                    <HomeFN flashnews={importantFN} />
+                  </div>
+                  <Footer />
+                </div>
+                </div>
+            </main>
+          </div>
         </div>
       </div>
     </>

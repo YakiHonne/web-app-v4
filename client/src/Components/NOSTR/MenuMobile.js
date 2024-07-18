@@ -8,6 +8,8 @@ import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import DtoLToggleButton from "../DtoLToggleButton";
 import { useMemo } from "react";
+import WriteNew from "./WriteNew";
+import NotificationCenter from "./NotificationCenter";
 
 export default function MenuMobile({ toggleLogin, exit }) {
   const { nostrUser, nostrUserLoaded, nostrUserLogout, nostrKeys, chatrooms } =
@@ -75,9 +77,9 @@ export default function MenuMobile({ toggleLogin, exit }) {
   return (
     <div className={`menu-login ${dismissed ? "dismiss" : "slide-up"}`}>
       <div className="fit-container fx-centered sticky" onClick={dismiss}>
-        <div className="close-button">
+        {/* <div className="close-button"> */}
           <div className="arrow"></div>
-        </div>
+        {/* </div> */}
       </div>
       {!nostrUser && nostrUserLoaded && (
         <>
@@ -134,15 +136,15 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
-            navigateTo("/curations");
+            navigateTo("/notes");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
-            isPage("/curations") ? "active-link" : "inactive-link"
+            isPage("/notes") ? "active-link" : "inactive-link"
           }`}
         >
-          <div className="curation-24"></div>
-          <div className="p-big">Curations</div>
+          <div className="posts-24"></div>
+          <div className="p-big">Notes</div>
         </div>
         <div
           onClick={() => {
@@ -170,18 +172,6 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
-            navigateTo("/buzz-feed");
-            dismiss();
-          }}
-          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-            isPage("/buzz-feed") ? "active-link" : "inactive-link"
-          }`}
-        >
-          <div className="buzz-24"></div>
-          <div className="link-label p-big">Buzz feed</div>
-        </div>
-        <div
-          onClick={() => {
             navigateTo("/videos");
             dismiss();
           }}
@@ -192,6 +182,33 @@ export default function MenuMobile({ toggleLogin, exit }) {
           <div className="play-24"></div>
           <div className="link-label p-big">Videos</div>
         </div>
+        <div
+          onClick={() => {
+            navigateTo("/curations");
+            dismiss();
+          }}
+          className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
+            isPage("/curations") ? "active-link" : "inactive-link"
+          }`}
+        >
+          <div className="curation-24"></div>
+          <div className="p-big">Curations</div>
+        </div>
+       
+       
+        <div
+          onClick={() => {
+            navigateTo("/buzz-feed");
+            dismiss();
+          }}
+          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+            isPage("/buzz-feed") ? "active-link" : "inactive-link"
+          }`}
+        >
+          <div className="buzz-24"></div>
+          <div className="link-label p-big">Buzz feed</div>
+        </div>
+        
         <div
           onClick={() => {
             navigateTo("/messages");
@@ -210,12 +227,13 @@ export default function MenuMobile({ toggleLogin, exit }) {
               style={{
                 minWidth: "8px",
                 aspectRatio: "1/1",
-                backgroundColor: "var(--green-main)",
+                backgroundColor: "var(--red-main)",
                 borderRadius: "var(--border-r-50)",
               }}
             ></div>
           )}
         </div>
+        <NotificationCenter />
         {/* <div
           onClick={() => {
             navigateTo("/my-curations");
@@ -285,33 +303,19 @@ export default function MenuMobile({ toggleLogin, exit }) {
               >
                 <div
                   onClick={() => {
-                    navigateTo("/my-flash-news");
+                    navigateTo("/my-notes");
                     dismiss();
                   }}
                   className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/my-flash-news") ? "active-link" : "inactive-link"
+                    isPage("/my-notes") ? "active-link" : "inactive-link"
                   }`}
                   style={{ borderRadius: 0 }}
                 >
-                  <div className="news-24"></div>
-                  <div className="link-label p-big">My flash news</div>
+                  <div className="note-24"></div>
+                  <div className="link-label p-big">Notes</div>
                 </div>
                 <hr />
 
-                <div
-                  onClick={() => {
-                    navigateTo("/my-curations");
-                    dismiss();
-                  }}
-                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/my-curations") ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ borderRadius: 0 }}
-                >
-                  <div className="stories-24"></div>
-                  <div className="link-label p-big">My curations</div>
-                </div>
-                <hr />
                 <div
                   onClick={() => {
                     navigateTo("/my-articles");
@@ -323,7 +327,51 @@ export default function MenuMobile({ toggleLogin, exit }) {
                   style={{ borderRadius: 0 }}
                 >
                   <div className="posts-24"></div>
-                  <div className="link-label p-big">My articles</div>
+                  <div className="link-label p-big">Articles</div>
+                </div>
+                <hr />
+
+                <div
+                  onClick={() => {
+                    navigateTo("/my-flash-news");
+                    dismiss();
+                  }}
+                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                    isPage("/my-flash-news") ? "active-link" : "inactive-link"
+                  }`}
+                  style={{ borderRadius: 0 }}
+                >
+                  <div className="news-24"></div>
+                  <div className="link-label p-big">Flash news</div>
+                </div>
+                <hr />
+
+                <div
+                  onClick={() => {
+                    navigateTo("/my-videos");
+                    dismiss();
+                  }}
+                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                    isPage("/my-videos") ? "active-link" : "inactive-link"
+                  }`}
+                  style={{ borderRadius: 0 }}
+                >
+                  <div className="stories-24"></div>
+                  <div className="link-label p-big">Videos</div>
+                </div>
+                <hr />
+                <div
+                  onClick={() => {
+                    navigateTo("/my-curations");
+                    dismiss();
+                  }}
+                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                    isPage("/my-curations") ? "active-link" : "inactive-link"
+                  }`}
+                  style={{ borderRadius: 0 }}
+                >
+                  <div className="stories-24"></div>
+                  <div className="link-label p-big">Curations</div>
                 </div>
                 <hr />
                 <div
@@ -337,13 +385,16 @@ export default function MenuMobile({ toggleLogin, exit }) {
                   style={{ borderRadius: 0 }}
                 >
                   <div className="bookmark-i-24"></div>
-                  <div className="link-label p-big">My bookmarks</div>
+                  <div className="link-label p-big">Bookmarks</div>
                 </div>
               </div>
             </div>
           )}
         </div>
-        <div
+
+        <WriteNew exit={dismiss} />
+
+        {/* <div
           className="fx-start-h fx-centered fit-container fx-col"
           ref={writingOpt}
         >
@@ -431,7 +482,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
         {/*        
         <div className="fx-centered" style={{ position: "relative" }}>
           <div
@@ -504,13 +555,6 @@ export default function MenuMobile({ toggleLogin, exit }) {
           </div>
         </>
       )}
-      <div className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s">
-        <div>
-          <div className="pointer fx-centered ">
-            <DtoLToggleButton isMobile={true} />
-          </div>
-        </div>
-      </div>
       <div
         className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
         onClick={() => {
@@ -521,6 +565,14 @@ export default function MenuMobile({ toggleLogin, exit }) {
         <div className="mobile-24"></div>
         <p className="p-big c1-c">Get the app</p>
       </div>
+      <div className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s">
+        <div>
+          <div className="pointer fx-centered ">
+            <DtoLToggleButton isMobile={true} />
+          </div>
+        </div>
+      </div>
+      
     </div>
   );
 }

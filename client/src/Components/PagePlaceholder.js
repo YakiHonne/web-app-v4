@@ -10,14 +10,20 @@ import HeroNostrNoUN from "../media/images/un-hero.png";
 import HeroNostrunauthorizedMessages from "../media/images/unauthorized-messages.png";
 import HeroDMS from "../media/images/DMS.png";
 import HeroDMSWaiting from "../media/images/DMS-waiting.gif";
+import HeroYakiChest from "../media/images/trophy.png";
+import HeroWallet from "../media/images/wallet.png";
 import LoginNOSTR from "./NOSTR/LoginNOSTR";
 import { useContext } from "react";
 import { Context } from "../Context/Context";
 import { Link } from "react-router-dom";
+import LoginWithAPI from "./NOSTR/LoginWithAPI";
+import AddWallet from "./NOSTR/AddWallet";
 
 export default function PagePlaceholder({ page, onClick = null }) {
-  const { nostrUserLogout } = useContext(Context);
+  const { nostrUserLogout, nostrKeys } = useContext(Context);
   const [triggerLogin, setTriggerLogin] = useState(false);
+  const [showYakiChest, setShowYakiChest] = useState(false);
+  const [showAddWallet, setShowAddWallet] = useState(false);
 
   if (page === "404")
     return (
@@ -279,5 +285,132 @@ export default function PagePlaceholder({ page, onClick = null }) {
           ></div>
         </div>
       </div>
+    );
+  if (page === "nostr-yaki-chest")
+    return (
+      <>
+        {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
+        <div className="fit-container">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroYakiChest})`,
+                width: "min(300px, 500px)",
+                height: "300px",
+              }}
+            ></div>
+            <h3 className="box-marg-s p-centered">Yakihonne point system</h3>
+            <p
+              className="p-centered gray-c box-marg-s "
+              style={{ maxWidth: "450px" }}
+            >
+              You need to connect to Yakihonne point system in order to gain
+              points and win rewards.
+            </p>
+            {nostrKeys && (nostrKeys.ext || nostrKeys.sec) && (
+              <button
+                className="btn btn-normal"
+                onClick={() => setShowYakiChest(true)}
+              >
+                Connect to Yaki chest
+              </button>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  if (page === "nostr-wallet")
+    return (
+      <>
+        {triggerLogin && <LoginNOSTR exit={() => setTriggerLogin(false)} />}
+        <div className="fit-container fx-centered">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroWallet})`,
+                width: "min(300px, 500px)",
+                height: "300px",
+              }}
+            ></div>
+            <h3 className=" p-centered">Full connection is required</h3>
+            <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
+              It seems that you're not connected using an extension nor a secret
+              key, please reconnect using either methods to access this page
+            </p>
+            <button
+              className="btn btn-normal"
+              onClick={() =>
+                nostrKeys ? nostrUserLogout() : setTriggerLogin(true)
+              }
+            >
+              {nostrKeys ? "reconnect" : "Login"}
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  if (page === "nostr-add-wallet")
+    return (
+      <>
+        {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} />}
+        <div className="fit-container fx-centered">
+          <div
+            className="fx-centered fx-col"
+            style={{ height: "80vh", rowGap: "24px" }}
+          >
+            <div style={{ position: "relative" }}>
+              <div className="round-icon" style={{ width: "140px" }}>
+                <div
+                  className="wallet-add"
+                  style={{ width: "60px", height: "60px" }}
+                ></div>
+              </div>
+              <div
+                className="box-pad-h-s box-pad-v-s"
+                style={{
+                  borderRadius: "var(--border-r-50)",
+                  backgroundColor: "var(--white)",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                }}
+              >
+                <div
+                  className="alby-logo-24"
+                  style={{ width: "32px", height: "32px" }}
+                ></div>
+              </div>
+              <div
+                className="box-pad-h-s box-pad-v-s"
+                style={{
+                  borderRadius: "var(--border-r-50)",
+                  backgroundColor: "var(--white)",
+                  position: "absolute",
+                  right: 0,
+                  bottom: 0,
+                }}
+              >
+                <div
+                  className="nwc-logo-24"
+                  style={{ width: "32px", height: "32px" }}
+                ></div>
+              </div>
+            </div>
+
+            <p className="p-centered gray-c" style={{ maxWidth: "400px" }}>
+              To be able to send zaps, please make sure to connect your bitcoin
+              lightning wallet.
+            </p>
+            <button
+              className="btn btn-orange fx-centered"
+              onClick={() => setShowAddWallet(!showAddWallet)}
+            >
+              <div className="plus-sign"></div> Add wallet
+            </button>
+          </div>
+        </div>
+      </>
     );
 }

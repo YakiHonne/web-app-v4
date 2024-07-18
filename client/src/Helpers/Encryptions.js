@@ -117,14 +117,17 @@ const encodeLud06 = (url) => {
 const getParsedAuthor = (data) => {
   let content = JSON.parse(data.content) || {};
   let tempAuthor = {
-    name:
+    display_name:
       content?.display_name || content?.name || data.pubkey.substring(0, 10),
+    name:
+      content?.name || content?.display_name || data.pubkey.substring(0, 10),
     picture: content?.picture || "",
     pubkey: data.pubkey,
     cover: content?.banner || getImagePlaceholder(),
     about: content?.about || "",
     lud06: content?.lud06 || "",
     lud16: content?.lud16 || "",
+    website: content?.website || "",
     pubkeyhashed: getBech32("npub", data.pubkey),
     joining_date: new Date(data.created_at * 1000).toISOString(),
     nip05: content?.nip05 || "",
@@ -159,7 +162,6 @@ const getParsed3000xContent = (tags) => {
         content.published_at = tag[1];
       }
       if (tag[0] === "client") {
-        
         if (tag.length >= 3 && tag[2].includes("31990")) {
           content.client = tag[2];
         }
@@ -204,7 +206,7 @@ const getZapper = (event) => {
   let sats = decodeBolt11(getBolt11(event));
   for (let tag of event.tags) {
     if (tag[0] === "description")
-      return { ...JSON.parse(tag[1]), amount: sats };
+      return { ...JSON.parse(tag[1]), amount: sats, message: event.content };
   }
   return "";
 };

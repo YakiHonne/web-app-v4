@@ -17,12 +17,14 @@ export default function NEventPreviewer({ id, pubkey, extraRelays = [] }) {
   const { nostrUser } = useContext(Context);
   const [note, setNote] = useState("");
   const [author, setAuthor] = useState(pubkey ? getEmptyNostrUser(pubkey) : "");
-
+  console.log(id)
+  console.log(pubkey)
   useEffect(() => {
     let relaysToUse = filterRelays(
       nostrUser?.relays || [],
       filterRelays(extraRelays, relaysOnPlatform)
     );
+
     const sub = pool.subscribeMany(
       relaysToUse,
       [

@@ -20,8 +20,13 @@ export default function Footer({ full = false }) {
           <p className="p-medium gray-c">Privacy policies</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
+      
         <Link to={"/terms"} target="_blank">
           <p className="p-medium gray-c">Terms & conditions</p>
+        </Link>
+        <p className="p-small gray-c">&#9679;</p>
+        <Link to={"/points-system"} target="_blank">
+          <p className="p-medium gray-c">Points system</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/yakihonne-flash-news"} target="_blank">

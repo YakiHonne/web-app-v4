@@ -482,236 +482,249 @@ export default function NostrVideo() {
         </Helmet>
 
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <SidebarNOSTR />
-          <main className="main-page-nostr-container">
-            <ArrowUp />
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main className="main-page-nostr-container">
+              <ArrowUp />
 
-            <div className="fit-container fx-centered fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,700px)" }} className="box-pad-h-m">
-                <Link
-                  className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m"
-                  to={"/videos"}
+              <div className="fit-container fx-centered fx-start-h fx-start-v">
+                <div
+                  style={{ width: "min(100%,700px)" }}
+                  className="box-pad-h-m"
                 >
-                  <div className="round-icon-small">
-                    <div className="arrow" style={{ rotate: "90deg" }}></div>
-                  </div>
-                  <div>Back to videos</div>
-                </Link>
-                <div className="box-pad-h-m">
-                  {getVideoFromURL(video.url)}
-                  <div className="fx-centered fx-col fx-start-h fx-start-v">
-                    <h4>{video.title}</h4>
-                  </div>
-
-                  <div className="fx-scattered fit-container box-pad-v-m">
-                    <div className="fx-centered">
-                      <UserProfilePicNOSTR
-                        img={author.picture}
-                        size={24}
-                        user_id={author.pubkey}
-                        allowClick={true}
-                        ring={false}
-                      />
-                      <p>{author.name}</p>
-                      <Follow
-                        size="small"
-                        toFollowKey={author.pubkey}
-                        toFollowName={""}
-                        bulkList={[]}
-                      />
-                      {video && (
-                        <div className="round-icon-small">
-                          <ZapTip
-                            recipientLNURL={checkForLUDS(
-                              author.lud06,
-                              author.lud16
-                            )}
-                            recipientPubkey={author.pubkey}
-                            senderPubkey={nostrUser.pubkey}
-                            recipientInfo={{
-                              name: author.name,
-                              img: author.picture,
-                            }}
-                            aTag={`30023:${video.pubkey}:${video.d}`}
-                            forContent={video.title}
-                            onlyIcon={true}
-                            smallIcon={true}
-                          />
-                        </div>
-                      )}
+                  <Link
+                    className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m"
+                    to={"/videos"}
+                  >
+                    <div className="round-icon-small">
+                      <div className="arrow" style={{ rotate: "90deg" }}></div>
                     </div>
-                    <div className="fx-centered">
-                      <div className="fx-centered" style={{ columnGap: 0 }}>
-                        <div
-                          className={`fx-centered pointer sc-s box-pad-h-m ${
-                            isLoading ? "flash" : ""
-                          }`}
-                          style={{
-                            columnGap: "8px",
-                            paddingTop: ".25rem",
-                            paddingBottom: ".25rem",
-                            borderTopRightRadius: 0,
-                            borderBottomRightRadius: 0,
-                          }}
-                        >
-                          <div onClick={upvoteNews}>
-                            <div
-                              className={
-                                isVoted?.content === "+" ? "like-bold" : "like"
-                              }
-                              style={{
-                                opacity: isVoted?.content === "-" ? ".2" : 1,
+                    <div>Back to videos</div>
+                  </Link>
+                  <div className="box-pad-h-m">
+                    {getVideoFromURL(video.url)}
+                    <div
+                      className="fx-centered fx-col fx-start-h fx-start-v"
+                      style={{ marginTop: ".5rem" }}
+                    >
+                      <h4>{video.title}</h4>
+                    </div>
+
+                    <div className="fx-scattered fit-container box-pad-v-m">
+                      <div className="fx-centered">
+                        <UserProfilePicNOSTR
+                          img={author.picture}
+                          size={24}
+                          user_id={author.pubkey}
+                          allowClick={true}
+                          ring={false}
+                        />
+                        <p>{author.name}</p>
+                        <Follow
+                          size="small"
+                          toFollowKey={author.pubkey}
+                          toFollowName={""}
+                          bulkList={[]}
+                        />
+                        {video && (
+                          <div className="round-icon-small">
+                            <ZapTip
+                              recipientLNURL={checkForLUDS(
+                                author.lud06,
+                                author.lud16
+                              )}
+                              recipientPubkey={author.pubkey}
+                              senderPubkey={nostrUser.pubkey}
+                              recipientInfo={{
+                                name: author.name,
+                                img: author.picture,
                               }}
-                            ></div>
-                          </div>
-                          <div
-                            className="icon-tooltip"
-                            data-tooltip="Upvoters"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              upvoteReaction.length > 0 &&
-                                setUsersList({
-                                  title: "Upvoters",
-                                  list: upvoteReaction.map(
-                                    (item) => item.pubkey
-                                  ),
-                                  extras: [],
-                                });
-                            }}
-                          >
-                            <NumberShrink value={upvoteReaction.length} />
-                          </div>
-                        </div>
-                        <div
-                          className={`fx-centered pointer sc-s box-pad-h-m ${
-                            isLoading ? "flash" : ""
-                          }`}
-                          style={{
-                            columnGap: "8px",
-                            paddingTop: ".25rem",
-                            paddingBottom: ".25rem",
-                            borderTopLeftRadius: 0,
-                            borderBottomLeftRadius: 0,
-                          }}
-                        >
-                          <div onClick={downvoteNews}>
-                            <div
-                              className={
-                                isVoted?.content === "-" ? "like-bold" : "like"
-                              }
-                              style={{
-                                transform: "rotate(180deg)",
-                                opacity: isVoted?.content === "+" ? ".2" : 1,
-                              }}
-                            ></div>
-                          </div>
-                          <div
-                            className="icon-tooltip"
-                            data-tooltip="Downvoters"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              downvoteReaction.length > 0 &&
-                                setUsersList({
-                                  title: "Downvoters",
-                                  list: downvoteReaction.map(
-                                    (item) => item.pubkey
-                                  ),
-                                  extras: [],
-                                });
-                            }}
-                          >
-                            <NumberShrink value={downvoteReaction.length} />
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ position: "relative" }} ref={optionsRef}>
-                        <div
-                          className="round-icon-small round-icon-tooltip"
-                          data-tooltip="Options"
-                          onClick={() => {
-                            setShowOptions(!showOptions);
-                          }}
-                        >
-                          <div
-                            className="fx-centered fx-col"
-                            style={{ rowGap: 0 }}
-                          >
-                            <p
-                              className="gray-c fx-centered"
-                              style={{ height: "6px" }}
-                            >
-                              &#x2022;
-                            </p>
-                            <p
-                              className="gray-c fx-centered"
-                              style={{ height: "6px" }}
-                            >
-                              &#x2022;
-                            </p>
-                            <p
-                              className="gray-c fx-centered"
-                              style={{ height: "6px" }}
-                            >
-                              &#x2022;
-                            </p>
-                          </div>
-                        </div>
-                        {showOptions && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              right: 0,
-                              top: "110%",
-                              backgroundColor: "var(--dim-gray)",
-                              border: "none",
-                              // transform: "translateY(100%)",
-                              minWidth: "200px",
-                              width: "max-content",
-                              zIndex: 1000,
-                              rowGap: "12px",
-                            }}
-                            className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                          >
-                            {nostrKeys && nostrKeys.pub !== video.pubkey && (
-                              <>
-                                <div
-                                  className="fit-container fx-centered fx-start-h pointer"
-                                  onClick={() => setShowArticleToCuration(true)}
-                                >
-                                  <p>Add to curation</p>
-                                </div>
-                                <SaveArticleAsBookmark
-                                label="Bookmark video"
-                                  pubkey={video.pubkey}
-                                  kind={video.kind}
-                                  d={parsedAddr.identifier}
-                                  image={video.image}
-                                />
-                              </>
-                            )}
-                            <div className="fit-container fx-centered fx-start-h pointer">
-                              <ShareLink
-                                label="Share video"
-                                path={`/videos/${video.naddr}`}
-                                title={author.display_name || author.name}
-                                description={video.content}
-                                kind={34235}
-                                shareImgData={{
-                                  post: {
-                                    ...video,
-                                    description: video.content,
-                                  },
-                                  author,
-                                  likes: upvoteReaction.length,
-                                  dislikes: downvoteReaction.length,
-                                  views: videoViews,
-                                }}
-                              />
-                            </div>
+                              aTag={`30023:${video.pubkey}:${video.d}`}
+                              forContent={video.title}
+                              onlyIcon={true}
+                              smallIcon={true}
+                            />
                           </div>
                         )}
                       </div>
-                      {/* <ShareLink
+                      <div className="fx-centered">
+                        <div className="fx-centered" style={{ columnGap: 0 }}>
+                          <div
+                            className={`fx-centered pointer sc-s box-pad-h-m ${
+                              isLoading ? "flash" : ""
+                            }`}
+                            style={{
+                              columnGap: "8px",
+                              paddingTop: ".25rem",
+                              paddingBottom: ".25rem",
+                              borderTopRightRadius: 0,
+                              borderBottomRightRadius: 0,
+                            }}
+                          >
+                            <div onClick={upvoteNews}>
+                              <div
+                                className={
+                                  isVoted?.content === "+"
+                                    ? "like-bold"
+                                    : "like"
+                                }
+                                style={{
+                                  opacity: isVoted?.content === "-" ? ".2" : 1,
+                                }}
+                              ></div>
+                            </div>
+                            <div
+                              className="icon-tooltip"
+                              data-tooltip="Upvoters"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                upvoteReaction.length > 0 &&
+                                  setUsersList({
+                                    title: "Upvoters",
+                                    list: upvoteReaction.map(
+                                      (item) => item.pubkey
+                                    ),
+                                    extras: [],
+                                  });
+                              }}
+                            >
+                              <NumberShrink value={upvoteReaction.length} />
+                            </div>
+                          </div>
+                          <div
+                            className={`fx-centered pointer sc-s box-pad-h-m ${
+                              isLoading ? "flash" : ""
+                            }`}
+                            style={{
+                              columnGap: "8px",
+                              paddingTop: ".25rem",
+                              paddingBottom: ".25rem",
+                              borderTopLeftRadius: 0,
+                              borderBottomLeftRadius: 0,
+                            }}
+                          >
+                            <div onClick={downvoteNews}>
+                              <div
+                                className={
+                                  isVoted?.content === "-"
+                                    ? "like-bold"
+                                    : "like"
+                                }
+                                style={{
+                                  transform: "rotate(180deg)",
+                                  opacity: isVoted?.content === "+" ? ".2" : 1,
+                                }}
+                              ></div>
+                            </div>
+                            <div
+                              className="icon-tooltip"
+                              data-tooltip="Downvoters"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                downvoteReaction.length > 0 &&
+                                  setUsersList({
+                                    title: "Downvoters",
+                                    list: downvoteReaction.map(
+                                      (item) => item.pubkey
+                                    ),
+                                    extras: [],
+                                  });
+                              }}
+                            >
+                              <NumberShrink value={downvoteReaction.length} />
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ position: "relative" }} ref={optionsRef}>
+                          <div
+                            className="round-icon-small round-icon-tooltip"
+                            data-tooltip="Options"
+                            onClick={() => {
+                              setShowOptions(!showOptions);
+                            }}
+                          >
+                            <div
+                              className="fx-centered fx-col"
+                              style={{ rowGap: 0 }}
+                            >
+                              <p
+                                className="gray-c fx-centered"
+                                style={{ height: "6px" }}
+                              >
+                                &#x2022;
+                              </p>
+                              <p
+                                className="gray-c fx-centered"
+                                style={{ height: "6px" }}
+                              >
+                                &#x2022;
+                              </p>
+                              <p
+                                className="gray-c fx-centered"
+                                style={{ height: "6px" }}
+                              >
+                                &#x2022;
+                              </p>
+                            </div>
+                          </div>
+                          {showOptions && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                right: 0,
+                                top: "110%",
+                                backgroundColor: "var(--dim-gray)",
+                                border: "none",
+                                // transform: "translateY(100%)",
+                                minWidth: "200px",
+                                width: "max-content",
+                                zIndex: 1000,
+                                rowGap: "12px",
+                              }}
+                              className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                            >
+                              {nostrKeys && nostrKeys.pub !== video.pubkey && (
+                                <>
+                                  <div
+                                    className="fit-container fx-centered fx-start-h pointer"
+                                    onClick={() =>
+                                      setShowArticleToCuration(true)
+                                    }
+                                  >
+                                    <p>Add to curation</p>
+                                  </div>
+                                  <SaveArticleAsBookmark
+                                    label="Bookmark video"
+                                    pubkey={video.pubkey}
+                                    kind={video.kind}
+                                    d={parsedAddr.identifier}
+                                    image={video.image}
+                                  />
+                                </>
+                              )}
+                              <div className="fit-container fx-centered fx-start-h pointer">
+                                <ShareLink
+                                  label="Share video"
+                                  path={`/videos/${video.naddr}`}
+                                  title={author.display_name || author.name}
+                                  description={video.content}
+                                  kind={34235}
+                                  shareImgData={{
+                                    post: {
+                                      ...video,
+                                      description: video.content,
+                                    },
+                                    author,
+                                    likes: upvoteReaction.length,
+                                    dislikes: downvoteReaction.length,
+                                    views: videoViews,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {/* <ShareLink
                         path={`/videos/${video.naddr}`}
                         title={author.display_name || author.name}
                         description={video.content}
@@ -724,62 +737,62 @@ export default function NostrVideo() {
                           views: videoViews,
                         }}
                       /> */}
-                    </div>
-                    {/* <div className="fx-centered">
+                      </div>
+                      {/* <div className="fx-centered">
                       <div className="sc-s box-pad-h-m box-pad-v-s fx-centered">
                         <div className="like"></div>
                         <NumberShrink value={upvoteReaction.length} />
                       </div>
                     </div> */}
-                  </div>
-                  <div
-                    className="fit-container sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-start-h fx-start-v fx-wrap pointer"
-                    style={{
-                      border: "none",
-                      backgroundColor: "var(--c1-side)",
-                    }}
-                    onClick={() => setExpandDescription(!expandDescription)}
-                  >
-                    <div className="fit-container fx-centered fx-start-h">
-                      <p className="gray-c p-medium">{videoViews} view(s)</p>
-                      <p className="p-small gray-c">&#9679;</p>
-                      <p className="gray-c p-medium">
-                        <Date_
-                          toConvert={new Date(
-                            video.published_at * 1000
-                          ).toString()}
-                          time={true}
-                        />
-                      </p>
                     </div>
-                    <p
-                      className={`fit-container ${
-                        !expandDescription ? "p-four-lines" : ""
-                      }`}
+                    <div
+                      className="fit-container sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-start-h fx-start-v fx-wrap pointer"
+                      style={{
+                        border: "none",
+                        backgroundColor: "var(--c1-side)",
+                      }}
+                      onClick={() => setExpandDescription(!expandDescription)}
                     >
-                      {video.content}
-                    </p>
-                    {!video.content && (
-                      <p className="gray-c p-medium p-italic">
-                        No description.
+                      <div className="fit-container fx-centered fx-start-h">
+                        <p className="gray-c p-medium">{videoViews} view(s)</p>
+                        <p className="p-small gray-c">&#9679;</p>
+                        <p className="gray-c p-medium">
+                          <Date_
+                            toConvert={new Date(
+                              video.published_at * 1000
+                            ).toString()}
+                            time={true}
+                          />
+                        </p>
+                      </div>
+                      <p
+                        className={`fit-container ${
+                          !expandDescription ? "p-four-lines" : ""
+                        }`}
+                      >
+                        {video.content}
                       </p>
-                    )}
+                      {!video.content && (
+                        <p className="gray-c p-medium p-italic">
+                          No description.
+                        </p>
+                      )}
 
-                    <div className="fx-centered fx-start-h fx-wrap">
-                      {video.keywords.map((tag, index) => {
-                        return (
-                          <Link
-                            key={index}
-                            className="sticker sticker-small sticker-gray-gray pointer"
-                            to={`/tags/${tag?.replace("#", "%23")}`}
-                          >
-                            {tag}
-                          </Link>
-                        );
-                      })}
+                      <div className="fx-centered fx-start-h fx-wrap">
+                        {video.keywords.map((tag, index) => {
+                          return (
+                            <Link
+                              key={index}
+                              className="sticker sticker-small sticker-gray-gray pointer"
+                              to={`/tags/${tag?.replace("#", "%23")}`}
+                            >
+                              {tag}
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  {/* <div className="fit-container fx-scattered box-pad-v-s">
+                    {/* <div className="fit-container fx-scattered box-pad-v-s">
                     <div className="fx-centered">
                       <div
                         className={`fx-centered pointer ${
@@ -883,100 +896,101 @@ export default function NostrVideo() {
                       />
                     </div>
                   </div> */}
-                  <CommentsSection
-                    id={video.id}
-                    aTag={`${video.kind}:${video.pubkey}:${video.d}`}
-                    author_pubkey={video.pubkey}
-                    nEvent={
-                      AuthNip05 && VidIdentifier
-                        ? `${AuthNip05}/${VidIdentifier}`
-                        : id
-                    }
-                    setNetCommentsCount={setNetCommentsCount}
-                  />
-                </div>
-              </div>
-              {morePosts.length > 0 && (
-                <div
-                  className=" fx-centered fx-col fx-start-v extras-homepage"
-                  style={{
-                    position: "sticky",
-                    top: extrasRef.current
-                      ? `min(0,calc(95vh - ${
-                          extrasRef.current?.getBoundingClientRect().height
-                        }px))`
-                      : 0,
-                    zIndex: "100",
-                    width: "min(100%, 400px)",
-                  }}
-                  ref={extrasRef}
-                >
-                  <div className="sticky fit-container">
-                    <SearchbarNOSTR />
+                    <CommentsSection
+                      id={video.id}
+                      aTag={`${video.kind}:${video.pubkey}:${video.d}`}
+                      author_pubkey={video.pubkey}
+                      nEvent={
+                        AuthNip05 && VidIdentifier
+                          ? `${AuthNip05}/${VidIdentifier}`
+                          : id
+                      }
+                      setNetCommentsCount={setNetCommentsCount}
+                    />
                   </div>
+                </div>
+                {morePosts.length > 0 && (
                   <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                    className=" fx-centered fx-col fx-start-v extras-homepage"
                     style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
+                      position: "sticky",
+                      top: extrasRef.current
+                        ? `min(0,calc(95vh - ${
+                            extrasRef.current?.getBoundingClientRect().height
+                          }px))`
+                        : 0,
+                      zIndex: "100",
+                      width: "min(100%, 400px)",
                     }}
+                    ref={extrasRef}
                   >
-                    <h4>You might also like</h4>
-                    <div className="fit-container fx-centered fx-wrap">
-                      {morePosts.map((video_) => {
-                        if (video_.id !== video.id)
-                          return (
-                            <Link
-                              key={video_.id}
-                              className="fit-container fx-centered fx-start-h"
-                              to={`/videos/${video_.naddr}`}
-                              target="_blank"
-                            >
-                              <div
-                                style={{
-                                  minWidth: "128px",
-                                  aspectRatio: "16/9",
-                                  borderRadius: "var(--border-r-6)",
-                                  backgroundImage: `url(${video_.image})`,
-                                  backgroundColor: "black",
-                                }}
-                                className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
+                    <div className="sticky fit-container">
+                      <SearchbarNOSTR />
+                    </div>
+                    <div
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                      style={{
+                        backgroundColor: "var(--c1-side)",
+                        rowGap: "24px",
+                        border: "none",
+                      }}
+                    >
+                      <h4>You might also like</h4>
+                      <div className="fit-container fx-centered fx-wrap">
+                        {morePosts.map((video_) => {
+                          if (video_.id !== video.id)
+                            return (
+                              <Link
+                                key={video_.id}
+                                className="fit-container fx-centered fx-start-h"
+                                to={`/videos/${video_.naddr}`}
+                                target="_blank"
                               >
                                 <div
-                                  className="sticker sticker-small"
                                   style={{
+                                    minWidth: "128px",
+                                    aspectRatio: "16/9",
+                                    borderRadius: "var(--border-r-6)",
+                                    backgroundImage: `url(${video_.image})`,
                                     backgroundColor: "black",
-                                    color: "white",
                                   }}
+                                  className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
                                 >
-                                  {video_.duration}
+                                  <div
+                                    className="sticker sticker-small"
+                                    style={{
+                                      backgroundColor: "black",
+                                      color: "white",
+                                    }}
+                                  >
+                                    {video_.duration}
+                                  </div>
                                 </div>
-                              </div>
-                              <div>
-                                <p className="p-small gray-c">
-                                  <Date_
-                                    toConvert={
-                                      new Date(video_.published_at * 1000)
-                                    }
-                                  />
-                                </p>
-                                <p className="p-medium p-two-lines">
-                                  {video_.title}
-                                </p>
-                                <AuthorPreviewExtra pubkey={video_.pubkey} />
-                              </div>
-                            </Link>
-                          );
-                      })}
+                                <div>
+                                  <p className="p-small gray-c">
+                                    <Date_
+                                      toConvert={
+                                        new Date(video_.published_at * 1000)
+                                      }
+                                    />
+                                  </p>
+                                  <p className="p-medium p-two-lines">
+                                    {video_.title}
+                                  </p>
+                                  <AuthorPreviewExtra pubkey={video_.pubkey} />
+                                </div>
+                              </Link>
+                            );
+                        })}
+                      </div>
                     </div>
+                    <Footer />
+                    <div className="box-marg-full"></div>
                   </div>
-                  <Footer />
-                  <div className="box-marg-full"></div>
-                </div>
-              )}
-            </div>
-          </main>
+                )}
+              </div>
+            </main>
+          </div>
         </div>
       </div>
     </>

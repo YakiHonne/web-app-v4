@@ -30,41 +30,10 @@ import { useRef } from "react";
 import LoadingDots from "../../Components/LoadingDots";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import EmojisList from "../../Components/EmojisList";
-import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
-import axios from "axios";
-import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
-import UserSearchBar from "../../Components/UserSearchBar";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/NOSTR/InitConvo";
+import axiosInstance from "../../Helpers/HTTP_Client";
 const pool = new SimplePool();
-
-const aggregateUsers = (convo) => {
-  const arr2 = [];
-
-  const map = new Map();
-  convo.forEach((item) => {
-    let pubkey = item.peer || item.pubkey;
-    if (map.has(pubkey)) {
-      let sortedConvo = [...map.get(pubkey).convo, item].sort(
-        (convo_1, convo_2) => convo_1.created_at - convo_2.created_at
-      );
-      map.get(pubkey).convo = sortedConvo;
-      map.get(pubkey).last_message =
-        sortedConvo[sortedConvo.length - 1].created_at;
-    } else {
-      map.set(pubkey, {
-        pubkey,
-        last_message: item.created_at,
-        convo: [item],
-        id: `${pubkey}-${item.created_at}`,
-      });
-    }
-  });
-
-  arr2.push(...map.values());
-  arr2.sort((convo_1, convo_2) => convo_2.last_message - convo_1.last_message);
-  return arr2;
-};
 
 export default function DMS() {
   const {
@@ -88,6 +57,7 @@ export default function DMS() {
     known: 0,
     unknown: 0,
   });
+
   const [mbHide, setMbHide] = useState(true);
 
   useEffect(() => {
@@ -114,7 +84,6 @@ export default function DMS() {
       if (isFollowing) followings = followings + 1;
       if (isUnknown) unknown = unknown + 1;
       if (isKnown) known = known + 1;
-
       if (contact)
         return {
           ...contact,
@@ -222,6 +191,7 @@ export default function DMS() {
     if (type === contentType) return;
     setContentType(type);
   };
+
   const handleShowSearch = () => {
     if (showSearch) {
       setShowSearch(false);
@@ -291,13 +261,15 @@ export default function DMS() {
           />
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <SidebarNOSTR />
-          <main
-            className="main-page-nostr-container"
-            style={{ padding: 0, overflow: "hidden" }}
-          >
-            <PagePlaceholder page={"nostr-not-connected"} />
-          </main>
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main
+              className="main-page-nostr-container"
+              style={{ padding: 0, overflow: "hidden" }}
+            >
+              <PagePlaceholder page={"nostr-not-connected"} />
+            </main>
+          </div>
         </div>
       </div>
     );
@@ -327,13 +299,15 @@ export default function DMS() {
           />
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <SidebarNOSTR />
-          <main
-            className="main-page-nostr-container"
-            style={{ padding: 0, overflow: "hidden" }}
-          >
-            <PagePlaceholder page={"nostr-unauthorized-messages"} />
-          </main>
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main
+              className="main-page-nostr-container"
+              style={{ padding: 0, overflow: "hidden" }}
+            >
+              <PagePlaceholder page={"nostr-unauthorized-messages"} />
+            </main>
+          </div>
         </div>
       </div>
     );
@@ -363,13 +337,15 @@ export default function DMS() {
           />
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <SidebarNOSTR />
-          <main
-            className="main-page-nostr-container"
-            style={{ padding: 0, overflow: "hidden" }}
-          >
-            <PagePlaceholder page={"nostr-DMS-waiting"} />
-          </main>
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main
+              className="main-page-nostr-container"
+              style={{ padding: 0, overflow: "hidden" }}
+            >
+              <PagePlaceholder page={"nostr-DMS-waiting"} />
+            </main>
+          </div>
         </div>
       </div>
     );
@@ -399,145 +375,213 @@ export default function DMS() {
         className="fit-container fx-centered"
         style={{ columnGap: 0, overflow: "hidden" }}
       >
-        <SidebarNOSTR />
-        <main
-          className="main-page-nostr-container"
-          style={{ padding: 0, overflow: "hidden" }}
-        >
-          <div
-            className="fit-container fx-centered fx-start-h fx-stretch DM-container"
-            style={{
-              columnGap: 0,
-              width: "min(100%,1200px)",
-            }}
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main
+            className="main-page-nostr-container"
+            style={{ padding: 0, overflow: "hidden" }}
           >
             <div
+              className="fit-container fx-centered fx-start-h fx-stretch DM-container"
               style={{
-                // width: "450px",
-                flex: "1 1 400px",
-                border: "1px solid var(--dim-gray)",
-
-                overflowY: "scroll",
+                columnGap: 0,
+                width: "min(100%,1200px)",
               }}
-              className={!mbHide ? "mb-hide-800" : ""}
             >
-              <div className="box-pad-h-m box-pad-v-m fit-container fx-scattered">
-                <h4>Messages</h4>
-                <div className="fx-centered">
-                  {!showSearch && (
-                    <div onClick={handleShowSearch}>
-                      <div className="search-24"></div>
-                    </div>
-                  )}
-                  <div onClick={() => setInitConv(true)}>
-                    <div className="env-edit-24"></div>
-                  </div>
-                </div>
-              </div>
-              {showSearch && (
-                <div
-                  style={{
-                    borderTop: "1px solid var(--very-dim-gray)",
-                    borderBottom: "1px solid var(--very-dim-gray)",
-                  }}
-                  className="slide-down fx-scattered box-pad-h-m"
-                >
-                  <input
-                    type="text"
-                    className="if ifs-full if-no-border"
-                    placeholder="Search for conversation"
-                    value={keyword}
-                    onChange={handleSearch}
-                    autoFocus
-                  />
-
-                  <div
-                    className="close"
-                    style={{ position: "static" }}
-                    onClick={handleShowSearch}
-                  >
-                    <div></div>
-                  </div>
-                </div>
-              )}
-              {!showSearch && (
-                <div
-                  className="fx-centered fit-container box-marg-s slide-up"
-                  style={{ columnGap: 0 }}
-                >
-                  <div
-                    style={{
-                      padding: ".5rem .5rem",
-                      borderBottom: `2px solid ${
-                        contentType == "following"
-                          ? "var(--c1)"
-                          : "var(--dim-gray)"
-                      }`,
-                    }}
-                    onClick={() => handleContentType("following")}
-                    className="pointer fx fx-centered"
-                  >
-                    <span
-                      className={
-                        contentType === "following" ? "c1-c" : "gray-c"
-                      }
-                    >
-                      Contacts ({msgsCount.followings})
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      padding: ".5rem .5rem",
-                      borderBottom: `2px solid ${
-                        contentType == "known" ? "var(--c1)" : "var(--dim-gray)"
-                      }`,
-                    }}
-                    onClick={() => handleContentType("known")}
-                    className="pointer fx fx-centered"
-                  >
-                    <span
-                      className={contentType === "known" ? "c1-c" : "gray-c"}
-                    >
-                      Known ({msgsCount.known})
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      padding: ".5rem .5rem",
-                      borderBottom: `2px solid ${
-                        contentType == "unknown"
-                          ? "var(--c1)"
-                          : "var(--dim-gray)"
-                      }`,
-                    }}
-                    onClick={() => handleContentType("unknown")}
-                    className="pointer fx fx-centered"
-                  >
-                    <span
-                      className={contentType === "unknown" ? "c1-c" : "gray-c"}
-                    >
-                      Unknown ({msgsCount.unknown})
-                    </span>
-                  </div>
-                </div>
-              )}
               <div
-                className="fit-container fx-centered fx-wrap"
-                style={{ rowGap: 0, overflow: "auto" }}
+                style={{
+                  // width: "450px",
+                  flex: "1 1 400px",
+                  border: "1px solid var(--dim-gray)",
+
+                  overflowY: "scroll",
+                }}
+                className={!mbHide ? "mb-hide-800" : ""}
               >
-                {!showSearch &&
-                  sortedInbox.map((convo) => {
-                    if (convo.type === contentType)
+                <div className="box-pad-h-m box-pad-v-m fit-container fx-scattered">
+                  <h4>Messages</h4>
+                  <div className="fx-centered">
+                    {!showSearch && (
+                      <div onClick={handleShowSearch}>
+                        <div className="search-24"></div>
+                      </div>
+                    )}
+                    <div onClick={() => setInitConv(true)}>
+                      <div className="env-edit-24"></div>
+                    </div>
+                  </div>
+                </div>
+                {showSearch && (
+                  <div
+                    style={{
+                      borderTop: "1px solid var(--very-dim-gray)",
+                      borderBottom: "1px solid var(--very-dim-gray)",
+                    }}
+                    className="slide-down fx-scattered box-pad-h-m"
+                  >
+                    <input
+                      type="text"
+                      className="if ifs-full if-no-border"
+                      placeholder="Search for conversation"
+                      value={keyword}
+                      onChange={handleSearch}
+                      autoFocus
+                    />
+
+                    <div
+                      className="close"
+                      style={{ position: "static" }}
+                      onClick={handleShowSearch}
+                    >
+                      <div></div>
+                    </div>
+                  </div>
+                )}
+                {!showSearch && (
+                  <div
+                    className="fx-centered fit-container box-marg-s slide-up"
+                    style={{ columnGap: 0 }}
+                  >
+                    <div
+                      style={{
+                        padding: ".5rem .5rem",
+                        borderBottom: `2px solid ${
+                          contentType == "following"
+                            ? "var(--c1)"
+                            : "var(--dim-gray)"
+                        }`,
+                      }}
+                      onClick={() => handleContentType("following")}
+                      className="pointer fx fx-centered"
+                    >
+                      <span
+                        className={
+                          contentType === "following" ? "c1-c" : "gray-c"
+                        }
+                      >
+                        Contacts ({msgsCount.followings})
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        padding: ".5rem .5rem",
+                        borderBottom: `2px solid ${
+                          contentType == "known"
+                            ? "var(--c1)"
+                            : "var(--dim-gray)"
+                        }`,
+                      }}
+                      onClick={() => handleContentType("known")}
+                      className="pointer fx fx-centered"
+                    >
+                      <span
+                        className={contentType === "known" ? "c1-c" : "gray-c"}
+                      >
+                        Known ({msgsCount.known})
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        padding: ".5rem .5rem",
+                        borderBottom: `2px solid ${
+                          contentType == "unknown"
+                            ? "var(--c1)"
+                            : "var(--dim-gray)"
+                        }`,
+                      }}
+                      onClick={() => handleContentType("unknown")}
+                      className="pointer fx fx-centered"
+                    >
+                      <span
+                        className={
+                          contentType === "unknown" ? "c1-c" : "gray-c"
+                        }
+                      >
+                        Unknown ({msgsCount.unknown})
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <div
+                  className="fit-container fx-centered fx-wrap"
+                  style={{ rowGap: 0, overflow: "auto" }}
+                >
+                  {!showSearch &&
+                    sortedInbox.map((convo) => {
+                      if (convo.type === contentType)
+                        return (
+                          <div
+                            className="fit-container fx-scattered  box-pad-h option box-pad-v-s pointer slide-up"
+                            key={convo.id}
+                            style={{
+                              backgroundColor:
+                                selectedConvo.id === convo.id
+                                  ? "var(--very-dim-gray)"
+                                  : "",
+                            }}
+                            onClick={() =>
+                              handleSelectedConversation({ ...convo })
+                            }
+                          >
+                            <div className="fx-centered">
+                              <div>
+                                <UserProfilePicNOSTR
+                                  img={convo.picture}
+                                  size={40}
+                                  user_id={convo.pubkey}
+                                  mainAccountUser={false}
+                                  ring={false}
+                                  allowClick={false}
+                                />
+                              </div>
+                              <div>
+                                <p>
+                                  {convo.display_name ||
+                                    convo.name ||
+                                    convo.pubkey.substring(0, 10)}
+                                </p>
+                                <div className="fx-centered fx-start-h">
+                                  {convo.convo[convo.convo.length - 1].peer && (
+                                    <p className="p-medium p-one-line">You:</p>
+                                  )}
+                                  <p
+                                    className="gray-c p-medium p-one-line"
+                                    style={{ maxWidth: "100px" }}
+                                  >
+                                    {
+                                      convo.convo[convo.convo.length - 1]
+                                        .content
+                                    }
+                                  </p>
+                                  <p className="orange-c p-medium">
+                                    <Date_
+                                      toConvert={
+                                        new Date(convo.last_message * 1000)
+                                      }
+                                    />
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            {!convo.checked && (
+                              <div
+                                style={{
+                                  minWidth: "8px",
+                                  aspectRatio: "1/1",
+                                  backgroundColor: "var(--red-main)",
+                                  borderRadius: "var(--border-r-50)",
+                                }}
+                              ></div>
+                            )}
+                          </div>
+                        );
+                    })}
+                  {keyword &&
+                    searchedConvos.map((convo) => {
                       return (
                         <div
-                          className="fit-container fx-scattered  box-pad-h option box-pad-v-s pointer slide-up"
+                          className="fit-container fx-scattered box-pad-h option box-pad-v-s pointer"
                           key={convo.id}
-                          style={{
-                            backgroundColor:
-                              selectedConvo.id === convo.id
-                                ? "var(--very-dim-gray)"
-                                : "",
-                          }}
                           onClick={() =>
                             handleSelectedConversation({ ...convo })
                           }
@@ -584,127 +628,76 @@ export default function DMS() {
                               style={{
                                 minWidth: "8px",
                                 aspectRatio: "1/1",
-                                backgroundColor: "var(--blue-main)",
+                                backgroundColor: "var(--red-main)",
                                 borderRadius: "var(--border-r-50)",
                               }}
                             ></div>
                           )}
                         </div>
                       );
-                  })}
-                {keyword &&
-                  searchedConvos.map((convo) => {
-                    let contact = getContactInfo(convo.pubkey);
-                    return (
-                      <div
-                        className="fit-container fx-scattered box-pad-h option box-pad-v-s pointer"
-                        key={convo.id}
-                        onClick={() => handleSelectedConversation({ ...convo })}
-                      >
-                        <div className="fx-centered">
-                          <div>
-                            <UserProfilePicNOSTR
-                              img={convo.picture}
-                              size={40}
-                              user_id={convo.pubkey}
-                              mainAccountUser={false}
-                              ring={false}
-                              allowClick={false}
-                            />
-                          </div>
-                          <div>
-                            <p>
-                              {convo.display_name ||
-                                convo.name ||
-                                convo.pubkey.substring(0, 10)}
-                            </p>
-                            <div className="fx-centered fx-start-h">
-                              {convo.convo[convo.convo.length - 1].peer && (
-                                <p className="p-medium p-one-line">You:</p>
-                              )}
-                              <p
-                                className="gray-c p-medium p-one-line"
-                                style={{ maxWidth: "100px" }}
-                              >
-                                {convo.convo[convo.convo.length - 1].content}
-                              </p>
-                              <p className="orange-c p-medium">
-                                <Date_
-                                  toConvert={
-                                    new Date(convo.last_message * 1000)
-                                  }
-                                />
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        {!convo.checked && (
-                          <div
-                            style={{
-                              minWidth: "8px",
-                              aspectRatio: "1/1",
-                              backgroundColor: "var(--blue-main)",
-                              borderRadius: "var(--border-r-50)",
-                            }}
-                          ></div>
-                        )}
-                      </div>
-                    );
-                  })}
-                {keyword && !searchedConvos.length && (
+                    })}
+                  {keyword && !searchedConvos.length && (
+                    <div
+                      style={{ height: "50vh" }}
+                      className="box-pad-h fx-centered fx-col"
+                    >
+                      <h4>No Messages</h4>
+                      <p className="gray-c p-centered">
+                        No messages were found from your search, try another one
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div
+                style={{
+                  flex: "1 1 600px",
+                  // width: "min(100%, calc(100% - 350px))",
+                  border: "1px solid var(--dim-gray)",
+                }}
+                className={mbHide ? "mb-hide-800" : ""}
+              >
+                {isConvoLoading && (
                   <div
-                    style={{ height: "50vh" }}
-                    className="box-pad-h fx-centered fx-col"
+                    className="fit-container fx-centered"
+                    style={{ height: "100%" }}
                   >
-                    <h4>No Messages</h4>
-                    <p className="gray-c p-centered">
-                      No messages were found from your search, try another one
-                    </p>
+                    <span className="loader"></span>
                   </div>
+                )}
+                {!selectedConvo && !isConvoLoading && (
+                  <PagePlaceholder page={"nostr-DMS"} />
+                )}
+                {selectedConvo && (
+                  <ConversationBox
+                    convo={selectedConvo}
+                    back={() => setMbHide(!mbHide)}
+                  />
                 )}
               </div>
             </div>
-            <div
-              style={{
-                flex: "1 1 600px",
-                // width: "min(100%, calc(100% - 350px))",
-                border: "1px solid var(--dim-gray)",
-              }}
-              className={mbHide ? "mb-hide-800" : ""}
-            >
-              {isConvoLoading && (
-                <div
-                  className="fit-container fx-centered"
-                  style={{ height: "100%" }}
-                >
-                  <span className="loader"></span>
-                </div>
-              )}
-              {!selectedConvo && !isConvoLoading && (
-                <PagePlaceholder page={"nostr-DMS"} />
-              )}
-              {selectedConvo && (
-                <ConversationBox
-                  convo={selectedConvo}
-                  back={() => setMbHide(!mbHide)}
-                />
-              )}
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );
 }
 
 const ConversationBox = ({ convo, back }) => {
-  const { nostrKeys, nostrUser, setToPublish, isDarkMode } =
-    useContext(Context);
+  const {
+    nostrKeys,
+    nostrUser,
+    setToPublish,
+    isDarkMode,
+    setUpdatedActionFromYakiChest,
+    updateYakiChestStats,
+  } = useContext(Context);
   const convoContainerRef = useRef(null);
   const inputFieldRef = useRef(null);
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(
-    nostrKeys.sec || window?.nostr?.nip44 ? false : true
+    // nostrKeys.sec || window?.nostr?.nip44 ? false : true
+    true
   );
   const [replayOn, setReplayOn] = useState("");
   const [showProgress, setShowProgress] = useState(false);
@@ -719,6 +712,7 @@ const ConversationBox = ({ convo, back }) => {
       convoContainerRef.current.scrollTop =
         convoContainerRef.current.scrollHeight;
     }
+
     setShowProgress(false);
   }, [convo]);
 
@@ -733,6 +727,9 @@ const ConversationBox = ({ convo, back }) => {
     let relaysToPublish = nostrUser
       ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
       : relaysOnPlatform;
+    // setMessage("");
+    // setReplayOn(false);
+    // setShowProgress(true);
     if (legacy) {
       let encryptedMessage = "";
       if (nostrKeys.ext) {
@@ -747,6 +744,9 @@ const ConversationBox = ({ convo, back }) => {
           message
         );
       }
+      setMessage("");
+      setReplayOn(false);
+      setShowProgress(true);
       let tags = [];
       tags.push(["p", convo.pubkey, convo.display_name || convo.name || ""]);
       if (replayOn) tags.push(["e", replayOn.id]);
@@ -774,11 +774,43 @@ const ConversationBox = ({ convo, back }) => {
     }
     if (!legacy) {
       let { sender_event, receiver_event } = await getGiftWrap();
-      initPublishing(relaysToPublish, sender_event, receiver_event);
+      setMessage("");
+      setReplayOn(false);
+      setShowProgress(true);
+      let response = await initPublishing(
+        relaysToPublish,
+        sender_event,
+        receiver_event
+      );
+
+      if (response) {
+        let action_key =
+          convo.pubkey ===
+          "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
+            ? "dms-10"
+            : "dms-5";
+        updateYakiChest(action_key);
+      }
     }
-    setMessage("");
-    setReplayOn(false);
-    setShowProgress(true);
+    // setMessage("");
+    // setReplayOn(false);
+    // setShowProgress(true);
+  };
+
+  const updateYakiChest = async (action_key) => {
+    try {
+      let data = await axiosInstance.post("/api/v1/yaki-chest", {
+        action_key,
+      });
+      let { user_stats, is_updated } = data.data;
+
+      if (is_updated) {
+        setUpdatedActionFromYakiChest(is_updated);
+        updateYakiChestStats(user_stats);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const getGiftWrap = async () => {
@@ -1203,8 +1235,13 @@ const initPublishing = async (relays, event1, event2) => {
     let pool_ev1 = new SimplePool();
     let pool_ev2 = new SimplePool();
 
-    let res1 = pool_ev1.publish(relays, event1);
-    let res2 = pool_ev2.publish(relays, event2);
+    let [res1, res2] = await Promise.race([
+      Promise.allSettled(pool_ev1.publish(relays, event1)),
+      Promise.allSettled(pool_ev2.publish(relays, event2)),
+    ]);
+    // console.log(res1)
+    // return res1.find((item) => item.status === "fulfilled") ? true : false;
+    return true;
   } catch (err) {
     console.log(err);
   }

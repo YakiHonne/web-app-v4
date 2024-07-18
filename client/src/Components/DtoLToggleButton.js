@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { useSpring, animated } from "react-spring";
 import { Context } from "../Context/Context";
 
-export default function DtoLToggleButton({ isMobile = false }) {
+export default function DtoLToggleButton({ isMobile = false, small = false }) {
   const { isDarkMode, setTheme } = useContext(Context);
   const properties = {
     sun: {
@@ -48,7 +48,7 @@ export default function DtoLToggleButton({ isMobile = false }) {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ ...svgContainerProps, cursor: "pointer" }}
+          style={{ ...svgContainerProps, cursor: "pointer", scale: small ? ".7" : 1 }}
         
         >
           <mask id="mask">

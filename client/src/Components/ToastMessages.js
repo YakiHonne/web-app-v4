@@ -6,6 +6,7 @@ import { Context } from "../Context/Context";
 export default function ToastMessages() {
   const { toast, setToast } = useContext(Context);
   const { desc, type } = toast || {};
+  
   useEffect(() => {
     let timeout = setTimeout(() => {
       setToast(false);
@@ -14,9 +15,11 @@ export default function ToastMessages() {
       clearTimeout(timeout);
     };
   }, [toast]);
+
   const close = () => {
     setToast(false);
   };
+
   if (type === 1)
     return (
       <div className="toast-message success-toast fx-scattered popout">

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import { Context } from "../../Context/Context";
 import PagePlaceholder from "../../Components/PagePlaceholder";
@@ -10,7 +10,7 @@ import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import { publishPost } from "../../Helpers/NostrPublisher";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingScreen from "../../Components/LoadingScreen";
-import { SimplePool } from "nostr-tools";
+import { Relay, SimplePool } from "nostr-tools";
 import {
   decodeUrlOrAddress,
   encodeLud06,
@@ -26,8 +26,21 @@ import { Helmet } from "react-helmet";
 import TopicTagsSelection from "../../Components/TopicTagsSelection";
 import Footer from "../../Components/Footer";
 import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
+import LoginWithAPI from "../../Components/NOSTR/LoginWithAPI";
+import AddWallet from "../../Components/NOSTR/AddWallet";
+import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 
 // import {requestInvoice} from 'lnurl-pay'
+const getWallets = () => {
+  let wallets = localStorage.getItem("yaki-wallets");
+  if (!wallets) return [];
+  try {
+    wallets = JSON.parse(wallets);
+    return wallets;
+  } catch (err) {
+    return [];
+  }
+};
 
 const checkForSavedCommentOptions = () => {
   try {
@@ -58,25 +71,34 @@ export default function NostrSettings() {
     setToast,
     isPublishing,
     setToPublish,
+    yakiChestStats,
+    isYakiChestLoaded,
+    setTempChannel,
   } = useContext(Context);
   const [isLoading, setIsLoading] = useState(false);
-  const [updatedProfilePic, setUpdatedProfilePic] = useState(false);
   const [timestamp, setTimestamp] = useState(false);
+  const [userDisplayName, setUserDisplayName] = useState(false);
   const [userName, setUserName] = useState(false);
   const [userAbout, setUserAbout] = useState(false);
+  const [userWebsite, setUserWebsite] = useState(false);
   const [userNIP05, setUserNIP05] = useState(false);
-  const [userThumbnail, setUserThumbnail] = useState(false);
-  const [userThumbnailPrev, setUserThumbnailPrev] = useState("");
+  const [isOnEdit, setIsOnEdit] = useState(false);
   const [showProfilePicChanger, setShowProfilePicChanger] = useState(false);
   const [showRelaysUpdater, setShowRelaysUpdater] = useState(false);
   const [showCoverUploader, setCoverUploader] = useState(false);
   const [showTopicsPicker, setShowTopicsPicker] = useState(false);
   const [showMutedList, setShowMutedList] = useState(false);
   const [selectedTab, setSelectedTab] = useState("");
-  const [tempUserRelays, setTempUserRelays] = useState(nostrUser.relays);
+  const [tempUserRelays, setTempUserRelays] = useState([]);
+  const [relaysStatus, setRelaysStatus] = useState([]);
   const [lud06, setLud06] = useState("");
   const [lud16, setLud16] = useState("");
   const [isSave, setIsSave] = useState(checkForSavedCommentOptions());
+  const [showYakiChest, setShowYakiChest] = useState(false);
+  const [wallets, setWallets] = useState(getWallets());
+  const [showAddWallet, setShowAddWallet] = useState(false);
+  const [showDeletionPopup, setShowDeletionPopup] = useState(false);
+  const extrasRef = useRef();
 
   const saveOption = () => {
     localStorage.setItem(
@@ -88,34 +110,46 @@ export default function NostrSettings() {
 
   useEffect(() => {
     setTempUserRelays(nostrUser.relays);
+    setRelaysStatus(
+      nostrUser.relays
+        ? nostrUser.relays.map((item) => {
+            return { url: item, connected: false };
+          })
+        : []
+    );
     setLud06(nostrUserAbout.lud06);
     setLud16(nostrUserAbout.lud16);
     setUserNIP05(nostrUser.nip05);
   }, [nostrUser]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       let author = await pool.get([...relaysOnPlatform], {
-  //         kinds: [0],
-  //         authors: [nostrKeys.pub],
-  //       });
-  //       if (author) setNostrUserData(author);
-  //       setIsLoading(false);
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   };
-  //   if (!timestamp) return;
-  //   fetchData();
-  // }, [timestamp]);
+  useEffect(() => {
+    const CheckRelays = async () => {
+      try {
+        await Promise.allSettled(
+          tempUserRelays.map(async (relay, index) => {
+            let connected = await Relay.connect(relay);
+            if (connected._connected) {
+              let tempRelays_ = Array.from(relaysStatus);
+              tempRelays_[index].connected = true;
+              setRelaysStatus(tempRelays_);
+            }
+          })
+        );
+      } catch (err) {}
+    };
+
+    if (tempUserRelays) CheckRelays();
+  }, [tempUserRelays]);
 
   const updateInfos = async () => {
     let content = { ...nostrUserAbout };
     content.name = userName !== false ? userName : content.name;
-    content.display_name = userName !== false ? userName : content.name;
+    content.display_name =
+      userDisplayName !== false ? userDisplayName : content.display_name;
     content.about = userAbout !== false ? userAbout : content.about || "";
     content.nip05 = userNIP05 !== false ? userNIP05 : content.nip05 || "";
+    content.website =
+      userWebsite !== false ? userWebsite : content.website || "";
 
     if (isPublishing) {
       setToast({
@@ -124,7 +158,6 @@ export default function NostrSettings() {
       });
       return;
     }
-    // setIsLoading(true);
 
     setToPublish({
       nostrKeys: nostrKeys,
@@ -134,11 +167,12 @@ export default function NostrSettings() {
       allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
     });
 
-    setUserAbout(false);
-    setUserName(false);
+    // setUserAbout(false);
+    // setUserName(false);
+    // setUserDisplayName(false);
+    // setUserWebsite(false);
+    triggerCancelEdit();
     setSelectedTab("");
-    // setIsLoading(false);
-    // setTimestamp(new Date().getTime());
     setNostrUserAbout(content);
   };
 
@@ -164,7 +198,7 @@ export default function NostrSettings() {
       });
       return;
     }
-    saveInKind10002()
+    saveInKind10002();
     setSelectedTab("");
   };
 
@@ -271,6 +305,7 @@ export default function NostrSettings() {
       console.log(err);
     }
   };
+
   const getUserContent = (banner) => {
     let content = {
       ...nostrUserAbout,
@@ -278,6 +313,7 @@ export default function NostrSettings() {
     content.banner = banner;
     return JSON.stringify(content);
   };
+
   const deleteFromS3 = async (img) => {
     if (img.includes("yakihonne.s3")) {
       let data = await axiosInstance.delete("/api/v1/file-upload", {
@@ -313,14 +349,7 @@ export default function NostrSettings() {
     let content = { ...nostrUserAbout };
     content.lud06 = lud06;
     content.lud16 = lud16;
-    // setIsLoading(true);
-    // let updateUser = await publishPost(
-    //   nostrKeys,
-    //   0,
-    //   JSON.stringify(content),
-    //   nostrUserTags,
-    //   relaysOnPlatform
-    // );
+
     setToPublish({
       nostrKeys: nostrKeys,
       kind: 0,
@@ -330,14 +359,70 @@ export default function NostrSettings() {
     });
     setNostrUserAbout(content);
     setSelectedTab("");
-    // setIsLoading(true);
-    // setTimestamp(new Date().getTime());
+  };
+
+  const handleDelete = () => {
+    try {
+      let tempWallets = wallets.filter(
+        (wallet) => wallet.id !== showDeletionPopup.id
+      );
+      if (tempWallets.length > 0 && showDeletionPopup.active) {
+        tempWallets[0].active = true;
+        setWallets(tempWallets);
+        setShowDeletionPopup(false);
+        localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+        return;
+      }
+
+      setWallets(tempWallets);
+      setShowDeletionPopup(false);
+      localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleSelectWallet = (walletID) => {
+    let index = wallets.findIndex((wallet) => wallet.id == walletID);
+
+    let tempWallets = Array.from(wallets);
+    tempWallets = tempWallets.map((wallet) => {
+      let w = { ...wallet };
+      w.active = false;
+      return w;
+    });
+    tempWallets[index].active = true;
+    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    setWallets(tempWallets);
+    setTempChannel(Date.now());
+  };
+
+  const triggerEdit = () => {
+    setUserName(nostrUserAbout.name);
+    setUserDisplayName(nostrUserAbout.display_name);
+    setUserWebsite(nostrUserAbout.website);
+    setUserAbout(nostrUserAbout.about);
+    setIsOnEdit(true);
+  };
+  const triggerCancelEdit = () => {
+    setUserName(false);
+    setUserDisplayName(false);
+    setUserWebsite(false);
+    setUserAbout(false);
+    setIsOnEdit(false);
   };
 
   if (!nostrUserLoaded) return <LoadingScreen />;
-
   return (
     <>
+      {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
+      {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} />}
+      {showDeletionPopup && (
+        <DeletionPopUp
+          exit={() => setShowDeletionPopup(false)}
+          handleDelete={handleDelete}
+        />
+      )}
       {showCoverUploader && (
         <CoverUploader
           exit={() => setCoverUploader(false)}
@@ -362,9 +447,7 @@ export default function NostrSettings() {
         <ToChangeProfilePic
           cancel={() => setShowProfilePicChanger(false)}
           exit={() => {
-            // setIsLoading(true);
             setShowProfilePicChanger(false);
-            // setTimestamp(new Date().getTime());
           }}
         />
       )}
@@ -377,315 +460,396 @@ export default function NostrSettings() {
           <title>Yakihonne | Settings</title>
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <SidebarNOSTR />
-          <main
-            className={`main-page-nostr-container ${isLoading ? "flash" : ""}`}
-            style={{
-              pointerEvents: isLoading ? "none" : "auto",
-              paddingBottom: "3rem",
-            }}
-          >
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,700px)" }}>
-                {nostrUser && (nostrKeys.sec || nostrKeys.ext) && (
-                  <>
-                    <div className="fit-container fx-centered fx-col">
-                      <div
-                        className="fit-container profile-cover fx-centered fx-end-h fx-col bg-img cover-bg"
-                        style={{
-                          height: "20vh",
-                          position: "relative",
-                          backgroundImage: nostrUserAbout.banner
-                            ? `url(${nostrUserAbout.banner})`
-                            : "",
-                        }}
-                      >
-                        {nostrUserAbout.banner && (
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main
+              className={`main-page-nostr-container ${
+                isLoading ? "flash" : ""
+              }`}
+              style={{
+                pointerEvents: isLoading ? "none" : "auto",
+              }}
+            >
+              <div className="fx-centered fit-container fx-start-h fx-start-v">
+                <div style={{ flex: 2 }}>
+                  {nostrUser && (nostrKeys.sec || nostrKeys.ext) && (
+                    <>
+                      <div className="fit-container fx-centered fx-col">
+                        <div
+                          className="fit-container profile-cover fx-centered fx-end-h fx-col bg-img cover-bg"
+                          style={{
+                            height: "20vh",
+                            position: "relative",
+                            backgroundImage: nostrUserAbout.banner
+                              ? `url(${nostrUserAbout.banner})`
+                              : "",
+                          }}
+                        >
+                          {nostrUserAbout.banner && (
+                            <div
+                              className="fx-centered pointer"
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "var(--border-r-50)",
+                                backgroundColor: "var(--dim-gray)",
+                                position: "absolute",
+                                right: "24px",
+                                top: "24px",
+                              }}
+                              onClick={clearCover}
+                            >
+                              <div className="trash-24"></div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="fit-container fx-col fx-centered box-pad-h">
                           <div
-                            className="fx-centered pointer"
                             style={{
-                              width: "36px",
-                              height: "36px",
+                              border: "6px solid var(--white)",
                               borderRadius: "var(--border-r-50)",
-                              backgroundColor: "var(--dim-gray)",
-                              position: "absolute",
-                              right: "24px",
-                              top: "24px",
+                              position: "relative",
+                              overflow: "hidden",
                             }}
-                            onClick={clearCover}
+                            className="settings-profile-pic"
                           >
-                            <div className="trash-24"></div>
+                            <UserProfilePicNOSTR
+                              img={nostrUserAbout.picture}
+                              size={120}
+                              ring={false}
+                            />
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                width: "100%",
+                                height: "100%",
+                                zIndex: 1,
+                                backgroundColor: "rgba(0,0,0,.5)",
+                              }}
+                              className="fx-centered pointer toggle"
+                              onClick={() => setShowProfilePicChanger(true)}
+                            >
+                              <div
+                                className="image-24"
+                                style={{ filter: "invert()" }}
+                              ></div>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="fit-container fx-col fx-centered box-pad-h">
+                          <div className="box-pad-v-s fx-centered fx-col fit-container">
+                            {userName === false && (
+                              <>
+                                <p className="gray-c">
+                                  <Date_ toConvert={nostrUser.added_date} />
+                                </p>
+                              </>
+                            )}
+                            <div
+                              className="fx-centered fit-container"
+                              style={{ columnGap: "10px" }}
+                            >
+                              {userDisplayName !== false ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    updateInfos();
+                                  }}
+                                  className="fit-container fx-centered"
+                                >
+                                  <input
+                                    className="if ifs-full"
+                                    placeholder="Name"
+                                    value={userDisplayName}
+                                    onChange={(e) =>
+                                      setUserDisplayName(e.target.value)
+                                    }
+                                  />
+                                </form>
+                              ) : (
+                                <>
+                                  {nostrUserAbout.display_name && (
+                                    <h4>{nostrUserAbout.display_name}</h4>
+                                  )}
+                                  {!nostrUserAbout.display_name && (
+                                    <h4 className="p-italic gray-c">Name</h4>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            <div
+                              className="fx-centered fit-container"
+                              style={{ columnGap: "10px" }}
+                            >
+                              {userName !== false ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    updateInfos();
+                                  }}
+                                  className="fit-container fx-centered"
+                                >
+                                  <input
+                                    className="if ifs-full"
+                                    placeholder="Username"
+                                    value={userName}
+                                    onChange={(e) =>
+                                      setUserName(e.target.value)
+                                    }
+                                  />
+                                </form>
+                              ) : (
+                                <>
+                                  <p className="gray-c">
+                                    @{nostrUserAbout.name || "Username"}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+
+                            <div
+                              className="fx-centered fit-container"
+                              style={{ columnGap: "10px" }}
+                            >
+                              {userAbout !== false ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    updateInfos();
+                                  }}
+                                  className="fit-container fx-centered "
+                                >
+                                  <textarea
+                                    className="txt-area box-pad-v-m ifs-full"
+                                    placeholder="About"
+                                    rows={20}
+                                    value={userAbout}
+                                    onChange={(e) =>
+                                      setUserAbout(e.target.value)
+                                    }
+                                  />
+                                </form>
+                              ) : (
+                                <>
+                                  <p
+                                    style={{ maxWidth: "600px" }}
+                                    className="p-centered"
+                                  >
+                                    {nostrUserAbout.about || (
+                                      <span className="gray-c italic-txt">
+                                        About yourself
+                                      </span>
+                                    )}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                            <div
+                              className="fx-centered fit-container"
+                              style={{ columnGap: "10px" }}
+                            >
+                              {userWebsite !== false ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    updateInfos();
+                                  }}
+                                  className="fit-container fx-centered"
+                                >
+                                  <input
+                                    className="if ifs-full"
+                                    placeholder="website"
+                                    value={userWebsite}
+                                    onChange={(e) =>
+                                      setUserWebsite(e.target.value)
+                                    }
+                                  />
+                                </form>
+                              ) : (
+                                <>
+                                  {nostrUserAbout.website && (
+                                    <div className="fx-centered fx-start-h">
+                                      <div className="link"></div>
+                                      <a
+                                        href={
+                                          nostrUserAbout.website
+                                            .toLowerCase()
+                                            .includes("http")
+                                            ? nostrUserAbout.website
+                                            : `https://${nostrUserAbout.website}`
+                                        }
+                                        className="orange-c"
+                                        target="_blank"
+                                      >
+                                        {nostrUserAbout.website || "N/A"}
+                                      </a>
+                                    </div>
+                                  )}
+                                  {!nostrUserAbout.website && (
+                                    <p className="gray-c italic-txt">
+                                      Your website
+                                    </p>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            {!isOnEdit && (
+                              <div
+                                className="round-icon round-icon-tooltip"
+                                data-tooltip="Edit profile"
+                                onClick={triggerEdit}
+                              >
+                                <div className="edit-24"></div>
+                              </div>
+                            )}
+                            {isOnEdit && (
+                              <div className="fx-centered fit-container">
+                                <button
+                                  className="btn btn-normal fx"
+                                  onClick={updateInfos}
+                                >
+                                  Update
+                                </button>
+                                <button
+                                  className="btn btn-gst-red fx"
+                                  onClick={triggerCancelEdit}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                         <div
                           style={{
-                            border: "6px solid var(--white)",
-                            borderRadius: "var(--border-r-50)",
-                            position: "relative",
-                            overflow: "hidden",
+                            columnGap: "5px",
+                            position: "absolute",
+                            left: "24px",
+                            top: "24px",
+                            width: "130px",
                           }}
-                          className="settings-profile-pic"
+                          className="pointer"
                         >
-                          <UserProfilePicNOSTR
-                            img={nostrUserAbout.picture}
-                            size={120}
-                            ring={false}
-                          />
                           <div
-                            style={{
-                              position: "absolute",
-                              left: 0,
-                              top: 0,
-                              width: "100%",
-                              height: "100%",
-                              zIndex: 1,
-                              backgroundColor: "rgba(0,0,0,.5)",
-                            }}
-                            className="fx-centered pointer toggle"
-                            onClick={() => setShowProfilePicChanger(true)}
+                            className="fit-container sticker sticker-gray-black"
+                            style={{ columnGap: "5px" }}
+                            onClick={() => setCoverUploader(true)}
                           >
-                            <div
-                              className="image-24"
-                              style={{ filter: "invert()" }}
-                            ></div>
-                          </div>
-                        </div>
-                        <div className="box-pad-v-s fx-centered fx-col fit-container">
-                          {userName === false && (
-                            <>
-                              <p className="gray-c">
-                                <Date_ toConvert={nostrUser.added_date} />
-                              </p>
-                            </>
-                          )}
-                          <div
-                            className="fx-centered"
-                            style={{ columnGap: "10px" }}
-                          >
-                            {userName !== false ? (
-                              <form
-                                onSubmit={(e) => {
-                                  e.preventDefault();
-                                  updateInfos();
-                                }}
-                                className="fit-container fx-centered"
-                              >
-                                <input
-                                  className="if"
-                                  placeholder="your name"
-                                  value={userName}
-                                  onChange={(e) => setUserName(e.target.value)}
-                                />
-                                <div
-                                  className="send-24"
-                                  role="submit"
-                                  onClick={updateInfos}
-                                ></div>
-                                <div
-                                  className="cancel-24"
-                                  onClick={() => setUserName(false)}
-                                ></div>
-                              </form>
+                            {isLoading ? (
+                              <LoadingDots />
                             ) : (
                               <>
-                                <h3>{nostrUserAbout.name}</h3>
-                                {!nostrUserAbout.name && (
-                                  <span className="gray-c italic-txt">
-                                    Name yourself
-                                  </span>
-                                )}
-                                <div
-                                  className="edit-24"
-                                  onClick={() =>
-                                    setUserName(nostrUserAbout.name)
-                                  }
-                                ></div>
+                                <p>+</p>
+                                <p className="p-medium">Upload cover</p>
                               </>
                             )}
                           </div>
-                          <div
-                            className="fx-centered fit-container"
-                            style={{ columnGap: "10px" }}
-                          >
-                            {userAbout !== false ? (
-                              <form
-                                onSubmit={(e) => {
-                                  e.preventDefault();
-                                  updateInfos();
-                                }}
-                                className="fit-container fx-centered fx-col"
-                              >
-                                <textarea
-                                  className="txt-area box-pad-v-m ifs-full"
-                                  placeholder="About"
-                                  rows={20}
-                                  value={userAbout}
-                                  onChange={(e) => setUserAbout(e.target.value)}
-                                  style={{ maxWidth: "400px" }}
-                                />
-                                <div className="fx-centered">
-                                  <div
-                                    className="send-24"
-                                    role="submit"
-                                    onClick={updateInfos}
-                                  ></div>
-                                  <div
-                                    className="cancel-24"
-                                    onClick={() => setUserAbout(false)}
-                                  ></div>
-                                </div>
-                              </form>
-                            ) : (
-                              <>
-                                <p
-                                  style={{ maxWidth: "400px" }}
-                                  className="p-centered"
-                                >
-                                  {nostrUserAbout.about || (
-                                    <span className="gray-c italic-txt">
-                                      About yourself
-                                    </span>
-                                  )}
+                        </div>
+                      </div>
+                      <div className="fit-container fx-centered box-pad-v box-pad-h-m">
+                        <div className="fit-container fx-centered fx-col">
+                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "keys"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("keys")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="key-icon-24"></div>
+                                <p>Your keys</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+                            {selectedTab === "keys" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <p className="c1-c p-left fit-container">
+                                  Your secret key
                                 </p>
                                 <div
-                                  className="edit-24"
+                                  className={`fx-scattered if pointer fit-container ${
+                                    nostrKeys.sec ? "dashed-onH" : "if-disabled"
+                                  }`}
+                                  style={{ borderStyle: "dashed" }}
                                   onClick={() =>
-                                    setUserAbout(nostrUserAbout.about)
+                                    nostrKeys.sec
+                                      ? copyKey(
+                                          "Private",
+                                          getBech32("nsec", nostrKeys.sec)
+                                        )
+                                      : null
                                   }
-                                ></div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          columnGap: "5px",
-                          position: "absolute",
-                          left: "24px",
-                          top: "24px",
-                          width: "130px",
-                        }}
-                        className="pointer"
-                      >
-                        <div
-                          className="fit-container sticker sticker-gray-black"
-                          style={{ columnGap: "5px" }}
-                          onClick={() => setCoverUploader(true)}
-                        >
-                          {isLoading ? (
-                            <LoadingDots />
-                          ) : (
-                            <>
-                              <p>+</p>
-                              <p className="p-medium">Upload cover</p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="fit-container fx-centered box-pad-v box-pad-h-m">
-                      <div className="fit-container fx-centered fx-col">
-                        <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "keys"
-                                ? setSelectedTab("")
-                                : setSelectedTab("keys")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="key-icon-24"></div>
-                              <p>Your keys</p>
-                            </div>
-                            <div className="arrow"></div>
-                          </div>
-                          <hr />
-                          {selectedTab === "keys" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <p className="c1-c p-left fit-container">
-                                Your secret key
-                              </p>
-                              <div
-                                className={`fx-scattered if pointer fit-container ${
-                                  nostrKeys.sec ? "dashed-onH" : "if-disabled"
-                                }`}
-                                style={{ borderStyle: "dashed" }}
-                                onClick={() =>
-                                  nostrKeys.sec
-                                    ? copyKey(
-                                        "Private",
+                                >
+                                  <p>
+                                    {nostrKeys.sec ? (
+                                      shortenKey(
                                         getBech32("nsec", nostrKeys.sec)
                                       )
-                                    : null
-                                }
-                              >
-                                <p>
-                                  {nostrKeys.sec ? (
-                                    shortenKey(getBech32("nsec", nostrKeys.sec))
-                                  ) : (
-                                    <span className="italic-txt gray-c">
-                                      {nostrKeys.ext
-                                        ? "check your extension settings"
-                                        : "No secret key is provided"}
-                                    </span>
+                                    ) : (
+                                      <span className="italic-txt gray-c">
+                                        {nostrKeys.ext
+                                          ? "check your extension settings"
+                                          : "No secret key is provided"}
+                                      </span>
+                                    )}
+                                  </p>
+                                  {nostrKeys.sec && (
+                                    <div className="copy-24"></div>
                                   )}
+                                </div>
+                                <p className="c1-c p-left fit-container">
+                                  Your public key
                                 </p>
-                                {nostrKeys.sec && (
+                                <div
+                                  className="fx-scattered if pointer dashed-onH fit-container"
+                                  style={{ borderStyle: "dashed" }}
+                                  onClick={() =>
+                                    copyKey(
+                                      "Public",
+                                      getBech32("npub", nostrKeys.pub)
+                                    )
+                                  }
+                                >
+                                  <p>
+                                    {shortenKey(
+                                      getBech32("npub", nostrKeys.pub)
+                                    )}
+                                  </p>
                                   <div className="copy-24"></div>
-                                )}
+                                </div>
                               </div>
-                              <p className="c1-c p-left fit-container">
-                                Your public key
-                              </p>
-                              <div
-                                className="fx-scattered if pointer dashed-onH fit-container"
-                                style={{ borderStyle: "dashed" }}
-                                onClick={() =>
-                                  copyKey(
-                                    "Public",
-                                    getBech32("npub", nostrKeys.pub)
-                                  )
-                                }
-                              >
-                                <p>
-                                  {shortenKey(getBech32("npub", nostrKeys.pub))}
-                                </p>
-                                <div className="copy-24"></div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                          <div
-                            className="fx-scattered fit-container box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "relays"
-                                ? setSelectedTab("")
-                                : setSelectedTab("relays")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="server-24"></div>
-                              <p>Relays settings</p>
-                            </div>
-                            <div className="arrow"></div>
+                            )}
                           </div>
-                          <hr />
-                          {selectedTab === "relays" && (
-                            <>
-                              <div
-                                className="fit-container fx-col fx-centered  fx-start-v box-pad-h-m box-pad-v-m fx-start-h"
-                                style={{
-                                  maxHeight: "40vh",
-                                  overflow: "scroll",
-                                  overflowX: "hidden",
-                                }}
-                              >
-                                {/* {relaysOnPlatform.map((relay, index) => {
+                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
+                            <div
+                              className="fx-scattered fit-container box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "relays"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("relays")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="server-24"></div>
+                                <p>Relays settings</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+                            {selectedTab === "relays" && (
+                              <>
+                                <div
+                                  className="fit-container fx-col fx-centered  fx-start-v box-pad-h-m box-pad-v-m fx-start-h"
+                                  style={{
+                                    maxHeight: "40vh",
+                                    overflow: "scroll",
+                                    overflowX: "hidden",
+                                  }}
+                                >
+                                  {/* {relaysOnPlatform.map((relay, index) => {
                             return (
                               <div
                                 key={`${relay}-${index}`}
@@ -695,236 +859,448 @@ export default function NostrSettings() {
                               </div>
                             );
                           })} */}
-                                {tempUserRelays?.map((relay, index) => {
-                                  if (index < relaysOnPlatform.length)
+                                  {tempUserRelays?.map((relay, index) => {
+                                    if (index < relaysOnPlatform.length)
+                                      return (
+                                        <div
+                                          key={`${relay}-${index}`}
+                                          className="if fit-container fx-centered  fx-start-h if-disabled fx-shrink"
+                                        >
+                                          <p className="c1-c">{relay}</p>
+                                        </div>
+                                      );
                                     return (
                                       <div
                                         key={`${relay}-${index}`}
-                                        className="if fit-container fx-centered  fx-start-h if-disabled fx-shrink"
+                                        className="if fit-container fx-scattered fx-shrink"
                                       >
-                                        <p className="c1-c">{relay}</p>
+                                        <p>{relay}</p>
+                                        <div
+                                          onClick={() =>
+                                            removeRelayFromList(index)
+                                          }
+                                        >
+                                          <div className="trash"></div>
+                                        </div>
                                       </div>
                                     );
+                                  })}
+                                </div>
+                                <div className="fx-centered fx-end-h fit-container box-pad-h box-marg-s">
+                                  <button
+                                    className="btn btn-gst"
+                                    onClick={() => setShowRelaysUpdater(true)}
+                                    disabled={isLoading}
+                                  >
+                                    {isLoading ? <LoadingDots /> : "Add relay"}
+                                  </button>
+                                  <button
+                                    className={`btn ${
+                                      Object.entries(nostrUser.relays)
+                                        .length !== tempUserRelays.length
+                                        ? "btn-normal"
+                                        : "btn-disabled"
+                                    }`}
+                                    onClick={saveRelays}
+                                    disabled={
+                                      !(
+                                        Object.entries(nostrUser.relays)
+                                          .length !== tempUserRelays.length
+                                      ) || isLoading
+                                    }
+                                  >
+                                    {isLoading ? <LoadingDots /> : "Save"}
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "nip05"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("nip05")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="nip05-24"></div>
+                                <p>NIP-05 address</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+
+                            {selectedTab === "nip05" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <p className="gray-c p-medium fit-container p-left">
+                                  NIP-05
+                                </p>
+                                <input
+                                  type="text"
+                                  className="if ifs-full"
+                                  value={userNIP05}
+                                  onChange={(e) => setUserNIP05(e.target.value)}
+                                  placeholder={"Enter your NIP-05 address"}
+                                />
+
+                                <div className="fit-container fx-centered fx-end-h">
+                                  <button
+                                    className="btn btn-normal"
+                                    onClick={updateInfos}
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "moderation"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("moderation")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="content-s-24"></div>
+                                <p>Content moderation</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+                            {selectedTab === "moderation" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <div className="fx-scattered fit-container">
+                                  <p>Topics customization</p>
+                                  <div
+                                    className="btn-text-gray"
+                                    style={{ marginRight: ".75rem" }}
+                                    onClick={() => setShowTopicsPicker(true)}
+                                  >
+                                    Edit
+                                  </div>
+                                </div>
+                                <hr style={{ margin: ".5rem" }} />
+                                <div className="fx-scattered fit-container">
+                                  <p>Muted list</p>
+                                  <div
+                                    className="btn-text-gray"
+                                    style={{ marginRight: ".75rem" }}
+                                    onClick={() => setShowMutedList(true)}
+                                  >
+                                    Edit
+                                  </div>
+                                </div>
+                                <hr style={{ margin: ".5rem" }} />
+                                <div className="fx-scattered fit-container">
+                                  <p>Crossposting comments suffix</p>
+                                  <div
+                                    className={`toggle ${
+                                      isSave === -1 ? "toggle-dim-gray" : ""
+                                    } ${
+                                      isSave !== -1 && isSave
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={saveOption}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "lnurls"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("lnurls")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="lightning"></div>
+                                <p>Lightning addresses</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+
+                            {selectedTab === "lnurls" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <p className="gray-c p-medium fit-container p-left">
+                                  LUD-16
+                                </p>
+                                <input
+                                  type="text"
+                                  className="if ifs-full"
+                                  value={lud16}
+                                  onChange={handleLUD16}
+                                  placeholder={
+                                    "Enter your address LUD-06 or LUD-16"
+                                  }
+                                />
+                                <p className="gray-c p-medium fit-container p-left">
+                                  LUD-06
+                                </p>
+                                <input
+                                  type="text"
+                                  className="if if-disabled ifs-full"
+                                  value={lud06}
+                                  placeholder={"-"}
+                                  disabled
+                                  onChange={null}
+                                />
+                                {((nostrUserAbout.lud16 !== lud16 && lud06) ||
+                                  !lud16) && (
+                                  <div className="fit-container fx-centered fx-end-h">
+                                    <button
+                                      className="btn btn-normal"
+                                      onClick={updateLightning}
+                                    >
+                                      Save
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className="fit-container sc-s-18 fx-scattered fx-col pointer"
+                            style={{ overflow: "visible" }}
+                          >
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "wallets"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("wallets")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="wallet-24"></div>
+                                <p>Wallets</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+
+                            {selectedTab === "wallets" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <div className="fit-container fx-scattered">
+                                  <div>
+                                    <p className="gray-c">Add wallet</p>
+                                  </div>
+                                  <div className="fx-centered">
+                                    <div
+                                      className="round-icon-small round-icon-tooltip"
+                                      data-tooltip="Add wallet"
+                                      onClick={() => setShowAddWallet(true)}
+                                    >
+                                      <div
+                                        style={{ rotate: "-45deg" }}
+                                        className="p-medium"
+                                      >
+                                        &#10005;
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                {wallets.map((wallet) => {
                                   return (
                                     <div
-                                      key={`${relay}-${index}`}
-                                      className="if fit-container fx-scattered fx-shrink"
+                                      className="sc-s-18 box-pad-h-m box-pad-v-m fx-scattered fit-container"
+                                      key={wallet.id}
+                                      style={{ overflow: "visible" }}
                                     >
-                                      <p>{relay}</p>
-                                      <div
-                                        onClick={() =>
-                                          removeRelayFromList(index)
-                                        }
-                                      >
-                                        <div className="trash"></div>
+                                      <div className="fx-centered">
+                                        <div className="fx-centered">
+                                          {wallet.kind === 1 && (
+                                            <div className="webln-logo-24"></div>
+                                          )}
+                                          {wallet.kind === 2 && (
+                                            <div className="alby-logo-24"></div>
+                                          )}
+                                          {wallet.kind === 3 && (
+                                            <div className="nwc-logo-24"></div>
+                                          )}
+                                          <p>{wallet.entitle}</p>
+                                          {wallet.active && (
+                                            <div
+                                              style={{
+                                                minWidth: "8px",
+                                                aspectRatio: "1/1",
+                                                backgroundColor:
+                                                  "var(--green-main)",
+                                                borderRadius:
+                                                  "var(--border-r-50)",
+                                              }}
+                                            ></div>
+                                          )}
+                                        </div>
+                                        <div className="fx-centered"></div>
+                                      </div>
+                                      <div className="fx-centered">
+                                        {!wallet.active && (
+                                          <div
+                                            className="round-icon-small round-icon-tooltip"
+                                            data-tooltip="Switch wallet"
+                                            onClick={() =>
+                                              handleSelectWallet(wallet.id)
+                                            }
+                                          >
+                                            <div className="switch-arrows"></div>
+                                          </div>
+                                        )}
+                                        {wallet.kind !== 1 && (
+                                          <div
+                                            className="round-icon-small round-icon-tooltip"
+                                            data-tooltip="Remove wallet"
+                                            onClick={() =>
+                                              setShowDeletionPopup(wallet)
+                                            }
+                                          >
+                                            <p className="red-c">&minus;</p>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   );
                                 })}
                               </div>
-                              <div className="fx-centered fx-end-h fit-container box-pad-h box-marg-s">
-                                <button
-                                  className="btn btn-gst"
-                                  onClick={() => setShowRelaysUpdater(true)}
-                                  disabled={isLoading}
-                                >
-                                  {isLoading ? <LoadingDots /> : "Add relay"}
-                                </button>
-                                <button
-                                  className={`btn ${
-                                    Object.entries(nostrUser.relays).length !==
-                                    tempUserRelays.length
-                                      ? "btn-normal"
-                                      : "btn-disabled"
-                                  }`}
-                                  onClick={saveRelays}
-                                  disabled={
-                                    !(
-                                      Object.entries(nostrUser.relays)
-                                        .length !== tempUserRelays.length
-                                    ) || isLoading
-                                  }
-                                >
-                                  {isLoading ? <LoadingDots /> : "Save"}
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "nip05"
-                                ? setSelectedTab("")
-                                : setSelectedTab("nip05")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="nip05-24"></div>
-                              <p>NIP-05 address</p>
-                            </div>
-                            <div className="arrow"></div>
+                            )}
                           </div>
-                          <hr />
-
-                          {selectedTab === "nip05" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <p className="gray-c p-medium fit-container p-left">
-                                NIP-05
-                              </p>
-                              <input
-                                type="text"
-                                className="if ifs-full"
-                                value={userNIP05}
-                                onChange={(e) => setUserNIP05(e.target.value)}
-                                placeholder={"Enter your NIP-05 address"}
-                              />
-
-                              <div className="fit-container fx-centered fx-end-h">
-                                <button
-                                  className="btn btn-normal"
-                                  onClick={updateInfos}
-                                >
-                                  Save
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "moderation"
-                                ? setSelectedTab("")
-                                : setSelectedTab("moderation")
-                            }
-                          >
+                          <div className="fit-container sc-s-18 fx-scattered box-pad-h-m box-pad-v-m pointer">
                             <div className="fx-centered fx-start-h">
-                              <div className="content-s-24"></div>
-                              <p>Content moderation</p>
+                              <div className="cup-24"></div>
+                              <p>Yaki chest</p>
                             </div>
-                            <div className="arrow"></div>
-                          </div>
-                          <hr />
-                          {selectedTab === "moderation" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <div className="fx-scattered fit-container">
-                                <p>Topics customization</p>
+                            {yakiChestStats && isYakiChestLoaded && (
+                              <div className="fx-centered">
+                                <p className="green-c p-medium">Connected</p>
                                 <div
-                                  className="btn-text-gray"
-                                  style={{ marginRight: ".75rem" }}
-                                  onClick={() => setShowTopicsPicker(true)}
-                                >
-                                  Edit
-                                </div>
-                              </div>
-                              <hr style={{ margin: ".5rem" }} />
-                              <div className="fx-scattered fit-container">
-                                <p>Muted list</p>
-                                <div
-                                  className="btn-text-gray"
-                                  style={{ marginRight: ".75rem" }}
-                                  onClick={() => setShowMutedList(true)}
-                                >
-                                  Edit
-                                </div>
-                              </div>
-                              <hr style={{ margin: ".5rem" }} />
-                              <div className="fx-scattered fit-container">
-                                <p>Crossposting comments suffix</p>
-                                <div
-                                  className={`toggle ${
-                                    isSave === -1 ? "toggle-dim-gray" : ""
-                                  } ${
-                                    isSave !== -1 && isSave
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={saveOption}
+                                  style={{
+                                    minWidth: "8px",
+                                    aspectRatio: "1/1",
+                                    backgroundColor: "var(--green-main)",
+                                    borderRadius: "var(--border-r-50)",
+                                  }}
                                 ></div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                        <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
+                            )}
+                            {!yakiChestStats && isYakiChestLoaded && (
+                              <div className="fx-centered">
+                                <button
+                                  className="btn btn-small btn-normal"
+                                  onClick={() => setShowYakiChest(true)}
+                                >
+                                  Connect
+                                </button>
+                              </div>
+                            )}
+                            {!isYakiChestLoaded && (
+                              <div className="fx-centered">
+                                <LoadingDots />
+                              </div>
+                            )}
+                          </div>
                           <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "lnurls"
-                                ? setSelectedTab("")
-                                : setSelectedTab("lnurls")
-                            }
+                            className="fit-container sc-s-18 fx-scattered box-pad-h-m box-pad-v-m pointer"
+                            onClick={nostrUserLogout}
                           >
                             <div className="fx-centered fx-start-h">
-                              <div className="lightning"></div>
-                              <p>Lightning addresses</p>
+                              <div className="logout-24"></div>
+                              <p>Logout</p>
                             </div>
-                            <div className="arrow"></div>
-                          </div>
-                          <hr />
-
-                          {selectedTab === "lnurls" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <p className="gray-c p-medium fit-container p-left">
-                                LUD-16
-                              </p>
-                              <input
-                                type="text"
-                                className="if ifs-full"
-                                value={lud16}
-                                onChange={handleLUD16}
-                                placeholder={
-                                  "Enter your address LUD-06 or LUD-16"
-                                }
-                              />
-                              <p className="gray-c p-medium fit-container p-left">
-                                LUD-06
-                              </p>
-                              <input
-                                type="text"
-                                className="if if-disabled ifs-full"
-                                value={lud06}
-                                placeholder={"-"}
-                                disabled
-                                onChange={null}
-                              />
-                              {((nostrUserAbout.lud16 !== lud16 && lud06) ||
-                                !lud16) && (
-                                <div className="fit-container fx-centered fx-end-h">
-                                  <button
-                                    className="btn btn-normal"
-                                    onClick={updateLightning}
-                                  >
-                                    Save
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container sc-s-18 fx-scattered box-pad-h-m box-pad-v-m pointer"
-                          onClick={nostrUserLogout}
-                        >
-                          <div className="fx-centered fx-start-h">
-                            <div className="logout-24"></div>
-                            <p>Logout</p>
                           </div>
                         </div>
                       </div>
+                    </>
+                  )}
+                  {nostrUser && !nostrKeys.sec && !nostrKeys.ext && (
+                    <PagePlaceholder page={"nostr-unauthorized"} />
+                  )}
+                  {!nostrUser && (
+                    <PagePlaceholder page={"nostr-not-connected"} />
+                  )}
+                </div>
+                {nostrUser && (
+                  <div
+                    className="box-pad-h-s fx-centered fx-col fx-start-v extras-homepage"
+                    style={{
+                      position: "sticky",
+                      top:
+                        extrasRef.current?.getBoundingClientRect().height >=
+                        window.innerHeight
+                          ? `calc(95vh - ${
+                              extrasRef.current?.getBoundingClientRect()
+                                .height || 0
+                            }px)`
+                          : 0,
+                      zIndex: "100",
+                      flex: 1,
+                    }}
+                    ref={extrasRef}
+                  >
+                    <div className="sticky fit-container">
+                      <SearchbarNOSTR />
                     </div>
-                  </>
+                    <div
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                      style={{
+                        backgroundColor: "var(--c1-side)",
+                        rowGap: "24px",
+                        border: "none",
+                        overflow: "visible",
+                      }}
+                    >
+                      <h4>My relays</h4>
+                      <div className="fx-centered fx-centered fx-wrap">
+                        {relaysStatus.map((relay, index) => {
+                          return (
+                            <div
+                              key={index}
+                              className="fit-container fx-scattered"
+                            >
+                              <p>{relay.url}</p>
+                              {relay?.connected && (
+                                <div
+                                  style={{
+                                    minWidth: "8px",
+                                    aspectRatio: "1/1",
+                                    backgroundColor: "var(--green-main)",
+                                    borderRadius: "var(--border-r-50)",
+                                  }}
+                                  className="round-icon-tooltip pointer"
+                                  data-tooltip="connected"
+                                ></div>
+                              )}
+                              {!relay?.connected && (
+                                <div
+                                  style={{
+                                    minWidth: "8px",
+                                    aspectRatio: "1/1",
+                                    backgroundColor: "var(--red-main)",
+                                    borderRadius: "var(--border-r-50)",
+                                  }}
+                                  className="round-icon-tooltip pointer"
+                                  data-tooltip="not connected"
+                                ></div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <Footer />
+                  </div>
                 )}
-                {nostrUser && !nostrKeys.sec && !nostrKeys.ext && (
-                  <PagePlaceholder page={"nostr-unauthorized"} />
-                )}
-                {!nostrUser && <PagePlaceholder page={"nostr-not-connected"} />}
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </>
@@ -1156,5 +1532,40 @@ const CoverUploader = ({ exit, oldThumbnail, uploadCover }) => {
         </button>
       </div>
     </div>
+  );
+};
+
+const DeletionPopUp = ({ exit, handleDelete }) => {
+  return (
+    <section className="fixed-container fx-centered box-pad-h">
+      <section
+        className="fx-centered fx-col sc-s box-pad-h box-pad-v"
+        style={{ width: "450px" }}
+      >
+        <div
+          className="fx-centered box-marg-s"
+          style={{
+            minWidth: "54px",
+            minHeight: "54px",
+            borderRadius: "var(--border-r-50)",
+            backgroundColor: "var(--red-main)",
+          }}
+        >
+          <div className="warning"></div>
+        </div>
+        <h3 className="p-centered">Delete wallet?</h3>
+        <p className="p-centered gray-c box-pad-v-m">
+          You're about to delete this wallet, do you wish to proceed?
+        </p>
+        <div className="fx-centered fit-container">
+          <button className="fx btn btn-gst-red" onClick={handleDelete}>
+            delete
+          </button>
+          <button className="fx btn btn-red" onClick={exit}>
+            cancel
+          </button>
+        </div>
+      </section>
+    </section>
   );
 };

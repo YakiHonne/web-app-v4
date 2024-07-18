@@ -160,8 +160,9 @@ import { publishPost } from "../../Helpers/NostrPublisher";
 import LoadingDots from "../LoadingDots";
 import LoginNOSTR from "./LoginNOSTR";
 
-const FOLLOWING = "following";
-const FOLLOW = "follow";
+const FOLLOWING = <div className="user-followed-w-24"></div>;
+const FOLLOW = <div className="user-to-follow-24"></div>;
+const UNFOLLOW = <div className="user-to-unfollow-24"></div>;
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -274,54 +275,76 @@ export default function Follow({
     return (
       <>
         {login && <LoginNOSTR exit={() => setLogin(false)} />}
-        <button
-          className={`btn btn-gst  ${size === "small" ? "btn-small" : ""}`}
+        <div
+          className={`round-icon round-icon-tooltip btn-gst  ${
+            size === "small" ? "round-icon-small" : ""
+          }`}
           disabled={isLoading}
           onClick={() => setLogin(true)}
+          data-tooltip={"Login to follow"}
         >
           {FOLLOW}
-        </button>
+        </div>
       </>
     );
   if (!toFollowKey || toFollowKey === nostrKeys.pub)
     return (
-      <button className={`btn btn-disabled  ${size === "small" ? "btn-small" : ""}`} disabled={isLoading}>
+      <div
+        className={`round-icon if-disabled  ${
+          size === "small" ? "round-icon-small" : ""
+        }`}
+        disabled={isLoading}
+      >
         {FOLLOW}
-      </button>
+      </div>
     );
   if (bulk)
     return (
-      <button
-        className={`btn  ${size === "small" ? "btn-small" : ""} ${
+      <div
+        className={`round-icon round-icon-tooltip ${
+          size === "small" ? "round-icon-small" : ""
+        } ${
           isFollowing.bulk
             ? `${isFollowing.status ? "btn-orange" : "btn-orange-gst"}`
             : `${isFollowing.status ? "btn-normal" : "btn-gst"}`
         }`}
+        style={{
+          borderColor: isFollowing.bulk && !isFollowing.status ? "initial" : "",
+        }}
         disabled={isLoading}
+        data-tooltip={
+          isFollowing.bulk
+            ? `${isFollowing.status ? "Pending to follow" : "Pending to unfollow"}`
+            : `${isFollowing.status ? "Unfollow" : "Follow"}`
+        }
         onClick={handleBulkList}
       >
         {isLoading ? (
           <LoadingDots />
         ) : isFollowing.bulk ? (
-          `${
-            isFollowing.status ? "Pending (To follow)" : "Pending (To Unfollow)"
-          }`
+          isFollowing.status ? (
+            FOLLOW
+          ) : (
+            UNFOLLOW
+          )
+        ) : isFollowing.status ? (
+          FOLLOWING
         ) : (
-          `${isFollowing.status ? FOLLOWING : FOLLOW}`
+          FOLLOW
         )}
-        {/* {isLoading ? <LoadingDots /> : isFollowing ? FOLLOWING : FOLLOW} */}
-      </button>
+      </div>
     );
 
   return (
-    <button
-      className={`btn ${isFollowing.status ? "btn-normal" : "btn-gst"} ${
-        size === "small" ? "btn-small" : ""
-      }`}
+    <div
+      className={`round-icon round-icon-tooltip ${
+        isFollowing.status ? "btn-normal" : "btn-gst"
+      } ${size === "small" ? "round-icon-small" : ""}`}
       disabled={isLoading}
       onClick={followUnfollow}
+      data-tooltip={isFollowing.status ? "Unfollow" : "Follow"}
     >
       {isLoading ? <LoadingDots /> : isFollowing.status ? FOLLOWING : FOLLOW}
-    </button>
+    </div>
   );
 }

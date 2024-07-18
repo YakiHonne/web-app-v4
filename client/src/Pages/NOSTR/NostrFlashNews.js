@@ -247,7 +247,7 @@ export default function NostrFlashNews() {
         return;
       }
       if (!isLoading && flashNews[flashNews.length - 1].news.length < total) {
-        console.log(flashNews[flashNews.length - 1], total);
+    
         setPage(
           (prev) => flashNews[flashNews.length - 1].news.length / elPerPage
         );
@@ -437,6 +437,7 @@ export default function NostrFlashNews() {
         />
       )}
       <div className="fit-container fx-centered">
+      <div className="main-container">
         <SidebarNOSTR />
         <main className="main-page-nostr-container">
           <ArrowUp />
@@ -459,8 +460,9 @@ export default function NostrFlashNews() {
             </div>
           )} */}
           {/* <NavbarNOSTR /> */}
-          <div className="fx-centered fit-container box-pad-h fx-start-h fx-start-v">
-            <div style={{ width: "min(100%,600px)" }}>
+          <div className="fx-centered fit-container  fx-start-h fx-start-v">
+            <div style={{ flex: 1.5, paddingLeft: "1rem" }}>
+            {/* <div style={{ width: "min(100%,600px)" }}> */}
               <div
                 className="fit-container fx-scattered"
                 style={{
@@ -758,7 +760,8 @@ export default function NostrFlashNews() {
                 position: "sticky",
                 top: 0,
                 zIndex: "100",
-                width: "min(100%, 400px)",
+                flex: 1
+                // width: "min(100%, 400px)",
               }}
             >
               <div className="sticky fit-container">
@@ -779,6 +782,7 @@ export default function NostrFlashNews() {
             </div>
           </div>
         </main>
+      </div>
       </div>
     </div>
   );
@@ -929,7 +933,8 @@ const AddNews = ({ exit }) => {
 
   const handlePublishing = async () => {
     try {
-      if (currentWordsCount === 0) {
+     
+      if (currentWordsCount === 0 && !note) {
         setToast({
           type: 3,
           desc: "Your note is empty!",

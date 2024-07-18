@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
@@ -32,6 +32,7 @@ export default function BuzzFeed() {
           kinds: [1],
           "#l": ["YAKI AI FEED"],
           "#t": contentFrom === "all" ? undefined : [contentFrom],
+          limit: 20,
           until: lastEventTimestamp,
         },
       ],
@@ -42,7 +43,7 @@ export default function BuzzFeed() {
             setPosts((prev) => {
               if (!prev.find((post) => post.title === event.content))
                 return [parsedEvent, ...prev].sort(
-                  (p1, p2) => p2.published_at - p1.published_at
+                  (p1, p2) => p2.created_at - p1.created_at
                 );
               return prev;
             });
@@ -61,30 +62,30 @@ export default function BuzzFeed() {
     setLastEventTimestamp(undefined);
   };
 
-  // useEffect(() => {
-  //   if (isLoading) return;
-  //   const handleScroll = () => {
-  //     if (posts.length === 0) return;
-  //     if (
-  //       document.querySelector(".main-page-nostr-container").scrollHeight -
-  //         document.querySelector(".main-page-nostr-container").scrollTop -
-  //         60 >
-  //       document.documentElement.offsetHeight
-  //     ) {
-  //       return;
-  //     }
-  //     console.log(posts[posts.length - 1].created_at)
-  //     setLastEventTimestamp(posts[posts.length - 1].created_at-1);
-  //   };
-  //   document
-  //     .querySelector(".main-page-nostr-container")
-  //     ?.addEventListener("scroll", handleScroll);
-  //   return () =>
-  //     document
-  //       .querySelector(".main-page-nostr-container")
-  //       ?.removeEventListener("scroll", handleScroll);
-  // }, [isLoading]);
-console.log(posts)
+  useEffect(() => {
+    if (isLoading) return;
+    const handleScroll = () => {
+      if (posts.length === 0) return;
+      if (
+        document.querySelector(".main-page-nostr-container").scrollHeight -
+          document.querySelector(".main-page-nostr-container").scrollTop -
+          60 >
+        document.documentElement.offsetHeight
+      ) {
+        return;
+      }
+
+      setLastEventTimestamp(posts[posts.length - 1].created_at);
+    };
+    document
+      .querySelector(".main-page-nostr-container")
+      ?.addEventListener("scroll", handleScroll);
+    return () =>
+      document
+        .querySelector(".main-page-nostr-container")
+        ?.removeEventListener("scroll", handleScroll);
+  }, [isLoading]);
+
   return (
     <div>
       <Helmet>
@@ -109,145 +110,195 @@ console.log(posts)
         />
       </Helmet>
       <div className="fit-container fx-centered">
-        <SidebarNOSTR />
-        <main className="main-page-nostr-container" style={{ padding: 0 }}>
-          <ArrowUp />
-          <div className="box-pad-h-m box-pad-v-m">
-            <div className="fx-centered fx-start-h fit-container">
-              <div style={{ width: "min(100%,1000px)" }}>
-                <div
-                  className="fit-container fx-centered fx-col fx-start-v box-pad-v"
-                  style={{
-                    position: "sticky",
-                    top: "0px",
-                    backgroundColor: "var(--white)",
-                    paddingTop: "1.5rem",
-                    zIndex: "101",
-                  }}
-                >
-                  <h4>Buzz feed ({posts.length})</h4>
-                  <div className="box-pad-v-s"></div>
-                  <Slider
-                    items={[
-                      <button
-                        className={`btn  fx-centered fx-shrink ${
-                          contentFrom === "all"
-                            ? "btn-normal-gray"
-                            : "btn-gst-nc"
-                        }`}
-                        onClick={() => switchContentSource("all")}
-                      >
-                        Globe
-                      </button>,
-                      ...buzzFeedSources.map((source, index) => {
-                        return (
-                          <button
-                            className={`btn  fx-centered fx-shrink ${
-                              source.name === contentFrom
-                                ? "btn-normal-gray"
-                                : "btn-gst-nc"
-                            }`}
-                            onClick={() => {
-                              switchContentSource(source.name);
-                            }}
-                            key={`${source.name}-${index}`}
-                          >
-                            <div
-                              style={{
-                                minWidth: "24px",
-                                minHeight: "24px",
-                                borderRadius: "var(--border-r-50)",
-                                backgroundImage: `url(${source.icon})`,
-                              }}
-                              className="bg-img cover-bg"
-                            ></div>
-                            {source.name}
-                          </button>
-                        );
-                      }),
-                    ]}
-                  />
-                </div>
-                <div className="fit-container fx-centered fx-start-h fx-start-v fx-wrap fx-stretch">
-                  {posts.map((post) => {
-                    return (
-                      <Link
-                        key={post.id}
-                        style={{
-                          backgroundImage: `url(${post.image})`,
-                          flex: "1 1 200px",
-                        }}
-                        to={`/buzz-feed/${post.nEvent}`}
-                        className="fit-container sc-s-18 fx-scattered fx-col slide-up bg-img cover-bg pointer"
-                      >
-                        <div style={{ height: "100px" }}></div>
-                        <div
-                          className="fit-container fx-centered fx-wrap box-pad-h-m box-pad-v-m"
-                          style={{
-                            background:
-                              "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 87%)",
-                          }}
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main className="main-page-nostr-container" style={{ padding: 0 }}>
+            <ArrowUp />
+            <div className="box-pad-h-m box-pad-v-m">
+              <div className="fx-centered fx-start-h fit-container">
+                <div style={{ width: "min(100%,1000px)" }}>
+                  <div
+                    className="fit-container fx-centered fx-col fx-start-v box-pad-v"
+                    style={{
+                      position: "sticky",
+                      top: "0px",
+                      backgroundColor: "var(--white)",
+                      paddingTop: "1.5rem",
+                      zIndex: "101",
+                    }}
+                  >
+                    <h4>Buzz feed ({posts.length})</h4>
+                    <div className="box-pad-v-s"></div>
+                    <Slider
+                      items={[
+                        <button
+                          className={`btn  fx-centered fx-shrink ${
+                            contentFrom === "all"
+                              ? "btn-normal-gray"
+                              : "btn-gst-nc"
+                          }`}
+                          onClick={() => switchContentSource("all")}
                         >
-                          <div className="fit-container box-marg-full"></div>
-                          <div>
-                            <p className="fit-container p-medium gray-c">
-                              <Date_
-                                toConvert={new Date(post.published_at * 1000)}
-                              />
-                            </p>
-                            <p
-                              className="fit-container"
-                              style={{ color: "white" }}
-                            >
-                              {post.title}
-                            </p>
-                          </div>
-                          <div className="fit-container fx-scattered">
-                            <a
-                              className="fx-centered"
-                              href={post.source_domain}
-                              target="_blank"
+                          Globe
+                        </button>,
+                        ...buzzFeedSources.map((source, index) => {
+                          return (
+                            <button
+                              className={`btn  fx-centered fx-shrink ${
+                                source.name === contentFrom
+                                  ? "btn-normal-gray"
+                                  : "btn-gst-nc"
+                              }`}
+                              onClick={() => {
+                                switchContentSource(source.name);
+                              }}
+                              key={`${source.name}-${index}`}
                             >
                               <div
                                 style={{
-                                  minWidth: "20px",
-                                  minHeight: "20px",
+                                  minWidth: "24px",
+                                  minHeight: "24px",
                                   borderRadius: "var(--border-r-50)",
-                                  backgroundImage: `url(${post.source_icon})`,
+                                  backgroundImage: `url(${source.icon})`,
                                 }}
                                 className="bg-img cover-bg"
                               ></div>
-                              <p
-                                className="p-medium"
-                                style={{ color: "white" }}
-                              >
-                                {post.source_name}
-                              </p>
-                            </a>
-                            <a
-                              href={post.source_url}
-                              target="_blank"
-                              className="round-icon-tooltip"
-                              data-tooltip="source"
-                            >
-                              <div className="share-icon"></div>
-                            </a>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-                {isLoading && (
-                  <div className="fit-container fx-centered box-marg-full">
-                    <p className="gray-c">Loading</p>
-                    <LoadingDots />
+                              {source.name}
+                            </button>
+                          );
+                        }),
+                      ]}
+                    />
                   </div>
-                )}
+                  <div className="fit-container fx-centered fx-start-h fx-start-v fx-wrap fx-stretch">
+                    {posts.map((post) => {
+                      return (
+                        <Fragment>
+                          <Link
+                            key={post.id}
+                            to={`/buzz-feed/${post.nEvent}`}
+                            className="fit-container fx-scattered  slide-up pointer box-pad-h-m "
+                          >
+                            <div className="fx-scattered fx-start-v fx-col" >
+                              <div className="fx-centered">
+                                <a
+                                  className="fx-centered"
+                                  href={post.source_domain}
+                                  target="_blank"
+                                  style={{ minWidth: "max-content" }}
+                                >
+                                  <div
+                                    style={{
+                                      minWidth: "16px",
+                                      minHeight: "16px",
+                                      borderRadius: "var(--border-r-50)",
+                                      backgroundImage: `url(${post.source_icon})`,
+                                    }}
+                                    className="bg-img cover-bg"
+                                  ></div>
+
+                                  <p className="p-medium gray-c">
+                                    {post.source_name}
+                                  </p>
+                                </a>
+                                <p className="p-medium gray-c">|</p>
+                                <p className="fit-container p-medium gray-c">
+                                  <Date_
+                                    toConvert={
+                                      new Date(post.published_at * 1000)
+                                    }
+                                  />
+                                </p>
+                              </div>
+                              <p className="fit-container">{post.title}</p>
+                            </div>
+                            <div className="sc-s-18 bg-img cover-bg" style={{minWidth: '50px', aspectRatio: '1/1', backgroundImage: `url(${post.image})`}}>
+
+                            </div>
+                          </Link>
+                          <hr />
+                        </Fragment>
+                        // <Link
+                        //   key={post.id}
+                        //   style={{
+                        //     backgroundImage: `url(${post.image})`,
+                        //     flex: "1 1 200px",
+                        //   }}
+                        //   to={`/buzz-feed/${post.nEvent}`}
+                        //   className="fit-container sc-s-18 fx-scattered fx-col slide-up bg-img cover-bg pointer"
+                        // >
+                        //   <div style={{ height: "100px" }}></div>
+                        //   <div
+                        //     className="fit-container fx-centered fx-wrap box-pad-h-m box-pad-v-m"
+                        //     style={{
+                        //       background:
+                        //         "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 87%)",
+                        //     }}
+                        //   >
+                        //     <div className="fit-container box-marg-full"></div>
+                        //     <div>
+                        //       <p className="fit-container p-medium gray-c">
+                        //         <Date_
+                        //           toConvert={new Date(post.published_at * 1000)}
+                        //         />
+                        //       </p>
+                        //       <p
+                        //         className="fit-container"
+                        //         style={{ color: "white" }}
+                        //       >
+                        //         {post.title}
+                        //       </p>
+                        //     </div>
+                        //     <div className="fit-container fx-scattered">
+                        //       <a
+                        //         className="fx-centered"
+                        //         href={post.source_domain}
+                        //         target="_blank"
+                        //       >
+                        //         <div
+                        //           style={{
+                        //             minWidth: "20px",
+                        //             minHeight: "20px",
+                        //             borderRadius: "var(--border-r-50)",
+                        //             backgroundImage: `url(${post.source_icon})`,
+                        //           }}
+                        //           className="bg-img cover-bg"
+                        //         ></div>
+                        //         <p
+                        //           className="p-medium"
+                        //           style={{ color: "white" }}
+                        //         >
+                        //           {post.source_name}
+                        //         </p>
+                        //       </a>
+                        //       <a
+                        //         href={post.source_url}
+                        //         target="_blank"
+                        //         className="round-icon-tooltip"
+                        //         data-tooltip="source"
+                        //       >
+                        //         <div className="share-icon"></div>
+                        //       </a>
+                        //     </div>
+                        //   </div>
+                        // </Link>
+                      );
+                    })}
+                    <div style={{ flex: "1 1 200px" }}></div>
+                    <div style={{ flex: "1 1 200px" }}></div>
+                    <div style={{ flex: "1 1 200px" }}></div>
+                  </div>
+                  {isLoading && (
+                    <div className="fit-container fx-centered box-marg-full">
+                      <p className="gray-c">Loading</p>
+                      <LoadingDots />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );

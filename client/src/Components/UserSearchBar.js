@@ -5,7 +5,7 @@ import { getHex } from "../Helpers/Encryptions";
 import LoadingDots from "./LoadingDots";
 import UserProfilePicNOSTR from "./NOSTR/UserProfilePicNOSTR";
 
-export default function UserSearchBar({ onClick }) {
+export default function UserSearchBar({ onClick, full = false, placeholder = "Search by name, npub, nprofile" }) {
   const [keyword, setKeyword] = useState("");
   const [searchAuthorsRes, setSearchAuthorsRes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +31,7 @@ export default function UserSearchBar({ onClick }) {
   };
   const handleKeyword = (e) => {
     let value = e.target.value;
-    
+
     try {
       if (value.includes("nprofile")) {
         let data = nip19.decode(value);
@@ -46,21 +46,21 @@ export default function UserSearchBar({ onClick }) {
       setKeyword(value);
       getUserFromCache(value);
     } catch (err) {
-        setKeyword(value);
+      setKeyword(value);
       getUserFromCache(value);
     }
   };
 
   return (
     <div
-      className="fx-centered"
+      className={full ? "fx-centered fit-container" : "fx-centered"}
       style={{ position: "relative", zIndex: "101" }}
     >
       <label
         className="fx-centered fx-start-h if search-if"
         htmlFor="search-input"
         style={{
-          width: "450px",
+          width: full ? "100%" : "450px",
           cursor: "default",
           position: "relative",
           paddingRight: "0",
@@ -72,7 +72,7 @@ export default function UserSearchBar({ onClick }) {
           id="search-input"
           type="search"
           className="if ifs-full"
-          placeholder="Search by name, npub, nprofile"
+          placeholder={placeholder}
           value={keyword}
           style={{ paddingLeft: ".5rem" }}
           onChange={handleKeyword}

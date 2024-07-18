@@ -254,217 +254,219 @@ export default function NostrCurations() {
         />
       </Helmet>
       <div className="fit-container fx-centered">
-        <SidebarNOSTR />
-        <main className="main-page-nostr-container" style={{ padding: 0 }}>
-          <ArrowUp />
-          {/* <NavbarNOSTR /> */}
-          <div
-            className="fit-container fx-centered fx-start-h box-pad-h"
-            style={{ columnGap: "32px" }}
-          >
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main className="main-page-nostr-container" style={{ padding: 0 }}>
+            <ArrowUp />
+            {/* <NavbarNOSTR /> */}
             <div
-              style={{ columnGap: "32px", width: "min(100%,1400px)" }}
-              className="fx-centered fx-start-v fx-start-h"
+              className="fit-container fx-centered fx-start-h box-pad-h-m"
+              style={{ columnGap: "32px" }}
             >
               <div
-                style={{ width: "min(100%, 700px)" }}
-                className={`fx-centered  fx-wrap posts-cards`}
+                style={{ columnGap: "32px", width: "min(100%,1400px)" }}
+                className="fx-centered fx-start-v fx-start-h"
               >
-                <div className="fit-container fx-scattered box-marg-s sticky">
-                  <span className="fx-centered">
-                    <h4>{curations.length} Curations</h4>
-                    {activeRelay && (
-                      <p className="orange-c">
-                        (From {activeRelay.replace("wss://", "")})
-                      </p>
-                    )}
-                  </span>
-                  <div style={{ position: "relative", zIndex: 100 }}>
-                    <div
-                      style={{ position: "relative" }}
-                      className="round-icon round-icon-tooltip"
-                      data-tooltip={
-                        activeRelay
-                          ? `${activeRelay} is ${
-                              isLoading ? "connecting" : "connected"
-                            }`
-                          : "All relays"
-                      }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowRelaysList(!showRelaysList);
-                      }}
-                    >
-                      <div className="server"></div>
-                    </div>
-                    {showRelaysList && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          bottom: "-5px",
-                          backgroundColor: "var(--dim-gray)",
-                          border: "none",
-                          transform: "translateY(100%)",
-                          maxWidth: "300px",
-                          rowGap: "12px",
-                        }}
-                        className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                      >
-                        <h5>Relays</h5>
-                        <button
-                          className={`btn-text-gray pointer fx-centered`}
-                          style={{
-                            width: "max-content",
-                            fontSize: "1rem",
-                            textDecoration: "none",
-                            color: activeRelay === "" ? "var(--c1)" : "",
-                            transition: ".4s ease-in-out",
-                          }}
-                          onClick={() => {
-                            switchActiveRelay("");
-                            setShowRelaysList(false);
-                          }}
-                        >
-                          {isLoading && activeRelay === "" ? (
-                            <>Connecting...</>
-                          ) : (
-                            "All relays"
-                          )}
-                        </button>
-                        {nostrUser &&
-                          nostrUser.relays.length > 0 &&
-                          nostrUser.relays.map((relay) => {
-                            return (
-                              <button
-                                key={relay}
-                                className={`btn-text-gray pointer fx-centered `}
-                                style={{
-                                  width: "max-content",
-                                  fontSize: "1rem",
-                                  textDecoration: "none",
-                                  color:
-                                    activeRelay === relay ? "var(--c1)" : "",
-                                  transition: ".4s ease-in-out",
-                                }}
-                                onClick={() => {
-                                  switchActiveRelay(relay);
-                                  setShowRelaysList(false);
-                                }}
-                              >
-                                {isLoading && relay === activeRelay ? (
-                                  <>Connecting...</>
-                                ) : (
-                                  relay.split("wss://")[1]
-                                )}
-                              </button>
-                            );
-                          })}
-                        {(!nostrUser ||
-                          (nostrUser && nostrUser.relays.length === 0)) &&
-                          relays.map((relay) => {
-                            return (
-                              <button
-                                key={relay}
-                                className={`btn-text-gray pointer fx-centered`}
-                                style={{
-                                  width: "max-content",
-                                  fontSize: "1rem",
-                                  textDecoration: "none",
-                                  color:
-                                    activeRelay === relay ? "var(--c1)" : "",
-                                  transition: ".4s ease-in-out",
-                                }}
-                                onClick={() => {
-                                  switchActiveRelay(relay);
-                                  setShowRelaysList(false);
-                                }}
-                              >
-                                {isLoading && relay === activeRelay ? (
-                                  <>Connecting..</>
-                                ) : (
-                                  relay.split("wss://")[1]
-                                )}
-                              </button>
-                            );
-                          })}
-                      </div>
-                    )}
-                  </div>
-                </div>
                 <div
-                  className="fx-centered fit-container fx-wrap fx-stretch"
-                  style={{ rowGap: "8px", columnGap: "32px" }}
+                  style={{ width: "min(100%, 700px)" }}
+                  className={`fx-centered  fx-wrap posts-cards`}
                 >
-                  {curations.map((item, index) => {
-                    return (
-                      <CurationPreviewCard
-                        key={`${item.id}-${index}`}
-                        curation={item}
-                      />
-                    );
-                  })}
-                  <div style={{ flex: "1 1 300px" }}></div>
-                  <div style={{ flex: "1 1 300px" }}></div>
-                  <div style={{ flex: "1 1 300px" }}></div>
-                  <div style={{ flex: "1 1 300px" }}></div>
-                </div>
-                {isLoading && (
-                  <div className="fit-container fx-centered box-marg-full">
-                    <p className="gray-c">Loading</p>
-                    <LoadingDots />
+                  <div className="fit-container fx-scattered box-marg-s sticky">
+                    <span className="fx-centered">
+                      <h4>{curations.length} Curations</h4>
+                      {activeRelay && (
+                        <p className="orange-c">
+                          (From {activeRelay.replace("wss://", "")})
+                        </p>
+                      )}
+                    </span>
+                    <div style={{ position: "relative", zIndex: 100 }}>
+                      <div
+                        style={{ position: "relative" }}
+                        className="round-icon round-icon-tooltip"
+                        data-tooltip={
+                          activeRelay
+                            ? `${activeRelay} is ${
+                                isLoading ? "connecting" : "connected"
+                              }`
+                            : "All relays"
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowRelaysList(!showRelaysList);
+                        }}
+                      >
+                        <div className="server"></div>
+                      </div>
+                      {showRelaysList && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            right: 0,
+                            bottom: "-5px",
+                            backgroundColor: "var(--dim-gray)",
+                            border: "none",
+                            transform: "translateY(100%)",
+                            maxWidth: "300px",
+                            rowGap: "12px",
+                          }}
+                          className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                        >
+                          <h5>Relays</h5>
+                          <button
+                            className={`btn-text-gray pointer fx-centered`}
+                            style={{
+                              width: "max-content",
+                              fontSize: "1rem",
+                              textDecoration: "none",
+                              color: activeRelay === "" ? "var(--c1)" : "",
+                              transition: ".4s ease-in-out",
+                            }}
+                            onClick={() => {
+                              switchActiveRelay("");
+                              setShowRelaysList(false);
+                            }}
+                          >
+                            {isLoading && activeRelay === "" ? (
+                              <>Connecting...</>
+                            ) : (
+                              "All relays"
+                            )}
+                          </button>
+                          {nostrUser &&
+                            nostrUser.relays.length > 0 &&
+                            nostrUser.relays.map((relay) => {
+                              return (
+                                <button
+                                  key={relay}
+                                  className={`btn-text-gray pointer fx-centered `}
+                                  style={{
+                                    width: "max-content",
+                                    fontSize: "1rem",
+                                    textDecoration: "none",
+                                    color:
+                                      activeRelay === relay ? "var(--c1)" : "",
+                                    transition: ".4s ease-in-out",
+                                  }}
+                                  onClick={() => {
+                                    switchActiveRelay(relay);
+                                    setShowRelaysList(false);
+                                  }}
+                                >
+                                  {isLoading && relay === activeRelay ? (
+                                    <>Connecting...</>
+                                  ) : (
+                                    relay.split("wss://")[1]
+                                  )}
+                                </button>
+                              );
+                            })}
+                          {(!nostrUser ||
+                            (nostrUser && nostrUser.relays.length === 0)) &&
+                            relays.map((relay) => {
+                              return (
+                                <button
+                                  key={relay}
+                                  className={`btn-text-gray pointer fx-centered`}
+                                  style={{
+                                    width: "max-content",
+                                    fontSize: "1rem",
+                                    textDecoration: "none",
+                                    color:
+                                      activeRelay === relay ? "var(--c1)" : "",
+                                    transition: ".4s ease-in-out",
+                                  }}
+                                  onClick={() => {
+                                    switchActiveRelay(relay);
+                                    setShowRelaysList(false);
+                                  }}
+                                >
+                                  {isLoading && relay === activeRelay ? (
+                                    <>Connecting..</>
+                                  ) : (
+                                    relay.split("wss://")[1]
+                                  )}
+                                </button>
+                              );
+                            })}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-              <div
-                className=" fx-centered fx-col fx-start-v extras-homepage"
-                style={{
-                  position: "sticky",
-                  top: 0,
-
-                  // backgroundColor: "var(--white)",
-                  zIndex: "100",
-                  width: "min(100%, 300px)",
-                }}
-              >
-                <div className="sticky fit-container">
-                  <SearchbarNOSTR />
+                  <div
+                    className="fx-centered fit-container fx-wrap fx-stretch"
+                    style={{ rowGap: "8px", columnGap: "32px" }}
+                  >
+                    {curations.map((item, index) => {
+                      return (
+                        <CurationPreviewCard
+                          key={`${item.id}-${index}`}
+                          curation={item}
+                        />
+                      );
+                    })}
+                    <div style={{ flex: "1 1 300px" }}></div>
+                    <div style={{ flex: "1 1 300px" }}></div>
+                    <div style={{ flex: "1 1 300px" }}></div>
+                    <div style={{ flex: "1 1 300px" }}></div>
+                  </div>
+                  {isLoading && (
+                    <div className="fit-container fx-centered box-marg-full">
+                      <p className="gray-c">Loading</p>
+                      <LoadingDots />
+                    </div>
+                  )}
                 </div>
                 <div
-                  className="fx-centered gradient-border box-marg-s"
+                  className=" fx-centered fx-col fx-start-v extras-homepage"
                   style={{
-                    height: "300px",
+                    position: "sticky",
+                    top: 0,
+                    // backgroundColor: "var(--white)",
+                    zIndex: "100",
+                    width: "min(100%, 300px)",
                   }}
                 >
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
                   <div
-                    className="fit-container fx-scattered fx-col fx-start-v box-pad-h box-pad-v sc-s-18"
+                    className="fx-centered gradient-border box-marg-s"
                     style={{
-                      height: "100%",
-                      border: "none",
-                      // background:
-                      //   "radial-gradient(100.21% 187.14% at 0% .15%,#8F0599,#200622)",
-
-                      animation: "animatedgradient 3s ease alternate infinite",
+                      height: "300px",
                     }}
                   >
-                    <div className="fx-centered fx-start-v fx-col">
-                      <h3 className="c1-c">Join the community!</h3>
-                      <p style={{ maxWidth: "400px" }}>
-                        Enjoy what people are curating or create your own for
-                        the community to see!
-                      </p>
+                    <div
+                      className="fit-container fx-scattered fx-col fx-start-v box-pad-h box-pad-v sc-s-18"
+                      style={{
+                        height: "100%",
+                        border: "none",
+                        // background:
+                        // "radial-gradient(100.21% 187.14% at 0% .15%,#8F0599,#200622)",
+                        animation:
+                          "animatedgradient 3s ease alternate infinite",
+                      }}
+                    >
+                      <div className="fx-centered fx-start-v fx-col">
+                        <h3 className="c1-c">Join the community!</h3>
+                        <p style={{ maxWidth: "400px" }}>
+                          Enjoy what people are curating or create your own for
+                          the community to see!
+                        </p>
+                      </div>
+                      <Link to={"/my-curations"} state={{ addCuration: true }}>
+                        <button className="btn btn-normal">
+                          Start curating
+                        </button>
+                      </Link>
                     </div>
-                    <Link to={"/my-curations"} state={{ addCuration: true }}>
-                      <button className="btn btn-normal">Start curating</button>
-                    </Link>
                   </div>
+                  <Footer />
                 </div>
-                <Footer />
               </div>
             </div>
-          </div>
-          <div className="fit-container">
-            {/* <div
+            <div className="fit-container">
+              {/* <div
             className="fx-centered fit-container fx-wrap"
             style={{ rowGap: "32px", columnGap: "32px" }}
           >
@@ -477,15 +479,16 @@ export default function NostrCurations() {
               );
             })}
           </div> */}
-          </div>
-          {/* {isLoading && (
+            </div>
+            {/* {isLoading && (
             <div className="fit-container fx-centered box-marg-full">
               <p className="gray-c">Loading</p>
               <LoadingDots />
             </div>
           )} */}
-          {/* <Footer /> */}
-        </main>
+            {/* <Footer /> */}
+          </main>
+        </div>
       </div>
     </div>
   );

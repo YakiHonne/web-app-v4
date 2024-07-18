@@ -434,309 +434,324 @@ export default function NostrFlashNewsEvent() {
           />
         </Helmet>
         <div className="fit-container fx-centered">
-          <SidebarNOSTR />
-          <main className="main-page-nostr-container">
-            <ArrowUp />
-            {/* <NavbarNOSTR /> */}
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,600px)" }} className="box-pad-h-m">
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main className="main-page-nostr-container">
+              <ArrowUp />
+              {/* <NavbarNOSTR /> */}
+              <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div
-                  className="fit-container fx-centered fx-col fx-start-v box-pad-v"
-                  style={{ paddingBottom: "3rem" }}
-                  // onClick={(e) => {
-                  //   e.stopPropagation();
-                  //   navigateTo(`/flash-news/${news.nEvent}`);
-                  // }}
+                  style={{ flex: 1.5 }}
+                  // style={{ width: "min(100%,600px)" }}
+                  className="box-pad-h-m"
                 >
-                  <div className="fx-centered fit-container fx-start-h">
-                    {console.log(author)}
-                    <UserProfilePicNOSTR
-                      img={author.picture}
-                      size={64}
-                      mainAccountUser={false}
-                      user_id={author.pubkey}
-                      ring={false}
-                    />
-                    <div className="box-pad-h-m fx-centered fx-col fx-start-v">
-                      <h4>By {author.name}</h4>
-                      <p className="gray-c">
-                        <Date_
-                          toConvert={new Date(
-                            news.created_at * 1000
-                          ).toString()}
-                          time={true}
-                        />
-                      </p>
+                  <div
+                    className="fit-container fx-centered fx-col fx-start-v box-pad-v"
+                    style={{ paddingBottom: "3rem" }}
+                    // onClick={(e) => {
+                    //   e.stopPropagation();
+                    //   navigateTo(`/flash-news/${news.nEvent}`);
+                    // }}
+                  >
+                    <div className="fx-centered fit-container fx-start-h">
+                      <UserProfilePicNOSTR
+                        img={author.picture}
+                        size={64}
+                        mainAccountUser={false}
+                        user_id={author.pubkey}
+                        ring={false}
+                      />
+                      <div className="box-pad-h-m fx-centered fx-col fx-start-v">
+                        <h4>By {author.name}</h4>
+                        <p className="gray-c">
+                          <Date_
+                            toConvert={new Date(
+                              news.created_at * 1000
+                            ).toString()}
+                            time={true}
+                          />
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  {(news.is_important || news.keywords.length > 0) && (
-                    <div
-                      className="fx-centered fx-start-h fx-wrap box-pad-v-s"
-                      style={{ rowGap: 0, columnGap: "4px" }}
-                    >
-                      {news.is_important && (
-                        <div className="sticker sticker-small sticker-c1-pale">
-                          <svg
-                            viewBox="0 0 13 12"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="hot"
-                          >
-                            <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
-                          </svg>
-                          Important
-                        </div>
-                      )}
-                      {news.keywords.map((keyword, index) => {
-                        return (
-                          <Link
-                            key={`${keyword}-${index}`}
-                            className="sticker sticker-small sticker-gray-black"
-                            to={`/tags/${keyword.replace("#", "%23")}`}
-                            target={"_blank"}
-                          >
-                            {keyword}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {/* <div
+                    {(news.is_important || news.keywords.length > 0) && (
+                      <div
+                        className="fx-centered fx-start-h fx-wrap box-pad-v-s"
+                        style={{ rowGap: 0, columnGap: "4px" }}
+                      >
+                        {news.is_important && (
+                          <div className="sticker sticker-small sticker-orange">
+                            <svg
+                              viewBox="0 0 13 12"
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="hot"
+                            >
+                              <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
+                            </svg>
+                            Important
+                          </div>
+                        )}
+                        {news.keywords.map((keyword, index) => {
+                          return (
+                            <Link
+                              key={`${keyword}-${index}`}
+                              className="sticker sticker-small sticker-gray-black"
+                              to={`/tags/${keyword.replace("#", "%23")}`}
+                              target={"_blank"}
+                            >
+                              {keyword}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {/* <div
                   className="fx-centered fx-start-h fx-wrap"
                   style={{ rowGap: 0, columnGap: "4px" }}
                 > */}
-                  {/* {getNoteTree(news.content, news.is_important)} */}
-                  <div className="fit-container">{news.note_tree}</div>
-                  {/* </div> */}
-                  {news.sealed_note && (
-                    <div className="fit-container fx-centered fx-col">
-                      <UN
-                        data={JSON.parse(news.sealed_note.content)}
-                        state="sealed"
-                        setTimestamp={() => null}
-                        flashNewsAuthor={news.author.pubkey}
-                      />
-                    </div>
-                  )}
-                  <Link
-                    className="fit-container"
-                    onClick={(e) => e.stopPropagation()}
-                    to={`/uncensored-notes/${news.nEvent}`}
-                  >
-                    <div
-                      className="fx-scattered fit-container option if pointer"
-                      style={{
-                        border: "none",
-                        backgroundColor: "var(--very-dim-gray)",
-                      }}
-                    >
-                      <p className="gray-c">See all uncensored notes</p>
-                      <div
-                        className="arrow"
-                        style={{ transform: "rotate(-90deg)" }}
-                      ></div>
-                    </div>
-                  </Link>
-                  <div className="fit-container fx-scattered box-pad-v-s">
-                    <div className="fx-centered">
-                      <div className="fx-centered" style={{ columnGap: "8px" }}>
-                        <div className="icon-tooltip" data-tooltip="Tip news">
-                          <ZapTip
-                            recipientLNURL={checkForLUDS(
-                              author.lud06,
-                              author.lud16
-                            )}
-                            recipientPubkey={author.pubkey}
-                            senderPubkey={nostrUser.pubkey}
-                            recipientInfo={{
-                              name: author.name,
-                              picture: author.picture,
-                            }}
-                            eTag={news.id}
-                            forContent={news.content.substring(0, 40)}
-                            onlyIcon={true}
-                          />
-                        </div>
-                        <div
-                          data-tooltip="See zappers"
-                          className="icon-tooltip pointer"
-                          onClick={() =>
-                            zapsCount &&
-                            setUsersList({
-                              title: "Zappers",
-                              list: zappers.map((item) => item.pubkey),
-                              extras: zappers,
-                            })
-                          }
-                        >
-                          <NumberShrink value={zapsCount} />
-                        </div>
-                      </div>
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className="comment-24"
-                          // data-tooltip="Comments"
-                        ></div>
-                        <div>
-                          <NumberShrink value={netCommentsCount} />
-                        </div>
-                      </div>
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className={"icon-tooltip"}
-                          data-tooltip="Upvote"
-                          onClick={upvoteNews}
-                        >
-                          <div
-                            className={
-                              isVoted?.content === "+"
-                                ? "arrow-up-bold"
-                                : "arrow-up"
-                            }
-                            style={{
-                              opacity: isVoted?.content === "-" ? ".2" : 1,
-                            }}
-                          ></div>
-                        </div>
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Upvoters"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            upvoteReaction.length > 0 &&
-                              setUsersList({
-                                title: "Upvoters",
-                                list: upvoteReaction.map((item) => item.pubkey),
-                                extras: [],
-                              });
-                          }}
-                        >
-                          <NumberShrink value={upvoteReaction.length} />
-                        </div>
-                      </div>
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvote"
-                          onClick={downvoteNews}
-                        >
-                          <div
-                            className={
-                              isVoted?.content === "-"
-                                ? "arrow-up-bold"
-                                : "arrow-up"
-                            }
-                            style={{
-                              transform: "rotate(180deg)",
-                              opacity: isVoted?.content === "+" ? ".2" : 1,
-                            }}
-                          ></div>
-                        </div>
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvoters"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downvoteReaction.length > 0 &&
-                              setUsersList({
-                                title: "Downvoters",
-                                list: downvoteReaction.map(
-                                  (item) => item.pubkey
-                                ),
-                                extras: [],
-                              });
-                          }}
-                        >
-                          <NumberShrink value={downvoteReaction.length} />
-                        </div>
-                      </div>
-                      <p>|</p>
-                      <ShareLink
-                        path={`/flash-news/${news.nEvent}`}
-                        title={author.display_name || author.name}
-                        description={news.content}
-                        kind={1}
-                        shareImgData={{post:news, author: news.author, label: "Flash news"}}
-                      />
-                    </div>
-                    <div className="fx-centered">
-                      {news.source && (
-                        <a
-                          target={"_blank"}
-                          href={news.source}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div
-                            className="round-icon round-icon-tooltip"
-                            data-tooltip="source"
-                          >
-                            <div className="globe-24"></div>
-                          </div>
-                        </a>
-                      )}
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip="Bookmark flash news"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <SaveArticleAsBookmark
-                          pubkey={news.id}
-                          itemType="e"
-                          kind="1"
+                    {/* {getNoteTree(news.content, news.is_important)} */}
+                    <div className="fit-container">{news.note_tree}</div>
+                    {/* </div> */}
+                    {news.sealed_note && (
+                      <div className="fit-container fx-centered fx-col">
+                        <UN
+                          data={JSON.parse(news.sealed_note.content)}
+                          state="sealed"
+                          setTimestamp={() => null}
+                          flashNewsAuthor={news.author.pubkey}
                         />
                       </div>
+                    )}
+                    <Link
+                      className="fit-container"
+                      onClick={(e) => e.stopPropagation()}
+                      to={`/uncensored-notes/${news.nEvent}`}
+                    >
+                      <div
+                        className="fx-scattered fit-container option if pointer"
+                        style={{
+                          border: "none",
+                          backgroundColor: "var(--very-dim-gray)",
+                        }}
+                      >
+                        <p className="gray-c">See all uncensored notes</p>
+                        <div
+                          className="arrow"
+                          style={{ transform: "rotate(-90deg)" }}
+                        ></div>
+                      </div>
+                    </Link>
+                    <div className="fit-container fx-scattered box-pad-v-s">
+                      <div className="fx-centered">
+                        <div
+                          className="fx-centered"
+                          style={{ columnGap: "8px" }}
+                        >
+                          <div className="icon-tooltip" data-tooltip="Tip news">
+                            <ZapTip
+                              recipientLNURL={checkForLUDS(
+                                author.lud06,
+                                author.lud16
+                              )}
+                              recipientPubkey={author.pubkey}
+                              senderPubkey={nostrUser.pubkey}
+                              recipientInfo={{
+                                name: author.name,
+                                picture: author.picture,
+                              }}
+                              eTag={news.id}
+                              forContent={news.content.substring(0, 40)}
+                              onlyIcon={true}
+                            />
+                          </div>
+                          <div
+                            data-tooltip="See zappers"
+                            className="icon-tooltip pointer"
+                            onClick={() =>
+                              zapsCount &&
+                              setUsersList({
+                                title: "Zappers",
+                                list: zappers.map((item) => item.pubkey),
+                                extras: zappers,
+                              })
+                            }
+                          >
+                            <NumberShrink value={zapsCount} />
+                          </div>
+                        </div>
+                        <div
+                          className={`fx-centered pointer ${
+                            isLoading ? "flash" : ""
+                          }`}
+                          style={{ columnGap: "8px" }}
+                        >
+                          <div
+                            className="comment-24"
+                            // data-tooltip="Comments"
+                          ></div>
+                          <div>
+                            <NumberShrink value={netCommentsCount} />
+                          </div>
+                        </div>
+                        <div
+                          className={`fx-centered pointer ${
+                            isLoading ? "flash" : ""
+                          }`}
+                          style={{ columnGap: "8px" }}
+                        >
+                          <div
+                            className={"icon-tooltip"}
+                            data-tooltip="Upvote"
+                            onClick={upvoteNews}
+                          >
+                            <div
+                              className={
+                                isVoted?.content === "+"
+                                  ? "arrow-up-bold"
+                                  : "arrow-up"
+                              }
+                              style={{
+                                opacity: isVoted?.content === "-" ? ".2" : 1,
+                              }}
+                            ></div>
+                          </div>
+                          <div
+                            className="icon-tooltip"
+                            data-tooltip="Upvoters"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              upvoteReaction.length > 0 &&
+                                setUsersList({
+                                  title: "Upvoters",
+                                  list: upvoteReaction.map(
+                                    (item) => item.pubkey
+                                  ),
+                                  extras: [],
+                                });
+                            }}
+                          >
+                            <NumberShrink value={upvoteReaction.length} />
+                          </div>
+                        </div>
+                        <div
+                          className={`fx-centered pointer ${
+                            isLoading ? "flash" : ""
+                          }`}
+                          style={{ columnGap: "8px" }}
+                        >
+                          <div
+                            className="icon-tooltip"
+                            data-tooltip="Downvote"
+                            onClick={downvoteNews}
+                          >
+                            <div
+                              className={
+                                isVoted?.content === "-"
+                                  ? "arrow-up-bold"
+                                  : "arrow-up"
+                              }
+                              style={{
+                                transform: "rotate(180deg)",
+                                opacity: isVoted?.content === "+" ? ".2" : 1,
+                              }}
+                            ></div>
+                          </div>
+                          <div
+                            className="icon-tooltip"
+                            data-tooltip="Downvoters"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downvoteReaction.length > 0 &&
+                                setUsersList({
+                                  title: "Downvoters",
+                                  list: downvoteReaction.map(
+                                    (item) => item.pubkey
+                                  ),
+                                  extras: [],
+                                });
+                            }}
+                          >
+                            <NumberShrink value={downvoteReaction.length} />
+                          </div>
+                        </div>
+                        <p>|</p>
+                        <ShareLink
+                          path={`/flash-news/${news.nEvent}`}
+                          title={author.display_name || author.name}
+                          description={news.content}
+                          kind={1}
+                          shareImgData={{
+                            post: news,
+                            author: news.author,
+                            label: "Flash news",
+                          }}
+                        />
+                      </div>
+                      <div className="fx-centered">
+                        {news.source && (
+                          <a
+                            target={"_blank"}
+                            href={news.source}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div
+                              className="round-icon round-icon-tooltip"
+                              data-tooltip="source"
+                            >
+                              <div className="globe-24"></div>
+                            </div>
+                          </a>
+                        )}
+                        <div
+                          className="round-icon round-icon-tooltip"
+                          data-tooltip="Bookmark flash news"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <SaveArticleAsBookmark
+                            pubkey={news.id}
+                            itemType="e"
+                            kind="1"
+                          />
+                        </div>
+                      </div>
                     </div>
+                    <CommentsSection
+                      id={news.id}
+                      nEvent={nevent}
+                      setNetCommentsCount={setNetCommentsCount}
+                    />
                   </div>
-                  <CommentsSection
-                    id={news.id}
-                    nEvent={nevent}
-                    setNetCommentsCount={setNetCommentsCount}
-                  />
-                </div>
-              </div>
-              <div
-                className=" fx-centered fx-col fx-start-v extras-homepage"
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  // backgroundColor: "var(--white)",
-                  zIndex: "100",
-                  width: "min(100%, 400px)",
-                }}
-              >
-                <div className="sticky fit-container">
-                  <SearchbarNOSTR />
                 </div>
                 <div
-                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                  className=" fx-centered fx-col fx-start-v extras-homepage"
                   style={{
-                    backgroundColor: "var(--dim-gray)",
-                    rowGap: "24px",
-                    border: "none",
+                    position: "sticky",
+                    top: 0,
+                    // backgroundColor: "var(--white)",
+                    zIndex: "100",
+                    flex: 1,
+                    // width: "min(100%, 400px)",
                   }}
                 >
-                  <h4>Important Flash News</h4>
-                  <HomeFN flashnews={importantFN} />
-                </div>
+                  <div className="sticky fit-container">
+                    <SearchbarNOSTR />
+                  </div>
+                  <div
+                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                    style={{
+                      backgroundColor: "var(--dim-gray)",
+                      rowGap: "24px",
+                      border: "none",
+                    }}
+                  >
+                    <h4>Important Flash News</h4>
+                    <HomeFN flashnews={importantFN} />
+                  </div>
 
-                <Footer />
+                  <Footer />
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </>
@@ -784,7 +799,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
     };
     parsedCom();
   }, [comments]);
-  console.log(netComments);
+
   //   useEffect(() => {
   //     // setMainComments(comments);
   //     addNostrAuthors(comments.map((item) => item.pubkey));

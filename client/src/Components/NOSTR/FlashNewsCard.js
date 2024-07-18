@@ -227,7 +227,7 @@ export default function FlashNewsCard({
             style={{ rowGap: 0, columnGap: "4px" }}
           >
             {newsContent.is_important && (
-              <div className="sticker sticker-small sticker-c1-pale">
+              <div className="sticker sticker-small sticker-orange">
                 <svg
                   viewBox="0 0 13 12"
                   xmlns="http://www.w3.org/2000/svg"

@@ -45,6 +45,13 @@ const checkEventType = (event) => {
     let isUN = event.tags.find(
       (tag) => tag[0] === "l" && tag[1] === "UNCENSORED NOTE"
     );
+
+    // if (isFN) {
+    //   return { type: "fn", part_1: types.fn, show_profile: true };
+    // }
+    // if (isUN) {
+    //   return { type: "un", part_1: types.un, show_profile: false };
+    // }
     if (isThereParent) {
       if (isUN) {
         return { type: "un", part_1: types.un, show_profile: false };
@@ -278,10 +285,10 @@ export default function NotificationCenter({ icon = false }) {
                     </div>,
                     <div
                       className={`list-item fx-centered fx-shrink ${
-                        contentFrom === "mentions" ? "selected-list-item" : ""
+                        contentFrom === "mention" ? "selected-list-item" : ""
                       }`}
                       style={{ padding: " .5rem 1rem" }}
-                      onClick={() => switchContentSource("mentions")}
+                      onClick={() => switchContentSource("mention")}
                     >
                       Mentions
                     </div>,
@@ -335,12 +342,13 @@ export default function NotificationCenter({ icon = false }) {
                         key={event.id}
                       />
                     );
-                  if (contentFrom === "mentions" && event.kind === 1)
+                  if (contentFrom === "mention" && event.kind === 1)
                     return (
                       <Notification
                         event={event}
                         allEvents={allEvents}
                         key={event.id}
+                        filterByType={["mention", "un", "comments"]}
                       />
                     );
                   if (contentFrom === "reactions" && event.kind === 7)
@@ -401,7 +409,7 @@ export default function NotificationCenter({ icon = false }) {
   );
 }
 
-const Notification = ({ event, allEvents }) => {
+const Notification = ({ event, allEvents, filterByType = false }) => {
   const { nostrKeys, nostrAuthors, getNostrAuthor } = useContext(Context);
   const [user, setUser] = useState(getEmptyNostrUser(event.pubkey));
   const [relatedEvent, setRelatedEvent] = useState(false);
@@ -432,8 +440,8 @@ const Notification = ({ event, allEvents }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      let eventToFetch = event.tags.find((tag) => tag[0] === "e");
-      eventToFetch = eventToFetch ? eventToFetch[1] : false;
+      let eventToFetch = event.tags.filter((tag) => tag[0] === "e");
+      eventToFetch = eventToFetch ? eventToFetch.reverse()[0][1] : false;
       if (!eventToFetch) return;
       let tempRelatedEvent = allEvents.find((e) => e.id === eventToFetch);
 
@@ -515,331 +523,374 @@ const Notification = ({ event, allEvents }) => {
     (event.kind === 7 && !relatedEvent)
   )
     return;
-  return (
-    <div
-      className="fit-container fx-centered fx-col box-pad-v-m box-pad-h"
-      onClick={(e) => {
-        e.stopPropagation();
-      }}
-      style={{
-        borderTop: "1px solid  var(--c1-side)",
-        borderBottom: "1px solid  var(--c1-side)",
-      }}
-    >
-      {event.kind !== 30078 && (
-        <div className="fit-container fx-scattered">
-          <div className="fx-centered fx-start-h">
-            {type.show_profile && (
-              <UserProfilePicNOSTR
-                size={30}
-                mainAccountUser={false}
-                ring={false}
-                user_id={user.pubkey}
-                img={user.picture}
-              />
-            )}
-            {!type.show_profile && (
-              <UserProfilePicNOSTR
-                size={30}
-                mainAccountUser={false}
-                ring={false}
-                user_id={"Unanymous"}
-                allowClick={false}
-                img={""}
-              />
-            )}
-            <p
-              className="orange-c p-medium fx-centered"
-              style={{ columnGap: "4px" }}
-            >
+  if ((filterByType && filterByType.includes(type.type)) || !filterByType)
+    return (
+      <div
+        className="fit-container fx-centered fx-col box-pad-v-m box-pad-h"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        style={{
+          borderTop: "1px solid  var(--c1-side)",
+          borderBottom: "1px solid  var(--c1-side)",
+        }}
+      >
+        {event.kind !== 30078 && (
+          <div className="fit-container fx-scattered">
+            <div className="fx-centered fx-start-h">
               {type.show_profile && (
-                <span style={{ color: "var(--black)" }}>{user.name}</span>
-              )}{" "}
-              {type.part_1} {event.kind === 7 && getReatcion(event.content)}{" "}
-              {event.kind === 9735 && `${isSats.amount} Sats`}
+                <UserProfilePicNOSTR
+                  size={30}
+                  mainAccountUser={false}
+                  ring={false}
+                  user_id={user.pubkey}
+                  img={user.picture}
+                />
+              )}
+              {!type.show_profile && (
+                <UserProfilePicNOSTR
+                  size={30}
+                  mainAccountUser={false}
+                  ring={false}
+                  user_id={"Unanymous"}
+                  allowClick={false}
+                  img={""}
+                />
+              )}
+              <p
+                className="orange-c p-medium fx-centered"
+                style={{ columnGap: "4px" }}
+              >
+                {type.show_profile && (
+                  <span style={{ color: "var(--black)" }}>{user.name}</span>
+                )}{" "}
+                {type.part_1} {event.kind === 7 && getReatcion(event.content)}{" "}
+                {event.kind === 9735 && `${isSats.amount} Sats`}
+              </p>
+            </div>
+            <p className="gray-c p-medium" style={{ minWidth: "max-content" }}>
+              <Date_
+                toConvert={new Date(event.created_at * 1000)}
+                time={true}
+              />
             </p>
           </div>
-          <p className="gray-c p-medium" style={{ minWidth: "max-content" }}>
-            <Date_ toConvert={new Date(event.created_at * 1000)} time={true} />
-          </p>
-        </div>
-      )}
-      {event.kind === 30078 && (
-        <div className="fit-container fx-scattered">
-          <div className="fit-container fx-centered fx-start-h">
-            <div
-              className="round-icon"
-              style={{
-                minHeight: "30px",
-                minWidth: "30px",
-                borderColor: "var(--black)",
-              }}
-            >
-              <div className="note"></div>
+        )}
+        {event.kind === 30078 && (
+          <div className="fit-container fx-scattered">
+            <div className="fit-container fx-centered fx-start-h">
+              <div
+                className="round-icon"
+                style={{
+                  minHeight: "30px",
+                  minWidth: "30px",
+                  borderColor: "var(--black)",
+                }}
+              >
+                <div className="note"></div>
+              </div>
+              <p className="gray-c p-medium">{type.part_1}</p>
             </div>
-            <p className="gray-c p-medium">{type.part_1}</p>
+            <p className="gray-c p-medium" style={{ minWidth: "max-content" }}>
+              <Date_
+                toConvert={new Date(event.created_at * 1000)}
+                time={true}
+              />
+            </p>
           </div>
-          <p className="gray-c p-medium" style={{ minWidth: "max-content" }}>
-            <Date_ toConvert={new Date(event.created_at * 1000)} time={true} />
-          </p>
-        </div>
-      )}
-      {[30078].includes(event.kind) && (
-        <div className="fit-container fx-centered fx-end-h">
-          <div
-            className="box-pad-h-m box-pad-v-m sc-s-18 fit-container"
-            style={{ backgroundColor: "var(--white-transparent)" }}
-          >
-            <p className="p-medium p-three-lines">{content}</p>
-          </div>
-        </div>
-      )}
-      {[1, 30023, 30004, 34235].includes(event.kind) && (
-        <div className="fit-container fx-centered fx-wrap fx-end-h">
-          {relatedEvent && (
+        )}
+        {[30078].includes(event.kind) && (
+          <div className="fit-container fx-centered fx-end-h">
             <div
               className="box-pad-h-m box-pad-v-m sc-s-18 fit-container"
-              style={{ backgroundColor: "var(--c1-side)" }}
+              style={{ backgroundColor: "var(--white-transparent)" }}
             >
-              <div className="fx-scattered fit-container box-marg-s">
-                <div className="fx-centered fx-start-h">
-                  <UserProfilePicNOSTR
-                    size={24}
-                    mainAccountUser={false}
-                    ring={false}
-                    user_id={relatedEvent.author.pubkey}
-                    img={relatedEvent.author.picture}
-                  />
-                  <div>
-                    <p className="p-medium">
-                      {relatedEvent.author.display_name ||
-                        relatedEvent.author.name}
-                    </p>
-                    <p className="p-medium gray-c">
-                      @
-                      {relatedEvent.author.name ||
-                        relatedEvent.author.display_name}
-                    </p>
-                  </div>
-                </div>
-                {type.type === "un" && (
-                  <Link
-                    target="_blank"
-                    to={`/uncensored-notes/${relatedEvent.nEvent}`}
-                  >
-                    <div className="share-icon"></div>
-                  </Link>
-                )}
-                {type.type === "fn" && (
-                  <Link
-                    target="_blank"
-                    to={`/flash-news/${relatedEvent.nEvent}`}
-                  >
-                    <div className="share-icon"></div>
-                  </Link>
-                )}
-                {type.type === "arts" && (
-                  <Link target="_blank" to={`/articles/${relatedEvent.naddr}`}>
-                    <div className="share-icon"></div>
-                  </Link>
-                )}
-                {type.type === "cur" && (
-                  <Link target="_blank" to={`/curations/${relatedEvent.naddr}`}>
-                    <div className="share-icon"></div>
-                  </Link>
-                )}
-                {type.type === "vid" && (
-                  <Link target="_blank" to={`/videos/${relatedEvent.naddr}`}>
-                    <div className="share-icon"></div>
-                  </Link>
-                )}
-              </div>
-              {event.kind === 1 && <p className="p-three-lines">{relatedEvent.content}</p>}
-              {[30023, 30004].includes(event.kind) && (
-                <div className="fit-container fx-centered fx-start-h">
-                  <div
-                    className=" cover-bg bg-img sc-s-18"
-                    style={{
-                      minWidth: "50px",
-                      aspectRatio: "1/1",
-                      backgroundImage: `url(${relatedEvent.image})`,
-                    }}
-                  ></div>
-                  <p>{relatedEvent.title}</p>
-                </div>
-              )}
-              {[34235].includes(event.kind) && (
-                <Link
-                  key={relatedEvent.id}
-                  className=" bg-img cover-bg fit-container fx-scattered"
-                  to={`/videos/${relatedEvent.naddr}`}
-                >
-                  <div
-                    className=" fx-centered fx-start-v fx-col"
-                    style={{
-                      height: "100%",
-
-                      position: "relative",
-                    }}
-                  >
-                    <p className="p-two-lines" style={{ color: "white" }}>
-                      {relatedEvent.title}
-                    </p>
-                    <div className="fit-container fx-scattered">
-                      <div className="fx-centered">
-                        <p className="gray-c p-medium">
-                          <Date_
-                            toConvert={
-                              new Date(relatedEvent.published_at * 1000)
-                            }
-                            time={true}
-                          />
-                        </p>
-                      </div>
+              <p className="p-medium p-three-lines">{content}</p>
+            </div>
+          </div>
+        )}
+        {[1, 30023, 30004, 34235].includes(event.kind) && (
+          <div className="fit-container fx-centered fx-wrap fx-end-h">
+            {relatedEvent && (
+              <div
+                className="box-pad-h-m box-pad-v-m sc-s-18 fit-container"
+                style={{ backgroundColor: "var(--c1-side)" }}
+              >
+                <div className="fx-scattered fit-container box-marg-s">
+                  <div className="fx-centered fx-start-h">
+                    <UserProfilePicNOSTR
+                      size={24}
+                      mainAccountUser={false}
+                      ring={false}
+                      user_id={relatedEvent.author.pubkey}
+                      img={relatedEvent.author.picture}
+                    />
+                    <div>
+                      <p className="p-medium">
+                        {relatedEvent.author.display_name ||
+                          relatedEvent.author.name}
+                      </p>
+                      <p className="p-medium gray-c">
+                        @
+                        {relatedEvent.author.name ||
+                          relatedEvent.author.display_name}
+                      </p>
                     </div>
                   </div>
+                  {type.type === "un" && (
+                    <Link
+                      target="_blank"
+                      to={`/uncensored-notes/${relatedEvent.nEvent}`}
+                    >
+                      <div className="share-icon"></div>
+                    </Link>
+                  )}
+                  {type.type === "fn" && (
+                    <Link
+                      target="_blank"
+                      to={`/flash-news/${relatedEvent.nEvent}`}
+                    >
+                      <div className="share-icon"></div>
+                    </Link>
+                  )}
+                  {type.type === "comments" && (
+                    <Link
+                      target="_blank"
+                      to={`/notes/${relatedEvent.nEvent}`}
+                    >
+                      <div className="share-icon"></div>
+                    </Link>
+                  )}
+                  {type.type === "arts" && (
+                    <Link
+                      target="_blank"
+                      to={`/articles/${relatedEvent.naddr}`}
+                    >
+                      <div className="share-icon"></div>
+                    </Link>
+                  )}
+                  {type.type === "cur" && (
+                    <Link
+                      target="_blank"
+                      to={`/curations/${relatedEvent.naddr}`}
+                    >
+                      <div className="share-icon"></div>
+                    </Link>
+                  )}
+                  {type.type === "vid" && (
+                    <Link target="_blank" to={`/videos/${relatedEvent.naddr}`}>
+                      <div className="share-icon"></div>
+                    </Link>
+                  )}
+                </div>
+                {event.kind === 1 && (
+                  <p className="p-three-lines">{relatedEvent.content}</p>
+                )}
+                {[30023, 30004].includes(event.kind) && (
+                  <div className="fit-container fx-centered fx-start-h">
+                    <div
+                      className=" cover-bg bg-img sc-s-18"
+                      style={{
+                        minWidth: "50px",
+                        aspectRatio: "1/1",
+                        backgroundImage: `url(${relatedEvent.image})`,
+                      }}
+                    ></div>
+                    <p>{relatedEvent.title}</p>
+                  </div>
+                )}
+                {[34235].includes(event.kind) && (
                   <Link
                     key={relatedEvent.id}
-                    className="sc-s-18 fx-centered bg-img cover-bg  fx-centered fx-end-h fx-end-v"
+                    className=" bg-img cover-bg fit-container fx-scattered"
                     to={`/videos/${relatedEvent.naddr}`}
-                    style={{
-                      width: "150px",
-                      minWidth: "150px",
-                      aspectRatio: "16/9",
-                      backgroundImage: `url(${relatedEvent.image})`,
-                      backgroundColor: "black",
-                    }}
                   >
                     <div
-                      className="fit-container fx-centered fx-col box-pad-h-m fx-start-v fx-end-h box-pad-v-m"
+                      className=" fx-centered fx-start-v fx-col"
                       style={{
                         height: "100%",
-                        background:
-                          "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 87%)",
+
                         position: "relative",
                       }}
                     >
-                      <div
-                        className="fx-centered"
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          width: "100%",
-                          height: "100%",
-                        }}
-                      >
-                        <div className="play-vid-58"></div>
+                      <p className="p-two-lines">{relatedEvent.title}</p>
+                      <div className="fit-container fx-scattered">
+                        <div className="fx-centered">
+                          <p className="gray-c p-medium">
+                            <Date_
+                              toConvert={
+                                new Date(relatedEvent.published_at * 1000)
+                              }
+                              time={true}
+                            />
+                          </p>
+                        </div>
                       </div>
                     </div>
+                    <Link
+                      key={relatedEvent.id}
+                      className="sc-s-18 fx-centered bg-img cover-bg  fx-centered fx-end-h fx-end-v"
+                      to={`/videos/${relatedEvent.naddr}`}
+                      style={{
+                        width: "150px",
+                        minWidth: "150px",
+                        aspectRatio: "16/9",
+                        backgroundImage: `url(${relatedEvent.image})`,
+                        backgroundColor: "black",
+                      }}
+                    >
+                      <div
+                        className="fit-container fx-centered fx-col box-pad-h-m fx-start-v fx-end-h box-pad-v-m"
+                        style={{
+                          height: "100%",
+                          background:
+                            "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 87%)",
+                          position: "relative",
+                        }}
+                      >
+                        <div
+                          className="fx-centered"
+                          style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            width: "100%",
+                            height: "100%",
+                          }}
+                        >
+                          <div className="play-vid-58"></div>
+                        </div>
+                      </div>
+                    </Link>
                   </Link>
-                </Link>
-              )}
-            </div>
-          )}
-          {event.kind === 1 && (
-            <div
-              className="box-pad-h-m box-pad-v-m sc-s-18 fit-container p-medium"
-              style={{
-                backgroundColor: "var(--white-transparent)",
-                width: "95%",
-              }}
-            >
-              {type.show_profile && (
-                <div className="fx-scattered box-marg-s fit-container">
+                )}
+              </div>
+            )}
+            {event.kind === 1 && (
+              <div
+                className="box-pad-h-m box-pad-v-m sc-s-18 fit-container p-medium"
+                style={{
+                  backgroundColor: "var(--white-transparent)",
+                  width: "95%",
+                }}
+              >
+                {type.show_profile && (
+                  <div className="fx-scattered box-marg-s fit-container">
+                    <div className="fx-centered">
+                      <UserProfilePicNOSTR
+                        size={24}
+                        mainAccountUser={false}
+                        ring={false}
+                        user_id={event.pubkey}
+                        img={user.picture}
+                      />
+                      <div>
+                        <p className="p-small">
+                          {user.display_name || user.name}
+                        </p>
+                        <p className="p-small gray-c">
+                          @{user.name || user.display_name}
+                        </p>
+                      </div>
+                    </div>
+                    {type.type === "fn" && (
+                      <Link
+                        target="_blank"
+                        to={`/flash-news/${nip19.neventEncode({
+                          author: event.pubkey,
+                          id: event.id,
+                        })}`}
+                      >
+                        <div className="share-icon"></div>
+                      </Link>
+                    )}
+                    {type.type !== "fn" && (
+                      <Link
+                        target="_blank"
+                        to={`/notes/${nip19.neventEncode({
+                          author: event.pubkey,
+                          id: event.id,
+                        })}`}
+                      >
+                        <div className="share-icon"></div>
+                      </Link>
+                    )}
+                  </div>
+                )}
+                {!type.show_profile && (
+                  <div className="fx-centered fx-start-h box-marg-s fit-container">
+                    <UserProfilePicNOSTR
+                      size={24}
+                      mainAccountUser={false}
+                      ring={false}
+                      user_id={"Unanymous"}
+                      allowClick={false}
+                      img={""}
+                    />
+                    <div>
+                      <p className="p-small">{"Unanymous"}</p>
+                      <p className="p-small gray-c">@Unanymous</p>
+                    </div>
+                  </div>
+                )}
+                <p className="p-medium p-three-lines">{content}</p>
+              </div>
+            )}
+          </div>
+        )}
+        {[7].includes(event.kind) && (
+          <div className="fit-container fx-centered fx-wrap fx-end-h">
+            {relatedEvent && (
+              <div
+                className="box-pad-h-m box-pad-v-m sc-s-18 fit-container"
+                style={{ backgroundColor: "var(--white-transparent)" }}
+              >
+                <div className="fx-scattered fit-container box-marg-s">
                   <div className="fx-centered">
                     <UserProfilePicNOSTR
                       size={24}
                       mainAccountUser={false}
                       ring={false}
                       user_id={event.pubkey}
-                      img={user.picture}
+                      img={relatedEvent.author.picture}
                     />
                     <div>
-                      <p className="p-small">
-                        {user.display_name || user.name}
+                      <p className="p-medium">
+                        {relatedEvent.author.display_name ||
+                          relatedEvent.author.name}
                       </p>
-                      <p className="p-small gray-c">
-                        @{user.name || user.display_name}
+                      <p className="p-medium gray-c">
+                        {relatedEvent.author.name ||
+                          relatedEvent.author.display_name}
                       </p>
                     </div>
                   </div>
-                  {type.type === "fn" && (
-                    <Link
-                      target="_blank"
-                      to={`/flash-news/${nip19.neventEncode({
-                        author: event.pubkey,
-                        id: event.id,
-                      })}`}
-                    >
-                      <div className="share-icon"></div>
-                    </Link>
-                  )}
+                  <Link
+                    target="_blank"
+                    to={`/notes/${nip19.neventEncode({
+                      author: relatedEvent.pubkey,
+                      id: relatedEvent.id,
+                    })}`}
+                  >
+                    <div className="share-icon"></div>
+                  </Link>
                 </div>
-              )}
-              {!type.show_profile && (
-                <div className="fx-centered fx-start-h box-marg-s fit-container">
-                  <UserProfilePicNOSTR
-                    size={24}
-                    mainAccountUser={false}
-                    ring={false}
-                    user_id={"Unanymous"}
-                    allowClick={false}
-                    img={""}
-                  />
-                  <div>
-                    <p className="p-small">{"Unanymous"}</p>
-                    <p className="p-small gray-c">@Unanymous</p>
-                  </div>
-                </div>
-              )}
-              <p className="p-medium p-three-lines">{content}</p>
-            </div>
-          )}
-        </div>
-      )}
-      {[7].includes(event.kind) && (
-        <div className="fit-container fx-centered fx-wrap fx-end-h">
-          {relatedEvent && (
+                <p className="p-medium">{relatedEvent.content}</p>
+              </div>
+            )}
+          </div>
+        )}
+        {[9735].includes(event.kind) && event.content && (
+          <div className="fit-container fx-centered fx-wrap fx-end-h">
             <div
               className="box-pad-h-m box-pad-v-m sc-s-18 fit-container"
               style={{ backgroundColor: "var(--white-transparent)" }}
             >
-              <div className="fx-centered fx-start-h fit-container box-marg-s">
-                <UserProfilePicNOSTR
-                  size={24}
-                  mainAccountUser={false}
-                  ring={false}
-                  user_id={event.pubkey}
-                  img={relatedEvent.author.picture}
-                />
-                <div>
-                  <p className="p-medium">
-                    {relatedEvent.author.display_name ||
-                      relatedEvent.author.name}
-                  </p>
-                  <p className="p-medium gray-c">
-                    {relatedEvent.author.name ||
-                      relatedEvent.author.display_name}
-                  </p>
-                </div>
-              </div>
-              <p className="p-medium">{relatedEvent.content}</p>
+              <p className="p-medium gray-c">Zappers message</p>
+              <p>{event.content}</p>
             </div>
-          )}
-        </div>
-      )}
-      {[9735].includes(event.kind) && event.content && (
-        <div className="fit-container fx-centered fx-wrap fx-end-h">
-          <div
-            className="box-pad-h-m box-pad-v-m sc-s-18 fit-container"
-            style={{ backgroundColor: "var(--white-transparent)" }}
-          >
-            <p className="p-medium gray-c">Zappers message</p>
-            <p>{event.content}</p>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
 };

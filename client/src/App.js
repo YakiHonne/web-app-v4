@@ -12,13 +12,13 @@ import { ContextProvider } from "./Context/Context";
 
 import NostrHome from "./Pages/NOSTR/NostrHome";
 import NostrWriting from "./Pages/NOSTR/NostrWriting";
-import NostrArticle from "./Components/NOSTR/NostrArticle";
+import NostrArticle from "./Pages/NOSTR/NostrArticle";
 import NostrCurations from "./Pages/NOSTR/NostrCurations";
 import NostrSettings from "./Pages/NOSTR/NostrSettings";
 import NostrUser from "./Pages/NOSTR/NostrUser";
 import NostrMyPosts from "./Pages/NOSTR/NostrMyPosts";
 import NostrMyCurations from "./Pages/NOSTR/NostrMyCurations";
-import NostrCuration from "./Components/NOSTR/NostrCuration";
+import NostrCuration from "./Pages/NOSTR/NostrCuration";
 import ToastMessages from "./Components/ToastMessages";
 import FourOFour from "./Pages/FourOFour";
 import NostrSearchTag from "./Pages/NOSTR/NostrSearchTag";
@@ -46,13 +46,24 @@ import NostrMyVideos from "./Pages/NOSTR/NostrMyVideos";
 import BuzzFeed from "./Pages/NOSTR/BuzzFeed";
 import NostrBuzzFeed from "./Pages/NOSTR/NostrBuzzFeed";
 import BuzzFeedSource from "./Pages/NOSTR/BuzzFeedSource";
+import UserLevels from "./Pages/NOSTR/UserLevels";
 import NostrNotes from "./Pages/NOSTR/NostrNotes";
+import UserFirsLogin from "./Components/UserFirsLogin";
+import YakiNewFeatureIntro from "./Components/YakiNewFeatureIntro";
+import YakiLevelingFeature from "./Pages/YakiLevelingFeature";
+import NostrNote from "./Pages/NOSTR/NostrNote";
+import NostrMyNotes from "./Pages/NOSTR/NostrMyNotes";
+import Wallet from "./Pages/NOSTR/Wallet";
+import WalletAlby from "./Pages/NOSTR/WalletAlby";
+import WalletNWC from "./Pages/NOSTR/WalletNWC";
 
 function App() {
   return (
     <ContextProvider>
       <Publishing />
       <ToastMessages />
+      <UserFirsLogin />
+      <YakiNewFeatureIntro />
       <Router>
         <NavbarNOSTR />
         <Routes>
@@ -90,19 +101,28 @@ function App() {
             element={<NostrVideo />}
           />
           <Route path="/notes" element={<NostrNotes />} />
-          <Route path="/notes/:nevent" element={<NostrNotes />} />
+          <Route path="/notes/:nevent" element={<NostrNote />} />
+          <Route path="/my-notes" element={<NostrMyNotes />} />
           <Route path="/messages" element={<DMS />} />
           <Route path="/buzz-feed" element={<BuzzFeed />} />
           <Route path="/buzz-feed/:nevent" element={<NostrBuzzFeed />} />
-          <Route path="/buzz-feed/source/:source" element={<BuzzFeedSource />} />
+          <Route
+            path="/buzz-feed/source/:source"
+            element={<BuzzFeedSource />}
+          />
           <Route path="/yakihonne-mobile-app" element={<YakiMobileApp />} />
           <Route path="/yakihonne-flash-news" element={<YakiFN />} />
           <Route
             path="/yakihonne-mobile-app-links"
             element={<YMARedirection />}
           />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/wallet/alby" element={<WalletAlby />} />
+          <Route path="/wallet/nwc" element={<WalletNWC />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/yaki-points" element={<UserLevels />} />
+          <Route path="/points-system" element={<YakiLevelingFeature />} />
         </Routes>
       </Router>
     </ContextProvider>

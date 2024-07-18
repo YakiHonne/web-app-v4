@@ -44,7 +44,7 @@ export default function ToDeletePostNOSTR({
       console.log(err);
       setToast({
         type: 2,
-        desc: "An error occurred while deleting this article.",
+        desc: "An error occurred while deleting this event.",
       });
     }
   };

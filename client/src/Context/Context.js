@@ -10,7 +10,8 @@ import {
 } from "../Helpers/Encryptions";
 import { getBech32 } from "../Helpers/Encryptions";
 import axios from "axios";
-import { getNoteTree } from "../Helpers/Helpers";
+import { getCurrentLevel, getNoteTree, levelCount } from "../Helpers/Helpers";
+import axiosInstance from "../Helpers/HTTP_Client";
 const Context = React.createContext();
 
 const pool = new SimplePool();
@@ -81,7 +82,9 @@ const ContextProvider = ({ children }) => {
     localStorage.getItem("yaki-theme") || "0"
   );
   const [nostrUserImpact, setNostrUserImpact] = useState(false);
+  const [userFirstLoginYakiChest, setUserFirstLoginYakiChest] = useState(false);
   const [nostrUserBookmarks, setNostrUserBookmarks] = useState([]);
+  const [tempUserMeta, setTempUserMeta] = useState(false);
   const [nostrUserAbout, setNostrUserAbout] = useState(false);
   const [nostrUserTags, setNostrUserTags] = useState(false);
   const [nostrUserLoaded, setNostrUserLoaded] = useState(false);
@@ -104,6 +107,14 @@ const ContextProvider = ({ children }) => {
   const [mutedList, setMutedList] = useState(false);
   const [lastMessageDate, setLastMessageDate] = useState(undefined);
   const [tempChannel, setTempChannel] = useState(false);
+  const [isConnectedToYaki, setIsConnectedToYaki] = useState(
+    localStorage.getItem("connect_yc") ? true : false
+  );
+  const [yakiChestStats, setYakiChestStats] = useState(false);
+  const [isYakiChestLoaded, setIsYakiChestLoaded] = useState(false);
+  const [updatedActionFromYakiChest, setUpdatedActionFromYakiChest] =
+    useState(false);
+  const [balance, setBalance] = useState("N/A");
 
   useEffect(() => {
     let fetchData = async () => {
@@ -249,6 +260,29 @@ const ContextProvider = ({ children }) => {
     }
   }, [loadCacheDB, nostrKeys]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsYakiChestLoaded(false);
+        const data = await axiosInstance.get("/api/v1/yaki-chest/stats");
+        if (data.data.user_stats.pubkey !== nostrKeys.pub) {
+          nostrUserLogout();
+          setIsYakiChestLoaded(false);
+          return;
+        }
+        let { user_stats, platform_standards } = data.data;
+        updateYakiChestStats(user_stats);
+        setIsYakiChestLoaded(true);
+      } catch (err) {
+        console.log(err);
+        localStorage.removeItem("connect_yc");
+        setIsYakiChestLoaded(true);
+      }
+    };
+    if (nostrKeys && isConnectedToYaki) fetchData();
+    if (nostrKeys && !isConnectedToYaki) setIsYakiChestLoaded(true);
+  }, [nostrKeys, isConnectedToYaki]);
+
   const handleDM = (inbox, authors, oldAggregated) => {
     addNostrAuthors(authors);
     let sortedInbox = aggregateUsers(inbox, oldAggregated);
@@ -339,6 +373,7 @@ const ContextProvider = ({ children }) => {
       setNostrUser(userData);
       setNostrUserTags(content.tags);
       setNostrUserAbout(userAbout);
+      setTempUserMeta(userAbout);
       getUserBookmarks(content.pubkey);
       // setNostrUserBookmarks(userBookmarks);
       setNostrUserTopics(userTopics);
@@ -358,10 +393,15 @@ const ContextProvider = ({ children }) => {
     setNostrKeys(false);
   };
 
-  const nostrUserLogout = () => {
+  const nostrUserLogout = async () => {
     localStorage.removeItem("_nostruser");
     localStorage.removeItem("_nostruserkeys");
     localStorage.removeItem("comment-with-prefix");
+    localStorage.removeItem("connect_yc");
+    localStorage.removeItem("yaki-wallets");
+    setIsConnectedToYaki(false);
+    setYakiChestStats(false);
+    setBalance("N/A")
     let openDB = window.indexedDB.open("yaki-nostr", 3);
     // let req = window.indexedDB.deleteDatabase("yaki-nostr");
 
@@ -413,6 +453,7 @@ const ContextProvider = ({ children }) => {
     setNostrUser(false);
     setNostrKeys(false);
     setNostrUserAbout(false);
+    setTempUserMeta(false);
     setNostrUserBookmarks([]);
     setNostrUserTopics([]);
     setNostrUserTags([]);
@@ -420,6 +461,11 @@ const ContextProvider = ({ children }) => {
     setChatrooms([]);
     setMutedList([]);
     setLastMessageDate(undefined);
+    try {
+      const data = await axiosInstance.post("/api/v1/logout");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const getUserFromNOSTR = async (pubkey) => {
@@ -489,7 +535,6 @@ const ContextProvider = ({ children }) => {
           {
             kinds: [30003],
             authors: [pubkey],
-            // "#d": ["MyYakihonneBookmarkedArticles"],
           },
         ],
         {
@@ -555,9 +600,18 @@ const ContextProvider = ({ children }) => {
     });
     let res = data.data;
     if (res.length === 0 && pubkeys.length === 1)
-      setNostrAuthors([...nostrAuthors, getEmptyNostrUser(pubkeys[0])]);
+      setNostrAuthors((prev) => [...prev, getEmptyNostrUser(pubkeys[0])]);
 
-    setNostrAuthors([...nostrAuthors, ...res]);
+    setNostrAuthors((prev) => {
+      return [...prev, ...res].filter((item, index) => {
+        if (
+          [...prev, ...res].findIndex(
+            (item_) => item_.pubkey === item.pubkey
+          ) === index
+        )
+          return item;
+      });
+    });
     let openDB = indexedDB.open("yaki-nostr", 3);
     openDB.onsuccess = (event) => {
       let db = openDB.result;
@@ -655,10 +709,9 @@ const ContextProvider = ({ children }) => {
         };
         userFollowings_.onsuccess = () => {
           if (userFollowings_.result)
-            setUserFollowings(userFollowings_.result[0]);
+            setUserFollowings(userFollowings_.result[0] || []);
         };
         muted.onsuccess = () => {
-          console.log(muted.result);
           if (muted?.result?.length > 0) setMutedList(muted.result[0]);
           else setMutedList([]);
         };
@@ -746,6 +799,49 @@ const ContextProvider = ({ children }) => {
     };
   };
 
+  const updateYakiChestStats = (user_stats) => {
+    let xp = user_stats.xp;
+    let currentLevel = getCurrentLevel(xp);
+    let nextLevel = currentLevel + 1;
+    let toCurrentLevelPoints = levelCount(currentLevel);
+    let toNextLevelPoints = levelCount(nextLevel);
+    let totalPointInLevel = toNextLevelPoints - toCurrentLevelPoints;
+    let inBetweenLevelPoints = xp - toCurrentLevelPoints;
+    let remainingPointsToNextLevel = totalPointInLevel - inBetweenLevelPoints;
+
+    setYakiChestStats({
+      xp,
+      currentLevel,
+      nextLevel,
+      toCurrentLevelPoints,
+      toNextLevelPoints,
+      totalPointInLevel,
+      inBetweenLevelPoints,
+      remainingPointsToNextLevel,
+    });
+  };
+  const initiFirstLoginStats = (user_stats) => {
+    let xp = user_stats.xp;
+    let lvl = getCurrentLevel(xp);
+    let nextLevel = lvl + 1;
+    let toCurrentLevelPoints = levelCount(lvl);
+    let toNextLevelPoints = levelCount(nextLevel);
+    let totalPointInLevel = toNextLevelPoints - toCurrentLevelPoints;
+    let inBetweenLevelPoints = xp - toCurrentLevelPoints;
+    let actions = user_stats.actions.map((item) => {
+      return {
+        ...item,
+        display_name: user_stats.platform_standards[item.action].display_name,
+      };
+    });
+
+    setUserFirstLoginYakiChest({
+      xp,
+      lvl,
+      percentage: (inBetweenLevelPoints * 100) / totalPointInLevel,
+      actions,
+    });
+  };
   return (
     <Context.Provider
       value={{
@@ -754,6 +850,8 @@ const ContextProvider = ({ children }) => {
         nostrUser,
         nostrUserAbout,
         setNostrUserAbout,
+        tempUserMeta,
+        setTempUserMeta,
         nostrUserTags,
         setNostrUserData,
         setNostrUser,
@@ -790,6 +888,19 @@ const ContextProvider = ({ children }) => {
         setMutedList,
         tempChannel,
         setTempChannel,
+        isConnectedToYaki,
+        setIsConnectedToYaki,
+        yakiChestStats,
+        isYakiChestLoaded,
+        updateYakiChestStats,
+        userFirstLoginYakiChest,
+        setUserFirstLoginYakiChest,
+        initiFirstLoginStats,
+        updatedActionFromYakiChest,
+        setUpdatedActionFromYakiChest,
+        balance,
+        setBalance,
+        setNostrAuthors
       }}
     >
       {children}
