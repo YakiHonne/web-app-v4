@@ -440,6 +440,7 @@ export default function NostrUser() {
     return {
       id: post.id,
       thumbnail: thumbnail || getImagePlaceholder(),
+      content: post.content,
       summary,
       author_img,
       author_pubkey,

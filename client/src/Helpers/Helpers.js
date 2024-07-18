@@ -923,7 +923,7 @@ const getVideoFromURL = (url) => {
         name="media"
         width={"100%"}
         className="sc-s-18"
-        style={{ margin: "1rem auto", border: "none", aspectRatio: "16/9" }}
+        style={{ border: "none", aspectRatio: "16/9" }}
       >
         <source src={url} type="video/mp4" />
       </video>

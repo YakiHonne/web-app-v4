@@ -503,7 +503,10 @@ export default function NostrVideo() {
                   </Link>
                   <div className="box-pad-h-m">
                     {getVideoFromURL(video.url)}
-                    <div className="fx-centered fx-col fx-start-h fx-start-v">
+                    <div
+                      className="fx-centered fx-col fx-start-h fx-start-v"
+                      style={{ marginTop: ".5rem" }}
+                    >
                       <h4>{video.title}</h4>
                     </div>
 
