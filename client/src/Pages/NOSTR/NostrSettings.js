@@ -578,7 +578,7 @@ export default function NostrSettings() {
                               )}
                             </div>
                             <div
-                              className="fx-centered fit-container"
+                              className="fx-centered fit-container" 
                               style={{ columnGap: "10px" }}
                             >
                               {userName !== false ? (

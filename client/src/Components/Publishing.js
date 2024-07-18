@@ -55,6 +55,7 @@ export default function Publishing() {
   const [okRelays, setOkRelays] = useState([]);
   const [failedRelays, setFailedRelays] = useState([]);
   const [signedEvent, setSignedEvent] = useState(false);
+  const [action_key, setActionKey] = useState(false);
 
   useEffect(() => {
     const publishPost = async () => {
@@ -74,6 +75,8 @@ export default function Publishing() {
         created_at,
         eventInitEx,
       } = toPublish;
+      let ak = getActionKey();
+      setActionKey(ak);
       if (eventInitEx) {
         setFailedRelays(allRelays);
         setStartPublishing(true);
@@ -129,7 +132,7 @@ export default function Publishing() {
     }
     if (isFinished && okRelays.length > 0) {
       updateYakiChest();
-      if (window.location.pathname === "/messages") setToPublish(false)
+      if (window.location.pathname === "/messages") setToPublish(false);
     }
   }, [isFinished, okRelays]);
 
@@ -150,7 +153,7 @@ export default function Publishing() {
                 }
                 return prev;
               });
-              if (["article_post", "article_draft"].includes(getActionKey())) {
+              if (["article_post", "article_draft"].includes(action_key)) {
                 localStorage.removeItem("yai-last-article-content");
                 localStorage.removeItem("yai-last-article-title");
               }
@@ -191,9 +194,23 @@ export default function Publishing() {
 
   const updateYakiChest = async () => {
     try {
-      let action_key = getActionKey();
+      // let action_key = getActionKey();
+      // console.log(action_key);
+      if (Array.isArray(action_key)) {
+        for (let action_key_ of action_key) {
+          let data = await axiosInstance.post("/api/v1/yaki-chest", {
+            action_key: action_key_,
+          });
+          let { user_stats, is_updated } = data.data;
 
-      if (action_key) {
+          if (is_updated) {
+            setUpdatedActionFromYakiChest(is_updated);
+            updateYakiChestStats(user_stats);
+          }
+        }
+        return;
+      }
+      if (typeof action_key === "string") {
         let data = await axiosInstance.post("/api/v1/yaki-chest", {
           action_key,
         });
@@ -248,10 +265,14 @@ export default function Publishing() {
     }
     if (kind === 0) {
       let updatedUserMeta = getUpdatedMetaProperty(content);
-      if (!updatedUserMeta) return false;
+      if (!Array.isArray(updatedUserMeta)) return false;
       setTempUserMeta(JSON.parse(content));
-      return action_key_from_kind[updatedUserMeta];
+      let keys = updatedUserMeta.map((key) => action_key_from_kind[key]);
+
+      return keys;
+      // return action_key_from_kind[updatedUserMeta];
     }
+
     return action_key_from_kind[kind];
   };
 
@@ -283,20 +304,24 @@ export default function Publishing() {
   const getUpdatedMetaProperty = (content) => {
     let tempUser = tempUserMeta;
     let updatedUser = JSON.parse(content);
-    if (tempUser.about !== updatedUser.about) return "bio";
-    if (tempUser.banner !== updatedUser.banner) return "cover";
+    let metadataKeys = [];
+    if (tempUser.about !== updatedUser.about) metadataKeys.push("bio");
+    if (tempUser.banner !== updatedUser.banner) metadataKeys.push("cover");
     if (
       tempUser.display_name !== updatedUser.display_name ||
       tempUser.name !== updatedUser.name
     )
-      return "username";
+      metadataKeys.push("username");
     if (
       tempUser.lud06 !== updatedUser.lud06 ||
       tempUser.lud16 !== updatedUser.lud16
     )
-      return "luds";
-    if (tempUser.nip05 !== updatedUser.nip05) return "nip05";
-    if (tempUser.picture !== updatedUser.picture) return "profile_picture";
+      metadataKeys.push("luds");
+    if (tempUser.nip05 !== updatedUser.nip05) metadataKeys.push("nip05");
+    if (tempUser.picture !== updatedUser.picture)
+      metadataKeys.push("profile_picture");
+
+    if (metadataKeys.length > 0) return metadataKeys;
     return false;
   };
 
