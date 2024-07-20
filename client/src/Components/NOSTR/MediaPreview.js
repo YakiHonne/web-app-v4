@@ -200,7 +200,7 @@ export default function MediaPreview({ kind, data, exit }) {
 
           <div
             className="article fit-container box-pad-h-m "
-            style={{ pointerEvents: "none", marginBottom: '1.5rem' }}
+            style={{ pointerEvents: "none", marginBottom: "1.5rem" }}
           >
             {content.content}
           </div>
@@ -258,10 +258,7 @@ export default function MediaPreview({ kind, data, exit }) {
             </div>
           </div>
 
-          <div
-            className="article fit-container box-pad-h-m"
-       
-          >
+          <div className="article fit-container box-pad-h-m">
             {getVideoFromURL(content.url)}
           </div>
           <div className="fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v">

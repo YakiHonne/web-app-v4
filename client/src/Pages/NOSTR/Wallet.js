@@ -82,6 +82,9 @@ export default function Wallet() {
         setSelectedWallet(false);
         return;
       }
+      let tempWallets = getWallets()
+      setWallets(tempWallets);
+      setSelectedWallet(tempWallets.find((wallet) => wallet.active));
       let authors = [];
       let sub = pool.subscribeMany(
         nostrUser
@@ -207,7 +210,6 @@ export default function Wallet() {
         });
       sendersMetadata = [...new Set(sendersMetadata)];
       addNostrAuthors(sendersMetadata);
-      console.log(data.data);
 
       return data.data;
     } catch (err) {
