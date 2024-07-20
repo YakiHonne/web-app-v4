@@ -46,7 +46,6 @@ export default function IMGElement({ src }) {
           setResize(true);
         }}
         className="sc-s-18"
-        // style={{  cursor: "zoom-in" }}
         style={{
           margin: ".5rem auto 0",
           cursor: "zoom-in",

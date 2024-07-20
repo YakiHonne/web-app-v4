@@ -74,6 +74,7 @@ export default function UserProfilePicNOSTR({
 
   const handleClick = (e) => {
     try {
+      e.stopPropagation();
       if (allowClick) {
         let url = nip19.nprofileEncode({
           pubkey: mainAccountUser ? nostrUser.pubkey : user_id,
@@ -87,27 +88,6 @@ export default function UserProfilePicNOSTR({
       return null;
     }
   };
-
-  // useEffect(() => {
-  //   if (metadata) {
-  //     let events = [];
-  //     const sub = pool.subscribeMany(
-  //       relaysOnPlatform,
-  //       [{ kinds: [3], "#p": [user_id] }],
-  //       {
-  //         onevent(event) {
-  //           events.push(event);
-  //           setUserFollowers((prev) => [...prev, event]);
-  //         },
-  //         oneose() {
-  //           let authors = getMutualFollows(events, userFollowings);
-  //           addNostrAuthors(authors.map((author) => author.pubkey));
-  //           setMutualFollows(authors);
-  //         },
-  //       }
-  //     );
-  //   }
-  // }, []);
 
   const handleInitConvo = () => {
     if (nostrKeys && (nostrKeys.sec || nostrKeys.ext)) {

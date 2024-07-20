@@ -123,7 +123,7 @@ const getParsedAuthor = (data) => {
       content?.name || content?.display_name || data.pubkey.substring(0, 10),
     picture: content?.picture || "",
     pubkey: data.pubkey,
-    cover: content?.banner || getImagePlaceholder(),
+    banner: content?.banner || getImagePlaceholder(),
     about: content?.about || "",
     lud06: content?.lud06 || "",
     lud16: content?.lud16 || "",

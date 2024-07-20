@@ -60,6 +60,7 @@ import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import HomeFN from "../../Components/NOSTR/HomeFN";
 import TopCreators from "../../Components/NOSTR/TopCreators";
 import QRCode from "react-qr-code";
+import Avatar from "boring-avatars";
 
 const pool = new SimplePool();
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
@@ -623,7 +624,7 @@ export default function NostrUser() {
                     style={{
                       height: "20vh",
                       position: "relative",
-                      backgroundImage: user.cover ? `url(${user.cover})` : "",
+                      backgroundImage: user.banner ? `url(${user.banner})` : "",
                       backgroundColor: "var(--very-dim-gray)",
                       overflow: "visible",
                     }}
@@ -730,14 +731,19 @@ export default function NostrUser() {
                             className="fx-centered"
                             style={{ columnGap: "16px" }}
                           >
-                            <UserProfilePicNOSTR
+                            <UserPP
+                              size={72}
+                              src={user.picture}
+                              user_id={user.pubkey}
+                            />
+                            {/* <UserProfilePicNOSTR
                               size={72}
                               ring={false}
                               img={user.picture}
                               mainAccountUser={false}
                               allowClick={false}
                               user_id={user.pubkey}
-                            />
+                            /> */}
                             <div className="fx-centered fx-col fx-start-v">
                               <h4 className="p-caps">
                                 {user.display_name || user.name}
@@ -2210,5 +2216,82 @@ const QRSharing = ({ user, exit }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const UserPP = ({ src, size, user_id }) => {
+  const [resize, setResize] = useState(false);
+  if (!src) {
+    return (
+      <div style={{ minWidth: `${size}px`, minHeight: `${size}px` }}>
+        <Avatar
+          size={size}
+          name={user_id}
+          variant="beam"
+          colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
+        />
+      </div>
+    );
+  }
+  return (
+    <>
+      {resize && (
+        <div
+          className="fixed-container box-pad-h box-pad-v fx-centered"
+          onClick={(e) => {
+            e.stopPropagation();
+            setResize(false);
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              // maxWidth: "800px",
+              // maxHeight: "80vh",
+              width: "min(100%, 600px)",
+            }}
+          >
+            <div
+              className="close"
+              onClick={(e) => {
+                e.stopPropagation();
+                setResize(false);
+              }}
+            >
+              <div></div>
+            </div>
+            <img
+              className="sc-s-18"
+              width={"100%"}
+              style={{ objectFit: "contain", maxHeight: "60vh", backgroundColor : "transparent",  }}
+              src={src}
+              alt="el"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      )}
+      <img
+        onClick={(e) => {
+          e.stopPropagation();
+          setResize(true);
+        }}
+        className="sc-s-18"
+        style={{
+          cursor: "zoom-in",
+          aspectRatio: "1/1",
+          objectFit: "cover",
+          minWidth: `${size}px`,
+          minHeight: `${size}px`,
+          maxWidth: `${size}px`,
+          maxHeight: `${size}px`,
+          borderRadius: "var(--border-r-50)",
+        }}
+        width={"100%"}
+        src={src}
+        alt="el"
+        loading="lazy"
+      />
+    </>
   );
 };
