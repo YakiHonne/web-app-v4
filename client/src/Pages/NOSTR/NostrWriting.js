@@ -70,8 +70,7 @@ export default function NostrWriting() {
     post_content,
     post_published_at,
   } = state || {};
-  const { nostrUser, nostrKeys, nostrUserLoaded, setToast, isDarkMode } =
-    useContext(Context);
+  const { nostrKeys, setToast, isDarkMode } = useContext(Context);
   const [content, setContent] = useState(
     post_content || localStorage.getItem("yai-last-article-content") || ""
   );

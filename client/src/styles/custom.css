@@ -1836,7 +1836,15 @@ main {
     display: none;
 }
 
+.sw-container .round-icon-small {
+    display: none;
+}
+
 @media (hover: hover) {
+
+    .sw-container:hover .round-icon-small {
+        display: flex;
+    }
     .list-item:hover {
         background-color: var(--c1-side);
         color: var(--black);
@@ -1979,3 +1987,4 @@ main {
     padding-bottom: .5rem;
     background-color: #ff9c0811
 }
+

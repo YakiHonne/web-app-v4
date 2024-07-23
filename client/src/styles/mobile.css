@@ -318,6 +318,10 @@
      pointer-events: none;
 } */
 
+.sw-container .round-icon-small {
+  display: flex;
+}
+
 }
 
 @media only screen and (max-width: 550px) {

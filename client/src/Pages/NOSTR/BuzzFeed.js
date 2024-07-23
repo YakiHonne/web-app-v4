@@ -16,7 +16,6 @@ import { Context } from "../../Context/Context";
 export default function BuzzFeed() {
   const { buzzFeedSources } = useContext(Context);
   const [posts, setPosts] = useState([]);
-
   const [contentFrom, setContentFrom] = useState("all");
   const [lastEventTimestamp, setLastEventTimestamp] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
@@ -179,7 +178,7 @@ export default function BuzzFeed() {
                             to={`/buzz-feed/${post.nEvent}`}
                             className="fit-container fx-scattered  slide-up pointer box-pad-h-m "
                           >
-                            <div className="fx-scattered fx-start-v fx-col" >
+                            <div className="fx-scattered fx-start-v fx-col">
                               <div className="fx-centered">
                                 <a
                                   className="fx-centered"
@@ -212,9 +211,14 @@ export default function BuzzFeed() {
                               </div>
                               <p className="fit-container">{post.title}</p>
                             </div>
-                            <div className="sc-s-18 bg-img cover-bg" style={{minWidth: '50px', aspectRatio: '1/1', backgroundImage: `url(${post.image})`}}>
-
-                            </div>
+                            <div
+                              className="sc-s-18 bg-img cover-bg"
+                              style={{
+                                minWidth: "50px",
+                                aspectRatio: "1/1",
+                                backgroundImage: `url(${post.image})`,
+                              }}
+                            ></div>
                           </Link>
                           <hr />
                         </Fragment>

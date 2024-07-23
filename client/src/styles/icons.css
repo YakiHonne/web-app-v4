@@ -281,7 +281,27 @@
 .qrcode,
 .qrcode-24,
 .wallet-add,
-.wallet-add-24 {
+.wallet-add-24,
+.smart-widget-add,
+.smart-widget-add-24,
+.text,
+.text-24,
+.button,
+.button-24,
+.container-one,
+.container-one-24,
+.container-one-one,
+.container-one-one-24,
+.container-one-two,
+.container-one-two-24,
+.container-two-one,
+.container-two-one-24,
+.youtube-logo,
+.youtube-logo-24,
+.discord-logo,
+.discord-logo-24,
+.telegram-b-logo,
+.telegram-b-logo-24 {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -563,7 +583,21 @@
     .qrcode,
     .qrcode-24,
     .wallet-add,
-    .wallet-add-24 {
+    .wallet-add-24,
+    .smart-widget-add,
+    .smart-widget-add-24,
+    .text,
+    .text-24,
+    .button,
+    .button-24,
+    .container-one,
+    .container-one-24,
+    .container-one-one,
+    .container-one-one-24,
+    .container-one-two,
+    .container-one-two-24,
+    .container-two-one,
+    .container-two-one-24 {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -730,7 +764,17 @@
 .mute,
 .unmute,
 .qrcode,
-.wallet-add {
+.wallet-add,
+.smart-widget-add,
+.text,
+.button,
+.container-one,
+.container-one-one,
+.container-one-two,
+.container-two-one,
+.youtube-logo,
+.discord-logo,
+.telegram-b-logo {
     min-width: 16px;
     min-height: 16px;
 }
@@ -879,7 +923,16 @@
 .mute-24,
 .unmute-24,
 .qrcode-24,
-.wallet-add-24 {
+.wallet-add-24,
+.text-24,
+.button-24,
+.container-one-24,
+.container-one-one-24,
+.container-one-two-24,
+.container-two-one-24,
+.youtube-logo-24,
+.discord-logo-24,
+.telegram-b-logo-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -887,6 +940,54 @@
 .play-vid-58 {
     min-width: 48px;
     min-height: 48px;
+}
+
+.telegram-b-logo,
+.telegram-b-logo-24 {
+    background-image: url('../media/icons/telegram.svg');
+}
+.youtube-logo,
+.youtube-logo-24 {
+    background-image: url('../media/icons/youtube.svg');
+ 
+}
+.discord-logo,
+.discord-logo-24 {
+    background-image: url('../media/icons/discord.svg');
+}
+.container-one,
+.container-one-24 {
+    background-image: url('../media/icons/container-one.svg');
+}
+
+.container-one-one,
+.container-one-one-24 {
+    background-image: url('../media/icons/container-one-one.svg');
+}
+
+.container-one-two,
+.container-one-two-24 {
+    background-image: url('../media/icons/container-one-two.svg');
+}
+
+.container-two-one,
+.container-two-one-24 {
+    background-image: url('../media/icons/container-two-one.svg');
+}
+
+.button,
+.button-24 {
+    background-image: url('../media/icons/button.svg');
+}
+
+.text,
+.text-24 {
+    background-image: url('../media/icons/text.svg');
+}
+
+.smart-widget-add,
+.smart-widget-add-24 {
+    background-image: url('../media/icons/smart-widget-add.svg');
 }
 
 .wallet-add,
@@ -1081,6 +1182,12 @@
 .plus-sign-w,
 .plus-sign-w-24 {
     background-image: url('../media/icons/plus-sign.svg');
+}
+
+.plus-sign,
+.plus-sign-w {
+    min-width: 10px;
+    min-height: 10px;
 }
 
 .plus-sign-w,
