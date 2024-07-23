@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../../Context/Context";
 import {
   SimplePool,
@@ -20,17 +20,20 @@ export default function InitiConvo({ exit, receiver = false }) {
     nostrKeys,
     nostrUser,
     setToPublish,
+    toPublish,
     setToast,
+    isPublishing,
     setUpdatedActionFromYakiChest,
     updateYakiChestStats,
   } = useContext(Context);
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
   const [message, setMessage] = useState("");
-  const [legacy, setLegacy] = useState(
-    // nostrKeys.sec || window?.nostr?.nip44 ? false : true
-    true
-  );
+  const [legacy, setLegacy] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPublishing && toPublish) exit();
+  }, [isPublishing]);
 
   const handleSendMessage = async () => {
     if (
@@ -45,6 +48,7 @@ export default function InitiConvo({ exit, receiver = false }) {
       ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
       : relaysOnPlatform;
     if (legacy) {
+      setIsLoading(true);
       let encryptedMessage = "";
       if (nostrKeys.ext) {
         encryptedMessage = await window.nostr.nip04.encrypt(
@@ -73,6 +77,7 @@ export default function InitiConvo({ exit, receiver = false }) {
           tempEvent = await window.nostr.signEvent(tempEvent);
         } catch (err) {
           console.log(err);
+          setIsLoading(false);
           return false;
         }
       } else {
@@ -213,24 +218,38 @@ export default function InitiConvo({ exit, receiver = false }) {
 
       // let res2 = pool_ev2.publish(relays, event2);
 
-      let [res1, res2] = await Promise.all([
-        Promise.allSettled(pool_ev1.publish(relays, event1)),
-        Promise.allSettled(pool_ev2.publish(relays, event2)),
+      // let [res1, res2] = await Promise.all([
+      //   Promise.allSettled(pool_ev1.publish(relays, event1)),
+      //   Promise.allSettled(pool_ev2.publish(relays, event2)),
+      // ]);
+      let [res1, res2] = await Promise.race([
+        Promise.allSettled(pool_ev1.publish(relaysOnPlatform, event1)),
+        Promise.allSettled(pool_ev2.publish(relaysOnPlatform, event2)),
       ]);
-      let check_publishing = res1.find((item) => item.status === "fulfilled");
-      if (receiver && check_publishing) {
+
+      if (res1.status === "rejected") {
         setToast({
-          type: 1,
-          desc: "Message sent!",
+          type: 2,
+          desc: "Error sending the message.",
         });
+        return false;
       }
-      return check_publishing ? true : false;
+      // let check_publishing = res1.find((item) => item.status === "fulfilled");
+      // if (receiver && check_publishing) {
+      setToast({
+        type: 1,
+        desc: "Message sent!",
+      });
+      // }
+      // return check_publishing ? true : false;
+      return true;
     } catch (err) {
       console.log(err);
       setToast({
         type: 2,
         desc: "Error sending the message.",
       });
+      return false;
     }
   };
 

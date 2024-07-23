@@ -347,13 +347,15 @@ export default function NostrHome() {
         : [];
 
       let profiles = nostrBandProfiles.data.profiles
-        ? nostrBandProfiles.data.profiles.map((profile) => {
-            return {
-              pubkey: profile.profile.pubkey,
-              articles_number: profile.new_followers_count,
-              ...JSON.parse(profile.profile.content),
-            };
-          })
+        ? nostrBandProfiles.data.profiles
+            .filter((profile) => profile.profile)
+            .map((profile) => {
+              return {
+                pubkey: profile.profile.pubkey,
+                articles_number: profile.new_followers_count,
+                ...JSON.parse(profile.profile.content),
+              };
+            })
         : [];
       let tempTrendingNotes = await Promise.all(
         nostrBandNotes.data.notes.map(async (note) => {
@@ -375,6 +377,7 @@ export default function NostrHome() {
       setTrendingNotes(tempTrendingNotes);
       setTopCreators(profiles.slice(0, 6));
       setRecentTags([...new Set(tags)]);
+      console.log(data);
       setFlashNews(data.data);
     } catch (err) {
       console.log(err);
