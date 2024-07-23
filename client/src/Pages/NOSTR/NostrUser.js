@@ -492,13 +492,15 @@ export default function NostrUser() {
         setSatsSent((SATS_STATS.data.stats[id]?.zaps_sent?.msats || 0) / 1000);
         setUserImpact(USER_IMPACT.data);
         let profiles = nostrBandProfiles.data.profiles
-          ? nostrBandProfiles.data.profiles.map((profile) => {
-              return {
-                pubkey: profile.profile.pubkey,
-                articles_number: profile.new_followers_count,
-                ...JSON.parse(profile.profile.content),
-              };
-            })
+          ? nostrBandProfiles.data.profiles
+              .filter((profile) => profile.profile)
+              .map((profile) => {
+                return {
+                  pubkey: profile.profile.pubkey,
+                  articles_number: profile.new_followers_count,
+                  ...JSON.parse(profile.profile.content),
+                };
+              })
           : [];
         setImportantFN(important.data);
         setTrendingProfiles(profiles.slice(0, 6));
@@ -2263,7 +2265,11 @@ const UserPP = ({ src, size, user_id }) => {
             <img
               className="sc-s-18"
               width={"100%"}
-              style={{ objectFit: "contain", maxHeight: "60vh", backgroundColor : "transparent",  }}
+              style={{
+                objectFit: "contain",
+                maxHeight: "60vh",
+                backgroundColor: "transparent",
+              }}
               src={src}
               alt="el"
               loading="lazy"

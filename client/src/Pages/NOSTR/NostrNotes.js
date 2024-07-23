@@ -139,13 +139,15 @@ export default function NostrNotes() {
         let tNotes = nostrBandNotes.data?.notes.splice(0, 10) || [];
 
         let profiles = nostrBandProfiles.data.profiles
-          ? nostrBandProfiles.data.profiles.map((profile) => {
-              return {
-                pubkey: profile.profile.pubkey,
-                articles_number: profile.new_followers_count,
-                ...JSON.parse(profile.profile.content),
-              };
-            })
+          ? nostrBandProfiles.data.profiles
+              .filter((profile) => profile.profile)
+              .map((profile) => {
+                return {
+                  pubkey: profile.profile.pubkey,
+                  articles_number: profile.new_followers_count,
+                  ...JSON.parse(profile.profile.content),
+                };
+              })
           : [];
         setTopCreators(profiles.slice(0, 6));
         setTrendingNotes(
@@ -408,7 +410,7 @@ export default function NostrNotes() {
                       backgroundColor: "var(--c1-side)",
                       rowGap: "24px",
                       border: "none",
-                      overflow: "visible"
+                      overflow: "visible",
                     }}
                   >
                     <h4>Trending users</h4>
