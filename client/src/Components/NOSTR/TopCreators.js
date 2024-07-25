@@ -86,7 +86,7 @@ const AuthorPreview = ({ author, kind }) => {
           metadata={author}
         />
         <div>
-          <p>{author.name}</p>
+          <p>{author.display_name || author.name}</p>
           <div className="fx-centered fx-start-h">
             <p className="c1-c p-medium">
               {author.articles_number} <span className="gray-c">{kind}</span>

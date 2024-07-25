@@ -10,7 +10,7 @@ import ToDeletePostNOSTR from "../../Components/NOSTR/ToDeletePostNOSTR";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
-import { filterRelays, getBech32 } from "../../Helpers/Encryptions";
+import { filterRelays, getBech32, getEmptyNostrUser } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
 import UploadFile from "../../Components/UploadFile";
 import { nanoid } from "nanoid";
@@ -164,13 +164,21 @@ export default function NostrMyNotes() {
         let tNotes = nostrBandNotes.data?.notes.splice(0, 10) || [];
 
         let profiles = nostrBandProfiles.data.profiles
-          ? nostrBandProfiles.data.profiles.map((profile) => {
-              return {
-                pubkey: profile.profile.pubkey,
-                articles_number: profile.new_followers_count,
-                ...JSON.parse(profile.profile.content),
-              };
-            })
+          ? nostrBandProfiles.data.profiles
+              .filter((profile) => profile.profile)
+              .map((profile) => {
+                let author = getEmptyNostrUser(profile.profile.pubkey);
+                try {
+                  author = JSON.parse(profile.profile.content);
+                } catch (err) {
+                  console.log(err);
+                }
+                return {
+                  pubkey: profile.profile.pubkey,
+                  articles_number: profile.new_followers_count,
+                  ...author,
+                };
+              })
           : [];
         setTopCreators(profiles.slice(0, 6));
         setTrendingNotes(
@@ -246,7 +254,7 @@ export default function NostrMyNotes() {
               >
                 <div className="fx-centered fit-container fx-start-h fx-start-v">
                   <div
-                    style={{flex: 2, width: "min(100%,700px)" }}
+                    style={{ flex: 2, width: "min(100%,700px)" }}
                     className="box-pad-h-m"
                   >
                     <div
@@ -439,51 +447,54 @@ export default function NostrMyNotes() {
                     </div>
                   </div>
                   <div
-                  style={{
-                    flex: 1,
-                    top:
-                      extrasRef.current?.getBoundingClientRect().height >=
-                      window.innerHeight
-                        ? `calc(95vh - ${
-                            extrasRef.current?.getBoundingClientRect().height ||
-                            0
-                          }px)`
-                        : 0,
-                  }}
-                  className={`fx-centered  fx-wrap  box-pad-v sticky extras-homepage`}
-                  ref={extrasRef}
-                >
-                  <div className="sticky fit-container">
-                    <SearchbarNOSTR />
-                  </div>
+                    style={{
+                      flex: 1,
+                      top:
+                        extrasRef.current?.getBoundingClientRect().height >=
+                        window.innerHeight
+                          ? `calc(95vh - ${
+                              extrasRef.current?.getBoundingClientRect()
+                                .height || 0
+                            }px)`
+                          : 0,
+                    }}
+                    className={`fx-centered  fx-wrap  box-pad-v sticky extras-homepage`}
+                    ref={extrasRef}
+                  >
+                    <div className="sticky fit-container">
+                      <SearchbarNOSTR />
+                    </div>
 
-                  {trendingNotes.length > 0 && (
+                    {trendingNotes.length > 0 && (
+                      <div
+                        className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v "
+                        style={{
+                          backgroundColor: "var(--c1-side)",
+                          rowGap: "24px",
+                          border: "none",
+                        }}
+                      >
+                        <h4>Trending notes</h4>
+                        <TrendingNotes notes={trendingNotes} />
+                      </div>
+                    )}
                     <div
-                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v "
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
                       style={{
                         backgroundColor: "var(--c1-side)",
                         rowGap: "24px",
                         border: "none",
+                        overflow: "visible",
                       }}
                     >
-                      <h4>Trending notes</h4>
-                      <TrendingNotes notes={trendingNotes} />
+                      <h4>Trending users</h4>
+                      <TopCreators
+                        top_creators={topCreators}
+                        kind="Followers"
+                      />
                     </div>
-                  )}
-                  <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
-                      overflow: "visible"
-                    }}
-                  >
-                    <h4>Trending users</h4>
-                    <TopCreators top_creators={topCreators} kind="Followers" />
+                    <Footer />
                   </div>
-                  <Footer />
-                </div>
                 </div>
               </main>
             </div>

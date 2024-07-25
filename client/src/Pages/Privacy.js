@@ -5,11 +5,11 @@ import { Link } from "react-router-dom";
 
 export default function Privacy() {
   return (
-    <div 
+    <div
       className="fx-centered box-pad-h box-pad-v fx-start-v"
       style={{ backgroundColor: "black", minHeight: "100vh" }}
     >
-      <div style={{ width: "min(100%, 1000px)", paddingBottom: "3rem" }}>
+      <div style={{ width: "min(100%, 1000px)" }}>
         <Helmet>
           <title>Yakihonne | Yakihonne privacy policies</title>
           <meta
@@ -39,7 +39,7 @@ export default function Privacy() {
         </Helmet>
         <div
           className="fx-centered fx-col fx-start-v fx-start-h"
-          style={{ rowGap: "20px" }}
+          style={{ rowGap: "20px", color: "white" }}
         >
           <div
             className="box-pad-h-s box-pad-v-s sc-s-18 fit-container fx-centered"
@@ -52,13 +52,13 @@ export default function Privacy() {
             }}
           >
             <Link to={"/"} className="fx-centered">
-              <div
-                className="yakihonne-logo-128"
-                style={{ filter: "brightness(0) invert()" }}
+            <div
+                className="yakihonne-logo"
+                style={{ filter: "brightness(0) invert()", height: "64px" }}
               ></div>
             </Link>
           </div>
-          <h2>Privacy Policy</h2>
+          <h2 style={{ color: "white" }}>Privacy Policy</h2>
           <p>Last updated: October 26, 2023</p>
           <p>
             This Privacy Policy describes Our policies and procedures on the
@@ -71,15 +71,15 @@ export default function Privacy() {
             using the Service, You agree to the collection and use of
             information in accordance with this Privacy Policy.
           </p>
-          <h2>Interpretation and Definitions</h2>
-          <h3>Interpretation</h3>
+          <h2 style={{ color: "white" }}>Interpretation and Definitions</h2>
+          <h3 style={{ color: "white" }}>Interpretation</h3>
           <p>
             The words of which the initial letter is capitalized have meanings
             defined under the following conditions. The following definitions
             shall have the same meaning regardless of whether they appear in
             singular or in plural.
           </p>
-          <h3>Definitions</h3>
+          <h3 style={{ color: "white" }}>Definitions</h3>
           <p>For the purposes of this Privacy Policy:</p>
           <ul className="fx-centered fx-col fx-start-h fx-start-v">
             <li>
@@ -161,8 +161,10 @@ export default function Privacy() {
               </p>
             </li>
           </ul>
-          <h2>Collecting and Using Your Personal Data</h2>
-          <h3>Types of Data Collected</h3>
+          <h2 style={{ color: "white" }}>
+            Collecting and Using Your Personal Data
+          </h2>
+          <h3 style={{ color: "white" }}>Types of Data Collected</h3>
           <h4>Personal Data</h4>
           <p>
             While using Our Service, We may ask You to provide Us with certain
@@ -195,7 +197,7 @@ export default function Privacy() {
             visit our Service or when You access the Service by or through a
             mobile device.
           </p>
-          <h3>Use of Your Personal Data</h3>
+          <h3 style={{ color: "white" }}>Use of Your Personal Data</h3>
           <p>The Company may use Personal Data for the following purposes:</p>
           <ul className="fx-centered fx-col fx-start-h fx-start-v">
             <li>
@@ -307,7 +309,7 @@ export default function Privacy() {
               information for any other purpose with Your consent.
             </li>
           </ul>
-          <h3>Retention of Your Personal Data</h3>
+          <h3 style={{ color: "white" }}>Retention of Your Personal Data</h3>
           <p>
             The Company will retain Your Personal Data only for as long as is
             necessary for the purposes set out in this Privacy Policy. We will
@@ -323,7 +325,7 @@ export default function Privacy() {
             improve the functionality of Our Service, or We are legally
             obligated to retain this data for longer time periods.
           </p>
-          <h3>Transfer of Your Personal Data</h3>
+          <h3 style={{ color: "white" }}>Transfer of Your Personal Data</h3>
           <p>
             Your information, including Personal Data, is processed at the
             Company's operating offices and in any other places where the
@@ -345,7 +347,7 @@ export default function Privacy() {
             place including the security of Your data and other personal
             information.
           </p>
-          <h3>Delete Your Personal Data</h3>
+          <h3 style={{ color: "white" }}>Delete Your Personal Data</h3>
           <p>
             You have the right to delete or request that We assist in deleting
             the Personal Data that We have collected about You.
@@ -365,7 +367,7 @@ export default function Privacy() {
             Please note, however, that We may need to retain certain information
             when we have a legal obligation or lawful basis to do so.
           </p>
-          <h3>Disclosure of Your Personal Data</h3>
+          <h3 style={{ color: "white" }}>Disclosure of Your Personal Data</h3>
           <h4>Business Transactions</h4>
           <p>
             If the Company is involved in a merger, acquisition or asset sale,
@@ -397,7 +399,7 @@ export default function Privacy() {
             </li>
             <li>Protect against legal liability</li>
           </ul>
-          <h3>Security of Your Personal Data</h3>
+          <h3 style={{ color: "white" }}>Security of Your Personal Data</h3>
           <p>
             The security of Your Personal Data is important to Us, but remember
             that no method of transmission over the Internet, or method of
@@ -405,7 +407,7 @@ export default function Privacy() {
             commercially acceptable means to protect Your Personal Data, We
             cannot guarantee its absolute security.
           </p>
-          <h2>Children's Privacy</h2>
+          <h2 style={{ color: "white" }}>Children's Privacy</h2>
           <p>
             Our Service does not address anyone under the age of 13. We do not
             knowingly collect personally identifiable information from anyone
@@ -421,7 +423,7 @@ export default function Privacy() {
             require Your parent's consent before We collect and use that
             information.
           </p>
-          <h2>Links to Other Websites</h2>
+          <h2 style={{ color: "white" }}>Links to Other Websites</h2>
           <p>
             Our Service may contain links to other websites that are not
             operated by Us. If You click on a third party link, You will be
@@ -433,7 +435,7 @@ export default function Privacy() {
             content, privacy policies or practices of any third party sites or
             services.
           </p>
-          <h2>Changes to this Privacy Policy</h2>
+          <h2 style={{ color: "white" }}>Changes to this Privacy Policy</h2>
           <p>
             We may update Our Privacy Policy from time to time. We will notify
             You of any changes by posting the new Privacy Policy on this page.
@@ -448,13 +450,18 @@ export default function Privacy() {
             changes. Changes to this Privacy Policy are effective when they are
             posted on this page.
           </p>
-          <h2>Contact Us</h2>
+          <h2 style={{ color: "white" }}>Contact Us</h2>
           <p>
             If you have any questions about this Privacy Policy, You can contact
             us by email at <span className="orange-c">dev@yakihonne.com</span>
           </p>
         </div>
-        <Footer full={true} />
+        <div
+          className="fit-container box-pad-v"
+          style={{ filter: "brightness(0) invert()" }}
+        >
+          <Footer />
+        </div>
       </div>
     </div>
   );

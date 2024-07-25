@@ -350,10 +350,16 @@ export default function NostrHome() {
         ? nostrBandProfiles.data.profiles
             .filter((profile) => profile.profile)
             .map((profile) => {
+              let author = getEmptyNostrUser(profile.profile.pubkey)
+              try {
+                author= JSON.parse(profile.profile.content)
+              } catch(err) {
+                console.log(err)
+              }
               return {
                 pubkey: profile.profile.pubkey,
                 articles_number: profile.new_followers_count,
-                ...JSON.parse(profile.profile.content),
+                ...author,
               };
             })
         : [];
@@ -365,7 +371,13 @@ export default function NostrHome() {
       );
       let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
         try {
-          return { ...JSON.parse(note.author.content), pubkey: note.pubkey };
+          let author = getEmptyNostrUser(note.author.pubkey)
+              try {
+                author= JSON.parse(note.author.content)
+              } catch(err) {
+                console.log(err)
+              }
+          return { ...author, pubkey: note.pubkey };
         } catch (err) {
           console.log(err);
           return getEmptyNostrUser(note.pubkey);

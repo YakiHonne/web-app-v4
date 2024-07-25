@@ -113,8 +113,12 @@ export default function YakiMobileApp() {
         >
           <Link to={"/"} className="fx-centered">
             <div
-              className="yakihonne-logo-128"
-              style={{ filter: "brightness(0) invert()" }}
+              className="yakihonne-logo"
+              style={{
+                filter: "brightness(0) invert()",
+                width: "128px",
+                height: "48px",
+              }}
             ></div>
           </Link>
           <h5 className="gray-c">Mobile App Preview</h5>
@@ -184,10 +188,10 @@ export default function YakiMobileApp() {
           >
             <div className="box-pad-h box-pad-v fx-scattered fx-col fx-start-v">
               <div>
-                <h2 className="  gray-c" style={{color: "white"}}>
+                <h2 className="  gray-c" style={{ color: "white" }}>
                   Elevate Your <span className="p-bold">Insights</span>
                 </h2>
-                <h2 className="  gray-c" style={{color: "white"}}>
+                <h2 className="  gray-c" style={{ color: "white" }}>
                   Where <span className="c1-c">writing</span> Shines Bright!
                 </h2>
               </div>
@@ -216,7 +220,7 @@ export default function YakiMobileApp() {
             }}
           >
             <div className="box-pad-h box-pad-v fx-centered fx-start-h fx-start-v">
-              <h2 className=" " style={{color: "white"}}>
+              <h2 className=" " style={{ color: "white" }}>
                 Limitless <span className="p-bold">content</span> for you to{" "}
                 <span className="c1-c">engage.</span>
               </h2>
@@ -247,13 +251,13 @@ export default function YakiMobileApp() {
           >
             <div className="box-pad-h box-pad-v fx-scattered fx-col fx-start-v">
               <div>
-                <h2 className=" " style={{color: "white"}}>
+                <h2 className=" " style={{ color: "white" }}>
                   Discover <span className="c3-c">curations.</span>
                 </h2>
-                <h2 className=" " style={{color: "white"}}>
+                <h2 className=" " style={{ color: "white" }}>
                   Craft your <span className="c3-c">collections.</span>
                 </h2>
-                <h2 className=" " style={{color: "white"}}>
+                <h2 className=" " style={{ color: "white" }}>
                   Captivate your <span className="c3-c">audience.</span>
                 </h2>
               </div>
@@ -287,7 +291,7 @@ export default function YakiMobileApp() {
           >
             <div className="box-pad-h box-pad-v fx-scattered fx-col fx-start-v">
               <div>
-                <h2 className=" " style={{color: "white"}}>
+                <h2 className=" " style={{ color: "white" }}>
                   Stay connected with your{" "}
                   <span className="c1-c">followers, followings.</span>
                 </h2>
@@ -319,13 +323,13 @@ export default function YakiMobileApp() {
           >
             <div className="box-pad-h box-pad-v fx-scattered fx-col fx-start-v">
               <div>
-                <h2 className=" " style={{color: "white"}}>
+                <h2 className=" " style={{ color: "white" }}>
                   <span className="c1-c">Write</span> your content.
                 </h2>
-                <h2 className=" " style={{color: "white"}}>
+                <h2 className=" " style={{ color: "white" }}>
                   <span className="c1-c">Refine</span> it effortlessly.
                 </h2>
-                <h2 className=" " style={{color: "white"}}>
+                <h2 className=" " style={{ color: "white" }}>
                   <span className="c1-c">Preview</span> it to perfection.
                 </h2>
               </div>
@@ -345,13 +349,13 @@ export default function YakiMobileApp() {
             }}
           >
             <div className="box-pad-h box-pad-v fx-centered fx-col fx-start-h fx-start-v">
-              <h2 className=" " style={{color: "white"}}>
+              <h2 className=" " style={{ color: "white" }}>
                 Dive into <span className="c1-c">discussions.</span>
               </h2>
-              <h2 className=" " style={{color: "white"}}>
+              <h2 className=" " style={{ color: "white" }}>
                 Share your <span className="c1-c">voice.</span>
               </h2>
-              <h2 className=" " style={{color: "white"}}>
+              <h2 className=" " style={{ color: "white" }}>
                 Show your support with <span className="c1-c">votes.</span>
               </h2>
             </div>
@@ -437,7 +441,7 @@ export default function YakiMobileApp() {
               className="box-pad-h box-pad-v fx-centered fx-col "
               style={{ flex: "1 1 500px" }}
             >
-              <h2 className="  p-centered" style={{color: "white"}}>
+              <h2 className="  p-centered" style={{ color: "white" }}>
                 <span className="c1-c">Seamless account access</span> anytime,
                 anywhere in <span className="c1-c">blink!</span>
               </h2>

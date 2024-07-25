@@ -96,7 +96,7 @@ export default function NostrBookmarks() {
       <div className="fit-container fx-centered">
       <div className="main-container">
         <SidebarNOSTR />
-        <main className="main-page-nostr-container">
+        <main className="main-page-nostr-container" style={{overflow: "visible"}}>
           <ArrowUp />
           <div className="fx-centered fit-container fx-start-h fx-start-v">
             <div style={{ flex: 1 }}>

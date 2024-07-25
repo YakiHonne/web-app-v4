@@ -142,10 +142,16 @@ export default function NostrNotes() {
           ? nostrBandProfiles.data.profiles
               .filter((profile) => profile.profile)
               .map((profile) => {
+                let author = getEmptyNostrUser(profile.profile.pubkey)
+                try {
+                  author= JSON.parse(profile.profile.content)
+                } catch(err) {
+                  console.log(err)
+                }
                 return {
                   pubkey: profile.profile.pubkey,
                   articles_number: profile.new_followers_count,
-                  ...JSON.parse(profile.profile.content),
+                  ...author,
                 };
               })
           : [];

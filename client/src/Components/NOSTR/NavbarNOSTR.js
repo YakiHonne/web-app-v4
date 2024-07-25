@@ -80,6 +80,17 @@ export default function NavbarNOSTR({ margin = true }) {
     };
   }, [ref]);
 
+  if (
+    [
+      "/yakihonne-mobile-app",
+      "/yakihonne-flash-news",
+      "/privacy",
+      "/terms",
+      "/points-system",
+    ].includes(window.location.pathname)
+  )
+    return;
+
   return (
     <>
       {triggerLogin && <LoginNOSTR exit={() => setTriggerLogin(false)} />}
@@ -105,7 +116,14 @@ export default function NavbarNOSTR({ margin = true }) {
         className={`fit-container fx-scattered  navbar-mobile box-pad-h-m box-pad-v-m`}
       >
         <Link to={"/"}>
-          <div className="yakihonne-logo" style={{filter: "brightness(0) invert()", width: "100px", height:"60px"}}></div>
+          <div
+            className="yakihonne-logo"
+            style={{
+              filter: "brightness(0) invert()",
+              width: "100px",
+              height: "60px",
+            }}
+          ></div>
         </Link>
         <div className="fx-centered">
           <div

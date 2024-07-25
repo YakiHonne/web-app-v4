@@ -1082,9 +1082,9 @@ main {
     flex: 1;
 }
 
-.nostr-article article code, .nostr-article article pre {
-    word-break: break-word;
-    white-space: unset;
+.nostr-article article code, .nostr-article article pre{
+    word-break: break-word !important;
+    white-space: unset !important;
 }
 
 .nostr-article a {

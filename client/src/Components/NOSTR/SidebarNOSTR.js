@@ -60,7 +60,7 @@ export default function SidebarNOSTR() {
       document.removeEventListener("mousedown", handleOffClick);
     };
   }, [settingsRef]);
-  
+
   useEffect(() => {
     let handleOffClick = (e) => {
       if (myContentRef.current && !myContentRef.current.contains(e.target))

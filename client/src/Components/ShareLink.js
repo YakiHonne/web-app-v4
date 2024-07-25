@@ -425,7 +425,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                     >
                       <p
                         className="p-medium p-centered"
-                        style={{ color: "white" }}
+                     
                       >
                         Help us provide more decentralized insights to review
                         this flash news.
