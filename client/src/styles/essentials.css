@@ -807,9 +807,6 @@ label {
     width: 31.3%;
 }
 
-.if::placeholder {
-    color: var(--pale-gray);
-}
 
 .if:focus {
     /* outline: none; */
@@ -1437,8 +1434,8 @@ textarea:focus {
     outline: none;
 }
 
-textarea::placeholder {
-    color: var(--pale-gray);
+textarea::placeholder, .if::placeholder {
+    color: var(--gray);
 }
 
 .plain-txt::-webkit-scrollbar,

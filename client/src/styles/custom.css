@@ -1988,3 +1988,14 @@ main {
     background-color: #ff9c0811
 }
 
+.poll-content-box > span {
+    color: var(--p-color) !important
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+color: var(--black) !important;
+    width: 15px;
+    padding: 0px;
+    margin: 0px;
+    margin-top: 10px;
+}

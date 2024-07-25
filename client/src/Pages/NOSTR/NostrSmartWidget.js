@@ -7,6 +7,12 @@ import { nanoid } from "nanoid";
 import { getVideoFromURL } from "../../Helpers/Helpers";
 import UploadFile from "../../Components/UploadFile";
 import { Link } from "react-router-dom";
+import ZapPollsPreview from "../../Components/NOSTR/ZapPollsPreview";
+import AddPoll from "../../Components/NOSTR/AddPoll";
+import relaysOnPlatform from "../../Content/Relays";
+import { finalizeEvent, nip19, SimplePool } from "nostr-tools";
+import { filterRelays } from "../../Helpers/Encryptions";
+const pool = new SimplePool();
 
 const getTypeMetada = (type) => {
   if (type === "video")
@@ -35,11 +41,12 @@ const getTypeMetada = (type) => {
     };
   if (type === "zap-poll")
     return {
+      nevent: "",
       content: "",
-      text_color: "",
+      content_text_color: "",
       options_text_color: "",
-      background_color: "",
-      front_color: "",
+      options_background_color: "",
+      options_foreground_color: "",
     };
 };
 
@@ -121,6 +128,7 @@ export default function NostrSmartWidget() {
 }
 
 const SmartWidgetBuilder = () => {
+  const { nostrKeys, nostrUser, setToast, setToPublish } = useContext(Context);
   const [showComponents, setShowComponents] = useState(false);
   const [componentsTree, setComponentsTree] = useState([
     {
@@ -299,6 +307,88 @@ const SmartWidgetBuilder = () => {
     return true;
   };
 
+  const postWidget = async () => {
+    let created_at = Math.floor(Date.now() / 1000);
+    let relaysToPublish = nostrUser
+      ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
+      : relaysOnPlatform;
+
+    let tags = [
+      ["d", nanoid()],
+      [
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ],
+      ["published_at", `${created_at}`],
+      // ["title", title],
+      // ["summary", summary],
+    ];
+
+    let content = componentsTree.filter(
+      (component) =>
+        component.left_side.length > 0 || component.right_side.length > 0
+    );
+
+    if (content.length === 0) {
+      setToast({
+        type: 3,
+        desc: "The smart widget should have at least one component",
+      });
+      return;
+    }
+    content = JSON.stringify({
+      border_color: mainContainerBorderColor,
+      background_color: mainContainerBackgroundColor,
+      components: componentsTree,
+    });
+    console.log(content);
+    setToast({
+      type: 1,
+      desc: "Good",
+    });
+    return;
+    let tempEvent = {
+      created_at,
+      kind: 6969,
+      content: content,
+      tags,
+    };
+    if (nostrKeys.ext) {
+      try {
+        tempEvent = await window.nostr.signEvent(tempEvent);
+      } catch (err) {
+        console.log(err);
+        return false;
+      }
+    } else {
+      tempEvent = finalizeEvent(tempEvent, nostrKeys.sec);
+    }
+    setToPublish({
+      eventInitEx: tempEvent,
+      allRelays: relaysToPublish,
+    });
+    let nEvent = nip19.neventEncode({
+      id: tempEvent.id,
+      pubkey: nostrKeys.pub,
+    });
+    let pool = new SimplePool();
+    let sub = pool.subscribeMany(
+      relaysToPublish,
+      [{ kinds: [6969], ids: [tempEvent.id] }],
+      {
+        onevent() {
+          setToast({
+            type: 1,
+            desc: "Poll was posted successfully",
+          });
+
+          sub.close();
+        },
+      }
+    );
+  };
+
   return (
     <>
       {showComponents && (
@@ -318,24 +408,29 @@ const SmartWidgetBuilder = () => {
         >
           <div className="fit-container fx-scattered box-marg-s sticky">
             <h3>Smart widget</h3>
-            {preview && (
-              <div
-                className="round-icon-small round-icon-tooltip"
-                data-tooltip="Edit widget"
-                onClick={() => setPreview(false)}
-              >
-                <div className="edit"></div>
-              </div>
-            )}
-            {!preview && (
-              <div
-                className="round-icon-small round-icon-tooltip"
-                data-tooltip="Preview widget"
-                onClick={() => setPreview(true)}
-              >
-                <div className="eye-opened"></div>
-              </div>
-            )}
+            <div className="fx-centered">
+              {preview && (
+                <div
+                  className="round-icon-small round-icon-tooltip"
+                  data-tooltip="Edit widget"
+                  onClick={() => setPreview(false)}
+                >
+                  <div className="edit"></div>
+                </div>
+              )}
+              {!preview && (
+                <div
+                  className="round-icon-small round-icon-tooltip"
+                  data-tooltip="Preview widget"
+                  onClick={() => setPreview(true)}
+                >
+                  <div className="eye-opened"></div>
+                </div>
+              )}
+              <button className="btn btn-normal btn-small" onClick={postWidget}>
+                Post my widget
+              </button>
+            </div>
           </div>
           <div
             className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col"
@@ -483,7 +578,7 @@ const SmartWidgetBuilder = () => {
           {selectedLayer && (
             <div className="fit-container fx-centered fx-col fx-start-v box-pad-v-s">
               <p className="gray-c p-medium">
-                Customize this {selectedLayer.type}
+                Customize this {selectedLayer.type.replace("-", " ")}
               </p>
               <CustomizeComponent
                 metadata={selectedLayer}
@@ -617,7 +712,7 @@ const EditContainer = ({
 }) => {
   const optionsRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
-  const isMonoLayoutRequired = ["video", "zap-polls"].includes(
+  const isMonoLayoutRequired = ["video", "zap-poll"].includes(
     metadata.left_side[0]?.type
   );
 
@@ -680,6 +775,43 @@ const EditContainer = ({
                       onClick={() => setSelectedLayer(metadata, comp)}
                     >
                       <VideoComp url={comp.metadata.url} />
+                    </div>
+                  );
+                if (comp.type === "zap-poll")
+                  return (
+                    <div
+                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                      key={comp.id}
+                      style={{
+                        borderRadius: "14px",
+                        borderColor:
+                          selectedLayer && selectedLayer.id === comp.id
+                            ? "var(--orange-main)"
+                            : "",
+                      }}
+                      onClick={() => setSelectedLayer(metadata, comp)}
+                    >
+                      <div
+                        className="fit-container"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        <ZapPollsPreview
+                          nevent={comp.metadata.nevent}
+                          event={
+                            comp.metadata.content
+                              ? JSON.parse(comp.metadata.content)
+                              : null
+                          }
+                          content_text_color={comp.metadata.content_text_color}
+                          options_text_color={comp.metadata.options_text_color}
+                          options_background_color={
+                            comp.metadata.options_background_color
+                          }
+                          options_foreground_color={
+                            comp.metadata.options_foreground_color
+                          }
+                        />
+                      </div>
                     </div>
                   );
                 if (comp.type === "image")
@@ -973,7 +1105,6 @@ const EditContainer = ({
                 borderRadius: "var(--border-r-6)",
                 backgroundColor: "var(--pale-gray)",
                 cursor: isMonoLayoutRequired ? "not-allowed" : "pointer",
-
                 zIndex: 4,
               }}
               className="fx-centered option pointer fit-height round-icon-tooltip"
@@ -1185,6 +1316,26 @@ const PreviewContainer = ({ metadata }) => {
             {metadata.left_side?.map((comp) => {
               if (comp.type === "video")
                 return <VideoComp url={comp.metadata.url} key={comp.id} />;
+
+              if (comp.type === "zap-poll")
+                return (
+                  <ZapPollsPreview
+                    nevent={comp.metadata.nevent}
+                    event={
+                      comp.metadata.content
+                        ? JSON.parse(comp.metadata.content)
+                        : null
+                    }
+                    content_text_color={comp.metadata.content_text_color}
+                    options_text_color={comp.metadata.options_text_color}
+                    options_background_color={
+                      comp.metadata.options_background_color
+                    }
+                    options_foreground_color={
+                      comp.metadata.options_foreground_color
+                    }
+                  />
+                );
               if (comp.type === "image")
                 return (
                   <ImgComp
@@ -1401,6 +1552,7 @@ const TextComp = ({ content = "", size, weight, textColor }) => {
     </div>
   );
 };
+
 const ButtonComp = ({ content, textColor, url, backgroundColor, type }) => {
   const getUrl = () => {
     if (!type) return "/";
@@ -1411,14 +1563,18 @@ const ButtonComp = ({ content, textColor, url, backgroundColor, type }) => {
   const getButtonColor = () => {
     if (!type || type === "regular" || type === "zap")
       return { color: textColor, backgroundColor };
-    if (type === "youtube") return { color: "white", backgroundColor: "#FF0000" };
-    if (type === "discord") return { color: "white", backgroundColor: "#7785cc" };
+    if (type === "youtube")
+      return { color: "white", backgroundColor: "#FF0000" };
+    if (type === "discord")
+      return { color: "white", backgroundColor: "#7785cc" };
     if (type === "x") return { color: "white", backgroundColor: "#000000" };
-    if (type === "telegram") return { color: "white", backgroundColor: "#24A1DE" };
+    if (type === "telegram")
+      return { color: "white", backgroundColor: "#24A1DE" };
   };
 
   const buttonUrl = getUrl();
   const buttonColor = getButtonColor();
+
   if (buttonUrl !== false)
     return (
       <a className="fit-container" href={buttonUrl} target="_blank">
@@ -1429,7 +1585,7 @@ const ButtonComp = ({ content, textColor, url, backgroundColor, type }) => {
         >
           {type === "youtube" && <div className="youtube-logo"></div>}
           {type === "discord" && <div className="discord-logo"></div>}
-          {type === "x" && <div className="twitter-logo"></div>}
+          {type === "x" && <div className="twitter-w-logo"></div>}
           {type === "telegram" && <div className="telegram-b-logo"></div>}
           {content}
         </button>
@@ -1447,6 +1603,9 @@ const ButtonComp = ({ content, textColor, url, backgroundColor, type }) => {
 };
 
 const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
+  const { nostrUser } = useContext(Context);
+  const [showAddPoll, setShowAddPoll] = useState(false);
+
   const handleMetadata = (key, value) => {
     let tempMetadata = {
       ...metadata,
@@ -1454,6 +1613,37 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
     };
     handleComponentMetadata(tempMetadata);
   };
+
+  useEffect(() => {
+    if (metadata.type === "zap-poll") {
+      let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
+      let id;
+      try {
+        id = nip19.decode(metadata.metadata.nevent).data.id;
+      } catch (err) {
+        console.log(err);
+      }
+      if (!id) return;
+      const sub = pool.subscribeMany(
+        relaysToUse,
+        [{ kinds: [6969], ids: [id] }],
+        {
+          async onevent(event) {
+            try {
+              console.log(event);
+              handleMetadata("content", JSON.stringify(event));
+            } catch (err) {
+              console.log(err);
+            }
+          },
+          oneose() {
+            sub.close();
+            pool.close(relaysToUse);
+          },
+        }
+      );
+    }
+  }, [metadata]);
 
   if (metadata.type === "image")
     return (
@@ -1600,23 +1790,44 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             onChange={(e) => handleMetadata("content", e.target.value)}
           />
         </div>
-        <div className="fit-container fx-scattered">
+        <div className="fit-container fx-centered fx-col">
           <input
             type="text"
-            placeholder="URL"
+            placeholder={
+              metadata.metadata.type === "zap"
+                ? "Invoice / Lightning address"
+                : "URL"
+            }
             className="if ifs-full"
             value={metadata.metadata.url}
             onChange={(e) => handleMetadata("url", e.target.value)}
           />
+          {metadata.metadata.type === "zap" && (
+            <p className="gray-c p-medium">
+              Generate an invoice in the{" "}
+              <a href="/wallet" className="orange-c" target="_blank">
+                wallet page
+              </a>
+            </p>
+          )}
         </div>
-        <div className="fx-scattered fit-container"style={{pointerEvents: !["regular", "zap"].includes(metadata.metadata.type) ? "none" : "", opacity: !["regular", "zap"].includes(metadata.metadata.type) ? .7 : 1}}>
+        <div
+          className="fx-scattered fit-container"
+          style={{
+            pointerEvents: !["regular", "zap"].includes(metadata.metadata.type)
+              ? "none"
+              : "",
+            opacity: !["regular", "zap"].includes(metadata.metadata.type)
+              ? 0.7
+              : 1,
+          }}
+        >
           <p>Background color</p>
           <div className="fx-centered">
             <label
               htmlFor="btn-bg-color"
               className="pointer"
               style={{ position: "relative" }}
-              
             >
               <input
                 type="color"
@@ -1629,7 +1840,6 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                   top: 0,
                   zIndex: -1,
                 }}
-                
                 value={metadata.metadata.background_color}
                 onChange={(e) =>
                   handleMetadata("background_color", e.target.value)
@@ -1654,7 +1864,17 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             )}
           </div>
         </div>
-        <div className="fx-scattered fit-container" style={{pointerEvents: !["regular", "zap"].includes(metadata.metadata.type) ? "none" : "", opacity: !["regular", "zap"].includes(metadata.metadata.type) ? .7 : 1}}>
+        <div
+          className="fx-scattered fit-container"
+          style={{
+            pointerEvents: !["regular", "zap"].includes(metadata.metadata.type)
+              ? "none"
+              : "",
+            opacity: !["regular", "zap"].includes(metadata.metadata.type)
+              ? 0.7
+              : 1,
+          }}
+        >
           <p>Text color</p>
           <div className="fx-centered">
             <label
@@ -1712,5 +1932,210 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           </select>
         </div>
       </div>
+    );
+
+  if (metadata.type === "zap-poll")
+    return (
+      <>
+        {showAddPoll && (
+          <AddPoll
+            exit={() => setShowAddPoll(false)}
+            setNevent={(data) => {
+              handleMetadata("nevent", data);
+              setShowAddPoll(false);
+            }}
+          />
+        )}
+        <div className="fit-container fx-centered fx-col fx-start-v">
+          <div className="fit-container fx-scattered">
+            <input
+              type="text"
+              placeholder="nEvent"
+              className="if ifs-full"
+              value={metadata.metadata.nevent}
+              onChange={(e) => handleMetadata("nevent", e.target.value)}
+            />
+            <div
+              className="round-icon round-icon-tooltip"
+              data-tooltip="Add poll"
+              onClick={() => setShowAddPoll(true)}
+            >
+              <div className="plus-sign"></div>
+            </div>
+          </div>
+          <div className="fx-scattered fit-container">
+            <p>Content text color</p>
+            <div className="fx-centered">
+              <label
+                htmlFor="content_text_color"
+                className="pointer"
+                style={{ position: "relative" }}
+              >
+                <input
+                  type="color"
+                  name="content_text_color"
+                  id="content_text_color"
+                  style={{
+                    opacity: 0,
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                    zIndex: -1,
+                  }}
+                  value={metadata.metadata.content_text_color}
+                  onChange={(e) =>
+                    handleMetadata("content_text_color", e.target.value)
+                  }
+                />
+                <div
+                  className="round-icon-small"
+                  style={{
+                    backgroundColor: metadata.metadata.content_text_color,
+                    position: "relative",
+                    zIndex: 2,
+                  }}
+                ></div>
+              </label>
+              {metadata.metadata.content_text_color && (
+                <div
+                  className="round-icon-small"
+                  onClick={() => handleMetadata("content_text_color", "")}
+                >
+                  <div className="trash"></div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="fx-scattered fit-container">
+            <p>Options text color</p>
+            <div className="fx-centered">
+              <label
+                htmlFor="options_text_color"
+                className="pointer"
+                style={{ position: "relative" }}
+              >
+                <input
+                  type="color"
+                  name="options_text_color"
+                  id="options_text_color"
+                  style={{
+                    opacity: 0,
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                    zIndex: -1,
+                  }}
+                  value={metadata.metadata.options_text_color}
+                  onChange={(e) =>
+                    handleMetadata("options_text_color", e.target.value)
+                  }
+                />
+                <div
+                  className="round-icon-small"
+                  style={{
+                    backgroundColor: metadata.metadata.options_text_color,
+                    position: "relative",
+                    zIndex: 2,
+                  }}
+                ></div>
+              </label>
+              {metadata.metadata.options_text_color && (
+                <div
+                  className="round-icon-small"
+                  onClick={() => handleMetadata("options_text_color", "")}
+                >
+                  <div className="trash"></div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="fx-scattered fit-container">
+            <p>Options background color</p>
+            <div className="fx-centered">
+              <label
+                htmlFor="options_background_color"
+                className="pointer"
+                style={{ position: "relative" }}
+              >
+                <input
+                  type="color"
+                  name="options_background_color"
+                  id="options_background_color"
+                  style={{
+                    opacity: 0,
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                    zIndex: -1,
+                  }}
+                  value={metadata.metadata.options_background_color}
+                  onChange={(e) =>
+                    handleMetadata("options_background_color", e.target.value)
+                  }
+                />
+                <div
+                  className="round-icon-small"
+                  style={{
+                    backgroundColor: metadata.metadata.options_background_color,
+                    position: "relative",
+                    zIndex: 2,
+                  }}
+                ></div>
+              </label>
+              {metadata.metadata.options_background_color && (
+                <div
+                  className="round-icon-small"
+                  onClick={() => handleMetadata("options_background_color", "")}
+                >
+                  <div className="trash"></div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="fx-scattered fit-container">
+            <p>Options foreground color</p>
+            <div className="fx-centered">
+              <label
+                htmlFor="options_foreground_color"
+                className="pointer"
+                style={{ position: "relative" }}
+              >
+                <input
+                  type="color"
+                  name="options_foreground_color"
+                  id="options_foreground_color"
+                  style={{
+                    opacity: 0,
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                    zIndex: -1,
+                  }}
+                  value={metadata.metadata.options_foreground_color}
+                  onChange={(e) =>
+                    handleMetadata("options_foreground_color", e.target.value)
+                  }
+                />
+                <div
+                  className="round-icon-small"
+                  style={{
+                    backgroundColor: metadata.metadata.options_foreground_color,
+                    position: "relative",
+                    zIndex: 2,
+                  }}
+                ></div>
+              </label>
+              {metadata.metadata.options_foreground_color && (
+                <div
+                  className="round-icon-small"
+                  onClick={() => handleMetadata("options_foreground_color", "")}
+                >
+                  <div className="trash"></div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </>
     );
 };

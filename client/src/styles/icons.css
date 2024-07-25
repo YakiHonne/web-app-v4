@@ -298,10 +298,9 @@
 .container-two-one-24,
 .youtube-logo,
 .youtube-logo-24,
-.discord-logo,
-.discord-logo-24,
 .telegram-b-logo,
-.telegram-b-logo-24 {
+.telegram-b-logo-24,
+.twitter-w-logo, .twitter-w-logo-24 {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -329,7 +328,6 @@
     .bounties,
     .code,
     .curation,
-    .discord-logo,
     .edit,
     .facebook-logo,
     .filter,
@@ -359,7 +357,7 @@
     .bounties-24,
     .code-24,
     .curation-24,
-    .discord-logo-24,
+
     .edit-24,
     .facebook-logo-24,
     .filter-24,
@@ -774,7 +772,8 @@
 .container-two-one,
 .youtube-logo,
 .discord-logo,
-.telegram-b-logo {
+.telegram-b-logo,
+.twitter-w-logo {
     min-width: 16px;
     min-height: 16px;
 }
@@ -932,7 +931,8 @@
 .container-two-one-24,
 .youtube-logo-24,
 .discord-logo-24,
-.telegram-b-logo-24 {
+.telegram-b-logo-24,
+.twitter-w-logo-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -946,15 +946,13 @@
 .telegram-b-logo-24 {
     background-image: url('../media/icons/telegram.svg');
 }
+
 .youtube-logo,
 .youtube-logo-24 {
     background-image: url('../media/icons/youtube.svg');
- 
+
 }
-.discord-logo,
-.discord-logo-24 {
-    background-image: url('../media/icons/discord.svg');
-}
+
 .container-one,
 .container-one-24 {
     background-image: url('../media/icons/container-one.svg');
@@ -1063,7 +1061,7 @@
 }
 
 .user-followed-w,
-.user-followed-w-24 {
+.user-followed-w-24, .twitter-w-logo, .twitter-w-logo-24 {
     filter: invert();
 }
 
@@ -1607,6 +1605,7 @@
 
 .discord-logo, .discord-logo-24 {
     background-image: url('../media/icons/discord-logo.svg');
+    filter: invert();
 }
 
 .edit, .edit-24 {
@@ -1681,7 +1680,7 @@
     background-image: url('../media/icons/trash.svg');
 }
 
-.twitter-logo, .twitter-logo-24 {
+.twitter-logo, .twitter-logo-24, .twitter-w-logo, .twitter-w-logo-24 {
     background-image: url('../media/icons/twitter-logo.svg');
 }
 
