@@ -336,7 +336,7 @@ const SmartWidgetBuilder = () => {
         desc: "The smart widget should have at least one component",
       });
       return;
-    }
+    } 
     content = JSON.stringify({
       border_color: mainContainerBorderColor,
       background_color: mainContainerBackgroundColor,
