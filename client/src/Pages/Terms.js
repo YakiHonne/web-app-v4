@@ -9,7 +9,7 @@ export default function Terms() {
       className="fx-centered box-pad-h box-pad-v fx-start-v"
       style={{ backgroundColor: "black", minHeight: "100vh" }}
     >
-      <div style={{ width: "min(100%, 1000px)", paddingBottom: "3rem" }}>
+      <div style={{ width: "min(100%, 1000px)",}}>
         <Helmet>
           <title>Yakihonne | Yakihonne privacy policies</title>
           <meta
@@ -39,7 +39,7 @@ export default function Terms() {
         </Helmet>
         <div
           className="fx-centered fx-col fx-start-v fx-start-h"
-          style={{ rowGap: "20px" }}
+          style={{ rowGap: "20px", color: "white" }}
         >
           <div
             className="box-pad-h-s box-pad-v-s sc-s-18 fit-container fx-centered"
@@ -52,13 +52,15 @@ export default function Terms() {
             }}
           >
             <Link to={"/"} className="fx-centered">
-              <div
-                className="yakihonne-logo-128"
-                style={{ filter: "brightness(0) invert()" }}
+            <div
+                className="yakihonne-logo"
+                style={{ filter: "brightness(0) invert()", height: "64px" }}
               ></div>
             </Link>
           </div>
-          <h2>End-User License Agreement (EULA) for YakiHonne</h2>
+          <h2 style={{ color: "white" }}>
+            End-User License Agreement (EULA) for YakiHonne
+          </h2>
           <p>Last updated: October 26, 2023</p>
           <p>
             Please read this End-User License Agreement ("'EULA") carefully
@@ -68,7 +70,7 @@ export default function Terms() {
             download, install, or use the App.
           </p>
 
-          <h3>Prohibited Content and Activities</h3>
+          <h3 style={{ color: "white" }}>Prohibited Content and Activities</h3>
           <ol className="fx-centered fx-col fx-start-h fx-start-v">
             <li>
               <p>
@@ -93,7 +95,9 @@ export default function Terms() {
               </p>
             </li>
           </ol>
-          <h3>Misrepresentation and Illegal Activities</h3>
+          <h3 style={{ color: "white" }}>
+            Misrepresentation and Illegal Activities
+          </h3>
           <ol className="fx-centered fx-col fx-start-h fx-start-v">
             <li>
               <p>
@@ -117,7 +121,7 @@ export default function Terms() {
             </li>
           </ol>
 
-          <h3>User Content Responsibility</h3>
+          <h3 style={{ color: "white" }}>User Content Responsibility</h3>
           <ol>
             <li>
               <p>
@@ -134,7 +138,7 @@ export default function Terms() {
               </p>
             </li>
           </ol>
-          <h3>Intellectual Property</h3>
+          <h3 style={{ color: "white" }}>Intellectual Property</h3>
           <ol>
             <li>
               <p>
@@ -146,7 +150,7 @@ export default function Terms() {
               </p>
             </li>
           </ol>
-          <h3>Governing Law</h3>
+          <h3 style={{ color: "white" }}>Governing Law</h3>
           <ol>
             <li>
               <p>
@@ -156,7 +160,7 @@ export default function Terms() {
               </p>
             </li>
           </ol>
-          <h3>Disclaimer of Warranty</h3>
+          <h3 style={{ color: "white" }}>Disclaimer of Warranty</h3>
           <ol>
             <li>
               <p>
@@ -182,7 +186,9 @@ export default function Terms() {
             <span className="orange-c"> contact@yakihonne.com</span>
           </p>
         </div>
-        <Footer full={true} />
+        <div className="fit-container box-pad-v" style={{filter: "brightness(0) invert()"}}>
+          <Footer />
+        </div>
       </div>
     </div>
   );

@@ -495,10 +495,16 @@ export default function NostrUser() {
           ? nostrBandProfiles.data.profiles
               .filter((profile) => profile.profile)
               .map((profile) => {
+                let author = getEmptyNostrUser(profile.profile.pubkey)
+                try {
+                  author= JSON.parse(profile.profile.content)
+                } catch(err) {
+                  console.log(err)
+                }
                 return {
                   pubkey: profile.profile.pubkey,
                   articles_number: profile.new_followers_count,
-                  ...JSON.parse(profile.profile.content),
+                  ...author,
                 };
               })
           : [];
@@ -618,6 +624,8 @@ export default function NostrUser() {
                     flex: 1.5,
                     maxWidth: "700px",
                     width: "min(100%, 700px)",
+                    zIndex: '11',
+                    position: "relative"
                   }}
                   className="box-pad-h-m box-pad-v-m"
                 >
@@ -1249,7 +1257,7 @@ export default function NostrUser() {
                             0
                           }px)`
                         : 0,
-                    zIndex: "100",
+                    zIndex: "10",
                     flex: 1,
                   }}
                   ref={extrasRef}

@@ -720,12 +720,17 @@ export default function KindOne({ event, reactions = true }) {
                     />
                   </div>
                   {event.pubkey !== nostrKeys.pub && (
-                    <div onClick={muteUnmute} className="pointer">
+                    <div onClick={muteUnmute} className="fit-container fx-scattered pointer">
                       {isMuted ? (
                         <p className="red-c">Unmute user</p>
                       ) : (
                         <p className="red-c">Mute user</p>
                       )}
+                        {isMuted ? (
+                                <div className="unmute-24"></div>
+                              ) : (
+                                <div className="mute-24"></div>
+                              )}
                     </div>
                   )}
                 </div>

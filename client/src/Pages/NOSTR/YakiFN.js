@@ -79,8 +79,8 @@ export default function YakiFN() {
         >
           <Link to={"/"} className="fx-centered">
             <div
-              className="yakihonne-logo-128"
-              style={{ filter: "brightness(0) invert()" }}
+              className="yakihonne-logo"
+              style={{ filter: "brightness(0) invert()", width: "128px", height: "48px" }}
             ></div>
           </Link>
 
@@ -153,7 +153,6 @@ export default function YakiFN() {
             />{" "}
             Your browser does not support HTML5 video.
           </video>
-          
         </div>
         <div
           className="fit-container fx-centered fx-start-v fx-col fx-wrap"

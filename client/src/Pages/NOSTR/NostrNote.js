@@ -1010,9 +1010,10 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
         return;
       }
       setIsLoading(true);
-      let tempComment = suffix
-        ? `${newComment} — This is a comment on: https://yakihonne.com/notes/${nEvent}`
-        : newComment;
+      let tempComment = newComment;
+      // let tempComment = suffix
+      //   ? `${newComment} — This is a comment on: https://yakihonne.com/notes/${nEvent}`
+      //   : newComment;
       setToPublish({
         nostrKeys: nostrKeys,
         kind: 1,

@@ -6,7 +6,6 @@ import relaysOnPlatform from "../../Content/Relays";
 import {
   checkForLUDS,
   decodeBolt11,
-  decryptEventData,
   filterRelays,
   getBech32,
   getBolt11,
@@ -37,6 +36,7 @@ import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import Follow from "../../Components/NOSTR/Follow";
 import AddArticleToCuration from "../../Components/NOSTR/AddArticleToCuration";
+import ReportArticle from "../../Components/NOSTR/ReportArticle";
 const pool = new SimplePool();
 
 const checkForSavedCommentOptions = () => {
@@ -136,8 +136,15 @@ export default function NostrVideo() {
   const extrasRef = useRef(null);
   const [zapsCount, setZapsCount] = useState(0);
   const [zappers, setZappers] = useState([]);
+  const [reporters, setReporters] = useState([]);
+  const [showReportPrompt, setShowReportPrompt] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showAddArticleToCuration, setShowArticleToCuration] = useState(false);
+  const isReported = useMemo(() => {
+    return nostrKeys
+      ? reporters.find((item) => item.pubkey === nostrKeys.pub)
+      : false;
+  }, [reporters]);
   const optionsRef = useRef(null);
 
   const isVoted = useMemo(() => {
@@ -170,6 +177,15 @@ export default function NostrVideo() {
             },
             {
               kinds: [7, 34237],
+
+              "#a": [
+                `${34235}:${naddrData.pubkey}:${naddrData.identifier}`,
+                `${34236}:${naddrData.pubkey}:${naddrData.identifier}`,
+              ],
+            },
+            {
+              kinds: [1984],
+
               "#a": [
                 `${34235}:${naddrData.pubkey}:${naddrData.identifier}`,
                 `${34236}:${naddrData.pubkey}:${naddrData.identifier}`,
@@ -178,8 +194,11 @@ export default function NostrVideo() {
           ],
           {
             onevent(event) {
-              if (event.kind === 7) {
+              if (event.kind === 1984) {
                 console.log(event);
+                setReporters((prev) => [...prev, event]);
+              }
+              if (event.kind === 7) {
                 if (event.content === "+")
                   setUpvoteReaction((upvoteNews) => [...upvoteNews, event]);
                 if (event.content === "-")
@@ -446,6 +465,18 @@ export default function NostrVideo() {
   return (
     <>
       {toLogin && <LoginNOSTR exit={() => setToLogin(false)} />}{" "}
+      {showReportPrompt && (
+        <ReportArticle
+          title={video.title}
+          exit={() => setShowReportPrompt(false)}
+          naddrData={{
+            pubkey: parsedAddr.pubkey,
+            identifier: parsedAddr.identifier,
+          }}
+          isReported={isReported}
+          kind={video.kind}
+        />
+      )}
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -509,7 +540,6 @@ export default function NostrVideo() {
                     >
                       <h4>{video.title}</h4>
                     </div>
-
                     <div className="fx-scattered fit-container box-pad-v-m">
                       <div className="fx-centered">
                         <UserProfilePicNOSTR
@@ -675,7 +705,6 @@ export default function NostrVideo() {
                                 top: "110%",
                                 backgroundColor: "var(--dim-gray)",
                                 border: "none",
-                                // transform: "translateY(100%)",
                                 minWidth: "200px",
                                 width: "max-content",
                                 zIndex: 1000,
@@ -721,29 +750,23 @@ export default function NostrVideo() {
                                   }}
                                 />
                               </div>
+                              {!isReported && (
+                                <div
+                                  className="fit-container fx-centered fx-start-h pointer"
+                                  onClick={() => setShowReportPrompt(true)}
+                                >
+                                  <p>Report this video</p>
+                                </div>
+                              )}
+                              {isReported && (
+                                <div className="fit-container fx-centered fx-start-h pointer">
+                                  <p className="orange-c">Reported!</p>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                        {/* <ShareLink
-                        path={`/videos/${video.naddr}`}
-                        title={author.display_name || author.name}
-                        description={video.content}
-                        kind={34235}
-                        shareImgData={{
-                          post: {...video, description: video.content},
-                          author,
-                          likes: upvoteReaction.length,
-                          dislikes: downvoteReaction.length,
-                          views: videoViews,
-                        }}
-                      /> */}
                       </div>
-                      {/* <div className="fx-centered">
-                      <div className="sc-s box-pad-h-m box-pad-v-s fx-centered">
-                        <div className="like"></div>
-                        <NumberShrink value={upvoteReaction.length} />
-                      </div>
-                    </div> */}
                     </div>
                     <div
                       className="fit-container sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-start-h fx-start-v fx-wrap pointer"
@@ -792,110 +815,6 @@ export default function NostrVideo() {
                         })}
                       </div>
                     </div>
-                    {/* <div className="fit-container fx-scattered box-pad-v-s">
-                    <div className="fx-centered">
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div className="comment-24"></div>
-                        <div>
-                          <NumberShrink value={netCommentsCount} />
-                        </div>
-                      </div>
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className={"icon-tooltip"}
-                          data-tooltip="Upvote"
-                          onClick={upvoteNews}
-                        >
-                          <div
-                            className={
-                              isVoted?.content === "+"
-                                ? "like-bold"
-                                : "arrow-up"
-                            }
-                            style={{
-                              opacity: isVoted?.content === "-" ? ".2" : 1,
-                            }}
-                          ></div>
-                        </div>
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Upvoters"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            upvoteReaction.length > 0 &&
-                              setUsersList({
-                                title: "Upvoters",
-                                list: upvoteReaction.map((item) => item.pubkey),
-                                extras: [],
-                              });
-                          }}
-                        >
-                          <NumberShrink value={upvoteReaction.length} />
-                        </div>
-                      </div>
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvote"
-                          onClick={downvoteNews}
-                        >
-                          <div
-                            className={
-                              isVoted?.content === "-"
-                                ? "like-bold"
-                                : "arrow-up"
-                            }
-                            style={{
-                              transform: "rotate(180deg)",
-                              opacity: isVoted?.content === "+" ? ".2" : 1,
-                            }}
-                          ></div>
-                        </div>
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvoters"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downvoteReaction.length > 0 &&
-                              setUsersList({
-                                title: "Downvoters",
-                                list: downvoteReaction.map(
-                                  (item) => item.pubkey
-                                ),
-                                extras: [],
-                              });
-                          }}
-                        >
-                          <NumberShrink value={downvoteReaction.length} />
-                        </div>
-                      </div>
-                      <p>|</p>
-                      <ShareLink
-                        path={`/video/${
-                          AuthNip05 && VidIdentifier
-                            ? `${AuthNip05}/${VidIdentifier}`
-                            : id
-                        }`}
-                        title={author.display_name || author.name}
-                        description={video.content}
-                      />
-                    </div>
-                  </div> */}
                     <CommentsSection
                       id={video.id}
                       aTag={`${video.kind}:${video.pubkey}:${video.d}`}
@@ -1013,7 +932,7 @@ const CommentsSection = ({
     isPublishing,
     setToast,
   } = useContext(Context);
-  //   const [mainComments, setMainComments] = useState([]);
+
   const [toLogin, setToLogin] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -1023,9 +942,7 @@ const CommentsSection = ({
   const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
     useState(false);
   const [netComments, setNetComments] = useState([]);
-  // const netComments = useMemo(() => {
-  //   return filterRootComments(comments);
-  // }, [comments]);
+
   useEffect(() => {
     if (selectedComment) {
       let sC = netComments.find((item) => item.id === selectedComment.id);
@@ -1043,11 +960,6 @@ const CommentsSection = ({
     };
     parsedCom();
   }, [comments]);
-
-  //   useEffect(() => {
-  //     // setMainComments(comments);
-  //     addNostrAuthors(comments.map((item) => item.pubkey));
-  //   }, [comments]);
 
   const postNewComment = async (suffix) => {
     try {
@@ -1077,15 +989,7 @@ const CommentsSection = ({
           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
           : relaysOnPlatform,
       });
-      // let temPublishingState = await publishPost(
-      //   nostrKeys,
-      //   1,
-      //   tempComment,
-      //   [["a", aTag, "", "root"]],
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
+
       setIsLoading(false);
       setNewComment("");
     } catch (err) {
@@ -1149,21 +1053,6 @@ const CommentsSection = ({
           nEvent={nEvent}
         />
       )}
-      {/* {netComments.length > 0 && (
-        <div className="fit-container">
-          <h4>
-            {
-              <NumberShrink
-                value={
-                  netComments.map((item) => item.count).flat().length +
-                  netComments.length
-                }
-              />
-            }{" "}
-            Comment(s)
-          </h4>
-        </div>
-      )} */}
       {toLogin && <LoginNOSTR exit={() => setToLogin(false)} />}{" "}
       <div className="fit-container fx-centered fx-col fx-start-h fx-start-v">
         {nostrKeys && (
@@ -1180,26 +1069,12 @@ const CommentsSection = ({
               type="text"
               onChange={(e) => setNewComment(e.target.value)}
             />
-            {/* <textarea
-              className="txt-area ifs-full"
-              placeholder="Comment on..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            /> */}
             <button
               className="btn btn-normal fx-centered"
               onClick={() => newComment && setShowCommentsSuffixOption(true)}
             >
               {isLoading && <LoadingDots />}
-              {!isLoading && (
-                <>
-                  {/* {" "}
-                  Comment as{" "}
-                  <UserProfilePicNOSTR img={nostrUser.picture} size={28} />{" "}
-                  {nostrUser.name}{" "} */}
-                  Post
-                </>
-              )}
+              {!isLoading && <>Post</>}
             </button>
           </div>
         )}
@@ -1425,15 +1300,7 @@ const Comment = ({
         eventInitEx: event,
         allRelays: relaysToPublish,
       });
-      // setToPublish({
-      //   nostrKeys: nostrKeys,
-      //   kind: 5,
-      //   content: "This comment will be deleted!",
-      //   tags: [["e", comment.id]],
-      //   allRelays: nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform,
-      // });
+
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -1497,18 +1364,7 @@ const Comment = ({
           style={{ columnGap: "16px" }}
         >
           <div style={{ minWidth: "24px" }}></div>
-          {/* <div
-            className="fx-centered fx-start-h fx-wrap fit-container"
-            style={{ rowGap: 0, columnGap: "4px" }}
-          > */}
           <div>{comment.content_tree}</div>
-          {/* <div
-            className="fx-centered fx-start-h fx-wrap"
-            style={{ rowGap: 0, columnGap: "4px" }}
-          >
-            {getNoteTree(comment.content.split(" — This is a comment on:")[0])}
-          </div> */}
-          {/* <p>{comment.content.split(" — This is a comment on:")[0]}</p> */}
         </div>
 
         {action && (
@@ -1621,21 +1477,6 @@ const CommentsReplies = ({
             className="fx-centered fx-wrap"
             style={{ width: "min(100%, 600px)" }}
           >
-            {/* {selectReplyTo && (
-              <div
-                className="fx-scattered fit-container sc-s-18 box-pad-h-m box-pad-v-s"
-                style={{
-                  backgroundColor: "var(--black)",
-                  border: "none",
-                  borderBottomRightRadius: 0,
-                  borderBottomLeftRadius: 0,
-                }}
-              >
-                <p className="white-c p-medium">
-                  Reply to: {selectReplyTo.content.split(" — This is a comment on:")[0].substring(0, 100)}...
-                </p>
-              </div>
-            )} */}
             {!selectReplyTo && (
               <div
                 className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink"
@@ -1662,20 +1503,10 @@ const CommentsReplies = ({
                   style={{ columnGap: "16px" }}
                 >
                   <div style={{ minWidth: "24px" }}></div>
-                  {/* <div
-                    className="fx-centered fx-start-h fx-wrap fit-container"
-                    style={{ rowGap: 0, columnGap: "4px" }}
-                  > */}
-                  <div className="fit-container">
-                    {comment.content_tree}
-                    {/* {getNoteTree(
-                      comment.content.split(" — This is a comment on:")[0]
-                    )} */}
-                  </div>
+                  <div className="fit-container">{comment.content_tree}</div>
                 </div>
               </div>
             )}
-
             {selectReplyTo && (
               <div
                 className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink"
@@ -1703,16 +1534,7 @@ const CommentsReplies = ({
                   style={{ columnGap: "16px" }}
                 >
                   <div style={{ minWidth: "24px" }}></div>
-                  {/* <div
-                    className="fx-centered fx-start-h fx-wrap fit-container"
-                    style={{ rowGap: 0, columnGap: "4px" }}
-                  > */}
-                  <div className="fit-container">
-                    {selectReplyTo.content}
-                    {/* {getNoteTree(
-                      selectReplyTo.content.split(" — This is a comment on:")[0]
-                    )} */}
-                  </div>
+                  <div className="fit-container">{selectReplyTo.content}</div>
                 </div>
               </div>
             )}
@@ -1760,11 +1582,6 @@ const CommentsReplies = ({
           width: "calc(100% - 64px)",
         }}
       >
-        {/* <h5 className="box-pad-v-m">{comment.count.length} Reply(ies)</h5> */}
-        {/* <div
-          className="fit-container fx-centered fx-col fx-start-h"
-          style={{ maxHeight: "40vh", overflow: "scroll" }}
-        > */}
         {all.map((comment, index) => {
           return (
             <Reply
@@ -1778,61 +1595,6 @@ const CommentsReplies = ({
             />
           );
         })}
-
-        {/* {nostrUser && (
-          <div className="fit-container" ref={ref}>
-            {selectReplyTo && (
-              <div
-                className="fx-scattered fit-container sc-s-18 box-pad-h-m box-pad-v-s"
-                style={{
-                  backgroundColor: "var(--very-dim-gray)",
-                  border: "none",
-                  borderBottomRightRadius: 0,
-                  borderBottomLeftRadius: 0,
-                }}
-              >
-                <p className="c1-c p-medium">
-                  Reply to: {selectReplyTo.content.substring(0, 20)}...
-                </p>
-              </div>
-            )}
-            {toggleReply && (
-              <>
-                <textarea
-                  className="txt-area ifs-full"
-                  placeholder="Reply to comment.."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  style={{
-                    borderTopRightRadius: selectReplyTo ? 0 : "",
-                    borderTopLeftRadius: selectReplyTo ? 0 : "",
-                  }}
-                />
-                <div className="fx-centered fit-container fx-end-h">
-                  <button
-                    className="btn btn-normal  fx-centered"
-                    onClick={() =>
-                      newComment && setShowCommentsSuffixOption(true)
-                    }
-                  >
-                    {isLoading && <LoadingDots />}
-                    {!isLoading && <>Post a comment</>}
-                  </button>
-                  <button
-                    className="btn btn-gst-red"
-                    onClick={() => {
-                      setSelectReplyTo(false);
-                      setToggleReply(false);
-                    }}
-                  >
-                    {" "}
-                    &#10005;
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )} */}
       </div>
     </>
   );
@@ -1901,23 +1663,6 @@ const Reply = ({
         eventInitEx: event,
         allRelays: relaysToPublish,
       });
-      // setToPublish({
-      //   nostrKeys: nostrKeys,
-      //   kind: 5,
-      //   content: "This comment will be deleted!",
-      //   tags: [["e", comment.id]],
-      //   allRelays: nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform,
-      // });
-      // let data = await deletePost(
-      //   nostrKeys,
-      //   comment.id,
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
-
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -1937,7 +1682,6 @@ const Reply = ({
           }}
         />
       )}
-      {/* {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />} */}
       <div
         className={`fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink  ${
           isLoading ? "flash" : ""
@@ -1972,10 +1716,7 @@ const Reply = ({
           )}
         </div>
         {repliedOn && (
-          <div
-            className="fx-start-h fx-centerd fit-container"
-            // style={{ width: seeReply ? "100%" : "max-content" }}
-          >
+          <div className="fx-start-h fx-centerd fit-container">
             <div
               className="fx-centered fit-container fx-start-h pointer"
               onClick={(e) => {
@@ -2008,42 +1749,8 @@ const Reply = ({
           className="fx-centered fx-start-h fit-container"
           style={{ columnGap: "16px" }}
         >
-          {/* <div
-            className="fx-centered fx-start-h fx-wrap fit-container"
-            style={{ rowGap: 0, columnGap: "4px" }}
-          > */}
-          <div className="fit-container">
-            {comment.content_tree}
-            {/* {getNoteTree(comment.content.split(" — This is a comment on:")[0])} */}
-          </div>
-          {/* <p>{comment.content.split(" — This is a comment on:")[0]}</p> */}
+          <div className="fit-container">{comment.content_tree}</div>
         </div>
-
-        {/* {repliedOn && (
-            <div
-              className="fx-start-h fx-centerd fit-container"
-              // style={{ width: seeReply ? "100%" : "max-content" }}
-            >
-              <div
-                className="fx-centered fit-container fx-start-h box-pad-h pointer"
-                onClick={() => setSeeReply(!seeReply)}
-              >
-                <p className="c1-c p-medium">Replied to : {repliedOn.content.substring(0,10)}... (See more)</p>
-                <div
-                  className="arrow"
-                  style={{ transform: seeReply ? "rotate(180deg)" : "" }}
-                ></div>
-              </div>
-  
-              <div
-                className="fit-container"
-                style={{ display: seeReply ? "flex" : "none" }}
-              >
-                {" "}
-                <Comment comment={{ ...repliedOn, count: [] }} />{" "}
-              </div>
-            </div>
-          )} */}
         <div
           className="fx-centered fx-start-h fit-container"
           style={{ columnGap: "16px" }}
@@ -2068,8 +1775,7 @@ const Reply = ({
 
 const AuthorPreview = ({ author }) => {
   const [authorData, setAuthorData] = useState("");
-  const { relayConnect, addNostrAuthors, getNostrAuthor, nostrAuthors } =
-    useContext(Context);
+  const { getNostrAuthor, nostrAuthors } = useContext(Context);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -2110,6 +1816,7 @@ const AuthorPreview = ({ author }) => {
         </div>
       </div>
     );
+
   return (
     <>
       <UserProfilePicNOSTR
@@ -2199,49 +1906,3 @@ const AuthorPreviewExtra = ({ pubkey }) => {
     </div>
   );
 };
-
-// // sealed
-// {
-//     "pubkey": "<32-bytes lowercase hex-encoded public key of the event creator>",
-//     "kind": 30078,
-//     "tags": [
-//       ["l", "SEALED UNCENSORED NOTE"],
-//       ["yaki_flash_news", "<encrypted created_at>"],
-//       ["e", "<post-id>", "<optional-relay-url>"],
-//       ["author", "<author-pubkey>", "<optional-relay-url>"],
-//       ["p", "<rater_1>", "<the full rating event, JSON-encoded>"],
-//       ["p", "<rater_2>", "<the full rating event, JSON-encoded>"],
-//       ...
-//       ["p", "<rater_3>", "<the full rating event, JSON-encoded>"],
-//       ["rating", "<content>", "<content label>"],
-//     ],
-//     "content": "<the full approved event, JSON-encoded>",
-//     ...
-//   }
-// // community note
-// {
-//     "pubkey": "<32-bytes lowercase hex-encoded public key of the event creator>",
-//     "kind": 1,
-//     "tags": [
-//       ["l", "UNCENSORED NOTE"],
-//       ["yaki_flash_news", "<encrypted created_at>"],
-//       ...
-//     ],
-//     "content": "<community note>",
-//     ...
-//   }
-// // rating
-// {
-//     "pubkey": "<32-bytes lowercase hex-encoded public key of the event creator>",
-//     "kind": 7,
-//     "tags": [
-//       ["l", "UNCENSORED NOTE RATING"],
-//       ["yaki_flash_news", "<encrypted created_at>"],
-//       ["rating_l", "HELPFUL"],
-//       ["rating_l", "SOMEWHAT"],
-//       ["rating_l", "NOT HELPFUL"],
-//       ...
-//     ],
-//     "content": "["+", "-"]",
-//     ...
-//   }
