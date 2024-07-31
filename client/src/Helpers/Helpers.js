@@ -111,11 +111,9 @@ const isImageUrlSync = (url) => {
   }
 };
 
-const getNoteTree = async (note, is_important = false) => {
+const getNoteTree = async (note, minimal = false) => {
   if (!note) return "";
   let tree = note.split(/(\s|\n)+/).filter(Boolean);
-  // let tree = note.split(/\s/);
-
   let finalTree = [];
 
   for (let i = 0; i < tree.length; i++) {
@@ -125,127 +123,86 @@ const getNoteTree = async (note, is_important = false) => {
       finalTree.push(<br key={key} />);
     } else if (/(https?:\/\/)/i.test(el)) {
       const isURLVid = isVid(el);
-      if (isURLVid) {
-        if (isURLVid.isYT) {
-          finalTree.push(
-            <iframe
-              key={key}
-              style={{
-                width: "100%",
-                aspectRatio: "16/9",
-                borderRadius: "var(--border-r-18)",
-              }}
-              src={`https://www.youtube.com/embed/${isURLVid.videoId}`}
-              title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
-              frameBorder="0"
-              allowFullScreen
-            ></iframe>
-          );
-        }
-        if (!isURLVid.isYT)
-          finalTree.push(
-            <iframe
-              key={key}
-              style={{
-                width: "100%",
-                aspectRatio: "16/9",
-                borderRadius: "var(--border-r-18)",
-              }}
-              src={`https://player.vimeo.com/video/${isURLVid.videoId}`}
-              title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
-              frameBorder="0"
-              allowFullScreen
-            ></iframe>
-          );
-      }
-      if (!isURLVid) {
-        const checkURL = await isImageUrl(el);
-        if (checkURL) {
-          if (checkURL.type === "image") {
+      if (!minimal) {
+        if (isURLVid) {
+          if (isURLVid.isYT) {
             finalTree.push(
-              // <img
-              //   className="sc-s-18"
-              //   style={{ margin: "1rem auto" }}
-              //   width={"100%"}
-              //   src={el}
-              //   alt="el"
-              //   key={key}
-              //   loading="lazy"
-              // />
-              <IMGElement src={el} key={key} />
-            );
-          } else if (checkURL.type === "video") {
-            finalTree.push(
-              <video
+              <iframe
                 key={key}
-                controls={true}
-                autoPlay={false}
-                name="media"
-                width={"100%"}
-                className="sc-s-18"
-                style={{ margin: "1rem auto", aspectRatio: "16/9" }}
-              >
-                <source src={el} type="video/mp4" />
-              </video>
+                style={{
+                  width: "100%",
+                  aspectRatio: "16/9",
+                  borderRadius: "var(--border-r-18)",
+                }}
+                src={`https://www.youtube.com/embed/${isURLVid.videoId}`}
+                title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
+                frameBorder="0"
+                allowFullScreen
+              ></iframe>
             );
           }
-        } else {
-          finalTree.push(
-            <a
-              style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
-              href={el}
-              className="btn-text-gray"
-              key={key}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {el}
-            </a>
-          );
+          if (!isURLVid.isYT)
+            finalTree.push(
+              <iframe
+                key={key}
+                style={{
+                  width: "100%",
+                  aspectRatio: "16/9",
+                  borderRadius: "var(--border-r-18)",
+                }}
+                src={`https://player.vimeo.com/video/${isURLVid.videoId}`}
+                title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
+                frameBorder="0"
+                allowFullScreen
+              ></iframe>
+            );
         }
-        // isMedia.then((checkURL) => {
-        //   if (checkURL) {
-        //     if (checkURL.type === "image") {
-        //       finalTree.push(
-        //         <img
-        //           className="sc-s-18"
-        //           style={{ margin: "1rem auto" }}
-        //           width={"100%"}
-        //           src={el}
-        //           alt="el"
-        //           key={key}
-        //           loading="lazy"
-        //         />
-        //       );
-        //     } else if (checkURL.type === "video") {
-        //       finalTree.push(
-        //         <video
-        //           key={key}
-        //           controls={true}
-        //           autoPlay={false}
-        //           name="media"
-        //           width={"100%"}
-        //           className="sc-s-18"
-        //           style={{ margin: "1rem auto" }}
-        //         >
-        //           <source src={el} type="video/mp4" />
-        //         </video>
-        //       );
-        //     }
-        //   } else {
-        //     finalTree.push(
-        //       <a
-        //         style={{ wordBreak: "break-word" }}
-        //         href={el}
-        //         className="btn-text-gray"
-        //         key={key}
-        //         onClick={(e) => e.stopPropagation()}
-        //       >
-        //         {el}
-        //       </a>
-        //     );
-        //   }
-        // });
-      }
+        if (!isURLVid) {
+          const checkURL = await isImageUrl(el);
+          if (checkURL) {
+            if (checkURL.type === "image") {
+              finalTree.push(<IMGElement src={el} key={key} />);
+            } else if (checkURL.type === "video") {
+              finalTree.push(
+                <video
+                  key={key}
+                  controls={true}
+                  autoPlay={false}
+                  name="media"
+                  width={"100%"}
+                  className="sc-s-18"
+                  style={{ margin: "1rem auto", aspectRatio: "16/9" }}
+                >
+                  <source src={el} type="video/mp4" />
+                </video>
+              );
+            }
+          } else {
+            finalTree.push(
+              <a
+                style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+                href={el}
+                className="btn-text-gray"
+                key={key}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {el}
+              </a>
+            );
+          }
+        }
+      } else
+        finalTree.push(
+          <a
+            style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+            href={el}
+            className="btn-text-gray"
+            key={key}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {el}
+          </a>
+        );
     } else if (
       (el.includes("nostr:") ||
         el.includes("naddr") ||
@@ -259,19 +216,9 @@ const getNoteTree = async (note, is_important = false) => {
         .replace("@", "")
         .replace(".", "")
         .replace(",", "");
-      // const nip19add = el.split("nostr:")[1].replace(".", "").replace(",", "");
-      const url = getLinkFromAddr(nip19add);
+
       finalTree.push(
-        // <Link
-        //   to={url}
-        //   className="btn-text-gray"
-        //   target={"_blank"}
-        //   key={key}
-        //   onClick={(e) => e.stopPropagation()}
-        // >
-        //   @{nip19add.substring(0, 10)}
-        // </Link>
-        <Nip19Parsing addr={nip19add} key={key} />
+        <Nip19Parsing addr={nip19add} key={key} minimal={minimal} />
       );
     } else if (el.startsWith("#")) {
       finalTree.push(
@@ -291,7 +238,6 @@ const getNoteTree = async (note, is_important = false) => {
           style={{
             wordBreak: "break-word",
             color: "var(--dark-gray)",
-            // color: is_important ? "var(--c1)" : "var(--dark-gray)",
           }}
           key={key}
         >
@@ -300,9 +246,6 @@ const getNoteTree = async (note, is_important = false) => {
       );
     }
   }
-  // console.log(finalTree);
-  // let tt = mergeConsecutivePElements(finalTree);
-  // console.log(tt);
   return mergeConsecutivePElements(finalTree);
 };
 
@@ -387,46 +330,64 @@ const getComponent = (children) => {
         }`;
         let child_ = getNIP21FromURL(child.toString());
         if (child_.startsWith("nostr:")) {
-          let addr = child_.split("nostr:")[1];
+          // let addr = child_.split("nostr:")[1];
           try {
-            if (addr.includes("naddr")) {
-              let data = nip19.decode(addr);
-              res.push(
-                <NAddrPreviewer
-                  pubkey={data.data.pubkey}
-                  d={data.data.identifier}
-                  kind={data.data.kind}
-                  relays={data.data.relays}
-                  key={key}
-                />
-              );
-            }
-            if (addr.includes("nprofile")) {
-              let data = nip19.decode(addr);
-              res.push(
-                <NProfilePreviewer pubkey={data.data.pubkey} key={key} />
-              );
-            }
-            if (addr.includes("npub")) {
-              let hex = getHex(addr);
+            // if (addr.includes("naddr")) {
+            //   let data = nip19.decode(addr);
+            //   res.push(
+            //     <NAddrPreviewer
+            //       pubkey={data.data.pubkey}
+            //       d={data.data.identifier}
+            //       kind={data.data.kind}
+            //       relays={data.data.relays}
+            //       key={key}
+            //     />
+            //   );
+            // }
+            // if (addr.includes("nprofile")) {
+            //   let data = nip19.decode(addr);
+            //   res.push(
+            //     <NProfilePreviewer pubkey={data.data.pubkey} key={key} />
+            //   );
+            // }
+            // if (addr.includes("npub")) {
+            //   let hex = getHex(addr);
 
-              res.push(<NProfilePreviewer pubkey={hex} key={key} />);
-            }
-            if (addr.includes("nevent")) {
-              let data = nip19.decode(addr);
+            //   res.push(<NProfilePreviewer pubkey={hex} key={key} />);
+            // }
+            // if (addr.includes("nevent")) {
+            //   let data = nip19.decode(addr);
+            //   res.push(
+            //     <NEventPreviewer
+            //       id={data.data.id}
+            //       pubkey={data.data.author}
+            //       key={key}
+            //       extraRelays={data.data.relays}
+            //     />
+            //   );
+            // }
+            if (
+              (child_.includes("nostr:") ||
+                child_.includes("naddr") ||
+                child_.includes("nprofile") ||
+                child_.includes("npub") ||
+                child_.includes("nevent")) &&
+              child_.length > 30
+            ) {
+              const nip19add = child_
+                .replace("nostr:", "")
+                .replace("@", "")
+                .replace(".", "")
+                .replace(",", "");
+
               res.push(
-                <NEventPreviewer
-                  id={data.data.id}
-                  pubkey={data.data.author}
-                  key={key}
-                  extraRelays={data.data.relays}
-                />
+                <Nip19Parsing addr={nip19add} key={key} />
               );
             }
           } catch (err) {
             res.push(
               <p dir="auto" key={key}>
-                {addr}
+                {child_.split("nostr:")[1]}
               </p>
             );
           }

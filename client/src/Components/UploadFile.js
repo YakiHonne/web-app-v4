@@ -86,7 +86,8 @@ export default function UploadFile({
             },
           }
         );
-        setImageURL(imageURL.data.metadata.thumbnail);
+
+        setImageURL(imageURL.data.nip94_event.tags.find(tag => tag[0] === "url")[1]);
         setIsLoading(false);
         setIsUploadsLoading(false);
         return;

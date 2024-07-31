@@ -495,11 +495,11 @@ export default function NostrUser() {
           ? nostrBandProfiles.data.profiles
               .filter((profile) => profile.profile)
               .map((profile) => {
-                let author = getEmptyNostrUser(profile.profile.pubkey)
+                let author = getEmptyNostrUser(profile.profile.pubkey);
                 try {
-                  author= JSON.parse(profile.profile.content)
-                } catch(err) {
-                  console.log(err)
+                  author = JSON.parse(profile.profile.content);
+                } catch (err) {
+                  console.log(err);
                 }
                 return {
                   pubkey: profile.profile.pubkey,
@@ -551,7 +551,7 @@ export default function NostrUser() {
 
   const copyID = (e, pubkey) => {
     e.stopPropagation();
-    navigator?.clipboard?.writeText(pubkey);
+    navigator?.clipboard?.writeText(getBech32("npub", pubkey));
     setToast({
       type: 1,
       desc: `Pubkey was copied! 👏`,
@@ -624,8 +624,8 @@ export default function NostrUser() {
                     flex: 1.5,
                     maxWidth: "700px",
                     width: "min(100%, 700px)",
-                    zIndex: '11',
-                    position: "relative"
+                    zIndex: "11",
+                    position: "relative",
                   }}
                   className="box-pad-h-m box-pad-v-m"
                 >
@@ -672,6 +672,7 @@ export default function NostrUser() {
                           </p>
                         </div>
                       </div>
+
                       {showOptions && (
                         <div
                           style={{
@@ -688,7 +689,7 @@ export default function NostrUser() {
                         >
                           <div
                             className="fit-container fx-centered fx-start-h pointer"
-                            onClick={(e) => copyID(e, user.pubkeyhashed)}
+                            onClick={(e) => copyID(e, user.pubkey)}
                           >
                             <p className="fx-centered">Copy user pubkey</p>
                           </div>

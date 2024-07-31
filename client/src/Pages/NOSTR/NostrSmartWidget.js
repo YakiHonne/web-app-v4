@@ -1,17 +1,25 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../../Context/Context";
-import PagePlaceholder from "../../Components/PagePlaceholder";
+import { finalizeEvent, nip19, SimplePool } from "nostr-tools";
+import Lottie from "lottie-react";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import { nanoid } from "nanoid";
-import { getVideoFromURL } from "../../Helpers/Helpers";
+import PagePlaceholder from "../../Components/PagePlaceholder";
+import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import UploadFile from "../../Components/UploadFile";
-import { Link } from "react-router-dom";
-import ZapPollsPreview from "../../Components/NOSTR/ZapPollsPreview";
+import ZapPollsComp from "../../Components/SmartWidget/ZapPollsComp";
 import AddPoll from "../../Components/NOSTR/AddPoll";
 import relaysOnPlatform from "../../Content/Relays";
-import { finalizeEvent, nip19, SimplePool } from "nostr-tools";
 import { filterRelays } from "../../Helpers/Encryptions";
+import BrowsePolls from "../../Components/NOSTR/BrowsePolls";
+import widget from "../../media/JSONs/widgets.json";
+import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
+import VideoComp from "../../Components/SmartWidget/VideoComp";
+import ImgComp from "../../Components/SmartWidget/ImgComp";
+import TextComp from "../../Components/SmartWidget/TextComp";
+import ButtonComp from "../../Components/SmartWidget/ButtonComp";
+import { useLocation } from "react-router-dom";
+import LoadingDots from "../../Components/LoadingDots";
 const pool = new SimplePool();
 
 const getTypeMetada = (type) => {
@@ -61,8 +69,34 @@ const getNostrKeys = () => {
   }
 };
 
+const getTemplate = (template) => {
+  return template.map((container) => {
+    let left_side = container.left_side.map((component) => {
+      return { ...component, id: nanoid() };
+    });
+    let right_side = container.right_side
+      ? container.right_side.map((component) => {
+          return { ...component, id: nanoid() };
+        })
+      : [];
+    return { ...container, left_side, right_side, id: nanoid() };
+  });
+};
+
 export default function NostrSmartWidget() {
+  let { state } = useLocation();
   let nostrKeys = getNostrKeys();
+  const [buildOptions, setBuildOptions] = useState(state ? false : true);
+  const [template, setTemplate] = useState(
+    state ? getTemplate(state.metadata.metadata.components) : []
+  );
+  const [containerBorderColor, setContainerBorderColor] = useState(
+    state ? state.metadata.metadata.border_color : ""
+  );
+  const [containerBackgroundColor, setContainerBackgroundColor] = useState(
+    state ? state.metadata.metadata.background_color : ""
+  );
+  const [postingOption, setPostingOption] = useState(state ? state.ops : "");
 
   return (
     <div>
@@ -96,20 +130,36 @@ export default function NostrSmartWidget() {
       <div className="fit-container fx-centered">
         <div className="main-container">
           <SidebarNOSTR />
-          <main
-            className="main-page-nostr-container"
-            // style={{ overflow: "visible" }}
-          >
+          <main className="main-page-nostr-container">
             <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div
-                style={{ width: "min(100%,1000px)" }}
-                className="box-pad-h-m fit-container"
-              >
+              <div className="box-pad-h-m fit-container">
                 {nostrKeys && (
                   <>
                     {(nostrKeys.sec || nostrKeys.ext) && (
                       <>
-                        <SmartWidgetBuilder />
+                        {buildOptions && (
+                          <BuildOptions
+                            setTemplate={(data) => {
+                              setBuildOptions(false);
+                              setTemplate(data);
+                            }}
+                            template={template}
+                            back={() => setBuildOptions(false)}
+                          />
+                        )}
+                        {!buildOptions && (
+                          <SmartWidgetBuilder
+                            template={template}
+                            back={(data) => {
+                              setBuildOptions(true);
+                              setTemplate(data);
+                            }}
+                            containerBorderColor={containerBorderColor}
+                            containerBackgroundColor={containerBackgroundColor}
+                            postingOption={postingOption}
+                            widget={state ? state.metadata : null}
+                          />
+                        )}
                       </>
                     )}
                     {!nostrKeys.sec && !nostrKeys.ext && (
@@ -127,24 +177,93 @@ export default function NostrSmartWidget() {
   );
 }
 
-const SmartWidgetBuilder = () => {
+const BuildOptions = ({ setTemplate, template, back }) => {
+  return (
+    <div
+      className="fit-container fit-height fx-centered fx-col"
+      style={{ height: "100vh", borderRight: "1px solid var(--pale-gray)" }}
+    >
+      <div style={{ width: "400px" }}>
+        <Lottie animationData={widget} loop={true} />
+        <div className="fx-centered fx-col">
+          <h3>Smart widget builder</h3>
+          <p className="gray-c p-centered">
+            Start building and customize your smart widget to use on Nostr
+            network
+          </p>
+        </div>
+        <div
+          className="fit-container fx-centered box-pad-v"
+          style={{ columnGap: "16px" }}
+        >
+          <div
+            className="fx fx-centered fx-col sc-s-18 option pointer"
+            style={{ height: "200px" }}
+            onClick={() => setTemplate([])}
+          >
+            <div className="round-icon">
+              <div className="plus-sign"></div>
+            </div>
+            <p className="gray-c">Blank widget</p>
+          </div>
+          <div
+            className="fx fx-centered fx-col sc-s-18 option pointer"
+            style={{ height: "200px" }}
+          >
+            <div
+              className="frames"
+              style={{ minWidth: "64px", height: "64px" }}
+            ></div>
+            <p className="gray-c">Browse templates</p>
+          </div>
+        </div>
+        {template.length > 0 && (
+          <div className="fx-centered pointer" onClick={back}>
+            <div
+              className="round-icon-small roun-icon-tooltip"
+              data-tooltip="Change plan"
+            >
+              <div className="arrow" style={{ rotate: "90deg" }}></div>
+            </div>
+            <p className="orange-c">Resume work</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const SmartWidgetBuilder = ({
+  back,
+  template,
+  containerBorderColor,
+  containerBackgroundColor,
+  postingOption,
+  widget,
+}) => {
   const { nostrKeys, nostrUser, setToast, setToPublish } = useContext(Context);
   const [showComponents, setShowComponents] = useState(false);
-  const [componentsTree, setComponentsTree] = useState([
-    {
-      id: nanoid(),
-      layout: 1,
-      division: "1:1",
-      left_side: [],
-      right_side: [],
-    },
-  ]);
+  const [componentsTree, setComponentsTree] = useState(
+    template.length > 0
+      ? template
+      : [
+          {
+            id: nanoid(),
+            layout: 1,
+            division: "1:1",
+            left_side: [],
+            right_side: [],
+          },
+        ]
+  );
   const [selectedLayer, setSelectedLayer] = useState(false);
-  const [mainContainerBorderColor, setMainContainerBorderColor] = useState("");
+  const [mainContainerBorderColor, setMainContainerBorderColor] =
+    useState(containerBorderColor);
   const [mainContainerBackgroundColor, setMainContainerBackgroundColor] =
-    useState("");
+    useState(containerBackgroundColor);
   const [selectedContainer, setSelectedContainer] = useState(componentsTree[0]);
   const [preview, setPreview] = useState(false);
+  const [showFinalStep, setShowFinalStep] = useState(false);
 
   const handleAddComponent = (type) => {
     let tempArray = Array.from(componentsTree);
@@ -306,24 +425,69 @@ const SmartWidgetBuilder = () => {
     }
     return true;
   };
+  const handleBack = () => {
+    if (componentsTree.length === 0) {
+      back([]);
+      return;
+    }
+    if (
+      componentsTree.length > 1 ||
+      componentsTree[0].right_side?.length > 0 ||
+      componentsTree[0].left_side?.length > 0
+    ) {
+      back(componentsTree);
+      return;
+    }
+    back([]);
+  };
 
-  const postWidget = async () => {
+  const handlShowFinalStep = () => {
+    let content = componentsTree.filter(
+      (component) =>
+        component.left_side.length > 0 || component.right_side.length > 0
+    );
+
+    if (content.length === 0) {
+      setToast({
+        type: 3,
+        desc: "The smart widget should have at least one component",
+      });
+      return;
+    }
+
+    setShowFinalStep(true);
+  };
+  const postWidget = async (title, summary) => {
     let created_at = Math.floor(Date.now() / 1000);
     let relaysToPublish = nostrUser
       ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
       : relaysOnPlatform;
+    let tags;
 
-    let tags = [
-      ["d", nanoid()],
-      [
-        "client",
-        "Yakihonne",
-        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
-      ],
-      ["published_at", `${created_at}`],
-      // ["title", title],
-      // ["summary", summary],
-    ];
+    if (!postingOption || postingOption === "clone")
+      tags = [
+        ["d", nanoid()],
+        [
+          "client",
+          "Yakihonne",
+          "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+        ],
+        ["published_at", `${created_at}`],
+        ["title", title],
+        ["summary", summary],
+      ];
+    if (postingOption === "edit")
+      tags = [
+        ["d", widget.d],
+        [
+          "client",
+          "Yakihonne",
+          "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+        ],
+        ["published_at", widget.published_at],
+        ["title", title],
+        ["summary", summary],
+      ];
 
     let content = componentsTree.filter(
       (component) =>
@@ -336,21 +500,43 @@ const SmartWidgetBuilder = () => {
         desc: "The smart widget should have at least one component",
       });
       return;
-    } 
+    }
+
+    const components = content.map((comp) => {
+      let tempComp = { ...comp };
+      delete tempComp.id;
+      let tempLeftSide = tempComp.left_side.map((innerComp) => {
+        let tempInnerComp = { ...innerComp };
+        delete tempInnerComp.id;
+        return tempInnerComp;
+      });
+      let tempRightSide =
+        tempComp.layout === 2
+          ? tempComp.right_side.map((innerComp) => {
+              let tempInnerComp = { ...innerComp };
+              delete tempInnerComp.id;
+              return tempInnerComp;
+            })
+          : null;
+      return {
+        ...tempComp,
+        left_side: tempLeftSide,
+        right_side: tempRightSide,
+      };
+    });
     content = JSON.stringify({
       border_color: mainContainerBorderColor,
       background_color: mainContainerBackgroundColor,
-      components: componentsTree,
+      components,
     });
-    console.log(content);
-    setToast({
-      type: 1,
-      desc: "Good",
-    });
-    return;
+    // setToast({
+    //   type: 1,
+    //   desc: "Good",
+    // });
+    // return;
     let tempEvent = {
       created_at,
-      kind: 6969,
+      kind: 30031,
       content: content,
       tags,
     };
@@ -368,21 +554,17 @@ const SmartWidgetBuilder = () => {
       eventInitEx: tempEvent,
       allRelays: relaysToPublish,
     });
-    let nEvent = nip19.neventEncode({
-      id: tempEvent.id,
-      pubkey: nostrKeys.pub,
-    });
     let pool = new SimplePool();
     let sub = pool.subscribeMany(
       relaysToPublish,
-      [{ kinds: [6969], ids: [tempEvent.id] }],
+      [{ kinds: [30031], ids: [tempEvent.id] }],
       {
         onevent() {
           setToast({
             type: 1,
-            desc: "Poll was posted successfully",
+            desc: "The smart widget was posted successfully",
           });
-
+          setShowFinalStep(false);
           sub.close();
         },
       }
@@ -391,6 +573,14 @@ const SmartWidgetBuilder = () => {
 
   return (
     <>
+      {showFinalStep && (
+        <FinilizePublishing
+          title={widget ? widget.title : ""}
+          description={widget ? widget.description : ""}
+          publish={postWidget}
+          exit={() => setShowFinalStep(false)}
+        />
+      )}
       {showComponents && (
         <Components
           exit={() => setShowComponents(false)}
@@ -407,7 +597,16 @@ const SmartWidgetBuilder = () => {
           className="box-pad-h-m box-pad-v"
         >
           <div className="fit-container fx-scattered box-marg-s sticky">
-            <h3>Smart widget</h3>
+            <div className="fx-centered">
+              <div
+                className="round-icon-small round-icon-tooltip"
+                data-tooltip="Change plan"
+                onClick={handleBack}
+              >
+                <div className="arrow" style={{ rotate: "90deg" }}></div>
+              </div>
+              <h3>Smart widget</h3>
+            </div>
             <div className="fx-centered">
               {preview && (
                 <div
@@ -427,7 +626,10 @@ const SmartWidgetBuilder = () => {
                   <div className="eye-opened"></div>
                 </div>
               )}
-              <button className="btn btn-normal btn-small" onClick={postWidget}>
+              <button
+                className="btn btn-normal btn-small"
+                onClick={handlShowFinalStep}
+              >
                 Post my widget
               </button>
             </div>
@@ -795,7 +997,7 @@ const EditContainer = ({
                         className="fit-container"
                         style={{ pointerEvents: "none" }}
                       >
-                        <ZapPollsPreview
+                        <ZapPollsComp
                           nevent={comp.metadata.nevent}
                           event={
                             comp.metadata.content
@@ -910,25 +1112,6 @@ const EditContainer = ({
               }}
               className="fx-centered fx-col"
             >
-              {/* <div
-                className="round-icon-small round-icon-tooltip"
-                data-tooltip="Switch sections"
-                onClick={() =>
-                  handleContainerOps("switch sections", {
-                    ...metadata,
-                    index,
-                  })
-                }
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "0",
-                  transform: "translateY(-50%)",
-                }}
-              >
-                <div className="switch-arrows"></div>
-              </div> */}
-
               {metadata.right_side?.map((comp) => {
                 if (comp.type === "video")
                   return (
@@ -1128,7 +1311,7 @@ const EditContainer = ({
               )}
               {metadata.layout === 2 && (
                 <div
-                  className="write"
+                  className="layout"
                   style={{ minWidth: "14px", minWidth: "14px" }}
                 ></div>
               )}
@@ -1295,125 +1478,53 @@ const EditContainer = ({
   );
 };
 
-const PreviewContainer = ({ metadata }) => {
-  return (
-    <div className="fx-centered fx-col fit-container">
-      <div
-        className="fx-centered fit-container fx-start-h fx-start-v fx-stretch"
-        style={{ gap: "16px" }}
-      >
-        {metadata.left_side.length === 0 && (
-          <div
-            style={{ flex: metadata.division?.split(":")[0] }}
-            className="fx-centered fx-col"
-          ></div>
-        )}
-        {metadata.left_side.length > 0 && (
-          <div
-            style={{ flex: metadata.division?.split(":")[0] }}
-            className="fx-centered fx-col"
-          >
-            {metadata.left_side?.map((comp) => {
-              if (comp.type === "video")
-                return <VideoComp url={comp.metadata.url} key={comp.id} />;
+const FinilizePublishing = ({ title, description, exit, publish }) => {
+  const [title_, setTitle] = useState(title || "");
+  const [description_, setDescription] = useState(description || "");
+  const [isLoading, setIsLoading] = useState(false);
 
-              if (comp.type === "zap-poll")
-                return (
-                  <ZapPollsPreview
-                    nevent={comp.metadata.nevent}
-                    event={
-                      comp.metadata.content
-                        ? JSON.parse(comp.metadata.content)
-                        : null
-                    }
-                    content_text_color={comp.metadata.content_text_color}
-                    options_text_color={comp.metadata.options_text_color}
-                    options_background_color={
-                      comp.metadata.options_background_color
-                    }
-                    options_foreground_color={
-                      comp.metadata.options_foreground_color
-                    }
-                  />
-                );
-              if (comp.type === "image")
-                return (
-                  <ImgComp
-                    url={comp.metadata.url}
-                    aspectRatio={comp.metadata.aspect_ratio}
-                    key={comp.id}
-                  />
-                );
-              if (comp.type === "text")
-                return (
-                  <TextComp
-                    content={comp.metadata.content}
-                    size={comp.metadata.size}
-                    weight={comp.metadata.weight}
-                    textColor={comp.metadata.text_color}
-                    key={comp.id}
-                  />
-                );
-              if (comp.type === "button")
-                return (
-                  <ButtonComp
-                    content={comp.metadata.content}
-                    textColor={comp.metadata.text_color}
-                    url={comp.metadata.url}
-                    backgroundColor={comp.metadata.background_color}
-                    type={comp.metadata.type}
-                    key={comp.id}
-                  />
-                );
-            })}
-          </div>
-        )}
-        {metadata.layout === 2 && metadata.right_side.length > 0 && (
+  return (
+    <div className="fixed-container box-pad-h fx-centered">
+      <div
+        className="sc-s-18 box-pad-h box-pad-v fx-centered fx-col"
+        style={{ width: "min(100%, 400px)" }}
+      >
+        <h4>Finilize your widget</h4>
+        <p className="gray-c p-centered">
+          Give a title and a description to your smart widget
+        </p>
+        <input
+          type="text"
+          className="if ifs-full"
+          placeholder="Title"
+          value={title_}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <textarea
+          className="txt-area ifs-full"
+          placeholder="Description (optional)"
+          value={description_}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <button
+          className="btn btn-normal btn-full"
+          onClick={() => {
+            setIsLoading(true);
+            publish(title_, description_);
+          }}
+          disabled={isLoading}
+        >
+          {isLoading ? <LoadingDots /> : "Publish widget"}
+        </button>
+        <div className="fx-centered pointer " onClick={exit}>
           <div
-            style={{ flex: metadata.division?.split(":")[1] }}
-            className="fx-centered fx-col"
+            className="round-icon-small roun-icon-tooltip"
+            data-tooltip="Change plan"
           >
-            {metadata.right_side?.map((comp) => {
-              if (comp.type === "video")
-                return <VideoComp url={comp.metadata.url} key={comp.id} />;
-              if (comp.type === "image")
-                return (
-                  <ImgComp
-                    url={comp.metadata.url}
-                    aspectRatio={comp.metadata.aspect_ratio}
-                    key={comp.id}
-                  />
-                );
-              if (comp.type === "text")
-                return (
-                  <TextComp
-                    content={comp.metadata.content}
-                    size={comp.metadata.size}
-                    weight={comp.metadata.weight}
-                    textColor={comp.metadata.text_color}
-                    key={comp.id}
-                  />
-                );
-              if (comp.type === "button")
-                return (
-                  <ButtonComp
-                    content={comp.metadata.content}
-                    textColor={comp.metadata.text_color}
-                    url={comp.metadata.url}
-                    backgroundColor={comp.metadata.background_color}
-                    type={comp.metadata.type}
-                    key={comp.id}
-                  />
-                );
-            })}
+            <div className="arrow" style={{ rotate: "90deg" }}></div>
           </div>
-        )}
-        {metadata.layout === 2 && metadata.right_side.length === 0 && (
-          <div
-            style={{ flex: metadata.division?.split(":")[1] }}
-            className="fx-centered fx-col"
-          ></div>
-        )}
+          <p className="orange-c">Keep editing</p>
+        </div>
       </div>
     </div>
   );
@@ -1503,108 +1614,10 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
   );
 };
 
-const VideoComp = ({ url = "" }) => {
-  return <div className="fit-container">{getVideoFromURL(url)}</div>;
-};
-
-const ImgComp = ({ url = "", aspectRatio }) => {
-  return (
-    <div className="fit-container">
-      <div
-        className="sc-s-18 fit-container bg-img cover-bg fx-centered"
-        style={{
-          aspectRatio: aspectRatio.startsWith("16") ? "16/9" : "1/1",
-          backgroundImage: `url(${url})`,
-
-          border: "none",
-        }}
-      >
-        {!url && <div className="image-24"></div>}
-      </div>
-    </div>
-  );
-};
-
-const TextComp = ({ content = "", size, weight, textColor }) => {
-  const getTextSize = () => {
-    if (!size) return "";
-    if (size === "h1") return "h2-txt p-bold";
-    if (size === "h2") return "h3-txt p-bold";
-    if (size === "regular") return "";
-    if (size === "small") return "p-medium";
-  };
-  const getTextWeight = () => {
-    if (!weight) return "";
-    if (weight === "regular") return "";
-    if (weight === "bold") return "p-bold";
-  };
-
-  const textSize = getTextSize();
-  const textWeight = getTextWeight();
-
-  return (
-    <div className="fit-container">
-      <div className="fit-container fx-start-h fx-centered">
-        <p className={`${textSize} ${textWeight}`} style={{ color: textColor }}>
-          {content}
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const ButtonComp = ({ content, textColor, url, backgroundColor, type }) => {
-  const getUrl = () => {
-    if (!type) return "/";
-    if (["regular", "youtube", "discord", "x", "telegram"].includes(type))
-      return url;
-    if (type === "zap") return false;
-  };
-  const getButtonColor = () => {
-    if (!type || type === "regular" || type === "zap")
-      return { color: textColor, backgroundColor };
-    if (type === "youtube")
-      return { color: "white", backgroundColor: "#FF0000" };
-    if (type === "discord")
-      return { color: "white", backgroundColor: "#7785cc" };
-    if (type === "x") return { color: "white", backgroundColor: "#000000" };
-    if (type === "telegram")
-      return { color: "white", backgroundColor: "#24A1DE" };
-  };
-
-  const buttonUrl = getUrl();
-  const buttonColor = getButtonColor();
-
-  if (buttonUrl !== false)
-    return (
-      <a className="fit-container" href={buttonUrl} target="_blank">
-        <button
-          className="btn btn-normal btn-full fx-centered"
-          style={buttonColor}
-          to={buttonUrl}
-        >
-          {type === "youtube" && <div className="youtube-logo"></div>}
-          {type === "discord" && <div className="discord-logo"></div>}
-          {type === "x" && <div className="twitter-w-logo"></div>}
-          {type === "telegram" && <div className="telegram-b-logo"></div>}
-          {content}
-        </button>
-      </a>
-    );
-  return (
-    <button
-      className="btn btn-normal btn-full"
-      style={{ color: textColor, backgroundColor }}
-      to={buttonUrl}
-    >
-      {content}
-    </button>
-  );
-};
-
 const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
   const { nostrUser } = useContext(Context);
   const [showAddPoll, setShowAddPoll] = useState(false);
+  const [showBrowsePolls, setShowBrowsePolls] = useState(false);
 
   const handleMetadata = (key, value) => {
     let tempMetadata = {
@@ -1615,13 +1628,30 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
   };
 
   useEffect(() => {
+    handleChange();
+  }, []);
+
+  const handleChange = (e) => {
+    if (!e) return;
+    let element = e.target;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  };
+
+  useEffect(() => {
     if (metadata.type === "zap-poll") {
       let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
       let id;
       try {
+        let event = metadata.metadata.content
+          ? JSON.parse(metadata.metadata.content)
+          : false;
         id = nip19.decode(metadata.metadata.nevent).data.id;
+
+        if (event && id === event.id) return;
       } catch (err) {
         console.log(err);
+        return;
       }
       if (!id) return;
       const sub = pool.subscribeMany(
@@ -1630,7 +1660,6 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         {
           async onevent(event) {
             try {
-              console.log(event);
               handleMetadata("content", JSON.stringify(event));
             } catch (err) {
               console.log(err);
@@ -1702,12 +1731,14 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
     return (
       <div className="fit-container fx-centered fx-col fx-start-v">
         <div className="fit-container fx-scattered">
-          <input
-            type="text"
+          <textarea
             placeholder="Content"
-            className="if ifs-full"
+            className="txt-area ifs-full"
             value={metadata.metadata.content}
-            onChange={(e) => handleMetadata("content", e.target.value)}
+            onChange={(e) => {
+              handleChange(e);
+              handleMetadata("content", e.target.value);
+            }}
           />
         </div>
         <div className="fit-container fx-scattered">
@@ -1925,6 +1956,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           >
             <option value="regular">Regular</option>
             <option value="zap">Zap</option>
+            <option value="nostr">NOSTR</option>
             <option value="youtube">Youtube</option>
             <option value="telegram">Telegram</option>
             <option value="discord">Discord</option>
@@ -1937,6 +1969,15 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
   if (metadata.type === "zap-poll")
     return (
       <>
+        {showBrowsePolls && (
+          <BrowsePolls
+            exit={() => setShowBrowsePolls(false)}
+            setNevent={(data) => {
+              handleMetadata("nevent", data);
+              setShowBrowsePolls(false);
+            }}
+          />
+        )}
         {showAddPoll && (
           <AddPoll
             exit={() => setShowAddPoll(false)}
@@ -1955,12 +1996,21 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
               value={metadata.metadata.nevent}
               onChange={(e) => handleMetadata("nevent", e.target.value)}
             />
-            <div
-              className="round-icon round-icon-tooltip"
-              data-tooltip="Add poll"
-              onClick={() => setShowAddPoll(true)}
-            >
-              <div className="plus-sign"></div>
+            <div className="fx-centered">
+              <div
+                className="round-icon round-icon-tooltip"
+                data-tooltip="Browse polls"
+                onClick={() => setShowBrowsePolls(true)}
+              >
+                <div className="curation"></div>
+              </div>
+              <div
+                className="round-icon round-icon-tooltip"
+                data-tooltip="Add poll"
+                onClick={() => setShowAddPoll(true)}
+              >
+                <div className="plus-sign"></div>
+              </div>
             </div>
           </div>
           <div className="fx-scattered fit-container">

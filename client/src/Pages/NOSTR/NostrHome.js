@@ -49,48 +49,6 @@ const pool_1 = new SimplePool();
 const pool_2 = new SimplePool();
 const pool_3 = new SimplePool();
 
-const getTopCreators = (posts) => {
-  if (!posts) return [];
-  let netCreators = posts.filter((creator, index, posts) => {
-    if (index === posts.findIndex((item) => item.pubkey === creator.pubkey))
-      return creator;
-  });
-
-  let tempCreators = [];
-
-  for (let creator of netCreators) {
-    let stats = getCreatorStats(creator.pubkey, posts);
-    tempCreators.push({
-      pubkey: creator.pubkey,
-      name: creator.author_name,
-      img: creator.author_img,
-      articles_number: stats.articles_number,
-    });
-  }
-
-  return (
-    tempCreators
-      .sort(
-        (curator_1, curator_2) =>
-          curator_2.articles_number - curator_1.articles_number
-      )
-      .splice(0, 6) || []
-  );
-};
-
-const getCreatorStats = (pubkey, posts) => {
-  let articles_number = 0;
-
-  for (let creator of posts) {
-    if (creator.author_pubkey === pubkey) {
-      articles_number += 1;
-    }
-  }
-  return {
-    articles_number,
-  };
-};
-
 const MixEvents = (posts, flashnews, buzzFeed, videos) => {
   const interleavedArray = [];
 
@@ -143,9 +101,6 @@ export default function NostrHome() {
   const [flashNews, setFlashNews] = useState([]);
   const [topCreators, setTopCreators] = useState([]);
   const [trendingNotes, setTrendingNotes] = useState([]);
-  // const topCreators = useMemo(() => {
-  //   return getTopCreators(posts);
-  // }, [posts]);
   const [mediaContentFrom, setMediaContentFrom] = useState("HOMEFEED");
   const [notesContentFrom, setNotesContentFrom] = useState("trending");
   const [contentSource, setContentSource] = useState("media");
@@ -167,6 +122,7 @@ export default function NostrHome() {
   const [scrollPX, setScrollPX] = useState(0);
   const [sideContentType, setSideContentType] = useState("0");
   const [showTabsSettings, setShowTabsSettings] = useState(false);
+  const [notesSub, setNotesSub] = useState(false);
   const extrasRef = useRef(null);
   const mixedContent = useMemo(() => {
     return MixEvents(posts, flashnews, buzzFeed, videos);
@@ -225,7 +181,7 @@ export default function NostrHome() {
       setBfLastEventTime(
         buzzFeed[buzzFeed.length - 1]?.created_at || undefined
       );
-      setNotesLastEventTime(notes[notes.length - 1].created_at);
+      setNotesLastEventTime(notes[notes.length - 1]?.created_at || undefined);
     };
     document
       .querySelector(".main-page-nostr-container")
@@ -234,7 +190,7 @@ export default function NostrHome() {
       document
         .querySelector(".main-page-nostr-container")
         ?.removeEventListener("scroll", handleScroll);
-  }, [recentTags]);
+  }, [isLoading]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -242,10 +198,11 @@ export default function NostrHome() {
         setIsLoaded(false);
         setIsLoading(true);
         let events = [];
-
+        if (notesSub) notesSub.close();
         let { filter, relaysToFetchFrom } = getNotesFilter();
         let sub_ = pool.subscribeMany(relaysToFetchFrom, filter, {
           async onevent(event) {
+            console.log(event)
             if (![...bannedList, ...mutedList].includes(event.pubkey)) {
               events.push(event.pubkey);
               let event_ = await onNotesReceived(event);
@@ -256,7 +213,10 @@ export default function NostrHome() {
                 setNotes((prev) => {
                   let existed = prev.find((note) => note.id === event.id);
                   if (existed) return prev;
-                  else return [...prev, event_];
+                  else
+                    return [...prev, event_].sort(
+                      (note_1, note_2) => note_2.created_at - note_1.created_at
+                    );
                 });
                 setIsLoading(false);
               }
@@ -267,6 +227,8 @@ export default function NostrHome() {
             setIsLoading(false);
           },
         });
+
+        setNotesSub(sub_);
       } catch (err) {
         console.log(err);
         setIsLoading(false);
@@ -350,11 +312,11 @@ export default function NostrHome() {
         ? nostrBandProfiles.data.profiles
             .filter((profile) => profile.profile)
             .map((profile) => {
-              let author = getEmptyNostrUser(profile.profile.pubkey)
+              let author = getEmptyNostrUser(profile.profile.pubkey);
               try {
-                author= JSON.parse(profile.profile.content)
-              } catch(err) {
-                console.log(err)
+                author = JSON.parse(profile.profile.content);
+              } catch (err) {
+                console.log(err);
               }
               return {
                 pubkey: profile.profile.pubkey,
@@ -371,12 +333,12 @@ export default function NostrHome() {
       );
       let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
         try {
-          let author = getEmptyNostrUser(note.author.pubkey)
-              try {
-                author= JSON.parse(note.author.content)
-              } catch(err) {
-                console.log(err)
-              }
+          let author = getEmptyNostrUser(note.author.pubkey);
+          try {
+            author = JSON.parse(note.author.content);
+          } catch (err) {
+            console.log(err);
+          }
           return { ...author, pubkey: note.pubkey };
         } catch (err) {
           console.log(err);
@@ -760,8 +722,6 @@ export default function NostrHome() {
     let relaysToFetchFrom;
     let filter;
 
-    // if (activeRelay) relaysToFetchFrom = [activeRelay];
-    // if (!activeRelay)
     relaysToFetchFrom = !nostrUser
       ? relaysOnPlatform
       : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
@@ -778,12 +738,27 @@ export default function NostrHome() {
         filter,
       };
     }
+    if (notesContentFrom === "smart-widget") {
+      filter = [
+        {
+          kinds: [1],
+          limit: 10,
+          until: notesLastEventTime,
+          "#l": ["smart-widget"],
+        },
+      ];
+      return {
+        relaysToFetchFrom,
+        filter,
+      };
+    }
     filter = [{ kinds: [1, 6], limit: 10, until: notesLastEventTime }];
     return {
       relaysToFetchFrom,
       filter,
     };
   };
+
   const getTags = () => {
     if (mediaContentFrom.includes("main-")) {
       let tempArray = shuffleArray(TopicsTags);
@@ -1040,6 +1015,7 @@ export default function NostrHome() {
     straightUp();
     setContentSource(source);
   };
+
   const handleNotesContentFrom = (from) => {
     if (from === notesContentFrom) return;
     const straightUp = () => {
@@ -1047,8 +1023,9 @@ export default function NostrHome() {
       if (!el) return;
       el.scrollTop = 0;
     };
-    straightUp();
 
+    straightUp();
+    notesSub?.close();
     setNotes([]);
     setNotesContentFrom(from);
   };
@@ -1423,6 +1400,22 @@ export default function NostrHome() {
                         </div>
                         <div
                           className={`list-item fx-centered fx ${
+                            notesContentFrom === "smart-widget"
+                              ? "selected-list-item"
+                              : ""
+                          }`}
+                          onClick={() => handleNotesContentFrom("smart-widget")}
+                        >
+                          <div className="smart-widget"></div>
+                          
+                          Widget notes
+                          {/* Notes <span className="p-big orange-c">
+                            &#215;
+                          </span>{" "}
+                          widgets */}
+                        </div>
+                        <div
+                          className={`list-item fx-centered fx ${
                             notesContentFrom === "universal"
                               ? "selected-list-item"
                               : ""
@@ -1520,14 +1513,16 @@ export default function NostrHome() {
                     </>
                   )}
                   {contentSource === "notes" && (
-                    <div className={`fx-centered  fx-wrap `}>
+                    <div className={`fx-centered  fx-wrap fit-container`}>
                       {notesContentFrom === "trending" &&
                         trendingNotes.map((note) => {
                           if (note.kind === 6)
                             return <KindSix event={note} key={note.id} />;
                           return <KindOne event={note} key={note.id} />;
                         })}
-                      {["universal", "followings"].includes(notesContentFrom) &&
+                      {["universal", "followings", "smart-widget"].includes(
+                        notesContentFrom
+                      ) &&
                         notes.map((note) => {
                           if (note.kind === 6)
                             return <KindSix event={note} key={note.id} />;

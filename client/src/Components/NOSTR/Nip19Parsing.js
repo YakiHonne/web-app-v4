@@ -1,5 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
-import { filterRelays, getBech32, getHex } from "../../Helpers/Encryptions";
+import {
+  filterRelays,
+  getBech32,
+  getHex,
+  getParsed3000xContent,
+} from "../../Helpers/Encryptions";
 import { SimplePool, nip19 } from "nostr-tools";
 import { Link } from "react-router-dom";
 import { Context } from "../../Context/Context";
@@ -7,18 +12,20 @@ import relaysOnPlatform from "../../Content/Relays";
 import { getNoteTree } from "../../Helpers/Helpers";
 import KindOne from "./KindOne";
 import LoadingDots from "../LoadingDots";
+import PreviewWidget from "../SmartWidget/PreviewWidget";
+import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
 const pool = new SimplePool();
-export default function Nip19Parsing({ addr }) {
+export default function Nip19Parsing({ addr, minimal = false }) {
   const { nostrUser } = useContext(Context);
   const [event, setEvent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [url, setUrl] = useState("");
-
+  const [url, setUrl] = useState("/");
   useEffect(() => {
     let filter = [];
     try {
       if (addr.startsWith("naddr")) {
         let data = nip19.decode(addr);
+
         filter.push({
           kinds: [data.data.kind],
           "#d": [data.data.identifier],
@@ -88,6 +95,14 @@ export default function Nip19Parsing({ addr }) {
           setEvent(parsedEvent);
           setIsLoading(false);
         }
+
+        if (event.kind === 30031) {
+          // console.log(event);
+          let metadata = JSON.parse(event.content);
+          let parsedContent = getParsed3000xContent(event.tags);
+          setEvent({ ...parsedContent, metadata, ...event });
+          setIsLoading(false);
+        }
         if ([30004, 30005, 30023, 34235].includes(event.kind)) {
           let titleTag = event.tags.find((tag) => tag[0] === "title");
           let title = "";
@@ -147,29 +162,44 @@ export default function Nip19Parsing({ addr }) {
   )
     return (
       <>
-        {event && (
-          <div className="fit-container">
-            <KindOne event={event} reactions={false} />
-          </div>
+        {!minimal && (
+          <>
+            {event && (
+              <div className="fit-container">
+                <KindOne event={event} reactions={false} />
+              </div>
+            )}
+            {isLoading && !event && (
+              <div
+                style={{ backgroundColor: "var(--c1-side)" }}
+                className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
+              >
+                <p className="p-medium gray-c">Loading note</p>
+                <LoadingDots />
+              </div>
+            )}
+            {!isLoading && !event && (
+              <div
+                style={{ backgroundColor: "var(--c1-side)" }}
+                className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
+              >
+                <p className="p-medium orange-c p-italic">
+                  The note does not seem to be found
+                </p>
+              </div>
+            )}
+          </>
         )}
-        {isLoading && !event && (
-          <div
-            style={{ backgroundColor: "var(--c1-side)" }}
-            className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
+        {minimal && (
+          <Link
+            to={`/notes/${addr}`}
+            className="btn-text-gray"
+            target={"_blank"}
+            onClick={(e) => e.stopPropagation()}
+            style={{ color: "var(--orange-main)" }}
           >
-            <p className="p-medium gray-c">Loading note</p>
-            <LoadingDots />
-          </div>
-        )}
-        {!isLoading && !event && (
-          <div
-            style={{ backgroundColor: "var(--c1-side)" }}
-            className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
-          >
-            <p className="p-medium orange-c p-italic">
-              The note does not seem to be found
-            </p>
-          </div>
+            @{addr.substring(0, 10)}
+          </Link>
         )}
       </>
     );
@@ -177,7 +207,7 @@ export default function Nip19Parsing({ addr }) {
   if (!event)
     return (
       <Link
-        to={url}
+        to={`/${addr}`}
         className="btn-text-gray"
         target={"_blank"}
         onClick={(e) => e.stopPropagation()}
@@ -197,6 +227,13 @@ export default function Nip19Parsing({ addr }) {
       >
         @{event.display_name}
       </Link>
+    );
+  if (event.kind === 30031)
+    return (
+      <>
+        {!minimal && <PreviewWidget widget={event.metadata} />}
+        {minimal && <MinimalPreviewWidget widget={event} />}
+      </>
     );
 
   if ([30004, 30005, 30023, 34235].includes(event.kind))

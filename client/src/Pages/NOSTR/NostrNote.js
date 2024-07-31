@@ -207,14 +207,16 @@ export default function NostrNote() {
               setReposts((reposts) => [...reposts, event]);
             }
             if (event.kind === 1) {
+              console.log(event);
+
               let tempNote = await onEvent(event);
               if (event.id !== id) {
                 setQuotes((quotes) => [...quotes, event]);
               } else {
                 setNote(tempNote);
-                if (tempNote.checkForQuote) {
-                  getRelatedEvent(tempNote.checkForQuote);
-                }
+                // if (tempNote.checkForQuote) {
+                //   getRelatedEvent(tempNote.checkForQuote);
+                // }
                 setIsLoaded(true);
               }
             }
@@ -567,9 +569,9 @@ export default function NostrNote() {
                     </div>
 
                     <div className="fit-container">{note.note_tree}</div>
-                    {relatedEvent && (
+                    {/* {relatedEvent && (
                       <KindOne reactions={false} event={relatedEvent} />
-                    )}
+                    )} */}
                     {note.checkForQuote &&
                       !isRelatedEventLoaded &&
                       !relatedEvent && (

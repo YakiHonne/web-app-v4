@@ -146,7 +146,6 @@ export default function NostrVideo() {
       : false;
   }, [reporters]);
   const optionsRef = useRef(null);
-
   const isVoted = useMemo(() => {
     return nostrKeys
       ? upvoteReaction
@@ -158,7 +157,6 @@ export default function NostrVideo() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // setIsLoaded(false);
         setVideoViews(0);
         setUpvoteReaction([]);
         setDownvoteReaction([]);
@@ -437,7 +435,6 @@ export default function NostrVideo() {
       setIsLoading(false);
     }
   };
-
   const checkURL = async () => {
     try {
       if (AuthNip05 && VidIdentifier) {
@@ -461,6 +458,7 @@ export default function NostrVideo() {
       navigateTo("/videos");
     }
   };
+  
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>

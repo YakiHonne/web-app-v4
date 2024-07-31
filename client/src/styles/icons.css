@@ -84,7 +84,7 @@
 .silver-medal,
 .bronze-medal,
 .copy-24,
-.switch-arrows,
+.copy .switch-arrows,
 .switch-arrows-24,
 .user,
 .user-24,
@@ -300,7 +300,17 @@
 .youtube-logo-24,
 .telegram-b-logo,
 .telegram-b-logo-24,
-.twitter-w-logo, .twitter-w-logo-24 {
+.twitter-w-logo, .twitter-w-logo-24,
+.frames,
+.frames-24,
+.smart-widget,
+.smart-widget-24,
+.smart-widget-bold,
+.smart-widget-bold-24,
+.layout,
+.layout-24,
+.clone,
+.clone-24 {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -357,7 +367,6 @@
     .bounties-24,
     .code-24,
     .curation-24,
-
     .edit-24,
     .facebook-logo-24,
     .filter-24,
@@ -410,6 +419,7 @@
     .silver-medal,
     .bronze-medal,
     .copy-24,
+    .copy,
     .switch-arrows,
     .switch-arrows-24,
     .user,
@@ -426,8 +436,6 @@
     .arrow-up-bold,
     .bolt-24,
     .bolt,
-    /* .checkmark,
-    .checkmark-24, */
     .flag,
     .upload-file,
     .upload-file-24,
@@ -481,8 +489,6 @@
     .medal-24,
     .add-note,
     .add-note-24,
-    /* .checkmark-c1,
-    .checkmark-c1-24, */
     .msg-icon,
     .msg-icon-24,
     .nostr-icon,
@@ -501,8 +507,6 @@
     .play-24,
     .download-file,
     .download-file-24,
-    /* .connect,
-    .connect-24, */
     .infinity,
     .infinity-24,
     .env-edit-24,
@@ -595,7 +599,17 @@
     .container-one-two,
     .container-one-two-24,
     .container-two-one,
-    .container-two-one-24 {
+    .container-two-one-24,
+    .frames,
+    .frames-24,
+    .smart-widget,
+    .smart-widget-24,
+    .smart-widget-bold,
+    .smart-widget-bold-24,
+    .layout,
+    .layout-24,
+    .clone,
+    .clone-24 {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -773,7 +787,13 @@
 .youtube-logo,
 .discord-logo,
 .telegram-b-logo,
-.twitter-w-logo {
+.twitter-w-logo,
+.frames,
+.smart-widget,
+.smart-widget-bold,
+.copy,
+.layout,
+.clone {
     min-width: 16px;
     min-height: 16px;
 }
@@ -932,7 +952,12 @@
 .youtube-logo-24,
 .discord-logo-24,
 .telegram-b-logo-24,
-.twitter-w-logo-24 {
+.twitter-w-logo-24,
+.frames-24,
+.smart-widget-24,
+.smart-widget-bold-24,
+.layout-24,
+.clone-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -940,6 +965,31 @@
 .play-vid-58 {
     min-width: 48px;
     min-height: 48px;
+}
+
+.clone,
+.clone-24 {
+    background-image: url('../media/icons/clone.svg');
+}
+
+.layout,
+.layout-24 {
+    background-image: url('../media/icons/layout.svg');
+}
+
+.frames,
+.frames-24 {
+    background-image: url('../media/icons/frames.svg');
+}
+
+.smart-widget,
+.smart-widget-24 {
+    background-image: url('../media/icons/smart-widget.svg');
+}
+
+.smart-widget-bold,
+.smart-widget-bold-24 {
+    background-image: url('../media/icons/smart-widget-bold.svg');
 }
 
 .telegram-b-logo,
@@ -1507,7 +1557,7 @@
     background-image: url('../media/icons/keys.svg');
 }
 
-.copy-24 {
+.copy, .copy-24 {
     background-image: url('../media/icons/copy.svg');
 }
 

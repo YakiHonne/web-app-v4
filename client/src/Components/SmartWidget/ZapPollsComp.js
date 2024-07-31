@@ -7,7 +7,7 @@ import { getNoteTree } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 const pool = new SimplePool();
 
-export default function ZapPollsPreview({
+export default function ZapPollsComp({
   event,
   nevent,
   content_text_color,
@@ -20,6 +20,7 @@ export default function ZapPollsPreview({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    
     const getData = async () => {
       setIsLoading(true);
       if (event) {
@@ -29,6 +30,7 @@ export default function ZapPollsPreview({
         let parsed_content = await getNoteTree(event.content);
         setPoll({ options, content: event.content, parsed_content });
         setIsLoading(false);
+        return
       }
       let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
       let id;

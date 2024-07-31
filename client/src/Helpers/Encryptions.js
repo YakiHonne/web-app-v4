@@ -152,7 +152,7 @@ const getParsed3000xContent = (tags) => {
       if (["image", "thumbnail", "thumb"].includes(tag[0])) {
         content.image = tag[1];
       }
-      if (["description", "excerpt"].includes(tag[0])) {
+      if (["description", "excerpt", "summary"].includes(tag[0])) {
         content.description = tag[1];
       }
       if (tag[0] === "d") {

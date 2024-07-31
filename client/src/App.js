@@ -57,6 +57,8 @@ import Wallet from "./Pages/NOSTR/Wallet";
 import WalletAlby from "./Pages/NOSTR/WalletAlby";
 import WalletNWC from "./Pages/NOSTR/WalletNWC";
 import NostrSmartWidget from "./Pages/NOSTR/NostrSmartWidget";
+import NostrSmartWidgets from "./Pages/NOSTR/NostrSmartWidgets";
+import SmartWidgetChecker from "./Pages/NOSTR/SmartWidgetChecker";
 
 function App() {
   return (
@@ -80,7 +82,12 @@ function App() {
           />
           <Route path="/my-curations" element={<NostrMyCurations />} />
           <Route path="/write-article" element={<NostrWriting />} />
-          <Route path="/smart-widget" element={<NostrSmartWidget />} />
+          <Route path="/smart-widget-builder" element={<NostrSmartWidget />} />
+          <Route path="/smart-widgets" element={<NostrSmartWidgets />} />
+          <Route
+            path="/smart-widget-checker"
+            element={<SmartWidgetChecker />}
+          />
           <Route path="/my-articles" element={<NostrMyPosts />} />
           <Route path="/settings" element={<NostrSettings />} />
           <Route path="/article/:id" element={<NostrArticle />} />

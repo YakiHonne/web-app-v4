@@ -14,11 +14,10 @@ const checkFollowing = (list, toFollowKey) => {
 };
 
 export default function VideosPreviewCards({ item, duration = true }) {
-  const { nostrUser } = useContext(Context);
+  const { nostrUser, nostrAuthors, getNostrAuthor } = useContext(Context);
   const optionsRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const { nostrAuthors, getNostrAuthor } = useContext(Context);
   const [author, setAuthor] = useState({
     pubkey: item.pubkey,
     display_name: getBech32("npub", item.pubkey).substring(0, 10),

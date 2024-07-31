@@ -76,16 +76,12 @@ export default function NostrNotes() {
   const [notes, setNotes] = useState([]);
   const memoNotes = useMemo(() => notes, [notes]);
   const [trendingNotes, setTrendingNotes] = useState([]);
-  const [relays, setRelays] = useState(relaysOnPlatform);
   const [activeRelay, setActiveRelay] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [contentFrom, setContentFrom] = useState("all");
   const [sub, setSub] = useState();
   const [lastEventTime, setLastTimeEventTime] = useState(undefined);
-  // const topCreators = useMemo(() => {
-  //   return getTopCreators(notes);
-  // }, [notes]);
   const [topCreators, setTopCreators] = useState([]);
   const extrasRef = useRef(null);
 
@@ -142,11 +138,11 @@ export default function NostrNotes() {
           ? nostrBandProfiles.data.profiles
               .filter((profile) => profile.profile)
               .map((profile) => {
-                let author = getEmptyNostrUser(profile.profile.pubkey)
+                let author = getEmptyNostrUser(profile.profile.pubkey);
                 try {
-                  author= JSON.parse(profile.profile.content)
-                } catch(err) {
-                  console.log(err)
+                  author = JSON.parse(profile.profile.content);
+                } catch (err) {
+                  console.log(err);
                 }
                 return {
                   pubkey: profile.profile.pubkey,
@@ -212,12 +208,21 @@ export default function NostrNotes() {
       relaysToFetchFrom = !nostrUser
         ? relaysOnPlatform
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
-    if (contentFrom !== "all") {
+    if (contentFrom === "followings") {
       let authors =
         nostrUser && nostrUser.following.length > 0
           ? [...nostrUser.following.map((item) => item[1])]
           : [];
       filter = [{ authors, kinds: [1, 6], limit: 10, until: lastEventTime }];
+      return {
+        relaysToFetchFrom,
+        filter,
+      };
+    }
+    if (contentFrom === "smart-widget") {
+      filter = [
+        { kinds: [1], limit: 10, "#l": ["smart-widget"], until: lastEventTime },
+      ];
       return {
         relaysToFetchFrom,
         filter,
@@ -232,10 +237,7 @@ export default function NostrNotes() {
 
   const onEOSE = (events) => {
     if (events) {
-      let filteredEvents = events.filter((event) => event);
       addNostrAuthors(events);
-
-      // addNostrAuthors(filteredEvents.map((item) => item.pubkey));
     }
     if (activeRelay) pool.close([activeRelay]);
     if (!activeRelay)
@@ -246,7 +248,6 @@ export default function NostrNotes() {
       );
     setIsLoaded(true);
     setIsLoading(false);
-    // relaySub.close();
   };
 
   const onEvent = async (event) => {
@@ -344,9 +345,9 @@ export default function NostrNotes() {
                     {nostrKeys && (
                       <div
                         className={`list-item fx-centered fx ${
-                          contentFrom !== "all" ? "selected-list-item" : ""
+                          contentFrom === "followings" ? "selected-list-item" : ""
                         }`}
-                        onClick={() => switchContentSource("following")}
+                        onClick={() => switchContentSource("followings")}
                       >
                         Following
                       </div>
@@ -358,6 +359,14 @@ export default function NostrNotes() {
                       onClick={() => switchContentSource("all")}
                     >
                       Universal
+                    </div>
+                    <div
+                      className={`list-item fx-centered fx ${
+                        contentFrom === "smart-widget" ? "selected-list-item" : ""
+                      }`}
+                      onClick={() => switchContentSource("smart-widget")}
+                    >
+                      Widget notes
                     </div>
                   </div>
                   {nostrKeys && (nostrKeys.sec || nostrKeys.ext) && (
