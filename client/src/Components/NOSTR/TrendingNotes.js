@@ -3,16 +3,20 @@ import { Context } from "../../Context/Context";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
 import { Link } from "react-router-dom";
+import { getEmptyNostrUser } from "../../Helpers/Encryptions";
 
 export default function TrendingNotes({ notes }) {
   return (
     <div className="fit-container fx-centered fx-wrap fx-start-h">
       {notes.map((note) => {
+        let author = note.author
+          ? JSON.parse(note.author.content)
+          : getEmptyNostrUser(note.pubkey);
         return (
           <div className="fit-container fx-scattered" key={note.id}>
             <div className="fx-centered fx-col fx-start-v">
               <div className="fx-centered fit-container fx-start-h">
-                <AuthorPreview author={JSON.parse(note.author.content)} pubkey={note.pubkey} />
+                <AuthorPreview author={author} pubkey={note.pubkey} />
                 <p className="p-small gray-c">|</p>
                 <p className="gray-c p-medium">
                   <Date_
@@ -34,7 +38,6 @@ export default function TrendingNotes({ notes }) {
 }
 
 const AuthorPreview = ({ author, pubkey }) => {
-  
   return (
     <div className="fx-centered">
       <UserProfilePicNOSTR

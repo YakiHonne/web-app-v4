@@ -56,6 +56,7 @@ import NostrMyNotes from "./Pages/NOSTR/NostrMyNotes";
 import Wallet from "./Pages/NOSTR/Wallet";
 import WalletAlby from "./Pages/NOSTR/WalletAlby";
 import WalletNWC from "./Pages/NOSTR/WalletNWC";
+import NostrMyNotesHidden from "./Pages/NOSTR/NostrMyNotesHidden";
 
 function App() {
   return (
@@ -103,6 +104,7 @@ function App() {
           <Route path="/notes" element={<NostrNotes />} />
           <Route path="/notes/:nevent" element={<NostrNote />} />
           <Route path="/my-notes" element={<NostrMyNotes />} />
+          <Route path="/my-notes-hidden" element={<NostrMyNotesHidden />} />
           <Route path="/messages" element={<DMS />} />
           <Route path="/buzz-feed" element={<BuzzFeed />} />
           <Route path="/buzz-feed/:nevent" element={<NostrBuzzFeed />} />
