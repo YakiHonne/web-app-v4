@@ -36,7 +36,7 @@ export default function ButtonComp({
       } catch (err) {
         console.log(err);
       }
-    }
+    } 
   }, [nostrAuthors]);
 
   const getUrl = () => {
