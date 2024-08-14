@@ -29,7 +29,7 @@ export default function ButtonComp({
   useEffect(() => {
     if (pubkey) {
       try {
-        let auth = getNostrAuthor(pubkey); 
+        let auth = getNostrAuthor(pubkey);
         if (auth) {
           setAuthor(auth);
         }
