@@ -18,6 +18,17 @@ import WriteNew from "./WriteNew";
 import UserBalance from "./UserBalance";
 import NumberShrink from "../NumberShrink";
 
+const getConnectedAccounts = () => {
+  try {
+    let accounts = localStorage.getItem("yaki-accounts") || [];
+    accounts = JSON.parse(accounts);
+    return accounts;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
 export default function SidebarNOSTR() {
   const {
     nostrKeys,
@@ -41,6 +52,9 @@ export default function SidebarNOSTR() {
   const mainFrame = useRef(null);
   const [isActive, setIsActive] = useState(false);
   const [showYakiChest, setShowYakiChest] = useState(false);
+  const accounts = useMemo(() => {
+    return getConnectedAccounts();
+  }, [nostrKeys]);
 
   const isNewMsg = useMemo(() => {
     return chatrooms.find((chatroom) => !chatroom.checked);
@@ -627,7 +641,6 @@ export default function SidebarNOSTR() {
                           <NumberShrink
                             value={updatedActionFromYakiChest.points}
                           />
-
                           <span className="gray-c p-medium">xp</span>
                         </p>
                       </div>
@@ -689,17 +702,8 @@ export default function SidebarNOSTR() {
                       style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="user"></div>
-                      <p className="gray-c">
-                        Profile{" "}
-                        <span className="orange-c p-medium">
-                          @{" "}
-                          {nostrUserAbout.display_name ||
-                            nostrUserAbout.name ||
-                            minimizeKey(nostrKeys.pub)}
-                        </span>{" "}
-                      </p>
+                      <p className="gray-c">Profile</p>
                     </div>
-
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
                       onClick={() => navigateTo(`/yaki-points`)}
@@ -733,7 +737,15 @@ export default function SidebarNOSTR() {
                       style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="logout"></div>
-                      <p>Logout</p>
+                      <p className="fx-centered">
+                        Logout
+                        <span className="sticker sticker-normal sticker-small sticker-orange-side">
+                          {" "}
+                          {nostrUserAbout.name ||
+                            nostrUserAbout.display_name ||
+                            minimizeKey(nostrKeys.pub)}
+                        </span>
+                      </p>
                     </div>
                   </div>
                   <hr />
@@ -741,53 +753,96 @@ export default function SidebarNOSTR() {
                     <div className="fit-container">
                       <p className="gray-c p-small">SWITCH ACCOUNT</p>
                     </div>
-                    <div
-                      className="fit-container sc-s-18 box-pad-h-s box-pad-v-s fx-scattered option"
-                      style={{ backgroundColor: "var(--dim-gray)", borderRadius: "10px", }}
-                    >
-                      <div className="fx-centered">
-                        <div style={{ pointerEvents: "none" }}>
-                          <UserProfilePicNOSTR
-                            size={32}
-                            mainAccountUser={true}
-                            allowClick={false}
-                            ring={false}
-                          />
-                        </div>
-                        <div>
-                          <p className="p-one-line p-medium">
-                            {nostrUserAbout.display_name ||
-                              nostrUserAbout.name ||
-                              minimizeKey(nostrKeys.pub)}
-                          </p>
-                          <p className="gray-c p-small p-one-line">
-                            @
-                            {nostrUserAbout.name ||
-                              nostrUserAbout.display_name ||
-                              minimizeKey(nostrKeys.pub)}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <div
-                          className="fx-centered"
-                          style={{
-                            borderRadius: "var(--border-r-50)",
-                            backgroundColor: "var(--orange-main)",
-                            minWidth: "14px",
-                            aspectRatio: "1/1",
-                          }}
-                        >
+                    <div className="fit-container">
+                      {accounts.map((account) => {
+                        return (
                           <div
+                            className="fit-container sc-s-18 box-pad-h-s box-pad-v-s fx-scattered option"
                             style={{
-                              borderRadius: "var(--border-r-50)",
-                              backgroundColor: "white",
-                              minWidth: "6px",
-                              aspectRatio: "1/1",
+                              backgroundColor:
+                                nostrKeys.pub !== account.pubkey
+                                  ? "transparent"
+                                  : "var(--dim-gray)",
+                              border: "none",
+                              borderRadius: "10px",
                             }}
-                          ></div>
-                        </div>
-                      </div>
+                            key={account.pubkey}
+                          >
+                            <div className="fx-centered">
+                              <div style={{ pointerEvents: "none" }}>
+                                <UserProfilePicNOSTR
+                                  size={32}
+                                  mainAccountUser={false}
+                                  img={account.img}
+                                  allowClick={false}
+                                  ring={false}
+                                />
+                              </div>
+                              <div>
+                                <p className="p-one-line p-medium">
+                                  {account.display_name ||
+                                    account.name ||
+                                    minimizeKey(nostrKeys.pub)}
+                                </p>
+                                <p className="gray-c p-small p-one-line">
+                                  @
+                                  {account.name ||
+                                    account.display_name ||
+                                    minimizeKey(account.pubkey)}
+                                </p>
+                              </div>
+                            </div>
+                            <div>
+                              {nostrKeys.pub !== account.pubkey && (
+                                <div
+                                  className="fx-centered"
+                                  style={{
+                                    border: "1px solid var(--gray)",
+                                    borderRadius: "var(--border-r-50)",
+                                    minWidth: "14px",
+                                    aspectRatio: "1/1",
+                                  }}
+                                ></div>
+                              )}
+                              {nostrKeys.pub === account.pubkey && (
+                                <div
+                                  className="fx-centered"
+                                  style={{
+                                    borderRadius: "var(--border-r-50)",
+                                    backgroundColor: "var(--orange-main)",
+                                    minWidth: "14px",
+                                    aspectRatio: "1/1",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      borderRadius: "var(--border-r-50)",
+                                      backgroundColor: "white",
+                                      minWidth: "6px",
+                                      aspectRatio: "1/1",
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div
+                      className="fit-container fx-centered box-pad-h-m box-pad-v-s sc-s-d option"
+                      style={{
+                        backgroundColor: "transparent",
+                        borderColor: "var(--gray)",
+                        borderRadius: "10px",
+                      }}
+                      onClick={(e) => {
+                        // e.stopPropagation();
+                        setTriggerLogin(true);
+                      }}
+                    >
+                      <div className="plus-sign"></div>
+                      <p className="gray-c p-medium">Add account</p>
                     </div>
                   </div>
                   {/* <hr /> */}
