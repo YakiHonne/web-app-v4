@@ -347,8 +347,8 @@ const ContextProvider = ({ children }) => {
     if (data) {
       setNostrUserLoaded(false);
       let content = data;
+ 
       let userAbout = JSON.parse(content.content) || {};
-
       let [relays, userFollowing, userTopics] = await Promise.all([
         getRelaysOfUser(content.pubkey),
         getUserFollowing(content.pubkey),
@@ -373,10 +373,10 @@ const ContextProvider = ({ children }) => {
         relays,
         following: userFollowing,
       };
+      addConnectedAccounts(userData)
       setNostrUser(userData);
       setNostrUserAbout(userAbout);
       setNostrUserTags(content.tags);
-
       setTempUserMeta(userAbout);
       getUserBookmarks(content.pubkey);
       // setNostrUserBookmarks(userBookmarks);
@@ -387,6 +387,31 @@ const ContextProvider = ({ children }) => {
     setNostrUser(false);
     setNostrUserLoaded(true);
   };
+
+  const getConnectedAccounts = () => {
+    try {
+      let accounts = localStorage.getItem("yaki-accounts") || []
+      accounts = JSON.parse(accounts)
+      return accounts
+    } catch (err) {
+      console.log(err)
+      return []
+    }
+  }
+
+  const addConnectedAccounts = (account) => {
+    try {
+      let accounts = getConnectedAccounts()
+      let isAccount = accounts.find(account_ => account_.pubkey === account.pubkey)
+      if(!isAccount) {
+        accounts.push(account)
+        localStorage.setItem("yaki-accounts", JSON.stringify(accounts))
+      }
+    } catch (err) {
+      console.log(err)
+   
+    }
+  }
 
   const setNostrKeysData = (data) => {
     if (data) {

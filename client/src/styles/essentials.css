@@ -356,6 +356,10 @@ hr:last-child {
     background: var(--orange-main);
     color: white
 }
+.sticker-orange-side {
+    background: #ff9c081b;
+    color: var(--orange-main)
+}
 
 .sticker-black {
     background: var(--primary);
