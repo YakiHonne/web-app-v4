@@ -47,7 +47,7 @@ const templates = [
   {
     url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/user-engagement-template-demo.mp4",
     title: "User Engagement",
-    desc: "This smart widget boosts your product’s growth with enhanced user engagement strategies that drive meaningful interactions and retention.",
+    desc: "This smart widget enhances user experiences and drive active participation with features that keep your audience engaged and invested.",
   },
   {
     url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/bitcoin-finance-template-demo.mp4",
@@ -61,8 +61,8 @@ const templates = [
   },
   {
     url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/governance-template-demo.mp4",
-    title: "Community governance",
-    desc: "Empower communities to express their collective voice, facilitating transparent decision-making and strengthening community governance.",
+    title: "Governance",
+    desc: "This smart widget empowers communities to express their collective voice, facilitating transparent decision-making and strengthening community governance.",
   },
 ];
 

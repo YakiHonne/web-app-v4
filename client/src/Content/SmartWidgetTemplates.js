@@ -953,7 +953,7 @@ Potential use cases:
     ],
   },
   {
-    title: "Community Governance",
+    title: "Governance",
     samples: [
       {
         title: "Voice of The Community",
