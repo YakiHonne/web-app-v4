@@ -688,7 +688,7 @@ export default function SidebarNOSTR() {
                       }
                     >
                       <div className="user"></div>
-                      <p>Profile</p>
+                      <p className="gray-c">Profile</p>
                     </div>
                     <hr />
                     <div
@@ -696,7 +696,7 @@ export default function SidebarNOSTR() {
                       onClick={() => navigateTo(`/yaki-points`)}
                     >
                       <div className="cup"></div>
-                      <p>Yaki points</p>
+                      <p className="gray-c">Yaki points</p>
                     </div>
                     <hr />
                     <div
@@ -704,7 +704,7 @@ export default function SidebarNOSTR() {
                       onClick={() => navigateTo(`/settings`)}
                     >
                       <div className="setting"></div>
-                      <p>Settings</p>
+                      <p className="gray-c">Settings</p>
                     </div>
                     <hr />
                     <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link">
@@ -716,7 +716,7 @@ export default function SidebarNOSTR() {
                       onClick={() => navigateTo(`/yakihonne-mobile-app`)}
                     >
                       <div className="mobile"></div>
-                      <p className="orange-c">Get the app</p>
+                      <p className="gray-c">Get the app</p>
                     </div>
                   </div>
                   <hr />
@@ -728,7 +728,7 @@ export default function SidebarNOSTR() {
                     }}
                   >
                     <div className="logout"></div>
-                    <p className="orange-c">Logout</p>
+                    <p>Logout</p>
                   </div>
                 </div>
               )}

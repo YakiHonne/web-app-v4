@@ -661,6 +661,30 @@ const ContextProvider = ({ children }) => {
   //   }
   // };
 
+  // useEffect(() => {
+  //   const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  //   function handleThemeChange(event) {
+  //       if (event.matches) {
+  //           console.log("Dark mode is now enabled");
+  //           localStorage.setItem("yaki-theme", "0");
+  //           setIsDarkMode("0");
+            
+  //       } else {
+  //           console.log("Light mode is now enabled");
+  //           localStorage.setItem("yaki-theme", "1");
+  //           setIsDarkMode("1");
+            
+  //       }
+  //   }
+    
+  //   // Initial check
+  //   handleThemeChange(darkModeMediaQuery);
+    
+  //   // Listen for changes
+  //   darkModeMediaQuery.addEventListener('change', handleThemeChange);
+  // }, [])
+
   const getRelaysOfUser = (pubkey) => {
     return new Promise((resolve, reject) => {
       try {

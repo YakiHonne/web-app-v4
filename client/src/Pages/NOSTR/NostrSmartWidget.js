@@ -342,8 +342,8 @@ const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
             onClick={() => setBuildOption("drafts")}
           >
             <div
-              className="smart-widget"
-              style={{ minWidth: "48px", height: "64px" }}
+              className="smart-widget-draft"
+              style={{ minWidth: "36px", height: "64px" }}
             ></div>
             <p className="gray-c">My drafts</p>
           </div>
@@ -354,7 +354,7 @@ const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
           >
             <div
               className="frames"
-              style={{ minWidth: "48px", height: "64px" }}
+              style={{ minWidth: "36px", height: "64px" }}
             ></div>
             <p className="gray-c">Templates</p>
           </div>
