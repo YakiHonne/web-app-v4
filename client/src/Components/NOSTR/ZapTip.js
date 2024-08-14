@@ -1,4 +1,4 @@
-import axios, { spread } from "axios";
+import axios from "axios";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   decodeUrlOrAddress,
@@ -15,6 +15,7 @@ import { SimplePool } from "nostr-tools";
 import LoadingDots from "../LoadingDots";
 import LoginNOSTR from "./LoginNOSTR";
 import { webln } from "@getalby/sdk";
+import { decode } from "light-bolt11-decoder";
 
 const pool = new SimplePool();
 
@@ -39,16 +40,30 @@ export default function ZapTip({
   forContent = "",
   onlyIcon = false,
   smallIcon = false,
+  custom = false,
 }) {
-  const { nostrKeys } = useContext(Context);
   const [callback, setCallback] = useState(false);
   const [showCashier, setCashier] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [lnbcAmount, setLnbcAmount] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       if (callback) return;
       try {
+        if (recipientLNURL.startsWith("lnbc") && recipientLNURL.length > 24) {
+          try {
+            let decoded = decode(recipientLNURL);
+            let lnbc = decoded.sections.find(
+              (section) => section.name === "amount"
+            );
+            setLnbcAmount(lnbc);
+            return;
+          } catch (err) {
+            console.log(err);
+            return;
+          }
+        }
         const data = await axios.get(decodeUrlOrAddress(recipientLNURL));
         setCallback(data.data.callback);
       } catch (err) {
@@ -58,10 +73,59 @@ export default function ZapTip({
     if (!callback) fetchData();
   }, [recipientLNURL]);
 
+  if (custom) {
+    if (
+      !recipientLNURL ||
+      (!callback && !recipientLNURL.startsWith("lnbc")) ||
+      (!lnbcAmount && recipientLNURL.startsWith("lnbc")) ||
+      (!recipientPubkey && !recipientLNURL.startsWith("lnbc")) ||
+      // (!recipientPubkey && recipientLNURL.startsWith("lnbc")) ||
+      senderPubkey === recipientPubkey
+    )
+      return (
+        <button
+          className="btn btn-normal btn-full if-disabled"
+          style={{
+            color: custom.textColor,
+            backgroundColor: custom.backgroundColor,
+          }}
+        >
+          {custom.content}
+        </button>
+      );
+    return (
+      <>
+        {showCashier && (
+          <Cashier
+            recipientLNURL={recipientLNURL}
+            recipientPubkey={recipientPubkey}
+            senderPubkey={senderPubkey}
+            callback={callback}
+            recipientInfo={recipientInfo}
+            aTag={aTag}
+            eTag={eTag}
+            exit={() => setCashier(false)}
+            forContent={forContent}
+            lnbcAmount={lnbcAmount}
+          />
+        )}
+        <button
+          className="btn btn-normal btn-full"
+          style={{
+            color: custom.textColor,
+            backgroundColor: custom.backgroundColor,
+          }}
+          onClick={() => setCashier(true)}
+        >
+          {custom.content}
+        </button>
+      </>
+    );
+  }
+
   if (
     !recipientLNURL ||
     !recipientPubkey ||
-    // !senderPubkey ||
     !callback ||
     senderPubkey === recipientPubkey
   )
@@ -157,6 +221,7 @@ const Cashier = ({
   eTag,
   exit,
   forContent,
+  lnbcAmount,
 }) => {
   const {
     nostrKeys,
@@ -165,7 +230,9 @@ const Cashier = ({
     setUpdatedActionFromYakiChest,
     updateYakiChestStats,
   } = useContext(Context);
-  const [amount, setAmount] = useState(1);
+  const [amount, setAmount] = useState(
+    lnbcAmount ? parseInt(lnbcAmount.value) / 1000 : 1
+  );
   const [message, setMessage] = useState("");
   const [invoice, setInvoice] = useState("");
   const [wallets, setWallets] = useState(getWallets());
@@ -203,46 +270,42 @@ const Cashier = ({
         setToast({ type: 2, desc: "User is not connected or amount is null!" });
         return;
       }
-      let sats = amount * 1000;
-      let tags = [
-        ["relays", ...relaysOnPlatform],
-        ["amount", sats.toString()],
-        ["lnurl", recipientLNURL],
-        ["p", recipientPubkey],
-      ];
-      if (aTag) tags.push(["a", aTag]);
-      if (eTag) tags.push(["e", eTag]);
-      const event = await getZapEventRequest(nostrKeys, message, tags);
-      if (!event) {
-        return;
-      }
-      let tempRecipientLNURL = recipientLNURL.includes("@")
-        ? encodeLud06(decodeUrlOrAddress(recipientLNURL))
-        : recipientLNURL;
+      let lnbcInvoice = lnbcAmount ? recipientLNURL : "";
+      if (!lnbcAmount) {
+        let sats = amount * 1000;
+        let tags = [
+          ["relays", ...relaysOnPlatform],
+          ["amount", sats.toString()],
+          ["lnurl", recipientLNURL],
+          ["p", recipientPubkey],
+        ];
+        if (aTag) tags.push(["a", aTag]);
+        if (eTag) tags.push(["e", eTag]);
+        const event = await getZapEventRequest(nostrKeys, message, tags);
+        if (!event) {
+          return;
+        }
+        let tempRecipientLNURL = recipientLNURL.includes("@")
+          ? encodeLud06(decodeUrlOrAddress(recipientLNURL))
+          : recipientLNURL;
 
-      const res = await axios(
-        `${callback}?amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
-      );
+        const res = await axios(
+          `${callback}?amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
+        );
 
-      if (res.data.status === "ERROR") {
-        setToast({
-          type: 2,
-          desc: "Something went wrong when processing payment!",
-        });
-        return;
+        if (res.data.status === "ERROR") {
+          setToast({
+            type: 2,
+            desc: "Something went wrong when processing payment!",
+          });
+          return;
+        }
+        lnbcInvoice = res.data.pr;
       }
-      setInvoice(res.data.pr);
+      setInvoice(lnbcInvoice);
       setConfirmation("in_progress");
-      // const { webln } = window;
-      // if (webln) {
-      //   await webln.enable();
-      //   try {
-      //     webln.sendPayment(res.data.pr);
-      //   } catch (err) {
-      //     console.log(err);
-      //   }
-      // }
-      await sendPayment(res.data.pr);
+
+      await sendPayment(lnbcInvoice);
 
       let sub = pool.subscribeMany(
         relaysOnPlatform,
@@ -255,8 +318,8 @@ const Cashier = ({
         ],
         {
           onevent(event) {
-            updateYakiChest();
             setConfirmation("confirmed");
+            updateYakiChest();
           },
         }
       );
@@ -386,7 +449,11 @@ const Cashier = ({
           e.stopPropagation();
         }}
         className="sc-s box-pad-h box-pad-v"
-        style={{ width: "min(100%, 500px)", position: "relative" }}
+        style={{
+          width: "min(100%, 500px)",
+          position: "relative",
+          overflow: "visible",
+        }}
       >
         <div
           className="close"
@@ -406,30 +473,34 @@ const Cashier = ({
             />
             <p className="gray-c p-medium">{nostrUser.name}</p>
           </div>
-          <div style={{ position: "relative", width: "30%" }}>
-            {confirmation === "confirmed" && (
-              <div
-                className="checkmark slide-left"
-                style={{ scale: "3" }}
-              ></div>
-            )}
-            {confirmation !== "confirmed" && (
-              <div className="arrows-animated">
-                <span></span>
-                <span></span>
-                <span></span>
+          {recipientPubkey && (
+            <>
+              <div style={{ position: "relative", width: "30%" }}>
+                {confirmation === "confirmed" && (
+                  <div
+                    className="checkmark slide-left"
+                    style={{ scale: "3" }}
+                  ></div>
+                )}
+                {confirmation !== "confirmed" && (
+                  <div className="arrows-animated">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="fx-centered fx-col">
-            <UserProfilePicNOSTR
-              size={54}
-              img={recipientInfo.img || recipientInfo.picture}
-              mainAccountUser={false}
-              ring={false}
-            />
-            <p className="gray-c p-medium">{recipientInfo.name}</p>
-          </div>
+              <div className="fx-centered fx-col">
+                <UserProfilePicNOSTR
+                  size={54}
+                  img={recipientInfo.img || recipientInfo.picture}
+                  mainAccountUser={false}
+                  ring={false}
+                />
+                <p className="gray-c p-medium">{recipientInfo.name}</p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* <hr style={{ margin: "1rem auto" }} /> */}
@@ -513,54 +584,58 @@ const Cashier = ({
                 </div>
               )}
             </div>
-            <div className="fit-container" style={{ position: "relative" }}>
-              <input
-                type="number"
-                className="if ifs-full"
-                placeholder="Amount"
-                value={amount}
-                onChange={(e) => setAmount(parseInt(e.target.value))}
-              />
-              <div
-                className="fx-centered"
-                style={{ position: "absolute", right: "16px", top: "16px" }}
-              >
-                <p className="gray-c">sats</p>
-              </div>
-            </div>
-            <div className="fit-container fx-scattered">
-              {predefined_amounts.map((item, index) => {
-                return (
-                  <button
-                    className={`fx  btn sc-s-18 `}
-                    key={index}
-                    style={{
-                      borderColor: amount === item.amount ? "var(--black)" : "",
-                      color: "var(--black)",
-                    }}
-                    onClick={() => setAmount(item.amount)}
+            {!lnbcAmount && (
+              <>
+                <div className="fit-container" style={{ position: "relative" }}>
+                  <input
+                    type="number"
+                    className="if ifs-full"
+                    placeholder="Amount"
+                    value={amount}
+                    onChange={(e) => setAmount(parseInt(e.target.value))}
+                  />
+                  <div
+                    className="fx-centered"
+                    style={{ position: "absolute", right: "16px", top: "16px" }}
                   >
-                    {index === 1 && <span>🥳</span>}
-                    {index === 2 && <span>🤩</span>}
-                    {index === 3 && <span>🤯</span>}
-                    {index === 0 && <span>😀</span>} {item.entitle}
-                  </button>
-                );
-              })}
-            </div>
-
-            <input
-              type="text"
-              className="if ifs-full"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Tip message (optional)"
-            />
+                    <p className="gray-c">sats</p>
+                  </div>
+                </div>
+                <div className="fit-container fx-scattered">
+                  {predefined_amounts.map((item, index) => {
+                    return (
+                      <button
+                        className={`fx  btn sc-s-18 `}
+                        key={index}
+                        style={{
+                          borderColor:
+                            amount === item.amount ? "var(--black)" : "",
+                          color: "var(--black)",
+                        }}
+                        onClick={() => setAmount(item.amount)}
+                      >
+                        {index === 1 && <span>🥳</span>}
+                        {index === 2 && <span>🤩</span>}
+                        {index === 3 && <span>🤯</span>}
+                        {index === 0 && <span>😀</span>} {item.entitle}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input
+                  type="text"
+                  className="if ifs-full"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Tip message (optional)"
+                />
+              </>
+            )}
             <button
               className="btn btn-normal btn-full"
               onClick={onConfirmation}
             >
-              Start confirmation
+              {lnbcAmount ? `Pay ${amount} sats` : "Start confirmation"}
             </button>
           </div>
         )}
@@ -593,7 +668,7 @@ const Cashier = ({
             <div className="box-pad-v-s"></div>
             <h4>Payment succeeded!</h4>
             <p className="gray-c box-pad-v-s">
-              You have tipped <span className="c1-c">{amount}</span> sats
+              You have tipped <span className="orange-c">{amount}</span> sats
             </p>
             <button className="btn btn-normal" onClick={exit}>
               Done!

@@ -3,28 +3,17 @@ import { useNavigate, useParams } from "react-router-dom";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { nip19, finalizeEvent, SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
-import {
-  checkForLUDS,
-  decodeBolt11,
-  decryptEventData,
-  filterRelays,
-  getBolt11,
-  getZapper,
-} from "../../Helpers/Encryptions";
+import { filterRelays } from "../../Helpers/Encryptions";
 import { Context } from "../../Context/Context";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import NumberShrink from "../../Components/NumberShrink";
 import ShowUsersList from "../../Components/NOSTR/ShowUsersList";
 import { Link } from "react-router-dom";
 import Date_ from "../../Components/Date_";
-import ZapTip from "../../Components/NOSTR/ZapTip";
 import LoadingDots from "../../Components/LoadingDots";
-import axios from "axios";
-import UN from "../../Components/NOSTR/UN";
 import SaveArticleAsBookmark from "../../Components/NOSTR/SaveArticleAsBookmark";
 import { getAIFeedContent, getNoteTree } from "../../Helpers/Helpers";
 import LoginNOSTR from "../../Components/NOSTR/LoginNOSTR";
@@ -370,268 +359,270 @@ export default function NostrBuzzFeed() {
         </Helmet>
 
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-        <div className="main-container">
-          <SidebarNOSTR />
-          <main className="main-page-nostr-container">
-            <ArrowUp />
+          <div className="main-container">
+            <SidebarNOSTR />
+            <main className="main-page-nostr-container">
+              <ArrowUp />
 
-            <div className="fit-container fx-centered fx-start-h fx-start-v">
-              <div style={{ width: "min(100%,700px)" }}>
-                {news.image && (
-                  <div
-                    className="fit-container profile-cover fx-centered fx-end-h  fx-col bg-img cover-bg"
-                    style={{
-                      height: "40vh",
-                      position: "relative",
-                      backgroundImage: `url(${news.image})`,
-                      backgroundColor: "var(--very-dim-gray)",
-                    }}
-                  ></div>
-                )}
-                <div className="box-pad-h-m">
-                  <div className="fx-centered fx-col fx-start-h fx-start-v ">
-                    <h3>{news.title}</h3>
-                    <div>
-                      {news.description}{" "}
-                      <a
-                        target={"_blank"}
-                        href={news.source_url}
-                        onClick={(e) => e.stopPropagation()}
-                        className="c1-c"
-                      >
-                        Read more
-                      </a>
-                    </div>
-                  </div>
-                  <div className="fx-scattered fit-container box-pad-v-m">
-                    <div className="fx-centered">
-                      <UserProfilePicNOSTR
-                        img={news.source_icon}
-                        size={24}
-                        user_id={false}
-                        allowClick={false}
-                        ring={false}
-                      />
-                      <Link
-                        to={`/buzz-feed/source/${news.source_name}`}
-                        target="_blank"
-                      >
-                        By {news.source_name}
-                      </Link>
-                    </div>
-                    <p className="gray-c p-medium">
-                      <Date_
-                        toConvert={new Date(
-                          news.published_at * 1000
-                        ).toString()}
-                        time={true}
-                      />
-                    </p>
-                  </div>
-                  <div className="fit-container fx-scattered box-pad-v-s">
-                    <div className="fx-centered">
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className="comment-24"
-                          // data-tooltip="Comments"
-                        ></div>
-                        <div>
-                          <NumberShrink value={netCommentsCount} />
-                        </div>
+              <div className="fit-container fx-centered fx-start-h fx-start-v">
+                <div style={{ width: "min(100%,700px)" }}>
+                  {news.image && (
+                    <div
+                      className="fit-container profile-cover fx-centered fx-end-h  fx-col bg-img cover-bg"
+                      style={{
+                        height: "40vh",
+                        position: "relative",
+                        backgroundImage: `url(${news.image})`,
+                        backgroundColor: "var(--very-dim-gray)",
+                      }}
+                    ></div>
+                  )}
+                  <div className="box-pad-h-m">
+                    <div className="fx-centered fx-col fx-start-h fx-start-v ">
+                      <h3>{news.title}</h3>
+                      <div>
+                        {news.description}{" "}
+                        <a
+                          target={"_blank"}
+                          href={news.source_url}
+                          onClick={(e) => e.stopPropagation()}
+                          className="c1-c"
+                        >
+                          Read more
+                        </a>
                       </div>
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
+                    </div>
+                    <div className="fx-scattered fit-container box-pad-v-m">
+                      <div className="fx-centered">
+                        <UserProfilePicNOSTR
+                          img={news.source_icon}
+                          size={24}
+                          user_id={false}
+                          allowClick={false}
+                          ring={false}
+                        />
+                        <Link
+                          to={`/buzz-feed/source/${news.source_name}`}
+                          target="_blank"
+                        >
+                          By {news.source_name}
+                        </Link>
+                      </div>
+                      <p className="gray-c p-medium">
+                        <Date_
+                          toConvert={new Date(
+                            news.published_at * 1000
+                          ).toString()}
+                          time={true}
+                        />
+                      </p>
+                    </div>
+                    <div className="fit-container fx-scattered box-pad-v-s">
+                      <div className="fx-centered">
                         <div
-                          className={"icon-tooltip"}
-                          data-tooltip="Upvote"
-                          onClick={upvoteNews}
+                          className={`fx-centered pointer ${
+                            isLoading ? "flash" : ""
+                          }`}
+                          style={{ columnGap: "8px" }}
                         >
                           <div
-                            className={
-                              isVoted?.content === "+"
-                                ? "arrow-up-bold"
-                                : "arrow-up"
-                            }
-                            style={{
-                              opacity: isVoted?.content === "-" ? ".2" : 1,
-                            }}
+                            className="comment-24"
+                            // data-tooltip="Comments"
                           ></div>
+                          <div>
+                            <NumberShrink value={netCommentsCount} />
+                          </div>
                         </div>
                         <div
-                          className="icon-tooltip"
-                          data-tooltip="Upvoters"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            upvoteReaction.length > 0 &&
-                              setUsersList({
-                                title: "Upvoters",
-                                list: upvoteReaction.map((item) => item.pubkey),
-                                extras: [],
-                              });
-                          }}
-                        >
-                          <NumberShrink value={upvoteReaction.length} />
-                        </div>
-                      </div>
-                      <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvote"
-                          onClick={downvoteNews}
+                          className={`fx-centered pointer ${
+                            isLoading ? "flash" : ""
+                          }`}
+                          style={{ columnGap: "8px" }}
                         >
                           <div
-                            className={
-                              isVoted?.content === "-"
-                                ? "arrow-up-bold"
-                                : "arrow-up"
-                            }
-                            style={{
-                              transform: "rotate(180deg)",
-                              opacity: isVoted?.content === "+" ? ".2" : 1,
+                            className={"icon-tooltip"}
+                            data-tooltip="Upvote"
+                            onClick={upvoteNews}
+                          >
+                            <div
+                              className={
+                                isVoted?.content === "+"
+                                  ? "arrow-up-bold"
+                                  : "arrow-up"
+                              }
+                              style={{
+                                opacity: isVoted?.content === "-" ? ".2" : 1,
+                              }}
+                            ></div>
+                          </div>
+                          <div
+                            className="icon-tooltip"
+                            data-tooltip="Upvoters"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              upvoteReaction.length > 0 &&
+                                setUsersList({
+                                  title: "Upvoters",
+                                  list: upvoteReaction.map(
+                                    (item) => item.pubkey
+                                  ),
+                                  extras: [],
+                                });
                             }}
-                          ></div>
+                          >
+                            <NumberShrink value={upvoteReaction.length} />
+                          </div>
                         </div>
                         <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvoters"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downvoteReaction.length > 0 &&
-                              setUsersList({
-                                title: "Downvoters",
-                                list: downvoteReaction.map(
-                                  (item) => item.pubkey
-                                ),
-                                extras: [],
-                              });
-                          }}
+                          className={`fx-centered pointer ${
+                            isLoading ? "flash" : ""
+                          }`}
+                          style={{ columnGap: "8px" }}
                         >
-                          <NumberShrink value={downvoteReaction.length} />
+                          <div
+                            className="icon-tooltip"
+                            data-tooltip="Downvote"
+                            onClick={downvoteNews}
+                          >
+                            <div
+                              className={
+                                isVoted?.content === "-"
+                                  ? "arrow-up-bold"
+                                  : "arrow-up"
+                              }
+                              style={{
+                                transform: "rotate(180deg)",
+                                opacity: isVoted?.content === "+" ? ".2" : 1,
+                              }}
+                            ></div>
+                          </div>
+                          <div
+                            className="icon-tooltip"
+                            data-tooltip="Downvoters"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downvoteReaction.length > 0 &&
+                                setUsersList({
+                                  title: "Downvoters",
+                                  list: downvoteReaction.map(
+                                    (item) => item.pubkey
+                                  ),
+                                  extras: [],
+                                });
+                            }}
+                          >
+                            <NumberShrink value={downvoteReaction.length} />
+                          </div>
                         </div>
-                      </div>
-                      <p>|</p>
-                      <ShareLink
-                        path={`/buzz-feed/${news.nEvent}`}
-                        title={news.source_name}
-                        description={news.content}
-                        kind={1}
-                        shareImgData={{
-                          post: {
-                            content: news.title,
-                            description: news.description,
-                            image: news.image,
-                            created_at: news.published_at
-                          },
-                          author: {
-                            display_name: news.source_name,
-                            picture: news.source_icon,
-                          },
-                          label: "Buzz feed",
-                        }}
-                      />
-                    </div>
-                    <div className="fx-centered">
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip="Bookmark news"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <SaveArticleAsBookmark
-                          pubkey={news.id}
-                          itemType="e"
-                          kind="1"
+                        <p>|</p>
+                        <ShareLink
+                          path={`/buzz-feed/${news.nEvent}`}
+                          title={news.source_name}
+                          description={news.content}
+                          kind={1}
+                          shareImgData={{
+                            post: {
+                              content: news.title,
+                              description: news.description,
+                              image: news.image,
+                              created_at: news.published_at,
+                            },
+                            author: {
+                              display_name: news.source_name,
+                              picture: news.source_icon,
+                            },
+                            label: "Buzz feed",
+                          }}
                         />
                       </div>
+                      <div className="fx-centered">
+                        <div
+                          className="round-icon round-icon-tooltip"
+                          data-tooltip="Bookmark news"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <SaveArticleAsBookmark
+                            pubkey={news.id}
+                            itemType="e"
+                            kind="1"
+                          />
+                        </div>
+                      </div>
                     </div>
+                    <CommentsSection
+                      id={news.id}
+                      nEvent={nevent}
+                      setNetCommentsCount={setNetCommentsCount}
+                    />
                   </div>
-                  <CommentsSection
-                    id={news.id}
-                    nEvent={nevent}
-                    setNetCommentsCount={setNetCommentsCount}
-                  />
                 </div>
-              </div>
-              {sourceName && morePosts.length > 0 && (
-                <div
-                  className=" fx-centered fx-col fx-start-v box-pad-h-m extras-homepage"
-                  style={{
-                    position: "sticky",
-                    top: extrasRef.current
-                      ? `min(0,calc(95vh - ${
-                          extrasRef.current?.getBoundingClientRect().height
-                        }px))`
-                      : 0,
-                    zIndex: "100",
-                    width: "min(100%, 400px)",
-                  }}
-                  ref={extrasRef}
-                >
-                  <div className="sticky fit-container">
-                    <SearchbarNOSTR />
-                  </div>
+                {sourceName && morePosts.length > 0 && (
                   <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                    className=" fx-centered fx-col fx-start-v box-pad-h-m extras-homepage"
                     style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
+                      position: "sticky",
+                      top: extrasRef.current
+                        ? `min(0,calc(95vh - ${
+                            extrasRef.current?.getBoundingClientRect().height
+                          }px))`
+                        : 0,
+                      zIndex: "100",
+                      width: "min(100%, 400px)",
                     }}
+                    ref={extrasRef}
                   >
-                    <h4>More from {sourceName}</h4>
-                    <div className="fit-container fx-centered fx-wrap">
-                      {morePosts.map((post) => {
-                        if (post.id !== news.id)
-                          return (
-                            <Link
-                              key={post.id}
-                              className="fit-container fx-centered fx-start-h"
-                              to={`/buzz-feed/${post.nEvent}`}
-                            >
-                              <div
-                                style={{
-                                  minWidth: "64px",
-                                  aspectRatio: "1/1",
-                                  borderRadius: "var(--border-r-18)",
-                                  backgroundImage: `url(${post.image})`,
-                                }}
-                                className="bg-img cover-bg"
-                              ></div>
-                              <div>
-                                <p className="p-medium gray-c">
-                                  <Date_
-                                    toConvert={
-                                      new Date(post.published_at * 1000)
-                                    }
-                                  />
-                                </p>
-                                <p className="p-two-lines">{post.title}</p>
-                              </div>
-                            </Link>
-                          );
-                      })}
+                    <div className="sticky fit-container">
+                      <SearchbarNOSTR />
                     </div>
+                    <div
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                      style={{
+                        backgroundColor: "var(--c1-side)",
+                        rowGap: "24px",
+                        border: "none",
+                      }}
+                    >
+                      <h4>More from {sourceName}</h4>
+                      <div className="fit-container fx-centered fx-wrap">
+                        {morePosts.map((post) => {
+                          if (post.id !== news.id)
+                            return (
+                              <Link
+                                key={post.id}
+                                className="fit-container fx-centered fx-start-h"
+                                to={`/buzz-feed/${post.nEvent}`}
+                              >
+                                <div
+                                  style={{
+                                    minWidth: "64px",
+                                    aspectRatio: "1/1",
+                                    borderRadius: "var(--border-r-18)",
+                                    backgroundImage: `url(${post.image})`,
+                                  }}
+                                  className="bg-img cover-bg"
+                                ></div>
+                                <div>
+                                  <p className="p-medium gray-c">
+                                    <Date_
+                                      toConvert={
+                                        new Date(post.published_at * 1000)
+                                      }
+                                    />
+                                  </p>
+                                  <p className="p-two-lines">{post.title}</p>
+                                </div>
+                              </Link>
+                            );
+                        })}
+                      </div>
+                    </div>
+                    <Footer />
+                    <div className="box-marg-full"></div>
                   </div>
-                  <Footer />
-                  <div className="box-marg-full"></div>
-                </div>
-              )}
-            </div>
-          </main>
-        </div>
+                )}
+              </div>
+            </main>
+          </div>
         </div>
       </div>
     </>
@@ -649,7 +640,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
     isPublishing,
     setToast,
   } = useContext(Context);
-  //   const [mainComments, setMainComments] = useState([]);
+
   const [toLogin, setToLogin] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -659,9 +650,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
   const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
     useState(false);
   const [netComments, setNetComments] = useState([]);
-  // const netComments = useMemo(() => {
-  //   return filterRootComments(comments);
-  // }, [comments]);
+
   useEffect(() => {
     if (selectedComment) {
       let sC = netComments.find((item) => item.id === selectedComment.id);
@@ -679,11 +668,6 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
     };
     parsedCom();
   }, [comments]);
-  console.log(netComments);
-  //   useEffect(() => {
-  //     // setMainComments(comments);
-  //     addNostrAuthors(comments.map((item) => item.pubkey));
-  //   }, [comments]);
 
   const postNewComment = async (suffix) => {
     try {
@@ -710,15 +694,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
           : relaysOnPlatform,
       });
-      // let temPublishingState = await publishPost(
-      //   nostrKeys,
-      //   1,
-      //   tempComment,
-      //   [["a", aTag, "", "root"]],
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
+
       setIsLoading(false);
       setNewComment("");
     } catch (err) {
@@ -1056,15 +1032,7 @@ const Comment = ({
         eventInitEx: event,
         allRelays: relaysToPublish,
       });
-      // setToPublish({
-      //   nostrKeys: nostrKeys,
-      //   kind: 5,
-      //   content: "This comment will be deleted!",
-      //   tags: [["e", comment.id]],
-      //   allRelays: nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform,
-      // });
+
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -1237,7 +1205,6 @@ const CommentsReplies = ({
       });
       setIsLoading(false);
       setNewComment("");
-      //   setSelectReplyTo(false);
     } catch (err) {
       console.log(err);
     }
@@ -1251,21 +1218,6 @@ const CommentsReplies = ({
             className="fx-centered fx-wrap"
             style={{ width: "min(100%, 600px)" }}
           >
-            {/* {selectReplyTo && (
-              <div
-                className="fx-scattered fit-container sc-s-18 box-pad-h-m box-pad-v-s"
-                style={{
-                  backgroundColor: "var(--black)",
-                  border: "none",
-                  borderBottomRightRadius: 0,
-                  borderBottomLeftRadius: 0,
-                }}
-              >
-                <p className="white-c p-medium">
-                  Reply to: {selectReplyTo.content.split(" — This is a comment on:")[0].substring(0, 100)}...
-                </p>
-              </div>
-            )} */}
             {!selectReplyTo && (
               <div
                 className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink"
@@ -1531,22 +1483,6 @@ const Reply = ({
         eventInitEx: event,
         allRelays: relaysToPublish,
       });
-      // setToPublish({
-      //   nostrKeys: nostrKeys,
-      //   kind: 5,
-      //   content: "This comment will be deleted!",
-      //   tags: [["e", comment.id]],
-      //   allRelays: nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform,
-      // });
-      // let data = await deletePost(
-      //   nostrKeys,
-      //   comment.id,
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
 
       refresh(index);
       setIsLoading(false);
@@ -1567,7 +1503,7 @@ const Reply = ({
           }}
         />
       )}
-      {/* {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />} */}
+
       <div
         className={`fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink  ${
           isLoading ? "flash" : ""

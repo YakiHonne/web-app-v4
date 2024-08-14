@@ -1,15 +1,12 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
 import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import { getAIFeedContent } from "../../Helpers/Helpers";
-import axios from "axios";
-import Slider from "../../Components/Slider";
 import Date_ from "../../Components/Date_";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Context } from "../../Context/Context";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
@@ -17,7 +14,6 @@ import { filterRelays } from "../../Helpers/Encryptions";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 
-const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 const checkTopicInList = (list, topic) => {
   return list.find(
     (item) => item.trim().toLowerCase() === topic.trim().toLowerCase()
@@ -88,31 +84,6 @@ export default function BuzzFeedSource() {
       }
     );
   }, [buzzFeedSources]);
-
-
-  // useEffect(() => {
-  //   if (isLoading) return;
-  //   const handleScroll = () => {
-  //     if (posts.length === 0) return;
-  //     if (
-  //       document.querySelector(".main-page-nostr-container").scrollHeight -
-  //         document.querySelector(".main-page-nostr-container").scrollTop -
-  //         60 >
-  //       document.documentElement.offsetHeight
-  //     ) {
-  //       return;
-  //     }
-  //     console.log(posts[posts.length - 1].created_at)
-  //     setLastEventTimestamp(posts[posts.length - 1].created_at-1);
-  //   };
-  //   document
-  //     .querySelector(".main-page-nostr-container")
-  //     ?.addEventListener("scroll", handleScroll);
-  //   return () =>
-  //     document
-  //       .querySelector(".main-page-nostr-container")
-  //       ?.removeEventListener("scroll", handleScroll);
-  // }, [isLoading]);
 
   const subscribe = () => {
     if (!nostrUser) {

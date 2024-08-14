@@ -1,20 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import axios from "axios";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import UN from "../../Components/NOSTR/UN";
 import Date_ from "../../Components/Date_";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  encryptEventData,
-  filterRelays,
-  getHex,
-  isImageUrl,
-} from "../../Helpers/Encryptions";
+import { encryptEventData, filterRelays } from "../../Helpers/Encryptions";
 import { nip19, finalizeEvent } from "nostr-tools";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { Context } from "../../Context/Context";
@@ -106,7 +99,6 @@ export default function NostrUNEvent() {
       } catch (err) {
         setIsLoaded(true);
         console.log(err);
-        // navigateTo("/uncensored-notes");
       }
     };
     fetchData();
@@ -116,7 +108,7 @@ export default function NostrUNEvent() {
     if (!isLoaded) return;
     let textArea = document.querySelector(".txt-area");
     if (!textArea) return;
-    // textArea.style.height = "200px";
+
     textArea.style.height = `${textArea.scrollHeight}px`;
   }, [note]);
 
@@ -190,14 +182,6 @@ export default function NostrUNEvent() {
         allRelays: relaysToPublish,
       });
 
-      //   setToPublish({
-      //     nostrKeys: nostrKeys,
-      //     kind: 1,
-      //     content: note,
-      //     tags,
-      //     allRelays: [...relaysToPublish],
-      //   });
-
       setTimeout(() => {
         setIsLoading(false);
         setNote("");
@@ -257,7 +241,7 @@ export default function NostrUNEvent() {
             {/* <NavbarNOSTR /> */}
             {toLogin && <LoginNOSTR exit={() => setToLogin(false)} />}{" "}
             <div className="fit-container fx-centered fx-start-v fx-start-h">
-              <div style={{  flex: 1.5 }} className="box-pad-h-s">
+              <div style={{ flex: 1.5 }} className="box-pad-h-s">
                 <Link className="fit-container" to="/uncensored-notes">
                   <div
                     className="fit-container fx-centered fx-start-h box-pad-v-m sticky"

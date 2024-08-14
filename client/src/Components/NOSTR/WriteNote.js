@@ -9,16 +9,21 @@ import LoadingDots from "../LoadingDots";
 import Slider from "../Slider";
 import BrowseSmartWidgets from "./BrowseSmartWidgets";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
+import MentionSuggestions from "./MentionSuggestions";
+import { nip19 } from "nostr-tools";
 
 export default function WriteNote() {
   const { nostrKeys, nostrUser, isPublishing, setToPublish, setToast } =
     useContext(Context);
   const [note, setNote] = useState("");
   const [tag, setTag] = useState("");
+  const [mention, setMention] = useState("");
   const [showHashSuggestions, setShowTagsSuggestions] = useState(false);
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [showSmartWidgets, setShowSmartWidgets] = useState(false);
   const [imgsSet, setImgsSet] = useState([]);
   const [widgetsSet, setWidgetsSet] = useState([]);
+  const [mentionSet, setMentionSet] = useState([]);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -30,14 +35,17 @@ export default function WriteNote() {
       setNote("");
       setTag("");
       setShowTagsSuggestions(false);
+      setShowMentionSuggestions(false);
     }
   }, [isPublishing]);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
       if (note.charAt(note.length - 1) === "#") setShowTagsSuggestions(true);
+      if (note.charAt(note.length - 1) === "@") setShowMentionSuggestions(true);
       else {
         let splitedNoteByHashtag = note.split("#");
+        let splitedNoteByMention = note.split("@");
         if (
           (splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(
             " "
@@ -46,6 +54,15 @@ export default function WriteNote() {
           !note
         ) {
           setShowTagsSuggestions(false);
+        }
+        if (
+          (splitedNoteByMention[splitedNoteByMention.length - 1].includes(
+            " "
+          ) &&
+            note.charAt(note.length - 1) !== "@") ||
+          !note
+        ) {
+          setShowMentionSuggestions(false);
         }
       }
       textareaRef.current.style.height = "auto";
@@ -56,9 +73,13 @@ export default function WriteNote() {
   const handleChange = (event) => {
     let value = event.target.value;
     let splitedNoteByHashtag = value.split("#");
+    let splitedNoteByMention = value.split("@");
 
     if (!splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(" ")) {
       setTag(splitedNoteByHashtag[splitedNoteByHashtag.length - 1]);
+    }
+    if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
+      setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
     }
     setNote(value);
   };
@@ -71,6 +92,17 @@ export default function WriteNote() {
 
     setShowTagsSuggestions(false);
     setTag("");
+    if (textareaRef.current) textareaRef.current.focus();
+  };
+  const handleSelectingMention = (data) => {
+    let splitedNoteByMention = note.split("@");
+    splitedNoteByMention[splitedNoteByMention.length - 1] = data;
+
+    setNote(splitedNoteByMention.join("@").replace("@npub", "npub"));
+    setMentionSet((prev) => [...prev, data]);
+    setShowMentionSuggestions(false);
+    setMention("");
+    if (textareaRef.current) textareaRef.current.focus();
   };
 
   const publishNote = () => {
@@ -97,6 +129,12 @@ export default function WriteNote() {
           "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
         ],
       ];
+      if (mentionSet.length > 0) {
+        for (let mention of mentionSet) {
+          if (note.includes(mention))
+            tags.push(["p", nip19.decode(mention).data]);
+        }
+      }
       if (widgetsSet.length > 0) {
         tags.push(["l", "smart-widget"]);
       }
@@ -123,6 +161,7 @@ export default function WriteNote() {
     if (!note) setNote(data);
     setImgsSet((prev) => [...prev, data]);
   };
+
   const handleAddWidget = (data) => {
     if (note) setNote(note + " " + data.naddr);
     if (!note) setNote(data.naddr);
@@ -136,13 +175,20 @@ export default function WriteNote() {
     tempImgSet.splice(index, 1);
     setImgsSet(tempImgSet);
   };
+
   const removeWidget = (index) => {
     let tempWidgetSet = Array.from(widgetsSet);
     setNote(note.replace(tempWidgetSet[index].naddr, ""));
     tempWidgetSet.splice(index, 1);
     setWidgetsSet(tempWidgetSet);
   };
-  console.log(widgetsSet);
+
+  const handleTextAreaMentions = (keyword) => {
+    if (textareaRef.current) textareaRef.current.focus();
+    if (note) setNote(note + ` ${keyword}`);
+    else setNote(keyword);
+  };
+
   return (
     <>
       {showSmartWidgets && (
@@ -183,38 +229,15 @@ export default function WriteNote() {
             {showHashSuggestions && (
               <HashSuggestions tag={tag} setSelectedTag={handleSelectingTags} />
             )}
+            {showMentionSuggestions && (
+              <MentionSuggestions
+                mention={mention}
+                setSelectedMention={handleSelectingMention}
+              />
+            )}
           </div>
           {widgetsSet.length > 0 && (
-            <div
-              className="box-pad-v-m fit-container fx-centered fx-col fx-start-h fx-start-v"
-              // style={{ maxWidth: "100%" }}
-            >
-              {/* <Slider
-                items={widgetsSet.map((widget, index) => {
-                  return (
-                    <div
-                      className="sc-s-18"
-                      style={{
-                        
-                        position: "relative",
-                      }}
-                      key={index}
-                    >
-                      <div
-                        className="close"
-                        style={{ top: "8px", right: "8px" }}
-                        onClick={() => removeWidget(index)}
-                      >
-                        <div></div>
-                      </div>
-                      <div style={{maxWidth: "520px"}}>
-
-                      <PreviewWidget widget={widget.metadata} />
-                      </div>
-                    </div>
-                  );
-                })}
-              /> */}
+            <div className="box-pad-v-m fit-container fx-centered fx-col fx-start-h fx-start-v">
               {widgetsSet.map((widget, index) => {
                 return (
                   <div
@@ -273,7 +296,13 @@ export default function WriteNote() {
             <div className="fx-centered">
               <div
                 className="round-icon-small"
-                onClick={() => (note ? setNote(note + " #") : setNote("#"))}
+                onClick={() => handleTextAreaMentions("@")}
+              >
+                @
+              </div>
+              <div
+                className="round-icon-small"
+                onClick={() => handleTextAreaMentions("#")}
               >
                 <div className="hashtag"></div>
               </div>

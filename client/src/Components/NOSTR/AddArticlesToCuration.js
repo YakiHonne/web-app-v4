@@ -4,10 +4,9 @@ import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import Date_ from "../Date_";
-import { publishPost } from "../../Helpers/NostrPublisher";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Relay, SimplePool, nip19 } from "nostr-tools";
-import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
+import { filterRelays } from "../../Helpers/Encryptions";
 import PublishRelaysPicker from "./PublishRelaysPicker";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 const pool = new SimplePool();
@@ -19,7 +18,6 @@ export default function AddArticlesToCuration({
   exit,
   curationKind = 30004,
   postKind = 30023,
-  exitAndRefresh,
 }) {
   const { title, image, description } = curation;
   const {
@@ -291,7 +289,6 @@ export default function AddArticlesToCuration({
     if (!input) return;
     try {
       let parsedData = nip19.decode(input);
-      // if (parsedData.data.kind === postKind) {
       setIsLoading(true);
       let post = await pool.get(
         nostrUser
@@ -335,12 +332,6 @@ export default function AddArticlesToCuration({
         });
       }
       setIsLoading(false);
-      // } else {
-      //   setToast({
-      //     type: 2,
-      //     desc: "The Naddr is not associated with an article.",
-      //   });
-      // }
     } catch (err) {
       setToast({
         type: 2,

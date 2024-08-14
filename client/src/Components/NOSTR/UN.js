@@ -1,102 +1,13 @@
-import React, {
-  Fragment,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 import Date_ from "../Date_";
-import { Link } from "react-router-dom";
-import {
-  encryptEventData,
-  filterRelays,
-  getHex,
-} from "../../Helpers/Encryptions";
-import { finalizeEvent, getEventHash, nip19, signEvent } from "nostr-tools";
+import { encryptEventData, filterRelays } from "../../Helpers/Encryptions";
+import { finalizeEvent } from "nostr-tools";
 import { Context } from "../../Context/Context";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
 import Counter from "../Counter";
 import { getNoteTree } from "../../Helpers/Helpers";
 import LoginNOSTR from "./LoginNOSTR";
-
-// const getNoteTree = (note) => {
-//   if (!note) return "";
-//   let tree = note.split(/\s/);
-//   let finalTree = tree.map((el, index) => {
-//     if (/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg))/i.test(el))
-//       return (
-//         <img
-//           className="sc-s-18"
-//           style={{ margin: "1rem auto" }}
-//           // style={{ margin: "1rem auto", aspectRatio: "16/9", objectFit: "contain", border: "none", objectPosition: 'left'}}
-//           width={"100%"}
-//           src={el}
-//           alt="el"
-//           key={`${el}-${index}`}
-//         />
-//       );
-//     else if (el.includes("nostr:")) {
-//       let nip19add = el.split("nostr:")[1];
-//       let url = getLinkFromAddr(nip19add);
-//       return (
-//         <Link
-//           to={url}
-//           className="btn-text-gray"
-//           target={"_blank"}
-//           key={`${el}-${index}`}
-//           onClick={(e) => e.stopPropagation()}
-//         >
-//           @{nip19add.substring(0, 10)}
-//         </Link>
-//       );
-//     } else if (/(https?:\/\/)/i.test(el)) {
-//       return (
-//         <a
-//           style={{ wordBreak: "break-word" }}
-//           href={el}
-//           className="btn-text-gray"
-//           key={`${el}-${index}`}
-//           onClick={(e) => e.stopPropagation()}
-//         >
-//           {el}
-//         </a>
-//       );
-//     } else
-//       return (
-//         <span
-//           style={{
-//             wordBreak: "break-word",
-//             color: "var(--dark-gray)",
-//           }}
-//           key={`${el}-${index}`}
-//         >
-//           {el}
-//         </span>
-//       );
-//   });
-//   return finalTree;
-// };
-// const getLinkFromAddr = (addr) => {
-//   try {
-//     if (addr.includes("naddr")) {
-//       let data = nip19.decode(addr);
-//       return data.data.kind === 30023
-//         ? `/article/${addr}`
-//         : `/curations/${addr}`;
-//     }
-//     if (addr.includes("nprofile")) {
-//       return `/users/${addr}`;
-//     }
-//     if (addr.includes("npub")) {
-//       let hex = getHex(addr);
-//       return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
-//     }
-//     return addr;
-//   } catch (err) {
-//     return addr;
-//   }
-// };
 
 export default function UN({
   sealedCauses = [],
@@ -109,10 +20,7 @@ export default function UN({
 }) {
   const { nostrUser, nostrKeys, setToPublish, setToast } = useContext(Context);
   const [content, setContent] = useState("");
-  // let content = useMemo(async () => {
-  //   let data = await getNoteTree(data.content)
-  //   return  data
-  // }, [data]);
+
   let findSource = data.tags.find((tag) => tag[0] === "source");
   let source = findSource ? findSource[1] : "";
   let isVoted =

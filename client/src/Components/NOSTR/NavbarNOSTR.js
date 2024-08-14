@@ -1,16 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../../Context/Context";
-import { getBech32, minimizeKey } from "../../Helpers/Encryptions";
+import { getBech32 } from "../../Helpers/Encryptions";
 import LoginNOSTR from "./LoginNOSTR";
-import SearchbarNOSTR from "./SearchbarNOSTR";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import ShortenKey from "./ShortenKey";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import MenuMobile from "./MenuMobile";
 import SearchMobile from "./SearchMobile";
-import { nip19 } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
-import NotificationCenter from "./NotificationCenter";
 
 const triggerLoginTime = () => {
   let time = localStorage.getItem("login-off");
@@ -28,20 +22,10 @@ const triggerLoginTime = () => {
 };
 
 export default function NavbarNOSTR({ margin = true }) {
-  const {
-    nostrUser,
-    nostrUserLoaded,
-    nostrKeys,
-    nostrUserLogout,
-    nostrUserAbout,
-  } = useContext(Context);
-  const navigateTo = useNavigate();
+  const { nostrUser, nostrUserLoaded, nostrKeys } = useContext(Context);
   const ref = useRef();
   const [showSettings, setShowSettings] = useState(false);
   const [showSearchMobile, setShowSearchMobile] = useState(false);
-  // const [showToast, setShowToast] = useState(
-  //   !localStorage.getItem("update-curation")
-  // );
   const [triggerLogin, setTriggerLogin] = useState("");
   const [pubkey, setPubkey] = useState(
     nostrKeys.pub ? getBech32("npub", nostrKeys.pub) : ""
@@ -84,6 +68,7 @@ export default function NavbarNOSTR({ margin = true }) {
     [
       "/yakihonne-mobile-app",
       "/yakihonne-flash-news",
+      "/yakihonne-smart-widgets",
       "/privacy",
       "/terms",
       "/points-system",

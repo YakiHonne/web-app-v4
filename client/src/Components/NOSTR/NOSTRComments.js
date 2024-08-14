@@ -1,10 +1,8 @@
 import { nip19 } from "nostr-tools";
 import React, { useContext, useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
-import { filterRelays, getHex } from "../../Helpers/Encryptions";
-import { deletePost, publishPost } from "../../Helpers/NostrPublisher";
+import { filterRelays } from "../../Helpers/Encryptions";
 import Date_ from "../Date_";
 import LoadingDots from "../LoadingDots";
 import LoginNOSTR from "./LoginNOSTR";
@@ -178,7 +176,7 @@ export default function NOSTRComments({
       setSelectedComment(sC);
     }
     setNetComments(netComments);
-    setShowCommentBox( netComments.length > 0 ? true : false)
+    setShowCommentBox(netComments.length > 0 ? true : false);
   }, [netComments]);
 
   useEffect(() => {
@@ -389,13 +387,6 @@ const Comment = ({ comment, refresh, index, onClick, action = true }) => {
           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
           : relaysOnPlatform,
       });
-      // let data = await deletePost(
-      //   nostrKeys,
-      //   comment.id,
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -525,14 +516,6 @@ const Reply = ({ comment, refresh, index, all, setSelectReplyTo }) => {
           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
           : relaysOnPlatform,
       });
-      // let data = await deletePost(
-      //   nostrKeys,
-      //   comment.id,
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
-
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -827,25 +810,9 @@ const CommentsReplies = ({ comment, exit, all, aTag, refresh }) => {
           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
           : relaysOnPlatform,
       });
-      // let temPublishingState = await publishPost(
-      //   nostrKeys,
-      //   1,
-      //   tempComment,
-      //   tags,
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
       setIsLoading(false);
-
       setNewComment("");
       setSelectReplyTo(false);
-
-      // setIsLoading(false);
-      // if (temPublishingState) {
-      //   setNewComment("");
-      //   setSelectReplyTo(false);
-      // }
     } catch (err) {
       console.log(err);
     }

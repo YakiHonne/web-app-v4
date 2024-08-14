@@ -9,6 +9,7 @@ export default function SearchMobile({ exit }) {
       exit();
     }, [600]);
   };
+  
   return (
     <div className={`menu-login ${dismissed ? "dismiss" : "slide-up"}`}>
       <div className="fit-container fx-centered" onClick={dismiss}>

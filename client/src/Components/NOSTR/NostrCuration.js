@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
-import { nip19, relayInit } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import SidebarNOSTR from "./SidebarNOSTR";
-import NavbarNOSTR from "./NavbarNOSTR";
 import { useParams } from "react-router-dom";
 import Date_ from "../Date_";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +23,6 @@ import { SimplePool } from "nostr-tools";
 import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import Helmet from "react-helmet";
-import ArrowUp from "../ArrowUp";
 import ZapTip from "./ZapTip";
 import NumberShrink from "../NumberShrink";
 import LoginNOSTR from "./LoginNOSTR";
@@ -301,15 +299,9 @@ export default function NostrCuration() {
             let tempArticle = { ...article };
 
             if (auth) {
-              // let checkNIP05 = auth.nip05
-              //   ? await getAuthPubkeyFromNip05(auth.nip05)
-              //   : false;
               tempArticle.author_img = auth.picture;
               tempArticle.author_name =
                 auth.display_name || auth.name || tempArticle.author_name;
-              // tempArticle.artURL = checkNIP05
-              //   ? `${auth.nip05}/${tempArticle.d}`
-              //   : tempArticle.artURL;
 
               return tempArticle;
             } else {
@@ -335,12 +327,8 @@ export default function NostrCuration() {
         const [important] = await Promise.all([
           axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
         ]);
-
         setImportantFN(important.data);
-
-        // setIsLoaded(true);
       } catch (err) {
-        // setIsLoaded(true)
         console.log(err);
       }
     };
@@ -630,30 +618,30 @@ export default function NostrCuration() {
         </Helmet>
         <div className="fit-container fx-centered">
           <div className="main-container">
-          <SidebarNOSTR />
-          <main className="main-page-nostr-container">
-            {/* <NavbarNOSTR /> */}
-            <div className="fit-container fx-centered fx-start-h fx-start-v">
-              <div
-                className="fit-container fx-centered fx-start-v fx-col box-pad-h-m box-pad-v-m"
-                style={{ columnGap: "32px", flex: 2 }}
-              >
+            <SidebarNOSTR />
+            <main className="main-page-nostr-container">
+              {/* <NavbarNOSTR /> */}
+              <div className="fit-container fx-centered fx-start-h fx-start-v">
                 <div
-                  className="fit-container sc-s-18 bg-img cover-bg fx-centered fx-end-v box-marg-s"
-                  style={{
-                    backgroundImage: `url(${curationDet.image})`,
-                    aspectRatio: "10 / 3",
-                    border: "none",
-                  }}
-                ></div>
-                <div
-                  // style={{ width: "min(100%,700px)" }}
-                  className="fx-centered fx-start-v fx-col fit-container box-pad-h-m"
+                  className="fit-container fx-centered fx-start-v fx-col box-pad-h-m box-pad-v-m"
+                  style={{ columnGap: "32px", flex: 2 }}
                 >
-                  <div className="fx-scattered fit-container fx-start-v">
-                    <div className="fx-centered fx-col fx-start-v">
-                      <div className="fx-start-h fx-centered">
-                        {/* <p className=" gray-c">
+                  <div
+                    className="fit-container sc-s-18 bg-img cover-bg fx-centered fx-end-v box-marg-s"
+                    style={{
+                      backgroundImage: `url(${curationDet.image})`,
+                      aspectRatio: "10 / 3",
+                      border: "none",
+                    }}
+                  ></div>
+                  <div
+                    // style={{ width: "min(100%,700px)" }}
+                    className="fx-centered fx-start-v fx-col fit-container box-pad-h-m"
+                  >
+                    <div className="fx-scattered fit-container fx-start-v">
+                      <div className="fx-centered fx-col fx-start-v">
+                        <div className="fx-start-h fx-centered">
+                          {/* <p className=" gray-c">
                         <Date_ toConvert={curationDet.added_date} />
                       </p>
                       <div
@@ -664,320 +652,323 @@ export default function NostrCuration() {
                           curationDet.modified_date
                         )}`}
                       ></div> */}
+                          <p
+                            className="pointer gray-c round-icon-tooltip"
+                            data-tooltip={`created at ${convertDate(
+                              curationDet.added_date
+                            )}, edited on ${convertDate(
+                              curationDet.modified_date
+                            )}`}
+                          >
+                            Last modified{" "}
+                            <Date_ toConvert={curationDet.modified_date} />
+                          </p>
+                          <p className="gray-c p-medium">|</p>
+                          <p className="gray-c">
+                            Posted from{" "}
+                            <span className="orange-c">
+                              {" "}
+                              <CheckNOSTRClient
+                                client={curationDet.client}
+                              />{" "}
+                            </span>
+                          </p>
+                        </div>
+                        <h3>{curationDet.title}</h3>
                         <p
-                          className="pointer gray-c round-icon-tooltip"
-                          data-tooltip={`created at ${convertDate(
-                            curationDet.added_date
-                          )}, edited on ${convertDate(
-                            curationDet.modified_date
-                          )}`}
+                          className="p-three-lines box-marg-s gray-c"
+                          style={{ marginLeft: 0 }}
                         >
-                          Last modified{" "}
-                          <Date_ toConvert={curationDet.modified_date} />
-                        </p>
-                        <p className="gray-c p-medium">|</p>
-                        <p className="gray-c">
-                          Posted from{" "}
-                          <span className="orange-c">
-                            {" "}
-                            <CheckNOSTRClient
-                              client={curationDet.client}
-                            />{" "}
-                          </span>
+                          {curationDet.description}
                         </p>
                       </div>
-                      <h3>{curationDet.title}</h3>
-                      <p
-                        className="p-three-lines box-marg-s gray-c"
-                        style={{ marginLeft: 0 }}
-                      >
-                        {curationDet.description}
-                      </p>
-                    </div>
 
-                    <div
-                      className="round-icon round-icon-tooltip"
-                      data-tooltip={"Bookmark curation"}
-                    >
-                      <SaveArticleAsBookmark
-                        pubkey={curationDet.naddrData.pubkey}
-                        kind={curationDet.naddrData.kind}
-                        d={curationDet.naddrData.identifier}
-                        image={curationDet.image}
-                      />
-                    </div>
-                  </div>
-                  <div className="fit-container fx-centered fx-start-h">
-                    <div
-                      className="fx-centered fx-start-h"
-                      style={{ columnGap: "16px" }}
-                    >
-                      <AuthorPreview_1 author={curationAuthor} />
-                    </div>
-                    <div>
-                      <p className="gray-c">&#9679;</p>
-                    </div>
-                    <div className="fx-centered fx-start-h">
-                      <div className="fx-centered">
-                        <div className="posts"></div>
-                        <p className="gray-c">
-                          {getDRef(curation.tags).length} <span>items</span>
-                        </p>
+                      <div
+                        className="round-icon round-icon-tooltip"
+                        data-tooltip={"Bookmark curation"}
+                      >
+                        <SaveArticleAsBookmark
+                          pubkey={curationDet.naddrData.pubkey}
+                          kind={curationDet.naddrData.kind}
+                          d={curationDet.naddrData.identifier}
+                          image={curationDet.image}
+                        />
                       </div>
                     </div>
-                  </div>
-                  {/* {curationDet.naddrData.kind === 30004 && ( */}
-                  <div
-                    className="fx-centered fit-container fx-start-h box-pad-v-m"
-                    style={{ columnGap: "12px", marginBottom: "1rem" }}
-                  >
-                    <div className="fx-centered" style={{ columnGap: "8px" }}>
-                      <div className="icon-tooltip" data-tooltip="Tip article">
-                        <ZapTip
-                          recipientLNURL={checkForLUDS(
-                            curationAuthor.lud06,
-                            curationAuthor.lud16
-                          )}
-                          // recipientLNURL={curationAuthor.lud06 || curationAuthor.lud16}
-                          recipientPubkey={curationAuthor.pubkey}
-                          senderPubkey={nostrUser.pubkey}
-                          recipientInfo={{
-                            name: curationAuthor.name,
-                            img: curationAuthor.picture,
-                          }}
-                          aTag={`${curationDet.naddrData.kind}:${curation.pubkey}:${curationDet.d}`}
-                          forContent={curationDet.title}
-                          onlyIcon={true}
+                    <div className="fit-container fx-centered fx-start-h">
+                      <div
+                        className="fx-centered fx-start-h"
+                        style={{ columnGap: "16px" }}
+                      >
+                        <AuthorPreview_1 author={curationAuthor} />
+                      </div>
+                      <div>
+                        <p className="gray-c">&#9679;</p>
+                      </div>
+                      <div className="fx-centered fx-start-h">
+                        <div className="fx-centered">
+                          <div className="posts"></div>
+                          <p className="gray-c">
+                            {getDRef(curation.tags).length} <span>items</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* {curationDet.naddrData.kind === 30004 && ( */}
+                    <div
+                      className="fx-centered fit-container fx-start-h box-pad-v-m"
+                      style={{ columnGap: "12px", marginBottom: "1rem" }}
+                    >
+                      <div className="fx-centered" style={{ columnGap: "8px" }}>
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip="Tip article"
+                        >
+                          <ZapTip
+                            recipientLNURL={checkForLUDS(
+                              curationAuthor.lud06,
+                              curationAuthor.lud16
+                            )}
+                            // recipientLNURL={curationAuthor.lud06 || curationAuthor.lud16}
+                            recipientPubkey={curationAuthor.pubkey}
+                            senderPubkey={nostrUser.pubkey}
+                            recipientInfo={{
+                              name: curationAuthor.name,
+                              img: curationAuthor.picture,
+                            }}
+                            aTag={`${curationDet.naddrData.kind}:${curation.pubkey}:${curationDet.d}`}
+                            forContent={curationDet.title}
+                            onlyIcon={true}
+                          />
+                        </div>
+                        <div
+                          data-tooltip="See zappers"
+                          className="icon-tooltip pointer"
+                          onClick={() =>
+                            zapsCount &&
+                            setUsersList({
+                              title: "Zappers",
+                              list: zappers.map((item) => item.pubkey),
+                              extras: zappers,
+                            })
+                          }
+                        >
+                          <NumberShrink value={zapsCount} />
+                        </div>
+                      </div>
+                      <div
+                        className="fx-centered pointer"
+                        style={{ columnGap: "8px" }}
+                        onClick={() => {
+                          setShowComments(true);
+                        }}
+                      >
+                        <div className="comment-24"></div>
+                        <NumberShrink
+                          value={
+                            netComments.map((item) => item.count).flat()
+                              .length + netComments.length
+                          }
                         />
                       </div>
                       <div
-                        data-tooltip="See zappers"
-                        className="icon-tooltip pointer"
-                        onClick={() =>
-                          zapsCount &&
-                          setUsersList({
-                            title: "Zappers",
-                            list: zappers.map((item) => item.pubkey),
-                            extras: zappers,
-                          })
-                        }
+                        className={`fx-centered pointer ${
+                          isLoading ? "flash" : ""
+                        }`}
+                        style={{ columnGap: "8px" }}
                       >
-                        <NumberShrink value={zapsCount} />
+                        <div
+                          className={" icon-tooltip"}
+                          data-tooltip="Upvote"
+                          onClick={upvoteCuration}
+                        >
+                          <div
+                            className={
+                              isVoted?.content === "+"
+                                ? "arrow-up-bold"
+                                : "arrow-up"
+                            }
+                            style={{
+                              opacity: isVoted?.content === "-" ? ".2" : 1,
+                            }}
+                          ></div>
+                        </div>
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip="Upvoters"
+                          onClick={() =>
+                            upvoteReaction.length > 0 &&
+                            setUsersList({
+                              title: "Upvoters",
+                              list: upvoteReaction.map((item) => item.pubkey),
+                              extras: [],
+                            })
+                          }
+                        >
+                          <NumberShrink value={upvoteReaction.length} />
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      className="fx-centered pointer"
-                      style={{ columnGap: "8px" }}
-                      onClick={() => {
-                        setShowComments(true);
-                      }}
-                    >
-                      <div className="comment-24"></div>
-                      <NumberShrink
-                        value={
-                          netComments.map((item) => item.count).flat().length +
-                          netComments.length
-                        }
+                      <div
+                        className={`fx-centered pointer ${
+                          isLoading ? "flash" : ""
+                        }`}
+                        style={{ columnGap: "8px" }}
+                      >
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip="Downvote"
+                          onClick={downvoteCuration}
+                        >
+                          <div
+                            className={
+                              isVoted?.content === "-"
+                                ? "arrow-up-bold"
+                                : "arrow-up"
+                            }
+                            style={{
+                              transform: "rotate(180deg)",
+                              opacity: isVoted?.content === "+" ? ".2" : 1,
+                            }}
+                          ></div>
+                        </div>
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip="Downvoters"
+                          onClick={() =>
+                            downvoteReaction.length > 0 &&
+                            setUsersList({
+                              title: "Downvoters",
+                              list: downvoteReaction.map((item) => item.pubkey),
+                              extras: [],
+                            })
+                          }
+                        >
+                          <NumberShrink value={downvoteReaction.length} />
+                        </div>
+                      </div>
+                      <p className="gray-c">|</p>
+                      <ShareLink
+                        path={getURLToShare()}
+                        title={curationDet.title}
+                        description={curationDet.description}
+                        kind={30004}
+                        shareImgData={{
+                          post: curationDet,
+                          author: curationAuthor,
+                          likes: upvoteReaction.length,
+                          dislikes: downvoteReaction.length,
+                        }}
                       />
                     </div>
-                    <div
-                      className={`fx-centered pointer ${
-                        isLoading ? "flash" : ""
-                      }`}
-                      style={{ columnGap: "8px" }}
-                    >
-                      <div
-                        className={" icon-tooltip"}
-                        data-tooltip="Upvote"
-                        onClick={upvoteCuration}
-                      >
-                        <div
-                          className={
-                            isVoted?.content === "+"
-                              ? "arrow-up-bold"
-                              : "arrow-up"
-                          }
-                          style={{
-                            opacity: isVoted?.content === "-" ? ".2" : 1,
-                          }}
-                        ></div>
-                      </div>
-                      <div
-                        className="icon-tooltip"
-                        data-tooltip="Upvoters"
-                        onClick={() =>
-                          upvoteReaction.length > 0 &&
-                          setUsersList({
-                            title: "Upvoters",
-                            list: upvoteReaction.map((item) => item.pubkey),
-                            extras: [],
-                          })
-                        }
-                      >
-                        <NumberShrink value={upvoteReaction.length} />
-                      </div>
-                    </div>
-                    <div
-                      className={`fx-centered pointer ${
-                        isLoading ? "flash" : ""
-                      }`}
-                      style={{ columnGap: "8px" }}
-                    >
-                      <div
-                        className="icon-tooltip"
-                        data-tooltip="Downvote"
-                        onClick={downvoteCuration}
-                      >
-                        <div
-                          className={
-                            isVoted?.content === "-"
-                              ? "arrow-up-bold"
-                              : "arrow-up"
-                          }
-                          style={{
-                            transform: "rotate(180deg)",
-                            opacity: isVoted?.content === "+" ? ".2" : 1,
-                          }}
-                        ></div>
-                      </div>
-                      <div
-                        className="icon-tooltip"
-                        data-tooltip="Downvoters"
-                        onClick={() =>
-                          downvoteReaction.length > 0 &&
-                          setUsersList({
-                            title: "Downvoters",
-                            list: downvoteReaction.map((item) => item.pubkey),
-                            extras: [],
-                          })
-                        }
-                      >
-                        <NumberShrink value={downvoteReaction.length} />
-                      </div>
-                    </div>
-                    <p className="gray-c">|</p>
-                    <ShareLink
-                      path={getURLToShare()}
-                      title={curationDet.title}
-                      description={curationDet.description}
-                      kind={30004}
-                      shareImgData={{
-                        post: curationDet,
-                        author: curationAuthor,
-                        likes: upvoteReaction.length,
-                        dislikes: downvoteReaction.length,
-                      }}
-                    />
-                  </div>
-                  {/* )} */}
+                    {/* )} */}
 
-                  {!articlesOnCuration.length && !isArtsLoaded && (
-                    <div
-                      className="fx-centered fit-container"
-                      style={{ height: "20vh" }}
-                    >
-                      <p className="gray-c p-medium">Loading</p>
-                      <LoadingDots />
-                    </div>
-                  )}
-                  {/* {isArtsLoaded && ( */}
-                  <div className="fit-container fx-scattered box-pad-v">
-                    {articlesOnCuration.length > 0 && (
+                    {!articlesOnCuration.length && !isArtsLoaded && (
                       <div
-                        className="fx-centered fx-start-h fx-wrap"
-                        style={{ columnGap: "32px", rowGap: "32px" }}
+                        className="fx-centered fit-container"
+                        style={{ height: "20vh" }}
                       >
-                        {articlesOnCuration.map((item, index) => {
-                          if (item?.id && item.kind === 30023)
-                            return (
-                              <div
-                                className="sc-s-18 bg-img cover-bg  fx-centered fx-end-v fx-shrink pointer"
-                                style={{
-                                  backgroundImage: `url(${item.thumbnail})`,
-                                  backgroundColor: "var(--dim-gray)",
-
-                                  flex: "1 1 200px",
-                                  height: "300px",
-                                }}
-                                key={`${item.id}-${index}`}
-                                onClick={() =>
-                                  navigateTo(`/article/${item.artURL}`)
-                                }
-                              >
+                        <p className="gray-c p-medium">Loading</p>
+                        <LoadingDots />
+                      </div>
+                    )}
+                    {/* {isArtsLoaded && ( */}
+                    <div className="fit-container fx-scattered box-pad-v">
+                      {articlesOnCuration.length > 0 && (
+                        <div
+                          className="fx-centered fx-start-h fx-wrap"
+                          style={{ columnGap: "32px", rowGap: "32px" }}
+                        >
+                          {articlesOnCuration.map((item, index) => {
+                            if (item?.id && item.kind === 30023)
+                              return (
                                 <div
-                                  className="fit-container sc-s-18 fx-centered fx-wrap fx-start-h fx-start-v  carousel-card-desc box-pad-h-m box-pad-v-m"
-                                  style={{ maxHeight: "60%", border: "none" }}
+                                  className="sc-s-18 bg-img cover-bg  fx-centered fx-end-v fx-shrink pointer"
+                                  style={{
+                                    backgroundImage: `url(${item.thumbnail})`,
+                                    backgroundColor: "var(--dim-gray)",
+
+                                    flex: "1 1 200px",
+                                    height: "300px",
+                                  }}
+                                  key={`${item.id}-${index}`}
+                                  onClick={() =>
+                                    navigateTo(`/article/${item.artURL}`)
+                                  }
                                 >
-                                  <p
-                                    className="p-three-lines fit-container"
-                                    style={{ color: "white" }}
+                                  <div
+                                    className="fit-container sc-s-18 fx-centered fx-wrap fx-start-h fx-start-v  carousel-card-desc box-pad-h-m box-pad-v-m"
+                                    style={{ maxHeight: "60%", border: "none" }}
                                   >
-                                    {item.title}
-                                  </p>
-                                  <div className="fx-centered fx-start-h fit-container">
-                                    <UserProfilePicNOSTR
-                                      size={16}
-                                      img={item.author_img}
-                                      mainAccountUser={false}
-                                      user_id={item.author_pubkey}
-                                      ring={false}
-                                    />
-                                    <p className="gray-c p-medium">
-                                      By{" "}
-                                      {item.author_name ||
-                                        getBech32(
-                                          "npub",
-                                          item.author_pubkey
-                                        ).substring(0, 10)}
+                                    <p
+                                      className="p-three-lines fit-container"
+                                      style={{ color: "white" }}
+                                    >
+                                      {item.title}
                                     </p>
+                                    <div className="fx-centered fx-start-h fit-container">
+                                      <UserProfilePicNOSTR
+                                        size={16}
+                                        img={item.author_img}
+                                        mainAccountUser={false}
+                                        user_id={item.author_pubkey}
+                                        ring={false}
+                                      />
+                                      <p className="gray-c p-medium">
+                                        By{" "}
+                                        {item.author_name ||
+                                          getBech32(
+                                            "npub",
+                                            item.author_pubkey
+                                          ).substring(0, 10)}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            );
-                          if (item?.id && item.kind === 34235)
-                            return (
-                              <div
-                                className="  fx-centered fx-end-v fx-shrink pointer"
-                                style={{
-                                  flex: "1 1 350px",
-                                }}
-                              >
-                                <VideosPreviewCards
-                                  item={item}
-                                  duration={false}
-                                />
-                              </div>
-                            );
-                        })}
-                        {CurationKind === "v" && (
-                          <>
-                            <div style={{ flex: "1 1 350px" }}></div>
-                            {/* <div style={{ flex: "1 1 350px" }}></div> */}
-                            {/* <div style={{ flex: "1 1 350px" }}></div> */}
-                          </>
-                        )}
-                        {CurationKind === "a" && (
-                          <>
-                            <div style={{ flex: "1 1 200px" }}></div>
-                            <div style={{ flex: "1 1 200px" }}></div>
-                            <div style={{ flex: "1 1 200px" }}></div>
-                          </>
-                        )}
-                      </div>
-                    )}
+                              );
+                            if (item?.id && item.kind === 34235)
+                              return (
+                                <div
+                                  className="  fx-centered fx-end-v fx-shrink pointer"
+                                  style={{
+                                    flex: "1 1 350px",
+                                  }}
+                                >
+                                  <VideosPreviewCards
+                                    item={item}
+                                    duration={false}
+                                  />
+                                </div>
+                              );
+                          })}
+                          {CurationKind === "v" && (
+                            <>
+                              <div style={{ flex: "1 1 350px" }}></div>
+                              {/* <div style={{ flex: "1 1 350px" }}></div> */}
+                              {/* <div style={{ flex: "1 1 350px" }}></div> */}
+                            </>
+                          )}
+                          {CurationKind === "a" && (
+                            <>
+                              <div style={{ flex: "1 1 200px" }}></div>
+                              <div style={{ flex: "1 1 200px" }}></div>
+                              <div style={{ flex: "1 1 200px" }}></div>
+                            </>
+                          )}
+                        </div>
+                      )}
 
-                    {articlesOnCuration.length === 0 && isArtsLoaded && (
-                      <div className="fx-centered fx-col">
-                        <p className="gray-c box-pad-v-s">
-                          more articles will join this topic, stay tuned!
-                        </p>
-                      </div>
-                    )}
+                      {articlesOnCuration.length === 0 && isArtsLoaded && (
+                        <div className="fx-centered fx-col">
+                          <p className="gray-c box-pad-v-s">
+                            more articles will join this topic, stay tuned!
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {/* )} */}
                   </div>
-                  {/* )} */}
                 </div>
-              </div>
-              <div
+                <div
                   className=" fx-centered fx-col fx-start-v extras-homepage"
                   style={{
                     position: "sticky",
@@ -1003,9 +994,9 @@ export default function NostrCuration() {
                   </div>
                   <Footer />
                 </div>
-            </div>
-          </main>
-        </div>
+              </div>
+            </main>
+          </div>
         </div>
       </div>
     </>

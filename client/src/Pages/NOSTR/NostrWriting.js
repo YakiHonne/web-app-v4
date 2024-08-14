@@ -3,9 +3,6 @@ import { useContext } from "react";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import MDEditor, {
   commands,
-  ICommand,
-  TextState,
-  TextAreaTextApi,
   bold,
   italic,
   strikethrough,
@@ -17,37 +14,23 @@ import MDEditor, {
   unorderedListCommand,
   orderedListCommand,
   checkedListCommand,
-  title,
-  title1,
-  title2,
-  title3,
-  title4,
-  title5,
-  title6,
-  comment,
-  group,
-  update,
-  image,
+  comment
 } from "@uiw/react-md-editor";
 import { Context } from "../../Context/Context";
 import { useState } from "react";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import ToPublishNOSTR from "../../Components/NOSTR/ToPublishNOSTR";
 import LoadingScreen from "../../Components/LoadingScreen";
-import { useLocation, unstable_usePrompt } from "react-router-dom";
-import { SimplePool, nip19 } from "nostr-tools";
+import { useLocation } from "react-router-dom";
+import { SimplePool } from "nostr-tools";
 import { Helmet } from "react-helmet";
 import ToPublishDraftsNOSTR from "../../Components/NOSTR/ToPublishDraftsNOSTR";
 import katex from "katex";
 import "katex/dist/katex.css";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import { getComponent } from "../../Helpers/Helpers";
-import Footer from "../../Components/Footer";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
-
-const pool = new SimplePool();
 
 const getUploadsHistory = () => {
   let history = localStorage.getItem("YakihonneUploadsHistory");
@@ -88,26 +71,6 @@ export default function NostrWriting() {
   const [isEdit, setIsEdit] = useState(true);
   const [triggerHTMLWarning, setTriggerHTMLWarning] = useState(false);
   const [showGPT, setShowGPT] = useState(false);
-
-  // useEffect(() => {
-  //   if (!title && !content) return;
-  //   // window.onbeforeunload = (e) => {
-  //   //   return "Did you save your stuff?";
-  //   // };
-
-  //   window.onbeforeunload = (event) => {
-  //     const e = event || window.event;
-  //     // Cancel the event
-  //     e.preventDefault();
-  //     if (e) {
-  //       e.returnValue = ""; // Legacy method for cross browser support
-  //     }
-  //     return ""; // Legacy method for cross browser support
-  //   };
-  //   return () => {
-  //     window.onbeforeunload = null;
-  //   };
-  // }, [title, content]);
 
   useEffect(() => {
     if (!title && !content) return;

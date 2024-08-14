@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Context } from "../../Context/Context";
 import DtoLToggleButton from "../DtoLToggleButton";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
@@ -303,7 +303,11 @@ export default function SidebarNOSTR() {
                 }`}
               >
                 <div
-                  className={isPage("/smart-widgets") ? "smart-widget-24" : "smart-widget-24"}
+                  className={
+                    isPage("/smart-widgets")
+                      ? "smart-widget-24"
+                      : "smart-widget-24"
+                  }
                 ></div>
                 <div className="link-label">Smart widgets</div>
               </div>
@@ -549,15 +553,19 @@ export default function SidebarNOSTR() {
               ref={settingsRef}
             >
               <div
-                className="fit-container sidebar-user-settings-button fx-wrap"
+                className="fit-container sidebar-user-settings-button"
                 style={{ overflow: "visible" }}
-                onClick={() => setShowSettings(!showSettings)}
+                // onClick={() => setShowSettings(!showSettings)}
               >
                 <div
                   className="fx-centered fx-start-h pointer"
                   style={{ columnGap: "16px" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSettings(!showSettings);
+                  }}
                 >
-                  <div className="mb-hide">
+                  <div className="mb-hide" style={{pointerEvents: "none"}}>
                     <UserProfilePicNOSTR
                       size={50}
                       mainAccountUser={true}
@@ -565,7 +573,7 @@ export default function SidebarNOSTR() {
                       ring={false}
                     />
                   </div>
-                  <div className="mb-show">
+                  <div className="mb-show" style={{pointerEvents: "none"}}>
                     <UserProfilePicNOSTR
                       size={40}
                       mainAccountUser={true}
@@ -574,12 +582,12 @@ export default function SidebarNOSTR() {
                     />
                   </div>
                   <div className="mb-hide">
-                    <p>
+                    <p className="p-one-line">
                       {nostrUserAbout.display_name ||
                         nostrUserAbout.name ||
                         minimizeKey(nostrKeys.pub)}
                     </p>
-                    <p className="gray-c p-medium">
+                    <p className="gray-c p-medium p-one-line">
                       @
                       {nostrUserAbout.name ||
                         nostrUserAbout.display_name ||
@@ -657,7 +665,7 @@ export default function SidebarNOSTR() {
                     position: "absolute",
                     bottom: "110%",
                     left: "0",
-                    width: "220px",
+                    width: "240px",
                     height: "max-content",
                     backgroundColor: "var(--very-dim-gray)",
                     zIndex: "900",
@@ -708,7 +716,7 @@ export default function SidebarNOSTR() {
                       onClick={() => navigateTo(`/yakihonne-mobile-app`)}
                     >
                       <div className="mobile"></div>
-                      <p className="c1-c">Get the app</p>
+                      <p className="orange-c">Get the app</p>
                     </div>
                   </div>
                   <hr />
@@ -720,7 +728,7 @@ export default function SidebarNOSTR() {
                     }}
                   >
                     <div className="logout"></div>
-                    <p className="c1-c">Logout</p>
+                    <p className="orange-c">Logout</p>
                   </div>
                 </div>
               )}

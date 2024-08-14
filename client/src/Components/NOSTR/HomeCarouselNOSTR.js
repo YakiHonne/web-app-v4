@@ -1,14 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
-import Date_ from "../Date_";
-import { useNavigate, Link } from "react-router-dom";
 import relaysOnPlatform from "../../Content/Relays";
-import { nip19, relayInit } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import {
   filterRelays,
   getEmptyNostrUser,
   getParsed3000xContent,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import TopicElementNOSTR from "./TopicElementNOSTR";
 import { SimplePool } from "nostr-tools";
 import { Context } from "../../Context/Context";
@@ -305,67 +302,4 @@ export default function HomeCarouselNOSTR({ homeCarousel = null }) {
       {/* </div> */}
     </div>
   );
-}
-
-{
-  /* <div
-      className="bg-img cover-bg sc-s fx-shrink box-pad-h-m box-pad-v-m pointer carousel-item"
-      style={{
-        backgroundImage: `url(${content.thumbnail})`,
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        navigateTo(`/curations/${topic.id}`);
-      }}
-    >
-      <section
-        className="fx-scattered fx-col fx-start-v sc-s carousel-card-desc box-pad-h box-pad-v"
-        style={{
-          height: "100%",
-        }}
-      >
-        <div>
-          <div className="box-marg-s fx-centered fx-start-v fx-col fit-container">
-            <h4 className="white-c p-two-lines">{content.title}</h4>
-            <div className="fit-container fx-centered fx-start-h">
-              <p className="gray-c p-medium">
-                On{" "}
-                <Date_
-                  toConvert={new Date(topic.created_at * 1000).toISOString()}
-                />
-              </p>
-            </div>
-          </div>
-          <p className="white-c p-medium p-four-lines">{content.excerpt}</p>
-        </div>
-        <div className="fit-container fx-centered fx-start-h">
-          <div className="fx-centered fx-start-h" style={{ columnGap: "16px" }}>
-            <UserProfilePicNOSTR
-              size={32}
-              img={topic.author.picture}
-              mainAccountUser={false}
-              allowClick={true}
-              user_id={topic.pubkey}
-            />
-            <p className="white-c">
-              Posted by <span className="green-c">{topic.author.name}</span>
-            </p>
-          </div>
-          <div>
-            <p className="white-c">&#9679;</p>
-          </div>
-          <div
-            className="fx-centered fx-start-h"
-            style={{ filter: "invert()" }}
-          >
-            <div className="fx-centered">
-              <div className="posts-24"></div>
-              <p>
-                {getDRef()} <span>arts.</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div> */
 }

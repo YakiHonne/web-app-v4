@@ -1,29 +1,21 @@
-import React, { Fragment, useContext, useMemo, useRef } from "react";
+import React, { useContext, useMemo, useRef } from "react";
 import { Context } from "../../Context/Context";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import { useState } from "react";
-import PagePlaceholder from "../../Components/PagePlaceholder";
-import LoadingScreen from "../../Components/LoadingScreen";
 import { useEffect } from "react";
-import { nip19, Relay, SimplePool } from "nostr-tools";
+import { nip19, SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import Date_ from "../../Components/Date_";
-import ToDeletePostNOSTR from "../../Components/NOSTR/ToDeletePostNOSTR";
-import placeholder from "../../media/images/nostr-thumbnail-ph.svg";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
 import {
-  convertDate,
   filterRelays,
   getBech32,
   getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
-import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import Footer from "../../Components/Footer";
 import bannedList from "../../Content/BannedList";
-import PostPreviewCardNOSTR from "../../Components/NOSTR/PostPreviewCardNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import TopCreators from "../../Components/NOSTR/TopCreators";
@@ -288,7 +280,7 @@ export default function NostrVideos() {
             >
               <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div
-                  style={{ width: "min(100%,700px)" }}
+                  style={{ width: "min(100%,550px)" }}
                   className="box-pad-h-m"
                 >
                   <div

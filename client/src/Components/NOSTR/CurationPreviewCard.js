@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
-import { nip19, relayInit } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
-import SidebarNOSTR from "./SidebarNOSTR";
-import NavbarNOSTR from "./NavbarNOSTR";
-import { useParams } from "react-router-dom";
 import Date_ from "../Date_";
 import { useNavigate } from "react-router-dom";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
@@ -23,8 +20,6 @@ import {
 import { SimplePool } from "nostr-tools";
 import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
-import Helmet from "react-helmet";
-import ArrowUp from "../ArrowUp";
 import NumberShrink from "../NumberShrink";
 import LoginNOSTR from "./LoginNOSTR";
 import ShowUsersList from "./ShowUsersList";
@@ -73,7 +68,6 @@ export default function CurationPreviewCard({ curationEv }) {
   const carousel = useRef();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isArtsLoaded, setIsArtsLoaded] = useState(false);
-  const [showDesc, setShowDesc] = useState(false);
   const [curation, setCuration] = useState({});
   const [curationAuthor, setCurationAuthor] = useState({});
   const [curationDet, setCurationDet] = useState({});

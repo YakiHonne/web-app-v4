@@ -10,7 +10,7 @@ export default function MinimalPreviewWidget({ widget }) {
       )}
       <div className="fit-container fx-scattered sc-s-18 box-pad-h-m box-pad-v-m">
         <div className="fx-centered fx-col fx-start-h fx-start-v">
-          <p>{widget.title}</p>
+          <p>{widget?.title}</p>
           {widget.description && (
             <p className="gray-c p-medium">{widget.description}</p>
           )}
@@ -39,13 +39,13 @@ const FullWidget = ({ widget, exit }) => {
         className="box-pad-h-m sc-s-18"
       >
         <div className="sticky fit-container fx-scattered">
-          <h4>{widget.title}</h4>
+          <h4>{widget?.title}</h4>
           <div className="close" style={{ position: "static" }} onClick={exit}>
             <div></div>
           </div>
         </div>
         <div className="fit-container box-marg-s">
-          <PreviewWidget widget={widget.metadata} />
+          <PreviewWidget widget={widget?.metadata} />
         </div>
       </div>
     </div>

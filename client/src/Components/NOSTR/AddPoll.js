@@ -69,7 +69,7 @@ export default function AddPoll({ exit, setNevent }) {
     if (closed_at && closed_at <= created_at) {
       setToast({
         type: 3,
-        desc: "The poll closing time must be creater than the current time",
+        desc: "The poll closing time must be greater than the current time",
       });
       return;
     }
@@ -91,10 +91,10 @@ export default function AddPoll({ exit, setNevent }) {
       "Yakihonne",
       "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
     ]);
+
     if (closed_at) tags.push(["closed_at", `${closed_at}`]);
     if (minSats !== "") tags.push(["value_minimum", `${minSats}`]);
     if (maxSats !== "") tags.push(["value_maximum", `${maxSats}`]);
-
     let tempEvent = {
       created_at,
       kind: 6969,

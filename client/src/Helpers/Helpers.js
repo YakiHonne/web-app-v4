@@ -1,9 +1,5 @@
 import { nip19, nip44 } from "nostr-tools";
-import { Link } from "react-router-dom";
 import { decryptEventData, getHex } from "./Encryptions";
-import NEventPreviewer from "../Components/NOSTR/NEventPreviewer";
-import NProfilePreviewer from "../Components/NOSTR/NProfilePreviewer";
-import NAddrPreviewer from "../Components/NOSTR/NAddrPreviewer";
 import IMGElement from "../Components/NOSTR/IMGElement";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
@@ -99,7 +95,7 @@ const isImageUrl = async (url) => {
     });
   } catch (error) {
     console.error(`Error checking URL ${url}:`, error);
-    return false; // Or reject(error) if you want to propagate errors
+    return false;
   }
 };
 const isImageUrlSync = (url) => {
@@ -113,7 +109,7 @@ const isImageUrlSync = (url) => {
 
 const getNoteTree = async (note, minimal = false) => {
   if (!note) return "";
-  let tree = note.split(/(\s|\n)+/).filter(Boolean);
+  let tree = note.trim().split(/(\s|\n)+/).filter(Boolean);
   let finalTree = [];
 
   for (let i = 0; i < tree.length; i++) {
@@ -171,7 +167,7 @@ const getNoteTree = async (note, minimal = false) => {
                   name="media"
                   width={"100%"}
                   className="sc-s-18"
-                  style={{ margin: "1rem auto", aspectRatio: "16/9" }}
+                  style={{ margin: "1rem auto", }}
                 >
                   <source src={el} type="video/mp4" />
                 </video>
@@ -253,9 +249,13 @@ const getLinkFromAddr = (addr) => {
   try {
     if (addr.startsWith("naddr")) {
       let data = nip19.decode(addr);
-      return data.data.kind === 30023
-        ? `/article/${addr}`
-        : `/curations/${addr}`;
+
+      if (data.data.kind === 30023) return `/article/${addr}`;
+      if (data.data.kind === 30004) return `/curations/${addr}`;
+      if (data.data.kind === 34235 || data.data.kind === 34236)
+        return `/videos/${addr}`;
+      if (data.data.kind === 30031)
+        return `/smart-widget-checker?naddr=${addr}`;
     }
     if (addr.startsWith("nprofile")) {
       return `/users/${addr}`;
@@ -264,9 +264,9 @@ const getLinkFromAddr = (addr) => {
       let hex = getHex(addr.replace(",", "").replace(".", ""));
       return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
     }
-    if (addr.startsWith("nevent")) {
+    if (addr.startsWith("nevent") || addr.startsWith("note")) {
       let data = nip19.decode(addr);
-      return `/flash-news/${nip19.neventEncode({
+      return `/notes/${nip19.neventEncode({
         author: data.data.author,
         id: data.data.id,
       })}`;
@@ -278,41 +278,13 @@ const getLinkFromAddr = (addr) => {
   }
 };
 
-// const getLinkFromAddr = (addr) => {
-//   try {
-//     if (addr.includes("naddr")) {
-//       let data = nip19.decode(addr);
-//       return data.data.kind === 30023
-//         ? `/article/${addr}`
-//         : `/curations/${addr}`;
-//     }
-//     if (addr.includes("nprofile")) {
-//       return `/users/${addr}`;
-//     }
-//     if (addr.includes("npub")) {
-//       let hex = getHex(addr);
-//       return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
-//     }
-//     if (addr.includes("nevent")) {
-//       let data = nip19.decode(addr);
-//       return `/flashnews/${nip19.neventEncode({
-//         author: data.data.author,
-//         id: data.data.id,
-//       })}`;
-//     }
-//     return addr;
-//   } catch (err) {
-//     return addr;
-//   }
-// };
-
 const getNIP21FromURL = (url) => {
   const regex = /n(event|profile|pub|addr)([^\s\W]*)/;
   const match = url.match(regex);
 
   if (match) {
-    const extracted = match[0]; // Access the first matched group
-    return `nostr:${extracted}`; // Output: "nostr:*"
+    const extracted = match[0];
+    return `nostr:${extracted}`;
   } else {
     return url;
   }
@@ -330,42 +302,7 @@ const getComponent = (children) => {
         }`;
         let child_ = getNIP21FromURL(child.toString());
         if (child_.startsWith("nostr:")) {
-          // let addr = child_.split("nostr:")[1];
           try {
-            // if (addr.includes("naddr")) {
-            //   let data = nip19.decode(addr);
-            //   res.push(
-            //     <NAddrPreviewer
-            //       pubkey={data.data.pubkey}
-            //       d={data.data.identifier}
-            //       kind={data.data.kind}
-            //       relays={data.data.relays}
-            //       key={key}
-            //     />
-            //   );
-            // }
-            // if (addr.includes("nprofile")) {
-            //   let data = nip19.decode(addr);
-            //   res.push(
-            //     <NProfilePreviewer pubkey={data.data.pubkey} key={key} />
-            //   );
-            // }
-            // if (addr.includes("npub")) {
-            //   let hex = getHex(addr);
-
-            //   res.push(<NProfilePreviewer pubkey={hex} key={key} />);
-            // }
-            // if (addr.includes("nevent")) {
-            //   let data = nip19.decode(addr);
-            //   res.push(
-            //     <NEventPreviewer
-            //       id={data.data.id}
-            //       pubkey={data.data.author}
-            //       key={key}
-            //       extraRelays={data.data.relays}
-            //     />
-            //   );
-            // }
             if (
               (child_.includes("nostr:") ||
                 child_.includes("naddr") ||
@@ -380,9 +317,7 @@ const getComponent = (children) => {
                 .replace(".", "")
                 .replace(",", "");
 
-              res.push(
-                <Nip19Parsing addr={nip19add} key={key} />
-              );
+              res.push(<Nip19Parsing addr={nip19add} key={key} />);
             }
           } catch (err) {
             res.push(
@@ -415,70 +350,7 @@ const getComponent = (children) => {
             key={key}
           />
         );
-      }
-      // if (children[i].type === "a") {
-      //   let child_ = getNIP21FromURL(children[i].props.href);
-      //   if (child_.startsWith("nostr:")) {
-      //     let addr = child_.split("nostr:")[1];
-      //     try {
-      //       if (addr.includes("naddr")) {
-      //         let data = nip19.decode(addr);
-      //         res.push(
-      //           <NAddrPreviewer
-      //             pubkey={data.data.pubkey}
-      //             d={data.data.identifier}
-      //             kind={data.data.kind}
-      //             key={key}
-      //           />
-      //         );
-      //       }
-      //       if (addr.includes("nprofile")) {
-      //         let data = nip19.decode(addr);
-      //         res.push(
-      //           <NProfilePreviewer pubkey={data.data.pubkey} key={key} />
-      //         );
-      //       }
-      //       if (addr.includes("npub")) {
-      //         let hex = getHex(addr);
-      //         console.log("first");
-      //         res.push(<NProfilePreviewer pubkey={hex} key={key} />);
-      //       }
-      //       if (addr.includes("nevent")) {
-      //         let data = nip19.decode(addr);
-
-      //         res.push(
-      //           <NEventPreviewer
-      //             id={data.data.id}
-      //             pubkey={data.data.author}
-      //             key={key}
-      //             extraRelays={data.data.relays}
-      //           />
-      //         );
-      //       }
-      //     } catch (err) {
-      //       res.push(
-      //         <p dir="auto" key={key}>
-      //           {children[i]}
-      //         </p>
-      //       );
-      //     }
-      //   }
-      //   if (!child_.startsWith("nostr:")) {
-      //     res.push(
-      //       <p dir="auto" key={key}>
-      //         {children[i]}
-      //       </p>
-      //     );
-      //   }
-      // }
-      // if (children[i].type !== "a") {
-      //   res.push(
-      //     <p dir="auto" key={key} style={{ margin: 0 }}>
-      //       {children[i]}
-      //     </p>
-      //   );
-      // }
-      else
+      } else
         res.push(
           <p dir="auto" key={key}>
             {children[i]}
@@ -486,14 +358,6 @@ const getComponent = (children) => {
         );
     }
   }
-  // let res_2 = []
-  // let start = 0
-  // let end = 0
-  // for(let i= 0; i < res.length; i++) {
-  //   if(res[i].type === "p") {
-  //     start = i
-  //   }
-  // }
   return (
     <div
       className="fx-centered fx-start-h fx-wrap fit-container"
@@ -504,65 +368,12 @@ const getComponent = (children) => {
   );
 };
 
-// function mergeConsecutivePElements(arr) {
-//   const result = [];
-//   let currentElement = null;
-
-//   for (const element of arr) {
-//     if (["p", "span"].includes(element.type)) {
-//       if (!currentElement) {
-//         currentElement = { ...element };
-//         currentElement.props = {
-//           ...element.props,
-//           children: [element.props.children],
-//         };
-//       } else {
-//         let tempPrevChildren = currentElement.props.children;
-//         if (typeof element.props.children !== "string") {
-//           tempPrevChildren.push(element.props.children);
-//         }
-//         if (
-//           typeof tempPrevChildren[tempPrevChildren.length - 1] === "string" &&
-//           typeof element.props.children === "string"
-//         ) {
-//           tempPrevChildren[tempPrevChildren.length - 1] = `${
-//             tempPrevChildren[tempPrevChildren.length - 1]
-//           } ${element.props.children}`;
-//         }
-//         if (
-//           typeof tempPrevChildren[tempPrevChildren.length - 1] !== "string" &&
-//           typeof element.props.children === "string"
-//         ) {
-//           tempPrevChildren.push(` ${element.props.children}`);
-//         }
-//         currentElement = {
-//           ...currentElement,
-//           props: {
-//             ...currentElement.props,
-//             children: tempPrevChildren,
-//           },
-//         };
-//       }
-//     } else {
-//       if (currentElement) {
-//         result.push(currentElement);
-//         currentElement = null;
-//       }
-
-//       result.push(element);
-//     }
-//   }
-//   if (currentElement) {
-//     result.push(currentElement);
-//   }
-//   return result;
-// }
 function mergeConsecutivePElements(arr) {
   const result = [];
   let currentTextElement = null;
   let currentImages = [];
   let tempArray = [];
-  // console.log(arr);
+
   for (let i = 0; i < arr.length; i++) {
     if (
       !(
@@ -571,10 +382,6 @@ function mergeConsecutivePElements(arr) {
         arr[i].type === "br" &&
         typeof arr[i - 1].type !== "string" &&
         arr[i - 1].props?.src &&
-        // (typeof arr[i - 1].type === "function" ||
-        //   ["IMGElement"].includes(arr[i - 1].type?.name)) &&
-        // (typeof arr[i + 1].type === "function" ||
-        //   ["IMGElement", "Kp"].includes(arr[i + 1].type?.name))
         typeof arr[i + 1].type !== "string" &&
         arr[i + 1].props?.src
       )
@@ -618,20 +425,12 @@ function mergeConsecutivePElements(arr) {
           },
         };
       }
-    } else if (
-      typeof element.type !== "string" &&
-      element.props?.src
-      // ["IMGElement", "Kp"].includes(element.type?.name)
-    ) {
+    } else if (typeof element.type !== "string" && element.props?.src) {
       if (currentTextElement) {
         result.push(currentTextElement);
         currentTextElement = null;
       }
       currentImages.push(element);
-      // if (currentImages.length === 3) {
-      //   result.push(createImageGrid(currentImages));
-      //   currentImages = [];
-      // }
     } else {
       if (currentTextElement) {
         result.push(currentTextElement);
@@ -667,21 +466,6 @@ function createImageGrid(images) {
   let images_ = images.map((image) => image.props.src);
   return <Carousel imgs={images_} />;
 }
-
-// function createImageGrid(images) {
-// console.log(images)
-//   return {
-//     $$typeof: "Symbol(react.element)",
-//     type: "div",
-//     props: {
-//       className: "image-grid",
-//       children: images.map((image, index) => ({
-//         ...image,
-//         key: index, // Ensure each image has a unique key
-//       })),
-//     },
-//   };
-// }
 
 const getAuthPubkeyFromNip05 = async (nip05Addr) => {
   try {
@@ -800,7 +584,6 @@ const getFlashnewsContent = async (news) => {
 };
 
 const getVideoContent = (video) => {
-  // console.log(video)
   let tags = video.tags;
   let keywords = [];
   let published_at = video.created_at;
@@ -929,6 +712,95 @@ const getCurrentLevel = (points) => {
   return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
 };
 
+const validateWidgetValues = (value, kind, type) => {
+  if (kind === "url" && (type === "regular" || !type)) {
+    let regex =
+      /((https?:www\.)|(https?:\/\/)|(www\.))[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}(\/[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)?/;
+    return regex.test(value);
+  }
+  if (kind === "url" && type === "zap") {
+    let regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return regex.test(value) || (value.startsWith("lnbc") && value.length > 32);
+  }
+  if (kind === "url" && type === "nostr") {
+    let regex = /^(npub|note|nprofile|nevent|naddr)/;
+    return regex.test(value);
+  }
+  if (kind === "url" && type === "youtube") {
+    let regex =
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|playlist\?list=)|youtu\.be\/)([\w-]{11,})/;
+    return regex.test(value);
+  }
+  if (kind === "url" && type === "telegram") {
+    let regex = /(?:https?:\/\/)?(?:www\.)?(?:t\.me\/|telegram\.me\/)([\w-]+)/;
+    return regex.test(value);
+  }
+  if (kind === "url" && type === "discord") {
+    let regex =
+      /(https?:\/\/)?(www\.)?(discord\.(gg|com)\/(invite\/)?([a-zA-Z0-9]{1,16})|discord\.com\/channels\/(@me|[0-9]{17,19})\/[0-9]{17,19})/g;
+    return regex.test(value);
+  }
+  if (kind === "url" && type === "x") {
+    let regex = /^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\/[a-zA-Z0-9_]+$/;
+    return regex.test(value);
+  }
+  if (kind === "aspect_ratio") {
+    return ["1:1", "16:9"].includes(value);
+  }
+  if (kind === "content") {
+    return typeof value === "string";
+  }
+  if (kind.includes("color")) {
+    let regex = /^#[0-9a-fA-F]{6}/;
+    // let regex = /^#(?:[0-9a-fA-F]{3}){1,2}$/;
+    if (value === "") return true;
+    return regex.test(value);
+  }
+  if (kind === "weight") {
+    if (value === "") return true;
+    return ["regular", "bold"].includes(value);
+  }
+  if (kind === "size") {
+    return ["h1", "h2", "regular", "small"].includes(value);
+  }
+  if (kind === "pubkey") {
+    return true
+  }
+  if (kind === "type") {
+    return [
+      "regular",
+      "zap",
+      "nostr",
+      "youtube",
+      "telegram",
+      "discord",
+      "x",
+    ].includes(value);
+  }
+  if (kind === "layout") {
+    return [1, 2, "1", "2"].includes(value);
+  }
+  if (kind === "division") {
+    return ["1:1", "1:2", "2:1"].includes(value);
+  }
+  if (kind === "poll-content") {
+    try {
+      let parsed = JSON.parse(value);
+      let checkKeys = Object.keys(parsed).find(
+        (key) =>
+          !["created_at", "content", "pubkey", "sig", "id", "tags"].includes(
+            key
+          )
+      );
+      if (parsed.kind === 6969 && !checkKeys) return true;
+      return false;
+    } catch (err) {
+      return false;
+    }
+  }
+  return false;
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -943,4 +815,5 @@ export {
   LoginToAPI,
   levelCount,
   getCurrentLevel,
+  validateWidgetValues,
 };

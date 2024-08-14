@@ -1,23 +1,17 @@
 import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
 import LoadingScreen from "../LoadingScreen";
-import { publishPost } from "../../Helpers/NostrPublisher";
 import LoadingDots from "../LoadingDots";
-import { filterRelays } from "../../Helpers/Encryptions";
 
 export default function ToUpdateRelay({ exit, exitAndRefresh }) {
   const {
     setToast,
     nostrUser,
-    setNostrUser,
-    nostrKeys,
     isPublishing,
-    setToPublish,
   } = useContext(Context);
   const [tempNostrUserRelays, setTempNostrUserRelays] = useState(
-    nostrUser.relays || []
+    nostrUser?.relays || []
   );
   const [allRelays, setAllRelays] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -106,79 +100,7 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
       });
       return;
     }
-    // setIsLoading(true);
-    // let kind3 = await saveInKind3(relaysToAdd);
-    let kind10002 = await saveInKind10002(relaysToAdd);
     exit();
-    // if (kind10002) {
-    //   setToast({
-    //     type: 1,
-    //     desc: "Relays are saved successfully!",
-    //   });
-    //   setIsLoading(false);
-    //   window.location = "/settings";
-    //   return;
-    // }
-    // setToast({
-    //   type: 2,
-    //   desc: "Could not update relays list!",
-    // });
-    // setIsLoading(false);
-  };
-  // const saveInKind3 = async (relays) => {
-  //   try {
-  //     let content = convertArrayToKind3(relays);
-  //     let res = await publishPost(
-  //       nostrKeys,
-  //       3,
-  //       content,
-  //       [],
-  //       [relaysOnPlatform[0]]
-  //     );
-  //     if (res.find((item) => item.status)) return true;
-  //     return false;
-  //   } catch (err) {
-  //     console.log(err);
-  //     return false;
-  //   }
-  // };
-  const saveInKind10002 = async (relays) => {
-    try {
-      let tags = convertArrayToKind10002(relays);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 10002,
-        content: "",
-        tags: tags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
-      });
-      let tempUser = {...nostrUser}
-      tempUser.relays = relays
-      setNostrUser(tempUser)
-      // let res = await publishPost(nostrKeys, 10002, "", tags, [
-      //   ...relaysOnPlatform,
-      // ]);
-      // if (res.find((item) => item.status)) return true;
-      // return false;
-      return true;
-    } catch (err) {
-      console.log(err);
-      return false;
-    }
-  };
-  // const convertArrayToKind3 = (relays) => {
-  //   let tempObj = {};
-  //   for (let relay of relays) {
-  //     tempObj[relay] = { read: true, write: true };
-  //   }
-  //   return JSON.stringify(tempObj);
-  // };
-  const convertArrayToKind10002 = (relays) => {
-    let tempArray = [];
-    for (let relay of relays) {
-      tempArray.push(["r", relay]);
-    }
-    return tempArray;
   };
 
   if (!isLoaded) return <LoadingScreen />;
@@ -198,7 +120,6 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
         <div
           className="fx-centered fx-col slide-up"
           style={{
-            // maxWidth: "500px",
             width: "min(100%, 350px)",
             flex: "1 1 350px",
           }}

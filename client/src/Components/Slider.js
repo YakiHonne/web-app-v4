@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 
-export default function Slider({ items = [] }) {
+export default function Slider({ items = [], slideBy = 10 }) {
   const [scrollPX, setScrollPX] = useState(0);
   const [showArrows, setShowArrows] = useState(false);
   const noScrollBarContainer = useRef(null);
@@ -23,13 +23,13 @@ export default function Slider({ items = [] }) {
     let carousel = noScrollBarContainer.current;
 
     let pxToSlide =
-      scrollPX + 100 < carousel.scrollWidth - carousel_container.clientWidth
-        ? scrollPX + 100
+      scrollPX + slideBy < carousel.scrollWidth - carousel_container.clientWidth
+        ? scrollPX + slideBy
         : carousel.scrollWidth - carousel_container.clientWidth;
     setScrollPX(pxToSlide);
   };
   const slideLeft = () => {
-    let pxToSlide = scrollPX - 100 > 0 ? scrollPX - 100 : 0;
+    let pxToSlide = scrollPX - slideBy > 0 ? scrollPX - slideBy : 0;
     setScrollPX(pxToSlide);
   };
 

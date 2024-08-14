@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Context } from "../../Context/Context";
-
 import relaysOnPlatform from "../../Content/Relays";
 import { SimplePool, nip19 } from "nostr-tools";
 import {
@@ -158,7 +157,7 @@ export default function NotesComment({
             }
             if (event_.kind === 1) {
                 let check_kind1 = await onEvent(event_);
-                console.log(check_kind1)
+                
               if (check_kind1.checkForQuote)
                 setQuotes((quotes) => [...quotes, event_]);
               if (check_kind1.checkForComment)

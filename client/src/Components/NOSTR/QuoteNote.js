@@ -56,20 +56,6 @@ export default function QuoteNote({ note, exit }) {
           : relaysOnPlatform,
       });
 
-      // setToPublish({
-      //   nostrKeys: nostrKeys,
-      //   kind: 1,
-      //   content: `${quote} nostr:${note.nEvent}`,
-      //   tags: [
-      //     ["q", note.id],
-      //     ["p", note.pubkey],
-      //   ],
-      //   allRelays: nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-      //     : relaysOnPlatform,
-      // });
-
-      // setIsLoading(false);
     } catch (err) {
       console.log(err);
       setIsLoading(false);

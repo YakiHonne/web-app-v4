@@ -647,7 +647,7 @@ export default function KindOne({ event, reactions = true }) {
                       setUsersList({
                         title: "Zappers",
                         list: zappers.map((item) => item.pubkey),
-                        extras: [],
+                        extras: zappers,
                       });
                   }}
                 >

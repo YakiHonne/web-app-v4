@@ -138,15 +138,14 @@ export default function Publishing() {
 
   const initPublishing = async (relays, event) => {
     try {
-      Promise.allSettled(pool.publish(relays, event))
-        .then((results) => {
+      for (let i = 0; i < relays.length; i++)
+        Promise.allSettled(pool.publish([relays[i]], event)).then((results) => {
+      
           results.forEach((result, index) => {
             if (result.status === "fulfilled" && result.value === "") {
               setFailedRelays((prev) => {
                 let tempArray = Array.from(prev);
-                let _index = tempArray.findIndex(
-                  (item) => relays[index] === item
-                );
+                let _index = tempArray.findIndex((item) => relays[i] === item);
                 if (_index !== -1) {
                   tempArray.splice(_index, 1);
                   return tempArray;
@@ -157,11 +156,60 @@ export default function Publishing() {
                 localStorage.removeItem("yai-last-article-content");
                 localStorage.removeItem("yai-last-article-title");
               }
-              setOkRelays((re) => [...re, relays[index]]);
+              setOkRelays((re) => [...re, relays[i]]);
             }
           });
-        })
-        .catch((err) => console.log(err));
+        });
+      // Promise.allSettled(pool.publish(relays, event))
+      // .then((results) => {
+      //   console.log(results)
+      //   results.forEach((result, index) => {
+      //       if (result.status === "fulfilled" && result.value === "") {
+      //         setFailedRelays((prev) => {
+      //           let tempArray = Array.from(prev);
+      //           let _index = tempArray.findIndex(
+      //             (item) => relays[index] === item
+      //           );
+      //           if (_index !== -1) {
+      //             tempArray.splice(_index, 1);
+      //             return tempArray;
+      //           }
+      //           return prev;
+      //         });
+      //         if (["article_post", "article_draft"].includes(action_key)) {
+      //           localStorage.removeItem("yai-last-article-content");
+      //           localStorage.removeItem("yai-last-article-title");
+      //         }
+      //         setOkRelays((re) => [...re, relays[index]]);
+      //       }
+      //     });
+      //   })
+      //   .catch((err) => console.log(err));
+      // Promise.allSettled(pool.publish(relays, event))
+      // .then((results) => {
+      //   console.log(results)
+      //   results.forEach((result, index) => {
+      //       if (result.status === "fulfilled" && result.value === "") {
+      //         setFailedRelays((prev) => {
+      //           let tempArray = Array.from(prev);
+      //           let _index = tempArray.findIndex(
+      //             (item) => relays[index] === item
+      //           );
+      //           if (_index !== -1) {
+      //             tempArray.splice(_index, 1);
+      //             return tempArray;
+      //           }
+      //           return prev;
+      //         });
+      //         if (["article_post", "article_draft"].includes(action_key)) {
+      //           localStorage.removeItem("yai-last-article-content");
+      //           localStorage.removeItem("yai-last-article-title");
+      //         }
+      //         setOkRelays((re) => [...re, relays[index]]);
+      //       }
+      //     });
+      //   })
+      //   .catch((err) => console.log(err));
     } catch (err) {
       console.log(err);
     }
@@ -194,8 +242,6 @@ export default function Publishing() {
 
   const updateYakiChest = async () => {
     try {
-      // let action_key = getActionKey();
-      // console.log(action_key);
       if (Array.isArray(action_key)) {
         for (let action_key_ of action_key) {
           let data = await axiosInstance.post("/api/v1/yaki-chest", {

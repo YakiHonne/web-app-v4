@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import katex from "katex";
 import { getComponent, getVideoFromURL } from "../../Helpers/Helpers";
@@ -6,7 +6,7 @@ import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Follow from "./Follow";
 
 export default function MediaPreview({ kind, data, exit }) {
-  const { nostrAuthors, getNostrAuthor, isDarkMode } = useContext;
+  const { isDarkMode } = useContext;
   let { author, content } = data;
 
   if (kind === "article")

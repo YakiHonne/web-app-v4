@@ -1,12 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import heroNostr from "../../media/images/nostr-login.png";
 import heroNostr2 from "../../media/images/nostr-login-2.png";
-import {
-  finalizeEvent,
-  generateSecretKey,
-  getPublicKey,
-  Relay,
-} from "nostr-tools";
+import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools";
 import { Context } from "../../Context/Context";
 import {
   getBech32,
@@ -19,14 +14,11 @@ import * as secp from "@noble/secp256k1";
 import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import { nostrPpPlaceholder } from "../../Content/NostrPPPlaceholder";
 import ProfilePictureUploaderNOSTR from "./ProfilePictureUploaderNOSTR";
 import hero from "../../media/images/end-init-hero.png";
 import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
 import s8e from "../../media/images/s8-e-yma.png";
-import { LoginToAPI } from "../../Helpers/Helpers";
 import LoginWithAPI from "./LoginWithAPI";
 
 const pool = new SimplePool();
@@ -121,17 +113,42 @@ export default function LoginNOSTR({ exit }) {
       desc: "Invalid private key!",
     });
   };
-  const getUserFromNOSTR = async (pubkey) => {
-    try {
-      let author = await pool.get(relaysOnPlatform, {
-        kinds: [0],
-        authors: [pubkey],
-      });
+  // const getUserFromNOSTR = async (pubkey) => {
+  //   try {
+  //     let author = await pool.get(relaysOnPlatform, {
+  //       kinds: [0],
+  //       authors: [pubkey],
+  //     });
 
-      return author || getEmptyNostrUser(pubkey);
-    } catch (err) {
-      console.log(err);
-    }
+  //     return author || getEmptyNostrUser(pubkey);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+  const getUserFromNOSTR = (pubkey) => {
+    return new Promise((resolve, reject) => {
+      try {
+        const subscription = pool.subscribeMany(
+          relaysOnPlatform,
+          [
+            {
+              kinds: [0],
+              authors: [pubkey],
+            },
+          ],
+          {
+            onevent(event) {
+              resolve(event);
+            },
+            oneose() {
+              resolve(getEmptyNostrUser(pubkey))
+            }
+          }
+        );
+      } catch (err) {
+        resolve(getEmptyNostrUser(pubkey));
+      }
+    });
   };
   const publish = async () => {
     setIsLoading(true);
@@ -140,7 +157,6 @@ export default function LoginNOSTR({ exit }) {
     content.name = name;
     let event = {
       kind: 0,
-
       content: JSON.stringify(content),
       created_at: Math.floor(Date.now() / 1000),
       tags: [],
@@ -213,13 +229,16 @@ export default function LoginNOSTR({ exit }) {
       }}
     >
       {showYakiChest && <LoginWithAPI exit={handleYakiChestExit} />}
-      {console.log(login)}
       <section
         className="fx-scattered sc-s nostr-login-container"
         onClick={(e) => {
           e.stopPropagation();
         }}
-        style={{ height: "85vh", border: "none", backgroundColor: "var(--white)" }}
+        style={{
+          height: "85vh",
+          border: "none",
+          backgroundColor: "var(--white)",
+        }}
       >
         <div className="close" onClick={exitScreen}>
           <div></div>
@@ -348,7 +367,7 @@ export default function LoginNOSTR({ exit }) {
                       className="fx-centered fx-col box-pad-v"
                       style={{ rowGap: "5px" }}
                     >
-                      <p style={{color: "white"}}>Stay signed-in</p>
+                      <p style={{ color: "white" }}>Stay signed-in</p>
                       <p className="gray-c p-medium p-centered">
                         Download the YakiHonne app for Android or iOS
                       </p>
@@ -461,22 +480,49 @@ const Login = ({ switchScreen, exit }) => {
     });
   };
 
-  const getUserFromNOSTR = async (pubkey) => {
-    try {
-      let author = await pool.get(relaysOnPlatform, {
-        kinds: [0],
-        authors: [pubkey],
-      });
+  // const getUserFromNOSTR = async (pubkey) => {
+  //   try {
+  //     let author = await pool.get(relaysOnPlatform, {
+  //       kinds: [0],
+  //       authors: [pubkey],
+  //     });
 
-      return author || getEmptyNostrUser(pubkey);
-    } catch (err) {
-      console.log(err);
-    }
+  //     return author || getEmptyNostrUser(pubkey);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+
+  const getUserFromNOSTR = (pubkey) => {
+    return new Promise((resolve, reject) => {
+      try {
+        const subscription = pool.subscribeMany(
+          relaysOnPlatform,
+          [
+            {
+              kinds: [0],
+              authors: [pubkey],
+            },
+          ],
+          {
+            onevent(event) {
+              resolve(event);
+            },
+            oneose() {
+              resolve(getEmptyNostrUser(pubkey))
+            }
+          }
+        );
+      } catch (err) {
+        resolve(getEmptyNostrUser(pubkey));
+      }
+    });
   };
 
   const onLoginWithExt = async () => {
     try {
       setIsLoading(true);
+      await window.nostr.enable()
       let key = await window.nostr.getPublicKey();
       let user = await getUserFromNOSTR(key);
       if (user) {

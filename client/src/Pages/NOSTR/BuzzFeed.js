@@ -1,12 +1,10 @@
 import React, { Fragment, useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
 import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import { getAIFeedContent } from "../../Helpers/Helpers";
-import axios from "axios";
 import Slider from "../../Components/Slider";
 import Date_ from "../../Components/Date_";
 import { Link } from "react-router-dom";

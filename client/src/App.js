@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import "./styles/root.css";
 import "./styles/animations.css";
 import "./styles/icons.css";
@@ -34,13 +39,10 @@ import YakiFN from "./Pages/NOSTR/YakiFN";
 import Privacy from "./Pages/Privacy";
 import Terms from "./Pages/Terms";
 import DMS from "./Pages/NOSTR/DMS";
-import AIFeeds from "./Pages/NOSTR/BuzzFeed";
-import NostrAIFeed from "./Pages/NOSTR/NostrBuzzFeed";
 import NavbarNOSTR from "./Components/NOSTR/NavbarNOSTR";
 import NostrMyFlashNews from "./Pages/NOSTR/NostrMyFlashNews";
 import NostrVideos from "./Pages/NOSTR/NostrVideos";
 import NostrArticles from "./Pages/NOSTR/NostrArticles";
-import NostrVideosEvent from "./Pages/NOSTR/NostrVideo";
 import NostrVideo from "./Pages/NOSTR/NostrVideo";
 import NostrMyVideos from "./Pages/NOSTR/NostrMyVideos";
 import BuzzFeed from "./Pages/NOSTR/BuzzFeed";
@@ -60,18 +62,21 @@ import NostrSmartWidget from "./Pages/NOSTR/NostrSmartWidget";
 import NostrSmartWidgets from "./Pages/NOSTR/NostrSmartWidgets";
 import SmartWidgetChecker from "./Pages/NOSTR/SmartWidgetChecker";
 import NostrMyNotesHidden from "./Pages/NOSTR/NostrMyNotesHidden";
+import YakiSmartWidget from "./Pages/NOSTR/YakiSmartWidget";
 
 function App() {
+  const location = useLocation()
   return (
     <ContextProvider>
       <Publishing />
       <ToastMessages />
       <UserFirsLogin />
       <YakiNewFeatureIntro />
-      <Router>
+      {/* <Router> */}
         <NavbarNOSTR />
         <Routes>
           <Route path="*" element={<FourOFour />} />
+          <Route path="/:nevent" element={<FourOFour />} />
           <Route path="/" element={<NostrHome />} />
           <Route path="/bookmarks" element={<NostrBookmarks />} />
           <Route path="/articles" element={<NostrArticles />} />
@@ -83,7 +88,7 @@ function App() {
           />
           <Route path="/my-curations" element={<NostrMyCurations />} />
           <Route path="/write-article" element={<NostrWriting />} />
-          <Route path="/smart-widget-builder" element={<NostrSmartWidget />} />
+          <Route path="/smart-widget-builder" element={<NostrSmartWidget key={location.key}/>} />
           <Route path="/smart-widgets" element={<NostrSmartWidgets />} />
           <Route
             path="/smart-widget-checker"
@@ -127,6 +132,10 @@ function App() {
             path="/yakihonne-mobile-app-links"
             element={<YMARedirection />}
           />
+          <Route
+            path="/yakihonne-smart-widgets"
+            element={<YakiSmartWidget />}
+          />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/wallet/alby" element={<WalletAlby />} />
           <Route path="/wallet/nwc" element={<WalletNWC />} />
@@ -135,7 +144,7 @@ function App() {
           <Route path="/yaki-points" element={<UserLevels />} />
           <Route path="/points-system" element={<YakiLevelingFeature />} />
         </Routes>
-      </Router>
+      {/* </Router> */}
     </ContextProvider>
   );
 }

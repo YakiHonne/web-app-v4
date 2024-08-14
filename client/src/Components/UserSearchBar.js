@@ -12,14 +12,17 @@ export default function UserSearchBar({ onClick, full = false, placeholder = "Se
 
   const getUserFromCache = async (keyword) => {
     try {
+      setIsLoading(true)
       const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
       let data = await axios.get(
         `${API_BASE_URL}/api/v1/users/search/${keyword}`
       );
       setSearchAuthorsRes(data.data);
+      setIsLoading(false)
     } catch (err) {
       console.log(err);
+      setIsLoading(false)
     }
   };
 
@@ -112,16 +115,21 @@ export default function UserSearchBar({ onClick, full = false, placeholder = "Se
                     >
                       <UserProfilePicNOSTR
                         img={user.picture || ""}
-                        size={48}
+                        size={36}
                         user_id={user.pubkey}
+                        ring={false}
                       />
                       <div className="fx-centered fx-start-h">
                         <div
-                          className="fx-centered fx-col fx-start-v box-pad-h-s"
+                          className="fx-centered fx-col fx-start-v "
                           style={{ rowGap: 0 }}
                         >
-                          <p className="c1-c">{user.name}</p>
-                          {/* {user.pubkey && <ShortenKey id={getBech32("npub", user.pubkey)} />} */}
+                          <p className="p-one-line">
+                            {user.display_name || user.name}
+                          </p>
+                          <p className="orange-c p-medium p-one-line">
+                            @{user.name || user.display_name}
+                          </p>
                         </div>
                       </div>
                     </div>

@@ -1,9 +1,5 @@
 import React, { useContext, useMemo, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
-import { filterRelays } from "../../Helpers/Encryptions";
-import { publishPost } from "../../Helpers/NostrPublisher";
-import AddBookmark from "./AddBookMark";
 import LoginNOSTR from "./LoginNOSTR";
 import BookmarksPicker from "./BookmarksPicker";
 
@@ -16,17 +12,8 @@ export default function SaveArticleAsBookmark({
   extraData = "",
   label = false,
 }) {
-  const {
-    nostrKeys,
-    nostrUser,
-    nostrUserBookmarks,
-    setNostrUserBookmarks,
-    setToPublish,
-    isPublishing,
-    setToast,
-  } = useContext(Context);
+  const { nostrKeys, nostrUserBookmarks } = useContext(Context);
   const [toLogin, setToLogin] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showBookmarksPicker, setShowBookmarksPicker] = useState(false);
   const itemTypes = {
     a: `${kind}:${pubkey}:${d}`,
@@ -41,11 +28,6 @@ export default function SaveArticleAsBookmark({
       : false;
   }, [nostrUserBookmarks, nostrKeys]);
 
-  // if (!nostrKeys) return(
-  //   <>
-
-  //   </>
-  // )
   return (
     <>
       {showBookmarksPicker && (

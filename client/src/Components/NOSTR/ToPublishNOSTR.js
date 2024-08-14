@@ -4,7 +4,6 @@ import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import { deletePost, publishPost } from "../../Helpers/NostrPublisher";
 import { nanoid } from "nanoid";
 import TopicsTags from "../../Content/TopicsTags";
 import UserSearchBar from "../UserSearchBar";

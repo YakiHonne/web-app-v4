@@ -899,7 +899,7 @@ main {
 /* NOSTR NOSTR NOSTR NOSTR */
 
 .main-container {
-    width: min(100%, 1400px);
+    width: min(100%, 1200px);
     display: flex;
     justify-content: center;
     align-items: flex-start;

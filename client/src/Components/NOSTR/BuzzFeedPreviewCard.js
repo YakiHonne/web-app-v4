@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {  useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Date_ from "../Date_";
-import { Context } from "../../Context/Context";
 import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
 import ShareLink from "../ShareLink";
 

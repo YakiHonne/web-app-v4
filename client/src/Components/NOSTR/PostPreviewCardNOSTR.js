@@ -1,16 +1,12 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
-import placeholder from "../../media/images/nostr-thumbnail-ph.svg";
+
 import { Context } from "../../Context/Context";
-import relaysOnPlatform from "../../Content/Relays";
-import { relayInit, SimplePool } from "nostr-tools";
+import { SimplePool } from "nostr-tools";
 import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
-import { convertDate, getEmptyNostrUser } from "../../Helpers/Encryptions";
-import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
-import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
-import Slider from "../Slider";
+import { getEmptyNostrUser } from "../../Helpers/Encryptions";
 import ShareLink from "../ShareLink";
 import MediaPreview from "./MediaPreview";
 

@@ -4,7 +4,7 @@ import { Context } from "../../Context/Context";
 import ProfilePictureUploaderNOSTR from "./ProfilePictureUploaderNOSTR";
 
 export default function ToChangeProfilePic({ exit, cancel }) {
-  const { nostrUser, nostrUserAbout, nostrUserTags } = useContext(Context);
+  const { nostrUserAbout, nostrUserTags } = useContext(Context);
 
   return (
     <section className="fixed-container fx-centered">

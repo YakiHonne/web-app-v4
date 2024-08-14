@@ -31,7 +31,7 @@ export default function HashSuggestions({ tag, setSelectedTag }) {
         overflow: "scroll",
         zIndex: 100,
       }}
-      className="sc-s-18 fx-centered fx-start-v fx-start-h fx-col box-pad-h-m box-pad-v-m"
+      className="sc-s-18 fx-centered fx-start-v fx-start-h fx-col box-pad-h-s box-pad-v-s"
     >
       {topicSuggestions.map((item, index) => {
         return (

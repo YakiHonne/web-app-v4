@@ -1,16 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import axios from "axios";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import NumberkShrink from "../../Components/NumberShrink";
 import Date_ from "../../Components/Date_";
 import { Link } from "react-router-dom";
-import { getClaimingData, getHex, isImageUrl } from "../../Helpers/Encryptions";
-import { nip04, nip19 } from "nostr-tools";
+import { getClaimingData } from "../../Helpers/Encryptions";
+import { nip19 } from "nostr-tools";
 import UN from "../../Components/NOSTR/UN";
 import { Context } from "../../Context/Context";
 import Counter from "../../Components/Counter";
@@ -193,298 +190,306 @@ export default function NostrUN() {
         />
       </Helmet>
       <div className="fit-container fx-centered">
-      <div className="main-container">
-        <SidebarNOSTR />
-        <main className="main-page-nostr-container">
-          <ArrowUp />
-          {/* <NavbarNOSTR /> */}
-          {toLogin && <LoginNOSTR exit={() => setToLogin(false)} />}{" "}
-          <div className="fit-container fx-centered fx-start-v fx-start-h box-pad-h-m">
-            <div style={{ flex: 2 }} className="box-pad-h-m">
-              <div
-                className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h un-banner"
-                style={{
-                  position: "relative",
-                  backgroundColor: "var(--c3)",
-                  border: "none",
-                }}
-              >
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main className="main-page-nostr-container">
+            <ArrowUp />
+            {/* <NavbarNOSTR /> */}
+            {toLogin && <LoginNOSTR exit={() => setToLogin(false)} />}{" "}
+            <div className="fit-container fx-centered fx-start-v fx-start-h box-pad-h-m">
+              <div style={{ flex: 2 }} className="box-pad-h-m">
                 <div
-                  className="cup-24"
+                  className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h un-banner"
                   style={{
-                    minHeight: "120px",
-                    minWidth: "120px",
-                    position: "absolute",
-                    right: "-20px",
-                    bottom: "-10px",
-                    filter: "brightness(0) invert()",
-                    opacity: ".2",
-                    rotate: "20deg",
+                    position: "relative",
+                    backgroundColor: "var(--c3)",
+                    border: "none",
                   }}
-                ></div>
-                <div className="fx-centered fx-col fx-start-v">
-                  <p className=" p-medium" style={{ color: "white" }}>
-                    Community wallet
-                  </p>
-                  <div className="fx-centered fx-end-v">
-                    <h2 className="orange-c">{balance || "N/A"}</h2>
-                    <p style={{ color: "white" }}>Sats.</p>
+                >
+                  <div
+                    className="cup-24"
+                    style={{
+                      minHeight: "120px",
+                      minWidth: "120px",
+                      position: "absolute",
+                      right: "-20px",
+                      bottom: "-10px",
+                      filter: "brightness(0) invert()",
+                      opacity: ".2",
+                      rotate: "20deg",
+                    }}
+                  ></div>
+                  <div className="fx-centered fx-col fx-start-v">
+                    <p className=" p-medium" style={{ color: "white" }}>
+                      Community wallet
+                    </p>
+                    <div className="fx-centered fx-end-v">
+                      <h2 className="orange-c">{balance || "N/A"}</h2>
+                      <p style={{ color: "white" }}>Sats.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div
-                className="fit-container fx-scattered box-pad-v-m"
-                style={{
-                  position: "sticky",
-                  background: "var(--white)",
-                  top: "0",
+                <div
+                  className="fit-container fx-scattered box-pad-v-m"
+                  style={{
+                    position: "sticky",
+                    background: "var(--white)",
+                    top: "0",
 
-                  zIndex: "100",
-                }}
-              >
-                <div className="fx-centered" style={{ columnGap: '16px' }}>
-                  <div
-                    // style={{
-                    //   padding: ".5rem 1rem",
-                    //   borderBottom: `2px solid ${
-                    //     contentType == "new" ? "var(--c1)" : "var(--dim-gray)"
-                    //   }`,
-                    // }}
-                    onClick={() => handleContentType("new")}
-                    className={`list-item ${contentType == "new" ? "selected-list-item" : ""}`}
-                  >
-                    {/* <span className={contentType === "new" ? "c1-c" : "gray-c"}> */}
+                    zIndex: "100",
+                  }}
+                >
+                  <div className="fx-centered" style={{ columnGap: "16px" }}>
+                    <div
+                      // style={{
+                      //   padding: ".5rem 1rem",
+                      //   borderBottom: `2px solid ${
+                      //     contentType == "new" ? "var(--c1)" : "var(--dim-gray)"
+                      //   }`,
+                      // }}
+                      onClick={() => handleContentType("new")}
+                      className={`list-item ${
+                        contentType == "new" ? "selected-list-item" : ""
+                      }`}
+                    >
+                      {/* <span className={contentType === "new" ? "c1-c" : "gray-c"}> */}
                       New
-                    {/* </span> */}
-                  </div>
-                  <div
-                    // style={{
-                    //   padding: ".5rem 1rem",
-                    //   borderBottom: `2px solid ${
-                    //     contentType == "nmh" ? "var(--c1)" : "var(--dim-gray)"
-                    //   }`,
-                    // }}
-                    onClick={() => handleContentType("nmh")}
-                    className={`list-item ${contentType == "nmh" ? "selected-list-item" : ""}`}
-                  >
-                    {/* <span className={contentType === "nmh" ? "c1-c" : "gray-c"}> */}
+                      {/* </span> */}
+                    </div>
+                    <div
+                      // style={{
+                      //   padding: ".5rem 1rem",
+                      //   borderBottom: `2px solid ${
+                      //     contentType == "nmh" ? "var(--c1)" : "var(--dim-gray)"
+                      //   }`,
+                      // }}
+                      onClick={() => handleContentType("nmh")}
+                      className={`list-item ${
+                        contentType == "nmh" ? "selected-list-item" : ""
+                      }`}
+                    >
+                      {/* <span className={contentType === "nmh" ? "c1-c" : "gray-c"}> */}
                       Needs your help
-                    {/* </span> */}
-                  </div>
-                  <div
-                    // style={{
-                    //   padding: ".5rem 1rem",
-                    //   borderBottom: `2px solid ${
-                    //     contentType == "sealed"
-                    //       ? "var(--c1)"
-                    //       : "var(--dim-gray)"
-                    //   }`,
-                    // }}
-                    onClick={() => handleContentType("sealed")}
-                    className={`list-item ${contentType == "sealed" ? "selected-list-item" : ""}`}
-                  >
-                    {/* <span
+                      {/* </span> */}
+                    </div>
+                    <div
+                      // style={{
+                      //   padding: ".5rem 1rem",
+                      //   borderBottom: `2px solid ${
+                      //     contentType == "sealed"
+                      //       ? "var(--c1)"
+                      //       : "var(--dim-gray)"
+                      //   }`,
+                      // }}
+                      onClick={() => handleContentType("sealed")}
+                      className={`list-item ${
+                        contentType == "sealed" ? "selected-list-item" : ""
+                      }`}
+                    >
+                      {/* <span
                       className={contentType === "sealed" ? "c1-c" : "gray-c"}
                     > */}
                       Rated helpful
-                    {/* </span> */}
-                  </div>
-                </div>
-                <div className="fx-centered">
-                  {!contentType && (
-                    <div
-                      className="round-icon round-icon-tooltip option"
-                      data-tooltip="Refresh"
-                      onClick={() => setTimestamp(Date.now())}
-                    >
-                      <div className="switch-arrows-24"></div>
+                      {/* </span> */}
                     </div>
-                  )}
-                  <div
-                    className="round-icon round-icon-tooltip"
-                    data-tooltip="My rewards"
-                    onClick={() => handleContentType("")}
-                  >
-                    <div className="cup-24"></div>
+                  </div>
+                  <div className="fx-centered">
+                    {!contentType && (
+                      <div
+                        className="round-icon round-icon-tooltip option"
+                        data-tooltip="Refresh"
+                        onClick={() => setTimestamp(Date.now())}
+                      >
+                        <div className="switch-arrows-24"></div>
+                      </div>
+                    )}
+                    <div
+                      className="round-icon round-icon-tooltip"
+                      data-tooltip="My rewards"
+                      onClick={() => handleContentType("")}
+                    >
+                      <div className="cup-24"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              {contentType && (
-                <div className="fit-container fx-centered fx-col ">
-                  {flashNews.map((fn) => {
-                    if (!mutedList.includes(fn.author.pubkey))
+                {contentType && (
+                  <div className="fit-container fx-centered fx-col ">
+                    {flashNews.map((fn) => {
+                      if (!mutedList.includes(fn.author.pubkey))
+                        return (
+                          <FlashNewsCard
+                            key={fn.flashnews.id}
+                            data={fn}
+                            refreshFlashNews={refreshFlashNews}
+                          />
+                        );
+                    })}
+                  </div>
+                )}
+                {!contentType && (
+                  <div className="fit-container fx-centered fx-col ">
+                    {myRewards.map((myrw) => {
                       return (
-                        <FlashNewsCard
-                          key={fn.flashnews.id}
-                          data={fn}
-                          refreshFlashNews={refreshFlashNews}
+                        <MyRewardedItem
+                          key={myrw.id}
+                          rwdItem={myrw}
+                          setTimestamp={setTimestamp}
+                          rewards={rewards}
+                          isLoading={isLoadingGlobal}
+                          setIsLoading={setIsLoadingGlobal}
                         />
                       );
-                  })}
-                </div>
-              )}
-              {!contentType && (
-                <div className="fit-container fx-centered fx-col ">
-                  {myRewards.map((myrw) => {
-                    return (
-                      <MyRewardedItem
-                        key={myrw.id}
-                        rwdItem={myrw}
-                        setTimestamp={setTimestamp}
-                        rewards={rewards}
-                        isLoading={isLoadingGlobal}
-                        setIsLoading={setIsLoadingGlobal}
-                      />
-                    );
-                  })}
-                  {nostrKeys &&
-                    (nostrKeys.sec || nostrKeys.ext) &&
-                    !myRewards.length && (
+                    })}
+                    {nostrKeys &&
+                      (nostrKeys.sec || nostrKeys.ext) &&
+                      !myRewards.length && (
+                        <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
+                          <h4>You have no rewards!</h4>
+                          <p
+                            className="gray-c p-centered"
+                            style={{ maxWidth: "600px" }}
+                          >
+                            Start rating peoples note or contribute to the
+                            community by writing uncensored notes,
+                          </p>
+                          <Link to={"/"}>
+                            <button className="btn btn-text-gray">
+                              See how you get rewarded
+                            </button>
+                          </Link>
+                        </div>
+                      )}
+                    {!nostrKeys && (
                       <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                        <h4>You have no rewards!</h4>
+                        <h4>Get rewarded!</h4>
                         <p
                           className="gray-c p-centered"
                           style={{ maxWidth: "600px" }}
                         >
-                          Start rating peoples note or contribute to the
-                          community by writing uncensored notes,
+                          Login to your account so you can see your rewards for
+                          your community contribution
                         </p>
-                        <Link to={"/"}>
-                          <button className="btn btn-text-gray">
-                            See how you get rewarded
-                          </button>
-                        </Link>
+                        <button
+                          className="btn btn-normal"
+                          onClick={() => setToLogin(true)}
+                        >
+                          Login
+                        </button>
                       </div>
                     )}
-                  {!nostrKeys && (
-                    <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                      <h4>Get rewarded!</h4>
-                      <p
-                        className="gray-c p-centered"
-                        style={{ maxWidth: "600px" }}
-                      >
-                        Login to your account so you can see your rewards for
-                        your community contribution
-                      </p>
-                      <button
-                        className="btn btn-normal"
-                        onClick={() => setToLogin(true)}
-                      >
-                        Login
-                      </button>
-                    </div>
-                  )}
-                  {nostrKeys && !nostrKeys.sec && !nostrKeys.ext && (
-                    <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                      <h4>Not authorized!</h4>
-                      <p
-                        className="gray-c p-centered"
-                        style={{ maxWidth: "600px" }}
-                      >
-                        You must login to your account using your secrect key or
-                        using an extension to be able to see your rewards
-                      </p>
-                      <h4 className="red-c">:(</h4>
-                    </div>
-                  )}
-                </div>
-              )}
-              {isLoading && (
-                <div
-                  className="fit-container fx-centered box-marg"
-                  style={{ height: "30vh" }}
-                >
-                  <p className="gray-c">Loading</p>
-                  <LoadingDots />
-                </div>
-              )}
-            </div>
-            <div
-              style={{
-                flex: 1,
-                position: "sticky",
-                top: 0,
-              }}
-              className="box-pad-h-m  fx-centered fx-col un-banners"
-            >
-              <div className="sticky fit-container">
-                <SearchbarNOSTR />
+                    {nostrKeys && !nostrKeys.sec && !nostrKeys.ext && (
+                      <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
+                        <h4>Not authorized!</h4>
+                        <p
+                          className="gray-c p-centered"
+                          style={{ maxWidth: "600px" }}
+                        >
+                          You must login to your account using your secrect key
+                          or using an extension to be able to see your rewards
+                        </p>
+                        <h4 className="red-c">:(</h4>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {isLoading && (
+                  <div
+                    className="fit-container fx-centered box-marg"
+                    style={{ height: "30vh" }}
+                  >
+                    <p className="gray-c">Loading</p>
+                    <LoadingDots />
+                  </div>
+                )}
               </div>
               <div
-                className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
                 style={{
-                  position: "relative",
-                  backgroundColor: "var(--c3)",
-                  border: "none",
+                  flex: 1,
+                  position: "sticky",
+                  top: 0,
                 }}
+                className="box-pad-h-m  fx-centered fx-col un-banners"
               >
+                <div className="sticky fit-container">
+                  <SearchbarNOSTR />
+                </div>
                 <div
-                  className="cup-24"
+                  className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
                   style={{
-                    minHeight: "120px",
-                    minWidth: "120px",
-                    position: "absolute",
-                    right: "-20px",
-                    bottom: "-10px",
-                    filter: "brightness(0) invert()",
-                    opacity: ".2",
-                    rotate: "20deg",
+                    position: "relative",
+                    backgroundColor: "var(--c3)",
+                    border: "none",
                   }}
-                ></div>
-                <div className="fx-centered fx-col fx-start-v">
-                  <p className="p-medium" style={{ color: "white" }}>
-                    Community wallet
-                  </p>
-                  <div className="fx-centered fx-end-v">
-                    <h2 className="orange-c">{balance || "N/A"}</h2>
-                    <p style={{ color: "white" }}>Sats.</p>
+                >
+                  <div
+                    className="cup-24"
+                    style={{
+                      minHeight: "120px",
+                      minWidth: "120px",
+                      position: "absolute",
+                      right: "-20px",
+                      bottom: "-10px",
+                      filter: "brightness(0) invert()",
+                      opacity: ".2",
+                      rotate: "20deg",
+                    }}
+                  ></div>
+                  <div className="fx-centered fx-col fx-start-v">
+                    <p className="p-medium" style={{ color: "white" }}>
+                      Community wallet
+                    </p>
+                    <div className="fx-centered fx-end-v">
+                      <h2 className="orange-c">{balance || "N/A"}</h2>
+                      <p style={{ color: "white" }}>Sats.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
-                <div
-                  className="note-24"
-                  style={{ minHeight: "48px", minWidth: "48px" }}
-                >
-                  {" "}
+                <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
+                  <div
+                    className="note-24"
+                    style={{ minHeight: "48px", minWidth: "48px" }}
+                  >
+                    {" "}
+                  </div>
+                  <h4>Read about Uncensored Notes</h4>
+                  <p className="gray-c">
+                    We've made an article for you to help you understand our
+                    purpose
+                  </p>
+                  <Link
+                    target="_blank"
+                    to={
+                      "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
+                    }
+                  >
+                    <button className="btn btn-normal">Read article</button>
+                  </Link>
                 </div>
-                <h4>Read about Uncensored Notes</h4>
-                <p className="gray-c">
-                  We've made an article for you to help you understand our
-                  purpose
-                </p>
-                <Link
-                  target="_blank"
-                  to={
-                    "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
-                  }
-                >
-                  <button className="btn btn-normal">Read article</button>
-                </Link>
+                <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
+                  <h4>Uncensored notes values</h4>
+                  <ul>
+                    <li className="gray-c">
+                      Contribute to build understanding
+                    </li>
+                    <li className="gray-c">Act in good faith</li>
+                    <li className="gray-c">
+                      Be helpful, even to those who disagree
+                    </li>
+                  </ul>
+                  <Link
+                    target="_blank"
+                    to={
+                      "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
+                    }
+                  >
+                    <button className="btn btn-normal">Read article</button>
+                  </Link>
+                </div>
+                <Footer />
               </div>
-              <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
-                <h4>Uncensored notes values</h4>
-                <ul>
-                  <li className="gray-c">Contribute to build understanding</li>
-                  <li className="gray-c">Act in good faith</li>
-                  <li className="gray-c">
-                    Be helpful, even to those who disagree
-                  </li>
-                </ul>
-                <Link
-                  target="_blank"
-                  to={
-                    "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
-                  }
-                >
-                  <button className="btn btn-normal">Read article</button>
-                </Link>
-              </div>
-              <Footer />
             </div>
-          </div>
-        </main>
-      </div>
+          </main>
+        </div>
       </div>
     </div>
   );

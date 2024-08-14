@@ -14,7 +14,8 @@
           "/flash-news/*",
           "/uncensored-notes/*",
           "/buzz-feed/*",
-          "/wallet/*"
+          "/wallet/*",
+          "/smart-widget-checker/*"
         ]
       }
     ]

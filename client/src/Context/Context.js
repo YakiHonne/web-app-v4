@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { relayInit, SimplePool, nip44 } from "nostr-tools";
+import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../Content/Relays";
 import {
   decrypt04,
-  filterRelays,
   getEmptyNostrUser,
   getParsed3000xContent,
   unwrapGiftWrap,
 } from "../Helpers/Encryptions";
-import { getBech32 } from "../Helpers/Encryptions";
 import axios from "axios";
-import { getCurrentLevel, getNoteTree, levelCount } from "../Helpers/Helpers";
+import { getCurrentLevel, levelCount } from "../Helpers/Helpers";
 import axiosInstance from "../Helpers/HTTP_Client";
 const Context = React.createContext();
 
@@ -25,7 +23,6 @@ const toggleColorScheme = (theme) => {
 
     for (const rule of rules) {
       if (rule.media && rule.media.mediaText.includes("prefers-color-scheme")) {
-        // Toggle between light and dark
         const newMediaText = !theme
           ? "(prefers-color-scheme: dark)"
           : "(prefers-color-scheme: light)";
@@ -126,7 +123,7 @@ const ContextProvider = ({ children }) => {
         setNostrKeys(content);
 
         let user = await getUserFromNOSTR(content.pub);
-        user.relays = await getRelaysOfUser(content.pub);
+        // user.relays = await getRelaysOfUser(content.pub);
         if (user) {
           setNostrUserData(user);
         }
@@ -352,13 +349,19 @@ const ContextProvider = ({ children }) => {
       let content = data;
       let userAbout = JSON.parse(content.content) || {};
 
-      let [userRelays, userFollowing, userTopics, userBookmarks] =
-        await Promise.all([
-          getRelaysOfUser(content.pubkey),
-          getUserFollowing(content.pubkey),
-          getUserTopics(content.pubkey),
-          // getUserBookmarks(content.pubkey),
-        ]);
+      let [relays, userFollowing, userTopics] = await Promise.all([
+        getRelaysOfUser(content.pubkey),
+        getUserFollowing(content.pubkey),
+        getUserTopics(content.pubkey),
+        // getUserBookmarks(content.pubkey),
+      ]);
+      // let [userRelays, userFollowing, userTopics, userBookmarks] =
+      //   await Promise.all([
+      //     // getRelaysOfUser(content.pubkey),
+      //     getUserFollowing(content.pubkey),
+      //     getUserTopics(content.pubkey),
+      //     // getUserBookmarks(content.pubkey),
+      //   ]);
       let userData = {
         pubkey: content.pubkey,
         added_date: new Date(content.created_at * 1000).toISOString(),
@@ -367,12 +370,13 @@ const ContextProvider = ({ children }) => {
         name: userAbout?.display_name || userAbout?.name || "",
         about: userAbout?.about || "",
         nip05: userAbout?.nip05 || "",
-        relays: userRelays,
+        relays,
         following: userFollowing,
       };
       setNostrUser(userData);
-      setNostrUserTags(content.tags);
       setNostrUserAbout(userAbout);
+      setNostrUserTags(content.tags);
+
       setTempUserMeta(userAbout);
       getUserBookmarks(content.pubkey);
       // setNostrUserBookmarks(userBookmarks);
@@ -401,22 +405,9 @@ const ContextProvider = ({ children }) => {
     localStorage.removeItem("yaki-wallets");
     setIsConnectedToYaki(false);
     setYakiChestStats(false);
-    setBalance("N/A")
+    setBalance("N/A");
     let openDB = window.indexedDB.open("yaki-nostr", 3);
-    // let req = window.indexedDB.deleteDatabase("yaki-nostr");
 
-    // req.onupgradeneeded = function () {
-    //   console.log("Deleted database successfully");
-    // };
-    // req.onsuccess = function () {
-    //   console.log("Deleted database successfully");
-    // };
-    // req.onerror = function () {
-    //   console.log("Couldn't delete database");
-    // };
-    // req.onblocked = function () {
-    //   console.log("DB got blocked");
-    // };
     openDB.onsuccess = () => {
       let db = openDB.result;
       db.onversionchange = function () {
@@ -449,7 +440,7 @@ const ContextProvider = ({ children }) => {
         console.log("DB cleared");
       };
     };
-    // localStorage.removeItem("topic-popup");
+
     setNostrUser(false);
     setNostrKeys(false);
     setNostrUserAbout(false);
@@ -468,18 +459,44 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  const getUserFromNOSTR = async (pubkey) => {
-    try {
-      let author = await pool.get(relaysOnPlatform, {
-        kinds: [0],
-        authors: [pubkey],
-      });
-      return author || getEmptyNostrUser(pubkey);
-    } catch (err) {
-      console.log(err);
-    }
+  // const getUserFromNOSTR = async (pubkey) => {
+  //   try {
+  //     let author = await pool.get(relaysOnPlatform, {
+  //       kinds: [0],
+  //       authors: [pubkey],
+  //     });
+  //     return author || getEmptyNostrUser(pubkey);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+  const getUserFromNOSTR = (pubkey) => {
+    return new Promise((resolve, reject) => {
+      try {
+        const subscription = pool.subscribeMany(
+          relaysOnPlatform,
+          [
+            {
+              kinds: [0],
+              authors: [pubkey],
+            },
+          ],
+          {
+            onevent(event) {
+              resolve(event);
+            },
+            oneose() {
+              resolve(getEmptyNostrUser(pubkey))
+            }
+          }
+        );
+      } catch (err) {
+        resolve(getEmptyNostrUser(pubkey));
+      }
+    });
   };
-  const getNostrClients = async (pubkey) => {
+
+  const getNostrClients = async () => {
     try {
       let clients = await pool.querySync(
         [...relaysOnPlatform, "wss://relay.nostr.band"],
@@ -500,31 +517,91 @@ const ContextProvider = ({ children }) => {
       console.log(err);
     }
   };
-  const getUserTopics = async (pubkey) => {
-    try {
-      let topics = await pool.get(relaysOnPlatform, {
-        kinds: [30078],
-        authors: [pubkey],
-      });
+  // const getUserTopics = async (pubkey) => {
+  //   try {
+  //     let topics = await pool.subscribeMany(relaysOnPlatform, {
+  //       kinds: [30078],
+  //       authors: [pubkey],
+  //     });
 
-      return topics
-        ? topics.tags.filter((item) => item[0] === "t").map((item) => item[1])
-        : [];
-    } catch (err) {
-      console.log(err);
-    }
+  //     return topics
+  //       ? topics.tags.filter((item) => item[0] === "t").map((item) => item[1])
+  //       : [];
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+  const getUserTopics = (pubkey) => {
+    return new Promise((resolve, reject) => {
+      try {
+        let topics = [];
+        const subscription = pool.subscribeMany(
+          relaysOnPlatform,
+          [
+            {
+              kinds: [30078],
+              authors: [pubkey],
+            },
+          ],
+          {
+            onevent(event) {
+              const newTopics = event.tags
+                .filter((tag) => tag[0] === "t")
+                .map((tag) => tag[1]);
+              topics = [...new Set([...topics, ...newTopics])];
+              resolve(topics);
+            },
+            oneose() {
+              resolve(topics);
+            },
+          }
+        );
+      } catch (err) {
+        resolve([]);
+      }
+    });
   };
-  const getUserFollowing = async (pubkey) => {
-    try {
-      let author = await pool.get(relaysOnPlatform, {
-        kinds: [3],
-        authors: [pubkey],
-      });
-      return author?.tags?.filter((people) => people[0] === "p") || [];
-    } catch (err) {
-      console.log(err);
-      return [];
-    }
+
+  // const getUserFollowing = async (pubkey) => {
+  //   try {
+  //     let author = await pool.get(relaysOnPlatform, {
+  //       kinds: [3],
+  //       authors: [pubkey],
+  //     });
+  //     return author?.tags?.filter((people) => people[0] === "p") || [];
+  //   } catch (err) {
+  //     console.log(err);
+  //     return [];
+  //   }
+  // };
+
+  const getUserFollowing = (pubkey) => {
+    return new Promise((resolve, reject) => {
+      try {
+        let following = [];
+        const subscription = pool.subscribeMany(
+          relaysOnPlatform,
+          [
+            {
+              kinds: [3],
+              authors: [pubkey],
+            },
+          ],
+          {
+            onevent(event) {
+              const newFollowing = event.tags.filter((tag) => tag[0] === "p");
+              following = [...new Set([...following, ...newFollowing])];
+              resolve(following);
+            },
+            oneose() {
+              resolve([])
+            }
+          }
+        );
+      } catch (err) {
+        resolve([]);
+      }
+    });
   };
 
   const getUserBookmarks = async (pubkey) => {
@@ -550,7 +627,7 @@ const ContextProvider = ({ children }) => {
                 ),
               ];
             });
-          },
+          }
         }
       );
     } catch (err) {
@@ -559,29 +636,60 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  const getRelaysOfUser = async (pubkey) => {
-    try {
-      let res_1 = await pool.querySync(relaysOnPlatform, {
-        kinds: [10002],
-        authors: [pubkey],
-      });
-      res_1 =
-        res_1.length > 0
-          ? res_1
-              .map((item) =>
-                item.tags
-                  .filter((item) => item[0] === "r")
-                  .map((item_) => item_[1])
-              )
-              .flat()
-          : [];
+  // const getRelaysOfUser = async (pubkey) => {
+  //   try {
+  //     let res_1 = await pool.querySync(relaysOnPlatform, {
+  //       kinds: [10002],
+  //       authors: [pubkey],
+  //     });
+  //     res_1 =
+  //       res_1.length > 0
+  //         ? res_1
+  //             .map((item) =>
+  //               item.tags
+  //                 .filter((item) => item[0] === "r")
+  //                 .map((item_) => item_[1])
+  //             )
+  //             .flat()
+  //         : [];
 
-      let final_res = [...new Set([...relaysOnPlatform, ...res_1])];
+  //     let final_res = [...new Set([...relaysOnPlatform, ...res_1])];
 
-      return final_res;
-    } catch (err) {
-      console.log(err);
-    }
+  //     return final_res;
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+
+  const getRelaysOfUser = (pubkey) => {
+    return new Promise((resolve, reject) => {
+      try {
+        let relays = [];
+        const subscription = pool.subscribeMany(
+          relaysOnPlatform,
+          [
+            {
+              kinds: [10002],
+              authors: [pubkey],
+            },
+          ],
+          {
+            onevent(event) {
+              const newRelays = event.tags
+                .filter((tag) => tag[0] === "r")
+                .map((tag) => tag[1]);
+              relays = [...new Set([...relays, ...newRelays])];
+              resolve(relays);
+            },
+            oneose() {
+              resolve(relays);
+            },
+          }
+        );
+      } catch (err) {
+        resolve([]);
+      }
+    });
   };
 
   const addNostrAuthors = async (pubkeys) => {
@@ -724,64 +832,6 @@ const ContextProvider = ({ children }) => {
           console.log("Deleted database successfully");
         };
       }
-      // chatrooms_.onerror = () => {
-      //   console.log(1)
-      //   db.close();
-      //   let req = indexedDB.deleteDatabase("yaki-nostr");
-      //   req.onsuccess = function () {
-      //     cacheDBInit();
-      //     console.log("Deleted database successfully");
-      //   };
-      // };
-      // chatContacts_.onerror = () => {
-      //   console.log(2)
-      //   db.close();
-      //   let req = indexedDB.deleteDatabase("yaki-nostr");
-      //   req.onsuccess = function () {
-      //     cacheDBInit();
-      //     console.log("Deleted database successfully");
-      //   };
-      // };
-      // userFollowings_.onerror = () => {
-      //   console.log(3)
-      //   db.close();
-      //   let req = indexedDB.deleteDatabase("yaki-nostr");
-      //   req.onsuccess = function () {
-      //     cacheDBInit();
-      //     console.log("Deleted database successfully");
-      //   };
-      // };
-      // muted.onerror = () => {
-      //   console.log(4)
-      //   db.close();
-      //   let req = indexedDB.deleteDatabase("yaki-nostr");
-      //   req.onsuccess = function () {
-      //     cacheDBInit();
-      //     console.log("Deleted database successfully");
-      //   };
-      // };
-      // transaction.onerror = () => {
-      //   console.log(5)
-      //   db.close();
-      //   let req = indexedDB.deleteDatabase("yaki-nostr");
-      //   req.onsuccess = function () {
-      //     cacheDBInit();
-      //     console.log("Deleted database successfully");
-      //   };
-      // };
-      // db.onerror = () => {
-      //   console.log(6)
-      //   let req = indexedDB.deleteDatabase("yaki-nostr");
-      //   req.onsuccess = function () {
-      //     cacheDBInit();
-      //     console.log("Deleted database successfully");
-      //   };
-      //   req.onblocked = function () {
-      //     db.close();
-      //     cacheDBInit();
-      //     console.log("Deleted database successfully");
-      //   };
-      // };
     };
 
     openDB.onerror = (event) => {
@@ -900,7 +950,7 @@ const ContextProvider = ({ children }) => {
         setUpdatedActionFromYakiChest,
         balance,
         setBalance,
-        setNostrAuthors
+        setNostrAuthors,
       }}
     >
       {children}

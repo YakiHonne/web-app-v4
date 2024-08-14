@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
-import Follow from "./Follow";
 import { Link } from "react-router-dom";
 import LoadingDots from "../LoadingDots";
 import { nip19 } from "nostr-tools";

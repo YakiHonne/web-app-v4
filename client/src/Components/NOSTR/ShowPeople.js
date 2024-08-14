@@ -66,26 +66,7 @@ export default function ShowPeople({ exit, list, type = "following" }) {
     };
     fetchData();
   }, []);
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       let _list =
-  //         type === "following"
-  //           ? list.map((item) => item[1])
-  //           : list.map((item) => item.pubkey);
 
-  //       let data = await pool.list(relaysOnPlatform, [
-  //         { kinds: [0], authors: _list },
-  //       ]);
-
-  //       setPeople(data.map((item) => getParsedAuthor(item)));
-  //       setIsLoaded(true);
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   };
-  //   fetchData();
-  // }, []);
   const followUnfollow = async () => {
     try {
       if (isPublishing) {

@@ -15,6 +15,7 @@ import LoadingDots from "../LoadingDots";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
 const pool = new SimplePool();
+
 export default function Nip19Parsing({ addr, minimal = false }) {
   const { nostrUser } = useContext(Context);
   const [event, setEvent] = useState(false);
@@ -97,7 +98,6 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         }
 
         if (event.kind === 30031) {
-          // console.log(event);
           let metadata = JSON.parse(event.content);
           let parsedContent = getParsed3000xContent(event.tags);
           setEvent({ ...parsedContent, metadata, ...event });
@@ -230,10 +230,10 @@ export default function Nip19Parsing({ addr, minimal = false }) {
     );
   if (event.kind === 30031)
     return (
-      <>
+      <div className="fit-container box-pad-v-s">
         {!minimal && <PreviewWidget widget={event.metadata} />}
         {minimal && <MinimalPreviewWidget widget={event} />}
-      </>
+      </div>
     );
 
   if ([30004, 30005, 30023, 34235].includes(event.kind))

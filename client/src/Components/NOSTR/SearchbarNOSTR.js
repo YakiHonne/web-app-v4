@@ -1,21 +1,17 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getBech32, getHex } from "../../Helpers/Encryptions";
+import { getHex } from "../../Helpers/Encryptions";
 import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
-import { getEmptyNostrUser } from "../../Helpers/Encryptions";
 import { nip19, SimplePool } from "nostr-tools";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import ShortenKey from "./ShortenKey";
 import Date_ from "../Date_";
 import axios from "axios";
-import { Context } from "../../Context/Context";
 
 const pool = new SimplePool();
 
 export default function SearchbarNOSTR() {
   const navigateTo = useNavigate();
-  const { nostrAuthors } = useContext(Context);
   const [keyword, setKeyword] = useState("");
   const [searchAuthorsRes, setSearchAuthorsRes] = useState([]);
   const [searchPostsRes, setSearchPostsRes] = useState([]);
@@ -27,33 +23,22 @@ export default function SearchbarNOSTR() {
       setIsLoading(true);
       timer = setTimeout(async () => {
         try {
-          let [authorsNB, posts] = await Promise.all([
-            // getUserFromNOSTR(keyword),
-            getUserFromNOSTRBAND(keyword),
-            getPostsFromNOSTR(keyword),
-          ]);
-
-          // if (authors)
-          //   setSearchAuthorsRes([
-          //     { ...JSON.parse(authors.content), pubkey: authors.pubkey },
-          //   ]);
-          // else {
-          //   setSearchAuthorsRes([]);
-          // }
-
-          // if (authors)
-          //   setSearchAuthorsRes([
-          //     ...authorsNB.filter((item) => item.pubkey !== authors.pubkey),
-          //     { ...JSON.parse(authors.content), pubkey: authors.pubkey },
-          //   ]);
+          let authorsNB = await getUsersFromCache(keyword);
           setSearchAuthorsRes([...(authorsNB || [])]);
-          setSearchPostsRes(posts);
           setIsLoading(false);
+          let posts = await getPostsFromNOSTR(keyword);
+
+          // let [authorsNB, posts] = await Promise.all([
+          //   getUsersFromCache(keyword),
+          //   getPostsFromNOSTR(keyword),
+          // ]);
+
+          setSearchPostsRes(posts);
         } catch (err) {
           console.log(err);
           setIsLoading(false);
         }
-      }, 500);
+      }, 100);
     } else {
       clearTimeout(timer);
       setSearchAuthorsRes([]);
@@ -71,45 +56,20 @@ export default function SearchbarNOSTR() {
     }, 200);
   };
 
-  const getUserFromNOSTRBAND = async (keyword) => {
+  const getUsersFromCache = async (keyword) => {
     try {
       const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
-      // let data = await axios.get(
-      //   `https://api.nostr.band/nostr?method=search&count=10&q=${keyword}`
-      // );
+
       let data = await axios.get(
         `${API_BASE_URL}/api/v1/users/search/${keyword}`
       );
 
-      // let authors = nostrAuthors.filter((author) => {
-      //   let { display_name, name, nip05, lud16 } = author;
-
-      //   return (
-      //     (display_name && `${display_name}`?.includes(keyword)) ||
-      //     (name && `${name}`?.includes(keyword)) ||
-      //     (nip05 && `${nip05}`?.includes(keyword)) ||
-      //     (lud16 && `${lud16}`?.includes(keyword))
-      //   );
-      // });
       return data.data;
     } catch (err) {
       console.log(err);
     }
   };
-  const getUserFromNOSTR = async (pubkey) => {
-    try {
-      let hex = pubkey;
-      if (pubkey.startsWith("npub")) hex = getHex(pubkey);
-      let author = await pool.get(relaysOnPlatform, {
-        kinds: [0],
-        authors: [hex],
-      });
 
-      return author;
-    } catch (err) {
-      console.log(err);
-    }
-  };
   const getPostsFromNOSTR = async (tag) => {
     try {
       let posts = await pool.querySync(relaysOnPlatform, {
@@ -233,6 +193,7 @@ export default function SearchbarNOSTR() {
               overflowX: "hidden",
               zIndex: "1000",
               borderColor: "var(--dim-gray)",
+              gap: 0
             }}
           >
             {isLoading && (
@@ -262,16 +223,21 @@ export default function SearchbarNOSTR() {
                     >
                       <UserProfilePicNOSTR
                         img={user.picture || ""}
-                        size={48}
+                        size={36}
                         user_id={user.pubkey}
+                        ring={false}
                       />
                       <div className="fx-centered fx-start-h">
                         <div
-                          className="fx-centered fx-col fx-start-v box-pad-h-s"
+                          className="fx-centered fx-col fx-start-v "
                           style={{ rowGap: 0 }}
                         >
-                          <p className="c1-c">{user.name}</p>
-                          {/* {user.pubkey && <ShortenKey id={getBech32("npub", user.pubkey)} />} */}
+                          <p className="p-one-line">
+                            {user.display_name || user.name}
+                          </p>
+                          <p className="orange-c p-medium p-one-line">
+                            @{user.name || user.display_name}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -306,7 +272,7 @@ export default function SearchbarNOSTR() {
                           className="fx-centered fx-col fx-start-v box-pad-h-s"
                           style={{ rowGap: 0 }}
                         >
-                          <p className="c1-c">{details.title}</p>
+                          <p className="orange-c">{details.title}</p>
                           <p className="gray-c p-medium">
                             <Date_ toConvert={details.added_date} />
                           </p>

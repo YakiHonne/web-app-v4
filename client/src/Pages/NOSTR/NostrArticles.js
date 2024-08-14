@@ -1,24 +1,14 @@
 import React, { useContext, useMemo } from "react";
 import { Context } from "../../Context/Context";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import { useState } from "react";
-import PagePlaceholder from "../../Components/PagePlaceholder";
-import LoadingScreen from "../../Components/LoadingScreen";
 import { useEffect } from "react";
 import { nip19, SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
-import Date_ from "../../Components/Date_";
-import ToDeletePostNOSTR from "../../Components/NOSTR/ToDeletePostNOSTR";
-import placeholder from "../../media/images/nostr-thumbnail-ph.svg";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
-import {
-  convertDate,
-  filterRelays,
-  getBech32,
-} from "../../Helpers/Encryptions";
+import { filterRelays, getBech32 } from "../../Helpers/Encryptions";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import Footer from "../../Components/Footer";
 import bannedList from "../../Content/BannedList";
@@ -41,9 +31,6 @@ const getTopCreators = (posts) => {
   for (let creator of netCreators) {
     let stats = getCreatorStats(creator.pubkey, posts);
     tempCreators.push({
-      // pubkey: creator.pubkey,
-      // name: creator.author_name,
-      // img: creator.author_img,
       ...getEmptyNostrUser(creator.pubkey),
       articles_number: stats.articles_number,
     });

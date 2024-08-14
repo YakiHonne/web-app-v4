@@ -345,7 +345,7 @@ export default function NostrArticle() {
       if (tag[0] === "t") tags.push(tag[1]);
       if (tag[0] === "d") d = tag[1];
     }
-    console.log(data.tags);
+
     tempPost.tags = Array.from(tags);
     tempPost.d = d;
     tempPost.author_pubkey = data.pubkey;
@@ -588,11 +588,11 @@ export default function NostrArticle() {
             )}
             <div className="fit-container fx-centered fx-start-h">
               <div
-                style={{ width: "min(100%,1400px)" }}
+                // style={{ width: "min(100%,1400px)" }}
                 className="fx-centered fx-start-v fx-start-h fx-wrap"
               >
                 <div
-                  style={{ flex: "1 1 700px" }}
+                  style={{ flex: "1 1 550px" }}
                   className={`fit-container fx-centered fx-wrap box-pad-h-m box-pad-v-m article-mw`}
                 >
                   <div className="fit-container nostr-article" dir="auto">
@@ -1039,7 +1039,6 @@ export default function NostrArticle() {
                                   const html = katex.renderToString(txt, {
                                     throwOnError: false,
                                   });
-                                  console.log("props", txt, className, props);
                                   return (
                                     <code
                                       dangerouslySetInnerHTML={{ __html: html }}

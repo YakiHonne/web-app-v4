@@ -5,9 +5,8 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { SimplePool, nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
-import Date_ from "../../Components/Date_";
 import ToDeletePostNOSTR from "../../Components/NOSTR/ToDeletePostNOSTR";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
 import {
@@ -16,8 +15,6 @@ import {
   getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
-import UploadFile from "../../Components/UploadFile";
-import { nanoid } from "nanoid";
 
 import KindOne from "../../Components/NOSTR/KindOne";
 import TopCreators from "../../Components/NOSTR/TopCreators";
@@ -30,8 +27,7 @@ var pool = new SimplePool();
 
 export default function NostrMyNotes() {
   const { state } = useLocation();
-  const { nostrKeys, nostrUser, isPublishing, setToast } = useContext(Context);
-  const [relays, setRelays] = useState(relaysOnPlatform);
+  const { nostrKeys, nostrUser } = useContext(Context);
   const [activeRelay, setActiveRelay] = useState("");
   const [notes, setNotes] = useState([]);
   const [trendingNotes, setTrendingNotes] = useState([]);
@@ -65,7 +61,6 @@ export default function NostrMyNotes() {
           [{ kinds: [1], authors: [nostrKeys.pub] }],
           {
             async onevent(event) {
-              console.log(event)
               let event_ = await onEvent(event);
               if (event_) {
                 setNotes((prev) => {
@@ -100,7 +95,6 @@ export default function NostrMyNotes() {
     }
     removeCurrentPost();
     setPostToDelete(false);
-    // setTimestamp(new Date().getTime());
   };
 
   const removeCurrentPost = () => {
@@ -148,13 +142,6 @@ export default function NostrMyNotes() {
           nEvent,
         };
       }
-
-      //   let relatedEvent = await onEvent(JSON.parse(event.content));
-      //   if (!relatedEvent) return false;
-      //   return {
-      //     ...event,
-      //     relatedEvent,
-      //   };
     } catch (err) {
       console.log(err);
       return false;

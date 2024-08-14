@@ -21,7 +21,6 @@ export default function UploadFile({
   const Upload = async (e) => {
     let file = e.target.files[0];
     if (!file && (!nostrKeys.sec || !nostrKeys.ext)) {
-      console.log(nostrKeys);
       setToast({
         type: 2,
         desc: "It's either you selected a corrupted file or you're not logged-in using your secret key/extension",
@@ -87,7 +86,9 @@ export default function UploadFile({
           }
         );
 
-        setImageURL(imageURL.data.nip94_event.tags.find(tag => tag[0] === "url")[1]);
+        setImageURL(
+          imageURL.data.nip94_event.tags.find((tag) => tag[0] === "url")[1]
+        );
         setIsLoading(false);
         setIsUploadsLoading(false);
         return;

@@ -1,15 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../../Context/Context";
-import { finalizeEvent, nip19, SimplePool } from "nostr-tools";
-import Lottie from "lottie-react";
+import { nip19, SimplePool } from "nostr-tools";
 import { Helmet } from "react-helmet";
-import { nanoid } from "nanoid";
-import PagePlaceholder from "../../Components/PagePlaceholder";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import { getNoteTree, getVideoFromURL } from "../../Helpers/Helpers";
-import UploadFile from "../../Components/UploadFile";
-import ZapPollsPreview from "../../Components/SmartWidget/ZapPollsComp";
-import AddPoll from "../../Components/NOSTR/AddPoll";
+import { getNoteTree } from "../../Helpers/Helpers";
+import ArrowUp from "../../Components/ArrowUp";
 import relaysOnPlatform from "../../Content/Relays";
 import {
   filterRelays,
@@ -18,18 +13,17 @@ import {
 } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
-import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import { Link } from "react-router-dom";
 import PreviewWidget from "../../Components/SmartWidget/PreviewWidget";
 import Footer from "../../Components/Footer";
 import OptionsDropdown from "../../Components/NOSTR/OptionsDropdown";
+import ToDeleteGeneral from "../../Components/NOSTR/ToDeleteGeneral";
 const pool = new SimplePool();
 
 export default function NostrSmartWidgets() {
-  const { nostrUser, nostrKeys, setToast, addNostrAuthors } =
+  const { nostrUser, nostrKeys, addNostrAuthors } =
     useContext(Context);
-  const [buildOptions, setBuildOptions] = useState(true);
   const [comWidgets, setComWidgets] = useState([]);
   const [myWidgets, setMyWidgets] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -37,6 +31,7 @@ export default function NostrSmartWidgets() {
   const [myWidgetsLE, setMyWidgetsLE] = useState(undefined);
   const [comWidgetsLE, setComWidgetsLE] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedWidgetID, setSelectedWidgetID] = useState(false);
   const [sub, setSub] = useState(false);
   const extrasRef = useRef(null);
 
@@ -146,7 +141,7 @@ export default function NostrSmartWidgets() {
             kinds: [30031],
             authors: [nostrKeys.pub],
             until: myWidgetsLE,
-            limit: 4,
+            limit: 10,
           },
         ],
       };
@@ -191,6 +186,16 @@ export default function NostrSmartWidgets() {
     setContentSource(source);
   };
 
+  const handleRefreshData = async () => {
+    setMyWidgets((widgets) =>
+      widgets.filter((widget) => widget.id !== selectedWidgetID)
+    );
+    setComWidgets((widgets) =>
+      widgets.filter((widget) => widget.id !== selectedWidgetID)
+    );
+    setSelectedWidgetID(false);
+  };
+
   return (
     <div>
       <Helmet>
@@ -217,7 +222,17 @@ export default function NostrSmartWidgets() {
           content={"Interact with the community smart widgets"}
         />
       </Helmet>
+      {selectedWidgetID && (
+        <ToDeleteGeneral
+          cancel={() => setSelectedWidgetID(false)}
+          title={""}
+          kind="Smart widget"
+          eventId={selectedWidgetID}
+          refresh={handleRefreshData}
+        />
+      )}
       <div className="fit-container fx-centered">
+        <ArrowUp />
         <div className="main-container">
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
@@ -236,7 +251,7 @@ export default function NostrSmartWidgets() {
                         className="round-icon-small round-icon-tooltip"
                         data-tooltip="Checker"
                       >
-                        <div className="search"></div>
+                        <div className="smart-widget-checker"></div>
                       </div>
                     </Link>
                     <div
@@ -269,11 +284,23 @@ export default function NostrSmartWidgets() {
                 >
                   {contentSource === "community" &&
                     comWidgets.map((widget) => {
-                      return <WidgetCard widget={widget} key={widget.id} />;
+                      return (
+                        <WidgetCard
+                          widget={widget}
+                          key={widget.id}
+                          deleteWidget={() => setSelectedWidgetID(widget.id)}
+                        />
+                      );
                     })}
                   {contentSource === "self" &&
                     myWidgets.map((widget) => {
-                      return <WidgetCard widget={widget} key={widget.id} />;
+                      return (
+                        <WidgetCard
+                          widget={widget}
+                          key={widget.id}
+                          deleteWidget={() => setSelectedWidgetID(widget.id)}
+                        />
+                      );
                     })}
                 </div>
                 {isLoading && (
@@ -312,15 +339,15 @@ export default function NostrSmartWidgets() {
                   </div>
                   <h4>What are smart widgets?</h4>
                   <p className="gray-c">
-                    We got your back! Check our demo on the article below
+                    We got your back! Check our demo
                   </p>
                   <Link
                     target="_blank"
                     to={
-                      "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
+                      "/yakihonne-smart-widgets"
                     }
                   >
-                    <button className="btn btn-normal">Read article</button>
+                    <button className="btn btn-normal">Read more</button>
                   </Link>
                 </div>
                 {notes.length > 0 && (
@@ -350,7 +377,7 @@ export default function NostrSmartWidgets() {
   );
 }
 
-const WidgetCard = ({ widget }) => {
+const WidgetCard = ({ widget, deleteWidget }) => {
   const { nostrAuthors, getNostrAuthor, nostrKeys, setToast } =
     useContext(Context);
   const [authorData, setAuthorData] = useState(widget.author);
@@ -403,6 +430,17 @@ const WidgetCard = ({ widget }) => {
             >
               <p>Clone</p>
             </Link>,
+
+            <Link
+              className="fit-container"
+              to={`/smart-widget-checker?naddr=${nip19.naddrEncode({
+                pubkey: widget.pubkey,
+                identifier: widget.d,
+                kind: widget.kind,
+              })}`}
+            >
+              <p>Check validity</p>
+            </Link>,
             nostrKeys.pub === widget.pubkey && (
               <Link
                 className="fit-container"
@@ -411,6 +449,11 @@ const WidgetCard = ({ widget }) => {
               >
                 <p>Edit</p>
               </Link>
+            ),
+            nostrKeys.pub === widget.pubkey && (
+              <div className="fit-container" onClick={deleteWidget}>
+                <p className="red-c">Delete</p>
+              </div>
             ),
           ]}
         />
@@ -442,7 +485,7 @@ const WidgetCard = ({ widget }) => {
           )}
         </div> */}
       </div>
-      <PreviewWidget widget={widget.metadata} />
+      <PreviewWidget widget={widget.metadata} pubkey={widget.pubkey} />
       {(widget.title || widget.description) && (
         <div
           className="fx-centered fx-col fx-start-h fx-start-v fit-container "

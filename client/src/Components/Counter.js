@@ -17,8 +17,8 @@ export default function Counter({ date, onClick }) {
       setTimer(EndOfTimer - new Date().getTime());
     }, 1000);
     return () => {
-      clearInterval(intervalID)
-    }
+      clearInterval(intervalID);
+    };
   }, []);
 
   useEffect(() => {
@@ -29,14 +29,8 @@ export default function Counter({ date, onClick }) {
       min: t.split(":")[1],
       sec: t.split(":")[2],
     });
-    // setTime({
-    //   min:
-    //     temp.getMinutes() >= 10 ? temp.getMinutes() : `0${temp.getMinutes()}`,
-    //   sec:
-    //     temp.getSeconds() >= 10 ? temp.getSeconds() : `0${temp.getSeconds()}`,
-    // });
   }, [timer]);
-  
+
   if (EndOfTimer - new Date().getTime() <= 0) return onClick();
   return (
     <>

@@ -7,7 +7,7 @@ import { SimplePool, nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import Date_ from "../../Components/Date_";
 import ToDeletePostNOSTR from "../../Components/NOSTR/ToDeletePostNOSTR";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
 import { filterRelays } from "../../Helpers/Encryptions";
@@ -559,12 +559,7 @@ const AddVideo = ({ exit }) => {
       }
     }
   };
-  // console.log(
-  //   nip19.neventEncode({
-  //     kind: 1063,
-  //     id: "42a944b03557dfde9bd7d47402a5152fae086dcfd8078a50e40271f9da58fad2",
-  //   })
-  // );
+
   return (
     <>
       {showFinalStep && (

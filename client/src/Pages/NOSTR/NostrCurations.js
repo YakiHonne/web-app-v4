@@ -1,12 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import PagePlaceholder from "../../Components/PagePlaceholder";
 import relaysOnPlatform from "../../Content/Relays";
-import { nip19, relayInit } from "nostr-tools";
-import LoadingScreen from "../../Components/LoadingScreen";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
+import { nip19 } from "nostr-tools";
 import Date_ from "../../Components/Date_";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   filterRelays,
   getBech32,
@@ -15,14 +12,12 @@ import {
 } from "../../Helpers/Encryptions";
 import { SimplePool } from "nostr-tools";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import TopicElementNOSTR from "../../Components/NOSTR/TopicElementNOSTR";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import { Context } from "../../Context/Context";
-// import CurationPreviewCard from "../../Components/NOSTR/CurationPreviewCard";
 import LoadingDots from "../../Components/LoadingDots";
 import Footer from "../../Components/Footer";
-import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
+
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import bannedList from "../../Content/BannedList";
 
@@ -37,7 +32,6 @@ export default function NostrCurations() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [lastEventTime, setLastEventTime] = useState(undefined);
-  const navigateTo = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -205,25 +199,15 @@ export default function NostrCurations() {
     }
   };
   const switchActiveRelay = (source) => {
-    // if (!isLoaded) return;
     if (source === activeRelay) return;
-    // relaySub.unsub();
+
     setIsLoading(false);
     setCurations([]);
     setActiveRelay(source);
 
     setLastEventTime(undefined);
   };
-  // if (!isLoaded) return <LoadingScreen />;
-  // if (curations.length === 0)
-  //   return (
-  //     <div>
-  //       <SidebarNOSTR />
-  //       <main className="main-page-nostr-container">
-  //         <PagePlaceholder page={"nostr-curations-2"} />
-  //       </main>
-  //     </div>
-  //   );
+
   return (
     <div>
       <Helmet>
@@ -513,22 +497,13 @@ const CurationPreviewCard = ({ curation }) => {
             author_name: auth.name,
             author_pubkey: auth.pubkey,
           });
-          // if (auth.nip05) {
-          //   let authPubkey = await getAuthPubkeyFromNip05(auth.nip05);
-          //   if (authPubkey)
-          //     setArtURL(
-          //       curation.kind === 30004
-          //         ? "a" + `/${auth.nip05}/${curation.d}`
-          //         : "v" + `/${auth.nip05}/${curation.d}`
-          //     );
-          // }
         }
         return;
       } catch (err) {
         console.log(err);
       }
     };
-    // if (!authorData) fetchData();
+
     fetchData();
   }, [nostrAuthors]);
   if (!curation.items.length) return;

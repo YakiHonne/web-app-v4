@@ -15,9 +15,7 @@ export default function IMGElement({ src }) {
           <div
             style={{
               position: "relative",
-              // maxWidth: "800px",
-              // maxHeight: "80vh",
-              width: "min(100%, 1000px)"
+              width: "min(100%, 1000px)",
             }}
           >
             <div
@@ -49,7 +47,7 @@ export default function IMGElement({ src }) {
         style={{
           margin: ".5rem auto 0",
           cursor: "zoom-in",
-          aspectRatio: "16/9",
+          // aspectRatio: "16/9",
           objectFit: "cover",
         }}
         width={"100%"}

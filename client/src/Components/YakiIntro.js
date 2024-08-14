@@ -2,6 +2,38 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../Context/Context";
 import hero from "../media/images/yaki-intro.jpg";
 import Follow from "./NOSTR/Follow";
+import { Link } from "react-router-dom";
+
+const content = [
+  {
+    url: "/yakihonne-smart-widgets",
+    thumbnail:
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-smart-widget.png",
+    tag: "Smart widgets",
+    new: true,
+  },
+  {
+    url: "/points-system",
+    thumbnail:
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-points-system.png",
+    tag: "Points system",
+    new: false,
+  },
+  {
+    url: "/yakihonne-flash-news",
+    thumbnail:
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-flash-news.png",
+    tag: "Flash news",
+    new: false,
+  },
+  {
+    url: "/yakihonne-mobile-app",
+    thumbnail:
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-mobile-app.png",
+    tag: "Mobile app",
+    new: false,
+  },
+];
 
 export default function YakiIntro() {
   const [swipe, setSwipe] = useState(false);
@@ -16,12 +48,9 @@ export default function YakiIntro() {
         style={{
           position: "fixed",
           right: "-200px",
-          // right: "0px",
           bottom: "128px",
           transform: "translateY(-50%)",
           transition: ".2s ease-in-out",
-          // width: "100vw",
-          // height: "100vh",
           zIndex: "1000000",
         }}
         className="fx-centered fx-end-h"
@@ -30,7 +59,6 @@ export default function YakiIntro() {
           <div className="slide-right">
             <div
               style={{
-                // width: "max-content",
                 border: "none",
                 background: "var(--dim-gray)",
                 transform: "rotate(-90deg) translateY(-150px)",
@@ -60,67 +88,202 @@ const Banner = ({ exit }) => {
         height: "100vh",
         zIndex: "100000000",
       }}
-      className="fx-centered fx-end-h box-pad-h"
+      className="fixed-container fx-centered fx-col fx-end-v  box-pad-h"
       onClick={(e) => {
         e.stopPropagation();
         exit();
       }}
     >
       <div
+        className="fx-scattered box-pad-v-s"
+        style={{ width: "min(100%, 400px)" }}
+      >
+        <h4>Updates news</h4>
+        <div className="close" style={{ position: "static" }} onClick={exit}>
+          <div></div>
+        </div>
+      </div>
+      <div
         style={{
           height: "90%",
           width: "min(100%, 400px)",
-          backgroundImage: `url(${hero})`,
-          border: "none",
           position: "relative",
+          backgroundColor: "transparent",
+          border: "none",
         }}
-        className="sc-s bg-img cover-bg fx-centered fx-end-v box-pad-h slide-right"
+        className="sc-s-18 bg-img cover-bg fx-centered fx-start-v slide-right carouselX"
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
         <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: "100%",
-            height: "100%",
-            zIndex: 0,
-            background:
-              "linear-gradient(179.82deg, rgba(0, 0, 0, 0) 19.91%, #000000 93.18%)",
-          }}
-          className="fx-centered fx-end-v"
-        ></div>
-        <div
-          className="fit-container fx-centered fx-col"
-          style={{ height: "50%", position: "relative", zIndex: "1" }}
+          className="fit-container fit-height fx-centered fx-col fx-start-h fx-start-v box-pad-h-s box-pad-v-s"
+          style={{ overflow: "scroll" }}
         >
+          {content.map((card, index) => {
+            return (
+              <Link
+                to={card.url}
+                target="_blank"
+                className="box-pad-h box-pad-v fit-container sc-s-18 pointer option fx-shrink bg-img cover-bg"
+                style={{
+                  aspectRatio: "16/9",
+                  position: "relative",
+                  borderColor: card.new ? "var(--orange-main)" : "",
+                  backgroundImage: `url(${card.thumbnail})`,
+                }}
+                key={index}
+              >
+                <div
+                  className="sticker sticker-normal "
+                  style={{
+                    position: "absolute",
+                    left: card.new ? "50px" : 0,
+                    paddingLeft: card.new ? "25px" : "",
+                    top: 0,
+                    color: "white",
+                    // color: card.new ? "white" : "var(--gray)",
+                    borderTopRightRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    backgroundColor: "#555555",
+                  }}
+                >
+                  <p className="p-medium p-italic ">{card.tag}</p>
+                </div>
+                {card.new && (
+                  <div
+                    className="sticker sticker-normal "
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      color: card.new ? "white" : "var(--gray)",
+                      borderTopRightRadius: 0,
+                      borderBottomLeftRadius: 0,
+                      backgroundColor: card.new
+                        ? "var(--orange-main)"
+                        : "var(--dim-gray)",
+                    }}
+                  >
+                    <p className="p-medium p-italic ">New</p>
+                  </div>
+                )}
+              </Link>
+            );
+          })}
           <div
-            className="yakihonne-logo"
-            style={{ filter: "brightness(0) invert()" }}
-          ></div>
-          <p className="p-centered" style={{ maxWidth: "400px", color: "white" }}>
-            YakiHonne is a Nostr-based decentralized content media protocol,
-            which supports free curation, creation, publishing, and reporting by
-            various media.
-          </p>
-          {nostrKeys && (
-            <div className="fit-container fx-centered box-pad-v fx-col">
-              <Follow
-                toFollowKey={
-                  "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
-                }
-                toFollowName={"Yakihonne"}
-              />
-              {/* <button className="btn btn-normal">Read about us</button> */}
+            className="box-pad-h-m box-pad-v-m fit-container sc-s-18 fx-shrink"
+            style={{
+              position: "relative",
+            }}
+          >
+            <div className="fit-container fx-scattered">
+              <div>
+                <p>Updates</p>
+                <p className="gray-c p-italic p-medium">
+                  Last updated Aug 12, 22024
+                </p>
+              </div>
+              <p className="orange-c p-medium">v123.1.0</p>
             </div>
-          )}
+            <p>{`
+- Yakihonne points system to win precious rewards by being active on the platform
+- Yakihonne’s points page to check your performance and gained points
+- Adding notes to Yakihonne content
+- The ability to toggle between Media (flash news, articles, videos and buzz feed) and Notes (trending notes, following notes and universal notes) from the home page for more diverse content
+- Adding wallets, checking latest transactions, making invoices and sending funds to your preferred people
+- The ability to have multiple wallets and check the balance on both side bar and wallet page and use your preferred wallet to send zaps across the app
+`}</p>
+            <div className="fit-container fx-centered box-pad-v">
+              <p className="orange-c p-medium">
+                {" "}
+                {">>"} The end 😁 {"<<"}{" "}
+              </p>
+            </div>
+            <div className="box-pad-v"></div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+// const Banner = ({ exit }) => {
+//   const { nostrKeys } = useContext(Context);
+//   return (
+//     <div
+//       style={{
+//         position: "fixed",
+//         right: "0",
+//         top: 0,
+//         transition: ".2s ease-in-out",
+//         width: "100vw",
+//         height: "100vh",
+//         zIndex: "100000000",
+//       }}
+//       className="fx-centered fx-end-h box-pad-h"
+//       onClick={(e) => {
+//         e.stopPropagation();
+//         exit();
+//       }}
+//     >
+//       <div
+//         style={{
+//           height: "90%",
+//           width: "min(100%, 400px)",
+//           backgroundImage: `url(${hero})`,
+//           border: "none",
+//           position: "relative",
+//         }}
+//         className="sc-s bg-img cover-bg fx-centered fx-end-v box-pad-h slide-right"
+//         onClick={(e) => {
+//           e.stopPropagation();
+//         }}
+//       >
+//         <div className="close" onClick={exit}>
+//           <div></div>
+//         </div>
+//         <div
+//           style={{
+//             position: "absolute",
+//             left: 0,
+//             top: 0,
+//             width: "100%",
+//             height: "100%",
+//             zIndex: 0,
+//             background:
+//               "linear-gradient(179.82deg, rgba(0, 0, 0, 0) 19.91%, #000000 93.18%)",
+//           }}
+//           className="fx-centered fx-end-v"
+//         ></div>
+//         <div
+//           className="fit-container fx-centered fx-col"
+//           style={{ height: "50%", position: "relative", zIndex: "1" }}
+//         >
+//           <div
+//             className="yakihonne-logo"
+//             style={{ filter: "brightness(0) invert()" }}
+//           ></div>
+//           <p
+//             className="p-centered"
+//             style={{ maxWidth: "400px", color: "white" }}
+//           >
+//             YakiHonne is a Nostr-based decentralized content media protocol,
+//             which supports free curation, creation, publishing, and reporting by
+//             various media.
+//           </p>
+//           {nostrKeys && (
+//             <div className="fit-container fx-centered box-pad-v fx-col">
+//               <Follow
+//                 toFollowKey={
+//                   "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
+//                 }
+//                 toFollowName={"Yakihonne"}
+//               />
+//               {/* <button className="btn btn-normal">Read about us</button> */}
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };

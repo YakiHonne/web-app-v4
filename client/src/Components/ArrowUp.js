@@ -5,10 +5,9 @@ export default function ArrowUp() {
 
   useEffect(() => {
     const handleScroll = (e) => {
-      let el = document.querySelector(".main-page-nostr-container")
-      if(!el) return
-      if (el.scrollTop >= 600)
-        setShowArrow(true);
+      let el = document.querySelector(".main-page-nostr-container");
+      if (!el) return;
+      if (el.scrollTop >= 600) setShowArrow(true);
       else setShowArrow(false);
     };
     window.addEventListener("scroll", handleScroll, true);
@@ -16,8 +15,8 @@ export default function ArrowUp() {
   }, []);
 
   const straightUp = () => {
-    let el = document.querySelector(".main-page-nostr-container")
-    if(!el) return
+    let el = document.querySelector(".main-page-nostr-container");
+    if (!el) return;
     el.scrollTop = 0;
   };
 
@@ -33,8 +32,7 @@ export default function ArrowUp() {
         borderRadius: "var(--border-r-50)",
         backgroundColor: "var(--white)",
         filter: "invert()",
-        zIndex: 1001
-        // transform: "rotate(180deg)",
+        zIndex: 1001,
       }}
       className="pointer fx-centered slide-up"
       onClick={straightUp}

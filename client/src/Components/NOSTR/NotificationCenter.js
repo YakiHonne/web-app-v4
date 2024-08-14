@@ -1,6 +1,5 @@
 import { SimplePool, nip19 } from "nostr-tools";
 import React, {
-  Fragment,
   useContext,
   useEffect,
   useMemo,
@@ -15,7 +14,7 @@ import {
 } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import { getNoteTree, getVideoContent } from "../../Helpers/Helpers";
+import { getVideoContent } from "../../Helpers/Helpers";
 import Date_ from "../Date_";
 import { Link } from "react-router-dom";
 import Slider from "../Slider";
@@ -250,6 +249,7 @@ export default function NotificationCenter({ icon = false }) {
               style={{
                 backgroundColor: "transparent",
                 zIndex: 100,
+                top: 'unset'
                 // backgroundColor: "var(--very-dim-gray)",
               }}
             >
@@ -654,10 +654,7 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
                     </Link>
                   )}
                   {type.type === "comments" && (
-                    <Link
-                      target="_blank"
-                      to={`/notes/${relatedEvent.nEvent}`}
-                    >
+                    <Link target="_blank" to={`/notes/${relatedEvent.nEvent}`}>
                       <div className="share-icon"></div>
                     </Link>
                   )}

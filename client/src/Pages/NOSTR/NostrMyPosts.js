@@ -1,7 +1,6 @@
 import React, { useContext, useMemo } from "react";
 import { Context } from "../../Context/Context";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import { useState } from "react";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingScreen from "../../Components/LoadingScreen";
@@ -41,10 +40,8 @@ export default function NostrMyPosts() {
   const [relays, setRelays] = useState(relaysOnPlatform);
   const [importantFN, setImportantFN] = useState(false);
   const [activeRelay, setActiveRelay] = useState("");
-  // const [activeRelay, setActiveRelay] = useState(relaysOnPlatform[0]);
   const [posts, setPosts] = useState([]);
   const [tempPosts, setTempPosts] = useState([]);
-  // const [timestamp, setTimestamp] = useState(new Date().getTime());
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [postToDelete, setPostToDelete] = useState(false);
@@ -128,10 +125,7 @@ export default function NostrMyPosts() {
         ]);
 
         setImportantFN(important.data);
-
-        // setIsLoaded(true);
       } catch (err) {
-        // setIsLoaded(true)
         console.log(err);
       }
     };
@@ -538,7 +532,7 @@ export default function NostrMyPosts() {
                                   <div
                                     className="sc-s-18 fx-scattered fx-col"
                                     style={{
-                                      width: "min(100%, 330px)",
+                                      width: "min(100%, 275px)",
                                       position: "relative",
                                       overflow: "visible",
                                     }}

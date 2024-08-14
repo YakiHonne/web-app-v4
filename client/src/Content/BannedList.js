@@ -1,17 +1,3 @@
-// import axios from "axios";
-
-// export default async () => {
-//   try {
-//     let data = await axios.get(
-//       "https://getbannedpubkeys-nfky5vvsma-ew.a.run.app"
-//       // "https://getbannedpubkeys-nfky5vvsma-uc.a.run.app/"
-//     );
-//     return data.data.pubkeys;
-//   } catch {
-//     return [];
-//   }
-// };
-
 let bannedList = [
   "6a4c0d5962f6ece3dd5ed04b78d8daf7143bd7630854e96b0173c296f2772cc6",
   "82c74c1d0743c0895b292709db84fbceedfe7b750e6f24eb21c598c51fbf1f9d",

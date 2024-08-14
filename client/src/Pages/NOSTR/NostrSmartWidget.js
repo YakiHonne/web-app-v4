@@ -10,7 +10,7 @@ import UploadFile from "../../Components/UploadFile";
 import ZapPollsComp from "../../Components/SmartWidget/ZapPollsComp";
 import AddPoll from "../../Components/NOSTR/AddPoll";
 import relaysOnPlatform from "../../Content/Relays";
-import { filterRelays } from "../../Helpers/Encryptions";
+import { decodeBolt11, filterRelays } from "../../Helpers/Encryptions";
 import BrowsePolls from "../../Components/NOSTR/BrowsePolls";
 import widget from "../../media/JSONs/widgets.json";
 import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
@@ -18,8 +18,16 @@ import VideoComp from "../../Components/SmartWidget/VideoComp";
 import ImgComp from "../../Components/SmartWidget/ImgComp";
 import TextComp from "../../Components/SmartWidget/TextComp";
 import ButtonComp from "../../Components/SmartWidget/ButtonComp";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
+import swTemplates from "../../Content/SmartWidgetTemplates";
+import PreviewWidget from "../../Components/SmartWidget/PreviewWidget";
+import Select from "../../Components/NOSTR/Select";
+import Date_ from "../../Components/Date_";
+import OptionsDropdown from "../../Components/NOSTR/OptionsDropdown";
+import UserSearchBar from "../../Components/UserSearchBar";
+import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
+
 const pool = new SimplePool();
 
 const getTypeMetada = (type) => {
@@ -44,12 +52,12 @@ const getTypeMetada = (type) => {
       content: "Button",
       text_color: "",
       url: "",
+      pubkey: "",
       background_color: "",
       type: "regular",
     };
   if (type === "zap-poll")
     return {
-      nevent: "",
       content: "",
       content_text_color: "",
       options_text_color: "",
@@ -70,23 +78,102 @@ const getNostrKeys = () => {
 };
 
 const getTemplate = (template) => {
+  if (!(template && Array.isArray(template))) return [];
   return template.map((container) => {
-    let left_side = container.left_side.map((component) => {
-      return { ...component, id: nanoid() };
-    });
-    let right_side = container.right_side
-      ? container.right_side.map((component) => {
-          return { ...component, id: nanoid() };
-        })
-      : [];
+    let left_side =
+      container.left_side && Array.isArray(container.left_side)
+        ? container.left_side.map((component) => {
+            return { ...component, id: nanoid() };
+          })
+        : [];
+    let right_side =
+      container.right_side && Array.isArray(container.right_side)
+        ? container.right_side.map((component) => {
+            return { ...component, id: nanoid() };
+          })
+        : [];
     return { ...container, left_side, right_side, id: nanoid() };
   });
 };
 
+const buttonTypes = [
+  {
+    display_name: "Regular",
+    value: "regular",
+  },
+  {
+    display_name: "Zap",
+    value: "zap",
+  },
+  {
+    display_name: "NOSTR",
+    value: "nostr",
+  },
+  {
+    display_name: "Youtube",
+    value: "youtube",
+  },
+  {
+    display_name: "Telegram",
+    value: "telegram",
+  },
+  {
+    display_name: "Discord",
+    value: "discord",
+  },
+  {
+    display_name: "X",
+    value: "x",
+  },
+];
+
+const textSizes = [
+  {
+    display_name: "H1",
+    value: "h1",
+  },
+  {
+    display_name: "H2",
+    value: "h2",
+  },
+  {
+    display_name: "Regular body",
+    value: "regular",
+  },
+  {
+    display_name: "Small body",
+    value: "small",
+  },
+];
+
+const textWeights = [
+  {
+    display_name: "Regular",
+    value: "regular",
+  },
+  {
+    display_name: "Bold",
+    value: "bold",
+  },
+];
+
+const imageAspectRatio = [
+  {
+    display_name: "16:9",
+    value: "16:9",
+  },
+  {
+    display_name: "1:1",
+    value: "1:1",
+  },
+];
+
 export default function NostrSmartWidget() {
   let { state } = useLocation();
   let nostrKeys = getNostrKeys();
+
   const [buildOptions, setBuildOptions] = useState(state ? false : true);
+  const [buildOption, setBuildOption] = useState("normal");
   const [template, setTemplate] = useState(
     state ? getTemplate(state.metadata.metadata.components) : []
   );
@@ -97,6 +184,23 @@ export default function NostrSmartWidget() {
     state ? state.metadata.metadata.background_color : ""
   );
   const [postingOption, setPostingOption] = useState(state ? state.ops : "");
+  const [triggerPublish, setTriggerPublish] = useState(false);
+  const [widgetID, setWidgetID] = useState(
+    state ? state?.metadata?.d : nanoid()
+  );
+  const handleSelectTemplate = (comps) => {
+    setTemplate(getTemplate(comps));
+    setBuildOption("normal");
+    setBuildOptions(false);
+  };
+
+  const handleSelectDraft = (draft, publish) => {
+    setWidgetID(draft.id);
+    setContainerBackgroundColor(draft.background_color);
+    setContainerBorderColor(draft.border_color);
+    handleSelectTemplate(draft.components);
+    if (publish) setTriggerPublish(true);
+  };
 
   return (
     <div>
@@ -138,14 +242,34 @@ export default function NostrSmartWidget() {
                     {(nostrKeys.sec || nostrKeys.ext) && (
                       <>
                         {buildOptions && (
-                          <BuildOptions
-                            setTemplate={(data) => {
-                              setBuildOptions(false);
-                              setTemplate(data);
-                            }}
-                            template={template}
-                            back={() => setBuildOptions(false)}
-                          />
+                          <>
+                            {buildOption === "normal" && (
+                              <BuildOptions
+                                setTemplate={(data, newID) => {
+                                  setBuildOptions(false);
+                                  setTemplate(data);
+                                  newID && setWidgetID(nanoid());
+                                }}
+                                template={template}
+                                setBuildOption={(option) =>
+                                  setBuildOption(option)
+                                }
+                                back={() => setBuildOptions(false)}
+                              />
+                            )}
+                            {buildOption === "template" && (
+                              <SWTemplates
+                                setBuildOption={() => setBuildOption("normal")}
+                                setTemplate={handleSelectTemplate}
+                              />
+                            )}
+                            {buildOption === "drafts" && (
+                              <SWDrafts
+                                back={setBuildOption}
+                                setTemplate={handleSelectDraft}
+                              />
+                            )}
+                          </>
                         )}
                         {!buildOptions && (
                           <SmartWidgetBuilder
@@ -158,10 +282,13 @@ export default function NostrSmartWidget() {
                             containerBackgroundColor={containerBackgroundColor}
                             postingOption={postingOption}
                             widget={state ? state.metadata : null}
+                            widgetID={widgetID}
+                            triggerPublish={triggerPublish}
                           />
                         )}
                       </>
                     )}
+
                     {!nostrKeys.sec && !nostrKeys.ext && (
                       <PagePlaceholder page={"nostr-unauthorized"} />
                     )}
@@ -177,16 +304,19 @@ export default function NostrSmartWidget() {
   );
 }
 
-const BuildOptions = ({ setTemplate, template, back }) => {
+const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
   return (
     <div
-      className="fit-container fit-height fx-centered fx-col"
-      style={{ height: "100vh", borderRight: "1px solid var(--pale-gray)" }}
+      className="fit-container fit-height fx-scattered "
+      style={{ height: "100vh" }}
     >
-      <div style={{ width: "400px" }}>
-        <Lottie animationData={widget} loop={true} />
+      <div></div>
+      <div style={{ width: "550px" }} className="fx-centered fx-col">
+        <div style={{ width: "350px" }} className="fx-centered">
+          <Lottie animationData={widget} loop={true} />
+        </div>
         <div className="fx-centered fx-col">
-          <h3>Smart widget builder</h3>
+          <h3 className="p-centered">Smart widget builder</h3>
           <p className="gray-c p-centered">
             Start building and customize your smart widget to use on Nostr
             network
@@ -199,7 +329,7 @@ const BuildOptions = ({ setTemplate, template, back }) => {
           <div
             className="fx fx-centered fx-col sc-s-18 option pointer"
             style={{ height: "200px" }}
-            onClick={() => setTemplate([])}
+            onClick={() => setTemplate([], true)}
           >
             <div className="round-icon">
               <div className="plus-sign"></div>
@@ -209,12 +339,24 @@ const BuildOptions = ({ setTemplate, template, back }) => {
           <div
             className="fx fx-centered fx-col sc-s-18 option pointer"
             style={{ height: "200px" }}
+            onClick={() => setBuildOption("drafts")}
+          >
+            <div
+              className="smart-widget"
+              style={{ minWidth: "48px", height: "64px" }}
+            ></div>
+            <p className="gray-c">My drafts</p>
+          </div>
+          <div
+            className="fx fx-centered fx-col sc-s-18 option pointer"
+            style={{ height: "200px" }}
+            onClick={() => setBuildOption("template")}
           >
             <div
               className="frames"
-              style={{ minWidth: "64px", height: "64px" }}
+              style={{ minWidth: "48px", height: "64px" }}
             ></div>
-            <p className="gray-c">Browse templates</p>
+            <p className="gray-c">Templates</p>
           </div>
         </div>
         {template.length > 0 && (
@@ -229,6 +371,18 @@ const BuildOptions = ({ setTemplate, template, back }) => {
           </div>
         )}
       </div>
+      <div className="desk-hide"></div>
+      <div
+        style={{
+          height: "100vh",
+          backgroundColor: "var(--pale-gray)",
+          width: "1px",
+          position: "sticky",
+          top: 0,
+          margin: "0 .5rem",
+        }}
+        className="mb-hide-800"
+      ></div>
     </div>
   );
 };
@@ -240,8 +394,11 @@ const SmartWidgetBuilder = ({
   containerBackgroundColor,
   postingOption,
   widget,
+  widgetID,
+  triggerPublish,
 }) => {
   const { nostrKeys, nostrUser, setToast, setToPublish } = useContext(Context);
+  const navigateTo = useNavigate();
   const [showComponents, setShowComponents] = useState(false);
   const [componentsTree, setComponentsTree] = useState(
     template.length > 0
@@ -263,11 +420,92 @@ const SmartWidgetBuilder = ({
     useState(containerBackgroundColor);
   const [selectedContainer, setSelectedContainer] = useState(componentsTree[0]);
   const [preview, setPreview] = useState(false);
-  const [showFinalStep, setShowFinalStep] = useState(false);
+  const [showFinalStep, setShowFinalStep] = useState(triggerPublish);
+  const [lastDesgin, setLastDesign] = useState(
+    localStorage.getItem("sw-current-workspace")
+  );
+  const [mbHide, setMbHide] = useState(true);
+  const checkContent = () => {
+    return !(
+      componentsTree.length === 1 &&
+      componentsTree[0].left_side.length === 0 &&
+      componentsTree[0].right_side &&
+      componentsTree[0].right_side.length === 0
+    );
+  };
+  const isThereContent = checkContent();
+  const [showOptions, setShowOptions] = useState(false);
+  const optionsRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let sw = {
+      id: widgetID,
+      last_updated: Math.floor(Date.now() / 1000),
+      background_color: mainContainerBackgroundColor,
+      border_color: mainContainerBorderColor,
+      components: componentsTree,
+    };
+    localStorage.setItem("sw-current-workspace", JSON.stringify(sw));
+
+    let workspaces = localStorage.getItem("sw-workspaces");
+    if (workspaces) {
+      try {
+        workspaces = JSON.parse(workspaces);
+        if (Array.isArray(workspaces)) {
+          let index = workspaces.findIndex(
+            (workspace) => workspace.id === widgetID
+          );
+          if (index !== -1) {
+            workspaces[index] = sw;
+            localStorage.setItem("sw-workspaces", JSON.stringify(workspaces));
+          } else {
+            workspaces.unshift(sw);
+            localStorage.setItem("sw-workspaces", JSON.stringify(workspaces));
+          }
+        } else {
+          localStorage.setItem("sw-workspaces", JSON.stringify([sw]));
+        }
+      } catch (err) {
+        console.log(err);
+        localStorage.setItem("sw-workspaces", JSON.stringify([sw]));
+      }
+    } else {
+      localStorage.setItem("sw-workspaces", JSON.stringify([sw]));
+    }
+  }, [componentsTree, mainContainerBorderColor, mainContainerBackgroundColor]);
+
+  useEffect(() => {
+    const handleOffClick = (e) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target))
+        setShowOptions(false);
+    };
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [optionsRef]);
+
+  const loadLastDesign = () => {
+    if (lastDesgin) {
+      try {
+        let parsedSW = JSON.parse(lastDesgin);
+        console.log(parsedSW);
+        setMainContainerBackgroundColor(parsedSW.background_color);
+        setMainContainerBorderColor(parsedSW.border_color);
+        setComponentsTree(parsedSW.components);
+        setLastDesign(false);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  };
 
   const handleAddComponent = (type) => {
     let tempArray = Array.from(componentsTree);
-    let index = tempArray.findIndex((comp) => comp.id === selectedContainer.id);
+    let index = tempArray.findIndex(
+      (comp) => comp?.id === selectedContainer.id
+    );
     if (index !== -1) {
       let tempId = nanoid();
       let tempComp = {
@@ -285,7 +523,7 @@ const SmartWidgetBuilder = ({
   };
   const handleAddContainer = (containerId) => {
     let tempArray = Array.from(componentsTree);
-    let index = tempArray.findIndex((comp) => comp.id === containerId);
+    let index = tempArray.findIndex((comp) => comp?.id === containerId);
     if (index !== -1) {
       let newContainer = {
         id: nanoid(),
@@ -309,7 +547,9 @@ const SmartWidgetBuilder = ({
   };
   const handleSelectedLayerMetadata = (metadata) => {
     let tempArray = Array.from(componentsTree);
-    let index = tempArray.findIndex((comp) => comp.id === selectedContainer.id);
+    let index = tempArray.findIndex(
+      (comp) => comp?.id === selectedContainer.id
+    );
     if (index !== -1) {
       let index_left = tempArray[index].left_side.findIndex(
         (comp_) => comp_.id === metadata.id
@@ -356,13 +596,21 @@ const SmartWidgetBuilder = ({
   const handleContainerOps = (opsKind, metadata) => {
     let changeSection = () => {
       let tempArray = Array.from(componentsTree);
-      let index = tempArray.findIndex((comp) => comp.id === metadata.id);
+      let index = tempArray.findIndex((comp) => comp?.id === metadata.id);
       let layout = metadata.layout || 1;
       let division = metadata.division || "1:1";
 
       if (index !== -1) {
         tempArray[index].layout = layout;
         tempArray[index].division = division;
+        if (
+          layout == 1 &&
+          tempArray[index].left_side.length === 0 &&
+          tempArray[index].right_side.length > 0
+        ) {
+          tempArray[index].left_side = tempArray[index].right_side;
+          tempArray[index].right_side = [];
+        }
         setComponentsTree(tempArray);
       }
     };
@@ -418,7 +666,9 @@ const SmartWidgetBuilder = ({
   };
   const checkMonoLayer = () => {
     let tempArray = Array.from(componentsTree);
-    let index = tempArray.findIndex((comp) => comp.id === selectedContainer.id);
+    let index = tempArray.findIndex(
+      (comp) => comp?.id === selectedContainer.id
+    );
     if (index !== -1) {
       if (tempArray[index].layout === 1) return true;
       return false;
@@ -440,7 +690,6 @@ const SmartWidgetBuilder = ({
     }
     back([]);
   };
-
   const handlShowFinalStep = () => {
     let content = componentsTree.filter(
       (component) =>
@@ -463,6 +712,14 @@ const SmartWidgetBuilder = ({
       ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
       : relaysOnPlatform;
     let tags;
+    if (!title) {
+      setToast({
+        type: 3,
+        desc: "You need to have a title to your widget",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     if (!postingOption || postingOption === "clone")
       tags = [
@@ -476,6 +733,7 @@ const SmartWidgetBuilder = ({
         ["title", title],
         ["summary", summary],
       ];
+
     if (postingOption === "edit")
       tags = [
         ["d", widget.d],
@@ -499,6 +757,7 @@ const SmartWidgetBuilder = ({
         type: 3,
         desc: "The smart widget should have at least one component",
       });
+      setIsLoading(false);
       return;
     }
 
@@ -508,6 +767,9 @@ const SmartWidgetBuilder = ({
       let tempLeftSide = tempComp.left_side.map((innerComp) => {
         let tempInnerComp = { ...innerComp };
         delete tempInnerComp.id;
+        if (tempInnerComp.type === "zap-poll") {
+          delete tempInnerComp.metadata.nevent;
+        }
         return tempInnerComp;
       });
       let tempRightSide =
@@ -529,11 +791,7 @@ const SmartWidgetBuilder = ({
       background_color: mainContainerBackgroundColor,
       components,
     });
-    // setToast({
-    //   type: 1,
-    //   desc: "Good",
-    // });
-    // return;
+
     let tempEvent = {
       created_at,
       kind: 30031,
@@ -545,6 +803,7 @@ const SmartWidgetBuilder = ({
         tempEvent = await window.nostr.signEvent(tempEvent);
       } catch (err) {
         console.log(err);
+        setIsLoading(false);
         return false;
       }
     } else {
@@ -566,9 +825,27 @@ const SmartWidgetBuilder = ({
           });
           setShowFinalStep(false);
           sub.close();
+          deleteDraft();
+          navigateTo("/smart-widgets");
         },
       }
     );
+  };
+
+  const deleteDraft = () => {
+    let tempArray = getDrafts();
+    let index = tempArray.findIndex((widget_) => widget_.id === widgetID);
+    if (index !== -1) {
+      tempArray.splice(index, 1);
+      localStorage.setItem("sw-workspaces", JSON.stringify(tempArray));
+    }
+  };
+
+  const handleSelectedTemplate = (sample) => {
+    setMainContainerBackgroundColor(sample.background_color);
+    setMainContainerBorderColor(sample.border_color);
+    setComponentsTree(getTemplate(sample.components));
+    setShowOptions(false);
   };
 
   return (
@@ -579,6 +856,8 @@ const SmartWidgetBuilder = ({
           description={widget ? widget.description : ""}
           publish={postWidget}
           exit={() => setShowFinalStep(false)}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
         />
       )}
       {showComponents && (
@@ -593,8 +872,8 @@ const SmartWidgetBuilder = ({
       )}
       <div className="fit-container fx-centered fx-start-h fx-start-v">
         <div
-          style={{ width: "min(100%,700px)" }}
-          className="box-pad-h-m box-pad-v"
+          style={{ width: "min(100%,800px)", flex: 1.5 }}
+          className={` ${!mbHide ? "mb-hide-800" : ""}`}
         >
           <div className="fit-container fx-scattered box-marg-s sticky">
             <div className="fx-centered">
@@ -632,6 +911,91 @@ const SmartWidgetBuilder = ({
               >
                 Post my widget
               </button>
+              <div style={{ position: "relative" }} ref={optionsRef}>
+                <div
+                  className="round-icon-small round-icon-tooltip"
+                  data-tooltip="Templates"
+                  onClick={() => setShowOptions(!showOptions)}
+                >
+                  <div className="frames"></div>
+                </div>
+                {showOptions && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "110%",
+                      border: "none",
+                      maxWidth: "400px",
+
+                      maxHeight: "400px",
+                      overflow: "scroll",
+                      width: "max-content",
+                      zIndex: 1000,
+                      rowGap: "0",
+                    }}
+                    className="sc-s-18 fx-centered fx-col fx-start-v fx-start-h pointer box-pad-v-s"
+                  >
+                    {swTemplates.map((category, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="fit-container fx-scattered sc-s-18 pointer box-pad-h-m"
+                          style={{
+                            border: "none",
+                            overflow: "visible",
+                            borderRadius: 0,
+                            padding: ".25rem 1rem",
+                          }}
+                        >
+                          <div className="fit-container fx-centered fx-start-h fx-start-v fx-col">
+                            <p className="gray-c">{category.title}</p>
+                            <div className="fit-container fx-centered fx-start-h fx-start-v fx-wrap">
+                              {category.samples.map((sample, index_) => {
+                                return (
+                                  <div
+                                    key={index_}
+                                    className="option fit-container fx-centered fx-start-h sc-s-18 pointer fx-col"
+                                    style={{
+                                      border: "none",
+                                      width: "48%",
+                                      overflow: "visible",
+                                      // borderRadius: 0,
+                                      // padding: ".25rem 1rem",
+                                    }}
+                                    onClick={() =>
+                                      handleSelectedTemplate(sample.metadata)
+                                    }
+                                  >
+                                    <div
+                                      style={{
+                                        // minWidth: "100px",
+                                        // maxWidth: "100px",
+                                        width: "100%",
+                                        aspectRatio: "16/9",
+                                        backgroundImage: `url(${sample.thumbnail})`,
+                                      }}
+                                      className="bg-img cover-bg sc-s-18"
+                                    ></div>
+                                    <p className="p-medium">{sample.title}</p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div
+                className="round-icon-small desk-hide round-icon-tooltip"
+                data-tooltip="See layers"
+                onClick={() => setMbHide(false)}
+              >
+                <div className="layers"></div>
+              </div>
             </div>
           </div>
           <div
@@ -647,6 +1011,7 @@ const SmartWidgetBuilder = ({
                 return (
                   <EditContainer
                     key={com.id}
+                    pubkey={nostrKeys.pub}
                     metadata={com}
                     showComponents={(data) => {
                       setSelectedContainer(data);
@@ -667,20 +1032,76 @@ const SmartWidgetBuilder = ({
                   />
                 );
               if (preview)
-                return <PreviewContainer key={com.id} metadata={com} />;
+                return (
+                  <PreviewContainer
+                    key={com.id}
+                    metadata={com}
+                    pubkey={nostrKeys.pub}
+                  />
+                );
             })}
           </div>
+          {!isThereContent && lastDesgin && (
+            <div className="fit-container fx-centered box-pad-v">
+              <div
+                className="round-icon purple-pulse round-icon-tooltip"
+                data-tooltip="Load last desgin"
+                onClick={loadLastDesign}
+              >
+                <div className="upload-file"></div>
+              </div>
+            </div>
+          )}
+          {/* {componentsTree.length === 1 &&
+            componentsTree[0].left_side.length === 0 && (
+              <div className="fit-container fx-centered box-pad-v">
+                <div
+                  className="round-icon purple-pulse round-icon-tooltip"
+                  data-tooltip="Load last desgin"
+                  onClick={loadLastDesign}
+                >
+                  <div className="upload-file"></div>
+                </div>
+              </div>
+            )} */}
         </div>
+        <div
+          style={{
+            height: "100vh",
+            backgroundColor: "var(--pale-gray)",
+            width: "1px",
+            position: "sticky",
+            top: 0,
+            margin: "0 .5rem",
+          }}
+          className="mb-hide-800"
+        ></div>
         <div
           style={{
             width: "min(100%,400px)",
             height: "100vh",
             overflow: "scroll",
-            padding: "1rem",
-            borderLeft: "1px solid var(--pale-gray)",
+            flex: 1,
+            // padding: "1rem",
+            // borderLeft: "1px solid var(--pale-gray)",
           }}
-          className="box-pad-h-m box-pad-v sticky"
+          className={`box-pad-h-m box-pad-v sticky ${
+            mbHide ? "mb-hide-800" : ""
+          }`}
         >
+          <div className="fx-centered fx-start-h fit-container box-marg-s desk-hide">
+            <div
+              className="round-icon-small  round-icon-tooltip "
+              onClick={() => setMbHide(true)}
+              data-tooltip="Back"
+            >
+              <div
+                className="arrow"
+                style={{ rotate: "90deg", scale: ".7" }}
+              ></div>
+            </div>
+            <p>Back to preview</p>
+          </div>
           <div className="fit-container fx-scattered">
             <h4 className="orange-c box-marg-s fit-container">Customize</h4>
             {/* <div className="arrow"></div> */}
@@ -714,8 +1135,6 @@ const SmartWidgetBuilder = ({
                   <div
                     className="round-icon-small"
                     style={{
-                      // maxWidth: "24px",
-                      // maxHeight: "24px",
                       backgroundColor: mainContainerBackgroundColor,
                       position: "relative",
                       zIndex: 2,
@@ -758,8 +1177,6 @@ const SmartWidgetBuilder = ({
                   <div
                     className="round-icon-small"
                     style={{
-                      // maxWidth: "24px",
-                      // maxHeight: "24px",
                       backgroundColor: mainContainerBorderColor,
                       position: "relative",
                       zIndex: 2,
@@ -795,12 +1212,17 @@ const SmartWidgetBuilder = ({
           <div className="fit-container fx-centered fx-col fx-start-v box-pad-v-m">
             {componentsTree.map((comp, index) => {
               return (
-                <div className="fit-container fx-centered fx-col" key={comp.id}>
+                <div
+                  className="fit-container fx-centered fx-col"
+                  key={comp?.id}
+                >
                   <div
                     className="fit-container fx-scattered sc-s"
                     style={{
                       borderColor:
-                        selectedContainer?.id === comp.id ? "var(--black)" : "",
+                        selectedContainer?.id === comp?.id
+                          ? "var(--black)"
+                          : "",
                       padding: ".5rem",
                       borderRadius: "var(--border-r-6)",
                       backgroundColor: "transparent",
@@ -820,7 +1242,7 @@ const SmartWidgetBuilder = ({
                   <div className="fit-container fx-scattered">
                     <div style={{ minWidth: "16px" }}></div>
                     <div className="fit-container fx-centered fx-col">
-                      {comp.left_side.map((innerComp, compIndex) => {
+                      {comp?.left_side.map((innerComp, compIndex) => {
                         return (
                           <div
                             className="fit-container fx-scattered sc-s pointer"
@@ -852,8 +1274,8 @@ const SmartWidgetBuilder = ({
                           </div>
                         );
                       })}
-                      {comp.right_side &&
-                        comp.right_side.map((innerComp, compIndex) => {
+                      {comp?.right_side &&
+                        comp?.right_side.map((innerComp, compIndex) => {
                           return (
                             <div
                               className="fit-container fx-scattered sc-s pointer"
@@ -911,6 +1333,7 @@ const EditContainer = ({
   setSelectedLayer,
   totalContainers,
   index,
+  pubkey,
 }) => {
   const optionsRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
@@ -962,32 +1385,32 @@ const EditContainer = ({
               className="fx-centered fx-col"
             >
               {metadata.left_side?.map((comp) => {
-                if (comp.type === "video")
+                if (comp?.type === "video")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
                       onClick={() => setSelectedLayer(metadata, comp)}
                     >
-                      <VideoComp url={comp.metadata.url} />
+                      <VideoComp url={comp?.metadata?.url} />
                     </div>
                   );
-                if (comp.type === "zap-poll")
+                if (comp?.type === "zap-poll")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
@@ -998,75 +1421,80 @@ const EditContainer = ({
                         style={{ pointerEvents: "none" }}
                       >
                         <ZapPollsComp
-                          nevent={comp.metadata.nevent}
+                          nevent={comp?.metadata?.nevent}
                           event={
-                            comp.metadata.content
-                              ? JSON.parse(comp.metadata.content)
+                            comp?.metadata?.content
+                              ? JSON.parse(comp?.metadata?.content)
                               : null
                           }
-                          content_text_color={comp.metadata.content_text_color}
-                          options_text_color={comp.metadata.options_text_color}
+                          content_text_color={
+                            comp?.metadata?.content_text_color
+                          }
+                          options_text_color={
+                            comp?.metadata?.options_text_color
+                          }
                           options_background_color={
-                            comp.metadata.options_background_color
+                            comp?.metadata?.options_background_color
                           }
                           options_foreground_color={
-                            comp.metadata.options_foreground_color
+                            comp?.metadata?.options_foreground_color
                           }
+                          edit={true}
                         />
                       </div>
                     </div>
                   );
-                if (comp.type === "image")
+                if (comp?.type === "image")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
                       onClick={() => setSelectedLayer(metadata, comp)}
                     >
                       <ImgComp
-                        url={comp.metadata.url}
-                        aspectRatio={comp.metadata.aspect_ratio}
+                        url={comp?.metadata?.url}
+                        aspectRatio={comp?.metadata?.aspect_ratio}
                       />
                     </div>
                   );
-                if (comp.type === "text")
+                if (comp?.type === "text")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
                       onClick={() => setSelectedLayer(metadata, comp)}
                     >
                       <TextComp
-                        content={comp.metadata.content}
-                        size={comp.metadata.size}
-                        weight={comp.metadata.weight}
-                        textColor={comp.metadata.text_color}
+                        content={comp?.metadata?.content}
+                        size={comp?.metadata?.size}
+                        weight={comp?.metadata?.weight}
+                        textColor={comp?.metadata?.text_color}
                       />
                     </div>
                   );
-                if (comp.type === "button")
+                if (comp?.type === "button")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
@@ -1077,11 +1505,12 @@ const EditContainer = ({
                         style={{ pointerEvents: "none" }}
                       >
                         <ButtonComp
-                          content={comp.metadata.content}
-                          textColor={comp.metadata.text_color}
-                          url={comp.metadata.url}
-                          backgroundColor={comp.metadata.background_color}
-                          type={comp.metadata.type}
+                          content={comp?.metadata?.content}
+                          textColor={comp?.metadata?.text_color}
+                          url={comp?.metadata?.url}
+                          backgroundColor={comp?.metadata?.background_color}
+                          type={comp?.metadata?.type}
+                          recipientPubkey={pubkey}
                         />
                       </div>
                     </div>
@@ -1113,74 +1542,74 @@ const EditContainer = ({
               className="fx-centered fx-col"
             >
               {metadata.right_side?.map((comp) => {
-                if (comp.type === "video")
+                if (comp?.type === "video")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       onClick={() => setSelectedLayer(metadata, comp)}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
                     >
-                      <VideoComp url={comp.metadata.url} />
+                      <VideoComp url={comp?.metadata?.url} />
                     </div>
                   );
-                if (comp.type === "image")
+                if (comp?.type === "image")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       onClick={() => setSelectedLayer(metadata, comp)}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
                     >
                       <ImgComp
-                        url={comp.metadata.url}
-                        aspectRatio={comp.metadata.aspect_ratio}
+                        url={comp?.metadata?.url}
+                        aspectRatio={comp?.metadata?.aspect_ratio}
                       />
                     </div>
                   );
-                if (comp.type === "text")
+                if (comp?.type === "text")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       onClick={() => setSelectedLayer(metadata, comp)}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
                     >
                       <TextComp
-                        content={comp.metadata.content}
-                        size={comp.metadata.size}
-                        weight={comp.metadata.weight}
-                        textColor={comp.metadata.text_color}
+                        content={comp?.metadata?.content}
+                        size={comp?.metadata?.size}
+                        weight={comp?.metadata?.weight}
+                        textColor={comp?.metadata?.text_color}
                       />
                     </div>
                   );
-                if (comp.type === "button")
+                if (comp?.type === "button")
                   return (
                     <div
                       className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp.id}
+                      key={comp?.id}
                       style={{
                         borderRadius: "14px",
                         borderColor:
-                          selectedLayer && selectedLayer.id === comp.id
+                          selectedLayer && selectedLayer.id === comp?.id
                             ? "var(--orange-main)"
                             : "",
                       }}
@@ -1191,11 +1620,12 @@ const EditContainer = ({
                         style={{ pointerEvents: "none" }}
                       >
                         <ButtonComp
-                          content={comp.metadata.content}
-                          textColor={comp.metadata.text_color}
-                          url={comp.metadata.url}
-                          backgroundColor={comp.metadata.background_color}
-                          type={comp.metadata.type}
+                          content={comp?.metadata?.content}
+                          textColor={comp?.metadata?.text_color}
+                          url={comp?.metadata?.url}
+                          backgroundColor={comp?.metadata?.background_color}
+                          type={comp?.metadata?.type}
+                          recipientPubkey={pubkey}
                         />
                       </div>
                     </div>
@@ -1478,10 +1908,16 @@ const EditContainer = ({
   );
 };
 
-const FinilizePublishing = ({ title, description, exit, publish }) => {
+const FinilizePublishing = ({
+  title,
+  description,
+  exit,
+  publish,
+  isLoading,
+  setIsLoading,
+}) => {
   const [title_, setTitle] = useState(title || "");
   const [description_, setDescription] = useState(description || "");
-  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="fixed-container box-pad-h fx-centered">
@@ -1618,6 +2054,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
   const { nostrUser } = useContext(Context);
   const [showAddPoll, setShowAddPoll] = useState(false);
   const [showBrowsePolls, setShowBrowsePolls] = useState(false);
+  const [invoiceData, setInvoicedata] = useState(false);
 
   const handleMetadata = (key, value) => {
     let tempMetadata = {
@@ -1672,7 +2109,35 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         }
       );
     }
+    if (metadata.type === "button" && metadata.metadata.type === "zap") {
+      if (metadata.metadata.url.startsWith("lnbc")) {
+        setInvoicedata(true);
+      } else if (!metadata.metadata.url) setInvoicedata(invoiceData);
+      else {
+        setInvoicedata(false);
+      }
+    }
   }, [metadata]);
+
+  const extractnpub = (input) => {
+    const regex = /\b(np(?:ub|rofile|event)\w*)\b/;
+
+    const match = input.match(regex);
+
+    return match ? match[0] : null;
+  };
+
+  const getButtonURL = (value) => {
+    if (metadata.type === "button" && metadata.metadata.type === "nostr")
+      return extractnpub(value);
+    return value;
+  };
+
+  const handleUserMetadata = (data) => {
+    if (data.lud16) {
+      handleMetadata("url", data.lud16);
+    }
+  };
 
   if (metadata.type === "image")
     return (
@@ -1694,14 +2159,12 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         </div>
         <div className="fit-container fx-scattered">
           <p>Aspect ratio</p>
-          <select
-            className="if"
-            onChange={(e) => handleMetadata("aspect_ratio", e.target.value)}
+          <Select
+            options={imageAspectRatio}
+            setSelectedValue={(value) => handleMetadata("aspect_ratio", value)}
             value={metadata.metadata.aspect_ratio}
-          >
-            <option value="16:9">16:9</option>
-            <option value="1:1">1:1</option>
-          </select>
+            defaultLabel="-- Aspect ratio --"
+          />
         </div>
       </div>
     );
@@ -1743,27 +2206,21 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         </div>
         <div className="fit-container fx-scattered">
           <p>Size</p>
-          <select
-            className="if"
-            onChange={(e) => handleMetadata("size", e.target.value)}
+          <Select
+            options={textSizes}
+            setSelectedValue={(value) => handleMetadata("size", value)}
             value={metadata.metadata.size}
-          >
-            <option value="h1">H1</option>
-            <option value="h2">H2</option>
-            <option value="regular">Regular body</option>
-            <option value="small">Small body</option>
-          </select>
+            defaultLabel="-- Text sizes --"
+          />
         </div>
         <div className="fit-container fx-scattered">
           <p>Weight</p>
-          <select
-            className="if"
-            onChange={(e) => handleMetadata("weight", e.target.value)}
+          <Select
+            options={textWeights}
+            setSelectedValue={(value) => handleMetadata("weight", value)}
             value={metadata.metadata.weight}
-          >
-            <option value="regular">Regular</option>
-            <option value="bold">Bold</option>
-          </select>
+            defaultLabel="-- Text weights --"
+          />
         </div>
         <div className="fx-scattered fit-container">
           <p>Text color</p>
@@ -1822,18 +2279,60 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           />
         </div>
         <div className="fit-container fx-centered fx-col">
+          {metadata.metadata.type === "zap" && (
+            <div
+              className="fx-scattered fit-container if pointer"
+              onClick={() => {
+                setInvoicedata(!invoiceData);
+                handleMetadata("url", "");
+              }}
+            >
+              <p>Use invoice</p>
+              <div
+                className={`toggle ${!invoiceData ? "toggle-dim-gray" : ""} ${
+                  invoiceData ? "toggle-c1" : "toggle-dim-gray"
+                }`}
+              ></div>
+            </div>
+          )}
           <input
             type="text"
             placeholder={
               metadata.metadata.type === "zap"
-                ? "Invoice / Lightning address"
+                ? invoiceData
+                  ? "Invoice"
+                  : "Lightning address"
                 : "URL"
             }
             className="if ifs-full"
             value={metadata.metadata.url}
-            onChange={(e) => handleMetadata("url", e.target.value)}
+            onChange={(e) =>
+              handleMetadata("url", getButtonURL(e.target.value))
+            }
           />
-          {metadata.metadata.type === "zap" && (
+
+          {metadata.metadata.type === "zap" && !invoiceData && (
+            <>
+              {!metadata.metadata?.pubkey && (
+                <UserSearchBar
+                  onClick={(pubkey) => handleMetadata("pubkey", pubkey)}
+                  full={true}
+                  placeholder="Search user to send as zap (optional)"
+                />
+              )}
+              {metadata.metadata?.pubkey && (
+                <NProfilePreviewer
+                  pubkey={metadata.metadata?.pubkey || ""}
+                  margin={false}
+                  close={true}
+                  showSharing={false}
+                  onClose={() => handleMetadata("pubkey", "")}
+                  setMetataData={handleUserMetadata}
+                />
+              )}
+            </>
+          )}
+          {metadata.metadata.type === "zap" && invoiceData && (
             <p className="gray-c p-medium">
               Generate an invoice in the{" "}
               <a href="/wallet" className="orange-c" target="_blank">
@@ -1949,19 +2448,13 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
 
         <div className="fit-container fx-scattered">
           <p>Button type</p>
-          <select
+          <Select
+            options={buttonTypes}
             className="if"
-            onChange={(e) => handleMetadata("type", e.target.value)}
+            setSelectedValue={(value) => handleMetadata("type", value)}
             value={metadata.metadata.type}
-          >
-            <option value="regular">Regular</option>
-            <option value="zap">Zap</option>
-            <option value="nostr">NOSTR</option>
-            <option value="youtube">Youtube</option>
-            <option value="telegram">Telegram</option>
-            <option value="discord">Discord</option>
-            <option value="x">X</option>
-          </select>
+            defaultLabel="-- Button types --"
+          />
         </div>
       </div>
     );
@@ -2188,4 +2681,242 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         </div>
       </>
     );
+};
+
+const SWTemplates = ({ setBuildOption, setTemplate }) => {
+  const [selectedTemplate, setSelectedTemplate] = useState(false);
+  const useTemplate = () => {
+    setTemplate(selectedTemplate.metadata.components);
+    setSelectedTemplate(false);
+  };
+
+  return (
+    <>
+      {selectedTemplate && (
+        <SWTemplate
+          template={selectedTemplate}
+          exit={() => setSelectedTemplate(false)}
+          useTemplate={useTemplate}
+        />
+      )}
+      <div
+        className="fit-container fit-height fx-centered fx-col fx-start-h fx-start-v box-pad-h-s box-pad-v-m"
+        style={{
+          mimnHeight: "100vh",
+        }}
+      >
+        <div className="fx-centered box-marg-s fx-start-h fit-container">
+          <div
+            className="round-icon-small round-icon-tooltip"
+            data-tooltip="Change plan"
+            onClick={() => setBuildOption("normal")}
+          >
+            <div className="arrow" style={{ rotate: "90deg" }}></div>
+          </div>
+          <h3>Templates</h3>
+        </div>
+        <div
+          className="fit-container fx-centered fx-col fx-start-h fx-start-v"
+          style={{ rowGap: "16px" }}
+        >
+          {swTemplates.map((template, index) => {
+            return (
+              <div
+                className="fit-container fx-centered fx-col fx-start-h fx-start-v"
+                style={{ rowGap: "16px" }}
+                key={index}
+              >
+                <h4>{template.title}</h4>
+                <div className="fit-container fx-wrap fx-centered fx-start-h fx-start-v">
+                  {template.samples.map((sample, index) => {
+                    return (
+                      <div
+                        className="fx-centered fx-col pointer"
+                        key={index}
+                        onClick={() => setSelectedTemplate(sample)}
+                        style={{ flex: "1 1 250px" }}
+                      >
+                        <div
+                          style={{
+                            // flex: "1 1 250px",
+                            width: "100%",
+                            aspectRatio: "16/9",
+                            backgroundImage: `url(${sample.thumbnail})`,
+                          }}
+                          className="bg-img cover-bg sc-s-18"
+                        ></div>
+                        <p className="gray-c">{sample.title}</p>
+                      </div>
+                    );
+                  })}
+                  <div style={{ flex: "1 1 250px" }}></div>
+                  <div style={{ flex: "1 1 250px" }}></div>
+                  <div style={{ flex: "1 1 250px" }}></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+};
+
+const SWTemplate = ({ template, useTemplate, exit }) => {
+  return (
+    <div
+      className="fixed-container box-pad-h fx-centered"
+      onClick={(e) => {
+        e.stopPropagation();
+        exit();
+      }}
+    >
+      <div
+        style={{
+          width: "min(100%, 600px)",
+          maxHeight: "90vh",
+          overflow: "scroll",
+          position: "relative",
+        }}
+        className="sc-s-18 fx-centered fx-start-h fx-start-v fx-col slide-up"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        <div
+          className="fit-container fx-centered fx-start-h fx-start-v fx-col box-pad-h-m"
+          style={{ paddingTop: "1rem" }}
+        >
+          <div className="fx-scattered fit-container">
+            <h4>{template.title}</h4>
+            <div
+              className="close"
+              style={{ position: "static" }}
+              onClick={exit}
+            >
+              <div></div>
+            </div>
+          </div>
+          <p className="gray-c">{template.description}</p>
+        </div>
+        <div
+          className="box-pad-h-m fit-container"
+          // style={{ pointerEvents: "none" }}
+          // onClick={() => null}
+        >
+          <PreviewWidget
+            widget={template.metadata}
+            pubkey={process.env.REACT_APP_YAKI_PUBKEY}
+          />
+        </div>
+        <div
+          style={{ position: "sticky", bottom: "-.5px", padding: "1rem" }}
+          className="sticky fit-container fx-centered"
+          onClick={useTemplate}
+        >
+          <button className="btn btn-orange btn-full">Use template</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SWDrafts = ({ back, setTemplate }) => {
+  const { nostrKeys } = useContext(Context);
+  const [drafts, setDrafts] = useState(getDrafts());
+  const deleteDraft = (index) => {
+    let tempArray = Array.from(drafts);
+    tempArray.splice(index, 1);
+    setDrafts(tempArray);
+    localStorage.setItem("sw-workspaces", JSON.stringify(tempArray));
+  };
+  return (
+    <div className="box-pad-v">
+      {drafts.length > 0 && (
+        <div className="fx-centered box-marg-s fx-start-h fit-container">
+          <div
+            className="round-icon-small round-icon-tooltip"
+            data-tooltip="Change plan"
+            onClick={() => back("normal")}
+          >
+            <div className="arrow" style={{ rotate: "90deg" }}></div>
+          </div>
+          <h3>Drafts</h3>
+        </div>
+      )}
+      {drafts.length > 0 && (
+        <div className="fit-container fx-centered fx-wrap fx-start-h fx-start-v">
+          {drafts?.map((draft, index) => {
+            return (
+              <div
+                style={{ width: "min(100%, 500px)", overflow: "visible" }}
+                key={draft.id}
+                className="fit-container fx-centered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
+              >
+                <div className="fit-container fx-scattered">
+                  <div>
+                    <p className="gray-c p-medium">Last updated</p>
+                    <Date_
+                      toConvert={
+                        new Date(draft?.last_updated * 1000 || Date.now())
+                      }
+                      time={true}
+                    />
+                  </div>
+                  <OptionsDropdown
+                    options={[
+                      <div onClick={() => setTemplate(draft, true)}>
+                        Publish
+                      </div>,
+                      <div onClick={() => setTemplate(draft)}>Edit</div>,
+                      <div className="red-c" onClick={() => deleteDraft(index)}>
+                        Delete
+                      </div>,
+                    ]}
+                  />
+                </div>
+
+                {(draft.components.length === 1 &&
+                  (draft.components[0].left_side.length > 0 ||
+                    draft.components[0].right_side.length > 0)) ||
+                draft.components.length > 1 ? (
+                  <PreviewWidget widget={draft} pubkey={nostrKeys.pub} />
+                ) : (
+                  <div
+                    className="fit-container fx-centered fx-col"
+                    style={{ height: "150px" }}
+                  >
+                    <div className="smart-widget-24"></div>
+                    <p className="gray-c p-medium">Empty widget</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {/* <div style={{ flex: "1 1 400px" }}></div>
+          <div style={{ flex: "1 1 400px" }}></div> */}
+        </div>
+      )}
+      {drafts.length === 0 && (
+        <PagePlaceholder
+          page={"widgets-draft"}
+          onClick={() => back("normal")}
+        />
+      )}
+    </div>
+  );
+};
+
+const getDrafts = () => {
+  try {
+    let drafts = localStorage.getItem("sw-workspaces");
+    if (drafts) {
+      drafts = JSON.parse(drafts);
+      if (Array.isArray(drafts)) return drafts;
+      return [];
+    }
+    return [];
+  } catch (err) {
+    return [];
+  }
 };

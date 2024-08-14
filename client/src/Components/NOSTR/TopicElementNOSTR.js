@@ -2,13 +2,9 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import Date_ from "../Date_";
 import { useNavigate } from "react-router-dom";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import relaysOnPlatform from "../../Content/Relays";
-import { SimplePool } from "nostr-tools";
 import { Context } from "../../Context/Context";
-import { convertDate, getParsed3000xContent } from "../../Helpers/Encryptions";
+import { getParsed3000xContent } from "../../Helpers/Encryptions";
 import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
-
-const pool = new SimplePool();
 
 export default function TopicElementNOSTR({ topic, full = false }) {
   const navigateTo = useNavigate();
@@ -67,7 +63,7 @@ export default function TopicElementNOSTR({ topic, full = false }) {
       style={{
         backgroundImage: `url(${content.image})`,
         border: "none",
-        height: "150px"
+        height: "150px",
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -125,9 +121,7 @@ const AuthorPreview = ({ author }) => {
         user_id={author.author_pubkey}
         ring={false}
       />
-      <p style={{ color: "white" }}>
-        {author.author_name}
-      </p>
+      <p style={{ color: "white" }}>{author.author_name}</p>
     </div>
   );
 };

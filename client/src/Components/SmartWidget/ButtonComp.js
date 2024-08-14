@@ -1,22 +1,55 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { getLinkFromAddr } from "../../Helpers/Helpers";
+import ZapTip from "../NOSTR/ZapTip";
+import { Context } from "../../Context/Context";
+import { getEmptyNostrUser, getHex } from "../../Helpers/Encryptions";
+
+const getPubkey = (pubkey, url) => {
+  if (!url || url.startsWith("lnbc")) return false;
+  try {
+    if (pubkey.startsWith("npub")) return getHex(pubkey);
+    return pubkey;
+  } catch (err) {
+    return pubkey;
+  }
+};
 
 export default function ButtonComp({
   content,
   textColor,
   url,
   backgroundColor,
+  recipientPubkey,
   type,
 }) {
+  const { nostrKeys, nostrAuthors, getNostrAuthor } = useContext(Context);
+  let pubkey = getPubkey(recipientPubkey, url);
+  const [author, setAuthor] = useState(pubkey ? getEmptyNostrUser(pubkey) : false);
+
+  useEffect(() => {
+    if (pubkey) {
+      try {
+        let auth = getNostrAuthor(pubkey);
+        if (auth) {
+          setAuthor(auth);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }, [nostrAuthors]);
+
   const getUrl = () => {
     if (!type) return "/";
     if (["regular", "youtube", "discord", "x", "telegram"].includes(type))
       return url;
     if (type === "zap") return false;
     if (type === "nostr") {
-      return getLinkFromAddr(url)
+      return getLinkFromAddr(url);
     }
+    return "/";
   };
+
   const getButtonColor = () => {
     if (!type || type === "regular" || type === "zap")
       return { color: textColor, backgroundColor };
@@ -27,12 +60,17 @@ export default function ButtonComp({
     if (type === "x") return { color: "white", backgroundColor: "#000000" };
     if (type === "telegram")
       return { color: "white", backgroundColor: "#24A1DE" };
-    if (type === "nost")
-      return { color: "white", backgroundColor: "" };
+    if (type === "nostr") return { color: "white", backgroundColor: "" };
+    return { color: "white", backgroundColor: "" };
   };
 
-  const buttonUrl = getUrl();
-  const buttonColor = getButtonColor();
+  const [buttonUrl, setButtonUrl] = useState(getUrl());
+  const [buttonColor, setButtonColor] = useState(getButtonColor());
+
+  useEffect(() => {
+    setButtonColor(getButtonColor());
+    setButtonUrl(getUrl());
+  }, [type]);
 
   if (buttonUrl !== false)
     return (
@@ -50,12 +88,29 @@ export default function ButtonComp({
         </button>
       </a>
     );
+
   return (
-    <button
-      className="btn btn-normal btn-full"
-      style={{ color: textColor, backgroundColor }}
-    >
-      {content}
-    </button>
+    <ZapTip
+      recipientLNURL={url}
+      recipientPubkey={pubkey}
+      senderPubkey={nostrKeys.pub}
+      recipientInfo={{
+        name: author.display_name || author.name,
+        img: author.picture,
+      }}
+      custom={{
+        textColor,
+        backgroundColor,
+        content,
+      }}
+    />
   );
+  // return (
+  //   <button
+  //     className="btn btn-normal btn-full"
+  //     style={{ color: textColor, backgroundColor }}
+  //   >
+  //     {content}
+  //   </button>
+  // );
 }

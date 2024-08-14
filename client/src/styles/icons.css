@@ -310,7 +310,17 @@
 .layout,
 .layout-24,
 .clone,
-.clone-24 {
+.clone-24,
+.checkmark-tt,
+.checkmark-tt-24,
+.crossmark-tt,
+.crossmark-tt-24,
+.info-tt,
+.info-tt-24,
+.smart-widget-checker,
+.smart-widget-checker-24,
+.layers,
+.layers-24 {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -609,7 +619,11 @@
     .layout,
     .layout-24,
     .clone,
-    .clone-24 {
+    .clone-24,
+    .smart-widget-checker,
+    .smart-widget-checker-24,
+    .layers,
+    .layers-24 {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -793,7 +807,12 @@
 .smart-widget-bold,
 .copy,
 .layout,
-.clone {
+.clone,
+.checkmark-tt,
+.crossmark-tt,
+.info-tt,
+.smart-widget-checker,
+.layers {
     min-width: 16px;
     min-height: 16px;
 }
@@ -957,7 +976,12 @@
 .smart-widget-24,
 .smart-widget-bold-24,
 .layout-24,
-.clone-24 {
+.clone-24,
+.checkmark-tt-24,
+.crossmark-tt-24,
+.info-tt-24,
+.smart-widget-checker-24,
+.layers-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -965,6 +989,31 @@
 .play-vid-58 {
     min-width: 48px;
     min-height: 48px;
+}
+
+.layers,
+.layers-24 {
+    background-image: url('../media/icons/layers.svg');
+}
+
+.smart-widget-checker,
+.smart-widget-checker-24 {
+    background-image: url('../media/icons/smart-widget-checker.svg');
+}
+
+.checkmark-tt,
+.checkmark-tt-24 {
+    background-image: url('../media/icons/checkmark-tt.svg');
+}
+
+.crossmark-tt,
+.crossmark-tt-24 {
+    background-image: url('../media/icons/crossmark-tt.svg');
+}
+
+.info-tt,
+.info-tt-24 {
+    background-image: url('../media/icons/info-tt.svg');
 }
 
 .clone,

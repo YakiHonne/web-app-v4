@@ -1,14 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../../Context/Context";
 import { nip19, SimplePool } from "nostr-tools";
-import { getNoteTree } from "../../Helpers/Helpers";
 import { filterRelays, getBech32 } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
-import ZapPollsPreview from "../SmartWidget/ZapPollsComp";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import Date_ from "../Date_";
 import MinimalZapPollPreview from "./MinimalZapPollPreview";
 import LoadingDots from "../LoadingDots";
+
 const pool = new SimplePool();
 
 export default function BrowsePolls({ setNevent, exit }) {
@@ -180,6 +178,7 @@ export default function BrowsePolls({ setNevent, exit }) {
                       <div className="plus-sign"></div>
                     </div>
                   </div>
+                  {/* <ZapPollsComp event={poll} /> */}
                   <MinimalZapPollPreview event={poll} />
                 </div>
               );
@@ -202,6 +201,7 @@ export default function BrowsePolls({ setNevent, exit }) {
                     </div>
                   </div>
                   <MinimalZapPollPreview event={poll} />
+                  {/* <ZapPollsComp event={poll} /> */}
                 </div>
               );
             })}

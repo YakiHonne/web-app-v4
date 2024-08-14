@@ -24,9 +24,7 @@ export default function YakiLevelingFeature() {
     <ScreenThree />,
     <ScreenFour />,
     <ScreenSeven />,
-    <ScreenFive />,
-    // <ScreenEight />,
-    // <ScreenSix />,
+    <ScreenFive />
   ];
   return (
     <div

@@ -2,12 +2,10 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import { Context } from "../../Context/Context";
 import PagePlaceholder from "../../Components/PagePlaceholder";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
 import Date_ from "../../Components/Date_";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import { publishPost } from "../../Helpers/NostrPublisher";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { Relay, SimplePool } from "nostr-tools";
@@ -16,7 +14,6 @@ import {
   encodeLud06,
   filterRelays,
   getBech32,
-  getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
 import ToChangeProfilePic from "../../Components/NOSTR/ToChangeProfilePic";
 import { shortenKey } from "../../Helpers/Encryptions";
@@ -30,7 +27,6 @@ import LoginWithAPI from "../../Components/NOSTR/LoginWithAPI";
 import AddWallet from "../../Components/NOSTR/AddWallet";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 
-// import {requestInvoice} from 'lnurl-pay'
 const getWallets = () => {
   let wallets = localStorage.getItem("yaki-wallets");
   if (!wallets) return [];
@@ -55,11 +51,8 @@ const checkForSavedCommentOptions = () => {
   }
 };
 
-const pool = new SimplePool();
-
 export default function NostrSettings() {
   const {
-    setNostrUserData,
     nostrUser,
     nostrUserLoaded,
     nostrKeys,
@@ -210,7 +203,7 @@ export default function NostrSettings() {
         kind: 10002,
         content: "",
         tags: tags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
+        allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
       });
       let tempUser = { ...nostrUser };
       tempUser.relays = tempUserRelays;
@@ -262,7 +255,7 @@ export default function NostrSettings() {
           kind: 0,
           content,
           tags: nostrUserTags,
-          allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
+          allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
         });
 
         setNostrUserAbout(JSON.parse(content));
@@ -294,7 +287,7 @@ export default function NostrSettings() {
         kind: 0,
         content,
         tags: nostrUserTags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
+        allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
       });
 
       deleteFromS3(nostrUserAbout.banner);
@@ -578,7 +571,7 @@ export default function NostrSettings() {
                               )}
                             </div>
                             <div
-                              className="fx-centered fit-container" 
+                              className="fx-centered fit-container"
                               style={{ columnGap: "10px" }}
                             >
                               {userName !== false ? (

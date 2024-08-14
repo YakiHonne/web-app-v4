@@ -1,14 +1,12 @@
-import { nip19, relayInit, SimplePool } from "nostr-tools";
 import React from "react";
+import { SimplePool } from "nostr-tools";
 import { useContext } from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
 import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
-import LoadingDots from "../LoadingDots";
 import AddCurationNOSTR from "./AddCurationNOSTR";
-import PublishRelaysPicker from "./PublishRelaysPicker";
 const pool = new SimplePool();
 pool.trackRelays = true;
 export default function AddArticleToCuration({ kind = 30004, d, exit }) {

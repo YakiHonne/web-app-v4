@@ -1,15 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../../Context/Context";
-import { finalizeEvent, nip19, SimplePool } from "nostr-tools";
-import Lottie from "lottie-react";
-import { Helmet } from "react-helmet";
-import { nanoid } from "nanoid";
-import PagePlaceholder from "../../Components/PagePlaceholder";
-import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import { getVideoFromURL } from "../../Helpers/Helpers";
-import UploadFile from "../../Components/UploadFile";
-import ZapPollsPreview from "../../Components/SmartWidget/ZapPollsComp";
-import AddPoll from "../../Components/NOSTR/AddPoll";
+import { nip19, SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import {
   filterRelays,
@@ -18,15 +9,11 @@ import {
 } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
-import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
-import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
-import { Link } from "react-router-dom";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 const pool = new SimplePool();
 
 export default function BrowseSmartWidgets({ setWidget, exit }) {
   const { nostrUser, nostrKeys, addNostrAuthors } = useContext(Context);
-  const [buildOptions, setBuildOptions] = useState(true);
   const [comWidgets, setComWidgets] = useState([]);
   const [myWidgets, setMyWidgets] = useState([]);
   const [contentSource, setContentSource] = useState("community");
@@ -34,7 +21,6 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
   const [comWidgetsLE, setComWidgetsLE] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [sub, setSub] = useState(false);
-  const extrasRef = useRef(null);
 
   useEffect(() => {
     const { relays, filter } = getFilter();
@@ -257,36 +243,6 @@ const WidgetCard = ({ setWidget, widget }) => {
       className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fit-container fx-start-h fx-start-v"
       style={{ overflow: "visible" }}
     >
-      {/* <div
-        className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fit-container"
-        style={{
-          backgroundColor: widget.metadata.background_color,
-          borderColor: widget.metadata.border_color,
-          overflow: "visible",
-        }}
-      >
-        {widget.metadata.components.map((widget_, index) => {
-          return <PreviewContainer metadata={widget_} key={index} />;
-        })}
-      </div> */}
-      <PreviewWidget widget={widget.metadata} />
-      {(widget.title || widget.description) && (
-        <>
-          <div
-            className="fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-v-s"
-            style={{ rowGap: 0 }}
-          >
-            <p>{widget.title || "Untitled"}</p>
-            {widget.description && (
-              <p className="gray-c p-medium">{widget.description}</p>
-            )}
-            {!widget.description && (
-              <p className="gray-c p-italic p-medium">No description</p>
-            )}
-          </div>
-          <hr />
-        </>
-      )}
       <div className="fit-container fx-scattered">
         <AuthorPreview author={authorData} />
         <div
@@ -310,6 +266,24 @@ const WidgetCard = ({ setWidget, widget }) => {
           </div>
         </div>
       </div>
+      <PreviewWidget widget={widget.metadata} />
+      {(widget.title || widget.description) && (
+        <>
+          <div
+            className="fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-v-s"
+            style={{ rowGap: 0 }}
+          >
+            <p>{widget.title || "Untitled"}</p>
+            {widget.description && (
+              <p className="gray-c p-medium">{widget.description}</p>
+            )}
+            {!widget.description && (
+              <p className="gray-c p-italic p-medium">No description</p>
+            )}
+          </div>
+          <hr />
+        </>
+      )}
     </div>
   );
 };

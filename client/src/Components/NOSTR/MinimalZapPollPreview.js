@@ -14,7 +14,7 @@ export default function MinimalZapPollPreview({ event }) {
           return (
             <div
               key={index}
-              className="box-pad-h-m box-pad-v-s sc-s-18 fit-container"
+              className="box-pad-h-m box-pad-v-s sc-s fit-container"
             >
               <p>{option}</p>
             </div>
