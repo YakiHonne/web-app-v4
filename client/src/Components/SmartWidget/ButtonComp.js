@@ -33,7 +33,7 @@ export default function ButtonComp({
         if (auth) {
           setAuthor(auth);
         }
-      } catch (err) {
+      } catch (err) { 
         console.log(err);
       }
     } 
