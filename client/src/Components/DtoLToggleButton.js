@@ -112,7 +112,7 @@ export default function DtoLToggleButton({ isMobile = false, small = false }) {
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
         </animated.g>
       </animated.svg>
-      <p className={isMobile ? "p-big link-label" : "link-label gray-c"}>
+      <p className={isMobile ? "p-big link-label" : "gray-c"}>
         Change theme
       </p>
     </div>

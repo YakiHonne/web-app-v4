@@ -32,33 +32,33 @@ const toggleColorScheme = (theme) => {
   }
 };
 
-const aggregateUsers = (convo, oldAggregated = []) => {
+const aggregateUsers = (convo, oldAggregated = [], connectedAccountPubkey) => {
   const arr2 = [];
   const map = oldAggregated.length
     ? new Map(oldAggregated.map((item) => [item.pubkey, item]))
     : new Map();
   convo.forEach((item) => {
     let pubkey = item.peer || item.pubkey;
-    if (map.has(pubkey)) {
+    if (map.has(`${pubkey},${connectedAccountPubkey}`)) {
       let checkConvo = map
-        .get(pubkey)
+        .get(`${pubkey},${connectedAccountPubkey}`)
         .convo.find((item_) => item_.id === item.id);
 
       if (!checkConvo) {
-        let sortedConvo = [...map.get(pubkey).convo, item].sort(
+        let sortedConvo = [...map.get(`${pubkey},${connectedAccountPubkey}`).convo, item].sort(
           (convo_1, convo_2) => convo_1.created_at - convo_2.created_at
         );
-        map.get(pubkey).convo = sortedConvo;
-        map.get(pubkey).checked =
-          (map.get(pubkey).checked &&
+        map.get(`${pubkey},${connectedAccountPubkey}`).convo = sortedConvo;
+        map.get(`${pubkey},${connectedAccountPubkey}`).checked =
+          (map.get(`${pubkey},${connectedAccountPubkey}`).checked &&
             sortedConvo[sortedConvo.length - 1].created_at ===
-              map.get(pubkey).last_message) ||
+              map.get(`${pubkey},${connectedAccountPubkey}`).last_message) ||
           (item.peer ? true : false);
-        map.get(pubkey).last_message =
+        map.get(`${pubkey},${connectedAccountPubkey}`).last_message =
           sortedConvo[sortedConvo.length - 1].created_at;
       }
     } else {
-      map.set(pubkey, {
+      map.set(`${pubkey},${connectedAccountPubkey}`, {
         pubkey,
         last_message: item.created_at,
         checked: item.peer ? true : false,
@@ -125,7 +125,7 @@ const ContextProvider = ({ children }) => {
         let user = await getUserFromNOSTR(content.pub);
         // user.relays = await getRelaysOfUser(content.pub);
         if (user) {
-          setNostrUserData(user);
+          setNostrUserData(user, content);
         }
         return;
       }
@@ -138,7 +138,7 @@ const ContextProvider = ({ children }) => {
 
     fetchData();
     cacheDBInit();
-    // localStorage.removeItem("update-curation");
+  
   }, []);
 
   useEffect(() => {
@@ -244,6 +244,7 @@ const ContextProvider = ({ children }) => {
               tempMutedList = { ...event };
               if (eose) handleMutedList(event);
             }
+            console.log(event)
           },
           oneose() {
             handleDM(tempInbox, tempAuthors, chatrooms);
@@ -256,6 +257,8 @@ const ContextProvider = ({ children }) => {
       );
     }
   }, [loadCacheDB, nostrKeys]);
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -282,7 +285,7 @@ const ContextProvider = ({ children }) => {
 
   const handleDM = (inbox, authors, oldAggregated) => {
     addNostrAuthors(authors);
-    let sortedInbox = aggregateUsers(inbox, oldAggregated);
+    let sortedInbox = aggregateUsers(inbox, oldAggregated, nostrKeys.pub);
     let openDB = indexedDB.open("yaki-nostr", 3);
     openDB.onsuccess = () => {
       let db = openDB.result;
@@ -296,7 +299,7 @@ const ContextProvider = ({ children }) => {
       );
       let chatrooms_ = transaction.objectStore("chatrooms");
 
-      for (let ibx of sortedInbox) chatrooms_.put(ibx, ibx.pubkey);
+      for (let ibx of sortedInbox) chatrooms_.put(ibx, `${ibx.pubkey},${nostrKeys.pub}`);
 
       setChatrooms(sortedInbox);
     };
@@ -324,7 +327,6 @@ const ContextProvider = ({ children }) => {
   };
   const handleMutedList = (event) => {
     if (!event) return;
-
     let muted_list = event.tags
       .filter((tag) => tag[0] === "p")
       .map((tag) => tag[1]);
@@ -343,11 +345,11 @@ const ContextProvider = ({ children }) => {
     };
   };
 
-  const setNostrUserData = async (data) => {
+  const setNostrUserData = async (data, nostrKeys) => {
     if (data) {
       setNostrUserLoaded(false);
       let content = data;
- 
+
       let userAbout = JSON.parse(content.content) || {};
       let [relays, userFollowing, userTopics] = await Promise.all([
         getRelaysOfUser(content.pubkey),
@@ -373,7 +375,7 @@ const ContextProvider = ({ children }) => {
         relays,
         following: userFollowing,
       };
-      addConnectedAccounts(userData)
+      addConnectedAccounts(userData, nostrKeys);
       setNostrUser(userData);
       setNostrUserAbout(userAbout);
       setNostrUserTags(content.tags);
@@ -390,28 +392,33 @@ const ContextProvider = ({ children }) => {
 
   const getConnectedAccounts = () => {
     try {
-      let accounts = localStorage.getItem("yaki-accounts") || []
-      accounts = JSON.parse(accounts)
-      return accounts
+      let accounts = localStorage.getItem("yaki-accounts") || [];
+      accounts = Array.isArray(accounts) ? [] : JSON.parse(accounts);
+      return accounts;
     } catch (err) {
-      console.log(err)
-      return []
+      console.log(err);
+      return [];
     }
-  }
+  };
 
-  const addConnectedAccounts = (account) => {
+  const addConnectedAccounts = (account, nostrKeys) => {
     try {
-      let accounts = getConnectedAccounts()
-      let isAccount = accounts.find(account_ => account_.pubkey === account.pubkey)
-      if(!isAccount) {
-        accounts.push(account)
-        localStorage.setItem("yaki-accounts", JSON.stringify(accounts))
+      let accounts = getConnectedAccounts() || [];
+      let isAccount = accounts.findIndex(
+        (account_) => account_.pubkey === account.pubkey
+      );
+      console.log(isAccount)
+      if (isAccount === -1) {
+        accounts.push({ ...account, nostrKeys });
+        localStorage.setItem("yaki-accounts", JSON.stringify(accounts));
+      } else {
+        accounts.splice(isAccount, 1, { ...account, nostrKeys });
+        localStorage.setItem("yaki-accounts", JSON.stringify(accounts));
       }
     } catch (err) {
-      console.log(err)
-   
+      console.log(err);
     }
-  }
+  };
 
   const setNostrKeysData = (data) => {
     if (data) {
@@ -422,6 +429,18 @@ const ContextProvider = ({ children }) => {
     setNostrKeys(false);
   };
 
+  const handleSwitchAccount = (keys) =>{
+    setLoadCacheDB(false)
+    // setInitDMS(true)
+    setNostrKeysData(keys)
+    setChatrooms([])
+    setNostrUserBookmarks([]);
+    setNostrUserTopics([]);
+    setNostrUserTags([]);
+    setChatContacts([]);
+    // cacheDBInit()
+  }
+
   const nostrUserLogout = async () => {
     localStorage.removeItem("_nostruser");
     localStorage.removeItem("_nostruserkeys");
@@ -431,6 +450,7 @@ const ContextProvider = ({ children }) => {
     setIsConnectedToYaki(false);
     setYakiChestStats(false);
     setBalance("N/A");
+
     let openDB = window.indexedDB.open("yaki-nostr", 3);
 
     openDB.onsuccess = () => {
@@ -511,8 +531,8 @@ const ContextProvider = ({ children }) => {
               resolve(event);
             },
             oneose() {
-              resolve(getEmptyNostrUser(pubkey))
-            }
+              resolve(getEmptyNostrUser(pubkey));
+            },
           }
         );
       } catch (err) {
@@ -619,8 +639,8 @@ const ContextProvider = ({ children }) => {
               resolve(following);
             },
             oneose() {
-              resolve([])
-            }
+              resolve([]);
+            },
           }
         );
       } catch (err) {
@@ -652,7 +672,7 @@ const ContextProvider = ({ children }) => {
                 ),
               ];
             });
-          }
+          },
         }
       );
     } catch (err) {
@@ -694,18 +714,18 @@ const ContextProvider = ({ children }) => {
   //           console.log("Dark mode is now enabled");
   //           localStorage.setItem("yaki-theme", "0");
   //           setIsDarkMode("0");
-            
+
   //       } else {
   //           console.log("Light mode is now enabled");
   //           localStorage.setItem("yaki-theme", "1");
   //           setIsDarkMode("1");
-            
+
   //       }
   //   }
-    
+
   //   // Initial check
   //   handleThemeChange(darkModeMediaQuery);
-    
+
   //   // Listen for changes
   //   darkModeMediaQuery.addEventListener('change', handleThemeChange);
   // }, [])
@@ -804,18 +824,6 @@ const ContextProvider = ({ children }) => {
   };
 
   const cacheDBInit = () => {
-    // let openDB = indexedDB.open("yaki-nostr", 3);
-    // openDB.onsuccess = () => {
-    //   let db = openDB.result;
-    //   let transaction = db.transaction(
-    //     ["chatrooms", "chatContacts"],
-    //     "readwrite"
-    //   );
-    //   let chatrooms_ = transaction.objectStore("chatrooms");
-    //   let chatContacts_ = transaction.objectStore("chatContacts");
-    //   chatrooms_.clear();
-    //   chatContacts_.clear();
-    // };
     let openDB = indexedDB.open("yaki-nostr", 3);
 
     openDB.onupgradeneeded = () => {
@@ -858,6 +866,7 @@ const ContextProvider = ({ children }) => {
                 )
               : chatrooms_.result;
           setLastMessageDate(sortedInbox[0]?.last_message || undefined);
+          
           setChatrooms(sortedInbox);
           setLoadCacheDB(openDB);
         };
@@ -1000,6 +1009,7 @@ const ContextProvider = ({ children }) => {
         balance,
         setBalance,
         setNostrAuthors,
+        handleSwitchAccount
       }}
     >
       {children}

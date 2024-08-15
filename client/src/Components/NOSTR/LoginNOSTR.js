@@ -57,10 +57,11 @@ export default function LoginNOSTR({ exit }) {
         let hex = getHex(inputKey);
         let user = await getUserFromNOSTR(hex);
         if (user) {
-          setNostrUserData(user);
-          setNostrKeysData({
+          let keys = {
             pub: hex,
-          });
+          }
+          setNostrUserData(user, keys);
+          setNostrKeysData(keys);
         }
 
         // exit();
@@ -78,11 +79,12 @@ export default function LoginNOSTR({ exit }) {
         if (secp.utils.isValidPrivateKey(hex)) {
           let user = await getUserFromNOSTR(getPublicKey(hex));
           if (user) {
-            setNostrUserData(user);
-            setNostrKeysData({
+            let keys = {
               sec: hex,
               pub: getPublicKey(hex),
-            });
+            }
+            setNostrUserData(user, keys);
+            setNostrKeysData(keys);
           }
 
           // exit();
@@ -98,11 +100,12 @@ export default function LoginNOSTR({ exit }) {
     if (secp.utils.isValidPrivateKey(inputKey)) {
       let user = await getUserFromNOSTR(getPublicKey(inputKey));
       if (user) {
-        setNostrUserData(user);
-        setNostrKeysData({
+        let keys = {
           sec: inputKey,
           pub: getPublicKey(inputKey),
-        });
+        }
+        setNostrUserData(user, keys);
+        setNostrKeysData(keys);
       }
 
       // exit();
@@ -130,8 +133,8 @@ export default function LoginNOSTR({ exit }) {
               resolve(event);
             },
             oneose() {
-              resolve(getEmptyNostrUser(pubkey))
-            }
+              resolve(getEmptyNostrUser(pubkey));
+            },
           }
         );
       } catch (err) {
@@ -144,6 +147,7 @@ export default function LoginNOSTR({ exit }) {
     let prevUserData = await getUserFromNOSTR(nostrKeys.pub);
     let content = JSON.parse(prevUserData.content);
     content.name = name;
+    setNostrUserData({ content, pubkey: nostrKeys.pub }, nostrKeys);
     let event = {
       kind: 0,
       content: JSON.stringify(content),
@@ -155,7 +159,7 @@ export default function LoginNOSTR({ exit }) {
       eventInitEx: event,
       allRelays: relaysOnPlatform,
     });
-   
+
     setIsLoading(false);
     setEndInit(true);
   };
@@ -379,10 +383,11 @@ const Login = ({ switchScreen, exit }) => {
         let hex = getHex(inputKey);
         let user = await getUserFromNOSTR(hex);
         if (user) {
-          setNostrUserData(user);
-          setNostrKeysData({
+          let keys = {
             pub: hex,
-          });
+          };
+          setNostrUserData(user, keys);
+          setNostrKeysData(keys);
         }
         setIsLoading(false);
         exit();
@@ -401,11 +406,12 @@ const Login = ({ switchScreen, exit }) => {
         if (secp.utils.isValidPrivateKey(hex)) {
           let user = await getUserFromNOSTR(getPublicKey(hex));
           if (user) {
-            setNostrUserData(user);
-            setNostrKeysData({
+            let keys = {
               sec: hex,
               pub: getPublicKey(hex),
-            });
+            };
+            setNostrUserData(user, keys);
+            setNostrKeysData(keys);
           }
           setIsLoading(false);
           exit();
@@ -422,11 +428,12 @@ const Login = ({ switchScreen, exit }) => {
     if (secp.utils.isValidPrivateKey(inputKey)) {
       let user = await getUserFromNOSTR(getPublicKey(inputKey));
       if (user) {
-        setNostrUserData(user);
-        setNostrKeysData({
+        let keys = {
           sec: inputKey,
           pub: getPublicKey(inputKey),
-        });
+        };
+        setNostrUserData(user, keys);
+        setNostrKeysData(keys);
       }
       setIsLoading(false);
       exit();
@@ -455,8 +462,8 @@ const Login = ({ switchScreen, exit }) => {
               resolve(event);
             },
             oneose() {
-              resolve(getEmptyNostrUser(pubkey))
-            }
+              resolve(getEmptyNostrUser(pubkey));
+            },
           }
         );
       } catch (err) {
@@ -468,15 +475,16 @@ const Login = ({ switchScreen, exit }) => {
   const onLoginWithExt = async () => {
     try {
       setIsLoading(true);
-      await window.nostr.enable()
+      await window.nostr.enable();
       let key = await window.nostr.getPublicKey();
       let user = await getUserFromNOSTR(key);
       if (user) {
-        setNostrUserData(user);
-        setNostrKeysData({
+        let keys = {
           pub: key,
           ext: true,
-        });
+        };
+        setNostrUserData(user, keys);
+        setNostrKeysData(keys);
         let extWallet = [
           {
             id: Date.now(),
@@ -550,7 +558,7 @@ const Login = ({ switchScreen, exit }) => {
 };
 
 const Signup = ({ switchScreen, continueSignup }) => {
-  const { setToast, setNostrKeysData } = useContext(Context);
+  const { setToast, setNostrKeysData, setNostrUserData } = useContext(Context);
   let [sk, setSk] = useState(bytesTohex(generateSecretKey()));
   let [pk, setPk] = useState(getPublicKey(sk));
   let [nsec, setSec] = useState(getBech32("nsec", sk));
@@ -565,10 +573,13 @@ const Signup = ({ switchScreen, continueSignup }) => {
   };
 
   const initilizeAccount = () => {
-    setNostrKeysData({
+    let user = getEmptyNostrUser(pk);
+    let keys = {
       pub: pk,
       sec: sk,
-    });
+    };
+    setNostrUserData(user, keys);
+    setNostrKeysData(keys);
     continueSignup();
   };
 

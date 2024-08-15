@@ -21,7 +21,7 @@ import NumberShrink from "../NumberShrink";
 const getConnectedAccounts = () => {
   try {
     let accounts = localStorage.getItem("yaki-accounts") || [];
-    accounts = JSON.parse(accounts);
+    accounts = Array.isArray(accounts) ? [] :JSON.parse(accounts);
     return accounts;
   } catch (err) {
     console.log(err);
@@ -31,6 +31,7 @@ const getConnectedAccounts = () => {
 
 export default function SidebarNOSTR() {
   const {
+    handleSwitchAccount,
     nostrKeys,
     nostrUserAbout,
     nostrUserLogout,
@@ -54,7 +55,7 @@ export default function SidebarNOSTR() {
   const [showYakiChest, setShowYakiChest] = useState(false);
   const accounts = useMemo(() => {
     return getConnectedAccounts();
-  }, [nostrKeys]);
+  }, [nostrKeys, nostrUserAbout]);
 
   const isNewMsg = useMemo(() => {
     return chatrooms.find((chatroom) => !chatroom.checked);
@@ -570,12 +571,18 @@ export default function SidebarNOSTR() {
                 className="fit-container sidebar-user-settings-button"
                 style={{ overflow: "visible" }}
                 // onClick={() => setShowSettings(!showSettings)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsActive(true)
+                  setShowSettings(!showSettings);
+                }}
               >
                 <div
                   className="fx-centered fx-start-h pointer"
-                  style={{ columnGap: "16px" }}
+                  style={{ columnGap: "16px"}}
                   onClick={(e) => {
                     e.stopPropagation();
+                    setIsActive(true)
                     setShowSettings(!showSettings);
                   }}
                 >
@@ -767,6 +774,7 @@ export default function SidebarNOSTR() {
                               borderRadius: "10px",
                             }}
                             key={account.pubkey}
+                            onClick={() => handleSwitchAccount(account.nostrKeys)}
                           >
                             <div className="fx-centered">
                               <div style={{ pointerEvents: "none" }}>
