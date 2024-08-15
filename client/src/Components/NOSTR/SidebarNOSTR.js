@@ -21,7 +21,7 @@ import NumberShrink from "../NumberShrink";
 const getConnectedAccounts = () => {
   try {
     let accounts = localStorage.getItem("yaki-accounts") || [];
-    accounts = Array.isArray(accounts) ? [] :JSON.parse(accounts);
+    accounts = Array.isArray(accounts) ? [] : JSON.parse(accounts);
     return accounts;
   } catch (err) {
     console.log(err);
@@ -56,6 +56,7 @@ export default function SidebarNOSTR() {
   const accounts = useMemo(() => {
     return getConnectedAccounts();
   }, [nostrKeys, nostrUserAbout]);
+  const [isAccountSwitching, setIsAccountSwitching] = useState(false);
 
   const isNewMsg = useMemo(() => {
     return chatrooms.find((chatroom) => !chatroom.checked);
@@ -124,6 +125,9 @@ export default function SidebarNOSTR() {
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
+      {isAccountSwitching && (
+        <AccountSwitching exit={() => setIsAccountSwitching(false)} />
+      )}
       <div
         className="fx-scattered fx-end-v nostr-sidebar box-pad-v-m fx-col "
         style={{
@@ -573,16 +577,16 @@ export default function SidebarNOSTR() {
                 // onClick={() => setShowSettings(!showSettings)}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsActive(true)
+                  setIsActive(true);
                   setShowSettings(!showSettings);
                 }}
               >
                 <div
                   className="fx-centered fx-start-h pointer"
-                  style={{ columnGap: "16px"}}
+                  style={{ columnGap: "16px" }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsActive(true)
+                    setIsActive(true);
                     setShowSettings(!showSettings);
                   }}
                 >
@@ -774,14 +778,18 @@ export default function SidebarNOSTR() {
                               borderRadius: "10px",
                             }}
                             key={account.pubkey}
-                            onClick={() => handleSwitchAccount(account.nostrKeys)}
+                            onClick={() => {
+                              handleSwitchAccount(account);
+                              setIsAccountSwitching(true);
+                              setShowSettings(false);
+                            }}
                           >
                             <div className="fx-centered">
                               <div style={{ pointerEvents: "none" }}>
                                 <UserProfilePicNOSTR
                                   size={32}
                                   mainAccountUser={false}
-                                  img={account.img}
+                                  img={account.picture}
                                   allowClick={false}
                                   ring={false}
                                 />
@@ -890,3 +898,39 @@ export default function SidebarNOSTR() {
     </>
   );
 }
+
+const AccountSwitching = ({ exit }) => {
+  const { nostrUserAbout } = useContext(Context);
+  useEffect(() => {
+    let timeout = setTimeout(() => {
+      exit();
+    }, 2000);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+  return (
+    <div className="fixed-container fx-centered">
+      <div className="fx-centered fx-col">
+        <div className="fx-centered popout">
+          <div
+            className="purple-pulse"
+            style={{ borderRadius: "var(--border-r-50)" }}
+          >
+            <UserProfilePicNOSTR
+              size={200}
+              mainAccountUser={true}
+              allowClick={false}
+              ring={false}
+            />
+          </div>
+        </div>
+        <div className="box-pad-v fx-centered fx-col">
+          <p className="orange-c p-medium">Switching to</p>
+          <h3>{nostrUserAbout.display_name || nostrUserAbout.name}</h3>
+          <p className="gray-c">@{nostrUserAbout.name}</p>
+        </div>
+      </div>
+    </div>
+  );
+};

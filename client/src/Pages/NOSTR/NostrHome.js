@@ -78,6 +78,7 @@ export default function NostrHome() {
   const {
     nostrKeys,
     buzzFeedSources,
+    userFollowings,
     nostrUser,
     nostrUserLoaded,
     addNostrAuthors,
@@ -804,8 +805,8 @@ export default function NostrHome() {
       : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
     if (notesContentFrom === "followings") {
       let authors =
-        nostrUser && nostrUser.following.length > 0
-          ? [...nostrUser.following.map((item) => item[1])]
+      userFollowings
+          ? [...userFollowings]
           : [];
       filter = [
         { authors, kinds: [1, 6], limit: 50, until: notesLastEventTime },

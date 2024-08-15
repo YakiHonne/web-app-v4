@@ -3,6 +3,7 @@ import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../Content/Relays";
 import {
   decrypt04,
+  getBech32,
   getEmptyNostrUser,
   getParsed3000xContent,
   unwrapGiftWrap,
@@ -45,9 +46,10 @@ const aggregateUsers = (convo, oldAggregated = [], connectedAccountPubkey) => {
         .convo.find((item_) => item_.id === item.id);
 
       if (!checkConvo) {
-        let sortedConvo = [...map.get(`${pubkey},${connectedAccountPubkey}`).convo, item].sort(
-          (convo_1, convo_2) => convo_1.created_at - convo_2.created_at
-        );
+        let sortedConvo = [
+          ...map.get(`${pubkey},${connectedAccountPubkey}`).convo,
+          item,
+        ].sort((convo_1, convo_2) => convo_1.created_at - convo_2.created_at);
         map.get(`${pubkey},${connectedAccountPubkey}`).convo = sortedConvo;
         map.get(`${pubkey},${connectedAccountPubkey}`).checked =
           (map.get(`${pubkey},${connectedAccountPubkey}`).checked &&
@@ -114,31 +116,38 @@ const ContextProvider = ({ children }) => {
   const [balance, setBalance] = useState("N/A");
 
   useEffect(() => {
-    let fetchData = async () => {
+    let getKeys = () => {
+      try {
+        let keys = localStorage.getItem("_nostruserkeys");
+        keys = JSON.parse(keys);
+        return keys;
+      } catch (err) {
+        return false;
+      }
+    };
+    let keys = getKeys();
+    let fetchData = async (keys) => {
       getNostrClients();
       getBuzzFeedSources();
-      let keys = localStorage.getItem("_nostruserkeys");
-      if (keys) {
-        let content = JSON.parse(keys);
-        setNostrKeys(content);
 
-        let user = await getUserFromNOSTR(content.pub);
-        // user.relays = await getRelaysOfUser(content.pub);
-        if (user) {
-          setNostrUserData(user, content);
-        }
-        return;
+      setNostrKeys(keys);
+
+      let user = await getUserFromNOSTR(keys.pub);
+      // user.relays = await getRelaysOfUser(content.pub);
+      if (user) {
+        setNostrUserData(user, keys);
       }
-      setNostrUser(false);
-      setNostrUserLoaded(true);
+      return;
     };
+    setNostrUser(false);
+    setNostrUserLoaded(true);
 
     if (isDarkMode === "0") toggleColorScheme(false);
     if (isDarkMode === "1") toggleColorScheme(true);
-
-    fetchData();
-    cacheDBInit();
-  
+    if (keys) {
+      fetchData(keys);
+      cacheDBInit(keys);
+    }
   }, []);
 
   useEffect(() => {
@@ -244,7 +253,7 @@ const ContextProvider = ({ children }) => {
               tempMutedList = { ...event };
               if (eose) handleMutedList(event);
             }
-            console.log(event)
+            // console.log(event);
           },
           oneose() {
             handleDM(tempInbox, tempAuthors, chatrooms);
@@ -257,8 +266,6 @@ const ContextProvider = ({ children }) => {
       );
     }
   }, [loadCacheDB, nostrKeys]);
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -291,7 +298,7 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        alert("Database is outdated, please reload the page.");
+        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(
         ["chatrooms", "chatContacts"],
@@ -299,7 +306,8 @@ const ContextProvider = ({ children }) => {
       );
       let chatrooms_ = transaction.objectStore("chatrooms");
 
-      for (let ibx of sortedInbox) chatrooms_.put(ibx, `${ibx.pubkey},${nostrKeys.pub}`);
+      for (let ibx of sortedInbox)
+        chatrooms_.put(ibx, `${ibx.pubkey},${nostrKeys.pub}`);
 
       setChatrooms(sortedInbox);
     };
@@ -315,12 +323,12 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        alert("Database is outdated, please reload the page.");
+        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(["followings"], "readwrite");
       let followings = transaction.objectStore("followings");
 
-      followings.put(user_followings, "USER_FOLLOWINGS");
+      followings.put(user_followings, nostrKeys.pub);
 
       setUserFollowings(user_followings);
     };
@@ -335,11 +343,11 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        alert("Database is outdated, please reload the page.");
+        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(["muted"], "readwrite");
       let muted = transaction.objectStore("muted");
-      muted.put(muted_list, "MUTED_LIST");
+      muted.put(muted_list, nostrKeys.pub);
 
       setMutedList(muted_list);
     };
@@ -367,9 +375,16 @@ const ContextProvider = ({ children }) => {
       let userData = {
         pubkey: content.pubkey,
         added_date: new Date(content.created_at * 1000).toISOString(),
-        img: userAbout?.picture || "",
+        picture: userAbout?.picture || "",
         banner: userAbout?.banner || "",
-        name: userAbout?.display_name || userAbout?.name || "",
+        display_name:
+          userAbout?.display_name ||
+          userAbout?.name ||
+          getBech32("npub", content.pubkey),
+        name:
+          userAbout?.name ||
+          userAbout?.display_name ||
+          getBech32("npub", content.pubkey),
         about: userAbout?.about || "",
         nip05: userAbout?.nip05 || "",
         relays,
@@ -407,7 +422,6 @@ const ContextProvider = ({ children }) => {
       let isAccount = accounts.findIndex(
         (account_) => account_.pubkey === account.pubkey
       );
-      console.log(isAccount)
       if (isAccount === -1) {
         accounts.push({ ...account, nostrKeys });
         localStorage.setItem("yaki-accounts", JSON.stringify(accounts));
@@ -429,17 +443,23 @@ const ContextProvider = ({ children }) => {
     setNostrKeys(false);
   };
 
-  const handleSwitchAccount = (keys) =>{
-    setLoadCacheDB(false)
+  const handleSwitchAccount = (account) => {
+    let keys = account.nostrKeys;
+    let about = { ...account };
+    delete about.nostrKeys;
+
+    setLoadCacheDB(false);
     // setInitDMS(true)
-    setNostrKeysData(keys)
-    setChatrooms([])
+    setNostrKeysData(keys);
+    setNostrUserAbout(about);
+    setUserFollowings([]);
+    setChatrooms([]);
     setNostrUserBookmarks([]);
     setNostrUserTopics([]);
     setNostrUserTags([]);
     setChatContacts([]);
-    // cacheDBInit()
-  }
+    cacheDBInit(account.nostrKeys);
+  };
 
   const nostrUserLogout = async () => {
     localStorage.removeItem("_nostruser");
@@ -457,7 +477,7 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        alert("Database is outdated, please reload the page.");
+        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(
         ["chatrooms", "chatContacts", "followings", "muted"],
@@ -504,17 +524,6 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  // const getUserFromNOSTR = async (pubkey) => {
-  //   try {
-  //     let author = await pool.get(relaysOnPlatform, {
-  //       kinds: [0],
-  //       authors: [pubkey],
-  //     });
-  //     return author || getEmptyNostrUser(pubkey);
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
   const getUserFromNOSTR = (pubkey) => {
     return new Promise((resolve, reject) => {
       try {
@@ -576,6 +585,7 @@ const ContextProvider = ({ children }) => {
   //     console.log(err);
   //   }
   // };
+
   const getUserTopics = (pubkey) => {
     return new Promise((resolve, reject) => {
       try {
@@ -794,7 +804,7 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        alert("Database is outdated, please reload the page.");
+        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(["chatContacts"], "readwrite");
       let chatContacts_ = transaction.objectStore("chatContacts");
@@ -823,7 +833,7 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  const cacheDBInit = () => {
+  const cacheDBInit = (keys) => {
     let openDB = indexedDB.open("yaki-nostr", 3);
 
     openDB.onupgradeneeded = () => {
@@ -846,40 +856,66 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        alert("Database is outdated, please reload the page.");
+        // alert("Database is outdated, please reload the page.");
       };
       try {
+        let chatRecords = [];
         let transaction = db.transaction(
           ["chatrooms", "chatContacts", "followings", "muted"],
           "readonly"
         );
-        let chatrooms_ = transaction.objectStore("chatrooms").getAll();
+        let chatrooms_ = transaction.objectStore("chatrooms").openCursor();
+        // let chatrooms_ = transaction.objectStore("chatrooms").getAll();
         let chatContacts_ = transaction.objectStore("chatContacts").getAll();
-        let userFollowings_ = transaction.objectStore("followings").getAll();
-        let muted = transaction.objectStore("muted").getAll();
+        let userFollowings_ = transaction
+          .objectStore("followings")
+          .get(keys.pub);
+        let muted = transaction.objectStore("muted").get(keys.pub);
 
-        chatrooms_.onsuccess = () => {
-          let sortedInbox =
-            chatrooms_.result.length > 0
-              ? chatrooms_.result.sort(
-                  (conv_1, conv_2) => conv_2.last_message - conv_1.last_message
-                )
-              : chatrooms_.result;
-          setLastMessageDate(sortedInbox[0]?.last_message || undefined);
-          
-          setChatrooms(sortedInbox);
-          setLoadCacheDB(openDB);
+        chatrooms_.onsuccess = (event) => {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.key.includes(`,${keys.pub}`)) {
+              chatRecords.push(cursor.value);
+            }
+            cursor.continue();
+          } else {
+            let sortedInbox =
+              chatRecords.length > 0
+                ? chatRecords.sort(
+                    (conv_1, conv_2) =>
+                      conv_2.last_message - conv_1.last_message
+                  )
+                : chatRecords;
+            setLastMessageDate(sortedInbox[0]?.last_message || undefined);
+
+            setChatrooms(sortedInbox);
+            setLoadCacheDB(openDB);
+          }
         };
+        // chatrooms_.onsuccess = () => {
+        //   let sortedInbox =
+        //     chatrooms_.result.length > 0
+        //       ? chatrooms_.result.sort(
+        //           (conv_1, conv_2) => conv_2.last_message - conv_1.last_message
+        //         )
+        //       : chatrooms_.result;
+        //   setLastMessageDate(sortedInbox[0]?.last_message || undefined);
+
+        //   setChatrooms(sortedInbox);
+        //   setLoadCacheDB(openDB);
+        // };
         chatContacts_.onsuccess = () => {
           setChatContacts(chatContacts_.result);
         };
-        userFollowings_.onsuccess = () => {
-          if (userFollowings_.result)
-            setUserFollowings(userFollowings_.result[0] || []);
+        userFollowings_.onsuccess = (event) => {
+          // if (userFollowings_.result)
+          setUserFollowings(event.target.result || []);
         };
-        muted.onsuccess = () => {
-          if (muted?.result?.length > 0) setMutedList(muted.result[0]);
-          else setMutedList([]);
+        muted.onsuccess = (event) => {
+          setMutedList(event.target?.result || []);
+          // if (muted?.result?.length > 0) setMutedList(muted.result[0]);
+          // else setMutedList([]);
         };
       } catch (err) {
         console.log(err);
@@ -1009,7 +1045,7 @@ const ContextProvider = ({ children }) => {
         balance,
         setBalance,
         setNostrAuthors,
-        handleSwitchAccount
+        handleSwitchAccount,
       }}
     >
       {children}

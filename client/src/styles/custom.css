@@ -1093,7 +1093,7 @@ main {
 }
 
 .nostr-navbar-link:hover {
-    background-color: var(--gray);
+    background-color: var(--dim-gray);
 }
 
 .w-md-editor {
