@@ -232,7 +232,7 @@ export default function NostrHome() {
             sub_.close();
           },
           onclose() {
-            console.log("closed");
+            // console.log("closed");
           },
         });
         setNotesSub(sub_);
@@ -326,13 +326,33 @@ export default function NostrHome() {
       return false;
     }
   };
+
   const getExternalData = async () => {
     try {
-      let [data, nostrBandNotes, nostrBandProfiles] = await Promise.all([
-        axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
-        axios.get("https://api.nostr.band/v0/trending/notes"),
-        axios.get("https://api.nostr.band/v0/trending/profiles"),
-      ]);
+      getFlashNews();
+      getTrendingNotes();
+      getTrendingProfiles();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getFlashNews = async () => {
+    try {
+      let data = await axios.get(
+        API_BASE_URL + "/api/v1/mb/flashnews/important"
+      );
+
+      setFlashNews(data.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const getTrendingNotes = async () => {
+    try {
+      let nostrBandNotes = await axios.get(
+        "https://api.nostr.band/v0/trending/notes"
+      );
 
       let tags = nostrBandNotes.data.notes
         ? nostrBandNotes.data.notes
@@ -343,7 +363,50 @@ export default function NostrHome() {
             )
             .flat()
         : [];
+      setRecentTags([...new Set(tags)]);
 
+      let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
+        try {
+          let author = getEmptyNostrUser(note.author.pubkey);
+          try {
+            author = JSON.parse(note.author.content);
+          } catch (err) {
+            console.log(err);
+          }
+          return { ...author, pubkey: note.pubkey };
+        } catch (err) {
+          console.log(err);
+          return getEmptyNostrUser(note.pubkey);
+        }
+      });
+      setNostrAuthors((prev) => [...prev, ...trendingNotesAuthors]);
+
+      let tempTrendingNotes = await Promise.all(
+        nostrBandNotes.data.notes.map(async (note) => {
+          let note_ = onNotesReceived(note.event);
+          return note_;
+        })
+      );
+      // let tempTrendingNotes = await Promise.all(
+      //   nostrBandNotes.data.notes.map(async (note) => {
+      //     let note_ = onNotesReceived(note.event);
+      //     return note_;
+      //   })
+      // );
+
+      tempTrendingNotes = tempTrendingNotes.filter((note) => note);
+      setTrendingNotes(tempTrendingNotes);
+
+      if (notesContentFrom === "trending") setIsLoadingNotes(false);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const getTrendingProfiles = async () => {
+    try {
+      let nostrBandProfiles = await axios.get(
+        "https://api.nostr.band/v0/trending/profiles"
+      );
       let profiles = nostrBandProfiles.data.profiles
         ? nostrBandProfiles.data.profiles
             .filter((profile) => profile.profile)
@@ -361,34 +424,8 @@ export default function NostrHome() {
               };
             })
         : [];
-      let tempTrendingNotes = await Promise.all(
-        nostrBandNotes.data.notes.map(async (note) => {
-          let note_ = await onNotesReceived(note.event);
-          return note_;
-        })
-      );
-      let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
-        try {
-          let author = getEmptyNostrUser(note.author.pubkey);
-          try {
-            author = JSON.parse(note.author.content);
-          } catch (err) {
-            console.log(err);
-          }
-          return { ...author, pubkey: note.pubkey };
-        } catch (err) {
-          console.log(err);
-          return getEmptyNostrUser(note.pubkey);
-        }
-      });
 
-      setNostrAuthors((prev) => [...prev, ...trendingNotesAuthors]);
-      tempTrendingNotes = tempTrendingNotes.filter((note) => note);
-      setTrendingNotes(tempTrendingNotes);
       setTopCreators(profiles.slice(0, 6));
-      setRecentTags([...new Set(tags)]);
-      setFlashNews(data.data);
-      if (notesContentFrom === "trending") setIsLoadingNotes(false);
     } catch (err) {
       console.log(err);
     }
@@ -988,7 +1025,7 @@ export default function NostrHome() {
       if (!el) return;
       el.scrollTop = 0;
     };
-    console.log(isLoadingNotes);
+    
     straightUp();
     setNotesLastEventTime(undefined);
     setNotes([]);

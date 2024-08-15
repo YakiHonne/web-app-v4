@@ -181,11 +181,12 @@ export default function KindOne({ event, reactions = true }) {
               setReposts((reposts) => [...reposts, event_]);
             }
             if (event_.kind === 1) {
-              let check_kind1 = await onEvent(event);
+              let check_kind1 = await onEvent(event_);
               if (check_kind1.checkForQuote)
                 setQuotes((quotes) => [...quotes, event_]);
-              if (check_kind1.checkForComment)
+              if (check_kind1.checkForComment) {
                 setComments((comments) => [...comments, event_]);
+              }
             }
           },
         }
@@ -199,7 +200,7 @@ export default function KindOne({ event, reactions = true }) {
     try {
       let checkForComment = event.tags.find((tag) => tag[0] === "e");
       let checkForQuote = event.tags.find((tag) => tag[0] === "q");
-      if (checkForComment && event.kind === 1) return false;
+      // if (checkForComment && event.kind === 1) return false;
       let author_img = "";
       let author_name = getBech32("npub", event.pubkey).substring(0, 10);
       let author_pubkey = event.pubkey;
@@ -213,6 +214,7 @@ export default function KindOne({ event, reactions = true }) {
           ...event,
           note_tree,
           checkForQuote,
+          checkForComment,
           author_img,
           author_name,
           author_pubkey,
@@ -532,7 +534,7 @@ export default function KindOne({ event, reactions = true }) {
                     onClick={() => setToggleComment(!toggleComment)}
                   ></div>
                 </div>
-                <div className="icon-tooltip" data-tooltip="Comments from">
+                <div className="icon-tooltip" data-tooltip="See comments" onClick={redirect}>
                   <p className="p-medium">{comments.length}</p>
                 </div>
               </div>
