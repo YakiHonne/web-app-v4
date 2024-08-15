@@ -556,12 +556,18 @@ export default function SidebarNOSTR() {
                 className="fit-container sidebar-user-settings-button"
                 style={{ overflow: "visible" }}
                 // onClick={() => setShowSettings(!showSettings)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsActive(true)
+                  setShowSettings(!showSettings);
+                }}
               >
                 <div
                   className="fx-centered fx-start-h pointer"
                   style={{ columnGap: "16px" }}
                   onClick={(e) => {
                     e.stopPropagation();
+                    setIsActive(true)
                     setShowSettings(!showSettings);
                   }}
                 >
