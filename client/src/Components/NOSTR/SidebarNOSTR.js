@@ -565,7 +565,7 @@ export default function SidebarNOSTR() {
                     setShowSettings(!showSettings);
                   }}
                 >
-                  <div className="mb-hide" style={{pointerEvents: "none"}}>
+                  <div className="mb-hide" style={{ pointerEvents: "none" }}>
                     <UserProfilePicNOSTR
                       size={50}
                       mainAccountUser={true}
@@ -573,7 +573,7 @@ export default function SidebarNOSTR() {
                       ring={false}
                     />
                   </div>
-                  <div className="mb-show" style={{pointerEvents: "none"}}>
+                  <div className="mb-show" style={{ pointerEvents: "none" }}>
                     <UserProfilePicNOSTR
                       size={40}
                       mainAccountUser={true}
@@ -686,49 +686,128 @@ export default function SidebarNOSTR() {
                           })}`
                         )
                       }
+                      style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="user"></div>
-                      <p className="gray-c">Profile</p>
+                      <p className="gray-c">
+                        Profile{" "}
+                        <span className="orange-c p-medium">
+                          @{" "}
+                          {nostrUserAbout.display_name ||
+                            nostrUserAbout.name ||
+                            minimizeKey(nostrKeys.pub)}
+                        </span>{" "}
+                      </p>
                     </div>
-                    <hr />
+
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
                       onClick={() => navigateTo(`/yaki-points`)}
+                      style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="cup"></div>
                       <p className="gray-c">Yaki points</p>
                     </div>
-                    <hr />
+
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
                       onClick={() => navigateTo(`/settings`)}
+                      style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="setting"></div>
                       <p className="gray-c">Settings</p>
                     </div>
-                    <hr />
-                    <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link">
+
+                    <div
+                      className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
+                      style={{ padding: ".75rem 1rem" }}
+                    >
                       <DtoLToggleButton small={true} />
                     </div>
-                    <hr />
                     <div
-                      className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
-                      onClick={() => navigateTo(`/yakihonne-mobile-app`)}
+                      className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-m nostr-navbar-link"
+                      onClick={() => {
+                        setShowSettings(false);
+                        nostrUserLogout();
+                      }}
+                      style={{ padding: ".75rem 1rem" }}
                     >
-                      <div className="mobile"></div>
-                      <p className="gray-c">Get the app</p>
+                      <div className="logout"></div>
+                      <p>Logout</p>
                     </div>
                   </div>
                   <hr />
+                  <div className="fit-container fx-centered fx-col box-pad-h-s box-pad-v-s">
+                    <div className="fit-container">
+                      <p className="gray-c p-small">SWITCH ACCOUNT</p>
+                    </div>
+                    <div
+                      className="fit-container sc-s-18 box-pad-h-s box-pad-v-s fx-scattered option"
+                      style={{ backgroundColor: "var(--dim-gray)", borderRadius: "10px", }}
+                    >
+                      <div className="fx-centered">
+                        <div style={{ pointerEvents: "none" }}>
+                          <UserProfilePicNOSTR
+                            size={32}
+                            mainAccountUser={true}
+                            allowClick={false}
+                            ring={false}
+                          />
+                        </div>
+                        <div>
+                          <p className="p-one-line p-medium">
+                            {nostrUserAbout.display_name ||
+                              nostrUserAbout.name ||
+                              minimizeKey(nostrKeys.pub)}
+                          </p>
+                          <p className="gray-c p-small p-one-line">
+                            @
+                            {nostrUserAbout.name ||
+                              nostrUserAbout.display_name ||
+                              minimizeKey(nostrKeys.pub)}
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <div
+                          className="fx-centered"
+                          style={{
+                            borderRadius: "var(--border-r-50)",
+                            backgroundColor: "var(--orange-main)",
+                            minWidth: "14px",
+                            aspectRatio: "1/1",
+                          }}
+                        >
+                          <div
+                            style={{
+                              borderRadius: "var(--border-r-50)",
+                              backgroundColor: "white",
+                              minWidth: "6px",
+                              aspectRatio: "1/1",
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* <hr /> */}
                   <div
-                    className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
+                    className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-s"
                     onClick={() => {
                       setShowSettings(false);
                       nostrUserLogout();
                     }}
                   >
-                    <div className="logout"></div>
-                    <p>Logout</p>
+                    <div
+                      className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-s sc-s-18"
+                      style={{
+                        backgroundColor: "var(--dim-gray)",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <div className="logout"></div>
+                      <p>Logout of all accounts</p>
+                    </div>
                   </div>
                 </div>
               )}
