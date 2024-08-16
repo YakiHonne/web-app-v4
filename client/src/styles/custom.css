@@ -1979,3 +1979,19 @@ main {
     padding-bottom: .5rem;
     background-color: #ff9c0811
 }
+
+.teaser-hover button {
+    height: 48px;
+    width: 48px;
+    transition: .2s ease-in-out;
+}
+.teaser-hover button span {
+   display: none;
+}
+.teaser-hover:hover button span {
+   display: flex;
+}
+.teaser-hover:hover button{
+    width: 240px;
+    background-color: var(--orange-main);
+}

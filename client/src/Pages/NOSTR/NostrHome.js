@@ -40,6 +40,7 @@ import BuzzFeedPreviewCard from "../../Components/NOSTR/BuzzFeedPreviewCard";
 import VideosPreviewCards from "../../Components/NOSTR/VideosPreviewCards";
 import KindSix from "../../Components/NOSTR/KindSix";
 import KindOne from "../../Components/NOSTR/KindOne";
+// import CountDownToNewProduct from "../../Components/CountDownToNewProduct";
 const defaultTopicIcon =
   "https://yakihonne.s3.ap-east-1.amazonaws.com/topics_icons/default.png";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
@@ -350,11 +351,11 @@ export default function NostrHome() {
         ? nostrBandProfiles.data.profiles
             .filter((profile) => profile.profile)
             .map((profile) => {
-              let author = getEmptyNostrUser(profile.profile.pubkey)
+              let author = getEmptyNostrUser(profile.profile.pubkey);
               try {
-                author= JSON.parse(profile.profile.content)
-              } catch(err) {
-                console.log(err)
+                author = JSON.parse(profile.profile.content);
+              } catch (err) {
+                console.log(err);
               }
               return {
                 pubkey: profile.profile.pubkey,
@@ -371,12 +372,12 @@ export default function NostrHome() {
       );
       let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
         try {
-          let author = getEmptyNostrUser(note.author.pubkey)
-              try {
-                author= JSON.parse(note.author.content)
-              } catch(err) {
-                console.log(err)
-              }
+          let author = getEmptyNostrUser(note.author.pubkey);
+          try {
+            author = JSON.parse(note.author.content);
+          } catch (err) {
+            console.log(err);
+          }
           return { ...author, pubkey: note.pubkey };
         } catch (err) {
           console.log(err);
@@ -1099,6 +1100,9 @@ export default function NostrHome() {
             {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />}
             <YakiIntro />
             <ArrowUp />
+            {/* <div className="desk-hide box-pad-h-m box-pad-v">
+              <CountDownToNewProduct />
+            </div> */}
             <div className="fit-container fx-centered">
               <HomeFNMobile flashnews={flashNews} />
             </div>
@@ -1553,7 +1557,11 @@ export default function NostrHome() {
                   }}
                   ref={extrasRef}
                 >
-                  <div className="sticky fit-container">
+           
+                  {/* <div className="fit-container sticky" style={{paddingBottom: '.5rem', zIndex: 101}}>
+                    <CountDownToNewProduct />
+                  </div> */}
+                  <div className=" fit-container" style={{position: "relative", zIndex: 100}}>
                     <SearchbarNOSTR />
                   </div>
                   <div
@@ -1586,17 +1594,6 @@ export default function NostrHome() {
                       />
                     </div>
                   )}
-                  {/* <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
-                    }}
-                  >
-                    <h4>Top curators</h4>
-                    <TopCurators />
-                  </div> */}
 
                   {recentTags.length > 0 && (
                     <div
