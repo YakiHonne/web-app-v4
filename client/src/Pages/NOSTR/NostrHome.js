@@ -425,26 +425,6 @@ export default function NostrHome() {
               };
             })
         : [];
-      let tempTrendingNotes = await Promise.all(
-        nostrBandNotes.data.notes.map(async (note) => {
-          let note_ = await onNotesReceived(note.event);
-          return note_;
-        })
-      );
-      let trendingNotesAuthors = nostrBandNotes.data.notes.map((note) => {
-        try {
-          let author = getEmptyNostrUser(note.author.pubkey);
-          try {
-            author = JSON.parse(note.author.content);
-          } catch (err) {
-            console.log(err);
-          }
-          return { ...author, pubkey: note.pubkey };
-        } catch (err) {
-          console.log(err);
-          return getEmptyNostrUser(note.pubkey);
-        }
-      });
 
       setTopCreators(profiles.slice(0, 6));
     } catch (err) {
@@ -1046,7 +1026,7 @@ export default function NostrHome() {
       if (!el) return;
       el.scrollTop = 0;
     };
-    
+
     straightUp();
     setNotesLastEventTime(undefined);
     setNotes([]);
@@ -1584,11 +1564,13 @@ export default function NostrHome() {
                   }}
                   ref={extrasRef}
                 >
-           
                   {/* <div className="fit-container sticky" style={{paddingBottom: '.5rem', zIndex: 101}}>
                     <CountDownToNewProduct />
                   </div> */}
-                  <div className=" fit-container" style={{position: "relative", zIndex: 100}}>
+                  <div
+                    className=" fit-container"
+                    style={{ position: "relative", zIndex: 100 }}
+                  >
                     <SearchbarNOSTR />
                   </div>
                   <div
