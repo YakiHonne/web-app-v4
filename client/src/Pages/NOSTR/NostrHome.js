@@ -100,7 +100,7 @@ export default function NostrHome() {
   const [topCreators, setTopCreators] = useState([]);
   const [trendingNotes, setTrendingNotes] = useState([]);
   const [mediaContentFrom, setMediaContentFrom] = useState("HOMEFEED");
-  const [notesContentFrom, setNotesContentFrom] = useState("trending");
+  const [notesContentFrom, setNotesContentFrom] = useState("universal");
   const [contentSource, setContentSource] = useState("notes");
   const [artsLastEventTime, setArtsLastEventTime] = useState(undefined);
   const [fnLastEventTime, setFnLastEventTime] = useState(undefined);
@@ -1401,14 +1401,14 @@ export default function NostrHome() {
                       >
                         <div
                           className={`list-item fx-centered fx ${
-                            notesContentFrom === "trending"
+                            notesContentFrom === "universal"
                               ? "selected-list-item"
                               : ""
                           }`}
-                          onClick={() => handleNotesContentFrom("trending")}
+                          onClick={() => handleNotesContentFrom("universal")}
                         >
-                          <div className="trending-up"></div>
-                          Trending
+                          <div className="globe"></div>
+                          Universal
                         </div>
                         <div
                           className={`list-item fx-centered fx ${
@@ -1423,14 +1423,14 @@ export default function NostrHome() {
                         </div>
                         <div
                           className={`list-item fx-centered fx ${
-                            notesContentFrom === "universal"
+                            notesContentFrom === "trending"
                               ? "selected-list-item"
                               : ""
                           }`}
-                          onClick={() => handleNotesContentFrom("universal")}
+                          onClick={() => handleNotesContentFrom("trending")}
                         >
-                          <div className="globe"></div>
-                          Universal
+                          <div className="trending-up"></div>
+                          Trending
                         </div>
                         {nostrKeys && (nostrKeys.sec || nostrKeys.ext) && (
                           <div

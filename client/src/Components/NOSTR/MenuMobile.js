@@ -148,6 +148,18 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
+            navigateTo("/notes");
+            dismiss();
+          }}
+          className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
+            isPage("/smart-widget") ? "active-link" : "inactive-link"
+          }`}
+        >
+          <div className="smart-widget-24"></div>
+          <div className="p-big">Smart widget</div>
+        </div>
+        <div
+          onClick={() => {
             navigateTo("/flash-news");
             dismiss();
           }}
@@ -550,7 +562,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               }}
             >
               <div className="logout-24"></div>
-              <p className="c1-c p-big">Logout</p>
+              <p className="p-big">Logout</p>
             </div>
           </div>
         </>
@@ -563,7 +575,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
         }}
       >
         <div className="mobile-24"></div>
-        <p className="p-big c1-c">Get the app</p>
+        <p className="p-big">Get the app</p>
       </div>
       <div className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s">
         <div>
