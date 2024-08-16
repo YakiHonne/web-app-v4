@@ -1987,6 +1987,7 @@ main {
     background-color: #ff9c0811
 }
 
+
 .poll-content-box>span {
     color: var(--p-color) !important
 }
@@ -1997,4 +1998,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding: 0px;
     margin: 0px;
     margin-top: 10px;
+
+.teaser-hover button {
+    height: 48px;
+    width: 48px;
+    transition: .2s ease-in-out;
+}
+.teaser-hover button span {
+   display: none;
+}
+.teaser-hover:hover button span {
+   display: flex;
+}
+.teaser-hover:hover button{
+    width: 240px;
+    background-color: var(--orange-main);
+
 }
