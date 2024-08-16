@@ -84,7 +84,7 @@
 .silver-medal,
 .bronze-medal,
 .copy-24,
-.switch-arrows,
+.copy .switch-arrows,
 .switch-arrows-24,
 .user,
 .user-24,
@@ -281,7 +281,53 @@
 .qrcode,
 .qrcode-24,
 .wallet-add,
-.wallet-add-24 {
+.wallet-add-24,
+.smart-widget-add,
+.smart-widget-add-24,
+.text,
+.text-24,
+.button,
+.button-24,
+.container-one,
+.container-one-24,
+.container-one-one,
+.container-one-one-24,
+.container-one-two,
+.container-one-two-24,
+.container-two-one,
+.container-two-one-24,
+.youtube-logo,
+.youtube-logo-24,
+.telegram-b-logo,
+.telegram-b-logo-24,
+.twitter-w-logo, .twitter-w-logo-24,
+.frames,
+.frames-24,
+.smart-widget,
+.smart-widget-24,
+.smart-widget-bold,
+.smart-widget-bold-24,
+.layout,
+.layout-24,
+.clone,
+.clone-24,
+.checkmark-tt,
+.checkmark-tt-24,
+.crossmark-tt,
+.crossmark-tt-24,
+.info-tt,
+.info-tt-24,
+.smart-widget-checker,
+.smart-widget-checker-24,
+.layers,
+.layers-24 ,
+.switch-arrows,
+.switch-arrows-24,
+.copy-24,
+.copy,
+.smart-widget-draft,
+.smart-widget-draft-24,
+.bunny-icon{
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -309,7 +355,6 @@
     .bounties,
     .code,
     .curation,
-    .discord-logo,
     .edit,
     .facebook-logo,
     .filter,
@@ -339,7 +384,6 @@
     .bounties-24,
     .code-24,
     .curation-24,
-    .discord-logo-24,
     .edit-24,
     .facebook-logo-24,
     .filter-24,
@@ -392,6 +436,7 @@
     .silver-medal,
     .bronze-medal,
     .copy-24,
+    .copy,
     .switch-arrows,
     .switch-arrows-24,
     .user,
@@ -408,8 +453,6 @@
     .arrow-up-bold,
     .bolt-24,
     .bolt,
-    /* .checkmark,
-    .checkmark-24, */
     .flag,
     .upload-file,
     .upload-file-24,
@@ -463,8 +506,6 @@
     .medal-24,
     .add-note,
     .add-note-24,
-    /* .checkmark-c1,
-    .checkmark-c1-24, */
     .msg-icon,
     .msg-icon-24,
     .nostr-icon,
@@ -483,8 +524,6 @@
     .play-24,
     .download-file,
     .download-file-24,
-    /* .connect,
-    .connect-24, */
     .infinity,
     .infinity-24,
     .env-edit-24,
@@ -563,7 +602,37 @@
     .qrcode,
     .qrcode-24,
     .wallet-add,
-    .wallet-add-24 {
+    .wallet-add-24,
+    .smart-widget-add,
+    .smart-widget-add-24,
+    .text,
+    .text-24,
+    .button,
+    .button-24,
+    .container-one,
+    .container-one-24,
+    .container-one-one,
+    .container-one-one-24,
+    .container-one-two,
+    .container-one-two-24,
+    .container-two-one,
+    .container-two-one-24,
+    .frames,
+    .frames-24,
+    .smart-widget,
+    .smart-widget-24,
+    .smart-widget-bold,
+    .smart-widget-bold-24,
+    .layout,
+    .layout-24,
+    .clone,
+    .clone-24,
+    .smart-widget-checker,
+    .smart-widget-checker-24,
+    .layers,
+    .layers-24,
+    .smart-widget-draft,
+.smart-widget-draft-24 {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -730,7 +799,30 @@
 .mute,
 .unmute,
 .qrcode,
-.wallet-add {
+.wallet-add,
+.smart-widget-add,
+.text,
+.button,
+.container-one,
+.container-one-one,
+.container-one-two,
+.container-two-one,
+.youtube-logo,
+.discord-logo,
+.telegram-b-logo,
+.twitter-w-logo,
+.frames,
+.smart-widget,
+.smart-widget-bold,
+.copy,
+.layout,
+.clone,
+.checkmark-tt,
+.crossmark-tt,
+.info-tt,
+.smart-widget-checker,
+.layers ,
+.smart-widget-draft{
     min-width: 16px;
     min-height: 16px;
 }
@@ -879,7 +971,28 @@
 .mute-24,
 .unmute-24,
 .qrcode-24,
-.wallet-add-24 {
+.wallet-add-24,
+.text-24,
+.button-24,
+.container-one-24,
+.container-one-one-24,
+.container-one-two-24,
+.container-two-one-24,
+.youtube-logo-24,
+.discord-logo-24,
+.telegram-b-logo-24,
+.twitter-w-logo-24,
+.frames-24,
+.smart-widget-24,
+.smart-widget-bold-24,
+.layout-24,
+.clone-24,
+.checkmark-tt-24,
+.crossmark-tt-24,
+.info-tt-24,
+.smart-widget-checker-24,
+.layers-24,
+.smart-widget-draft-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -887,6 +1000,114 @@
 .play-vid-58 {
     min-width: 48px;
     min-height: 48px;
+}
+
+.bunny-icon {
+    min-width: 8rem;
+    min-height: 8rem;
+}
+
+.bunny-icon{
+    background-image: url('../media/icons/bunny-icon.svg');
+}
+.smart-widget-draft,
+.smart-widget-draft-24 {
+    background-image: url('../media/icons/sw-draft.svg');
+}
+.layers,
+.layers-24 {
+    background-image: url('../media/icons/layers.svg');
+}
+
+.smart-widget-checker,
+.smart-widget-checker-24 {
+    background-image: url('../media/icons/smart-widget-checker.svg');
+}
+
+.checkmark-tt,
+.checkmark-tt-24 {
+    background-image: url('../media/icons/checkmark-tt.svg');
+}
+
+.crossmark-tt,
+.crossmark-tt-24 {
+    background-image: url('../media/icons/crossmark-tt.svg');
+}
+
+.info-tt,
+.info-tt-24 {
+    background-image: url('../media/icons/info-tt.svg');
+}
+
+.clone,
+.clone-24 {
+    background-image: url('../media/icons/clone.svg');
+}
+
+.layout,
+.layout-24 {
+    background-image: url('../media/icons/layout.svg');
+}
+
+.frames,
+.frames-24 {
+    background-image: url('../media/icons/frames.svg');
+}
+
+.smart-widget,
+.smart-widget-24 {
+    background-image: url('../media/icons/smart-widget.svg');
+}
+
+.smart-widget-bold,
+.smart-widget-bold-24 {
+    background-image: url('../media/icons/smart-widget-bold.svg');
+}
+
+.telegram-b-logo,
+.telegram-b-logo-24 {
+    background-image: url('../media/icons/telegram.svg');
+}
+
+.youtube-logo,
+.youtube-logo-24 {
+    background-image: url('../media/icons/youtube.svg');
+
+}
+
+.container-one,
+.container-one-24 {
+    background-image: url('../media/icons/container-one.svg');
+}
+
+.container-one-one,
+.container-one-one-24 {
+    background-image: url('../media/icons/container-one-one.svg');
+}
+
+.container-one-two,
+.container-one-two-24 {
+    background-image: url('../media/icons/container-one-two.svg');
+}
+
+.container-two-one,
+.container-two-one-24 {
+    background-image: url('../media/icons/container-two-one.svg');
+}
+
+.button,
+.button-24 {
+    background-image: url('../media/icons/button.svg');
+}
+
+.text,
+.text-24 {
+    background-image: url('../media/icons/text.svg');
+}
+
+.smart-widget-add,
+.smart-widget-add-24 {
+    background-image: url('../media/icons/smart-widget-add.svg');
 }
 
 .wallet-add,
@@ -962,7 +1183,7 @@
 }
 
 .user-followed-w,
-.user-followed-w-24 {
+.user-followed-w-24, .twitter-w-logo, .twitter-w-logo-24 {
     filter: invert();
 }
 
@@ -1081,6 +1302,12 @@
 .plus-sign-w,
 .plus-sign-w-24 {
     background-image: url('../media/icons/plus-sign.svg');
+}
+
+.plus-sign,
+.plus-sign-w {
+    min-width: 10px;
+    min-height: 10px;
 }
 
 .plus-sign-w,
@@ -1402,7 +1629,7 @@
     background-image: url('../media/icons/keys.svg');
 }
 
-.copy-24 {
+.copy, .copy-24 {
     background-image: url('../media/icons/copy.svg');
 }
 
@@ -1500,6 +1727,7 @@
 
 .discord-logo, .discord-logo-24 {
     background-image: url('../media/icons/discord-logo.svg');
+    filter: invert();
 }
 
 .edit, .edit-24 {
@@ -1574,7 +1802,7 @@
     background-image: url('../media/icons/trash.svg');
 }
 
-.twitter-logo, .twitter-logo-24 {
+.twitter-logo, .twitter-logo-24, .twitter-w-logo, .twitter-w-logo-24 {
     background-image: url('../media/icons/twitter-logo.svg');
 }
 

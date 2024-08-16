@@ -128,11 +128,26 @@ const RedictingLinks = ({ exit, internalExit }) => {
           </Link>
 
           <Link
+            to={"/smart-widget-builder"}
+            className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
+            style={{
+              width: "48%",
+              padding: "2rem",
+              backgroundColor: "var(--c1-side)",
+            }}
+          >
+            <div
+              className="smart-widget-add-24"
+              style={{ width: "48px", height: "48px" }}
+            ></div>
+            <div style={{ width: "max-content" }}>Smart widget</div>
+          </Link>
+          <Link
             to={"/my-videos"}
             state={{ addVideo: true }}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
             style={{
-              //   width: "48%",
+              width: "48%",
               padding: "2rem",
               backgroundColor: "var(--c1-side)",
             }}

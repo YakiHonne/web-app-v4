@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import { Helmet } from "react-helmet";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import { Context } from "../../Context/Context";
 import {
   SimplePool,
@@ -11,19 +9,10 @@ import {
   getEventHash,
   generateSecretKey,
   finalizeEvent,
-  getPublicKey,
-  nip19,
 } from "nostr-tools";
-import {
-  bytesTohex,
-  decrypt04,
-  filterRelays,
-  getHex,
-  unwrapGiftWrap,
-} from "../../Helpers/Encryptions";
+import { bytesTohex, filterRelays } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
 import { getNoteTree } from "../../Helpers/Helpers";
-import { useMemo } from "react";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import Date_ from "../../Components/Date_";
 import { useRef } from "react";
@@ -33,7 +22,6 @@ import EmojisList from "../../Components/EmojisList";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/NOSTR/InitConvo";
 import axiosInstance from "../../Helpers/HTTP_Client";
-const pool = new SimplePool();
 
 export default function DMS() {
   const {
@@ -232,7 +220,6 @@ export default function DMS() {
       let chatrooms_ = transaction.objectStore("chatrooms");
 
       chatrooms_.put(tempEvent, event.pubkey);
-      console.log(chatrooms_);
     };
   };
 
@@ -1239,8 +1226,7 @@ const initPublishing = async (relays, event1, event2) => {
       Promise.allSettled(pool_ev1.publish(relays, event1)),
       Promise.allSettled(pool_ev2.publish(relays, event2)),
     ]);
-    // console.log(res1)
-    // return res1.find((item) => item.status === "fulfilled") ? true : false;
+
     return true;
   } catch (err) {
     console.log(err);

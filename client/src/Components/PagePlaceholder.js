@@ -12,6 +12,8 @@ import HeroDMS from "../media/images/DMS.png";
 import HeroDMSWaiting from "../media/images/DMS-waiting.gif";
 import HeroYakiChest from "../media/images/trophy.png";
 import HeroWallet from "../media/images/wallet.png";
+import HeroWidgets from "../media/images/widgets.png";
+import HeroWidgetsDraft from "../media/images/draft.png";
 import LoginNOSTR from "./NOSTR/LoginNOSTR";
 import { useContext } from "react";
 import { Context } from "../Context/Context";
@@ -24,7 +26,6 @@ export default function PagePlaceholder({ page, onClick = null }) {
   const [triggerLogin, setTriggerLogin] = useState(false);
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [showAddWallet, setShowAddWallet] = useState(false);
-
   if (page === "404")
     return (
       <div className="fit-container">
@@ -409,6 +410,51 @@ export default function PagePlaceholder({ page, onClick = null }) {
             >
               <div className="plus-sign"></div> Add wallet
             </button>
+          </div>
+        </div>
+      </>
+    );
+  if (page === "widgets")
+    return (
+      <>
+        {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
+        <div className="fit-container">
+          <div className="fx-centered fx-col" style={{ height: "60vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroWidgets})`,
+                width: "500px",
+                height: "280px",
+              }}
+            ></div>
+            <h4>Smart widget checker</h4>
+            <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
+              Enter a smart widget naddr to check for its validity
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  if (page === "widgets-draft")
+    return (
+      <>
+        <div className="fit-container">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroWidgetsDraft})`,
+                width: "500px",
+                height: "280px",
+              }}
+            ></div>
+            <h4>No drafts</h4>
+            <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
+              Your drafts list is empty, any created or cloned widgets will be
+              automatically saved here!
+            </p>
+            <button className="btn btn-normal" onClick={onClick}>Add a widget</button>
           </div>
         </div>
       </>

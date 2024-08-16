@@ -22,7 +22,6 @@ import { Link } from "react-router-dom";
 import Date_ from "../../Components/Date_";
 import ZapTip from "../../Components/NOSTR/ZapTip";
 import LoadingDots from "../../Components/LoadingDots";
-import UN from "../../Components/NOSTR/UN";
 import SaveArticleAsBookmark from "../../Components/NOSTR/SaveArticleAsBookmark";
 import {
   getAuthPubkeyFromNip05,
@@ -146,7 +145,6 @@ export default function NostrVideo() {
       : false;
   }, [reporters]);
   const optionsRef = useRef(null);
-
   const isVoted = useMemo(() => {
     return nostrKeys
       ? upvoteReaction
@@ -158,7 +156,6 @@ export default function NostrVideo() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // setIsLoaded(false);
         setVideoViews(0);
         setUpvoteReaction([]);
         setDownvoteReaction([]);
@@ -195,7 +192,6 @@ export default function NostrVideo() {
           {
             onevent(event) {
               if (event.kind === 1984) {
-                console.log(event);
                 setReporters((prev) => [...prev, event]);
               }
               if (event.kind === 7) {
@@ -437,12 +433,10 @@ export default function NostrVideo() {
       setIsLoading(false);
     }
   };
-
   const checkURL = async () => {
     try {
       if (AuthNip05 && VidIdentifier) {
         let temPubkey = await getAuthPubkeyFromNip05(AuthNip05);
-        console.log(temPubkey);
         return {
           pubkey: temPubkey,
           identifier: VidIdentifier,
@@ -461,6 +455,7 @@ export default function NostrVideo() {
       navigateTo("/videos");
     }
   };
+
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
@@ -1005,7 +1000,7 @@ const CommentsSection = ({
     tempArray_1.splice(indexToDelete, 1);
     setComments(tempArray_1);
   };
-  console.log(netComments);
+  
   useEffect(() => {
     let tempComment = [];
     const sub = pool.subscribeMany(

@@ -24,7 +24,6 @@ export default function FlashNewsCard({
   const navigateTo = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [noteContent, setNoteContent] = useState("");
   const [author, setAuthor] = useState(newsContent.author);
   const isMisLeading = newsContent.sealed_note
     ? JSON.parse(newsContent.sealed_note.content).tags.find(
@@ -37,8 +36,7 @@ export default function FlashNewsCard({
       : false;
   }, [newsContent, nostrKeys]);
   const [usersList, setUsersList] = useState(false);
-  // const [upvoteReaction, setUpvoteReaction] = useState([]);
-  // const [downvoteReaction, refreshRating] = useState([]);
+
   const isVoted = useMemo(() => {
     return nostrKeys
       ? upvoteReaction

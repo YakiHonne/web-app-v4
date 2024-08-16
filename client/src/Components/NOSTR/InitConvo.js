@@ -205,23 +205,6 @@ export default function InitiConvo({ exit, receiver = false }) {
     try {
       let pool_ev1 = new SimplePool();
       let pool_ev2 = new SimplePool();
-
-      // Promise.allSettled(pool_ev1.publish(relays, event1)).then((results) => {
-      //   if (receiver) {
-      //     setToast({
-      //       type: 1,
-      //       desc: "Message sent!",
-      //     });
-      //     exit();
-      //   }
-      // });
-
-      // let res2 = pool_ev2.publish(relays, event2);
-
-      // let [res1, res2] = await Promise.all([
-      //   Promise.allSettled(pool_ev1.publish(relays, event1)),
-      //   Promise.allSettled(pool_ev2.publish(relays, event2)),
-      // ]);
       let [res1, res2] = await Promise.race([
         Promise.allSettled(pool_ev1.publish(relaysOnPlatform, event1)),
         Promise.allSettled(pool_ev2.publish(relaysOnPlatform, event2)),
@@ -234,14 +217,12 @@ export default function InitiConvo({ exit, receiver = false }) {
         });
         return false;
       }
-      // let check_publishing = res1.find((item) => item.status === "fulfilled");
-      // if (receiver && check_publishing) {
+
       setToast({
         type: 1,
         desc: "Message sent!",
       });
-      // }
-      // return check_publishing ? true : false;
+
       return true;
     } catch (err) {
       console.log(err);

@@ -20,8 +20,6 @@ const actionKeys = [
   "bookmark",
   "zap",
   "reaction",
-  // "upvote",
-  // "downvote",
   "comment_post",
 ];
 
@@ -37,8 +35,6 @@ const chartActionKeys = [
   "bookmark",
   "zap",
   "reaction",
-  // "upvote",
-  // "downvote",
   "dms",
   "user_impact",
   "comment_post",

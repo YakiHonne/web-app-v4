@@ -7,7 +7,6 @@ import axiosInstance from "../../Helpers/HTTP_Client";
 import ProgressBar from "../../Components/ProgressBar";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import { chartActionKeys } from "../../Content/ActionKeys";
-import { act } from "react";
 import Date_ from "../../Components/Date_";
 import ProgressCirc from "../../Components/ProgressCirc";
 import Footer from "../../Components/Footer";
@@ -27,8 +26,6 @@ let chart_ = [
   { action: "video_post", all_time_points: 0, last_updated: null },
   { action: "bookmark", all_time_points: 0, last_updated: null },
   { action: "zap", all_time_points: 0, last_updated: null },
-  // { action: "upvote", all_time_points: 0, last_updated: null },
-  // { action: "downvote", all_time_points: 0, last_updated: null },
   { action: "reaction", all_time_points: 0, last_updated: null },
   { action: "dms", all_time_points: 0, last_updated: null },
   { action: "user_impact", all_time_points: 0, last_updated: null },

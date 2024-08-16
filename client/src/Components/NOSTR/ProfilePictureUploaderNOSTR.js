@@ -2,14 +2,10 @@ import React, { useContext, useState } from "react";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { nostrPpPlaceholder } from "../../Content/NostrPPPlaceholder";
 import { Context } from "../../Context/Context";
-import { getEventHash, signEvent, relayInit } from "nostr-tools";
-import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import { filterRelays } from "../../Helpers/Encryptions";
-
-const pool = new SimplePool();
 
 export default function ProfilePictureUploaderNOSTR({
   current = "",

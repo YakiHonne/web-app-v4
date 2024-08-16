@@ -1,5 +1,6 @@
-import React, { Fragment, useState } from "react";
+import React, { useState } from "react";
 import LevelingSystem from "./YakiNewFeatureIntroComponents/LevelingSystem";
+import SmartWidgetsSystem from "./YakiNewFeatureIntroComponents/SmartWidgetsSystem";
 
 export default function YakiNewFeatureIntro() {
   const [isDisplayed, setIsDisplayed] = useState(
@@ -7,7 +8,7 @@ export default function YakiNewFeatureIntro() {
   );
   const [slideNumber, setSlideNumber] = useState(0);
   const nextSlide = () => {
-    if (slideNumber + 1 < LevelingSystem.length)
+    if (slideNumber + 1 < SmartWidgetsSystem.length)
       setSlideNumber(slideNumber + 1);
   };
   const prevSlide = () => {
@@ -15,33 +16,47 @@ export default function YakiNewFeatureIntro() {
   };
 
   const skipShowcase = () => {
-    localStorage.setItem("feature_showcase", Date.now());
-    setIsDisplayed(true);
+    localStorage.setItem("feature_showcase", "sw");
+    setIsDisplayed("sw");
   };
 
-  if (isDisplayed) return null;
+  if (isDisplayed === "sw") return null;
   return (
     <div className="fixed-container fx-centered fx-col box-pad-h">
       <div
         className="sc-s fx-centered carousel"
         style={{ width: "min(100%, 1000px)", columnGap: 0, maxHeight: "560px" }}
       >
-        {/* <div
-          className="carousel-arrows fx-scattered fit-container fit-height box-pad-h-s"
-          style={{ position: "absolute", left: 0, top: 0, zIndex: 100 }}
-        > */}
-          <div className="browsing-arrow slide-left carousel-arrows" onClick={prevSlide}   style={{ position: "absolute", left: "10px", top: "50%", zIndex: 100 }}>
-            <div className="arrow" style={{ rotate: "90deg" }}></div>{" "}
-          </div>
-          <div className="browsing-arrow slide-right carousel-arrows" onClick={nextSlide}   style={{ position: "absolute", right: "10px", top: "50%", zIndex: 100 }}>
-            <div className="arrow" style={{ rotate: "-90deg" }}></div>{" "}
-          </div>
+        <div
+          className="browsing-arrow slide-left carousel-arrows"
+          onClick={prevSlide}
+          style={{
+            position: "absolute",
+            left: "10px",
+            top: "50%",
+            zIndex: 100,
+          }}
+        >
+          <div className="arrow" style={{ rotate: "90deg" }}></div>{" "}
+        </div>
+        <div
+          className="browsing-arrow slide-right carousel-arrows"
+          onClick={nextSlide}
+          style={{
+            position: "absolute",
+            right: "10px",
+            top: "50%",
+            zIndex: 100,
+          }}
+        >
+          <div className="arrow" style={{ rotate: "-90deg" }}></div>{" "}
+        </div>
         {/* </div> */}
         <div
           className="fx-centered fit-container fit-height fx-start-h "
           style={{ columnGap: 0 }}
         >
-          {LevelingSystem.map((item, index) => {
+          {SmartWidgetsSystem.map((item, index) => {
             return (
               <div
                 className="fit-container fit-height fx-shrink"
@@ -69,7 +84,7 @@ export default function YakiNewFeatureIntro() {
             <div
               style={{
                 width: `${Math.ceil(
-                  ((slideNumber + 1) * 100) / LevelingSystem.length
+                  ((slideNumber + 1) * 100) / SmartWidgetsSystem.length
                 )}%`,
                 height: "4px",
                 backgroundColor: "var(--c1)",

@@ -1,38 +1,27 @@
 import axios from "axios";
-import CryptoJS from "crypto-js";
 import { nip19, finalizeEvent, SimplePool } from "nostr-tools";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import QRCode from "react-qr-code";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ArrowUp from "../../Components/ArrowUp";
 import Calendar from "../../Components/Calendar";
 import Date_ from "../../Components/Date_";
 import LoadingDots from "../../Components/LoadingDots";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import NumberShrink from "../../Components/NumberShrink";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import relaysOnPlatform from "../../Content/Relays";
-import ShowUsersList from "../../Components/NOSTR/ShowUsersList";
 import { Context } from "../../Context/Context";
 import {
-  decryptEventData,
   encryptEventData,
   filterRelays,
-  getBech32,
-  getEmptyNostrUser,
-  getHex,
   getParsed3000xContent,
-  isImageUrl,
   shortenKey,
 } from "../../Helpers/Encryptions";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import ToDeleteNote from "../../Components/NOSTR/ToDeleteNote";
-import UN from "../../Components/NOSTR/UN";
-import SaveArticleAsBookmark from "../../Components/NOSTR/SaveArticleAsBookmark";
 import { getNoteTree } from "../../Helpers/Helpers";
 import FlashNewsCard from "../../Components/NOSTR/FlashNewsCard";
 import Footer from "../../Components/Footer";
@@ -247,7 +236,6 @@ export default function NostrFlashNews() {
         return;
       }
       if (!isLoading && flashNews[flashNews.length - 1].news.length < total) {
-    
         setPage(
           (prev) => flashNews[flashNews.length - 1].news.length / elPerPage
         );
@@ -437,11 +425,11 @@ export default function NostrFlashNews() {
         />
       )}
       <div className="fit-container fx-centered">
-      <div className="main-container">
-        <SidebarNOSTR />
-        <main className="main-page-nostr-container">
-          <ArrowUp />
-          {/* {(nostrKeys?.sec || nostrKeys?.ext) && (
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main className="main-page-nostr-container">
+            <ArrowUp />
+            {/* {(nostrKeys?.sec || nostrKeys?.ext) && (
             <div
               style={{
                 position: "fixed",
@@ -459,27 +447,27 @@ export default function NostrFlashNews() {
               <p className="p-big white-c">&#xFF0B;</p>
             </div>
           )} */}
-          {/* <NavbarNOSTR /> */}
-          <div className="fx-centered fit-container  fx-start-h fx-start-v">
-            <div style={{ flex: 1.5, paddingLeft: "1rem" }}>
-            {/* <div style={{ width: "min(100%,600px)" }}> */}
-              <div
-                className="fit-container fx-scattered"
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  backgroundColor: "var(--white)",
-                  paddingTop: "1.5rem",
-                  zIndex: "101",
-                }}
-              >
-                {contentType === "all" && <h4>Flash news</h4>}
+            {/* <NavbarNOSTR /> */}
+            <div className="fx-centered fit-container  fx-start-h fx-start-v">
+              <div style={{ flex: 1.5, paddingLeft: "1rem" }}>
+                {/* <div style={{ width: "min(100%,600px)" }}> */}
+                <div
+                  className="fit-container fx-scattered"
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    backgroundColor: "var(--white)",
+                    paddingTop: "1.5rem",
+                    zIndex: "101",
+                  }}
+                >
+                  {contentType === "all" && <h4>Flash news</h4>}
 
-                <div className="fx-centered">
                   <div className="fx-centered">
                     <div className="fx-centered">
-                      {/* <p className="p-medium gray-c">Show only importants</p> */}
-                      {/* <div
+                      <div className="fx-centered">
+                        {/* <p className="p-medium gray-c">Show only importants</p> */}
+                        {/* <div
                         className="round-icon round-icon-tooltip"
                         data-tooltip="Show only days with news"
                         style={{
@@ -491,107 +479,107 @@ export default function NostrFlashNews() {
                       >
                         <div className="news-24"></div>
                       </div> */}
-                      <div
-                        className="round-icon-tooltip round-icon"
-                        style={{
-                          backgroundColor: onlyImportant ? "var(--c1)" : "",
-                        }}
-                        data-tooltip="Show only importants"
-                        onClick={() => setOnlyImportant(!onlyImportant)}
-                      >
-                        <svg
-                          viewBox="0 0 14 13"
-                          xmlns="http://www.w3.org/2000/svg"
-                          style={{
-                            fill: onlyImportant
-                              ? "var(--white)"
-                              : "var(--gray)",
-                            height: "24px",
-                            width: "24px",
-                            margin: 0,
-                          }}
-                          className="hot"
-                        >
-                          <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="days-picker">
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip="Choose date"
-                        onClick={() => {
-                          setShowCalendar(!showCalendar);
-                          setShowOptions(false);
-                        }}
-                      >
-                        <div className="calendar"></div>
-                      </div>
-                      {showCalendar && (
-                        <>
-                          <Calendar
-                            selected_day={
-                              specificDate
-                                ? new Date(firstEventTime * 1000)
-                                : null
-                            }
-                            onClick={handleSelectingDates}
-                            clear={clearDates}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {nostrKeys && (
-                    <div style={{ position: "relative" }}>
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip="Options"
-                        onClick={() => {
-                          setShowOptions(!showOptions);
-                          setShowCalendar(false);
-                        }}
-                      >
                         <div
-                          className="fx-centered fx-col"
-                          style={{ rowGap: 0 }}
+                          className="round-icon-tooltip round-icon"
+                          style={{
+                            backgroundColor: onlyImportant ? "var(--c1)" : "",
+                          }}
+                          data-tooltip="Show only importants"
+                          onClick={() => setOnlyImportant(!onlyImportant)}
                         >
-                          <p
-                            className="gray-c fx-centered"
-                            style={{ height: "6px" }}
+                          <svg
+                            viewBox="0 0 14 13"
+                            xmlns="http://www.w3.org/2000/svg"
+                            style={{
+                              fill: onlyImportant
+                                ? "var(--white)"
+                                : "var(--gray)",
+                              height: "24px",
+                              width: "24px",
+                              margin: 0,
+                            }}
+                            className="hot"
                           >
-                            &#x2022;
-                          </p>
-                          <p
-                            className="gray-c fx-centered"
-                            style={{ height: "6px" }}
-                          >
-                            &#x2022;
-                          </p>
-                          <p
-                            className="gray-c fx-centered"
-                            style={{ height: "6px" }}
-                          >
-                            &#x2022;
-                          </p>
+                            <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
+                          </svg>
                         </div>
                       </div>
-                      {showOptions && (
+                      <div className="days-picker">
                         <div
-                          style={{
-                            position: "absolute",
-                            right: 0,
-                            bottom: "-5px",
-                            backgroundColor: "var(--dim-gray)",
-                            border: "none",
-                            transform: "translateY(100%)",
-                            minWidth: "150px",
-                            zIndex: 1000,
-                            rowGap: "12px",
+                          className="round-icon round-icon-tooltip"
+                          data-tooltip="Choose date"
+                          onClick={() => {
+                            setShowCalendar(!showCalendar);
+                            setShowOptions(false);
                           }}
-                          className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
                         >
-                          {/* <div
+                          <div className="calendar"></div>
+                        </div>
+                        {showCalendar && (
+                          <>
+                            <Calendar
+                              selected_day={
+                                specificDate
+                                  ? new Date(firstEventTime * 1000)
+                                  : null
+                              }
+                              onClick={handleSelectingDates}
+                              clear={clearDates}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {nostrKeys && (
+                      <div style={{ position: "relative" }}>
+                        <div
+                          className="round-icon round-icon-tooltip"
+                          data-tooltip="Options"
+                          onClick={() => {
+                            setShowOptions(!showOptions);
+                            setShowCalendar(false);
+                          }}
+                        >
+                          <div
+                            className="fx-centered fx-col"
+                            style={{ rowGap: 0 }}
+                          >
+                            <p
+                              className="gray-c fx-centered"
+                              style={{ height: "6px" }}
+                            >
+                              &#x2022;
+                            </p>
+                            <p
+                              className="gray-c fx-centered"
+                              style={{ height: "6px" }}
+                            >
+                              &#x2022;
+                            </p>
+                            <p
+                              className="gray-c fx-centered"
+                              style={{ height: "6px" }}
+                            >
+                              &#x2022;
+                            </p>
+                          </div>
+                        </div>
+                        {showOptions && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              right: 0,
+                              bottom: "-5px",
+                              backgroundColor: "var(--dim-gray)",
+                              border: "none",
+                              transform: "translateY(100%)",
+                              minWidth: "150px",
+                              zIndex: 1000,
+                              rowGap: "12px",
+                            }}
+                            className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
+                          >
+                            {/* <div
                             className="fit-container fx-centered fx-start-h pointer"
                             
                           >
@@ -603,186 +591,188 @@ export default function NostrFlashNews() {
                               All news
                             </p>
                           </div> */}
-                          <Link
-                            className="fit-container fx-centered fx-start-h pointer"
-                            to={"/my-flash-news"}
+                            <Link
+                              className="fit-container fx-centered fx-start-h pointer"
+                              to={"/my-flash-news"}
+                            >
+                              <p className="gray-c">My news</p>
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div
+                  className="fx-centered fit-container fx-col fx-start-v fx-start-h"
+                  style={{ rowGap: 0 }}
+                >
+                  {flashNews.map((fn, fnIndex) => {
+                    return (
+                      <div
+                        key={`${fn.date}-${fnIndex}`}
+                        className="fit-container"
+                      >
+                        {((specificDate && fn.news.length > 1) ||
+                          (!specificDate &&
+                            onlyHasNews &&
+                            fn.news.length > 0)) && (
+                          // (!specificDate && !onlyHasNews)) && (
+                          <div
+                            className="fit-container box-pad-v fx-scattered"
+                            style={{
+                              position: "sticky",
+                              top: "50px",
+                              backgroundColor: "var(--white)",
+                              zIndex: "100",
+                            }}
                           >
-                            <p className="gray-c">My news</p>
-                          </Link>
-                        </div>
-                      )}
+                            <h4 className="gray-c">
+                              <Date_
+                                toConvert={new Date(
+                                  fn.date * 1000
+                                ).toISOString()}
+                              />
+                            </h4>
+                          </div>
+                        )}
+                        {fn.news.map((news, index) => {
+                          let ratingStats = getRatingStats(news.id);
+                          let isBanned = [...bannedList, ...mutedList].includes(
+                            news.author.pubkey
+                          );
+
+                          if (!onlyImportant && !isBanned)
+                            return (
+                              <div
+                                className="fx-centered fx-start-v fx-stretch fit-container"
+                                style={{ columnGap: "10px" }}
+                                key={news.id}
+                              >
+                                <div
+                                  className="fx-centered fx-start-v"
+                                  // style={{ minWidth: "64px" }}
+                                >
+                                  <div
+                                    className="fx-centered fx-col fx-start-h"
+                                    style={{ rowGap: 0, height: "100%" }}
+                                  >
+                                    <h4 className="gray-c">&#x2022;</h4>
+                                  </div>
+                                </div>
+                                <FlashNewsCard
+                                  newsContent={news}
+                                  self={!(contentType === "all")}
+                                  upvoteReaction={ratingStats.upvotes}
+                                  downvoteReaction={ratingStats.downvotes}
+                                  refreshRating={refreshRating}
+                                />
+                                {contentType === "self" && (
+                                  <div>
+                                    <div
+                                      className="round-icon"
+                                      onClick={() => {
+                                        setNoteToDelete({
+                                          id: news.id,
+                                          content: news.content,
+                                          index_1: fnIndex,
+                                          index_2: index,
+                                        });
+                                      }}
+                                    >
+                                      <div className="trash"></div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          if (
+                            (onlyImportant === news.is_important) === true &&
+                            news.is_authentic &&
+                            !isBanned
+                          )
+                            return (
+                              <div
+                                className="fx-centered fx-start-v fx-stretch fit-container"
+                                style={{ columnGap: "10px" }}
+                                key={news.id}
+                              >
+                                <div
+                                  className="fx-centered fx-start-v"
+                                  // style={{ minWidth: "64px" }}
+                                >
+                                  <div
+                                    className="fx-centered fx-col fx-start-h"
+                                    style={{ rowGap: 0, height: "100%" }}
+                                  >
+                                    <h4 className="gray-c h4-big">&#x2022;</h4>
+                                  </div>
+                                </div>
+                                <FlashNewsCard
+                                  newsContent={news}
+                                  self={!(contentType === "all")}
+                                  upvoteReaction={ratingStats.upvotes}
+                                  downvoteReaction={ratingStats.downvotes}
+                                  refreshRating={refreshRating}
+                                />
+                              </div>
+                            );
+                        })}
+                        {!specificDate &&
+                          !onlyHasNews &&
+                          fn.news.length === 0 && (
+                            <div className="fit-container fx-centered fx-start-h">
+                              <p className="gray-c">No news on this day</p>
+                            </div>
+                          )}
+                      </div>
+                    );
+                  })}
+                  {!isLoading &&
+                    specificDate &&
+                    flashNews[0]?.news?.length === 0 && (
+                      <PagePlaceholder page={"nostr-news"} />
+                    )}
+                  {isLoading && (
+                    <div
+                      className="fit-container fx-centered box-marg"
+                      style={{ height: "30vh" }}
+                    >
+                      <p className="gray-c">Loading</p>
+                      <LoadingDots />
                     </div>
                   )}
                 </div>
               </div>
               <div
-                className="fx-centered fit-container fx-col fx-start-v fx-start-h"
-                style={{ rowGap: 0 }}
-              >
-                {flashNews.map((fn, fnIndex) => {
-                  return (
-                    <div
-                      key={`${fn.date}-${fnIndex}`}
-                      className="fit-container"
-                    >
-                      {((specificDate && fn.news.length > 1) ||
-                        (!specificDate &&
-                          onlyHasNews &&
-                          fn.news.length > 0)) && (
-                        // (!specificDate && !onlyHasNews)) && (
-                        <div
-                          className="fit-container box-pad-v fx-scattered"
-                          style={{
-                            position: "sticky",
-                            top: "50px",
-                            backgroundColor: "var(--white)",
-                            zIndex: "100",
-                          }}
-                        >
-                          <h4 className="gray-c">
-                            <Date_
-                              toConvert={new Date(fn.date * 1000).toISOString()}
-                            />
-                          </h4>
-                        </div>
-                      )}
-                      {fn.news.map((news, index) => {
-                        let ratingStats = getRatingStats(news.id);
-                        let isBanned = [...bannedList, ...mutedList].includes(
-                          news.author.pubkey
-                        );
-
-                        if (!onlyImportant && !isBanned)
-                          return (
-                            <div
-                              className="fx-centered fx-start-v fx-stretch fit-container"
-                              style={{ columnGap: "10px" }}
-                              key={news.id}
-                            >
-                              <div
-                                className="fx-centered fx-start-v"
-                                // style={{ minWidth: "64px" }}
-                              >
-                                <div
-                                  className="fx-centered fx-col fx-start-h"
-                                  style={{ rowGap: 0, height: "100%" }}
-                                >
-                                  <h4 className="gray-c">&#x2022;</h4>
-                                </div>
-                              </div>
-                              <FlashNewsCard
-                                newsContent={news}
-                                self={!(contentType === "all")}
-                                upvoteReaction={ratingStats.upvotes}
-                                downvoteReaction={ratingStats.downvotes}
-                                refreshRating={refreshRating}
-                              />
-                              {contentType === "self" && (
-                                <div>
-                                  <div
-                                    className="round-icon"
-                                    onClick={() => {
-                                      setNoteToDelete({
-                                        id: news.id,
-                                        content: news.content,
-                                        index_1: fnIndex,
-                                        index_2: index,
-                                      });
-                                    }}
-                                  >
-                                    <div className="trash"></div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        if (
-                          (onlyImportant === news.is_important) === true &&
-                          news.is_authentic &&
-                          !isBanned
-                        )
-                          return (
-                            <div
-                              className="fx-centered fx-start-v fx-stretch fit-container"
-                              style={{ columnGap: "10px" }}
-                              key={news.id}
-                            >
-                              <div
-                                className="fx-centered fx-start-v"
-                                // style={{ minWidth: "64px" }}
-                              >
-                                <div
-                                  className="fx-centered fx-col fx-start-h"
-                                  style={{ rowGap: 0, height: "100%" }}
-                                >
-                                  <h4 className="gray-c h4-big">&#x2022;</h4>
-                                </div>
-                              </div>
-                              <FlashNewsCard
-                                newsContent={news}
-                                self={!(contentType === "all")}
-                                upvoteReaction={ratingStats.upvotes}
-                                downvoteReaction={ratingStats.downvotes}
-                                refreshRating={refreshRating}
-                              />
-                            </div>
-                          );
-                      })}
-                      {!specificDate &&
-                        !onlyHasNews &&
-                        fn.news.length === 0 && (
-                          <div className="fit-container fx-centered fx-start-h">
-                            <p className="gray-c">No news on this day</p>
-                          </div>
-                        )}
-                    </div>
-                  );
-                })}
-                {!isLoading &&
-                  specificDate &&
-                  flashNews[0]?.news?.length === 0 && (
-                    <PagePlaceholder page={"nostr-news"} />
-                  )}
-                {isLoading && (
-                  <div
-                    className="fit-container fx-centered box-marg"
-                    style={{ height: "30vh" }}
-                  >
-                    <p className="gray-c">Loading</p>
-                    <LoadingDots />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div
-              className="box-pad-h-s fx-centered fx-col fx-start-v extras-homepage"
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: "100",
-                flex: 1
-                // width: "min(100%, 400px)",
-              }}
-            >
-              <div className="sticky fit-container">
-                <SearchbarNOSTR />
-              </div>
-              <div
-                className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                className="box-pad-h-s fx-centered fx-col fx-start-v extras-homepage"
                 style={{
-                  backgroundColor: "var(--c1-side)",
-                  rowGap: "24px",
-                  border: "none",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: "100",
+                  flex: 1,
+                  // width: "min(100%, 400px)",
                 }}
               >
-                <h4>Important Flash News</h4>
-                <HomeFN flashnews={importantFN} />
+                <div className="sticky fit-container">
+                  <SearchbarNOSTR />
+                </div>
+                <div
+                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                  style={{
+                    backgroundColor: "var(--c1-side)",
+                    rowGap: "24px",
+                    border: "none",
+                  }}
+                >
+                  <h4>Important Flash News</h4>
+                  <HomeFN flashnews={importantFN} />
+                </div>
+                <Footer />
               </div>
-              <Footer />
             </div>
-          </div>
-        </main>
-      </div>
+          </main>
+        </div>
       </div>
     </div>
   );
@@ -933,7 +923,6 @@ const AddNews = ({ exit }) => {
 
   const handlePublishing = async () => {
     try {
-     
       if (currentWordsCount === 0 && !note) {
         setToast({
           type: 3,
@@ -970,7 +959,7 @@ const AddNews = ({ exit }) => {
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
       if (flag) tags.push(["important", `${created_at}`]);
-      tags.push( [
+      tags.push([
         "client",
         "Yakihonne",
         "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
@@ -1036,7 +1025,7 @@ const AddNews = ({ exit }) => {
       }
 
       setInvoice(res.data.pr);
-      // setConfirmation("in_progress");
+      
       const { webln } = window;
       if (webln) {
         try {
@@ -1561,651 +1550,3 @@ const AddNews = ({ exit }) => {
     </>
   );
 };
-
-// const FlashNewsCard = ({
-//   self = "false",
-//   newsContent,
-//   upvoteReaction = [],
-//   downvoteReaction = [],
-//   refreshRating,
-// }) => {
-//   const { nostrKeys, nostrUser, isPublishing, setToast, setToPublish } =
-//     useContext(Context);
-//   const navigateTo = useNavigate();
-
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [noteContent, setNoteContent] = useState("");
-//   const [author, setAuthor] = useState(newsContent.author);
-//   const isMisLeading = newsContent.sealed_note
-//     ? JSON.parse(newsContent.sealed_note.content).tags.find(
-//         (tag) => tag[0] === "type" && tag[1] === "-"
-//       )
-//     : false;
-//   const [usersList, setUsersList] = useState(false);
-//   // const [upvoteReaction, setUpvoteReaction] = useState([]);
-//   // const [downvoteReaction, refreshRating] = useState([]);
-//   const isVoted = useMemo(() => {
-//     return nostrKeys
-//       ? upvoteReaction
-//           .concat(downvoteReaction)
-//           .find((item) => item.pubkey === nostrKeys.pub)
-//       : false;
-//   }, [upvoteReaction, downvoteReaction, nostrKeys]);
-
-//   // useEffect(() => {
-//   //   // console.log(upvotes);
-//   //   setUpvoteReaction(upvotes);
-//   //   setDownvoteReaction(downvotes);
-//   // }, [upvotes]);
-//   // useEffect(() => {
-//   //   const pool_ = new SimplePool();
-//   //   let relaysToUse = nostrUser
-//   //     ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-//   //     : relaysOnPlatform;
-//   //   const sub = pool_.sub(relaysToUse, [
-//   //     {
-//   //       kinds: [7],
-//   //       "#e": [newsContent.id],
-//   //     },
-//   //   ]);
-//   //   sub.on("event", (event) => {
-//   //     if (event.content === "+")
-//   //       setUpvoteReaction((upvoteNews) => [...upvoteNews, event]);
-//   //     if (event.content === "-")
-//   //       setDownvoteReaction((downvoteNews) => [...downvoteNews, event]);
-//   //   });
-
-//   //   return () => {
-//   //     console.log("first");
-//   //     pool_.close(relaysToUse);
-//   //     sub.unsub();
-//   //   };
-//   // }, []);
-
-//   // useEffect(() => {
-//   //   const fetchData = async () => {
-//   //     let data = await getNoteTree(newsContent.content);
-//   //     console.log(data);
-//   //     setNoteContent(data);
-//   //   };
-//   //   fetchData();
-//   // }, []);
-
-//   // const getNoteTree = (note) => {
-//   //   let tree = note.split(/\s/);
-//   //   let finalTree = [];
-
-//   //   for (let i = 0; i < tree.length; i++) {
-//   //     const el = tree[i];
-//   //     const key = `${el}-${i}`;
-
-//   //     if (/(https?:\/\/)/i.test(el)) {
-//   //       const isMedia = isImageUrl(el);
-//   //       isMedia.then((checkURL) => {
-//   //         if (checkURL) {
-//   //           if (checkURL.type === "image") {
-//   //             console.log("image")
-//   //             finalTree.push(
-//   //               <img
-//   //                 className="sc-s-18"
-//   //                 style={{ margin: "1rem auto" }}
-//   //                 width={"100%"}
-//   //                 src={el}
-//   //                 alt="el"
-//   //                 key={key}
-//   //               />
-//   //             );
-//   //           } else if (checkURL.type === "video") {
-//   //             finalTree.push(
-//   //               <video
-//   //                 key={key}
-//   //                 controls="true"
-//   //                 autoPlay="false"
-//   //                 name="media"
-//   //                 width={"100%"}
-//   //                 className="sc-s-18"
-//   //                 style={{ margin: "1rem auto" }}
-//   //               >
-//   //                 <source
-//   //                   src={el}
-//   //                   type="video/mp4"
-//   //                 />
-//   //               </video>
-//   //             );
-//   //           }
-//   //         } else {
-//   //           finalTree.push(
-//   //             <a
-//   //               style={{ wordBreak: "break-word" }}
-//   //               href={el}
-//   //               className="btn-text-gray"
-//   //               key={key}
-//   //               onClick={(e) => e.stopPropagation()}
-//   //             >
-//   //               {el}
-//   //             </a>
-//   //           );
-//   //         }
-//   //       });
-//   //     } else if (el.includes("nostr:")) {
-//   //       const nip19add = el.split("nostr:")[1];
-//   //       const url = getLinkFromAddr(nip19add);
-//   //       finalTree.push(
-//   //         <Link
-//   //           to={url}
-//   //           className="btn-text-gray"
-//   //           target={"_blank"}
-//   //           key={key}
-//   //           onClick={(e) => e.stopPropagation()}
-//   //         >
-//   //           @{nip19add.substring(0, 10)}
-//   //         </Link>
-//   //       );
-//   //     } else {
-//   //       finalTree.push(
-//   //         <span
-//   //           style={{
-//   //             wordBreak: "break-word",
-//   //             color: newsContent.is_important
-//   //               ? "var(--c1)"
-//   //               : "var(--dark-gray)",
-//   //           }}
-//   //           key={key}
-//   //         >
-//   //           {el}
-//   //         </span>
-//   //       );
-//   //     }
-//   //   }
-
-//   //   return finalTree;
-//   // };
-
-//   // const getNoteTree =  (note) => {
-//   //   let tree = note.split(/\s/);
-//   //   let finalTree = tree.map(async (el, index) => {
-//   //     if (/(https?:\/\/)/i.test(el)) {
-//   //       let checkURL = await isImageUrl(el);
-//   //       if (checkURL) {
-//   //         if (checkURL.type === "image")
-//   //           return (
-//   //             <img
-//   //               className="sc-s-18"
-//   //               style={{ margin: "1rem auto" }}
-//   //               // style={{ margin: "1rem auto", aspectRatio: "16/9", objectFit: "contain", border: "none", objectPosition: 'left'}}
-//   //               width={"100%"}
-//   //               src={el}
-//   //               alt="el"
-//   //               key={`${el}-${index}`}
-//   //             />
-//   //           );
-//   //         if (checkURL.type === "video")
-//   //           return (
-//   //             <video
-//   //               key={`${el}-${index}`}
-//   //               controls="true"
-//   //               autoPlay="false"
-//   //               name="media"
-//   //               width={"100%"}
-//   //               className="sc-s-18"
-//   //               style={{ margin: "1rem auto" }}
-//   //             >
-//   //               <source
-//   //                 src={el}
-//   //                 type="video/mp4"
-//   //               />
-//   //             </video>
-//   //           );
-//   //         //   <img
-//   //         //   className="sc-s-18"
-//   //         //   style={{ margin: "1rem auto" }}
-//   //         //   // style={{ margin: "1rem auto", aspectRatio: "16/9", objectFit: "contain", border: "none", objectPosition: 'left'}}
-//   //         //   width={"100%"}
-//   //         //   src={el}
-//   //         //   alt="el"
-//   //         //   key={`${el}-${index}`}
-//   //         // />
-//   //       }
-//   //       return (
-//   //         <a
-//   //           style={{ wordBreak: "break-word" }}
-//   //           href={el}
-//   //           className="btn-text-gray"
-//   //           key={`${el}-${index}`}
-//   //           onClick={(e) => e.stopPropagation()}
-//   //         >
-//   //           {el}
-//   //         </a>
-//   //       );
-//   //     } else if (el.includes("nostr:")) {
-//   //       let nip19add = el.split("nostr:")[1];
-//   //       let url = getLinkFromAddr(nip19add);
-//   //       return (
-//   //         <Link
-//   //           to={url}
-//   //           className="btn-text-gray"
-//   //           target={"_blank"}
-//   //           key={`${el}-${index}`}
-//   //           onClick={(e) => e.stopPropagation()}
-//   //         >
-//   //           @{nip19add.substring(0, 10)}
-//   //         </Link>
-//   //       );
-//   //     } else
-//   //       return (
-//   //         <span
-//   //           style={{
-//   //             wordBreak: "break-word",
-//   //             color: newsContent.is_important
-//   //               ? "var(--c1)"
-//   //               : "var(--dark-gray)",
-//   //           }}
-//   //           key={`${el}-${index}`}
-//   //         >
-//   //           {el}
-//   //         </span>
-//   //       );
-//   //   });
-//   //   return finalTree;
-//   // };
-//   // const getNoteTree = (note) => {
-//   //   let tree = note.split(/\s/);
-//   //   let finalTree = tree.map((el, index) => {
-//   //     if (/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg))/i.test(el))
-//   //       return (
-//   //         <img
-//   //           className="sc-s-18"
-//   //           style={{ margin: "1rem auto" }}
-//   //           // style={{ margin: "1rem auto", aspectRatio: "16/9", objectFit: "contain", border: "none", objectPosition: 'left'}}
-//   //           width={"100%"}
-//   //           src={el}
-//   //           alt="el"
-//   //           key={`${el}-${index}`}
-//   //         />
-//   //       );
-//   //     else if (el.includes("nostr:")) {
-//   //       let nip19add = el.split("nostr:")[1];
-//   //       let url = getLinkFromAddr(nip19add);
-//   //       return (
-//   //         <Link
-//   //           to={url}
-//   //           className="btn-text-gray"
-//   //           target={"_blank"}
-//   //           key={`${el}-${index}`}
-//   //           onClick={(e) => e.stopPropagation()}
-//   //         >
-//   //           @{nip19add.substring(0, 10)}
-//   //         </Link>
-//   //       );
-//   //     } else if (/(https?:\/\/)/i.test(el)) {
-//   //       return (
-//   //         <a
-//   //           style={{ wordBreak: "break-word" }}
-//   //           href={el}
-//   //           className="btn-text-gray"
-//   //           key={`${el}-${index}`}
-//   //           onClick={(e) => e.stopPropagation()}
-//   //         >
-//   //           {el}
-//   //         </a>
-//   //       );
-//   //     } else
-//   //       return (
-//   //         <span
-//   //           style={{
-//   //             wordBreak: "break-word",
-//   //             color: newsContent.is_important
-//   //               ? "var(--c1)"
-//   //               : "var(--dark-gray)",
-//   //           }}
-//   //           key={`${el}-${index}`}
-//   //         >
-//   //           {el}
-//   //         </span>
-//   //       );
-//   //   });
-//   //   return finalTree;
-//   // };
-//   // const getLinkFromAddr = (addr) => {
-//   //   try {
-//   //     if (addr.includes("naddr")) {
-//   //       let data = nip19.decode(addr);
-//   //       return data.data.kind === 30023
-//   //         ? `/article/${addr}`
-//   //         : `/curations/${addr}`;
-//   //     }
-//   //     if (addr.includes("nprofile")) {
-//   //       return `/users/${addr}`;
-//   //     }
-//   //     if (addr.includes("npub")) {
-//   //       let hex = getHex(addr);
-//   //       return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
-//   //     }
-//   //     return addr;
-//   //   } catch (err) {
-//   //     return addr;
-//   //   }
-//   // };
-
-//   const upvoteNews = async (e) => {
-//     e.stopPropagation();
-//     if (isLoading) return;
-//     if (isPublishing) {
-//       setToast({
-//         type: 3,
-//         desc: "An event publishing is in process!",
-//       });
-//       return;
-//     }
-//     try {
-//       if (!nostrKeys) {
-//         // setToLogin(true);
-//         return false;
-//       }
-//       if (isVoted) {
-//         setIsLoading(true);
-//         setToPublish({
-//           nostrKeys: nostrKeys,
-//           kind: 5,
-//           content: "This vote will be deleted!",
-//           tags: [["e", isVoted.id]],
-//           allRelays: nostrUser
-//             ? [
-//                 ...filterRelays(relaysOnPlatform, nostrUser.relays),
-//                 "wss://nostr.wine",
-//               ]
-//             : [...relaysOnPlatform, "wss://nostr.wine"],
-//         });
-
-//         setIsLoading(false);
-
-//         if (isVoted.content === "+") {
-//           let tempArray = Array.from(upvoteReaction);
-//           let index = tempArray.findIndex((item) => item.id === isVoted.id);
-//           tempArray.splice(index, 1);
-//           refreshRating(isVoted.id);
-//           return false;
-//         }
-//         let tempArray = Array.from(downvoteReaction);
-//         let index = tempArray.findIndex((item) => item.id === isVoted.id);
-//         tempArray.splice(index, 1);
-//         refreshRating(isVoted.id);
-//       }
-
-//       setIsLoading(true);
-//       setToPublish({
-//         nostrKeys: nostrKeys,
-//         kind: 7,
-//         content: "+",
-//         tags: [
-//           ["e", newsContent.id],
-//           ["p", newsContent.author.pubkey],
-//         ],
-//         allRelays: nostrUser
-//           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-//           : relaysOnPlatform,
-//       });
-
-//       setIsLoading(false);
-//     } catch (err) {
-//       console.log(err);
-//       setIsLoading(false);
-//     }
-//   };
-//   const downvoteNews = async (e) => {
-//     e.stopPropagation();
-//     if (isLoading) return;
-//     if (isPublishing) {
-//       setToast({
-//         type: 3,
-//         desc: "An event publishing is in process!",
-//       });
-//       return;
-//     }
-//     try {
-//       if (!nostrKeys) {
-//         // setToLogin(true);
-//         return false;
-//       }
-//       if (isVoted) {
-//         setIsLoading(true);
-//         setToPublish({
-//           nostrKeys: nostrKeys,
-//           kind: 5,
-//           content: "This vote will be deleted!",
-//           tags: [["e", isVoted.id]],
-//           allRelays: nostrUser
-//             ? [
-//                 ...filterRelays(relaysOnPlatform, nostrUser.relays),
-//                 "wss://nostr.wine",
-//               ]
-//             : [...relaysOnPlatform, "wss://nostr.wine"],
-//         });
-//         setIsLoading(false);
-//         if (isVoted.content === "-") {
-//           let tempArray = Array.from(downvoteReaction);
-//           let index = tempArray.findIndex((item) => item.id === isVoted.id);
-//           tempArray.splice(index, 1);
-//           refreshRating(isVoted.id);
-//           return false;
-//         }
-//         let tempArray = Array.from(upvoteReaction);
-//         let index = tempArray.findIndex((item) => item.id === isVoted.id);
-//         tempArray.splice(index, 1);
-//         refreshRating(isVoted.id);
-//       }
-//       setIsLoading(true);
-//       setToPublish({
-//         nostrKeys: nostrKeys,
-//         kind: 7,
-//         content: "-",
-//         tags: [
-//           ["e", newsContent.id],
-//           ["p", newsContent.author.pubkey],
-//         ],
-//         allRelays: nostrUser
-//           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-//           : relaysOnPlatform,
-//       });
-
-//       setIsLoading(false);
-//     } catch (err) {
-//       console.log(err);
-//       setIsLoading(false);
-//     }
-//   };
-
-//   return (
-//     <>
-//       {usersList && (
-//         <ShowUsersList
-//           exit={() => setUsersList(false)}
-//           title={usersList.title}
-//           list={usersList.list}
-//           extras={usersList.extras}
-//         />
-//       )}
-
-//       <div
-//         className="fx-centered fx-col fx-start-v note-card"
-//         style={{ paddingBottom: "3rem", width: "calc(100%)" }}
-//         onClick={(e) => {
-//           e.stopPropagation();
-//           navigateTo(`/flash-news/${newsContent.nEvent}`);
-//         }}
-//       >
-//         <p className="gray-c">
-//           <Date_
-//             toConvert={new Date(newsContent.created_at * 1000).toISOString()}
-//             timeOnly={true}
-//           />
-//         </p>
-//         {!self && (
-//           <div className="fx-centered fit-container fx-start-h">
-//             <UserProfilePicNOSTR
-//               img={author.picture}
-//               size={20}
-//               user_id={author.pubkey}
-//               ring={false}
-//             />
-//             <p className="p-medium gray-c">
-//               by <span className="c1-c">{author.name}</span>
-//             </p>
-//           </div>
-//         )}
-//         {(newsContent.is_important || newsContent.keywords.length > 0) && (
-//           <div
-//             className="fx-centered fx-start-h fx-wrap"
-//             style={{ rowGap: 0, columnGap: "4px" }}
-//           >
-//             {newsContent.is_important && (
-//               <div className="sticker sticker-small sticker-c1-pale">
-//                 <svg
-//                   viewBox="0 0 13 12"
-//                   xmlns="http://www.w3.org/2000/svg"
-//                   className="hot"
-//                 >
-//                   <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
-//                 </svg>
-//                 Important
-//               </div>
-//             )}
-//             {newsContent.keywords.map((keyword, index) => {
-//               return (
-//                 // <div
-//                 //   key={keyword}
-//                 //   className="sticker sticker-small sticker-gray-black"
-//                 // >
-//                 <Link
-//                   key={`${keyword}-${index}`}
-//                   className="sticker sticker-small sticker-gray-black"
-//                   to={`/tags/${keyword.replace("#", "%23")}`}
-//                   target={"_blank"}
-//                   onClick={(e) => e.stopPropagation()}
-//                 >
-//                   {keyword}
-//                 </Link>
-//                 // </div>
-//               );
-//             })}
-//           </div>
-//         )}
-//         <div
-//           className="fx-centered fx-start-h fx-wrap"
-//           style={{ rowGap: 0, columnGap: "4px" }}
-//         >
-//           {/* {noteContent} */}
-//           {/* {getNoteTree(newsContent.content)} */}
-//           {newsContent.note_tree}
-//         </div>
-//         <div className="fit-container fx-scattered box-pad-v-s">
-//           <div className="fx-centered">
-//             <div
-//               className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
-//               style={{ columnGap: "8px" }}
-//             >
-//               <div
-//                 className={
-//                   isVoted?.content === "+"
-//                     ? "arrow-up-bold icon-tooltip"
-//                     : "arrow-up icon-tooltip"
-//                 }
-//                 style={{ opacity: isVoted?.content === "-" ? ".2" : 1 }}
-//                 data-tooltip="Upvote"
-//                 onClick={upvoteNews}
-//               ></div>
-//               <div
-//                 className="icon-tooltip"
-//                 data-tooltip="Upvoters"
-//                 onClick={(e) => {
-//                   e.stopPropagation();
-//                   upvoteReaction.length > 0 &&
-//                     setUsersList({
-//                       title: "Upvoters",
-//                       list: upvoteReaction.map((item) => item.pubkey),
-//                       extras: [],
-//                     });
-//                 }}
-//               >
-//                 <NumberShrink value={upvoteReaction.length} />
-//               </div>
-//             </div>
-//             <div
-//               className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
-//               style={{ columnGap: "8px" }}
-//             >
-//               <div
-//                 className="icon-tooltip"
-//                 data-tooltip="Downvote"
-//                 onClick={downvoteNews}
-//               >
-//                 <div
-//                   className={
-//                     isVoted?.content === "-" ? "arrow-up-bold" : "arrow-up"
-//                   }
-//                   style={{
-//                     transform: "rotate(180deg)",
-//                     opacity: isVoted?.content === "+" ? ".2" : 1,
-//                   }}
-//                 ></div>
-//               </div>
-//               <div
-//                 className="icon-tooltip"
-//                 data-tooltip="Downvoters"
-//                 onClick={(e) => {
-//                   e.stopPropagation();
-//                   downvoteReaction.length > 0 &&
-//                     setUsersList({
-//                       title: "Downvoters",
-//                       list: downvoteReaction.map((item) => item.pubkey),
-//                       extras: [],
-//                     });
-//                 }}
-//               >
-//                 <NumberShrink value={downvoteReaction.length} />
-//               </div>
-//             </div>
-//           </div>
-//           <div className="fx-centered">
-//             {newsContent.source && (
-//               <a
-//                 target={"_blank"}
-//                 href={newsContent.source}
-//                 onClick={(e) => e.stopPropagation()}
-//               >
-//                 <div
-//                   className="round-icon round-icon-tooltip"
-//                   data-tooltip="source"
-//                 >
-//                   <div className="globe-24"></div>
-//                 </div>
-//               </a>
-//             )}
-//             <div
-//               className="round-icon round-icon-tooltip"
-//               data-tooltip="Bookmark flash news"
-//               onClick={(e) => e.stopPropagation()}
-//             >
-//               <SaveArticleAsBookmark
-//                 pubkey={newsContent.id}
-//                 itemType="e"
-//                 kind="1"
-//               />
-//             </div>
-//           </div>
-//         </div>
-//         {newsContent.sealed_note && isMisLeading && (
-//           <UN
-//             data={JSON.parse(newsContent.sealed_note.content)}
-//             state="sealed"
-//             setTimestamp={() => null}
-//             flashNewsAuthor={newsContent.author.pubkey}
-//             sealedCauses={newsContent.sealed_note.tags
-//               .filter((tag) => tag[0] === "cause")
-//               .map((cause) => cause[1])}
-//           />
-//         )}
-//       </div>
-//     </>
-//   );
-// };

@@ -1,13 +1,8 @@
 import React, { useContext, useState } from "react";
 import relaysOnPlatform from "../../Content/Relays";
-import { deletePost } from "../../Helpers/NostrPublisher";
 import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
-import axiosInstance from "../../Helpers/HTTP_Client";
-import { SimplePool } from "nostr-tools";
 import { filterRelays } from "../../Helpers/Encryptions";
-
-const pool = new SimplePool();
 
 export default function ToDeleteBookmark({
   exit,

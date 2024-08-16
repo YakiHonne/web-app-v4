@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import LoadingScreen from "../../Components/LoadingScreen";
 import Date_ from "../../Components/Date_";
-import ShortenKey from "../../Components/NOSTR/ShortenKey";
 import {
   checkForLUDS,
   decodeBolt11,
@@ -16,25 +15,22 @@ import {
   getBech32,
   getBolt11,
   getEmptyNostrUser,
-  getHex,
   getParsed3000xContent,
   getParsedAuthor,
   shortenKey,
 } from "../../Helpers/Encryptions";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import relaysOnPlatform from "../../Content/Relays";
 import { nip19, SimplePool } from "nostr-tools";
 import PostPreviewCardNOSTR from "../../Components/NOSTR/PostPreviewCardNOSTR";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import ZapTip from "../../Components/NOSTR/ZapTip";
 import Follow from "../../Components/NOSTR/Follow";
 import ShowPeople from "../../Components/NOSTR/ShowPeople";
 import TopicElementNOSTR from "../../Components/NOSTR/TopicElementNOSTR";
 import Helmet from "react-helmet";
 import { Context } from "../../Context/Context";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import axios from "axios";
 import NumberShrink from "../../Components/NumberShrink";
 import CheckNIP05 from "../../Components/CheckNIP05";
@@ -75,7 +71,6 @@ export default function NostrUser() {
     mutedList,
     isPublishing,
     setToast,
-    setMutedList,
     setToPublish,
   } = useContext(Context);
   const [id, setID] = useState(false);
@@ -88,7 +83,6 @@ export default function NostrUser() {
   const [trendingProfiles, setTrendingProfiles] = useState([]);
   const [contentType, setContentType] = useState("np");
   const [importantFN, setImportantFN] = useState(false);
-  const [followers, setFollowers] = useState([]);
   const [following, setFollowings] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [notes, setNotes] = useState([]);
@@ -495,11 +489,11 @@ export default function NostrUser() {
           ? nostrBandProfiles.data.profiles
               .filter((profile) => profile.profile)
               .map((profile) => {
-                let author = getEmptyNostrUser(profile.profile.pubkey)
+                let author = getEmptyNostrUser(profile.profile.pubkey);
                 try {
-                  author= JSON.parse(profile.profile.content)
-                } catch(err) {
-                  console.log(err)
+                  author = JSON.parse(profile.profile.content);
+                } catch (err) {
+                  console.log(err);
                 }
                 return {
                   pubkey: profile.profile.pubkey,
@@ -510,9 +504,7 @@ export default function NostrUser() {
           : [];
         setImportantFN(important.data);
         setTrendingProfiles(profiles.slice(0, 6));
-        // setIsLoaded(true);
       } catch (err) {
-        // setIsLoaded(true)
         console.log(err);
       }
     };
@@ -551,7 +543,7 @@ export default function NostrUser() {
 
   const copyID = (e, pubkey) => {
     e.stopPropagation();
-    navigator?.clipboard?.writeText(pubkey);
+    navigator?.clipboard?.writeText(getBech32("npub", pubkey));
     setToast({
       type: 1,
       desc: `Pubkey was copied! 👏`,
@@ -624,8 +616,8 @@ export default function NostrUser() {
                     flex: 1.5,
                     maxWidth: "700px",
                     width: "min(100%, 700px)",
-                    zIndex: '11',
-                    position: "relative"
+                    zIndex: "11",
+                    position: "relative",
                   }}
                   className="box-pad-h-m box-pad-v-m"
                 >
@@ -672,6 +664,7 @@ export default function NostrUser() {
                           </p>
                         </div>
                       </div>
+
                       {showOptions && (
                         <div
                           style={{
@@ -688,7 +681,7 @@ export default function NostrUser() {
                         >
                           <div
                             className="fit-container fx-centered fx-start-h pointer"
-                            onClick={(e) => copyID(e, user.pubkeyhashed)}
+                            onClick={(e) => copyID(e, user.pubkey)}
                           >
                             <p className="fx-centered">Copy user pubkey</p>
                           </div>

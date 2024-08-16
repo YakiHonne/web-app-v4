@@ -7,7 +7,6 @@ import {
   getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
-import { getNoteTree } from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { Link } from "react-router-dom";
 const pool = new SimplePool();
@@ -21,7 +20,6 @@ export default function NProfilePreviewer({
   setMetataData = () => null,
 }) {
   const { nostrUser } = useContext(Context);
-  const [note, setNote] = useState("");
   const [author, setAuthor] = useState(getEmptyNostrUser(pubkey));
 
   useEffect(() => {

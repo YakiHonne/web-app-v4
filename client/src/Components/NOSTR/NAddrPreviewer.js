@@ -1,13 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { SimplePool, nip19 } from "nostr-tools";
 import { Context } from "../../Context/Context";
-import {
-  filterRelays,
-  getBech32,
-  getEmptyNostrUser,
-} from "../../Helpers/Encryptions";
+import { filterRelays } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
-import { getNoteTree } from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { Link } from "react-router-dom";
 const pool = new SimplePool();
@@ -33,7 +28,6 @@ export default function NAddrPreviewer({ pubkey, d, kind, relays = [] }) {
           if ([30004, 30023].includes(kind)) {
             let title = event.tags.find((tag) => tag[0] === "title");
             title = title ? title[1] : "Untitled";
-            console.log(event);
             setEvent({
               title,
               naddr:

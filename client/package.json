@@ -20,7 +20,8 @@
     "crypto-js": "^4.2.0",
     "exports": "^0.0.1",
     "katex": "^0.16.8",
-    "light-bolt11-decoder": "^3.0.0",
+    "light-bolt11-decoder": "^3.1.1",
+    "lottie-react": "^2.4.0",
     "markdown-to-jsx": "^7.1.9",
     "nanoid": "^4.0.2",
     "nostr-tools": "^2.3.1",
@@ -54,7 +55,7 @@
     "util": "^0.12.5"
   },
   "scripts": {
-    "start": "PORT=3200 react-scripts start",
+    "start": "PORT=3400 react-scripts start",
     "build": "react-scripts build",
     "postbuild": "rimraf build/static/**/*.map",
     "test": "react-scripts test",

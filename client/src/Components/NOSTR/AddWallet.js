@@ -1,9 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 
 export default function AddWallet({ exit }) {
-  const navigateTo = useNavigate();
   return (
     <div
       className="fixed-container fx-centered box-pad-h"

@@ -112,7 +112,6 @@ export default function UserBalance() {
       const balanceResponse = await nwc.getBalance();
 
       setBalance(balanceResponse.balance);
-      // setWalletTransactions(t);
       setIsLoading(false);
     } catch (err) {
       console.log(err);
@@ -147,7 +146,10 @@ export default function UserBalance() {
         style={{ borderLeft: "2px solid var(--orange-main)", margin: ".75rem" }}
         to={"/wallet"}
       >
-        <div className="wallet-add" style={{ width: "32px", height: "32px" }}></div>
+        <div
+          className="wallet-add"
+          style={{ width: "32px", height: "32px" }}
+        ></div>
         <p>Add wallet</p>
       </Link>
     );

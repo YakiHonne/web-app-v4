@@ -65,10 +65,7 @@ export default function NostrMyCurations() {
         ]);
 
         setImportantFN(important.data);
-
-        // setIsLoaded(true);
       } catch (err) {
-        // setIsLoaded(true)
         console.log(err);
       }
     };
@@ -241,7 +238,11 @@ export default function NostrMyCurations() {
             setShowAddCuration(false);
             setCurationToEdit(false);
           }}
-          curation={curationToEdit ? { ...curationToEdit.curation, kind: curationToEdit.kind } : null}
+          curation={
+            curationToEdit
+              ? { ...curationToEdit.curation, kind: curationToEdit.kind }
+              : null
+          }
           tags={curationToEdit.tags}
           relaysToPublish={
             curationToEdit.relays ||
@@ -529,9 +530,9 @@ export default function NostrMyCurations() {
                                     return (
                                       <div
                                         key={curation.id}
-                                        className="sc-s-18 fx-scattered fx-col pointer"
+                                        className="sc-s-18 fx-scattered fx-col pointer fit-container"
                                         style={{
-                                          width: "min(100%, 330px)",
+                                          // width: "min(100%, 330px)",
                                           position: "relative",
                                           overflow: "visible",
                                         }}
@@ -636,41 +637,11 @@ export default function NostrMyCurations() {
                                               borderTopRightRadius: "18px",
                                             }}
                                           ></div>
-                                          <div className="fit-container box-pad-v box-pad-h">
+                                          <div className="fit-container box-pad-v-m box-pad-h-m">
                                             <div className="fit-container fx-centered fx-start-v fx-col">
-                                              {curation.kind === 30004 && (
-                                                <div className="sticker sticker-normal sticker-green">
-                                                  Article
-                                                </div>
-                                              )}
-                                              {curation.kind === 30005 && (
-                                                <div className="sticker sticker-normal sticker-orange">
-                                                  Video
-                                                </div>
-                                              )}
+                                              <div className="fit-container fx-scattered">
                                               <div className="fx-centered fx-start-h">
                                                 <div className="fx-start-h fx-centered">
-                                                  {/* <p className="p-medium gray-c">
-                                                  <Date_
-                                                    toConvert={
-                                                      curation.added_date
-                                                    }
-                                                  />
-                                                </p>
-                                                <div
-                                                  className="round-icon-tooltip"
-                                                  data-tooltip={`created at ${
-                                                    curation.added_date.split(
-                                                      "T"
-                                                    )[0]
-                                                  }, edited on ${
-                                                    curation.modified_date.split(
-                                                      "T"
-                                                    )[0]
-                                                  }`}
-                                                >
-                                                  <div className="edit"></div>
-                                                </div> */}
                                                   <p
                                                     className="pointer p-medium gray-c round-icon-tooltip"
                                                     data-tooltip={`created at ${
@@ -699,11 +670,23 @@ export default function NostrMyCurations() {
                                                   {numberorArticles} arts.{" "}
                                                 </p>
                                               </div>
+                                         
+                                              {curation.kind === 30004 && (
+                                                <div className="sticker sticker-normal sticker-green">
+                                                  Article
+                                                </div>
+                                              )}
+                                              {curation.kind === 30005 && (
+                                                <div className="sticker sticker-normal sticker-orange">
+                                                  Video
+                                                </div>
+                                              )}
+                                                </div>
 
-                                              <h4 className="p-maj">
+                                              <p className="p-maj">
                                                 {curation.content.title}
-                                              </h4>
-                                              <p className="p-three-lines">
+                                              </p>
+                                              <p className="p-two-lines gray-c">
                                                 {curation.content.description}
                                               </p>
                                             </div>

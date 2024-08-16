@@ -11,15 +11,11 @@ import {
   getBech32,
   getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import { getNoteTree } from "../../Helpers/Helpers";
-import Date_ from "../../Components/Date_";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
 import TopCreators from "../../Components/NOSTR/TopCreators";
 import Footer from "../../Components/Footer";
-import UploadFile from "../../Components/UploadFile";
-import { useNavigate } from "react-router-dom";
 import KindOne from "../../Components/NOSTR/KindOne";
 import WriteNote from "../../Components/NOSTR/WriteNote";
 import KindSix from "../../Components/NOSTR/KindSix";
@@ -28,64 +24,18 @@ import TrendingNotes from "../../Components/NOSTR/TrendingNotes";
 
 var pool = new SimplePool();
 
-const getTopCreators = (posts) => {
-  if (!posts) return [];
-  let netCreators = posts.filter((creator, index, posts) => {
-    if (index === posts.findIndex((item) => item.pubkey === creator.pubkey))
-      return creator;
-  });
-
-  let tempCreators = [];
-
-  for (let creator of netCreators) {
-    let stats = getCreatorStats(creator.pubkey, posts);
-    tempCreators.push({
-      pubkey: creator.pubkey,
-      name: creator.author_name,
-      img: creator.author_img,
-      articles_number: stats.articles_number,
-    });
-  }
-
-  return (
-    tempCreators
-      .sort(
-        (curator_1, curator_2) =>
-          curator_2.articles_number - curator_1.articles_number
-      )
-      .splice(0, 6) || []
-  );
-};
-
-const getCreatorStats = (pubkey, posts) => {
-  let articles_number = 0;
-
-  for (let creator of posts) {
-    if (creator.author_pubkey === pubkey) {
-      articles_number += 1;
-    }
-  }
-  return {
-    articles_number,
-  };
-};
-
 export default function NostrNotes() {
   const { nostrKeys, nostrUser, addNostrAuthors, mutedList } =
     useContext(Context);
   const [notes, setNotes] = useState([]);
   const memoNotes = useMemo(() => notes, [notes]);
   const [trendingNotes, setTrendingNotes] = useState([]);
-  const [relays, setRelays] = useState(relaysOnPlatform);
   const [activeRelay, setActiveRelay] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [contentFrom, setContentFrom] = useState("all");
   const [sub, setSub] = useState();
   const [lastEventTime, setLastTimeEventTime] = useState(undefined);
-  // const topCreators = useMemo(() => {
-  //   return getTopCreators(notes);
-  // }, [notes]);
   const [topCreators, setTopCreators] = useState([]);
   const extrasRef = useRef(null);
 
@@ -142,11 +92,11 @@ export default function NostrNotes() {
           ? nostrBandProfiles.data.profiles
               .filter((profile) => profile.profile)
               .map((profile) => {
-                let author = getEmptyNostrUser(profile.profile.pubkey)
+                let author = getEmptyNostrUser(profile.profile.pubkey);
                 try {
-                  author= JSON.parse(profile.profile.content)
-                } catch(err) {
-                  console.log(err)
+                  author = JSON.parse(profile.profile.content);
+                } catch (err) {
+                  console.log(err);
                 }
                 return {
                   pubkey: profile.profile.pubkey,
@@ -212,12 +162,21 @@ export default function NostrNotes() {
       relaysToFetchFrom = !nostrUser
         ? relaysOnPlatform
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
-    if (contentFrom !== "all") {
+    if (contentFrom === "followings") {
       let authors =
         nostrUser && nostrUser.following.length > 0
           ? [...nostrUser.following.map((item) => item[1])]
           : [];
       filter = [{ authors, kinds: [1, 6], limit: 10, until: lastEventTime }];
+      return {
+        relaysToFetchFrom,
+        filter,
+      };
+    }
+    if (contentFrom === "smart-widget") {
+      filter = [
+        { kinds: [1], limit: 10, "#l": ["smart-widget"], until: lastEventTime },
+      ];
       return {
         relaysToFetchFrom,
         filter,
@@ -232,10 +191,7 @@ export default function NostrNotes() {
 
   const onEOSE = (events) => {
     if (events) {
-      let filteredEvents = events.filter((event) => event);
       addNostrAuthors(events);
-
-      // addNostrAuthors(filteredEvents.map((item) => item.pubkey));
     }
     if (activeRelay) pool.close([activeRelay]);
     if (!activeRelay)
@@ -246,7 +202,6 @@ export default function NostrNotes() {
       );
     setIsLoaded(true);
     setIsLoading(false);
-    // relaySub.close();
   };
 
   const onEvent = async (event) => {
@@ -333,20 +288,23 @@ export default function NostrNotes() {
             <ArrowUp />
             <div className="fit-container fx-centered fx-start-h">
               <div
-                style={{ width: "min(100%,1400px)" }}
+                // style={{ width: "min(100%,1400px)" }}
+                style={{ gap: 0 }}
                 className="fx-centered fx-start-v fx-start-h"
               >
                 <div
-                  style={{ flex: 1.5, maxWidth: "700px" }}
+                  style={{ flex: 1.8, maxWidth: "700px" }}
                   className={`fx-centered  fx-wrap box-pad-h `}
                 >
                   <div className="fit-container fx-centered sticky">
                     {nostrKeys && (
                       <div
                         className={`list-item fx-centered fx ${
-                          contentFrom !== "all" ? "selected-list-item" : ""
+                          contentFrom === "followings"
+                            ? "selected-list-item"
+                            : ""
                         }`}
-                        onClick={() => switchContentSource("following")}
+                        onClick={() => switchContentSource("followings")}
                       >
                         Following
                       </div>
@@ -358,6 +316,16 @@ export default function NostrNotes() {
                       onClick={() => switchContentSource("all")}
                     >
                       Universal
+                    </div>
+                    <div
+                      className={`list-item fx-centered fx ${
+                        contentFrom === "smart-widget"
+                          ? "selected-list-item"
+                          : ""
+                      }`}
+                      onClick={() => switchContentSource("smart-widget")}
+                    >
+                      Widget notes
                     </div>
                   </div>
                   {nostrKeys && (nostrKeys.sec || nostrKeys.ext) && (
@@ -432,257 +400,3 @@ export default function NostrNotes() {
     </div>
   );
 }
-
-// const KindOne = ({ event, reactions = true }) => {
-//   const { nostrKeys, nostrAuthors, getNostrAuthor } = useContext(Context);
-//   const navigate = useNavigate();
-//   const [user, setUser] = useState(getEmptyNostrUser(event.pubkey));
-//   const [relatedEvent, setRelatedEvent] = useState(false);
-
-//   useEffect(() => {
-//     let tempPubkey = event.pubkey;
-//     let auth = getNostrAuthor(tempPubkey);
-
-//     if (auth) {
-//       setUser(auth);
-//     }
-//     if (event.checkForQuote && !relatedEvent) {
-//       let pool = new SimplePool();
-
-//       pool.subscribeMany(
-//         relaysOnPlatform,
-//         [{ kinds: [1], ids: [event.checkForQuote] }],
-//         {
-//           async onevent(event) {
-//             setRelatedEvent(await onEvent(event));
-//           },
-//         }
-//       );
-//     }
-//   }, [nostrAuthors]);
-
-//   const onEvent = async (event) => {
-//     try {
-//       let checkForComment = event.tags.find((tag) => tag[0] === "e");
-//       let checkForQuote = event.tags.find((tag) => tag[0] === "q");
-//       if (checkForComment && event.kind === 1) return false;
-//       let author_img = "";
-//       let author_name = getBech32("npub", event.pubkey).substring(0, 10);
-//       let author_pubkey = event.pubkey;
-//       let nEvent = nip19.neventEncode({
-//         id: event.id,
-//         author: event.pubkey,
-//       });
-//       if (event.kind === 1) {
-//         let note_tree = await getNoteTree(event.content);
-//         return {
-//           ...event,
-//           note_tree,
-//           checkForQuote,
-//           author_img,
-//           author_name,
-//           author_pubkey,
-//           nEvent,
-//         };
-//       }
-//     } catch (err) {
-//       console.log(err);
-//       return false;
-//     }
-//   };
-
-//   const onClick = (e) => {
-//     let isSelected = window.getSelection().toString();
-
-//     if (isSelected) return null;
-//     navigate(`/notes/${event.nEvent}`);
-//   };
-
-//   return (
-//     <div
-//       className="box-pad-h-m box-pad-v-m sc-s-18 fit-container pointer"
-//       style={{ backgroundColor: "var(--c1-side)" }}
-//     >
-//       <div className="fit-container fx-scattered box-marg-s" onClick={onClick}>
-//         <div className="fx-centered fx-start-h ">
-//           <UserProfilePicNOSTR
-//             size={30}
-//             mainAccountUser={false}
-//             ring={false}
-//             user_id={user.pubkey}
-//             img={user.picture}
-//           />
-//           <div>
-//             <p className="p-medium">{user.display_name || user.name}</p>
-//             <p className="p-medium gray-c">@{user.name || user.display_name}</p>
-//           </div>
-//         </div>
-//         <p className="gray-c p-medium">
-//           <Date_ toConvert={new Date(event.created_at * 1000)} time={true} />
-//         </p>
-//       </div>
-//       <div className="fx-centered fx-col fit-container">
-//         <div className="fit-container" onClick={onClick}>
-//           {event.note_tree}
-//         </div>
-//         {relatedEvent && (
-//           <div className="fit-container">
-//             <KindOne event={relatedEvent} reactions={false} />
-//           </div>
-//         )}
-//       </div>
-//       {reactions && (
-//         <div
-//           className="fx-scattered fit-container"
-//           style={{ paddingTop: "1rem" }}
-//         >
-//           <div className="fx-centered" style={{ columnGap: "16px" }}>
-//             <div className="fx-centered">
-//               <div className="comment-icon"></div>
-//               <p className="p-medium ">0</p>
-//             </div>
-//             <div className="fx-centered">
-//               <div className="heart"></div>
-//               <p className="p-medium ">0</p>
-//             </div>
-//             <div className="fx-centered">
-//               <div className="switch-arrows"></div>
-//               <p className="p-medium ">0</p>
-//             </div>
-//             <div className="fx-centered">
-//               <div className="quote"></div>
-//               <p className="p-medium ">0</p>
-//             </div>
-//             <div className="fx-centered">
-//               <div className="bolt"></div>
-//               <p className="p-medium ">0</p>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// const KindSix = ({ event }) => {
-//   const { nostrKeys, nostrAuthors, getNostrAuthor } = useContext(Context);
-//   const [user, setUser] = useState(getEmptyNostrUser(event.pubkey));
-//   // const [sourceUser, setSourceUser] = useState(
-//   //   getEmptyNostrUser(event.repostPubkey)
-//   // );
-//   // const navigate = useNavigate();
-
-//   useEffect(() => {
-//     let auth = getNostrAuthor(event.pubkey);
-//     // let sourceAuth = getNostrAuthor(event.repostPubkey);
-
-//     if (auth) {
-//       setUser(auth);
-//     }
-//     // if (sourceAuth) {
-//     //   setSourceUser(sourceAuth);
-//     // }
-//   }, [nostrAuthors]);
-
-//   // const onClick = (e) => {
-//   //   let isSelected = window.getSelection().toString();
-
-//   //   if (isSelected) return null;
-//   //   navigate(`/notes/${event.repostedNEvent}`);
-//   // };
-
-//   return (
-//     <div
-//       className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v fit-container"
-//       style={{
-//         backgroundColor: "var(--c1-side)",
-//         rowGap: "10px",
-//         overflow: "visible",
-//       }}
-//     >
-//       <div
-//         className="fx-centered fx-start-h sc-s-18 box-pad-h-s box-pad-v-s round-icon-tooltip pointer"
-//         style={{ overflow: "visible" }}
-//         data-tooltip={`${user.display_name} reposted this on ${new Date(
-//           event.created_at * 1000
-//         ).toLocaleDateString()}`}
-//       >
-//         <UserProfilePicNOSTR
-//           size={20}
-//           mainAccountUser={false}
-//           ring={false}
-//           user_id={user.pubkey}
-//           img={user.picture}
-//         />
-//         <div>
-//           <p className="p-medium">{user.display_name || user.name}</p>
-//         </div>
-//         <div className="switch-arrows"></div>
-//       </div>
-//       <KindOne event={event.relatedEvent} />
-//       {/* <div
-//         className="fit-container"
-//         // style={{ backgroundColor: "var(--c1-side)" }}
-//       >
-//         <div
-//           className="fit-container fx-scattered box-marg-s pointer"
-//           onClick={onClick}
-//         >
-//           <div className="fx-centered fx-start-h">
-//             <UserProfilePicNOSTR
-//               size={30}
-//               mainAccountUser={false}
-//               ring={false}
-//               user_id={sourceUser.pubkey}
-//               img={sourceUser.picture}
-//             />
-//             <div>
-//               <p className="p-medium">
-//                 {sourceUser.display_name || sourceUser.name}
-//               </p>
-//               <p className="p-medium gray-c">
-//                 @{sourceUser.name || sourceUser.display_name}
-//               </p>
-//             </div>
-//           </div>
-//           <p className="gray-c p-medium">
-//             <Date_
-//               toConvert={new Date(event.repostCreatedAt * 1000)}
-//               time={true}
-//             />
-//           </p>
-//         </div>
-//         <div onClick={onClick} className="pointer">
-//           {event.note_tree}
-//         </div>
-//       </div> */}
-//       {/* <div
-//         className="fx-scattered fit-container"
-//         style={{ paddingTop: "1rem" }}
-//       >
-//         <div className="fx-centered" style={{ columnGap: "16px" }}>
-//           <div className="fx-centered">
-//             <div className="comment-icon"></div>
-//             <p className="p-medium ">0</p>
-//           </div>
-//           <div className="fx-centered">
-//             <div className="heart"></div>
-//             <p className="p-medium ">0</p>
-//           </div>
-//           <div className="fx-centered">
-//             <div className="switch-arrows"></div>
-//             <p className="p-medium ">0</p>
-//           </div>
-//           <div className="fx-centered">
-//             <div className="quote"></div>
-//             <p className="p-medium ">0</p>
-//           </div>
-//           <div className="fx-centered">
-//             <div className="bolt"></div>
-//             <p className="p-medium ">0</p>
-//           </div>
-//         </div>
-//       </div> */}
-//     </div>
-//   );
-// };

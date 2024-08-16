@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Context } from "../../Context/Context";
 import DtoLToggleButton from "../DtoLToggleButton";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
@@ -294,6 +294,23 @@ export default function SidebarNOSTR() {
                 ></div>
                 <div className="link-label">Notes</div>
               </div>
+              <div
+                onClick={() => {
+                  navigateTo("/smart-widgets");
+                }}
+                className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                  isPage("/smart-widgets") ? "active-link" : "inactive-link"
+                }`}
+              >
+                <div
+                  className={
+                    isPage("/smart-widgets")
+                      ? "smart-widget-24"
+                      : "smart-widget-24"
+                  }
+                ></div>
+                <div className="link-label">Smart widgets</div>
+              </div>
               {!(showMedia || showMyContent || showWritingOptions) && (
                 <>
                   <div
@@ -509,98 +526,6 @@ export default function SidebarNOSTR() {
                 )}
               <div style={{ height: ".5rem" }}></div>
               <WriteNew exit={() => null} />
-              {/* <div
-                className="fit-container fx-centered fx-col fx-end-v"
-                ref={writingOptRef}
-                style={{
-                  position: "relative",
-                }}
-              >
-                <div
-                  className={`pointer fit-container  fx-scattered box-pad-h-s box-pad-v-s ${
-                    showWritingOptions ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ position: "relative" }}
-                  onClick={() =>
-                    nostrKeys
-                      ? setShowWritingOptions(!showWritingOptions)
-                      : setTriggerLogin(true)
-                  }
-                >
-                  <div className="fx-centered">
-                    <div className="write-24"></div>
-                    <div className="link-label">Write</div>
-                  </div>
-                  <div className="link-label arrow"></div>
-                </div>
-                {showWritingOptions && (
-                  <div
-                    className="fx-centered fx-start-v fx-col pointer slide-left"
-                    style={{
-                      height: "max-content",
-                      zIndex: "900",
-                      rowGap: 0,
-                      zIndex: 200,
-                    }}
-                  >
-                    <div
-                      className="fx-centered fx-col fx-start-v fit-container"
-                      style={{ rowGap: "0" }}
-                    >
-                      <Link
-                        to={"/my-flash-news"}
-                        state={{ addFN: true }}
-                        className={`pointer fit-container fx-scattered box-pad-h-s  ${"inactive-link"}`}
-                        style={{ borderRadius: 0 }}
-                      >
-                        <div className="fx-centered">
-                          <div className="news-24"></div>
-                          <div>Flash news</div>{" "}
-                        </div>
-                        <p className="p-big">+</p>
-                      </Link>
-
-                      <Link
-                        to={"/my-curations"}
-                        state={{ addCuration: true }}
-                        className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
-                        style={{ borderRadius: 0 }}
-                      >
-                        <div className="fx-centered">
-                          <div className="stories-24"></div>
-                          <div>Curation</div>
-                        </div>
-                        <p className="p-big">+</p>
-                      </Link>
-
-                      <div
-                        onClick={() => navigateTo("/write-article")}
-                        className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
-                        style={{ borderRadius: 0 }}
-                      >
-                        <div className="fx-centered">
-                          <div className="posts-24"></div>
-                          <div>Article</div>
-                        </div>
-                        <p className="p-big">+</p>
-                      </div>
-
-                      <Link
-                        to={"/my-videos"}
-                        state={{ addVideo: true }}
-                        className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
-                        style={{ borderRadius: 0 }}
-                      >
-                        <div className="fx-centered">
-                          <div className="play-24"></div>
-                          <div>Video</div>
-                        </div>
-                        <p className="p-big">+</p>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div> */}
             </div>
             {(showMedia || showMyContent || showWritingOptions) && (
               <div className="fit-container fx-start-h fx-centered box-pad-h-s">
@@ -628,15 +553,25 @@ export default function SidebarNOSTR() {
               ref={settingsRef}
             >
               <div
-                className="fit-container sidebar-user-settings-button fx-wrap"
+                className="fit-container sidebar-user-settings-button"
                 style={{ overflow: "visible" }}
-                onClick={() => setShowSettings(!showSettings)}
+                // onClick={() => setShowSettings(!showSettings)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsActive(true)
+                  setShowSettings(!showSettings);
+                }}
               >
                 <div
                   className="fx-centered fx-start-h pointer"
                   style={{ columnGap: "16px" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsActive(true)
+                    setShowSettings(!showSettings);
+                  }}
                 >
-                  <div className="mb-hide">
+                  <div className="mb-hide" style={{pointerEvents: "none"}}>
                     <UserProfilePicNOSTR
                       size={50}
                       mainAccountUser={true}
@@ -644,7 +579,7 @@ export default function SidebarNOSTR() {
                       ring={false}
                     />
                   </div>
-                  <div className="mb-show">
+                  <div className="mb-show" style={{pointerEvents: "none"}}>
                     <UserProfilePicNOSTR
                       size={40}
                       mainAccountUser={true}
@@ -653,12 +588,12 @@ export default function SidebarNOSTR() {
                     />
                   </div>
                   <div className="mb-hide">
-                    <p>
+                    <p className="p-one-line">
                       {nostrUserAbout.display_name ||
                         nostrUserAbout.name ||
                         minimizeKey(nostrKeys.pub)}
                     </p>
-                    <p className="gray-c p-medium">
+                    <p className="gray-c p-medium p-one-line">
                       @
                       {nostrUserAbout.name ||
                         nostrUserAbout.display_name ||
@@ -736,7 +671,7 @@ export default function SidebarNOSTR() {
                     position: "absolute",
                     bottom: "110%",
                     left: "0",
-                    width: "220px",
+                    width: "240px",
                     height: "max-content",
                     backgroundColor: "var(--very-dim-gray)",
                     zIndex: "900",
@@ -759,7 +694,7 @@ export default function SidebarNOSTR() {
                       }
                     >
                       <div className="user"></div>
-                      <p>Profile</p>
+                      <p className="gray-c">Profile</p>
                     </div>
                     <hr />
                     <div
@@ -767,7 +702,7 @@ export default function SidebarNOSTR() {
                       onClick={() => navigateTo(`/yaki-points`)}
                     >
                       <div className="cup"></div>
-                      <p>Yaki points</p>
+                      <p className="gray-c">Yaki points</p>
                     </div>
                     <hr />
                     <div
@@ -775,7 +710,7 @@ export default function SidebarNOSTR() {
                       onClick={() => navigateTo(`/settings`)}
                     >
                       <div className="setting"></div>
-                      <p>Settings</p>
+                      <p className="gray-c">Settings</p>
                     </div>
                     <hr />
                     <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link">
@@ -787,7 +722,7 @@ export default function SidebarNOSTR() {
                       onClick={() => navigateTo(`/yakihonne-mobile-app`)}
                     >
                       <div className="mobile"></div>
-                      <p className="c1-c">Get the app</p>
+                      <p className="gray-c">Get the app</p>
                     </div>
                   </div>
                   <hr />
@@ -799,7 +734,7 @@ export default function SidebarNOSTR() {
                     }}
                   >
                     <div className="logout"></div>
-                    <p className="c1-c">Logout</p>
+                    <p>Logout</p>
                   </div>
                 </div>
               )}
@@ -819,142 +754,3 @@ export default function SidebarNOSTR() {
     </>
   );
 }
-// export default function NavBar() {
-//   const { nostrUser, nostrUserLoaded, nostrUserLogout } = useContext(Context);
-//   const navigateTo = useNavigate();
-//   const [showLogout, setShowLogout] = useState(false);
-//   const isPage = (url) => {
-//     if (url === window.location.pathname) return true;
-//     return false;
-//   };
-
-//   const switchPlatform = () => {
-//     document.body.style.transition = ".2s ease-in-out";
-//     document.body.style.transformOrigin = "center center";
-//     document.body.style.opacity = "0";
-//     document.body.style.transform = "translateY(50px)";
-//     let timer = setTimeout(() => {
-//       navigateTo("/");
-//       document.body.style.opacity = "1";
-//       document.body.style.transform = "initial";
-//     }, 300);
-//   };
-//   return (
-//     <div className="fx-scattered nostr-sidebar box-pad-v-m fx-col">
-//       <div>
-//         <div className="sidebar-logo fx-centered fit-container">
-//           <div
-//             className="yakihonne-logo-128"
-//             onClick={() => navigateTo("/")}
-//           ></div>
-//         </div>
-//       </div>
-//       <div className="fx-scattered fx-col">
-//         <div
-//           onClick={() => navigateTo("/")}
-//           className={` pointer box-pad-h-s box-pad-v-s ${
-//             isPage("/") ? "active-link" : "inactive-link"
-//           }`}
-//         >
-//           <div className="tooltip-sidebar-hover">Home</div>
-//           <div className="home-24"></div>
-//         </div>
-//         <div
-//           onClick={() => navigateTo("/curations")}
-//           className={`pointer box-pad-h-s box-pad-v-s ${
-//             isPage("/curations") ? "active-link" : "inactive-link"
-//           }`}
-//         >
-//           <div className="tooltip-sidebar-hover">Curations</div>
-//           <div className="curation-24"></div>
-//         </div>
-//         <div
-//           onClick={() => navigateTo("/flash-news")}
-//           className={`pointer box-pad-h-s box-pad-v-s ${
-//             isPage("/flash-news") ? "active-link" : "inactive-link"
-//           }`}
-//         >
-//           <div className="tooltip-sidebar-hover">Flash news</div>
-//           <div className="news-24"></div>
-//         </div>
-//         <div
-//           onClick={() => navigateTo("/uncensored-notes")}
-//           className={`pointer box-pad-h-s box-pad-v-s ${
-//             isPage("/uncensored-notes") ? "active-link" : "inactive-link"
-//           }`}
-//         >
-//           <div className="tooltip-sidebar-hover">Uncensored notes</div>
-//           <div className="note-24"></div>
-//         </div>
-
-//         <div
-//           onClick={() => navigateTo("/my-curations")}
-//           className={`pointer box-pad-h-s box-pad-v-s ${
-//             isPage("/my-curations") ? "active-link" : "inactive-link"
-//           }`}
-//         >
-//           <div className="tooltip-sidebar-hover">My curations</div>
-//           <div className="stories-24"></div>
-//         </div>
-
-//         <Link
-//           to={"/my-articles"}
-//           // onClick={() => navigateTo("/my-articles")}
-//           className={`pointer box-pad-h-s box-pad-v-s ${
-//             isPage("/my-articles") ? "active-link" : "inactive-link"
-//           }`}
-//         >
-//           <div className="tooltip-sidebar-hover">My articles</div>
-//           <div className="posts-24"></div>
-//         </Link>
-//         {nostrUser && (
-//           <Link
-//             to={"/write"}
-//             // onClick={() => navigateTo("/my-articles")}
-//             className={`pointer box-pad-h-s box-pad-v-s ${
-//               isPage("/write") ? "active-link" : "inactive-link"
-//             }`}
-//           >
-//             <div className="tooltip-sidebar-hover">Write</div>
-//             <div className="edit-24"></div>
-//           </Link>
-//         )}
-//         {/*
-//         <div className="fx-centered" style={{ position: "relative" }}>
-//           <Link
-//             className="pointer box-pad-h-s box-pad-v-s
-//                active-link"
-//             style={{ backgroundColor: "var(--c1-side)" }}
-//             to={"/yakihonne-mobile-app"}
-//             target={"_blank"}
-//           >
-//             <div className="tooltip-sidebar-hover">Get the app</div>
-//             <div
-//               className="mobile-24"
-//               // style={{ filter: "invert()" }}
-//             ></div>
-//           </Link>
-//         </div> */}
-//         <div>
-//           <div
-//             className="pointer fx-centered
-//                inactive-link"
-//           >
-//             <DtoLToggleButton />
-//           </div>
-//         </div>
-//       </div>
-//       {/* {nostrUser && nostrUserLoaded && (
-//         <div className="fx-centered" style={{ position: "relative" }}>
-//           <div
-//             className="pointer box-pad-h-s box-pad-v-s
-//                active-link"
-//             onClick={nostrUserLogout}
-//           >
-//             <div className="switch-arrows-24"></div>
-//           </div>
-//         </div>
-//       )} */}
-//     </div>
-//   );
-// }

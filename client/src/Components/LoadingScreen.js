@@ -1,5 +1,4 @@
 import React from "react";
-import LoadingDots from "./LoadingDots";
 
 export default function LoadingScreen() {
   return (

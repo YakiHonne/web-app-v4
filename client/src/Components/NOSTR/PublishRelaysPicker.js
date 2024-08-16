@@ -1,11 +1,6 @@
-import React, { useContext, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useContext, useState } from "react";
 import { Context } from "../../Context/Context";
-import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
-import axiosInstance from "../../Helpers/HTTP_Client";
-import { deletePost, publishPost } from "../../Helpers/NostrPublisher";
-import { nanoid } from "nanoid";
 import TopicsTags from "../../Content/TopicsTags";
 
 const getSuggestions = (custom) => {

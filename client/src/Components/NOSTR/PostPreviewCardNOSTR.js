@@ -1,16 +1,12 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
-import placeholder from "../../media/images/nostr-thumbnail-ph.svg";
+
 import { Context } from "../../Context/Context";
-import relaysOnPlatform from "../../Content/Relays";
-import { relayInit, SimplePool } from "nostr-tools";
+import { SimplePool } from "nostr-tools";
 import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
-import { convertDate, getEmptyNostrUser } from "../../Helpers/Encryptions";
-import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
-import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
-import Slider from "../Slider";
+import { getEmptyNostrUser } from "../../Helpers/Encryptions";
 import ShareLink from "../ShareLink";
 import MediaPreview from "./MediaPreview";
 
@@ -24,11 +20,6 @@ const checkFollowing = (list, toFollowKey) => {
 export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
   const { nostrUser, getNostrAuthor, nostrAuthors } = useContext(Context);
   let [isThumbnailValid, setIsThumbnailValid] = useState(false);
-  // const [authorData, setAuthorData] = useState({
-  //   author_img: item.author_img,
-  //   author_pubkey: item.author_pubkey,
-  //   author_name: item.author_name,
-  // });
   const [authorData, setAuthorData] = useState(
     getEmptyNostrUser(item.author_pubkey)
   );
@@ -76,16 +67,6 @@ export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
 
         if (auth) {
           setAuthorData(auth);
-          // setAuthorData({
-          //   author_img: auth.picture,
-          //   author_name: auth.name,
-          //   author_pubkey: auth.pubkey,
-          //   author_about: auth.about
-          // });
-          // if (auth.nip05) {
-          //   let authPubkey = await getAuthPubkeyFromNip05(auth.nip05);
-          //   if (authPubkey) setArtURL(`${auth.nip05}/${item.d}`);
-          // }
         }
         return;
       } catch (err) {
@@ -110,7 +91,7 @@ export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
     <>
       {showPreview && (
         <MediaPreview
-        kind={"article"}
+          kind={"article"}
           exit={() => setShowPreview(false)}
           data={{ author: authorData, content: item }}
         />
@@ -120,7 +101,6 @@ export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
         className={"fit-container fx-scattered sc-s-18 box-pad-h-m mediacard"}
         onClick={(e) => e.stopPropagation()}
         style={{
-          // borderColor: isFollowing ? "var(--c1)" : "",
           border: "none",
           position: "relative",
           overflow: "visible",
@@ -149,9 +129,6 @@ export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
               <div className="fx-centered">
                 <AuthorPreview author={authorData} />
                 {isFollowing && (
-                  // <div className="sticker sticker-small sticker-c1">
-                  //   following
-                  // </div>
                   <div
                     className="round-icon-small round-icon-tooltip"
                     data-tooltip="Following"
@@ -161,23 +138,10 @@ export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
                 )}
               </div>
               <div className="fx-start-h fx-centered">
-                <p
-                  className="pointer p-medium gray-c round-icon-tooltip"
-                  // data-tooltip={`created at ${convertDate(
-                  //   item.added_date
-                  // )}, edited on ${convertDate(item.modified_date)}`}
-                >
+                <p className="pointer p-medium gray-c round-icon-tooltip">
                   <Date_ toConvert={item.modified_date} time={true} />
                 </p>
               </div>
-              {/* <div className="fx-centered">
-              <SaveArticleAsBookmark
-                pubkey={item.author_pubkey}
-                kind={30023}
-                d={item.d}
-                image={item.thumbnail}
-              />
-            </div> */}
             </div>
             <Link
               to={`/article/${artURL}`}

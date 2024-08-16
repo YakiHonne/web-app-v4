@@ -81,7 +81,7 @@ export default function YakiMobileApp() {
         style={{
           position: "fixed",
           right: "32px",
-          bottom: "32px",
+          bottom: "48px",
           minWidth: "64px",
           aspectRatio: "1/1",
           borderRadius: "var(--border-r-50)",
@@ -252,13 +252,13 @@ export default function YakiMobileApp() {
             <div className="box-pad-h box-pad-v fx-scattered fx-col fx-start-v">
               <div>
                 <h2 className=" " style={{ color: "white" }}>
-                  Discover <span className="c3-c">curations.</span>
+                  Discover <span className="white-c">curations.</span>
                 </h2>
                 <h2 className=" " style={{ color: "white" }}>
-                  Craft your <span className="c3-c">collections.</span>
+                  Craft your <span className="white-c">collections.</span>
                 </h2>
                 <h2 className=" " style={{ color: "white" }}>
-                  Captivate your <span className="c3-c">audience.</span>
+                  Captivate your <span className="white-c">audience.</span>
                 </h2>
               </div>
               {/* <img

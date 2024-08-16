@@ -6,8 +6,6 @@ import ArrowUp from "../../Components/ArrowUp";
 import Date_ from "../../Components/Date_";
 import LoadingScreen from "../../Components/LoadingScreen";
 import AddBookmark from "../../Components/NOSTR/AddBookMark";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
-import PostPreviewCardNOSTR from "../../Components/NOSTR/PostPreviewCardNOSTR";
 import SaveArticleAsBookmark from "../../Components/NOSTR/SaveArticleAsBookmark";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import ToDeleteBookmark from "../../Components/NOSTR/ToDeleteBookmark";
@@ -15,7 +13,6 @@ import PagePlaceholder from "../../Components/PagePlaceholder";
 import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
 import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
-import Footer from "../../Components/Footer";
 import LoadingDots from "../../Components/LoadingDots";
 const pool = new SimplePool();
 
@@ -94,127 +91,130 @@ export default function NostrBookmarks() {
       )}
 
       <div className="fit-container fx-centered">
-      <div className="main-container">
-        <SidebarNOSTR />
-        <main className="main-page-nostr-container" style={{overflow: "visible"}}>
-          <ArrowUp />
-          <div className="fx-centered fit-container fx-start-h fx-start-v">
-            <div style={{ flex: 1 }}>
-              {!nostrKeys && <PagePlaceholder page={"nostr-not-connected"} />}
-              {nostrKeys && (
-                <div className="fit-container box-pad-h-m box-pad-v">
-                  {nostrUserBookmarks.length > 0 && (
-                    <>
-                      {!showBookmarkDetails && (
-                        <>
-                          <div className="fit-container fx-scattered">
-                            <h4> {nostrUserBookmarks.length} Bookmarks</h4>
-                            <div
-                              className="round-icon round-icon-tooltip"
-                              data-tooltip={"Add new bookmark"}
-                              onClick={() => setShowAddBookmark(true)}
-                            >
-                              <p className="p-big">&#xFF0B;</p>
+        <div className="main-container">
+          <SidebarNOSTR />
+          <main
+            className="main-page-nostr-container"
+            style={{ overflow: "visible" }}
+          >
+            <ArrowUp />
+            <div className="fx-centered fit-container fx-start-h fx-start-v">
+              <div style={{ flex: 1 }}>
+                {!nostrKeys && <PagePlaceholder page={"nostr-not-connected"} />}
+                {nostrKeys && (
+                  <div className="fit-container box-pad-h-m box-pad-v">
+                    {nostrUserBookmarks.length > 0 && (
+                      <>
+                        {!showBookmarkDetails && (
+                          <>
+                            <div className="fit-container fx-scattered">
+                              <h4> {nostrUserBookmarks.length} Bookmarks</h4>
+                              <div
+                                className="round-icon round-icon-tooltip"
+                                data-tooltip={"Add new bookmark"}
+                                onClick={() => setShowAddBookmark(true)}
+                              >
+                                <p className="p-big">&#xFF0B;</p>
+                              </div>
                             </div>
-                          </div>
-                          <div
-                            className="fx-centered fit-container box-pad-v fx-wrap"
-                            style={{ rowGap: "16px", columnGap: "16px" }}
-                          >
-                            {nostrUserBookmarks.map((bookmark, index) => {
-                              return (
-                                <div
-                                  key={bookmark.id}
-                                  className={`fit-container fx-scattered  sc-s fx-shrink pointer option`}
-                                  style={{ flex: "1 1 350px" }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowBookmarkDetails({
-                                      ...bookmark,
-                                      ...bookmark.bookmarkContent,
-                                    });
-                                  }}
-                                >
+                            <div
+                              className="fx-centered fit-container box-pad-v fx-wrap"
+                              style={{ rowGap: "16px", columnGap: "16px" }}
+                            >
+                              {nostrUserBookmarks.map((bookmark, index) => {
+                                return (
                                   <div
-                                    className="fx-scattered fx-stretch fit-container"
-                                    // style={{ width: "calc(100% - 45px)" }}
+                                    key={bookmark.id}
+                                    className={`fit-container fx-scattered  sc-s fx-shrink pointer option`}
+                                    style={{ flex: "1 1 350px" }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowBookmarkDetails({
+                                        ...bookmark,
+                                        ...bookmark.bookmarkContent,
+                                      });
+                                    }}
                                   >
-                                    <div className="fx-centered fx-start-h fx-stretch">
-                                      <div
-                                        className="bg-img cover-bg"
-                                        style={{
-                                          aspectRatio: "5/6",
-                                          minWidth: "120px",
-                                          backgroundImage: `url(${bookmark.bookmarkContent.image})`,
-                                          backgroundColor: "var(--dim-gray)",
-                                        }}
-                                      ></div>
-                                      <div className="fx-scattered fx-col fx-start-v box-pad-h-m box-pad-v-m">
-                                        <div>
-                                          <p className="p-caps">
-                                            {bookmark.bookmarkContent.title}
-                                          </p>
-                                          <p className="gray-c p-four-lines p-medium">
+                                    <div
+                                      className="fx-scattered fx-stretch fit-container"
+                                      // style={{ width: "calc(100% - 45px)" }}
+                                    >
+                                      <div className="fx-centered fx-start-h fx-stretch">
+                                        <div
+                                          className="bg-img cover-bg"
+                                          style={{
+                                            aspectRatio: "5/6",
+                                            minWidth: "120px",
+                                            backgroundImage: `url(${bookmark.bookmarkContent.image})`,
+                                            backgroundColor: "var(--dim-gray)",
+                                          }}
+                                        ></div>
+                                        <div className="fx-scattered fx-col fx-start-v box-pad-h-m box-pad-v-m">
+                                          <div>
+                                            <p className="p-caps">
+                                              {bookmark.bookmarkContent.title}
+                                            </p>
+                                            <p className="gray-c p-four-lines p-medium">
+                                              {
+                                                bookmark.bookmarkContent
+                                                  .description
+                                              }
+                                            </p>
+                                          </div>
+                                          <p className="gray-c p-medium">
                                             {
-                                              bookmark.bookmarkContent
-                                                .description
-                                            }
+                                              bookmark.bookmarkContent.items
+                                                .length
+                                            }{" "}
+                                            item(s) &#8226;{" "}
+                                            <span className="orange-c">
+                                              Edited{" "}
+                                              <Date_
+                                                toConvert={
+                                                  new Date(
+                                                    bookmark.created_at * 1000
+                                                  )
+                                                }
+                                              />
+                                            </span>
                                           </p>
                                         </div>
-                                        <p className="gray-c p-medium">
-                                          {
-                                            bookmark.bookmarkContent.items
-                                              .length
-                                          }{" "}
-                                          item(s) &#8226;{" "}
-                                          <span className="orange-c">
-                                            Edited{" "}
-                                            <Date_
-                                              toConvert={
-                                                new Date(
-                                                  bookmark.created_at * 1000
-                                                )
-                                              }
-                                            />
-                                          </span>
-                                        </p>
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              );
-                            })}
-                            <div style={{ flex: "1 1 350px" }}></div>
-                            <div style={{ flex: "1 1 350px" }}></div>
-                            <div style={{ flex: "1 1 350px" }}></div>
-                            <div
-                              style={{ width: "min(100%,800px)" }}
-                              className="fx-around fx-wrap posts-cards"
-                            ></div>
-                          </div>
-                        </>
-                      )}
-                      {showBookmarkDetails && (
-                        <>
-                          <BookmarkContent
-                            bookmark={showBookmarkDetails}
-                            setToEditBookmark={setToEditBookmark}
-                            setToDeleteBoormark={setToDeleteBoormark}
-                            exit={() => setShowBookmarkDetails(false)}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
-                  {nostrUserBookmarks.length === 0 && (
-                    <PagePlaceholder page={"nostr-no-bookmarks"} />
-                  )}
-                </div>
-              )}
+                                );
+                              })}
+                              <div style={{ flex: "1 1 350px" }}></div>
+                              <div style={{ flex: "1 1 350px" }}></div>
+                              <div style={{ flex: "1 1 350px" }}></div>
+                              <div
+                                style={{ width: "min(100%,800px)" }}
+                                className="fx-around fx-wrap posts-cards"
+                              ></div>
+                            </div>
+                          </>
+                        )}
+                        {showBookmarkDetails && (
+                          <>
+                            <BookmarkContent
+                              bookmark={showBookmarkDetails}
+                              setToEditBookmark={setToEditBookmark}
+                              setToDeleteBoormark={setToDeleteBoormark}
+                              exit={() => setShowBookmarkDetails(false)}
+                            />
+                          </>
+                        )}
+                      </>
+                    )}
+                    {nostrUserBookmarks.length === 0 && (
+                      <PagePlaceholder page={"nostr-no-bookmarks"} />
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </main>
-      </div>
+          </main>
+        </div>
       </div>
     </div>
   );
@@ -252,7 +252,7 @@ const BookmarkContent = ({
       tag[0] === "e" && eIDs.push(tag[1]);
     }
     aKinds = [...new Set(aKinds)];
-    console.log(aKinds);
+
     let events = [];
     let filter = [];
     aDs.length > 0 && filter.push({ kinds: aKinds, "#d": aDs });
@@ -313,9 +313,7 @@ const BookmarkContent = ({
     );
   }, []);
 
-  const getKind = (l) => {
-    
-  }
+  const getKind = (l) => {};
 
   return (
     <div

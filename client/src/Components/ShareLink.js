@@ -7,7 +7,6 @@ import UserProfilePicNOSTR from "./NOSTR/UserProfilePicNOSTR";
 import { useToPng } from "@hugocxl/react-to-image";
 import axios from "axios";
 import { getBech32 } from "../Helpers/Encryptions";
-import LoadingDots from "./LoadingDots";
 import Date_ from "./Date_";
 import UN from "./NOSTR/UN";
 
@@ -93,7 +92,6 @@ export default function ShareLink({
   };
   const handleSharing = async (e) => {
     e.stopPropagation();
-    let isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     let isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
     if (navigator.share && isTouchScreen) {
       setIsMobile(true);
@@ -423,10 +421,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                       className="fit-container fx-centered box-pad-h-m box-pad-v-s"
                       style={{ rowGap: "0px" }}
                     >
-                      <p
-                        className="p-medium p-centered"
-                     
-                      >
+                      <p className="p-medium p-centered">
                         Help us provide more decentralized insights to review
                         this flash news.
                       </p>
@@ -435,7 +430,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 </div>
               )}
             </div>
-            <div style={{height: "50px"}}></div>
+            <div style={{ height: "50px" }}></div>
             <div className="fx-centered fx-start-h box-pad-h-m box-pad-v-s ">
               <UserProfilePicNOSTR
                 mainAccountUser={false}

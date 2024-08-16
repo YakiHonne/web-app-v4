@@ -296,16 +296,9 @@ export default function NostrCuration() {
             let tempArticle = { ...article };
 
             if (auth) {
-              // let checkNIP05 = auth.nip05
-              //   ? await getAuthPubkeyFromNip05(auth.nip05)
-              //   : false;
               tempArticle.author_img = auth.picture;
               tempArticle.author_name =
                 auth.display_name || auth.name || tempArticle.author_name;
-              // tempArticle.artURL = checkNIP05
-              //   ? `${auth.nip05}/${tempArticle.d}`
-              //   : tempArticle.artURL;
-
               return tempArticle;
             } else {
               return tempArticle;
@@ -332,10 +325,7 @@ export default function NostrCuration() {
         ]);
 
         setImportantFN(important.data);
-
-        // setIsLoaded(true);
       } catch (err) {
-        // setIsLoaded(true)
         console.log(err);
       }
     };

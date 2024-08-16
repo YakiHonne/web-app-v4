@@ -1,14 +1,7 @@
 import { nip19, SimplePool } from "nostr-tools";
-import React, {
-  Fragment,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import PostPreviewCardNOSTR from "../../Components/NOSTR/PostPreviewCardNOSTR";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import relaysOnPlatform from "../../Content/Relays";
@@ -17,7 +10,6 @@ import { getBech32, filterRelays } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
 import axios from "axios";
 import FlashNewsCard from "../../Components/NOSTR/FlashNewsCard";
-import Footer from "../../Components/Footer";
 import KindOne from "../../Components/NOSTR/KindOne";
 
 const pool = new SimplePool();
@@ -72,7 +64,7 @@ export default function NostrSearchTag() {
                 let postTags = [];
 
                 let d = "";
-                // let added_date = new Date(event.created_at * 1000).toDateString();
+
                 let modified_date = new Date(
                   event.created_at * 1000
                 ).toISOString();

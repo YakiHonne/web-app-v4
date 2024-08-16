@@ -78,6 +78,7 @@
 
   .sidebar-user-settings-button {
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   .mb-show {
@@ -163,7 +164,9 @@
 }
 
 @media only screen and (max-width: 930px) {
-
+  html {
+    font-size: 14px;
+  }
   .author-info-post-p, .un-banners {
     display: none;
   }
@@ -317,6 +320,10 @@
     color: var(--black);
      pointer-events: none;
 } */
+
+.sw-container .round-icon-small {
+  display: flex;
+}
 
 }
 

@@ -18,14 +18,14 @@ export default function Carousel({ imgs }) {
         />
       )}
       <div
-        className="fx-centered fx-start-h fx-wrap fit-container "
-        style={{ overflow: "hidden", marginTop: ".5rem" }}
+        className="fx-centered fx-start-h fx-wrap fit-container sc-s-18"
+        style={{ overflow: "hidden", marginTop: ".5rem", gap: '4px', border: "none" }}
       >
         {imgs.map((item, index) => {
           return (
             <div
               key={`${item}-${index}`}
-              className={`bg-img cover-bg pointer fit-height sc-s-18`}
+              className={`bg-img cover-bg pointer fit-height `}
               style={{
                 backgroundImage: `url(${item})`,
                 // width: "32%",

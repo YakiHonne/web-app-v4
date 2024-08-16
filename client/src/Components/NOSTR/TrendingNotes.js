@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
+import React from "react";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
 import { Link } from "react-router-dom";
@@ -25,7 +24,7 @@ export default function TrendingNotes({ notes }) {
                   />
                 </p>
               </div>
-              <p className="p-medium p-two-lines">{note.event.content}</p>
+              <p className=" p-two-lines">{note.event.content}</p>
             </div>
             <Link to={"/notes/" + note.nEvent}>
               <div className="share-icon"></div>

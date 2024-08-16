@@ -5,7 +5,6 @@ import * as secp from "@noble/secp256k1";
 import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
-import axios from "axios";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -152,7 +151,7 @@ const getParsed3000xContent = (tags) => {
       if (["image", "thumbnail", "thumb"].includes(tag[0])) {
         content.image = tag[1];
       }
-      if (["description", "excerpt"].includes(tag[0])) {
+      if (["description", "excerpt", "summary"].includes(tag[0])) {
         content.description = tag[1];
       }
       if (tag[0] === "d") {

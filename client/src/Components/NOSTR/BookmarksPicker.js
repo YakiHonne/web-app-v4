@@ -1,7 +1,7 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useState } from "react";
 import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
-import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
+import { filterRelays } from "../../Helpers/Encryptions";
 import Date_ from "../Date_";
 import AddBookmark from "./AddBookMark";
 

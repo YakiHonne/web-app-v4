@@ -1,14 +1,8 @@
 import React, { useContext, useState } from "react";
 import LoadingDots from "../LoadingDots";
-import {
-  deleteFromS3,
-  publishPost,
-  uploadToS3,
-} from "../../Helpers/NostrPublisher";
 import { Context } from "../../Context/Context";
 import relaysOnPlatform from "../../Content/Relays";
 import { nanoid } from "nanoid";
-import PublishRelaysPicker from "./PublishRelaysPicker";
 import { filterRelays } from "../../Helpers/Encryptions";
 
 export default function AddBookmark({ bookmark, exit, tags = [] }) {

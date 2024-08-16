@@ -1,8 +1,5 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-
+import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../../Context/Context";
-
-import { SimplePool } from "nostr-tools";
 import { getEmptyNostrUser } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import KindOne from "../../Components/NOSTR/KindOne";

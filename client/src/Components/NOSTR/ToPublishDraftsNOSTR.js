@@ -3,17 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
-import axiosInstance from "../../Helpers/HTTP_Client";
-import { deletePost, publishPost } from "../../Helpers/NostrPublisher";
 import { nanoid } from "nanoid";
 
 export default function ToPublishDraftsNOSTR({
-  postKind,
   postContent = "",
   postTitle = "",
-  postThumbnail,
-  postDesc,
-  tags,
   edit = false,
   exit,
   warning = false,

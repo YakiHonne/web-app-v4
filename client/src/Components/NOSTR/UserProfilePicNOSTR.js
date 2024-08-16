@@ -1,10 +1,8 @@
 import { SimplePool, nip19 } from "nostr-tools";
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { nostrPpPlaceholder } from "../../Content/NostrPPPlaceholder";
 import relaysOnPlatform from "../../Content/Relays";
 import Avatar from "boring-avatars";
-// import placeholder from "../../media/images/nostr-pp-ph.png";
 import { Context } from "../../Context/Context";
 import Follow from "./Follow";
 import InitiConvo from "./InitConvo";
@@ -14,23 +12,14 @@ import {
   getEmptyNostrUser,
 } from "../../Helpers/Encryptions";
 import ZapTip from "./ZapTip";
-import LoadingDots from "../LoadingDots";
 
 const pool = new SimplePool();
 
 const getMutualFollows = (userFollowers, userFollowing) => {
   let users = [];
-  // let followingsPubkeys = userFollowing.map((user) => user[1]);
 
   for (let user of userFollowers) {
     if (userFollowing.includes(user.pubkey)) {
-      // let username = userFollowing.find((user_) => user_ === user.pubkey);
-      // username =
-      //   username.length === 4
-      //     ? username[3]
-      //       ? username[3]
-      //       : getBech32("npub", user.pubkey).substring(0, 8)
-      //     : getBech32("npub", user.pubkey).substring(0, 8);
       users.push(getEmptyNostrUser(user.pubkey));
     }
   }

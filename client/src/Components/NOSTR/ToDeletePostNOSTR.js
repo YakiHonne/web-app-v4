@@ -24,7 +24,6 @@ export default function ToDeletePostNOSTR({
   const handleDeleteDraft = async () => {
     try {
       setIsLoading(true);
-      // let data = await deletePost(nostrKeys, post_id, [relayToDeleteFrom]);
       setToPublish({
         nostrKeys: nostrKeys,
         kind: 5,
@@ -33,10 +32,6 @@ export default function ToDeletePostNOSTR({
         allRelays: [...relayToDeleteFrom],
       });
       if (relayToDeleteFrom.length > 1) initDeleteFromS3(thumbnail);
-      // setToast({
-      //   type: 1,
-      //   desc: curation ? "Curation was deleted!" : "Article was deleted!",
-      // });
       setIsLoading(false);
       exitAndRefresh();
     } catch (err) {
@@ -90,7 +85,17 @@ export default function ToDeletePostNOSTR({
         >
           <div className="warning"></div>
         </div>
-        <h3 className="p-centered">Delete "{title || "Untitled article"}"?</h3>
+        {title && (
+          <h3 className="p-centered" style={{wordBreak: "break-word"}}>
+            Delete "{title.substring(0, 20)}
+            {title.length > 20 && "..."}"?
+          </h3>
+        )}
+        {!title && (
+          <h3 className="p-centered" style={{wordBreak: "break-word"}}>
+            Delete event?
+          </h3>
+        )}
         <p className="p-centered gray-c box-pad-v-m">
           {curation
             ? "You're about to delete this curation, do you wish to proceed?"

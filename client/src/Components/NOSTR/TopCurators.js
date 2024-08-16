@@ -1,13 +1,8 @@
-import { relayInit, SimplePool } from "nostr-tools";
 import React, { useContext, useEffect, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
 import { Context } from "../../Context/Context";
-import { getEmptyNostrUser } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Follow from "./Follow";
 import LoadingDots from "../LoadingDots";
-
-const pool = new SimplePool();
 
 export default function TopCurators() {
   const { globalCuration } = useContext(Context);

@@ -1,12 +1,11 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingScreen from "../../Components/LoadingScreen";
-import { nip19, finalizeEvent, SimplePool } from "nostr-tools";
+import { nip19, SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import {
   checkForLUDS,
   decodeBolt11,
-  decryptEventData,
   filterRelays,
   getBolt11,
   getEmptyNostrUser,
@@ -16,16 +15,13 @@ import { Context } from "../../Context/Context";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
-import NavbarNOSTR from "../../Components/NOSTR/NavbarNOSTR";
 import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
 import NumberShrink from "../../Components/NumberShrink";
 import ShowUsersList from "../../Components/NOSTR/ShowUsersList";
-import { Link } from "react-router-dom";
 import Date_ from "../../Components/Date_";
 import ZapTip from "../../Components/NOSTR/ZapTip";
 import LoadingDots from "../../Components/LoadingDots";
 import axios from "axios";
-import UN from "../../Components/NOSTR/UN";
 import SaveArticleAsBookmark from "../../Components/NOSTR/SaveArticleAsBookmark";
 import { getNoteTree } from "../../Helpers/Helpers";
 import LoginNOSTR from "../../Components/NOSTR/LoginNOSTR";
@@ -33,7 +29,6 @@ import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
 import HomeFN from "../../Components/NOSTR/HomeFN";
-import KindOne from "../../Components/NOSTR/KindOne";
 import QuoteNote from "../../Components/NOSTR/QuoteNote";
 import NotesComment from "../../Components/NOSTR/NotesComment";
 const pool = new SimplePool();
@@ -76,7 +71,6 @@ const countReplies = async (id, all) => {
   for (let comment of all) {
     let ev = comment.tags.find(
       (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
-      //   (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
     );
     if (ev) {
       let cr = await countReplies(comment.id, all);
@@ -212,9 +206,7 @@ export default function NostrNote() {
                 setQuotes((quotes) => [...quotes, event]);
               } else {
                 setNote(tempNote);
-                if (tempNote.checkForQuote) {
-                  getRelatedEvent(tempNote.checkForQuote);
-                }
+
                 setIsLoaded(true);
               }
             }
@@ -241,14 +233,6 @@ export default function NostrNote() {
     };
   }, [optionsRef]);
 
-  // useEffect(() => {
-  //   if (note) {
-  //     let auth = getNostrAuthor(note.pubkey);
-
-  //     if (auth) setAuthor(auth);
-  //   }
-  // }, [note, nostrAuthors]);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -258,35 +242,12 @@ export default function NostrNote() {
         ]);
 
         setImportantFN(important.data);
-
-        // setIsLoaded(true);
       } catch (err) {
-        // setIsLoaded(true)
         console.log(err);
       }
     };
     fetchData();
   }, [nevent]);
-
-  const getRelatedEvent = (id) => {
-    let pool_ = new SimplePool();
-    let sub = pool_.subscribeMany(
-      nostrUser
-        ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-        : relaysOnPlatform,
-      [{ kinds: [1], ids: [id] }],
-      {
-        async onevent(event) {
-          let tempNote = await onEvent(event);
-          setRelatedEvent(tempNote);
-          setIsRelatedEventLoaded(true);
-        },
-        oneose() {
-          setIsRelatedEventLoaded(true);
-        },
-      }
-    );
-  };
 
   const reactToNote = async (e) => {
     e.stopPropagation();
@@ -409,7 +370,6 @@ export default function NostrNote() {
 
   const onEvent = async (event) => {
     try {
-      //   let checkForComment = event.tags.find((tag) => tag[0] === "e");
       let checkForQuote = event.tags.find((tag) => tag[0] === "q");
       let checkForLabel = event.tags.find((tag) => tag[0] === "l");
       if (
@@ -418,7 +378,6 @@ export default function NostrNote() {
       )
         return false;
 
-      //   if (checkForComment && event.kind === 1) return false;
       let nEvent = nip19.neventEncode({
         id: event.id,
         author: event.pubkey,
@@ -534,16 +493,12 @@ export default function NostrNote() {
             <SidebarNOSTR />
             <main className="main-page-nostr-container">
               <ArrowUp />
-              {/* <NavbarNOSTR /> */}
-              <div className="fx-centered fit-container fx-start-h fx-start-v">
-                <div style={{ flex: 1.5 }} className="box-pad-h-m">
+
+              <div className="fx-centered fit-container fx-start-h fx-start-v" style={{gap: 0}}>
+                <div style={{ flex: 1.8 }} className="box-pad-h-m">
                   <div
                     className="fit-container fx-centered fx-col fx-start-v box-pad-v"
                     style={{ paddingBottom: "3rem" }}
-                    // onClick={(e) => {
-                    //   e.stopPropagation();
-                    //   navigateTo(`/notes/${note.nEvent}`);
-                    // }}
                   >
                     <div className="fx-centered fit-container fx-start-h">
                       <UserProfilePicNOSTR
@@ -567,9 +522,7 @@ export default function NostrNote() {
                     </div>
 
                     <div className="fit-container">{note.note_tree}</div>
-                    {relatedEvent && (
-                      <KindOne reactions={false} event={relatedEvent} />
-                    )}
+
                     {note.checkForQuote &&
                       !isRelatedEventLoaded &&
                       !relatedEvent && (
@@ -754,73 +707,7 @@ export default function NostrNote() {
                             <NumberShrink value={zapsCount} />
                           </div>
                         </div>
-                        {/* <div
-                        className={`fx-centered pointer ${
-                          isLoading ? "flash" : ""
-                        }`}
-                        style={{ columnGap: "8px" }}
-                      >
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvote"
-                          onClick={downvoteNews}
-                        >
-                          <div
-                            className={
-                              isVoted?.content === "-"
-                                ? "arrow-up-bold"
-                                : "arrow-up"
-                            }
-                            style={{
-                              transform: "rotate(180deg)",
-                              opacity: isVoted ? ".2" : 1,
-                            }}
-                          ></div>
-                        </div>
-                        <div
-                          className="icon-tooltip"
-                          data-tooltip="Downvoters"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downvoteReaction.length > 0 &&
-                              setUsersList({
-                                title: "Downvoters",
-                                list: downvoteReaction.map(
-                                  (item) => item.pubkey
-                                ),
-                                extras: [],
-                              });
-                          }}
-                        >
-                          <NumberShrink value={downvoteReaction.length} />
-                        </div>
-                      </div> */}
-                        {/* <p>|</p>
-                      <ShareLink
-                        path={`/notes/${note.nEvent}`}
-                        title={author.display_name || author.name}
-                        description={note.content}
-                        kind={1}
-                        shareImgData={{
-                          post: note,
-                          author,
-                          label: "Note",
-                        }}
-                      /> */}
                       </div>
-                      {/* <div className="fx-centered">
-                      <div
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip="Bookmark note"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <SaveArticleAsBookmark
-                          pubkey={note.id}
-                          itemType="e"
-                          kind="1"
-                        />
-                      </div>
-                    </div> */}
                       <div style={{ position: "relative" }} ref={optionsRef}>
                         <div
                           className="round-icon-small round-icon-tooltip"
@@ -961,7 +848,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
     isPublishing,
     setToast,
   } = useContext(Context);
-  //   const [mainComments, setMainComments] = useState([]);
+
   const [toLogin, setToLogin] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -971,9 +858,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
   const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
     useState(false);
   const [netComments, setNetComments] = useState([]);
-  // const netComments = useMemo(() => {
-  //   return filterRootComments(comments);
-  // }, [comments]);
+
   useEffect(() => {
     if (selectedComment) {
       let sC = netComments.find((item) => item.id === selectedComment.id);
@@ -992,11 +877,6 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
     parsedCom();
   }, [comments]);
 
-  //   useEffect(() => {
-  //     // setMainComments(comments);
-  //     addNostrAuthors(comments.map((item) => item.pubkey));
-  //   }, [comments]);
-
   const postNewComment = async (suffix) => {
     try {
       if (!nostrKeys || !newComment) {
@@ -1011,9 +891,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
       }
       setIsLoading(true);
       let tempComment = newComment;
-      // let tempComment = suffix
-      //   ? `${newComment} — This is a comment on: https://yakihonne.com/notes/${nEvent}`
-      //   : newComment;
+
       setToPublish({
         nostrKeys: nostrKeys,
         kind: 1,
@@ -1023,15 +901,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
           : relaysOnPlatform,
       });
-      // let temPublishingState = await publishPost(
-      //   nostrKeys,
-      //   1,
-      //   tempComment,
-      //   [["a", aTag, "", "root"]],
-      //   nostrUser
-      //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-      //     : relaysOnPlatform
-      // );
+
       setIsLoading(false);
       setNewComment("");
     } catch (err) {
@@ -1325,185 +1195,6 @@ const Comment = ({ comment, action = true, noteID }) => {
     </>
   );
 };
-// const Comment = ({
-//   comment,
-//   refresh,
-//   refreshRepleis,
-//   index,
-//   onClick,
-//   action = true,
-//   nEvent,
-//   noteID,
-// }) => {
-//   const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-//     useContext(Context);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
-//   const [toggleReply, setToggleReply] = useState(false);
-
-//   const handleCommentDeletion = async () => {
-//     try {
-//       if (isPublishing) {
-//         setToast({
-//           type: 3,
-//           desc: "An event publishing is in process!",
-//         });
-//         return;
-//       }
-//       setIsLoading(true);
-//       let relaysToPublish = filterRelays(
-//         nostrUser?.relays || [],
-//         relaysOnPlatform
-//       );
-//       let created_at = Math.floor(Date.now() / 1000);
-//       let tags = [["e", comment.id]];
-
-//       let event = {
-//         kind: 5,
-//         content: "This comment will be deleted!",
-//         created_at,
-//         tags,
-//       };
-//       if (nostrKeys.ext) {
-//         try {
-//           event = await window.nostr.signEvent(event);
-//           refresh(index);
-//           setIsLoading(false);
-//         } catch (err) {
-//           setIsLoading(false);
-//           console.log(err);
-//           return false;
-//         }
-//       } else {
-//         event = finalizeEvent(event, nostrKeys.sec);
-//       }
-//       setToPublish({
-//         eventInitEx: event,
-//         allRelays: relaysToPublish,
-//       });
-//       // setToPublish({
-//       //   nostrKeys: nostrKeys,
-//       //   kind: 5,
-//       //   content: "This comment will be deleted!",
-//       //   tags: [["e", comment.id]],
-//       //   allRelays: nostrUser
-//       //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-//       //     : relaysOnPlatform,
-//       // });
-//       refresh(index);
-//       setIsLoading(false);
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   };
-
-//   return (
-//     <>
-//       {confirmationPrompt && (
-//         <ToDeleteComment
-//           comment={comment}
-//           exit={(e) => {
-//             e.stopPropagation();
-//             setConfirmationPrompt(false);
-//           }}
-//           handleCommentDeletion={(e) => {
-//             e.stopPropagation();
-//             setConfirmationPrompt(false);
-//             handleCommentDeletion();
-//           }}
-//         />
-//       )}
-
-//       <div
-//         className={`fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink  ${
-//           isLoading ? "flash" : ""
-//         }`}
-//         style={{
-//           backgroundColor: "var(--very-dim-gray)",
-//           border: "none",
-//           pointerEvents: isLoading ? "none" : "auto",
-//         }}
-//       >
-//         <div className="fit-container fx-scattered fx-start-v">
-//           <div className="fx-centered" style={{ columnGap: "16px" }}>
-//             <AuthorPreview
-//               author={{
-//                 author_img: "",
-//                 author_name: comment.pubkey.substring(0, 20),
-//                 author_pubkey: comment.pubkey,
-//                 on: new Date(comment.created_at * 1000).toISOString(),
-//               }}
-//             />
-//           </div>
-//           {comment.pubkey === nostrKeys.pub && action && (
-//             <div
-//               className="fx-centered pointer"
-//               style={{ columnGap: "3px" }}
-//               onClick={(e) => {
-//                 e.stopPropagation();
-//                 setConfirmationPrompt(true);
-//               }}
-//             >
-//               <div className="trash-24"></div>
-//             </div>
-//           )}
-//         </div>
-//         <div
-//           className="fx-centered fx-start-h fit-container"
-//           style={{ columnGap: "16px" }}
-//         >
-//           <div style={{ minWidth: "24px" }}></div>
-//           {/* <div
-//             className="fx-centered fx-start-h fx-wrap fit-container"
-//             style={{ rowGap: 0, columnGap: "4px" }}
-//           > */}
-//           <div>{comment.note_tree}</div>
-//           {/* <div
-//             className="fx-centered fx-start-h fx-wrap"
-//             style={{ rowGap: 0, columnGap: "4px" }}
-//           >
-//             {getNoteTree(comment.content.split(" — This is a comment on:")[0])}
-//           </div> */}
-//           {/* <p>{comment.content.split(" — This is a comment on:")[0]}</p> */}
-//         </div>
-
-//         {action && (
-//           <div
-//             className="fx-centered fx-start-h fit-container"
-//             style={{ columnGap: "16px" }}
-//           >
-//             <div className="fx-centered">
-//               <div style={{ minWidth: "24px" }}></div>
-//               <div className="fx-centered">
-//                 <div className="comment-icon"></div>
-//                 <p className="p-medium ">
-//                   {comment.count.length}{" "}
-//                   <span className="gray-c">Reply(ies)</span>{" "}
-//                 </p>
-//               </div>
-//             </div>
-//             <div onClick={() => setToggleReply(true)}>
-//               <p className="gray-c p-medium pointer btn-text">Reply</p>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//       {action && (
-//         <div className="fit-container fx-centered fx-end-h">
-//           <CommentsReplies
-//             refresh={refreshRepleis}
-//             comment={comment}
-//             all={comment.count}
-//             nEvent={nEvent}
-//             noteID={noteID}
-//             toggleReply={toggleReply}
-//             setToggleReply={setToggleReply}
-//           />
-//         </div>
-//       )}
-//     </>
-//   );
-// };
 
 const CommentsReplies = ({ all, noteID }) => {
   return (
@@ -1528,293 +1219,6 @@ const CommentsReplies = ({ all, noteID }) => {
     </>
   );
 };
-// const CommentsReplies = ({
-//   comment,
-//   exit,
-//   all,
-//   nEvent,
-//   refresh,
-//   noteID,
-//   toggleReply,
-//   setToggleReply,
-// }) => {
-//   const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-//     useContext(Context);
-//   const [login, setLogin] = useState(false);
-//   const [newComment, setNewComment] = useState("");
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [selectReplyTo, setSelectReplyTo] = useState(false);
-//   const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
-//     useState(false);
-//   const ref = useRef(null);
-
-//   useEffect(() => {
-//     if (toggleReply) {
-//       // ref.current?.scrollIntoView({ behavior: "smooth" });
-//     }
-//   }, [toggleReply]);
-//   const postNewComment = async (suffix) => {
-//     try {
-//       if (!nostrKeys || !newComment) {
-//         return;
-//       }
-//       if (isPublishing) {
-//         setToast({
-//           type: 3,
-//           desc: "An event publishing is in process!",
-//         });
-//         return;
-//       }
-//       setIsLoading(true);
-
-//       let tempComment = suffix
-//         ? `${newComment} — This is a comment on: https://yakihonne.com/notes/${nEvent}`
-//         : newComment;
-//       let tags = [["e", noteID, "", "root"]];
-//       if (selectReplyTo) tags.push(["e", selectReplyTo.id, "", "reply"]);
-//       if (!selectReplyTo) tags.push(["e", comment.id, "", "reply"]);
-
-//       setToPublish({
-//         nostrKeys: nostrKeys,
-//         kind: 1,
-//         content: tempComment,
-//         tags,
-//         allRelays: nostrUser
-//           ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-//           : relaysOnPlatform,
-//       });
-//       setIsLoading(false);
-//       setNewComment("");
-//       //   setSelectReplyTo(false);
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   };
-
-//   return (
-//     <>
-//       {toggleReply && nostrKeys && (
-//         <div className="fixed-container fx-centered box-pad-h" ref={ref}>
-//           <div
-//             className="fx-centered fx-wrap"
-//             style={{ width: "min(100%, 600px)" }}
-//           >
-//             {/* {selectReplyTo && (
-//               <div
-//                 className="fx-scattered fit-container sc-s-18 box-pad-h-m box-pad-v-s"
-//                 style={{
-//                   backgroundColor: "var(--black)",
-//                   border: "none",
-//                   borderBottomRightRadius: 0,
-//                   borderBottomLeftRadius: 0,
-//                 }}
-//               >
-//                 <p className="white-c p-medium">
-//                   Reply to: {selectReplyTo.content.split(" — This is a comment on:")[0].substring(0, 100)}...
-//                 </p>
-//               </div>
-//             )} */}
-//             {!selectReplyTo && (
-//               <div
-//                 className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink"
-//                 style={{
-//                   backgroundColor: "var(--very-dim-gray)",
-//                   border: "none",
-//                   pointerEvents: isLoading ? "none" : "auto",
-//                 }}
-//               >
-//                 <div className="fit-container fx-scattered fx-start-v">
-//                   <div className="fx-centered" style={{ columnGap: "16px" }}>
-//                     <AuthorPreview
-//                       author={{
-//                         author_img: "",
-//                         author_name: comment.pubkey.substring(0, 20),
-//                         author_pubkey: comment.pubkey,
-//                         on: new Date(comment.created_at * 1000).toISOString(),
-//                       }}
-//                     />
-//                   </div>
-//                 </div>
-//                 <div
-//                   className="fx-centered fx-start-h fit-container"
-//                   style={{ columnGap: "16px" }}
-//                 >
-//                   <div style={{ minWidth: "24px" }}></div>
-//                   {/* <div
-//                     className="fx-centered fx-start-h fx-wrap fit-container"
-//                     style={{ rowGap: 0, columnGap: "4px" }}
-//                   > */}
-//                   <div className="fit-container">
-//                     {comment.note_tree}
-//                     {/* {getNoteTree(
-//                       comment.content.split(" — This is a comment on:")[0]
-//                     )} */}
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-
-//             {selectReplyTo && (
-//               <div
-//                 className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink"
-//                 style={{
-//                   backgroundColor: "var(--c1-side)",
-//                   border: "none",
-//                 }}
-//               >
-//                 <div className="fit-container fx-scattered fx-start-v">
-//                   <div className="fx-centered" style={{ columnGap: "16px" }}>
-//                     <AuthorPreview
-//                       author={{
-//                         author_img: "",
-//                         author_name: selectReplyTo.pubkey.substring(0, 20),
-//                         author_pubkey: selectReplyTo.pubkey,
-//                         on: new Date(
-//                           selectReplyTo.created_at * 1000
-//                         ).toISOString(),
-//                       }}
-//                     />
-//                   </div>
-//                 </div>
-//                 <div
-//                   className="fx-centered fx-start-h fit-container"
-//                   style={{ columnGap: "16px" }}
-//                 >
-//                   <div style={{ minWidth: "24px" }}></div>
-//                   {/* <div
-//                     className="fx-centered fx-start-h fx-wrap fit-container"
-//                     style={{ rowGap: 0, columnGap: "4px" }}
-//                   > */}
-//                   <div className="fit-container">
-//                     {comment.note_tree}
-//                     {/* {getNoteTree(
-//                       selectReplyTo.content.split(" — This is a comment on:")[0]
-//                     )} */}
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-//             <textarea
-//               className="txt-area ifs-full"
-//               placeholder={
-//                 selectReplyTo ? "Reply to reply..." : "Reply to comment.."
-//               }
-//               value={newComment}
-//               onChange={(e) => setNewComment(e.target.value)}
-//             />
-//             <div className="fx-centered fit-container fx-end-h">
-//               <button
-//                 className="btn btn-normal  fx-centered"
-//                 onClick={() => newComment && setShowCommentsSuffixOption(true)}
-//               >
-//                 {isLoading && <LoadingDots />}
-//                 {!isLoading && <>Post a comment</>}
-//               </button>
-//               <button
-//                 className="btn btn-gst-red"
-//                 onClick={() => {
-//                   setSelectReplyTo(false);
-//                   setToggleReply(false);
-//                 }}
-//               >
-//                 {" "}
-//                 &#10005;
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//       {showCommentsSuffixOption && (
-//         <AddSuffixToComment
-//           post={postNewComment}
-//           comment={newComment}
-//           exit={() => setShowCommentsSuffixOption(false)}
-//           nEvent={nEvent}
-//         />
-//       )}
-//       <div
-//         className="fx-col fit-container fx-centered"
-//         style={{
-//           width: "calc(100% - 64px)",
-//         }}
-//       >
-//         {/* <h5 className="box-pad-v-m">{comment.count.length} Reply(ies)</h5> */}
-//         {/* <div
-//           className="fit-container fx-centered fx-col fx-start-h"
-//           style={{ maxHeight: "40vh", overflow: "scroll" }}
-//         > */}
-//         {all.map((comment, index) => {
-//           return (
-//             <Reply
-//               comment={{ ...comment, count: [] }}
-//               index={index}
-//               all={all || []}
-//               setSelectReplyTo={setSelectReplyTo}
-//               key={comment.id}
-//               refresh={refresh}
-//               setToggleReply={setToggleReply}
-//             />
-//           );
-//         })}
-
-//         {/* {nostrUser && (
-//           <div className="fit-container" ref={ref}>
-//             {selectReplyTo && (
-//               <div
-//                 className="fx-scattered fit-container sc-s-18 box-pad-h-m box-pad-v-s"
-//                 style={{
-//                   backgroundColor: "var(--very-dim-gray)",
-//                   border: "none",
-//                   borderBottomRightRadius: 0,
-//                   borderBottomLeftRadius: 0,
-//                 }}
-//               >
-//                 <p className="c1-c p-medium">
-//                   Reply to: {selectReplyTo.content.substring(0, 20)}...
-//                 </p>
-//               </div>
-//             )}
-//             {toggleReply && (
-//               <>
-//                 <textarea
-//                   className="txt-area ifs-full"
-//                   placeholder="Reply to comment.."
-//                   value={newComment}
-//                   onChange={(e) => setNewComment(e.target.value)}
-//                   style={{
-//                     borderTopRightRadius: selectReplyTo ? 0 : "",
-//                     borderTopLeftRadius: selectReplyTo ? 0 : "",
-//                   }}
-//                 />
-//                 <div className="fx-centered fit-container fx-end-h">
-//                   <button
-//                     className="btn btn-normal  fx-centered"
-//                     onClick={() =>
-//                       newComment && setShowCommentsSuffixOption(true)
-//                     }
-//                   >
-//                     {isLoading && <LoadingDots />}
-//                     {!isLoading && <>Post a comment</>}
-//                   </button>
-//                   <button
-//                     className="btn btn-gst-red"
-//                     onClick={() => {
-//                       setSelectReplyTo(false);
-//                       setToggleReply(false);
-//                     }}
-//                   >
-//                     {" "}
-//                     &#10005;
-//                   </button>
-//                 </div>
-//               </>
-//             )}
-//           </div>
-//         )} */}
-//       </div>
-//     </>
-//   );
-// };
 
 const Reply = ({ comment, all, noteID }) => {
   const [seeReply, setSeeReply] = useState(false);
@@ -1873,333 +1277,5 @@ const Reply = ({ comment, all, noteID }) => {
         </div>
       </div>
     </>
-  );
-};
-// const Reply = ({
-//   comment,
-//   refresh,
-//   index,
-//   all,
-//   setSelectReplyTo,
-//   setToggleReply,
-// }) => {
-//   const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-//     useContext(Context);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
-//   const [seeReply, setSeeReply] = useState(false);
-//   const [showLogin, setShowLogin] = useState(false);
-
-//   const repliedOn = useMemo(() => {
-//     return getOnReply(
-//       all,
-//       comment.tags.find(
-//         (item) => item[0] === "e" && item.length === 4 && item[3] === "reply"
-//       )[1] || ""
-//     );
-//   }, [all]);
-
-//   const handleCommentDeletion = async () => {
-//     try {
-//       if (isPublishing) {
-//         setToast({
-//           type: 3,
-//           desc: "An event publishing is in process!",
-//         });
-//         return;
-//       }
-//       setIsLoading(true);
-//       let relaysToPublish = filterRelays(
-//         nostrUser?.relays || [],
-//         relaysOnPlatform
-//       );
-//       let created_at = Math.floor(Date.now() / 1000);
-//       let tags = [["e", comment.id]];
-
-//       let event = {
-//         kind: 5,
-//         content: "This comment will be deleted!",
-//         created_at,
-//         tags,
-//       };
-//       if (nostrKeys.ext) {
-//         try {
-//           event = await window.nostr.signEvent(event);
-//         } catch (err) {
-//           console.log(err);
-//           refresh(index);
-//           setIsLoading(false);
-//           return false;
-//         }
-//       } else {
-//         event = finalizeEvent(event, nostrKeys.sec);
-//       }
-//       setToPublish({
-//         eventInitEx: event,
-//         allRelays: relaysToPublish,
-//       });
-//       // setToPublish({
-//       //   nostrKeys: nostrKeys,
-//       //   kind: 5,
-//       //   content: "This comment will be deleted!",
-//       //   tags: [["e", comment.id]],
-//       //   allRelays: nostrUser
-//       //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-//       //     : relaysOnPlatform,
-//       // });
-//       // let data = await deletePost(
-//       //   nostrKeys,
-//       //   comment.id,
-//       //   nostrUser
-//       //     ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-//       //     : relaysOnPlatform
-//       // );
-
-//       refresh(index);
-//       setIsLoading(false);
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   };
-
-//   return (
-//     <>
-//       {confirmationPrompt && (
-//         <ToDeleteComment
-//           comment={comment}
-//           exit={(e) => setConfirmationPrompt(false)}
-//           handleCommentDeletion={() => {
-//             setConfirmationPrompt(false);
-//             handleCommentDeletion();
-//           }}
-//         />
-//       )}
-//       {/* {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />} */}
-//       <div
-//         className={`fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink  ${
-//           isLoading ? "flash" : ""
-//         }`}
-//         style={{
-//           backgroundColor: "var(--c1-side)",
-//           border: "none",
-//         }}
-//       >
-//         <div className="fit-container fx-scattered fx-start-v">
-//           <div className="fx-centered" style={{ columnGap: "16px" }}>
-//             <AuthorPreview
-//               author={{
-//                 author_img: "",
-//                 author_name: comment.pubkey.substring(0, 20),
-//                 author_pubkey: comment.pubkey,
-//                 on: new Date(comment.created_at * 1000).toISOString(),
-//               }}
-//             />
-//           </div>
-//           {comment.pubkey === nostrKeys.pub && (
-//             <div
-//               className="fx-centered pointer"
-//               style={{ columnGap: "3px" }}
-//               onClick={(e) => {
-//                 e.stopPropagation();
-//                 setConfirmationPrompt(true);
-//               }}
-//             >
-//               <div className="trash-24"></div>
-//             </div>
-//           )}
-//         </div>
-//         {repliedOn && (
-//           <div
-//             className="fx-start-h fx-centerd fit-container"
-//             // style={{ width: seeReply ? "100%" : "max-content" }}
-//           >
-//             <div
-//               className="fx-centered fit-container fx-start-h pointer"
-//               onClick={(e) => {
-//                 e.stopPropagation();
-//                 setSeeReply(!seeReply);
-//               }}
-//             >
-//               <p className="c1-c p-medium">
-//                 Replied to : {repliedOn.content.substring(0, 10)}... (See more)
-//               </p>
-//               <div
-//                 className="arrow"
-//                 style={{ transform: seeReply ? "rotate(180deg)" : "" }}
-//               ></div>
-//             </div>
-//             <div
-//               className="fit-container box-pad-v-s"
-//               style={{ display: seeReply ? "flex" : "none" }}
-//             >
-//               {" "}
-//               <Comment
-//                 comment={{ ...repliedOn, count: [] }}
-//                 action={false}
-//               />{" "}
-//             </div>
-//             <hr />
-//           </div>
-//         )}
-//         <div
-//           className="fx-centered fx-start-h fit-container"
-//           style={{ columnGap: "16px" }}
-//         >
-//           {/* <div
-//             className="fx-centered fx-start-h fx-wrap fit-container"
-//             style={{ rowGap: 0, columnGap: "4px" }}
-//           > */}
-//           <div className="fit-container">
-//             {comment.note_tree}
-//             {/* {getNoteTree(comment.content.split(" — This is a comment on:")[0])} */}
-//           </div>
-//           {/* <p>{comment.content.split(" — This is a comment on:")[0]}</p> */}
-//         </div>
-
-//         {/* {repliedOn && (
-//             <div
-//               className="fx-start-h fx-centerd fit-container"
-//               // style={{ width: seeReply ? "100%" : "max-content" }}
-//             >
-//               <div
-//                 className="fx-centered fit-container fx-start-h box-pad-h pointer"
-//                 onClick={() => setSeeReply(!seeReply)}
-//               >
-//                 <p className="c1-c p-medium">Replied to : {repliedOn.content.substring(0,10)}... (See more)</p>
-//                 <div
-//                   className="arrow"
-//                   style={{ transform: seeReply ? "rotate(180deg)" : "" }}
-//                 ></div>
-//               </div>
-
-//               <div
-//                 className="fit-container"
-//                 style={{ display: seeReply ? "flex" : "none" }}
-//               >
-//                 {" "}
-//                 <Comment comment={{ ...repliedOn, count: [] }} />{" "}
-//               </div>
-//             </div>
-//           )} */}
-//         <div
-//           className="fx-centered fx-start-h fit-container"
-//           style={{ columnGap: "16px" }}
-//           onClick={() => {
-//             nostrKeys
-//               ? setSelectReplyTo({
-//                   id: comment.id,
-//                   content: comment.content,
-//                   created_at: comment.created_at,
-//                   pubkey: comment.pubkey,
-//                 })
-//               : setShowLogin(true);
-//             setToggleReply(true);
-//           }}
-//         >
-//           <p className="gray-c p-medium pointer btn-text">Reply</p>
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-const AuthorPreview = ({ author }) => {
-  const [authorData, setAuthorData] = useState("");
-  const { relayConnect, addNostrAuthors, getNostrAuthor, nostrAuthors } =
-    useContext(Context);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let auth = getNostrAuthor(author.author_pubkey);
-
-        if (auth)
-          setAuthorData({
-            author_img: auth.picture,
-            author_name: auth.name,
-            author_pubkey: auth.pubkey,
-          });
-        return;
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    if (!authorData) fetchData();
-  }, [nostrAuthors]);
-
-  if (!authorData)
-    return (
-      <div className="fx-centered" style={{ opacity: ".5" }}>
-        <UserProfilePicNOSTR
-          size={24}
-          ring={false}
-          img={author.author_img}
-          mainAccountUser={false}
-          user_id={author.author_pubkey}
-        />
-        <div>
-          <p className="gray-c p-medium">
-            On <Date_ time={true} toConvert={author.on} />
-          </p>
-          <p className="p-one-line p-medium">
-            By: <span className="c1-c">{author.author_name}</span>
-          </p>
-        </div>
-      </div>
-    );
-  return (
-    <>
-      <UserProfilePicNOSTR
-        size={24}
-        ring={false}
-        img={authorData.author_img}
-        mainAccountUser={false}
-        user_id={authorData.author_pubkey}
-      />
-      <div>
-        <p className="gray-c p-medium">
-          On <Date_ time={true} toConvert={author.on} />
-        </p>
-        <p className="p-one-line p-medium">
-          By: <span className="c1-c">{authorData.author_name}</span>
-        </p>
-      </div>
-    </>
-  );
-};
-
-const ToDeleteComment = ({ comment, exit, handleCommentDeletion }) => {
-  return (
-    <div className="fixed-container fx-centered box-pad-h">
-      <section
-        className="box-pad-h box-pad-v sc-s fx-centered fx-col"
-        style={{ position: "relative", width: "min(100%, 350px)" }}
-      >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
-        <h4 className="p-centered">
-          Delete{" "}
-          <span className="orange-c" style={{ wordBreak: "break-word" }}>
-            "
-            {comment.content
-              .split(" — This is a comment on:")[0]
-              .substring(0, 100)}
-            "?
-          </span>
-        </h4>
-        <p className="p-centered gray-c box-pad-v-m">
-          Do you wish to delete this comment?
-        </p>
-        <div className="fit-container fx-centered">
-          <button className="btn btn-normal fx" onClick={handleCommentDeletion}>
-            Delete
-          </button>
-          <button className="btn btn-gst fx" onClick={exit}>
-            Cancel
-          </button>
-        </div>
-      </section>
-    </div>
   );
 };
