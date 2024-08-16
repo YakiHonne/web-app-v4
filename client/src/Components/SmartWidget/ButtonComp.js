@@ -70,7 +70,7 @@ export default function ButtonComp({
   useEffect(() => {
     setButtonColor(getButtonColor());
     setButtonUrl(getUrl());
-  }, [type]);
+  }, [type, backgroundColor, textColor]);
 
   if (buttonUrl !== false)
     return (
