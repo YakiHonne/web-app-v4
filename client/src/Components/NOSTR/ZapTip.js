@@ -289,8 +289,15 @@ const Cashier = ({
           ? encodeLud06(decodeUrlOrAddress(recipientLNURL))
           : recipientLNURL;
         try {
+          // const res = await axios(callback, {
+          //   params: {
+          //     amount: sats,
+          //     nostr: event,
+          //     lnurl: tempRecipientLNURL,
+          //   },
+          // });
           const res = await axios(
-            `${callback}?amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
+            `${callback}${callback.includes("?") ? "&" : "?"}amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
           );
           if (res.data.status === "ERROR") {
             setToast({
@@ -305,7 +312,7 @@ const Cashier = ({
             type: 2,
             desc: "Something went wrong when creating the invoice!",
           });
-          return
+          return;
         }
       }
       setInvoice(lnbcInvoice);
