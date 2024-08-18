@@ -17,7 +17,6 @@ const getZapEventRequest = async (nostrKeys, content, tags = []) => {
   } else {
     event = finalizeEvent(event, nostrKeys.sec);
   }
-
   return encodeURI(JSON.stringify(event));
 };
 

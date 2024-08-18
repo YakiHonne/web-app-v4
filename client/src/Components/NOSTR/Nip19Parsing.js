@@ -231,7 +231,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
   if (event.kind === 30031)
     return (
       <div className="fit-container box-pad-v-s">
-        {!minimal && <PreviewWidget widget={event.metadata} />}
+        {!minimal && <PreviewWidget widget={event.metadata} pubkey={event.pubkey} />}
         {minimal && <MinimalPreviewWidget widget={event} />}
       </div>
     );

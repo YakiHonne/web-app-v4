@@ -240,6 +240,7 @@ export default function SmartWidgetChecker() {
           {
             async onevent(event) {
               try {
+                
                 if (event.created_at > event_created_at) {
                   event_created_at = event.created_at;
                   let metadata = JSON.parse(event.content);

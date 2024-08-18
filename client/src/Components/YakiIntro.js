@@ -198,7 +198,7 @@ const Banner = ({ exit }) => {
                   Last updated Aug 16, 2024
                 </p>
               </div>
-              <p className="orange-c p-medium">v3.121.0</p>
+              <p className="orange-c p-medium">v3.123.0</p>
             </div>
             <p>{`
 - Smart widgets are here! Our new feature.
