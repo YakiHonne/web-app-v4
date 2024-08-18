@@ -91,6 +91,7 @@ export default function NostrHome() {
   const [buzzFeed, setBuzzFeed] = useState([]);
   const [videos, setVideos] = useState([]);
   const [notes, setNotes] = useState([]);
+  const [notesSmartWidgets, setNotesSmartWidgets] = useState([]);
   const [relays, setRelays] = useState(relaysOnPlatform);
   const [activeRelay, setActiveRelay] = useState("");
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
@@ -107,6 +108,7 @@ export default function NostrHome() {
   const [bfLastEventTime, setBfLastEventTime] = useState(undefined);
   const [videosLastEventTime, setVideosLastEventTime] = useState(undefined);
   const [notesLastEventTime, setNotesLastEventTime] = useState(undefined);
+  const [notesSWLastEventTime, setNotesSWLastEventTime] = useState(undefined);
   const [showTopicsPicker, setShowTopicsPicker] = useState(
     !localStorage.getItem("topic-popup") && nostrUser
   );
@@ -189,6 +191,9 @@ export default function NostrHome() {
       ) {
         return;
       }
+      if(notesContentFrom === "smart-widget")
+      setNotesSWLastEventTime(notesSmartWidgets[notesSmartWidgets.length - 1]?.created_at || undefined);
+    else
       setNotesLastEventTime(notes[notes.length - 1]?.created_at || undefined);
     };
     document
@@ -216,14 +221,26 @@ export default function NostrHome() {
                 if (event.kind === 6) {
                   events.push(event_.repostPubkey);
                 }
-                setNotes((prev) => {
-                  let existed = prev.find((note) => note.id === event.id);
-                  if (existed) return prev;
-                  else
-                    return [...prev, event_].sort(
-                      (note_1, note_2) => note_2.created_at - note_1.created_at
-                    );
-                });
+                if (notesContentFrom === "smart-widget")
+                  setNotesSmartWidgets((prev) => {
+                    let existed = prev.find((note) => note.id === event.id);
+                    if (existed) return prev;
+                    else
+                      return [...prev, event_].sort(
+                        (note_1, note_2) =>
+                          note_2.created_at - note_1.created_at
+                      );
+                  });
+                else
+                  setNotes((prev) => {
+                    let existed = prev.find((note) => note.id === event.id);
+                    if (existed) return prev;
+                    else
+                      return [...prev, event_].sort(
+                        (note_1, note_2) =>
+                          note_2.created_at - note_1.created_at
+                      );
+                  });
               }
             }
           },
@@ -244,7 +261,7 @@ export default function NostrHome() {
     };
     if (Array.isArray(mutedList) && notesContentFrom !== "trending")
       fetchData();
-  }, [notesLastEventTime, mutedList, notesContentFrom]);
+  }, [notesLastEventTime, notesSWLastEventTime, mutedList, notesContentFrom]);
 
   // useEffect(() => {
   //   if (!nostrKeys) setNotesContentFrom("trending");
@@ -1028,8 +1045,8 @@ export default function NostrHome() {
     };
 
     straightUp();
-    setNotesLastEventTime(undefined);
-    setNotes([]);
+    // setNotesLastEventTime(undefined);
+    // setNotes([]);
     setNotesContentFrom(from);
   };
 
@@ -1526,10 +1543,18 @@ export default function NostrHome() {
                             return <KindSix event={note} key={note.id} />;
                           return <KindOne event={note} key={note.id} />;
                         })}
-                      {["universal", "followings", "smart-widget"].includes(
+                      {["universal", "followings"].includes(
                         notesContentFrom
                       ) &&
                         notes.map((note) => {
+                          if (note.kind === 6)
+                            return <KindSix event={note} key={note.id} />;
+                          return <KindOne event={note} key={note.id} />;
+                        })}
+                      {["smart-widget"].includes(
+                        notesContentFrom
+                      ) &&
+                        notesSmartWidgets.map((note) => {
                           if (note.kind === 6)
                             return <KindSix event={note} key={note.id} />;
                           return <KindOne event={note} key={note.id} />;
