@@ -357,6 +357,11 @@ hr:last-child {
     color: white
 }
 
+.sticker-orange-side {
+    background: #ff9c081b;
+    color: var(--orange-main)
+}
+
 .sticker-black {
     background: var(--primary);
     color: var(--white);
@@ -1459,7 +1464,7 @@ textarea::placeholder, .if::placeholder {
     word-break: break-word;
     background: none;
     color: var(--black);
-        line-height: 120%;
+    line-height: 120%;
 }
 
 .h2-txt {
@@ -1468,7 +1473,7 @@ textarea::placeholder, .if::placeholder {
     word-break: break-word;
     background: none;
     color: var(--black);
-        line-height: 120%;
+    line-height: 120%;
 }
 
 .h3-txt {

@@ -188,7 +188,7 @@ export default function NostrWriting() {
     setContent(data);
   };
 
-  if (!nostrKeys) return <LoadingScreen />;
+  // if (!nostrKeys) return <LoadingScreen />;
   return (
     <>
       {showPublishingScreen && (

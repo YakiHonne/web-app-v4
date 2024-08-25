@@ -18,8 +18,20 @@ import WriteNew from "./WriteNew";
 import UserBalance from "./UserBalance";
 import NumberShrink from "../NumberShrink";
 
+const getConnectedAccounts = () => {
+  try {
+    let accounts = localStorage.getItem("yaki-accounts") || [];
+    accounts = Array.isArray(accounts) ? [] : JSON.parse(accounts);
+    return accounts;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
 export default function SidebarNOSTR() {
   const {
+    handleSwitchAccount,
     nostrKeys,
     nostrUserAbout,
     nostrUserLogout,
@@ -41,6 +53,10 @@ export default function SidebarNOSTR() {
   const mainFrame = useRef(null);
   const [isActive, setIsActive] = useState(false);
   const [showYakiChest, setShowYakiChest] = useState(false);
+  const accounts = useMemo(() => {
+    return getConnectedAccounts();
+  }, [nostrKeys, nostrUserAbout]);
+  const [isAccountSwitching, setIsAccountSwitching] = useState(false);
 
   const isNewMsg = useMemo(() => {
     return chatrooms.find((chatroom) => !chatroom.checked);
@@ -109,6 +125,9 @@ export default function SidebarNOSTR() {
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
+      {isAccountSwitching && (
+        <AccountSwitching exit={() => setIsAccountSwitching(false)} />
+      )}
       <div
         className="fx-scattered fx-end-v nostr-sidebar box-pad-v-m fx-col "
         style={{
@@ -558,7 +577,7 @@ export default function SidebarNOSTR() {
                 // onClick={() => setShowSettings(!showSettings)}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsActive(true)
+                  setIsActive(true);
                   setShowSettings(!showSettings);
                 }}
               >
@@ -567,11 +586,11 @@ export default function SidebarNOSTR() {
                   style={{ columnGap: "16px" }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsActive(true)
+                    setIsActive(true);
                     setShowSettings(!showSettings);
                   }}
                 >
-                  <div className="mb-hide" style={{pointerEvents: "none"}}>
+                  <div className="mb-hide" style={{ pointerEvents: "none" }}>
                     <UserProfilePicNOSTR
                       size={50}
                       mainAccountUser={true}
@@ -579,7 +598,7 @@ export default function SidebarNOSTR() {
                       ring={false}
                     />
                   </div>
-                  <div className="mb-show" style={{pointerEvents: "none"}}>
+                  <div className="mb-show" style={{ pointerEvents: "none" }}>
                     <UserProfilePicNOSTR
                       size={40}
                       mainAccountUser={true}
@@ -633,7 +652,6 @@ export default function SidebarNOSTR() {
                           <NumberShrink
                             value={updatedActionFromYakiChest.points}
                           />
-
                           <span className="gray-c p-medium">xp</span>
                         </p>
                       </div>
@@ -692,49 +710,175 @@ export default function SidebarNOSTR() {
                           })}`
                         )
                       }
+                      style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="user"></div>
                       <p className="gray-c">Profile</p>
                     </div>
-                    <hr />
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
                       onClick={() => navigateTo(`/yaki-points`)}
+                      style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="cup"></div>
                       <p className="gray-c">Yaki points</p>
                     </div>
-                    <hr />
+
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
                       onClick={() => navigateTo(`/settings`)}
+                      style={{ padding: ".75rem 1rem" }}
                     >
                       <div className="setting"></div>
                       <p className="gray-c">Settings</p>
                     </div>
-                    <hr />
-                    <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link">
+
+                    <div
+                      className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
+                      style={{ padding: ".75rem 1rem" }}
+                    >
                       <DtoLToggleButton small={true} />
                     </div>
-                    <hr />
                     <div
-                      className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
-                      onClick={() => navigateTo(`/yakihonne-mobile-app`)}
+                      className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-m nostr-navbar-link"
+                      onClick={() => {
+                        setShowSettings(false);
+                        nostrUserLogout();
+                      }}
+                      style={{ padding: ".75rem 1rem" }}
                     >
-                      <div className="mobile"></div>
-                      <p className="gray-c">Get the app</p>
+                      <div className="logout"></div>
+                      <p className="fx-centered">
+                        Logout
+                        <span className="sticker sticker-normal sticker-small sticker-orange-side">
+                          {" "}
+                          {nostrUserAbout.name ||
+                            nostrUserAbout.display_name ||
+                            minimizeKey(nostrKeys.pub)}
+                        </span>
+                      </p>
                     </div>
                   </div>
                   <hr />
+                  <div className="fit-container fx-centered fx-col box-pad-h-s box-pad-v-s">
+                    <div className="fit-container">
+                      <p className="gray-c p-small">SWITCH ACCOUNT</p>
+                    </div>
+                    <div className="fit-container">
+                      {accounts.map((account) => {
+                        return (
+                          <div
+                            className="fit-container sc-s-18 box-pad-h-s box-pad-v-s fx-scattered option"
+                            style={{
+                              backgroundColor:
+                                nostrKeys.pub !== account.pubkey
+                                  ? "transparent"
+                                  : "var(--dim-gray)",
+                              border: "none",
+                              borderRadius: "10px",
+                            }}
+                            key={account.pubkey}
+                            onClick={() => {
+                              handleSwitchAccount(account);
+                              setIsAccountSwitching(true);
+                              setShowSettings(false);
+                            }}
+                          >
+                            <div className="fx-centered">
+                              <div style={{ pointerEvents: "none" }}>
+                                <UserProfilePicNOSTR
+                                  size={32}
+                                  mainAccountUser={false}
+                                  img={account.picture}
+                                  allowClick={false}
+                                  ring={false}
+                                />
+                              </div>
+                              <div>
+                                <p className="p-one-line p-medium">
+                                  {account.display_name ||
+                                    account.name ||
+                                    minimizeKey(nostrKeys.pub)}
+                                </p>
+                                <p className="gray-c p-small p-one-line">
+                                  @
+                                  {account.name ||
+                                    account.display_name ||
+                                    minimizeKey(account.pubkey)}
+                                </p>
+                              </div>
+                            </div>
+                            <div>
+                              {nostrKeys.pub !== account.pubkey && (
+                                <div
+                                  className="fx-centered"
+                                  style={{
+                                    border: "1px solid var(--gray)",
+                                    borderRadius: "var(--border-r-50)",
+                                    minWidth: "14px",
+                                    aspectRatio: "1/1",
+                                  }}
+                                ></div>
+                              )}
+                              {nostrKeys.pub === account.pubkey && (
+                                <div
+                                  className="fx-centered"
+                                  style={{
+                                    borderRadius: "var(--border-r-50)",
+                                    backgroundColor: "var(--orange-main)",
+                                    minWidth: "14px",
+                                    aspectRatio: "1/1",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      borderRadius: "var(--border-r-50)",
+                                      backgroundColor: "white",
+                                      minWidth: "6px",
+                                      aspectRatio: "1/1",
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div
+                      className="fit-container fx-centered box-pad-h-m box-pad-v-s sc-s-d option"
+                      style={{
+                        backgroundColor: "transparent",
+                        borderColor: "var(--gray)",
+                        borderRadius: "10px",
+                      }}
+                      onClick={(e) => {
+                        // e.stopPropagation();
+                        setTriggerLogin(true);
+                      }}
+                    >
+                      <div className="plus-sign"></div>
+                      <p className="gray-c p-medium">Add account</p>
+                    </div>
+                  </div>
+                  {/* <hr /> */}
                   <div
-                    className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
+                    className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-s"
                     onClick={() => {
                       setShowSettings(false);
                       nostrUserLogout();
                     }}
                   >
-                    <div className="logout"></div>
-                    <p>Logout</p>
+                    <div
+                      className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-s sc-s-18"
+                      style={{
+                        backgroundColor: "var(--dim-gray)",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <div className="logout"></div>
+                      <p>Logout of all accounts</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -754,3 +898,39 @@ export default function SidebarNOSTR() {
     </>
   );
 }
+
+const AccountSwitching = ({ exit }) => {
+  const { nostrUserAbout } = useContext(Context);
+  useEffect(() => {
+    let timeout = setTimeout(() => {
+      exit();
+    }, 2000);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+  return (
+    <div className="fixed-container fx-centered">
+      <div className="fx-centered fx-col">
+        <div className="fx-centered popout">
+          <div
+            className="purple-pulse"
+            style={{ borderRadius: "var(--border-r-50)" }}
+          >
+            <UserProfilePicNOSTR
+              size={200}
+              mainAccountUser={true}
+              allowClick={false}
+              ring={false}
+            />
+          </div>
+        </div>
+        <div className="box-pad-v fx-centered fx-col">
+          <p className="orange-c p-medium">Switching to</p>
+          <h3>{nostrUserAbout.display_name || nostrUserAbout.name}</h3>
+          <p className="gray-c">@{nostrUserAbout.name}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
