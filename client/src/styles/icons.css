@@ -326,7 +326,8 @@
 .copy-24,
 .copy,
 .smart-widget-draft,
-.smart-widget-draft-24{
+.smart-widget-draft-24,
+.bunny-icon{
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -1001,6 +1002,14 @@
     min-height: 48px;
 }
 
+.bunny-icon {
+    min-width: 8rem;
+    min-height: 8rem;
+}
+
+.bunny-icon{
+    background-image: url('../media/icons/bunny-icon.svg');
+}
 .smart-widget-draft,
 .smart-widget-draft-24 {
     background-image: url('../media/icons/sw-draft.svg');

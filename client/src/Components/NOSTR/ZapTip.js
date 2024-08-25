@@ -288,19 +288,32 @@ const Cashier = ({
         let tempRecipientLNURL = recipientLNURL.includes("@")
           ? encodeLud06(decodeUrlOrAddress(recipientLNURL))
           : recipientLNURL;
-
-        const res = await axios(
-          `${callback}?amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
-        );
-
-        if (res.data.status === "ERROR") {
+        try {
+          // const res = await axios(callback, {
+          //   params: {
+          //     amount: sats,
+          //     nostr: event,
+          //     lnurl: tempRecipientLNURL,
+          //   },
+          // });
+          const res = await axios(
+            `${callback}${callback.includes("?") ? "&" : "?"}amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
+          );
+          if (res.data.status === "ERROR") {
+            setToast({
+              type: 2,
+              desc: "Something went wrong when processing payment!",
+            });
+            return;
+          }
+          lnbcInvoice = res.data.pr;
+        } catch (err) {
           setToast({
             type: 2,
-            desc: "Something went wrong when processing payment!",
+            desc: "Something went wrong when creating the invoice!",
           });
           return;
         }
-        lnbcInvoice = res.data.pr;
       }
       setInvoice(lnbcInvoice);
       setConfirmation("in_progress");

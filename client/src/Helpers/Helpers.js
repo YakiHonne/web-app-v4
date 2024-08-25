@@ -720,7 +720,7 @@ const validateWidgetValues = (value, kind, type) => {
   }
   if (kind === "url" && type === "zap") {
     let regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return regex.test(value) || (value.startsWith("lnbc") && value.length > 32);
+    return regex.test(value) || (value.startsWith("lnurl") && value.length > 32) || (value.startsWith("lnbc") && value.length > 32);
   }
   if (kind === "url" && type === "nostr") {
     let regex = /^(npub|note|nprofile|nevent|naddr)/;

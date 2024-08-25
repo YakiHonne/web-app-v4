@@ -39,7 +39,18 @@ export default function YakiIntro() {
   const [swipe, setSwipe] = useState(false);
   const ref = useRef(null);
 
-  useEffect(() => {}, []);
+  const [up, setUp] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = (e) => {
+      let el = document.querySelector(".main-page-nostr-container");
+      if (!el) return;
+      if (el.scrollTop >= 600) setUp(true);
+      else setUp(false);
+    };
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
@@ -47,17 +58,19 @@ export default function YakiIntro() {
       <div
         style={{
           position: "fixed",
-          right: "-200px",
-          bottom: "128px",
-          transform: "translateY(-50%)",
+          // right: "-200px",
+          // bottom: "128px",
+          // transform: "translateY(-50%)",
+          right: "0px",
+          bottom: up ? "74px" : "16px",
           transition: ".2s ease-in-out",
           zIndex: "1000000",
         }}
         className="fx-centered fx-end-h"
       >
         {!swipe && (
-          <div className="slide-right">
-            <div
+          <div className="slide-right" onClick={() => setSwipe(!swipe)}>
+            {/* <div
               style={{
                 border: "none",
                 background: "var(--dim-gray)",
@@ -67,7 +80,8 @@ export default function YakiIntro() {
               onClick={() => setSwipe(!swipe)}
             >
               <div>Hey 👋🏻 Check me!</div>
-            </div>
+            </div> */}
+            <div className="bunny-icon"></div>
           </div>
         )}
       </div>
@@ -181,18 +195,21 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated Aug 12, 22024
+                  Last updated Aug 16, 2024
                 </p>
               </div>
-              <p className="orange-c p-medium">v123.1.0</p>
+              <p className="orange-c p-medium">v3.123.0</p>
             </div>
             <p>{`
-- Yakihonne points system to win precious rewards by being active on the platform
-- Yakihonne’s points page to check your performance and gained points
-- Adding notes to Yakihonne content
-- The ability to toggle between Media (flash news, articles, videos and buzz feed) and Notes (trending notes, following notes and universal notes) from the home page for more diverse content
-- Adding wallets, checking latest transactions, making invoices and sending funds to your preferred people
-- The ability to have multiple wallets and check the balance on both side bar and wallet page and use your preferred wallet to send zaps across the app
+- Smart widgets are here! Our new feature.
+- Our new bunny on the right side to notify you about new updates.
+- Notes now appear first in order in the home page.
+- The ability to add smart widgets on notes.
+- The ability to tag people on notes.
+- Mentioned smart widgets and uploaded images are now sorted as a gallery for easy access while creating a note.
+- Minor design changes and scaling.
+- Optimizing singin/signup performance
+- Bug fix.
 `}</p>
             <div className="fit-container fx-centered box-pad-v">
               <p className="orange-c p-medium">
@@ -200,6 +217,7 @@ const Banner = ({ exit }) => {
                 {">>"} The end 😁 {"<<"}{" "}
               </p>
             </div>
+            <div className="box-pad-v"></div>
             <div className="box-pad-v"></div>
           </div>
         </div>

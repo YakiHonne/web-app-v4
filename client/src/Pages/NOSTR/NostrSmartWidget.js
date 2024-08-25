@@ -83,6 +83,16 @@ const getTemplate = (template) => {
     let left_side =
       container.left_side && Array.isArray(container.left_side)
         ? container.left_side.map((component) => {
+            if (component.type === "zap-poll") {
+              let nevent = nip19.neventEncode({
+                id: JSON.parse(component.metadata.content).id,
+              });
+              return {
+                ...component,
+                id: nanoid(),
+                metadata: { ...component.metadata, nevent },
+              };
+            }
             return { ...component, id: nanoid() };
           })
         : [];
@@ -2344,20 +2354,34 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         <div
           className="fx-scattered fit-container"
           style={{
-            pointerEvents: !["regular", "zap"].includes(metadata.metadata.type)
-              ? "none"
-              : "",
+            // pointerEvents: !["regular", "zap"].includes(metadata.metadata.type)
+            //   ? "none"
+            //   : "",
             opacity: !["regular", "zap"].includes(metadata.metadata.type)
-              ? 0.7
+              ? 0.5
               : 1,
           }}
         >
           <p>Background color</p>
-          <div className="fx-centered">
+          <div
+            className="fx-centered"
+            style={{
+              cursor: !["regular", "zap"].includes(metadata.metadata.type)
+                ? "not-allowed"
+                : "",
+            }}
+          >
             <label
               htmlFor="btn-bg-color"
               className="pointer"
-              style={{ position: "relative" }}
+              style={{
+                position: "relative",
+                pointerEvents: !["regular", "zap"].includes(
+                  metadata.metadata.type
+                )
+                  ? "none"
+                  : "",
+              }}
             >
               <input
                 type="color"
@@ -2372,7 +2396,9 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                 }}
                 value={metadata.metadata.background_color}
                 onChange={(e) =>
-                  handleMetadata("background_color", e.target.value)
+                  !["regular", "zap"].includes(metadata.metadata.type)
+                    ? null
+                    : handleMetadata("background_color", e.target.value)
                 }
               />
               <div
@@ -2381,6 +2407,9 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                   backgroundColor: metadata.metadata.background_color,
                   position: "relative",
                   zIndex: 2,
+                  cursor: !["regular", "zap"].includes(metadata.metadata.type)
+                    ? "not-allowed"
+                    : "",
                 }}
               ></div>
             </label>
@@ -2397,20 +2426,34 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         <div
           className="fx-scattered fit-container"
           style={{
-            pointerEvents: !["regular", "zap"].includes(metadata.metadata.type)
-              ? "none"
-              : "",
+            // pointerEvents: !["regular", "zap"].includes(metadata.metadata.type)
+            //   ? "none"
+            //   : "",
             opacity: !["regular", "zap"].includes(metadata.metadata.type)
-              ? 0.7
+              ? 0.5
               : 1,
           }}
         >
           <p>Text color</p>
-          <div className="fx-centered">
+          <div
+            className="fx-centered"
+            style={{
+              cursor: !["regular", "zap"].includes(metadata.metadata.type)
+                ? "not-allowed"
+                : "",
+            }}
+          >
             <label
               htmlFor="btn-text-color"
               className="pointer"
-              style={{ position: "relative" }}
+              style={{
+                position: "relative",
+                pointerEvents: !["regular", "zap"].includes(
+                  metadata.metadata.type
+                )
+                  ? "none"
+                  : "",
+              }}
             >
               <input
                 type="color"
@@ -2424,7 +2467,11 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                   zIndex: -1,
                 }}
                 value={metadata.metadata.text_color}
-                onChange={(e) => handleMetadata("text_color", e.target.value)}
+                onChange={(e) =>
+                  !["regular", "zap"].includes(metadata.metadata.type)
+                    ? null
+                    : handleMetadata("text_color", e.target.value)
+                }
               />
               <div
                 className="round-icon-small"
@@ -2495,7 +2542,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                 data-tooltip="Browse polls"
                 onClick={() => setShowBrowsePolls(true)}
               >
-                <div className="curation"></div>
+                <div className="polls"></div>
               </div>
               <div
                 className="round-icon round-icon-tooltip"

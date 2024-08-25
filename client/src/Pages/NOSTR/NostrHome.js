@@ -38,6 +38,7 @@ import BuzzFeedPreviewCard from "../../Components/NOSTR/BuzzFeedPreviewCard";
 import VideosPreviewCards from "../../Components/NOSTR/VideosPreviewCards";
 import KindSix from "../../Components/NOSTR/KindSix";
 import KindOne from "../../Components/NOSTR/KindOne";
+// import CountDownToNewProduct from "../../Components/CountDownToNewProduct";
 const defaultTopicIcon =
   "https://yakihonne.s3.ap-east-1.amazonaws.com/topics_icons/default.png";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
@@ -91,6 +92,7 @@ export default function NostrHome() {
   const [buzzFeed, setBuzzFeed] = useState([]);
   const [videos, setVideos] = useState([]);
   const [notes, setNotes] = useState([]);
+  const [notesSmartWidgets, setNotesSmartWidgets] = useState([]);
   const [relays, setRelays] = useState(relaysOnPlatform);
   const [activeRelay, setActiveRelay] = useState("");
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
@@ -100,13 +102,14 @@ export default function NostrHome() {
   const [topCreators, setTopCreators] = useState([]);
   const [trendingNotes, setTrendingNotes] = useState([]);
   const [mediaContentFrom, setMediaContentFrom] = useState("HOMEFEED");
-  const [notesContentFrom, setNotesContentFrom] = useState("trending");
+  const [notesContentFrom, setNotesContentFrom] = useState("universal");
   const [contentSource, setContentSource] = useState("notes");
   const [artsLastEventTime, setArtsLastEventTime] = useState(undefined);
   const [fnLastEventTime, setFnLastEventTime] = useState(undefined);
   const [bfLastEventTime, setBfLastEventTime] = useState(undefined);
   const [videosLastEventTime, setVideosLastEventTime] = useState(undefined);
   const [notesLastEventTime, setNotesLastEventTime] = useState(undefined);
+  const [notesSWLastEventTime, setNotesSWLastEventTime] = useState(undefined);
   const [showTopicsPicker, setShowTopicsPicker] = useState(
     !localStorage.getItem("topic-popup") && nostrUser
   );
@@ -189,6 +192,9 @@ export default function NostrHome() {
       ) {
         return;
       }
+      if(notesContentFrom === "smart-widget")
+      setNotesSWLastEventTime(notesSmartWidgets[notesSmartWidgets.length - 1]?.created_at || undefined);
+    else
       setNotesLastEventTime(notes[notes.length - 1]?.created_at || undefined);
     };
     document
@@ -216,14 +222,26 @@ export default function NostrHome() {
                 if (event.kind === 6) {
                   events.push(event_.repostPubkey);
                 }
-                setNotes((prev) => {
-                  let existed = prev.find((note) => note.id === event.id);
-                  if (existed) return prev;
-                  else
-                    return [...prev, event_].sort(
-                      (note_1, note_2) => note_2.created_at - note_1.created_at
-                    );
-                });
+                if (notesContentFrom === "smart-widget")
+                  setNotesSmartWidgets((prev) => {
+                    let existed = prev.find((note) => note.id === event.id);
+                    if (existed) return prev;
+                    else
+                      return [...prev, event_].sort(
+                        (note_1, note_2) =>
+                          note_2.created_at - note_1.created_at
+                      );
+                  });
+                else
+                  setNotes((prev) => {
+                    let existed = prev.find((note) => note.id === event.id);
+                    if (existed) return prev;
+                    else
+                      return [...prev, event_].sort(
+                        (note_1, note_2) =>
+                          note_2.created_at - note_1.created_at
+                      );
+                  });
               }
             }
           },
@@ -244,7 +262,7 @@ export default function NostrHome() {
     };
     if (Array.isArray(mutedList) && notesContentFrom !== "trending")
       fetchData();
-  }, [notesLastEventTime, mutedList, notesContentFrom]);
+  }, [notesLastEventTime, notesSWLastEventTime, mutedList, notesContentFrom]);
 
   // useEffect(() => {
   //   if (!nostrKeys) setNotesContentFrom("trending");
@@ -1026,10 +1044,10 @@ export default function NostrHome() {
       if (!el) return;
       el.scrollTop = 0;
     };
-    
+
     straightUp();
-    setNotesLastEventTime(undefined);
-    setNotes([]);
+    // setNotesLastEventTime(undefined);
+    // setNotes([]);
     setNotesContentFrom(from);
   };
 
@@ -1079,6 +1097,9 @@ export default function NostrHome() {
             {showLogin && <LoginNOSTR exit={() => setShowLogin(false)} />}
             <YakiIntro />
             <ArrowUp />
+            {/* <div className="desk-hide box-pad-h-m box-pad-v">
+              <CountDownToNewProduct />
+            </div> */}
             <div className="fit-container fx-centered">
               <HomeFNMobile flashnews={flashNews} />
             </div>
@@ -1398,14 +1419,14 @@ export default function NostrHome() {
                       >
                         <div
                           className={`list-item fx-centered fx ${
-                            notesContentFrom === "trending"
+                            notesContentFrom === "universal"
                               ? "selected-list-item"
                               : ""
                           }`}
-                          onClick={() => handleNotesContentFrom("trending")}
+                          onClick={() => handleNotesContentFrom("universal")}
                         >
-                          <div className="trending-up"></div>
-                          Trending
+                          <div className="globe"></div>
+                          Universal
                         </div>
                         <div
                           className={`list-item fx-centered fx ${
@@ -1420,14 +1441,14 @@ export default function NostrHome() {
                         </div>
                         <div
                           className={`list-item fx-centered fx ${
-                            notesContentFrom === "universal"
+                            notesContentFrom === "trending"
                               ? "selected-list-item"
                               : ""
                           }`}
-                          onClick={() => handleNotesContentFrom("universal")}
+                          onClick={() => handleNotesContentFrom("trending")}
                         >
-                          <div className="globe"></div>
-                          Universal
+                          <div className="trending-up"></div>
+                          Trending
                         </div>
                         {nostrKeys && (nostrKeys.sec || nostrKeys.ext) && (
                           <div
@@ -1523,10 +1544,18 @@ export default function NostrHome() {
                             return <KindSix event={note} key={note.id} />;
                           return <KindOne event={note} key={note.id} />;
                         })}
-                      {["universal", "followings", "smart-widget"].includes(
+                      {["universal", "followings"].includes(
                         notesContentFrom
                       ) &&
                         notes.map((note) => {
+                          if (note.kind === 6)
+                            return <KindSix event={note} key={note.id} />;
+                          return <KindOne event={note} key={note.id} />;
+                        })}
+                      {["smart-widget"].includes(
+                        notesContentFrom
+                      ) &&
+                        notesSmartWidgets.map((note) => {
                           if (note.kind === 6)
                             return <KindSix event={note} key={note.id} />;
                           return <KindOne event={note} key={note.id} />;
@@ -1561,7 +1590,13 @@ export default function NostrHome() {
                   }}
                   ref={extrasRef}
                 >
-                  <div className="sticky fit-container">
+                  {/* <div className="fit-container sticky" style={{paddingBottom: '.5rem', zIndex: 101}}>
+                    <CountDownToNewProduct />
+                  </div> */}
+                  <div
+                    className=" fit-container"
+                    style={{ position: "relative", zIndex: 100 }}
+                  >
                     <SearchbarNOSTR />
                   </div>
                   <div
@@ -1594,17 +1629,6 @@ export default function NostrHome() {
                       />
                     </div>
                   )}
-                  {/* <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
-                    }}
-                  >
-                    <h4>Top curators</h4>
-                    <TopCurators />
-                  </div> */}
 
                   {recentTags.length > 0 && (
                     <div

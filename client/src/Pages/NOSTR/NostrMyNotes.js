@@ -120,8 +120,19 @@ export default function NostrMyNotes() {
       let checkForComment = event.tags.find(
         (tag) => tag[0] === "e" || tag[0] === "a"
       );
+      let checkForL = event.tags.find((tag) => tag[0] === "l");
+      checkForL = checkForL ? checkForL[1] : "";
+ 
       let checkForQuote = event.tags.find((tag) => tag[0] === "q");
-      if (checkForComment && event.kind === 1) return false;
+      if (
+        (checkForComment && event.kind === 1 && !checkForL) ||
+        (checkForComment &&
+          event.kind === 1 &&
+          checkForL &&
+          checkForL !== "smart-widget")
+      )
+        return false;
+      if (checkForL && checkForL !== "smart-widget") return false;
       let author_img = "";
       let author_name = getBech32("npub", event.pubkey).substring(0, 10);
       let author_pubkey = event.pubkey;
