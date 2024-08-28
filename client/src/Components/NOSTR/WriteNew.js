@@ -74,7 +74,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
           >
             <div
               className="note-plus-24"
-              style={{ width: "48px", height: "48px" }}
+              style={{ width: "32px", height: "32px" }}
             ></div>
             <div>Note</div>
           </Link>
@@ -89,7 +89,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
           >
             <div
               className="posts-plus-24"
-              style={{ width: "48px", height: "48px" }}
+              style={{ width: "32px", height: "32px" }}
             ></div>
             <div>Article</div>
           </div>
@@ -105,7 +105,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
           >
             <div
               className="news-plus-24"
-              style={{ width: "48px", height: "48px" }}
+              style={{ width: "32px", height: "32px" }}
             ></div>
             <div>Flash news</div>
           </Link>
@@ -122,7 +122,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
           >
             <div
               className="curation-plus-24"
-              style={{ width: "48px", height: "48px" }}
+              style={{ width: "32px", height: "32px" }}
             ></div>
             <div>Curation</div>
           </Link>
@@ -138,7 +138,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
           >
             <div
               className="smart-widget-add-24"
-              style={{ width: "48px", height: "48px" }}
+              style={{ width: "32px", height: "32px" }}
             ></div>
             <div style={{ width: "max-content" }}>Smart widget</div>
           </Link>
@@ -154,7 +154,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
           >
             <div
               className="play-plus-24"
-              style={{ width: "48px", height: "48px" }}
+              style={{ width: "32px", height: "32px" }}
             ></div>
             <div>Video</div>
           </Link>

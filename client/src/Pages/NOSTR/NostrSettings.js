@@ -26,17 +26,7 @@ import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
 import LoginWithAPI from "../../Components/NOSTR/LoginWithAPI";
 import AddWallet from "../../Components/NOSTR/AddWallet";
 import SearchbarNOSTR from "../../Components/NOSTR/SearchbarNOSTR";
-
-const getWallets = () => {
-  let wallets = localStorage.getItem("yaki-wallets");
-  if (!wallets) return [];
-  try {
-    wallets = JSON.parse(wallets);
-    return wallets;
-  } catch (err) {
-    return [];
-  }
-};
+import { getWallets, updateWallets } from "../../Helpers/Helpers";
 
 const checkForSavedCommentOptions = () => {
   try {
@@ -58,15 +48,17 @@ export default function NostrSettings() {
     nostrKeys,
     nostrUserAbout,
     nostrUserTags,
-    nostrUserLogout,
+    userLogout,
     setNostrUserAbout,
     setNostrUser,
+    userRelays,
     setToast,
     isPublishing,
     setToPublish,
     yakiChestStats,
     isYakiChestLoaded,
     setTempChannel,
+    setUserRelays
   } = useContext(Context);
   const [isLoading, setIsLoading] = useState(false);
   const [timestamp, setTimestamp] = useState(false);
@@ -102,18 +94,18 @@ export default function NostrSettings() {
   };
 
   useEffect(() => {
-    setTempUserRelays(nostrUser.relays);
+    setTempUserRelays(userRelays);
     setRelaysStatus(
-      nostrUser.relays
-        ? nostrUser.relays.map((item) => {
-            return { url: item, connected: false };
-          })
-        : []
+      userRelays.map((item) => {
+        return { url: item, connected: false };
+      })
     );
+  }, [userRelays]);
+  useEffect(() => {
     setLud06(nostrUserAbout.lud06);
     setLud16(nostrUserAbout.lud16);
-    setUserNIP05(nostrUser.nip05);
-  }, [nostrUser]);
+    setUserNIP05(nostrUserAbout.nip05);
+  }, [nostrUserAbout]);
 
   useEffect(() => {
     const CheckRelays = async () => {
@@ -203,12 +195,12 @@ export default function NostrSettings() {
         kind: 10002,
         content: "",
         tags: tags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
+        allRelays: tempUserRelays,
       });
       let tempUser = { ...nostrUser };
       tempUser.relays = tempUserRelays;
       setNostrUser(tempUser);
-
+      setUserRelays(tempUserRelays);
       return true;
     } catch (err) {
       console.log(err);
@@ -255,7 +247,9 @@ export default function NostrSettings() {
           kind: 0,
           content,
           tags: nostrUserTags,
-          allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
+          allRelays: [
+            ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
+          ],
         });
 
         setNostrUserAbout(JSON.parse(content));
@@ -363,13 +357,13 @@ export default function NostrSettings() {
         tempWallets[0].active = true;
         setWallets(tempWallets);
         setShowDeletionPopup(false);
-        localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+        updateWallets(tempWallets);
         return;
       }
 
       setWallets(tempWallets);
       setShowDeletionPopup(false);
-      localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+      updateWallets(tempWallets);
     } catch (err) {
       console.log(err);
     }
@@ -385,7 +379,7 @@ export default function NostrSettings() {
       return w;
     });
     tempWallets[index].active = true;
-    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    updateWallets(tempWallets);
     setWallets(tempWallets);
     setTempChannel(Date.now());
   };
@@ -478,17 +472,39 @@ export default function NostrSettings() {
                               : "",
                           }}
                         >
+                          <div
+                            className="fx-centered pointer round-icon round-icon-tooltip"
+                            data-tooltip={"Update cover"}
+                            style={{
+                              // width: "36px",
+                              // height: "36px",
+                              // borderRadius: "var(--border-r-50)",
+                              backgroundColor: "var(--dim-gray)",
+                              position: "absolute",
+                              right: nostrUserAbout.banner ? "62px" : "16px",
+                              top: "16px",
+                            }}
+                            onClick={() => setCoverUploader(true)}
+                          >
+                            {isLoading ? (
+                              <LoadingDots />
+                            ) : (
+                              <div className="edit-24"></div>
+                            )}
+                          </div>
+
                           {nostrUserAbout.banner && (
                             <div
-                              className="fx-centered pointer"
+                              className="fx-centered pointer round-icon round-icon-tooltip"
+                              data-tooltip={"Delete cover"}
                               style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "var(--border-r-50)",
+                                // width: "36px",
+                                // height: "36px",
+                                // borderRadius: "var(--border-r-50)",
                                 backgroundColor: "var(--dim-gray)",
                                 position: "absolute",
-                                right: "24px",
-                                top: "24px",
+                                right: "16px",
+                                top: "16px",
                               }}
                               onClick={clearCover}
                             >
@@ -713,13 +729,13 @@ export default function NostrSettings() {
                             )}
                           </div>
                         </div>
-                        <div
+                        {/* <div
                           style={{
                             columnGap: "5px",
                             position: "absolute",
-                            left: "24px",
-                            top: "24px",
-                            width: "130px",
+                            left: "16px",
+                            top: "16px",
+                            // width: "130px",
                           }}
                           className="pointer"
                         >
@@ -737,7 +753,7 @@ export default function NostrSettings() {
                               </>
                             )}
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                       <div className="fit-container fx-centered box-pad-v box-pad-h-m">
                         <div className="fit-container fx-centered fx-col">
@@ -1202,7 +1218,7 @@ export default function NostrSettings() {
                           </div>
                           <div
                             className="fit-container sc-s-18 fx-scattered box-pad-h-m box-pad-v-m pointer"
-                            onClick={nostrUserLogout}
+                            onClick={userLogout}
                           >
                             <div className="fx-centered fx-start-h">
                               <div className="logout-24"></div>

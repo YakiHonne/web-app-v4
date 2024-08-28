@@ -1,4 +1,11 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  lazy,
+} from "react";
 import SidebarNOSTR from "../../Components/NOSTR/SidebarNOSTR";
 import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
@@ -37,7 +44,8 @@ import FlashNewsPreviewCard from "../../Components/NOSTR/FlashNewsPreviewCard";
 import BuzzFeedPreviewCard from "../../Components/NOSTR/BuzzFeedPreviewCard";
 import VideosPreviewCards from "../../Components/NOSTR/VideosPreviewCards";
 import KindSix from "../../Components/NOSTR/KindSix";
-import KindOne from "../../Components/NOSTR/KindOne";
+const KindOne = lazy(() => import("../../Components/NOSTR/KindOne"));
+// import KindOne from "../../Components/NOSTR/KindOne";
 // import CountDownToNewProduct from "../../Components/CountDownToNewProduct";
 const defaultTopicIcon =
   "https://yakihonne.s3.ap-east-1.amazonaws.com/topics_icons/default.png";
@@ -192,10 +200,13 @@ export default function NostrHome() {
       ) {
         return;
       }
-      if(notesContentFrom === "smart-widget")
-      setNotesSWLastEventTime(notesSmartWidgets[notesSmartWidgets.length - 1]?.created_at || undefined);
-    else
-      setNotesLastEventTime(notes[notes.length - 1]?.created_at || undefined);
+      if (notesContentFrom === "smart-widget")
+        setNotesSWLastEventTime(
+          notesSmartWidgets[notesSmartWidgets.length - 1]?.created_at ||
+            undefined
+        );
+      else
+        setNotesLastEventTime(notes[notes.length - 1]?.created_at || undefined);
     };
     document
       .querySelector(".main-page-nostr-container")
@@ -212,7 +223,7 @@ export default function NostrHome() {
         setIsLoadingNotes(true);
         let events = [];
         let { filter, relaysToFetchFrom } = getNotesFilter();
-        // let pool_ = new SimplePool();
+
         let sub_ = pool.subscribeMany(relaysToFetchFrom, filter, {
           async onevent(event) {
             if (![...bannedList, ...mutedList].includes(event.pubkey)) {
@@ -579,8 +590,8 @@ export default function NostrHome() {
     }
     if (mediaContentFrom === "follows") {
       let authors =
-          nostrUser && nostrUser.following.length > 0
-            ? [...nostrUser.following.map((item) => item[1])]
+          nostrUser && userFollowings.length > 0
+            ? userFollowings
             : [
                 "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3",
               ],
@@ -652,8 +663,8 @@ export default function NostrHome() {
     }
     if (mediaContentFrom === "follows") {
       let authors =
-          nostrUser && nostrUser.following.length > 0
-            ? [...nostrUser.following.map((item) => item[1])]
+          nostrUser && userFollowings.length > 0
+            ? userFollowings
             : [
                 "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3",
               ],
@@ -781,8 +792,8 @@ export default function NostrHome() {
     }
     if (mediaContentFrom === "follows") {
       let authors =
-          nostrUser && nostrUser.following.length > 0
-            ? [...nostrUser.following.map((item) => item[1])]
+          nostrUser && userFollowings.length > 0
+            ? userFollowings
             : [
                 "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3",
               ],
@@ -822,10 +833,7 @@ export default function NostrHome() {
       ? relaysOnPlatform
       : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
     if (notesContentFrom === "followings") {
-      let authors =
-      userFollowings
-          ? [...userFollowings]
-          : [];
+      let authors = Array.from(userFollowings);
       filter = [
         { authors, kinds: [1, 6], limit: 50, until: notesLastEventTime },
       ];
@@ -1047,7 +1055,7 @@ export default function NostrHome() {
 
     straightUp();
     // setNotesLastEventTime(undefined);
-    // setNotes([]);
+    setNotes([]);
     setNotesContentFrom(from);
   };
 
@@ -1544,17 +1552,13 @@ export default function NostrHome() {
                             return <KindSix event={note} key={note.id} />;
                           return <KindOne event={note} key={note.id} />;
                         })}
-                      {["universal", "followings"].includes(
-                        notesContentFrom
-                      ) &&
+                      {["universal", "followings"].includes(notesContentFrom) &&
                         notes.map((note) => {
                           if (note.kind === 6)
                             return <KindSix event={note} key={note.id} />;
                           return <KindOne event={note} key={note.id} />;
                         })}
-                      {["smart-widget"].includes(
-                        notesContentFrom
-                      ) &&
+                      {["smart-widget"].includes(notesContentFrom) &&
                         notesSmartWidgets.map((note) => {
                           if (note.kind === 6)
                             return <KindSix event={note} key={note.id} />;
@@ -1593,10 +1597,7 @@ export default function NostrHome() {
                   {/* <div className="fit-container sticky" style={{paddingBottom: '.5rem', zIndex: 101}}>
                     <CountDownToNewProduct />
                   </div> */}
-                  <div
-                    className=" fit-container"
-                    style={{ position: "relative", zIndex: 100 }}
-                  >
+                  <div className="sticky fit-container">
                     <SearchbarNOSTR />
                   </div>
                   <div

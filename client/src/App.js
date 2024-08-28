@@ -71,7 +71,7 @@ function App() {
       <Publishing />
       <ToastMessages />
       <UserFirsLogin />
-      <YakiNewFeatureIntro />
+      {/* <YakiNewFeatureIntro /> */}
       {/* <Router> */}
         <NavbarNOSTR />
         <Routes>

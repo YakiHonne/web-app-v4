@@ -109,7 +109,10 @@ const isImageUrlSync = (url) => {
 
 const getNoteTree = async (note, minimal = false) => {
   if (!note) return "";
-  let tree = note.trim().split(/(\s|\n)+/).filter(Boolean);
+  let tree = note
+    .trim()
+    .split(/(\s|\n)+/)
+    .filter(Boolean);
   let finalTree = [];
 
   for (let i = 0; i < tree.length; i++) {
@@ -117,7 +120,10 @@ const getNoteTree = async (note, minimal = false) => {
     const key = `${el}-${i}`;
     if (el === "\n") {
       finalTree.push(<br key={key} />);
-    } else if (/(https?:\/\/)/i.test(el)) {
+    } else if (
+      /(https?:\/\/)/i.test(el) &&
+      !el.includes("https://yakihonne.com/smart-widget-checker?naddr=")
+    ) {
       const isURLVid = isVid(el);
       if (!minimal) {
         if (isURLVid) {
@@ -167,12 +173,30 @@ const getNoteTree = async (note, minimal = false) => {
                   name="media"
                   width={"100%"}
                   className="sc-s-18"
-                  style={{ margin: "1rem auto", }}
+                  style={{ margin: "1rem auto" }}
                 >
                   <source src={el} type="video/mp4" />
                 </video>
               );
             }
+          } else if (
+            el.includes(".mp3") ||
+            el.includes(".ogg") ||
+            el.includes(".wav")
+          ) {
+            finalTree.push(
+              <audio
+                controls
+                key={key}
+                className="fit-container"
+                style={{ margin: ".5rem auto", minWidth: "300px" }}
+              >
+                <source src={el} type="audio/ogg" />
+                <source src={el} type="audio/mpeg" />
+                <source src={el} type="audio/wav" />
+                Your browser does not support the audio element.
+              </audio>
+            );
           } else {
             finalTree.push(
               <a
@@ -202,12 +226,14 @@ const getNoteTree = async (note, minimal = false) => {
     } else if (
       (el.includes("nostr:") ||
         el.includes("naddr") ||
+        el.includes("https://yakihonne.com/smart-widget-checker?naddr=") ||
         el.includes("nprofile") ||
         el.includes("npub") ||
         el.includes("nevent")) &&
       el.length > 30
     ) {
       const nip19add = el
+        .replace("https://yakihonne.com/smart-widget-checker?naddr=", "")
         .replace("nostr:", "")
         .replace("@", "")
         .replace(".", "")
@@ -720,7 +746,11 @@ const validateWidgetValues = (value, kind, type) => {
   }
   if (kind === "url" && type === "zap") {
     let regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return regex.test(value) || (value.startsWith("lnurl") && value.length > 32) || (value.startsWith("lnbc") && value.length > 32);
+    return (
+      regex.test(value) ||
+      (value.startsWith("lnurl") && value.length > 32) ||
+      (value.startsWith("lnbc") && value.length > 32)
+    );
   }
   if (kind === "url" && type === "nostr") {
     let regex = /^(npub|note|nprofile|nevent|naddr)/;
@@ -764,7 +794,7 @@ const validateWidgetValues = (value, kind, type) => {
     return ["h1", "h2", "regular", "small"].includes(value);
   }
   if (kind === "pubkey") {
-    return true
+    return true;
   }
   if (kind === "type") {
     return [
@@ -801,6 +831,73 @@ const validateWidgetValues = (value, kind, type) => {
   return false;
 };
 
+const getWallets = () => {
+  let nostkeys = getKeys();
+  let wallets = localStorage.getItem("yaki-wallets");
+  if (!(wallets && nostkeys)) return [];
+  try {
+    wallets = JSON.parse(wallets);
+    let wallets_ = wallets.find((wallet) => wallet?.pubkey === nostkeys.pub);
+    return wallets_ ? wallets_.wallets : [];
+  } catch (err) {
+    return [];
+  }
+};
+
+// const getWallets = () => {
+//   let wallets = localStorage.getItem("yaki-wallets");
+//   if (!wallets) return [];
+//   try {
+//     wallets = JSON.parse(wallets);
+//     return wallets;
+//   } catch (err) {
+//     return [];
+//   }
+// };
+const updateWallets = (wallets_) => {
+  let nostkeys = getKeys();
+  let wallets = localStorage.getItem("yaki-wallets");
+
+  if (!nostkeys) return;
+  try {
+    wallets = wallets ? JSON.parse(wallets) : [];
+    let wallets_index = wallets.findIndex(
+      (wallet) => wallet?.pubkey === nostkeys.pub
+    );
+    if (wallets_index !== -1) {
+      wallets[wallets_index].wallets = wallets_;
+    }
+    if (wallets_index === -1) {
+      wallets.push({ pubkey: nostkeys.pub, wallets: wallets_ });
+    }
+    localStorage.setItem("yaki-wallets", JSON.stringify(wallets));
+  } catch (err) {
+    localStorage.removeItem("yaki-wallets");
+    return [];
+  }
+};
+
+let getKeys = () => {
+  try {
+    let keys = localStorage.getItem("_nostruserkeys");
+    keys = JSON.parse(keys);
+    return keys;
+  } catch (err) {
+    return false;
+  }
+};
+
+const getConnectedAccounts = () => {
+  try {
+    let accounts = localStorage.getItem("yaki-accounts") || [];
+    accounts = Array.isArray(accounts) ? [] : JSON.parse(accounts);
+    return accounts;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -816,4 +913,7 @@ export {
   levelCount,
   getCurrentLevel,
   validateWidgetValues,
+  getWallets,
+  updateWallets,
+  getConnectedAccounts
 };

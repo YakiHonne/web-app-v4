@@ -3,7 +3,7 @@ import { Context } from "../../Context/Context";
 import { nip19, SimplePool } from "nostr-tools";
 import { checkForLUDS, filterRelays } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
-import { getNoteTree } from "../../Helpers/Helpers";
+import { getNoteTree, getWallets, updateWallets } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 import { decode } from "light-bolt11-decoder";
 import Date_ from "../Date_";
@@ -20,17 +20,6 @@ import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import { webln } from "@getalby/sdk";
 
 const pool = new SimplePool();
-
-const getWallets = () => {
-  let wallets = localStorage.getItem("yaki-wallets");
-  if (!wallets) return [];
-  try {
-    wallets = JSON.parse(wallets);
-    return wallets;
-  } catch (err) {
-    return [];
-  }
-};
 
 export default function ZapPollsComp({
   event,
@@ -1049,7 +1038,7 @@ const checkAlbyToken = async (wallets, activeWallet) => {
     let tempWallets = Array.from(wallets);
     let index = wallets.findIndex((item) => item.id === activeWallet.id);
     tempWallets[index] = tempWallet;
-    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    updateWallets(tempWallets)
     return {
       wallets: tempWallets,
       activeWallet: tempWallet,

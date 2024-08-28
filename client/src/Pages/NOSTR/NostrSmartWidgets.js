@@ -19,11 +19,11 @@ import PreviewWidget from "../../Components/SmartWidget/PreviewWidget";
 import Footer from "../../Components/Footer";
 import OptionsDropdown from "../../Components/NOSTR/OptionsDropdown";
 import ToDeleteGeneral from "../../Components/NOSTR/ToDeleteGeneral";
+import ShareLink from "../../Components/ShareLink";
 const pool = new SimplePool();
 
 export default function NostrSmartWidgets() {
-  const { nostrUser, nostrKeys, addNostrAuthors } =
-    useContext(Context);
+  const { nostrUser, nostrKeys, addNostrAuthors } = useContext(Context);
   const [comWidgets, setComWidgets] = useState([]);
   const [myWidgets, setMyWidgets] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -338,15 +338,8 @@ export default function NostrSmartWidgets() {
                     {" "}
                   </div>
                   <h4>What are smart widgets?</h4>
-                  <p className="gray-c">
-                    We got your back! Check our demo
-                  </p>
-                  <Link
-                    target="_blank"
-                    to={
-                      "/yakihonne-smart-widgets"
-                    }
-                  >
+                  <p className="gray-c">We got your back! Check our demo</p>
+                  <Link target="_blank" to={"/yakihonne-smart-widgets"}>
                     <button className="btn btn-normal">Read more</button>
                   </Link>
                 </div>
@@ -455,6 +448,16 @@ const WidgetCard = ({ widget, deleteWidget }) => {
                 <p className="red-c">Delete</p>
               </div>
             ),
+            <ShareLink
+              label="Share widget"
+              path={`/${nip19.naddrEncode({
+                pubkey: widget.pubkey,
+                identifier: widget.d,
+                kind: widget.kind,
+              })}`}
+              title={widget.title || widget.description}
+              description={widget.description || widget.title}
+            />,
           ]}
         />
         {/* <div className="fx-centered">

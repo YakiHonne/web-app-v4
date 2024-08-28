@@ -1634,7 +1634,7 @@ const Reply = ({
 
 const AuthorPreview = ({ author }) => {
   const [authorData, setAuthorData] = useState("");
-  const { relayConnect, addNostrAuthors, getNostrAuthor, nostrAuthors } =
+  const {  getNostrAuthor, nostrAuthors } =
     useContext(Context);
 
   useEffect(() => {

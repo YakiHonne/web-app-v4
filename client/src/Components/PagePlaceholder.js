@@ -22,7 +22,7 @@ import LoginWithAPI from "./NOSTR/LoginWithAPI";
 import AddWallet from "./NOSTR/AddWallet";
 
 export default function PagePlaceholder({ page, onClick = null }) {
-  const { nostrUserLogout, nostrKeys } = useContext(Context);
+  const { userLogout, nostrKeys } = useContext(Context);
   const [triggerLogin, setTriggerLogin] = useState(false);
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [showAddWallet, setShowAddWallet] = useState(false);
@@ -101,7 +101,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
               height: "300px",
             }}
           ></div>
-          <button className="btn btn-normal" onClick={nostrUserLogout}>
+          <button className="btn btn-normal" onClick={userLogout}>
             Logout
           </button>
         </div>
@@ -243,7 +243,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
               height: "300px",
             }}
           ></div>
-          <button className="btn btn-normal" onClick={nostrUserLogout}>
+          <button className="btn btn-normal" onClick={userLogout}>
             Logout
           </button>
         </div>
@@ -343,7 +343,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
             <button
               className="btn btn-normal"
               onClick={() =>
-                nostrKeys ? nostrUserLogout() : setTriggerLogin(true)
+                nostrKeys ? userLogout() : setTriggerLogin(true)
               }
             >
               {nostrKeys ? "reconnect" : "Login"}

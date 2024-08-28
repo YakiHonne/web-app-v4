@@ -1596,8 +1596,7 @@ const Reply = ({
 
 const AuthorPreview = ({ author }) => {
   const [authorData, setAuthorData] = useState("");
-  const { relayConnect, addNostrAuthors, getNostrAuthor, nostrAuthors } =
-    useContext(Context);
+  const { getNostrAuthor, nostrAuthors } = useContext(Context);
 
   useEffect(() => {
     const fetchData = async () => {

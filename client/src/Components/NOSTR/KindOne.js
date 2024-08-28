@@ -100,24 +100,24 @@ export default function KindOne({ event, reactions = true }) {
     fetchData();
   }, [nostrAuthors]);
 
-  useEffect(() => {
-    if (event.checkForQuote && !relatedEvent) {
-      let pool = new SimplePool();
+  // useEffect(() => {
+  //   if (event.checkForQuote && !relatedEvent) {
+  //     let pool = new SimplePool();
 
-      pool.subscribeMany(
-        relaysOnPlatform,
-        [{ kinds: [1], ids: [event.checkForQuote] }],
-        {
-          async onevent(event) {
-            setRelatedEvent(await onEvent(event));
-          },
-          oneose() {
-            setIsRelatedEventLoaded(true);
-          },
-        }
-      );
-    }
-  }, []);
+  //     pool.subscribeMany(
+  //       relaysOnPlatform,
+  //       [{ kinds: [1], ids: [event.checkForQuote] }],
+  //       {
+  //         async onevent(event) {
+  //           setRelatedEvent(await onEvent(event));
+  //         },
+  //         oneose() {
+  //           setIsRelatedEventLoaded(true);
+  //         },
+  //       }
+  //     );
+  //   }
+  // }, []);
 
   useEffect(() => {
     if (!isPublishing) {
@@ -138,63 +138,63 @@ export default function KindOne({ event, reactions = true }) {
     };
   }, [optionsRef]);
 
-  useEffect(() => {
-    try {
-      if (reactions === false) return;
-      let sub = pool.subscribeMany(
-        nostrUser
-          ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-          : relaysOnPlatform,
-        [
-          {
-            kinds: [6, 7],
-            "#e": [event.id],
-          },
-          {
-            kinds: [1],
-            "#q": [event.id],
-          },
-          {
-            kinds: [1],
-            "#e": [event.id],
-          },
-          {
-            kinds: [9735],
-            "#p": [event.pubkey],
-            "#e": [event.id],
-          },
-        ],
-        {
-          async onevent(event_) {
-            if (event_.kind === 9735) {
-              let sats = decodeBolt11(getBolt11(event_));
-              let zapper = getZapper(event_);
-              setZappers((prev) => {
-                return [...prev, zapper];
-              });
-              setZapsCount((prev) => prev + sats);
-            }
-            if (event_.kind === 7) {
-              setReactions((reactions_) => [...reactions_, event_]);
-            }
-            if (event_.kind === 6) {
-              setReposts((reposts) => [...reposts, event_]);
-            }
-            if (event_.kind === 1) {
-              let check_kind1 = await onEvent(event_);
-              if (check_kind1.checkForQuote)
-                setQuotes((quotes) => [...quotes, event_]);
-              if (check_kind1.checkForComment) {
-                setComments((comments) => [...comments, event_]);
-              }
-            }
-          },
-        }
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     if (reactions === false) return;
+  //     let sub = pool.subscribeMany(
+  //       nostrUser
+  //         ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
+  //         : relaysOnPlatform,
+  //       [
+  //         {
+  //           kinds: [6, 7],
+  //           "#e": [event.id],
+  //         },
+  //         {
+  //           kinds: [1],
+  //           "#q": [event.id],
+  //         },
+  //         {
+  //           kinds: [1],
+  //           "#e": [event.id],
+  //         },
+  //         {
+  //           kinds: [9735],
+  //           "#p": [event.pubkey],
+  //           "#e": [event.id],
+  //         },
+  //       ],
+  //       {
+  //         async onevent(event_) {
+  //           if (event_.kind === 9735) {
+  //             let sats = decodeBolt11(getBolt11(event_));
+  //             let zapper = getZapper(event_);
+  //             setZappers((prev) => {
+  //               return [...prev, zapper];
+  //             });
+  //             setZapsCount((prev) => prev + sats);
+  //           }
+  //           if (event_.kind === 7) {
+  //             setReactions((reactions_) => [...reactions_, event_]);
+  //           }
+  //           if (event_.kind === 6) {
+  //             setReposts((reposts) => [...reposts, event_]);
+  //           }
+  //           if (event_.kind === 1) {
+  //             let check_kind1 = await onEvent(event_);
+  //             if (check_kind1.checkForQuote)
+  //               setQuotes((quotes) => [...quotes, event_]);
+  //             if (check_kind1.checkForComment) {
+  //               setComments((comments) => [...comments, event_]);
+  //             }
+  //           }
+  //         },
+  //       }
+  //     );
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // }, []);
 
   const onEvent = async (event) => {
     try {
@@ -495,12 +495,12 @@ export default function KindOne({ event, reactions = true }) {
           <div className="fit-container" onClick={onClick}>
             {event.note_tree}
           </div>
-          {relatedEvent && (
+          {/* {relatedEvent && (
             <div className="fit-container">
               <KindOne event={relatedEvent} reactions={false} />
             </div>
-          )}
-          {event.checkForQuote && !isRelatedEventLoaded && !relatedEvent && (
+          )} */}
+          {/* {event.checkForQuote && !isRelatedEventLoaded && !relatedEvent && (
             <div
               style={{ backgroundColor: "var(--c1-side)" }}
               className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
@@ -519,7 +519,7 @@ export default function KindOne({ event, reactions = true }) {
                 The quoted note does not seem to be found
               </p>
             </div>
-          )}
+          )} */}
         </div>
         {reactions && (
           <div

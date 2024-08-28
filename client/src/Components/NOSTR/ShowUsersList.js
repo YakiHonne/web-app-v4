@@ -19,6 +19,7 @@ const getBulkListStats = (list) => {
 
 export default function ShowUsersList({ exit, list, title, extras }) {
   const {
+    userFollowings,
     nostrUser,
     setNostrUser,
     nostrKeys,
@@ -86,8 +87,8 @@ export default function ShowUsersList({ exit, list, title, extras }) {
         .map((item) => item.pubkey);
 
       let tempTags = Array.from(
-        nostrUser?.following?.filter(
-          (item) => !toUnfollowList.includes(item[1])
+        userFollowings?.filter(
+          (item) => !toUnfollowList.includes(item)
         ) || []
       );
       for (let item of bulkList) {

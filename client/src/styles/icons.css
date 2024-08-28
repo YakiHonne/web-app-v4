@@ -320,14 +320,14 @@
 .smart-widget-checker,
 .smart-widget-checker-24,
 .layers,
-.layers-24 ,
+.layers-24,
 .switch-arrows,
 .switch-arrows-24,
 .copy-24,
 .copy,
 .smart-widget-draft,
 .smart-widget-draft-24,
-.bunny-icon{
+.bunny-icon {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -349,6 +349,23 @@
 }
 
 @media (prefers-color-scheme: dark) {
+
+    audio {
+        overflow: hidden;
+    }
+
+    audio::-webkit-media-controls-panel {
+        background-color: #9d9d9d;
+    }
+
+    audio::-webkit-media-controls-play-button {
+        background-color: #8f8f8f;
+        border-radius: 50%;
+    }
+
+    audio::-webkit-media-controls-play-button:hover {
+        background-color: #878787
+    }
 
     .arrow,
     .bold,
@@ -375,7 +392,7 @@
     .twitter-logo,
     .video,
     .env,
-    .warning,
+    /* .warning, */
     .info-flag,
     .success,
     .weechat-logo,
@@ -427,7 +444,7 @@
     .logout,
     .logout-24,
     .weechat-logo-24,
-    .warning-24,
+    /* .warning-24, */
     .info-flag-24,
     .flag,
     .flag-24,
@@ -632,7 +649,7 @@
     .layers,
     .layers-24,
     .smart-widget-draft,
-.smart-widget-draft-24 {
+    .smart-widget-draft-24 {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -821,8 +838,8 @@
 .crossmark-tt,
 .info-tt,
 .smart-widget-checker,
-.layers ,
-.smart-widget-draft{
+.layers,
+.smart-widget-draft {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1007,13 +1024,15 @@
     min-height: 8rem;
 }
 
-.bunny-icon{
+.bunny-icon {
     background-image: url('../media/icons/bunny-icon.svg');
 }
+
 .smart-widget-draft,
 .smart-widget-draft-24 {
     background-image: url('../media/icons/sw-draft.svg');
 }
+
 .layers,
 .layers-24 {
     background-image: url('../media/icons/layers.svg');

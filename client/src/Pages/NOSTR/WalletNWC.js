@@ -4,13 +4,14 @@ import { webln } from "@getalby/sdk";
 import { Link, useNavigate } from "react-router-dom";
 import { Context } from "../../Context/Context";
 import LoadingDots from "../../Components/LoadingDots";
+import { getWallets, updateWallets } from "../../Helpers/Helpers";
 
 export default function WalletNWC() {
   const { setToast } = useContext(Context);
   const navigateTo = useNavigate();
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const addNWC = async () => {
     try {
       if (isLoading) return;
@@ -35,27 +36,26 @@ export default function WalletNWC() {
         data: url,
       };
 
-      let oldVersion = localStorage.getItem("yaki-wallets");
+      let oldVersion = getWallets();
       if (oldVersion) {
         try {
-          oldVersion = JSON.parse(oldVersion);
           oldVersion = oldVersion.map((item) => {
             let updated_item = { ...item };
             updated_item.active = false;
             return updated_item;
           });
           oldVersion.push(nwcNode);
-          localStorage.setItem("yaki-wallets", JSON.stringify(oldVersion));
+          updateWallets(oldVersion);
           navigateTo("/wallet");
           return;
         } catch (err) {
-          localStorage.setItem("yaki-wallets", JSON.stringify([nwcNode]));
+          updateWallets([nwcNode]);
           navigateTo("/wallet");
           return;
         }
       }
-      localStorage.setItem("yaki-wallets", JSON.stringify([nwcNode]));
-   
+      updateWallets([nwcNode]);
+
       nwc.close();
       setIsLoading(false);
       navigateTo("/wallet");
@@ -102,7 +102,13 @@ export default function WalletNWC() {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                   />
-                  <p className="gray-c p-medium">Using Alby? Go to <a href="https://nwc.getalby.com" target="_blank">nwc.getalby.com</a> to get your NWC config!</p>
+                  <p className="gray-c p-medium">
+                    Using Alby? Go to{" "}
+                    <a href="https://nwc.getalby.com" target="_blank">
+                      nwc.getalby.com
+                    </a>{" "}
+                    to get your NWC config!
+                  </p>
                   <button
                     className="btn btn-normal btn-full"
                     onClick={addNWC}

@@ -53,7 +53,7 @@ const orderChart = (array) => {
 };
 
 export default function UserLevels() {
-  const { nostrKeys, isConnectedToYaki, nostrUserLogout } = useContext(Context);
+  const { nostrKeys, isConnectedToYaki, userLogout } = useContext(Context);
   const [oneTimeRewardStats, setOneTimeRewardStats] = useState([]);
   const [repeatedRewardsStats, setRepeatedRewardsStats] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -71,7 +71,7 @@ export default function UserLevels() {
         setIsLoaded(false);
         const data = await axiosInstance.get("/api/v1/yaki-chest/stats");
         if (data.data.user_stats.pubkey !== nostrKeys.pub) {
-          nostrUserLogout();
+          userLogout();
           setIsLoaded(false);
           return;
         }

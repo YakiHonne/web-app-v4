@@ -17,24 +17,17 @@ import LoginWithAPI from "./LoginWithAPI";
 import WriteNew from "./WriteNew";
 import UserBalance from "./UserBalance";
 import NumberShrink from "../NumberShrink";
+import { getConnectedAccounts } from "../../Helpers/Helpers";
 
-const getConnectedAccounts = () => {
-  try {
-    let accounts = localStorage.getItem("yaki-accounts") || [];
-    accounts = Array.isArray(accounts) ? [] : JSON.parse(accounts);
-    return accounts;
-  } catch (err) {
-    console.log(err);
-    return [];
-  }
-};
+
 
 export default function SidebarNOSTR() {
   const {
     handleSwitchAccount,
+    userLogout,
+    logoutAllAccounts,
     nostrKeys,
     nostrUserAbout,
-    nostrUserLogout,
     chatrooms,
     yakiChestStats,
     isYakiChestLoaded,
@@ -743,7 +736,7 @@ export default function SidebarNOSTR() {
                       className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-m nostr-navbar-link"
                       onClick={() => {
                         setShowSettings(false);
-                        nostrUserLogout();
+                        userLogout();
                       }}
                       style={{ padding: ".75rem 1rem" }}
                     >
@@ -866,7 +859,7 @@ export default function SidebarNOSTR() {
                     className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-s"
                     onClick={() => {
                       setShowSettings(false);
-                      nostrUserLogout();
+                      logoutAllAccounts();
                     }}
                   >
                     <div
@@ -910,7 +903,7 @@ const AccountSwitching = ({ exit }) => {
     };
   }, []);
   return (
-    <div className="fixed-container fx-centered">
+    <div className="fixed-container fx-centered" >
       <div className="fx-centered fx-col">
         <div className="fx-centered popout">
           <div

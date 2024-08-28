@@ -5,17 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { webln } from "@getalby/sdk";
 import LoadingDots from "../LoadingDots";
-
-const getWallets = () => {
-  let wallets = localStorage.getItem("yaki-wallets");
-  if (!wallets) return [];
-  try {
-    wallets = JSON.parse(wallets);
-    return wallets;
-  } catch (err) {
-    return [];
-  }
-};
+import { getWallets, updateWallets } from "../../Helpers/Helpers";
 
 export default function UserBalance() {
   const navigateTo = useNavigate();
@@ -37,19 +27,25 @@ export default function UserBalance() {
     if (["/wallet"].includes(window.location.pathname)) return;
     if (!nostrKeys) return;
     if (nostrKeys && (nostrKeys?.ext || nostrKeys?.sec)) {
-      if (selectedWallet) {
-        if (selectedWallet.kind === 1) {
+      let tempWallets = getWallets();
+      let selectedWallet_ = tempWallets.find((wallet) => wallet.active);
+      if (selectedWallet_) {
+        if (selectedWallet_.kind === 1) {
           getBalancWebLN();
         }
-        if (selectedWallet.kind === 2) {
-          getAlbyData(selectedWallet);
+        if (selectedWallet_.kind === 2) {
+          getAlbyData(selectedWallet_);
         }
-        if (selectedWallet.kind === 3) {
-          getNWCData(selectedWallet);
+        if (selectedWallet_.kind === 3) {
+          getNWCData(selectedWallet_);
         }
+      } else {
+        setWallets([]);
+        setSelectedWallet(false);
+        setBalance("N/A");
       }
     } else {
-      setBalance(false);
+      setBalance("N/A");
     }
   }, [nostrKeys, selectedWallet]);
 
@@ -134,13 +130,6 @@ export default function UserBalance() {
   if (!(nostrKeys && (nostrKeys?.ext || nostrKeys?.sec))) return;
   if (nostrKeys?.sec && balance == "N/A")
     return (
-      // <Link
-      //   to={"/wallet"}
-      //   className={`link-label pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${"inactive-link"}`}
-      //   style={{backgroundColor: "#ff9c0811"}}
-      // >
-      //   <div className="wallet-24"></div> My wallets
-      // </Link>
       <Link
         className="fit-container fx-centered fx-start-h box-pad-h-m balance-container mb-hide"
         style={{ borderLeft: "2px solid var(--orange-main)", margin: ".75rem" }}
@@ -219,7 +208,7 @@ const checkAlbyToken = async (wallets, activeWallet) => {
     let tempWallets = Array.from(wallets);
     let index = wallets.findIndex((item) => item.id === activeWallet.id);
     tempWallets[index] = tempWallet;
-    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    updateWallets(tempWallets);
     return {
       wallets: tempWallets,
       activeWallet: tempWallet,

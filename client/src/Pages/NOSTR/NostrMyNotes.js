@@ -66,7 +66,10 @@ export default function NostrMyNotes() {
                 setNotes((prev) => {
                   let existed = prev.find((note) => note.id === event.id);
                   if (existed) return prev;
-                  else return [...prev, event_];
+                  else
+                    return [...prev, event_].sort(
+                      (note_1, note_2) => note_2.created_at - note_1.created_at
+                    );
                 });
                 setIsLoading(false);
               }
@@ -122,7 +125,7 @@ export default function NostrMyNotes() {
       );
       let checkForL = event.tags.find((tag) => tag[0] === "l");
       checkForL = checkForL ? checkForL[1] : "";
- 
+
       let checkForQuote = event.tags.find((tag) => tag[0] === "q");
       if (
         (checkForComment && event.kind === 1 && !checkForL) ||

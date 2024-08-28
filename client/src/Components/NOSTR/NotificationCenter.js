@@ -180,10 +180,7 @@ export default function NotificationCenter({ icon = false }) {
       if (subInstance) {
         subInstance.close();
       }
-      // if (notifications.length > 0) {
-      //   setNotifications([]);
-      // }
-
+      setNotifications([])
       fetchData();
     }
   }, [nostrKeys, userFollowings]);

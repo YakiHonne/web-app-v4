@@ -20,6 +20,7 @@ import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
 import s8e from "../../media/images/s8-e-yma.png";
 import LoginWithAPI from "./LoginWithAPI";
+import { updateWallets } from "../../Helpers/Helpers";
 
 const pool = new SimplePool();
 
@@ -35,7 +36,7 @@ export default function LoginNOSTR({ exit }) {
   const [accountInit, setAccountInit] = useState(false);
   const [finishInit, setFinishInit] = useState(false);
   const [endInit, setEndInit] = useState(false);
-  const [showYakiChest, setShowYakiChest] = useState(true);
+  const [showYakiChest, setShowYakiChest] = useState(false);
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -191,7 +192,7 @@ export default function LoginNOSTR({ exit }) {
         exitScreen();
       }}
     >
-      {/* {showYakiChest && <LoginWithAPI exit={handleYakiChestExit} />} */}
+      {showYakiChest && <LoginWithAPI exit={handleYakiChestExit} />}
       <section
         className="fx-scattered sc-s nostr-login-container"
         onClick={(e) => {
@@ -302,7 +303,7 @@ export default function LoginNOSTR({ exit }) {
                     <Login
                       switchScreen={() => setLogin(false)}
                       // exit={exitScreen}
-                      exit={() => null}
+                      exit={() => setShowYakiChest(true)}
                     />
                   )}
                   {!login && (
@@ -475,7 +476,7 @@ const Login = ({ switchScreen, exit }) => {
   const onLoginWithExt = async () => {
     try {
       setIsLoading(true);
-      await window.nostr.enable();
+      await window.nostr?.enable();
       let key = await window.nostr.getPublicKey();
       let user = await getUserFromNOSTR(key);
       if (user) {
@@ -494,7 +495,7 @@ const Login = ({ switchScreen, exit }) => {
             data: "",
           },
         ];
-        localStorage.setItem("yaki-wallets", JSON.stringify(extWallet));
+        updateWallets(extWallet);
       }
       setIsLoading(false);
       exit();

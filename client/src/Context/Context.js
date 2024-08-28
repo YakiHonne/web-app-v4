@@ -3,6 +3,7 @@ import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../Content/Relays";
 import {
   decrypt04,
+  filterRelays,
   getBech32,
   getEmptyNostrUser,
   getParsed3000xContent,
@@ -35,37 +36,39 @@ const toggleColorScheme = (theme) => {
 
 const aggregateUsers = (convo, oldAggregated = [], connectedAccountPubkey) => {
   const arr2 = [];
-  const map = oldAggregated.length
-    ? new Map(oldAggregated.map((item) => [item.pubkey, item]))
-    : new Map();
+  const map =
+    oldAggregated.length > 0
+      ? new Map(oldAggregated.map((item) => [item.pubkey, item]))
+      : new Map();
+
   convo.forEach((item) => {
     let pubkey = item.peer || item.pubkey;
-    if (map.has(`${pubkey},${connectedAccountPubkey}`)) {
+    if (map.has(`${pubkey}`)) {
       let checkConvo = map
-        .get(`${pubkey},${connectedAccountPubkey}`)
+        .get(`${pubkey}`)
         .convo.find((item_) => item_.id === item.id);
 
       if (!checkConvo) {
-        let sortedConvo = [
-          ...map.get(`${pubkey},${connectedAccountPubkey}`).convo,
-          item,
-        ].sort((convo_1, convo_2) => convo_1.created_at - convo_2.created_at);
-        map.get(`${pubkey},${connectedAccountPubkey}`).convo = sortedConvo;
-        map.get(`${pubkey},${connectedAccountPubkey}`).checked =
-          (map.get(`${pubkey},${connectedAccountPubkey}`).checked &&
+        let sortedConvo = [...map.get(`${pubkey}`).convo, item].sort(
+          (convo_1, convo_2) => convo_1.created_at - convo_2.created_at
+        );
+        map.get(`${pubkey}`).convo = sortedConvo;
+        map.get(`${pubkey}`).checked =
+          (map.get(`${pubkey}`).checked &&
             sortedConvo[sortedConvo.length - 1].created_at ===
-              map.get(`${pubkey},${connectedAccountPubkey}`).last_message) ||
+              map.get(`${pubkey}`).last_message) ||
           (item.peer ? true : false);
-        map.get(`${pubkey},${connectedAccountPubkey}`).last_message =
+        map.get(`${pubkey}`).last_message =
           sortedConvo[sortedConvo.length - 1].created_at;
       }
     } else {
-      map.set(`${pubkey},${connectedAccountPubkey}`, {
+      map.set(`${pubkey}`, {
         pubkey,
         last_message: item.created_at,
         checked: item.peer ? true : false,
         convo: [item],
-        id: `${pubkey}-${item.created_at}`,
+        id: pubkey,
+        // id: `${pubkey}-${item.created_at}`,
       });
     }
   });
@@ -76,25 +79,23 @@ const aggregateUsers = (convo, oldAggregated = [], connectedAccountPubkey) => {
 };
 
 const ContextProvider = ({ children }) => {
-  const [nostrUser, setNostrUser] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(
     localStorage.getItem("yaki-theme") || "0"
   );
-  const [nostrUserImpact, setNostrUserImpact] = useState(false);
+  const [nostrUser, setNostrUser] = useState(false);
   const [userFirstLoginYakiChest, setUserFirstLoginYakiChest] = useState(false);
   const [nostrUserBookmarks, setNostrUserBookmarks] = useState([]);
   const [tempUserMeta, setTempUserMeta] = useState(false);
+  const [userRelays, setUserRelays] = useState([]);
   const [nostrUserAbout, setNostrUserAbout] = useState(false);
-  const [nostrUserTags, setNostrUserTags] = useState(false);
+  const [nostrUserTags, setNostrUserTags] = useState([]);
   const [nostrUserLoaded, setNostrUserLoaded] = useState(false);
   const [initDMS, setInitDMS] = useState(false);
   const [nostrUserTopics, setNostrUserTopics] = useState([]);
   const [nostrKeys, setNostrKeys] = useState(false);
   const [nostrAuthors, setNostrAuthors] = useState([]);
-  const [revLoaded, setRevLoaded] = useState(false);
   const [globalCuration, setGlobalCuration] = useState([]);
   const [toast, setToast] = useState(false);
-  const [relayConnect, setRelayConnect] = useState(false);
   const [toPublish, setToPublish] = useState(false);
   const [isPublishing, setPublishing] = useState(false);
   const [nostrClients, setNostrClients] = useState([]);
@@ -111,6 +112,7 @@ const ContextProvider = ({ children }) => {
   );
   const [yakiChestStats, setYakiChestStats] = useState(false);
   const [isYakiChestLoaded, setIsYakiChestLoaded] = useState(false);
+  const [dmsSub, setDmSub] = useState(null);
   const [updatedActionFromYakiChest, setUpdatedActionFromYakiChest] =
     useState(false);
   const [balance, setBalance] = useState("N/A");
@@ -129,11 +131,8 @@ const ContextProvider = ({ children }) => {
     let fetchData = async (keys) => {
       getNostrClients();
       getBuzzFeedSources();
-
       setNostrKeys(keys);
-
       let user = await getUserFromNOSTR(keys.pub);
-      // user.relays = await getRelaysOfUser(content.pub);
       if (user) {
         setNostrUserData(user, keys);
       }
@@ -151,14 +150,16 @@ const ContextProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    let sub = null;
     if (loadCacheDB && nostrKeys && (nostrKeys.ext || nostrKeys.sec)) {
       setInitDMS(true);
+
       let tempInbox = [];
       let tempAuthors = [];
       let tempUserFollowings;
       let tempMutedList;
       let eose = false;
-      let sub = DMs_pool.subscribeMany(
+      sub = DMs_pool.subscribeMany(
         relaysOnPlatform,
         [
           {
@@ -253,7 +254,6 @@ const ContextProvider = ({ children }) => {
               tempMutedList = { ...event };
               if (eose) handleMutedList(event);
             }
-            // console.log(event);
           },
           oneose() {
             handleDM(tempInbox, tempAuthors, chatrooms);
@@ -264,7 +264,11 @@ const ContextProvider = ({ children }) => {
           },
         }
       );
+      setDmSub(sub);
     }
+    return () => {
+      sub && sub.close();
+    };
   }, [loadCacheDB, nostrKeys]);
 
   useEffect(() => {
@@ -273,7 +277,7 @@ const ContextProvider = ({ children }) => {
         setIsYakiChestLoaded(false);
         const data = await axiosInstance.get("/api/v1/yaki-chest/stats");
         if (data.data.user_stats.pubkey !== nostrKeys.pub) {
-          nostrUserLogout();
+          userLogout();
           setIsYakiChestLoaded(false);
           return;
         }
@@ -298,7 +302,6 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(
         ["chatrooms", "chatContacts"],
@@ -306,12 +309,14 @@ const ContextProvider = ({ children }) => {
       );
       let chatrooms_ = transaction.objectStore("chatrooms");
 
-      for (let ibx of sortedInbox)
+      for (let ibx of sortedInbox) {
         chatrooms_.put(ibx, `${ibx.pubkey},${nostrKeys.pub}`);
+      }
 
       setChatrooms(sortedInbox);
     };
   };
+
   const handleUserFollowings = (event) => {
     if (!event) return;
 
@@ -323,7 +328,6 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(["followings"], "readwrite");
       let followings = transaction.objectStore("followings");
@@ -333,6 +337,7 @@ const ContextProvider = ({ children }) => {
       setUserFollowings(user_followings);
     };
   };
+
   const handleMutedList = (event) => {
     if (!event) return;
     let muted_list = event.tags
@@ -348,30 +353,19 @@ const ContextProvider = ({ children }) => {
       let transaction = db.transaction(["muted"], "readwrite");
       let muted = transaction.objectStore("muted");
       muted.put(muted_list, nostrKeys.pub);
-
       setMutedList(muted_list);
     };
   };
-
   const setNostrUserData = async (data, nostrKeys) => {
     if (data) {
       setNostrUserLoaded(false);
       let content = data;
 
       let userAbout = JSON.parse(content.content) || {};
-      let [relays, userFollowing, userTopics] = await Promise.all([
+      let [relays, userTopics] = await Promise.all([
         getRelaysOfUser(content.pubkey),
-        getUserFollowing(content.pubkey),
         getUserTopics(content.pubkey),
-        // getUserBookmarks(content.pubkey),
       ]);
-      // let [userRelays, userFollowing, userTopics, userBookmarks] =
-      //   await Promise.all([
-      //     // getRelaysOfUser(content.pubkey),
-      //     getUserFollowing(content.pubkey),
-      //     getUserTopics(content.pubkey),
-      //     // getUserBookmarks(content.pubkey),
-      //   ]);
       let userData = {
         pubkey: content.pubkey,
         added_date: new Date(content.created_at * 1000).toISOString(),
@@ -387,16 +381,17 @@ const ContextProvider = ({ children }) => {
           getBech32("npub", content.pubkey),
         about: userAbout?.about || "",
         nip05: userAbout?.nip05 || "",
+        lud06: userAbout?.lud06 || "",
+        lud16: userAbout?.lud16 || "",
+        website: userAbout?.website || "",
         relays,
-        following: userFollowing,
       };
       addConnectedAccounts(userData, nostrKeys);
       setNostrUser(userData);
       setNostrUserAbout(userAbout);
-      setNostrUserTags(content.tags);
+      setUserRelays(filterRelays(relays, relaysOnPlatform));
       setTempUserMeta(userAbout);
       getUserBookmarks(content.pubkey);
-      // setNostrUserBookmarks(userBookmarks);
       setNostrUserTopics(userTopics);
       setNostrUserLoaded(true);
       return;
@@ -404,7 +399,18 @@ const ContextProvider = ({ children }) => {
     setNostrUser(false);
     setNostrUserLoaded(true);
   };
-
+  const getUserRelaysAndTopics = async (pubkey) => {
+    try {
+      let [relays, userTopics] = await Promise.all([
+        getRelaysOfUser(pubkey),
+        getUserTopics(pubkey),
+      ]);
+      setUserRelays(filterRelays(relays, relaysOnPlatform));
+      setNostrUserTopics(userTopics);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const getConnectedAccounts = () => {
     try {
       let accounts = localStorage.getItem("yaki-accounts") || [];
@@ -415,7 +421,6 @@ const ContextProvider = ({ children }) => {
       return [];
     }
   };
-
   const addConnectedAccounts = (account, nostrKeys) => {
     try {
       let accounts = getConnectedAccounts() || [];
@@ -433,10 +438,14 @@ const ContextProvider = ({ children }) => {
       console.log(err);
     }
   };
-
   const setNostrKeysData = (data) => {
     if (data) {
       localStorage.setItem("_nostruserkeys", JSON.stringify(data));
+      setInitDMS(true)
+      if (chatrooms.length > 0) {
+        setChatrooms([]);
+        cacheDBInit(data);
+      }
       setNostrKeys(data);
       return;
     }
@@ -447,37 +456,46 @@ const ContextProvider = ({ children }) => {
     let keys = account.nostrKeys;
     let about = { ...account };
     delete about.nostrKeys;
-
-    setLoadCacheDB(false);
-    // setInitDMS(true)
-    setNostrKeysData(keys);
-    setNostrUserAbout(about);
+    if (dmsSub) dmsSub.close();
+    getUserRelaysAndTopics(keys.pub);
     setUserFollowings([]);
     setChatrooms([]);
+    setLoadCacheDB(false);
+    setNostrKeysData(keys);
+    setNostrUserAbout(about);
     setNostrUserBookmarks([]);
     setNostrUserTopics([]);
-    setNostrUserTags([]);
     setChatContacts([]);
+    yakiChestDisconnect();
+    setInitDMS(true);
     cacheDBInit(account.nostrKeys);
   };
 
-  const nostrUserLogout = async () => {
+  const yakiChestDisconnect = async () => {
+    try {
+      setIsConnectedToYaki(false);
+      setYakiChestStats(false);
+      const data = await axiosInstance.post("/api/v1/logout");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const logoutAllAccounts = async () => {
     localStorage.removeItem("_nostruser");
     localStorage.removeItem("_nostruserkeys");
     localStorage.removeItem("comment-with-prefix");
     localStorage.removeItem("connect_yc");
     localStorage.removeItem("yaki-wallets");
+    localStorage.removeItem("yaki-accounts");
     setIsConnectedToYaki(false);
     setYakiChestStats(false);
     setBalance("N/A");
-
     let openDB = window.indexedDB.open("yaki-nostr", 3);
-
     openDB.onsuccess = () => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        // alert("Database is outdated, please reload the page.");
       };
       let transaction = db.transaction(
         ["chatrooms", "chatContacts", "followings", "muted"],
@@ -505,14 +523,12 @@ const ContextProvider = ({ children }) => {
         console.log("DB cleared");
       };
     };
-
     setNostrUser(false);
     setNostrKeys(false);
     setNostrUserAbout(false);
     setTempUserMeta(false);
     setNostrUserBookmarks([]);
     setNostrUserTopics([]);
-    setNostrUserTags([]);
     setChatContacts([]);
     setChatrooms([]);
     setMutedList([]);
@@ -521,6 +537,21 @@ const ContextProvider = ({ children }) => {
       const data = await axiosInstance.post("/api/v1/logout");
     } catch (err) {
       console.log(err);
+    }
+  };
+  const userLogout = async () => {
+    let accounts = getConnectedAccounts();
+    if (accounts.length < 2) {
+      logoutAllAccounts();
+      return;
+    }
+    let accountIndex = accounts.findIndex(
+      (account) => account.nostrKeys.pub === nostrKeys.pub
+    );
+    if (accountIndex !== -1) {
+      accounts.splice(accountIndex, 1);
+      localStorage.setItem("yaki-accounts", JSON.stringify(accounts));
+      if (accounts.length > 0) handleSwitchAccount(accounts[0]);
     }
   };
 
@@ -571,20 +602,6 @@ const ContextProvider = ({ children }) => {
       console.log(err);
     }
   };
-  // const getUserTopics = async (pubkey) => {
-  //   try {
-  //     let topics = await pool.subscribeMany(relaysOnPlatform, {
-  //       kinds: [30078],
-  //       authors: [pubkey],
-  //     });
-
-  //     return topics
-  //       ? topics.tags.filter((item) => item[0] === "t").map((item) => item[1])
-  //       : [];
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
 
   const getUserTopics = (pubkey) => {
     return new Promise((resolve, reject) => {
@@ -596,6 +613,7 @@ const ContextProvider = ({ children }) => {
             {
               kinds: [30078],
               authors: [pubkey],
+              "#d": ["MyFavoriteTopicsInYakihonne"],
             },
           ],
           {
@@ -616,19 +634,6 @@ const ContextProvider = ({ children }) => {
       }
     });
   };
-
-  // const getUserFollowing = async (pubkey) => {
-  //   try {
-  //     let author = await pool.get(relaysOnPlatform, {
-  //       kinds: [3],
-  //       authors: [pubkey],
-  //     });
-  //     return author?.tags?.filter((people) => people[0] === "p") || [];
-  //   } catch (err) {
-  //     console.log(err);
-  //     return [];
-  //   }
-  // };
 
   const getUserFollowing = (pubkey) => {
     return new Promise((resolve, reject) => {
@@ -690,55 +695,6 @@ const ContextProvider = ({ children }) => {
       return [];
     }
   };
-
-  // const getRelaysOfUser = async (pubkey) => {
-  //   try {
-  //     let res_1 = await pool.querySync(relaysOnPlatform, {
-  //       kinds: [10002],
-  //       authors: [pubkey],
-  //     });
-  //     res_1 =
-  //       res_1.length > 0
-  //         ? res_1
-  //             .map((item) =>
-  //               item.tags
-  //                 .filter((item) => item[0] === "r")
-  //                 .map((item_) => item_[1])
-  //             )
-  //             .flat()
-  //         : [];
-
-  //     let final_res = [...new Set([...relaysOnPlatform, ...res_1])];
-
-  //     return final_res;
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-  //   function handleThemeChange(event) {
-  //       if (event.matches) {
-  //           console.log("Dark mode is now enabled");
-  //           localStorage.setItem("yaki-theme", "0");
-  //           setIsDarkMode("0");
-
-  //       } else {
-  //           console.log("Light mode is now enabled");
-  //           localStorage.setItem("yaki-theme", "1");
-  //           setIsDarkMode("1");
-
-  //       }
-  //   }
-
-  //   // Initial check
-  //   handleThemeChange(darkModeMediaQuery);
-
-  //   // Listen for changes
-  //   darkModeMediaQuery.addEventListener('change', handleThemeChange);
-  // }, [])
 
   const getRelaysOfUser = (pubkey) => {
     return new Promise((resolve, reject) => {
@@ -835,7 +791,6 @@ const ContextProvider = ({ children }) => {
 
   const cacheDBInit = (keys) => {
     let openDB = indexedDB.open("yaki-nostr", 3);
-
     openDB.onupgradeneeded = () => {
       let db = openDB.result;
       db.onerror = (event) => {
@@ -856,7 +811,6 @@ const ContextProvider = ({ children }) => {
       let db = openDB.result;
       db.onversionchange = function () {
         db.close();
-        // alert("Database is outdated, please reload the page.");
       };
       try {
         let chatRecords = [];
@@ -865,7 +819,6 @@ const ContextProvider = ({ children }) => {
           "readonly"
         );
         let chatrooms_ = transaction.objectStore("chatrooms").openCursor();
-        // let chatrooms_ = transaction.objectStore("chatrooms").getAll();
         let chatContacts_ = transaction.objectStore("chatContacts").getAll();
         let userFollowings_ = transaction
           .objectStore("followings")
@@ -893,36 +846,22 @@ const ContextProvider = ({ children }) => {
             setLoadCacheDB(openDB);
           }
         };
-        // chatrooms_.onsuccess = () => {
-        //   let sortedInbox =
-        //     chatrooms_.result.length > 0
-        //       ? chatrooms_.result.sort(
-        //           (conv_1, conv_2) => conv_2.last_message - conv_1.last_message
-        //         )
-        //       : chatrooms_.result;
-        //   setLastMessageDate(sortedInbox[0]?.last_message || undefined);
 
-        //   setChatrooms(sortedInbox);
-        //   setLoadCacheDB(openDB);
-        // };
         chatContacts_.onsuccess = () => {
           setChatContacts(chatContacts_.result);
         };
         userFollowings_.onsuccess = (event) => {
-          // if (userFollowings_.result)
           setUserFollowings(event.target.result || []);
         };
         muted.onsuccess = (event) => {
           setMutedList(event.target?.result || []);
-          // if (muted?.result?.length > 0) setMutedList(muted.result[0]);
-          // else setMutedList([]);
         };
       } catch (err) {
         console.log(err);
         db.close();
         let req = indexedDB.deleteDatabase("yaki-nostr");
         req.onsuccess = function () {
-          cacheDBInit();
+          cacheDBInit(keys);
           console.log("Deleted database successfully");
         };
       }
@@ -942,7 +881,6 @@ const ContextProvider = ({ children }) => {
       setMutedList([]);
     };
   };
-
   const updateYakiChestStats = (user_stats) => {
     let xp = user_stats.xp;
     let currentLevel = getCurrentLevel(xp);
@@ -1000,12 +938,10 @@ const ContextProvider = ({ children }) => {
         setNostrUserData,
         setNostrUser,
         nostrUserLoaded,
-        nostrUserLogout,
         setNostrKeysData,
         nostrKeys,
         globalCuration,
         setGlobalCuration,
-        relayConnect,
         nostrUserBookmarks,
         setNostrUserBookmarks,
         addNostrAuthors,
@@ -1019,7 +955,6 @@ const ContextProvider = ({ children }) => {
         setNostrUserTopics,
         setNostrUserBookmarks,
         nostrClients,
-        nostrUserImpact,
         isDarkMode,
         setTheme,
         initDMS,
@@ -1046,6 +981,10 @@ const ContextProvider = ({ children }) => {
         setBalance,
         setNostrAuthors,
         handleSwitchAccount,
+        logoutAllAccounts,
+        userLogout,
+        userRelays,
+        setUserRelays
       }}
     >
       {children}

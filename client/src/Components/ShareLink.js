@@ -39,7 +39,8 @@ const getNostrLink = async (path) => {
     }
     return `nostr:${naddr}`;
   }
-  let naddr = pathSplit[2];
+  
+  let naddr = pathSplit[2] || pathSplit[1];
   return `nostr:${naddr}`;
 };
 

@@ -653,6 +653,22 @@ const SmartWidgetBuilder = ({
       setComponentsTree(tempArray);
     };
 
+    let emptyContainer = () => {
+      let tempArray = Array.from(componentsTree);
+      let index = tempArray.findIndex((comp) => comp?.id === metadata.id);
+      if (index !== -1) {
+        tempArray[index].right_side = [];
+        tempArray[index].left_side = [];
+        tempArray[index].layout = 1;
+        tempArray[index].division = "1:1";
+        setComponentsTree(tempArray);
+      }
+    };
+
+    if (opsKind === "empty container") {
+      emptyContainer();
+      return;
+    }
     if (opsKind === "change section") {
       changeSection();
       return;
@@ -1350,6 +1366,8 @@ const EditContainer = ({
   const isMonoLayoutRequired = ["video", "zap-poll"].includes(
     metadata.left_side[0]?.type
   );
+  const [showContainerLayoutWarning, setShowContainerLayoutWarning] =
+    useState(false);
 
   useEffect(() => {
     let handleOffClick = (e) => {
@@ -1363,170 +1381,336 @@ const EditContainer = ({
     };
   }, [optionsRef]);
 
+  const checkContainerOps = (ops, data) => {
+    if (data.layout === 1 && (metadata.right_side.length > 0 || metadata.left_side.length > 1)) {
+      setShowContainerLayoutWarning({ ops, data });
+      return;
+    }
+    handleContainerOps(ops, data);
+  };
+
+  const confirmContainerOps = (confirm) => {
+    if (confirm) {
+      handleContainerOps("empty container", showContainerLayoutWarning.data);
+    }
+    setShowContainerLayoutWarning(false);
+  };
+
   return (
-    <div className="fx-centered fx-col fit-container">
-      <div className="fx-scattered fx-stretch fit-container sw-container">
-        <div
-          className="fx-centered fit-container fx-start-h fx-start-v fx-stretch sc-s-d box-pad-h-s box-pad-v-s"
-          style={{
-            borderRadius: "10px",
-            borderRadius: "var(--border-r-18)",
-            position: "relative",
-            borderColor:
-              selectedContainer?.id === metadata.id ? "var(--black)" : "",
-          }}
-        >
-          {metadata.left_side.length === 0 && (
+    <>
+      {showContainerLayoutWarning && (
+        <>
+          <div className="fixed-container fx-centered">
             <div
-              className="box-pad-h-m box-pad-v-m fx-centered  pointer option"
-              onClick={() => showComponents({ id: metadata.id, side: "left" })}
-              style={{
-                borderRadius: "10px",
-                flex: metadata.division?.split(":")[0],
-              }}
+              className="sc-s box-pad-h box-pad-v fx-centered fx-col slide-down"
+              style={{ width: "min(100%, 400px)", gap: "24px" }}
             >
-              <div className="plus-sign" style={{ minWidth: "10px" }}></div>{" "}
-              <p className="p-medium">Add component</p>
+              <div className="fx-centered fx-col">
+                <div className="warning-24"></div>
+                <h3>Warning!</h3>
+              </div>
+              <p className="gray-c p-centered">
+                You're switching to a mono layout whilst having elements on both
+                sides, this will erase the container content, do you wish to
+                proceed?
+              </p>
+              <div className="fx-centered">
+                <button
+                  className="btn btn-gst-red"
+                  onClick={() => confirmContainerOps(true)}
+                >
+                  Erase elements
+                </button>
+                <button
+                  className="btn btn-normal"
+                  onClick={() => confirmContainerOps(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          )}
-          {metadata.left_side.length > 0 && (
-            <div
-              style={{ flex: metadata.division?.split(":")[0] }}
-              className="fx-centered fx-col"
-            >
-              {metadata.left_side?.map((comp) => {
-                if (comp?.type === "video")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                    >
-                      <VideoComp url={comp?.metadata?.url} />
-                    </div>
-                  );
-                if (comp?.type === "zap-poll")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                    >
+          </div>
+        </>
+      )}
+      <div className="fx-centered fx-col fit-container">
+        <div className="fx-scattered fx-stretch fit-container sw-container">
+          <div
+            className="fx-centered fit-container fx-start-h fx-start-v fx-stretch sc-s-d box-pad-h-s box-pad-v-s"
+            style={{
+              borderRadius: "10px",
+              borderRadius: "var(--border-r-18)",
+              position: "relative",
+              borderColor:
+                selectedContainer?.id === metadata.id ? "var(--black)" : "",
+            }}
+          >
+            {metadata.left_side.length === 0 && (
+              <div
+                className="box-pad-h-m box-pad-v-m fx-centered  pointer option"
+                onClick={() =>
+                  showComponents({ id: metadata.id, side: "left" })
+                }
+                style={{
+                  borderRadius: "10px",
+                  flex: metadata.division?.split(":")[0],
+                }}
+              >
+                <div className="plus-sign" style={{ minWidth: "10px" }}></div>{" "}
+                <p className="p-medium">Add component</p>
+              </div>
+            )}
+            {metadata.left_side.length > 0 && (
+              <div
+                style={{ flex: metadata.division?.split(":")[0] }}
+                className="fx-centered fx-col"
+              >
+                {metadata.left_side?.map((comp) => {
+                  if (comp?.type === "video")
+                    return (
                       <div
-                        className="fit-container"
-                        style={{ pointerEvents: "none" }}
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                        onClick={() => setSelectedLayer(metadata, comp)}
                       >
-                        <ZapPollsComp
-                          nevent={comp?.metadata?.nevent}
-                          event={
-                            comp?.metadata?.content
-                              ? JSON.parse(comp?.metadata?.content)
-                              : null
-                          }
-                          content_text_color={
-                            comp?.metadata?.content_text_color
-                          }
-                          options_text_color={
-                            comp?.metadata?.options_text_color
-                          }
-                          options_background_color={
-                            comp?.metadata?.options_background_color
-                          }
-                          options_foreground_color={
-                            comp?.metadata?.options_foreground_color
-                          }
-                          edit={true}
-                        />
+                        <VideoComp url={comp?.metadata?.url} />
                       </div>
-                    </div>
-                  );
-                if (comp?.type === "image")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                    >
-                      <ImgComp
-                        url={comp?.metadata?.url}
-                        aspectRatio={comp?.metadata?.aspect_ratio}
-                      />
-                    </div>
-                  );
-                if (comp?.type === "text")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                    >
-                      <TextComp
-                        content={comp?.metadata?.content}
-                        size={comp?.metadata?.size}
-                        weight={comp?.metadata?.weight}
-                        textColor={comp?.metadata?.text_color}
-                      />
-                    </div>
-                  );
-                if (comp?.type === "button")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                    >
+                    );
+                  if (comp?.type === "zap-poll")
+                    return (
                       <div
-                        className="fit-container"
-                        style={{ pointerEvents: "none" }}
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                        onClick={() => setSelectedLayer(metadata, comp)}
                       >
-                        <ButtonComp
-                          content={comp?.metadata?.content}
-                          textColor={comp?.metadata?.text_color}
+                        <div
+                          className="fit-container"
+                          style={{ pointerEvents: "none" }}
+                        >
+                          <ZapPollsComp
+                            nevent={comp?.metadata?.nevent}
+                            event={
+                              comp?.metadata?.content
+                                ? JSON.parse(comp?.metadata?.content)
+                                : null
+                            }
+                            content_text_color={
+                              comp?.metadata?.content_text_color
+                            }
+                            options_text_color={
+                              comp?.metadata?.options_text_color
+                            }
+                            options_background_color={
+                              comp?.metadata?.options_background_color
+                            }
+                            options_foreground_color={
+                              comp?.metadata?.options_foreground_color
+                            }
+                            edit={true}
+                          />
+                        </div>
+                      </div>
+                    );
+                  if (comp?.type === "image")
+                    return (
+                      <div
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                        onClick={() => setSelectedLayer(metadata, comp)}
+                      >
+                        <ImgComp
                           url={comp?.metadata?.url}
-                          backgroundColor={comp?.metadata?.background_color}
-                          type={comp?.metadata?.type}
-                          recipientPubkey={pubkey}
+                          aspectRatio={comp?.metadata?.aspect_ratio}
                         />
                       </div>
-                    </div>
-                  );
-              })}
-              {metadata.layout === 2 && (
+                    );
+                  if (comp?.type === "text")
+                    return (
+                      <div
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                        onClick={() => setSelectedLayer(metadata, comp)}
+                      >
+                        <TextComp
+                          content={comp?.metadata?.content}
+                          size={comp?.metadata?.size}
+                          weight={comp?.metadata?.weight}
+                          textColor={comp?.metadata?.text_color}
+                        />
+                      </div>
+                    );
+                  if (comp?.type === "button")
+                    return (
+                      <div
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                        onClick={() => setSelectedLayer(metadata, comp)}
+                      >
+                        <div
+                          className="fit-container"
+                          style={{ pointerEvents: "none" }}
+                        >
+                          <ButtonComp
+                            content={comp?.metadata?.content}
+                            textColor={comp?.metadata?.text_color}
+                            url={comp?.metadata?.url}
+                            backgroundColor={comp?.metadata?.background_color}
+                            type={comp?.metadata?.type}
+                            recipientPubkey={pubkey}
+                          />
+                        </div>
+                      </div>
+                    );
+                })}
+                {metadata.layout === 2 && (
+                  <div
+                    style={{
+                      height: "32px",
+                      borderRadius: "var(--border-r-6)",
+                      backgroundColor: "var(--pale-gray)",
+                    }}
+                    className={`fx-centered fit-container option pointer`}
+                    onClick={() =>
+                      showComponents({ id: metadata.id, side: "left" })
+                    }
+                  >
+                    <div className="plus-sign"></div>
+                  </div>
+                )}
+              </div>
+            )}
+            {metadata.layout === 2 && metadata.right_side.length > 0 && (
+              <div
+                style={{
+                  flex: metadata.division?.split(":")[1],
+                  position: "relative",
+                }}
+                className="fx-centered fx-col"
+              >
+                {metadata.right_side?.map((comp) => {
+                  if (comp?.type === "video")
+                    return (
+                      <div
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        onClick={() => setSelectedLayer(metadata, comp)}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                      >
+                        <VideoComp url={comp?.metadata?.url} />
+                      </div>
+                    );
+                  if (comp?.type === "image")
+                    return (
+                      <div
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        onClick={() => setSelectedLayer(metadata, comp)}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                      >
+                        <ImgComp
+                          url={comp?.metadata?.url}
+                          aspectRatio={comp?.metadata?.aspect_ratio}
+                        />
+                      </div>
+                    );
+                  if (comp?.type === "text")
+                    return (
+                      <div
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        onClick={() => setSelectedLayer(metadata, comp)}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                      >
+                        <TextComp
+                          content={comp?.metadata?.content}
+                          size={comp?.metadata?.size}
+                          weight={comp?.metadata?.weight}
+                          textColor={comp?.metadata?.text_color}
+                        />
+                      </div>
+                    );
+                  if (comp?.type === "button")
+                    return (
+                      <div
+                        className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
+                        key={comp?.id}
+                        style={{
+                          borderRadius: "14px",
+                          borderColor:
+                            selectedLayer && selectedLayer.id === comp?.id
+                              ? "var(--orange-main)"
+                              : "",
+                        }}
+                        onClick={() => setSelectedLayer(metadata, comp)}
+                      >
+                        <div
+                          className="fit-container"
+                          style={{ pointerEvents: "none" }}
+                        >
+                          <ButtonComp
+                            content={comp?.metadata?.content}
+                            textColor={comp?.metadata?.text_color}
+                            url={comp?.metadata?.url}
+                            backgroundColor={comp?.metadata?.background_color}
+                            type={comp?.metadata?.type}
+                            recipientPubkey={pubkey}
+                          />
+                        </div>
+                      </div>
+                    );
+                })}
                 <div
                   style={{
                     height: "32px",
@@ -1535,386 +1719,275 @@ const EditContainer = ({
                   }}
                   className={`fx-centered fit-container option pointer`}
                   onClick={() =>
-                    showComponents({ id: metadata.id, side: "left" })
+                    showComponents({ id: metadata.id, side: "right" })
                   }
                 >
                   <div className="plus-sign"></div>
                 </div>
-              )}
-            </div>
-          )}
-          {metadata.layout === 2 && metadata.right_side.length > 0 && (
-            <div
-              style={{
-                flex: metadata.division?.split(":")[1],
-                position: "relative",
-              }}
-              className="fx-centered fx-col"
-            >
-              {metadata.right_side?.map((comp) => {
-                if (comp?.type === "video")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                    >
-                      <VideoComp url={comp?.metadata?.url} />
-                    </div>
-                  );
-                if (comp?.type === "image")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                    >
-                      <ImgComp
-                        url={comp?.metadata?.url}
-                        aspectRatio={comp?.metadata?.aspect_ratio}
-                      />
-                    </div>
-                  );
-                if (comp?.type === "text")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                    >
-                      <TextComp
-                        content={comp?.metadata?.content}
-                        size={comp?.metadata?.size}
-                        weight={comp?.metadata?.weight}
-                        textColor={comp?.metadata?.text_color}
-                      />
-                    </div>
-                  );
-                if (comp?.type === "button")
-                  return (
-                    <div
-                      className="sc-s-d pointer fit-container box-pad-h-s box-pad-v-s"
-                      key={comp?.id}
-                      style={{
-                        borderRadius: "14px",
-                        borderColor:
-                          selectedLayer && selectedLayer.id === comp?.id
-                            ? "var(--orange-main)"
-                            : "",
-                      }}
-                      onClick={() => setSelectedLayer(metadata, comp)}
-                    >
-                      <div
-                        className="fit-container"
-                        style={{ pointerEvents: "none" }}
-                      >
-                        <ButtonComp
-                          content={comp?.metadata?.content}
-                          textColor={comp?.metadata?.text_color}
-                          url={comp?.metadata?.url}
-                          backgroundColor={comp?.metadata?.background_color}
-                          type={comp?.metadata?.type}
-                          recipientPubkey={pubkey}
-                        />
-                      </div>
-                    </div>
-                  );
-              })}
+              </div>
+            )}
+            {metadata.layout === 2 && metadata.right_side.length === 0 && (
               <div
-                style={{
-                  height: "32px",
-                  borderRadius: "var(--border-r-6)",
-                  backgroundColor: "var(--pale-gray)",
-                }}
-                className={`fx-centered fit-container option pointer`}
+                className=" fx-centered  pointer option"
                 onClick={() =>
                   showComponents({ id: metadata.id, side: "right" })
                 }
-              >
-                <div className="plus-sign"></div>
-              </div>
-            </div>
-          )}
-          {metadata.layout === 2 && metadata.right_side.length === 0 && (
-            <div
-              className=" fx-centered  pointer option"
-              onClick={() => showComponents({ id: metadata.id, side: "right" })}
-              style={{
-                borderRadius: "10px",
-                flex: metadata.division?.split(":")[1],
-              }}
-            >
-              <div className="plus-sign" style={{ minWidth: "10px" }}></div>{" "}
-              <p className="p-medium">Add component</p>
-            </div>
-          )}
-          {metadata.layout === 2 && (
-            <div
-              className="round-icon-small round-icon-tooltip"
-              data-tooltip="Switch sections"
-              onClick={() =>
-                handleContainerOps("switch sections", {
-                  ...metadata,
-                  index,
-                })
-              }
-              style={{
-                position: "absolute",
-                top: "50%",
-                left:
-                  metadata.division === "1:1"
-                    ? "50%"
-                    : `${parseInt(metadata.division?.split(":")[0]) * 33}%`,
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              <div className="switch-arrows"></div>
-            </div>
-          )}
-        </div>
-        <div className="fx-scattered fx-col">
-          {totalContainers > 1 && (
-            <div
-              className={`round-icon-small round-icon-tooltip ${
-                index === 0 ? "if-disabled" : ""
-              }`}
-              data-tooltip="Move up"
-              style={{ zIndex: 5 }}
-              onClick={() =>
-                index === 0
-                  ? null
-                  : handleContainerOps("move up", {
-                      ...metadata,
-                      index,
-                    })
-              }
-            >
-              <div
-                className="arrow"
-                style={{ rotate: "180deg", cursor: "unset" }}
-              ></div>
-            </div>
-          )}
-          <div
-            className="fit-height"
-            style={{ position: "relative" }}
-            ref={optionsRef}
-          >
-            <div
-              style={{
-                width: "32px",
-                minHeight: "32px",
-                borderRadius: "var(--border-r-6)",
-                backgroundColor: "var(--pale-gray)",
-                cursor: isMonoLayoutRequired ? "not-allowed" : "pointer",
-                zIndex: 4,
-              }}
-              className="fx-centered option pointer fit-height round-icon-tooltip"
-              data-tooltip={isMonoLayoutRequired ? "Only Mono layout" : ""}
-              onClick={() =>
-                !isMonoLayoutRequired
-                  ? metadata.layout === 1
-                    ? handleContainerOps("change section", {
-                        ...metadata,
-                        layout: 2,
-                      })
-                    : setShowOptions(!showOptions)
-                  : null
-              }
-            >
-              {metadata.layout === 1 && (
-                <div
-                  className="plus-sign"
-                  style={{ opacity: isMonoLayoutRequired ? 0.5 : 1 }}
-                ></div>
-              )}
-              {metadata.layout === 2 && (
-                <div
-                  className="layout"
-                  style={{ minWidth: "14px", minWidth: "14px" }}
-                ></div>
-              )}
-            </div>
-            {showOptions && (
-              <div
-                className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v"
                 style={{
-                  width: "180px",
-                  backgroundColor: "var(--c1-side)",
-                  position: "absolute",
-                  right: "0",
-                  top: "calc(100% + 5px)",
-                  rowGap: 0,
-                  overflow: "visible",
-                  zIndex: 100,
+                  borderRadius: "10px",
+                  flex: metadata.division?.split(":")[1],
                 }}
               >
-                <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
-                  Choose a layout
-                </p>
-                <div
-                  className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowOptions(false);
-                    handleContainerOps("change section", {
-                      ...metadata,
-                      layout: 1,
-                      division: "1:1",
-                    });
-                  }}
-                  style={{
-                    border: "none",
-                    overflow: "visible",
-                  }}
-                >
-                  <div className="container-one-24"></div>
-                  <p className="p-medium">Mono layout</p>
-                </div>
-
-                <div
-                  className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowOptions(false);
-                    handleContainerOps("change section", {
-                      ...metadata,
-                      layout: 2,
-                      division: "1:1",
-                    });
-                  }}
-                  style={{
-                    border: "none",
-                    overflow: "visible",
-                    backgroundColor:
-                      metadata.division === "1:1" ? "var(--pale-gray)" : "",
-                  }}
-                >
-                  <div className="container-one-one-24"></div>
-                  <p className="p-medium">1:1</p>
-                </div>
-                <div
-                  className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowOptions(false);
-                    handleContainerOps("change section", {
-                      ...metadata,
-                      layout: 2,
-                      division: "1:2",
-                    });
-                  }}
-                  style={{
-                    border: "none",
-                    overflow: "visible",
-                    backgroundColor:
-                      metadata.division === "1:2" ? "var(--pale-gray)" : "",
-                  }}
-                >
-                  <div className="container-one-two-24"></div>
-                  <p className="p-medium">1:2</p>
-                </div>
-                <div
-                  className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowOptions(false);
-                    handleContainerOps("change section", {
-                      ...metadata,
-                      layout: 2,
-                      division: "2:1",
-                    });
-                  }}
-                  style={{
-                    border: "none",
-                    overflow: "visible",
-                    backgroundColor:
-                      metadata.division === "2:1" ? "var(--pale-gray)" : "",
-                  }}
-                >
-                  <div className="container-two-one-24"></div>
-                  <p className="p-medium">2:1</p>
-                </div>
+                <div className="plus-sign" style={{ minWidth: "10px" }}></div>{" "}
+                <p className="p-medium">Add component</p>
               </div>
             )}
-          </div>
-          {totalContainers > 1 && (
-            <>
+            {metadata.layout === 2 && (
               <div
                 className="round-icon-small round-icon-tooltip"
-                data-tooltip="Delete section"
-                style={{ zIndex: 3 }}
+                data-tooltip="Switch sections"
                 onClick={() =>
-                  handleContainerOps("delete", {
+                  handleContainerOps("switch sections", {
                     ...metadata,
                     index,
                   })
                 }
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left:
+                    metadata.division === "1:1"
+                      ? "50%"
+                      : `${parseInt(metadata.division?.split(":")[0]) * 33}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
               >
-                <div className="trash"></div>
+                <div className="switch-arrows"></div>
               </div>
+            )}
+          </div>
+          <div className="fx-scattered fx-col">
+            {totalContainers > 1 && (
               <div
                 className={`round-icon-small round-icon-tooltip ${
-                  index + 1 === totalContainers ? "if-disabled" : ""
+                  index === 0 ? "if-disabled" : ""
                 }`}
-                data-tooltip="Move down"
-                style={{ zIndex: 2 }}
+                data-tooltip="Move up"
+                style={{ zIndex: 5 }}
                 onClick={() =>
-                  index + 1 === totalContainers
+                  index === 0
                     ? null
-                    : handleContainerOps("move down", {
+                    : handleContainerOps("move up", {
                         ...metadata,
                         index,
                       })
                 }
               >
-                <div className="arrow" style={{ cursor: "unset" }}></div>
+                <div
+                  className="arrow"
+                  style={{ rotate: "180deg", cursor: "unset" }}
+                ></div>
               </div>
-            </>
-          )}
+            )}
+            <div
+              className="fit-height"
+              style={{ position: "relative" }}
+              ref={optionsRef}
+            >
+              <div
+                style={{
+                  width: "32px",
+                  minHeight: "32px",
+                  borderRadius: "var(--border-r-6)",
+                  backgroundColor: "var(--pale-gray)",
+                  cursor: isMonoLayoutRequired ? "not-allowed" : "pointer",
+                  zIndex: 4,
+                }}
+                className="fx-centered option pointer fit-height round-icon-tooltip"
+                data-tooltip={isMonoLayoutRequired ? "Only Mono layout" : ""}
+                onClick={() =>
+                  !isMonoLayoutRequired
+                    ? metadata.layout === 1
+                      ? handleContainerOps("change section", {
+                          ...metadata,
+                          layout: 2,
+                        })
+                      : setShowOptions(!showOptions)
+                    : null
+                }
+              >
+                {metadata.layout === 1 && (
+                  <div
+                    className="plus-sign"
+                    style={{ opacity: isMonoLayoutRequired ? 0.5 : 1 }}
+                  ></div>
+                )}
+                {metadata.layout === 2 && (
+                  <div
+                    className="layout"
+                    style={{ minWidth: "14px", minWidth: "14px" }}
+                  ></div>
+                )}
+              </div>
+              {showOptions && (
+                <div
+                  className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v"
+                  style={{
+                    width: "180px",
+                    backgroundColor: "var(--c1-side)",
+                    position: "absolute",
+                    right: "0",
+                    top: "calc(100% + 5px)",
+                    rowGap: 0,
+                    overflow: "visible",
+                    zIndex: 100,
+                  }}
+                >
+                  <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
+                    Choose a layout
+                  </p>
+                  <div
+                    className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowOptions(false);
+                      checkContainerOps("change section", {
+                        ...metadata,
+                        layout: 1,
+                        division: "1:1",
+                      });
+                    }}
+                    style={{
+                      border: "none",
+                      overflow: "visible",
+                    }}
+                  >
+                    <div className="container-one-24"></div>
+                    <p className="p-medium">Mono layout</p>
+                  </div>
+
+                  <div
+                    className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowOptions(false);
+                      checkContainerOps("change section", {
+                        ...metadata,
+                        layout: 2,
+                        division: "1:1",
+                      });
+                    }}
+                    style={{
+                      border: "none",
+                      overflow: "visible",
+                      backgroundColor:
+                        metadata.division === "1:1" ? "var(--pale-gray)" : "",
+                    }}
+                  >
+                    <div className="container-one-one-24"></div>
+                    <p className="p-medium">1:1</p>
+                  </div>
+                  <div
+                    className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowOptions(false);
+                      checkContainerOps("change section", {
+                        ...metadata,
+                        layout: 2,
+                        division: "1:2",
+                      });
+                    }}
+                    style={{
+                      border: "none",
+                      overflow: "visible",
+                      backgroundColor:
+                        metadata.division === "1:2" ? "var(--pale-gray)" : "",
+                    }}
+                  >
+                    <div className="container-one-two-24"></div>
+                    <p className="p-medium">1:2</p>
+                  </div>
+                  <div
+                    className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowOptions(false);
+                      checkContainerOps("change section", {
+                        ...metadata,
+                        layout: 2,
+                        division: "2:1",
+                      });
+                    }}
+                    style={{
+                      border: "none",
+                      overflow: "visible",
+                      backgroundColor:
+                        metadata.division === "2:1" ? "var(--pale-gray)" : "",
+                    }}
+                  >
+                    <div className="container-two-one-24"></div>
+                    <p className="p-medium">2:1</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            {totalContainers > 1 && (
+              <>
+                <div
+                  className="round-icon-small round-icon-tooltip"
+                  data-tooltip="Delete section"
+                  style={{ zIndex: 3 }}
+                  onClick={() =>
+                    handleContainerOps("delete", {
+                      ...metadata,
+                      index,
+                    })
+                  }
+                >
+                  <div className="trash"></div>
+                </div>
+                <div
+                  className={`round-icon-small round-icon-tooltip ${
+                    index + 1 === totalContainers ? "if-disabled" : ""
+                  }`}
+                  data-tooltip="Move down"
+                  style={{ zIndex: 2 }}
+                  onClick={() =>
+                    index + 1 === totalContainers
+                      ? null
+                      : handleContainerOps("move down", {
+                          ...metadata,
+                          index,
+                        })
+                  }
+                >
+                  <div className="arrow" style={{ cursor: "unset" }}></div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <div
+          style={{
+            height: "32px",
+            borderRadius: "var(--border-r-6)",
+            backgroundColor: "var(--pale-gray)",
+          }}
+          className={`fx-centered fit-container option pointer ${
+            metadata.left_side?.length > 0 || metadata.right_side?.length > 0
+              ? ""
+              : "if-disabled"
+          }`}
+          onClick={() =>
+            metadata.left_side?.length > 0 || metadata.right_side?.length > 0
+              ? addContainer(metadata.id)
+              : null
+          }
+        >
+          <div className="plus-sign"></div>
         </div>
       </div>
-      <div
-        style={{
-          height: "32px",
-          borderRadius: "var(--border-r-6)",
-          backgroundColor: "var(--pale-gray)",
-        }}
-        className={`fx-centered fit-container option pointer ${
-          metadata.left_side?.length > 0 || metadata.right_side?.length > 0
-            ? ""
-            : "if-disabled"
-        }`}
-        onClick={() =>
-          metadata.left_side?.length > 0 || metadata.right_side?.length > 0
-            ? addContainer(metadata.id)
-            : null
-        }
-      >
-        <div className="plus-sign"></div>
-      </div>
-    </div>
+    </>
   );
 };
 

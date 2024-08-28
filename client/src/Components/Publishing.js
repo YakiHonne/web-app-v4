@@ -46,7 +46,7 @@ export default function Publishing() {
     setPublishing,
     updateYakiChestStats,
     setUpdatedActionFromYakiChest,
-    nostrUser,
+    userFollowings
   } = useContext(Context);
   const [showDetails, setShowDetails] = useState(false);
   const [startPublishing, setStartPublishing] = useState(false);
@@ -301,9 +301,9 @@ export default function Publishing() {
       return action_key_from_kind[getKind4FromEvent(tags)];
     }
     if (kind === 3) {
-      let checkYakiInFollowings = nostrUser.following.find(
+      let checkYakiInFollowings = userFollowings.find(
         (item) =>
-          item[1] ===
+          item ===
           "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
       );
       if (checkYakiInFollowings) return action_key_from_kind[3];

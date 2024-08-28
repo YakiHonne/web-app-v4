@@ -23,7 +23,7 @@ export default function SmartWidgetChecker() {
   const naddrParam = getNaddrParam(location);
   const [widget, setWidget] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [mbHide, setMbHide] = useState(false);
+  const [mbHide, setMbHide] = useState(true);
   const [naddr, setNaddr] = useState(naddrParam);
   const [componentTree, setComponentTree] = useState([]);
 

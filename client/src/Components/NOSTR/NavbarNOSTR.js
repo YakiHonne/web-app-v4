@@ -36,21 +36,21 @@ export default function NavbarNOSTR({ margin = true }) {
     nostrKeys.pub ? setPubkey(getBech32("npub", nostrKeys.pub)) : setPubkey("");
   }, [nostrKeys]);
 
-  useEffect(() => {
-    if (nostrUserLoaded) {
-      let timer = triggerLoginTime();
-      let status = nostrUser;
-      if (status) {
-        setTriggerLogin(false);
-        return;
-      }
-      if (timer) {
-        setTimeout(() => {
-          setTriggerLogin(true);
-        }, 300000);
-      }
-    }
-  }, [nostrUser, nostrUserLoaded]);
+  // useEffect(() => {
+  //   if (nostrUserLoaded) {
+  //     let timer = triggerLoginTime();
+  //     let status = nostrUser;
+  //     if (status) {
+  //       setTriggerLogin(false);
+  //       return;
+  //     }
+  //     if (timer) {
+  //       setTimeout(() => {
+  //         setTriggerLogin(true);
+  //       }, 300000);
+  //     }
+  //   }
+  // }, [nostrUser, nostrUserLoaded]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -231,7 +231,7 @@ export default function NavbarNOSTR({ margin = true }) {
                   className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
                   onClick={() => {
                     setShowSettings(false);
-                    nostrUserLogout();
+                    userLogout();
                   }}
                 >
                   <div className="logout"></div>

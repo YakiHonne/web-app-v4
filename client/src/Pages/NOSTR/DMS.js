@@ -31,6 +31,7 @@ export default function DMS() {
     chatContacts,
     initDMS,
     userFollowings,
+    mutedList,
   } = useContext(Context);
   const [selectedConvo, setSelectedConvo] = useState(false);
   const [isConvoLoading, setIsConvoLoading] = useState(false);
@@ -52,40 +53,45 @@ export default function DMS() {
     let followings = 0;
     let known = 0;
     let unknown = 0;
-    let tempChatrooms = chatrooms.map((chatroom) => {
-      let contact = chatContacts.find(
-        (contact) => contact.pubkey === chatroom.pubkey
-      );
+    let tempChatrooms = chatrooms
+      .map((chatroom) => {
+        let contact = chatContacts.find(
+          (contact) => contact.pubkey === chatroom.pubkey
+        );
 
-      let isFollowing = userFollowings?.includes(chatroom.pubkey)
-        ? "following"
-        : false;
-      let isUnknown = false;
-      let isKnown = false;
-      if (!isFollowing) {
-        isUnknown = chatroom.convo.find((conv) => conv.pubkey === nostrKeys.pub)
-          ? false
-          : "unknown";
+        let isFollowing = userFollowings?.includes(chatroom.pubkey)
+          ? "following"
+          : false;
+        let isUnknown = false;
+        let isKnown = false;
+        if (!isFollowing) {
+          isUnknown = chatroom.convo.find(
+            (conv) => conv.pubkey === nostrKeys.pub
+          )
+            ? false
+            : "unknown";
 
-        if (!isUnknown) isKnown = "known";
-      }
-      if (isFollowing) followings = followings + 1;
-      if (isUnknown) unknown = unknown + 1;
-      if (isKnown) known = known + 1;
-      if (contact)
+          if (!isUnknown) isKnown = "known";
+        }
+        if (isFollowing) followings = followings + 1;
+        if (isUnknown) unknown = unknown + 1;
+        if (isKnown) known = known + 1;
+        if (contact)
+          return {
+            ...contact,
+            ...chatroom,
+            type: isFollowing || isUnknown || isKnown,
+          };
         return {
-          ...contact,
           ...chatroom,
+          picture: "",
+          display_name: chatroom.pubkey.substring(0, 10),
+          name: chatroom.pubkey.substring(0, 10),
           type: isFollowing || isUnknown || isKnown,
         };
-      return {
-        ...chatroom,
-        picture: "",
-        display_name: chatroom.pubkey.substring(0, 10),
-        name: chatroom.pubkey.substring(0, 10),
-        type: isFollowing || isUnknown || isKnown,
-      };
-    });
+      })
+      .filter((chatroom) => !mutedList.includes(chatroom.pubkey));
+    
     setMsgsCount({ followings, known, unknown });
     setSortedInbox(tempChatrooms);
     if (selectedConvo) {
@@ -106,24 +112,13 @@ export default function DMS() {
   }, [chatrooms, chatContacts, userFollowings]);
 
   useEffect(() => {
-    if (!nostrKeys) {
-      setSelectedConvo(false);
-      setSortedInbox([]);
-      setIsConvoLoading(false);
-    }
+    // if (!nostrKeys) {
+    if (!nostrKeys) setSortedInbox([]);
+    setSelectedConvo(false);
+    setIsConvoLoading(false);
+    // }
   }, [nostrKeys]);
-
-  const getContactInfo = (pubkey) => {
-    let contact = chatContacts.find((contact) => contact.pubkey === pubkey);
-    if (contact) return contact;
-    return {
-      pubkey: pubkey,
-      picture: "",
-      display_name: pubkey.substring(0, 10),
-      name: pubkey.substring(0, 10),
-    };
-  };
-
+  
   const handleSelectedConversation = async (
     conversation,
     ignoreLoading = false
@@ -299,7 +294,7 @@ export default function DMS() {
       </div>
     );
 
-  if (initDMS && !chatrooms.length)
+  if (initDMS)
     return (
       <div>
         <Helmet>

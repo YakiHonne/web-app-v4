@@ -3,12 +3,17 @@ import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../../Context/Context";
 import LoadingScreen from "../LoadingScreen";
 import LoadingDots from "../LoadingDots";
+import { filterRelays } from "../../Helpers/Encryptions";
 
 export default function ToUpdateRelay({ exit, exitAndRefresh }) {
   const {
     setToast,
     nostrUser,
     isPublishing,
+    setNostrUser,
+    setUserRelays,
+    nostrKeys,
+    setToPublish
   } = useContext(Context);
   const [tempNostrUserRelays, setTempNostrUserRelays] = useState(
     nostrUser?.relays || []
@@ -100,7 +105,38 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
       });
       return;
     }
+    saveInKind10002()
     exit();
+  };
+
+
+  const saveInKind10002 = async () => {
+    try {
+      let tags = convertArrayToKind10002();
+      setToPublish({
+        nostrKeys: nostrKeys,
+        kind: 10002,
+        content: "",
+        tags: tags,
+        allRelays: tempNostrUserRelays,
+      });
+      let tempUser = { ...nostrUser };
+      tempUser.relays = tempNostrUserRelays;
+      setNostrUser(tempUser);
+      setUserRelays(tempNostrUserRelays)
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  };
+
+  const convertArrayToKind10002 = () => {
+    let tempArray = [];
+    for (let relay of tempNostrUserRelays) {
+      tempArray.push(["r", relay]);
+    }
+    return tempArray;
   };
 
   if (!isLoaded) return <LoadingScreen />;
