@@ -44,12 +44,32 @@ import FlashNewsPreviewCard from "../../Components/NOSTR/FlashNewsPreviewCard";
 import BuzzFeedPreviewCard from "../../Components/NOSTR/BuzzFeedPreviewCard";
 import VideosPreviewCards from "../../Components/NOSTR/VideosPreviewCards";
 import KindSix from "../../Components/NOSTR/KindSix";
+import Select from "../../Components/NOSTR/Select";
 const KindOne = lazy(() => import("../../Components/NOSTR/KindOne"));
 // import KindOne from "../../Components/NOSTR/KindOne";
 // import CountDownToNewProduct from "../../Components/CountDownToNewProduct";
 const defaultTopicIcon =
   "https://yakihonne.s3.ap-east-1.amazonaws.com/topics_icons/default.png";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+
+const homeOptions = [
+  {
+    value: "universal",
+    display_name: "Universal",
+  },
+  {
+    value: "smart-widget",
+    display_name: "Notes with Widgets",
+  },
+  {
+    value: "trending",
+    display_name: "Trending notes",
+  },
+  {
+    value: "followings",
+    display_name: "Followings",
+  },
+];
 
 const pool = new SimplePool();
 const pool_1 = new SimplePool();
@@ -1124,355 +1144,16 @@ export default function NostrHome() {
                     className="fit-container sticky fx-centered fx-col"
                     style={{ rowGap: "16px" }}
                   >
-                    <div className="fit-container fx-centered ">
-                      <div
-                        className={`list-item fx-centered fx ${
-                          contentSource === "notes" ? "selected-list-item" : ""
-                        }`}
-                        onClick={() => handleContentSource("notes")}
-                      >
-                        {contentSource !== "notes" && (
-                          <div className="wiggle">
-                            <div className="note-2-24"></div>
-                          </div>
-                        )}
-                        <p>Notes</p>
-                      </div>
-                      <div
-                        className={`list-item fx-centered fx ${
-                          contentSource === "media" ? "selected-list-item" : ""
-                        }`}
-                        onClick={() => handleContentSource("media")}
-                      >
-                        {contentSource !== "media" && (
-                          <div className="wiggle">
-                            <div className="media-24"></div>
-                          </div>
-                        )}
-                        <p>Media</p>
-                      </div>
+                    <div className="fit-container fx-scattered">
+                      <h3>Home</h3>
+                      <Select
+                        options={homeOptions}
+                        value={notesContentFrom}
+                        setSelectedValue={(data) =>
+                          handleNotesContentFrom(data)
+                        }
+                      />
                     </div>
-                    {contentSource === "media" && (
-                      <div
-                        className="fit-container fx-centered  sticky"
-                        style={{
-                          padding: 0,
-                        }}
-                      >
-                        <div className="fit-container fx-scattered">
-                          {showArrows && (
-                            <div
-                              className="box-pad-h-s pointer slide-right"
-                              onClick={slideLeft}
-                            >
-                              <div
-                                className="arrow"
-                                style={{ transform: "rotate(90deg)" }}
-                              ></div>
-                            </div>
-                          )}
-                          <div
-                            className="fx-centered fx-start-h no-scrollbar slider-list fit-container"
-                            style={{
-                              overflow: "hidden",
-                            }}
-                          >
-                            <div
-                              className="fx-centered fx-start-h no-scrollbar fit-container"
-                              style={{
-                                transform: `translateX(-${scrollPX}px)`,
-                                transition: ".3s ease-in-out",
-                                columnGap: "20px",
-                                width: "100px",
-                              }}
-                            >
-                              <div
-                                className={`list-item fx-centered fx-shrink ${
-                                  mediaContentFrom === "HOMEFEED"
-                                    ? "selected-list-item"
-                                    : ""
-                                }`}
-                                onClick={() => switchContentSource("HOMEFEED")}
-                              >
-                                <div className="timeline"></div>
-                                Timeline
-                              </div>
-                              <div
-                                className={`list-item fx-centered fx-shrink ${
-                                  mediaContentFrom === "follows"
-                                    ? "selected-list-item"
-                                    : ""
-                                }`}
-                                onClick={() => switchContentSource("follows")}
-                              >
-                                <div className="followings"></div>
-                                Followings
-                              </div>
-                              {nostrUserTopics.map((item, index) => {
-                                let status = checkTopicInList(item);
-                                return (
-                                  <div
-                                    className={`list-item fx-centered fx-shrink ${
-                                      item === mediaContentFrom
-                                        ? "selected-list-item"
-                                        : ""
-                                    }`}
-                                    onClick={() => {
-                                      switchContentSource(item);
-                                    }}
-                                    key={`${item}-${index}`}
-                                  >
-                                    {status && (
-                                      <img
-                                        width="16"
-                                        height="16"
-                                        src={status.icon}
-                                        alt={item}
-                                      />
-                                    )}
-                                    {!status && (
-                                      <img
-                                        width="16"
-                                        height="16"
-                                        src={defaultTopicIcon}
-                                        alt={item}
-                                      />
-                                    )}
-                                    {item}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <div className="fx-centered">
-                            {showArrows && (
-                              <div
-                                className="box-pad-h-s pointer slide-left"
-                                onClick={slideRight}
-                                style={{
-                                  background:
-                                    "linear-gradient(to left,var(--white) 20%,rgba(255,255,255,0) 100%)",
-                                }}
-                              >
-                                <div
-                                  className="arrow"
-                                  style={{ transform: "rotate(-90deg)" }}
-                                ></div>
-                              </div>
-                            )}
-                            {showTabsSettings && (
-                              <>
-                                <div
-                                  className="round-icon-small round-icon-tooltip slide-right"
-                                  data-tooltip={"customize topics"}
-                                  onClick={() =>
-                                    nostrUserLoaded && nostrUser
-                                      ? setShowTopicsPicker(true)
-                                      : setShowLogin(true)
-                                  }
-                                >
-                                  <p>&#xFF0B;</p>
-                                </div>
-                                <div
-                                  style={{ position: "relative" }}
-                                  className="slide-right"
-                                >
-                                  <div
-                                    style={{ position: "relative" }}
-                                    className="round-icon-small round-icon-tooltip"
-                                    data-tooltip={
-                                      activeRelay
-                                        ? `${activeRelay} is ${
-                                            isLoadingMedia || isLoadingNotes
-                                              ? "connecting"
-                                              : "connected"
-                                          }`
-                                        : "All relays"
-                                    }
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowRelaysList(!showRelaysList);
-                                    }}
-                                  >
-                                    <div className="server"></div>
-                                  </div>
-                                  {showRelaysList && (
-                                    <div
-                                      style={{
-                                        position: "absolute",
-                                        right: 0,
-                                        bottom: "-5px",
-                                        backgroundColor: "var(--dim-gray)",
-                                        border: "none",
-                                        transform: "translateY(100%)",
-                                        maxWidth: "300px",
-                                        rowGap: "12px",
-                                      }}
-                                      className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                                    >
-                                      <h5>Relays</h5>
-                                      <button
-                                        className={`btn-text-gray pointer fx-centered`}
-                                        style={{
-                                          width: "max-content",
-                                          fontSize: "1rem",
-                                          textDecoration: "none",
-                                          color:
-                                            activeRelay === ""
-                                              ? "var(--c1)"
-                                              : "",
-                                          transition: ".4s ease-in-out",
-                                        }}
-                                        onClick={() => {
-                                          switchActiveRelay("");
-                                          setShowRelaysList(false);
-                                        }}
-                                      >
-                                        {(isLoadingMedia || isLoadingNotes) &&
-                                        activeRelay === "" ? (
-                                          <>Connecting...</>
-                                        ) : (
-                                          "All relays"
-                                        )}
-                                      </button>
-                                      {nostrUser &&
-                                        nostrUser.relays.length > 0 &&
-                                        nostrUser.relays.map((relay) => {
-                                          return (
-                                            <button
-                                              key={relay}
-                                              className={`btn-text-gray pointer fx-centered `}
-                                              style={{
-                                                width: "max-content",
-                                                fontSize: "1rem",
-                                                textDecoration: "none",
-                                                color:
-                                                  activeRelay === relay
-                                                    ? "var(--c1)"
-                                                    : "",
-                                                transition: ".4s ease-in-out",
-                                              }}
-                                              onClick={() => {
-                                                switchActiveRelay(relay);
-                                                setShowRelaysList(false);
-                                              }}
-                                            >
-                                              {(isLoadingMedia ||
-                                                isLoadingNotes) &&
-                                              relay === activeRelay ? (
-                                                <>Connecting...</>
-                                              ) : (
-                                                relay.split("wss://")[1]
-                                              )}
-                                            </button>
-                                          );
-                                        })}
-                                      {(!nostrUser ||
-                                        (nostrUser &&
-                                          nostrUser.relays.length === 0)) &&
-                                        relays.map((relay) => {
-                                          return (
-                                            <button
-                                              key={relay}
-                                              className={`btn-text-gray pointer fx-centered`}
-                                              style={{
-                                                width: "max-content",
-                                                fontSize: "1rem",
-                                                textDecoration: "none",
-                                                color:
-                                                  activeRelay === relay
-                                                    ? "var(--c1)"
-                                                    : "",
-                                                transition: ".4s ease-in-out",
-                                              }}
-                                              onClick={() => {
-                                                switchActiveRelay(relay);
-                                                setShowRelaysList(false);
-                                              }}
-                                            >
-                                              {(isLoadingMedia ||
-                                                isLoadingNotes) &&
-                                              relay === activeRelay ? (
-                                                <>Connecting..</>
-                                              ) : (
-                                                relay.split("wss://")[1]
-                                              )}
-                                            </button>
-                                          );
-                                        })}
-                                    </div>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                            <div
-                              className="setting-24"
-                              onClick={() =>
-                                setShowTabsSettings(!showTabsSettings)
-                              }
-                              style={{
-                                rotate: showTabsSettings ? "45deg" : "initial",
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {contentSource === "notes" && (
-                      <div
-                        className="fit-container fx-centered"
-                        style={{
-                          padding: 0,
-                        }}
-                      >
-                        <div
-                          className={`list-item fx-centered fx ${
-                            notesContentFrom === "universal"
-                              ? "selected-list-item"
-                              : ""
-                          }`}
-                          onClick={() => handleNotesContentFrom("universal")}
-                        >
-                          <div className="globe"></div>
-                          Universal
-                        </div>
-                        <div
-                          className={`list-item fx-centered fx ${
-                            notesContentFrom === "smart-widget"
-                              ? "selected-list-item"
-                              : ""
-                          }`}
-                          onClick={() => handleNotesContentFrom("smart-widget")}
-                        >
-                          <div className="smart-widget"></div>
-                          Widget
-                        </div>
-                        <div
-                          className={`list-item fx-centered fx ${
-                            notesContentFrom === "trending"
-                              ? "selected-list-item"
-                              : ""
-                          }`}
-                          onClick={() => handleNotesContentFrom("trending")}
-                        >
-                          <div className="trending-up"></div>
-                          Trending
-                        </div>
-                        {nostrKeys && (nostrKeys.sec || nostrKeys.ext) && (
-                          <div
-                            className={`list-item fx-centered fx ${
-                              notesContentFrom === "followings"
-                                ? "selected-list-item"
-                                : ""
-                            }`}
-                            onClick={() => handleNotesContentFrom("followings")}
-                          >
-                            <div className="followings"></div>
-                            Followings
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {contentSource === "media" && (
