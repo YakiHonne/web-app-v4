@@ -2487,7 +2487,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             {metadata.metadata.text_color && (
               <div
                 className="round-icon-small"
-                onClick={() => handleMetadata("text_color", "#ee7700")}
+                onClick={() => handleMetadata("text_color", isDarkMode === "0" ?  "#ffffff" : "#1C1B1F")}
               >
                 <div className="switch-arrows"></div>
               </div>
