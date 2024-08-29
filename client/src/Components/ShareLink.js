@@ -3,12 +3,12 @@ import { Context } from "../Context/Context";
 import { nip19 } from "nostr-tools";
 import { getAuthPubkeyFromNip05 } from "../Helpers/Helpers";
 import QRCode from "react-qr-code";
-import UserProfilePicNOSTR from "./NOSTR/UserProfilePicNOSTR";
+import UserProfilePicNOSTR from "./Main/UserProfilePicNOSTR";
 import { useToPng } from "@hugocxl/react-to-image";
 import axios from "axios";
 import { getBech32 } from "../Helpers/Encryptions";
 import Date_ from "./Date_";
-import UN from "./NOSTR/UN";
+import UN from "./Main/UN";
 
 const getNostrLink = async (path) => {
   let pathSplit = path.split("/");

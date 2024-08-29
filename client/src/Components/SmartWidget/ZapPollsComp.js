@@ -14,7 +14,7 @@ import {
   shortenKey,
 } from "../../Helpers/Encryptions";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import UserProfilePicNOSTR from "../NOSTR/UserProfilePicNOSTR";
+import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
 import QRCode from "react-qr-code";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import { webln } from "@getalby/sdk";

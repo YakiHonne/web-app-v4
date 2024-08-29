@@ -1,12 +1,12 @@
 import { nip19, nip44 } from "nostr-tools";
 import { decryptEventData, getHex } from "./Encryptions";
-import IMGElement from "../Components/NOSTR/IMGElement";
+import IMGElement from "../Components/Main/IMGElement";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import React from "react";
-import Carousel from "../Components/NOSTR/Carousel";
-import Nip19Parsing from "../Components/NOSTR/Nip19Parsing";
+import Carousel from "../Components/Main/Carousel";
+import Nip19Parsing from "../Components/Main/Nip19Parsing";
 
 const LoginToAPI = async (publicKey, secretKey) => {
   try {

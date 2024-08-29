@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { getLinkFromAddr } from "../../Helpers/Helpers";
-import ZapTip from "../NOSTR/ZapTip";
+import ZapTip from "../Main/ZapTip";
 import { Context } from "../../Context/Context";
 import { getEmptyNostrUser, getHex } from "../../Helpers/Encryptions";
 

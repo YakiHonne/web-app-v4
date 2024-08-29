@@ -3,7 +3,7 @@ import axios from "axios";
 import { nip19 } from "nostr-tools";
 import { getHex } from "../Helpers/Encryptions";
 import LoadingDots from "./LoadingDots";
-import UserProfilePicNOSTR from "./NOSTR/UserProfilePicNOSTR";
+import UserProfilePicNOSTR from "./Main/UserProfilePicNOSTR";
 
 export default function UserSearchBar({ onClick, full = false, placeholder = "Search by name, npub, nprofile" }) {
   const [keyword, setKeyword] = useState("");

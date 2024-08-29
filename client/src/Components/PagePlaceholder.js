@@ -14,12 +14,12 @@ import HeroYakiChest from "../media/images/trophy.png";
 import HeroWallet from "../media/images/wallet.png";
 import HeroWidgets from "../media/images/widgets.png";
 import HeroWidgetsDraft from "../media/images/draft.png";
-import LoginNOSTR from "./NOSTR/LoginNOSTR";
+import LoginWithNostr from "./Main/LoginWithNostr";
 import { useContext } from "react";
 import { Context } from "../Context/Context";
 import { Link } from "react-router-dom";
-import LoginWithAPI from "./NOSTR/LoginWithAPI";
-import AddWallet from "./NOSTR/AddWallet";
+import LoginWithAPI from "./Main/LoginWithAPI";
+import AddWallet from "./Main/AddWallet";
 
 export default function PagePlaceholder({ page, onClick = null }) {
   const { userLogout, nostrKeys } = useContext(Context);
@@ -58,7 +58,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
   if (page === "nostr-not-connected")
     return (
       <>
-        {triggerLogin && <LoginNOSTR exit={() => setTriggerLogin(false)} />}
+        {triggerLogin && <LoginWithNostr exit={() => setTriggerLogin(false)} />}
         <div className="fit-container fx-centered">
           <div className="fx-centered fx-col" style={{ height: "80vh" }}>
             <h2 className="box-marg-s p-centered">You're not connected</h2>
@@ -324,7 +324,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
   if (page === "nostr-wallet")
     return (
       <>
-        {triggerLogin && <LoginNOSTR exit={() => setTriggerLogin(false)} />}
+        {triggerLogin && <LoginWithNostr exit={() => setTriggerLogin(false)} />}
         <div className="fit-container fx-centered">
           <div className="fx-centered fx-col" style={{ height: "80vh" }}>
             <div

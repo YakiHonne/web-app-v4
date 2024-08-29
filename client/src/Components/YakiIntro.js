@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Context } from "../Context/Context";
 import hero from "../media/images/yaki-intro.jpg";
-import Follow from "./NOSTR/Follow";
+import Follow from "./Main/Follow";
 import { Link } from "react-router-dom";
 
 const content = [
