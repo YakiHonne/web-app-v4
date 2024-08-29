@@ -658,7 +658,7 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
                   {type.type === "arts" && (
                     <Link
                       target="_blank"
-                      to={`/articles/${relatedEvent.naddr}`}
+                      to={`/article/${relatedEvent.naddr}`}
                     >
                       <div className="share-icon"></div>
                     </Link>
