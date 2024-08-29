@@ -16,19 +16,9 @@ import LoadingDots from "../LoadingDots";
 import LoginNOSTR from "./LoginNOSTR";
 import { webln } from "@getalby/sdk";
 import { decode } from "light-bolt11-decoder";
+import { getWallets, updateWallets } from "../../Helpers/Helpers";
 
 const pool = new SimplePool();
-
-const getWallets = () => {
-  let wallets = localStorage.getItem("yaki-wallets");
-  if (!wallets) return [];
-  try {
-    wallets = JSON.parse(wallets);
-    return wallets;
-  } catch (err) {
-    return [];
-  }
-};
 
 export default function ZapTip({
   recipientLNURL,
@@ -726,7 +716,7 @@ const checkAlbyToken = async (wallets, activeWallet) => {
     let tempWallets = Array.from(wallets);
     let index = wallets.findIndex((item) => item.id === activeWallet.id);
     tempWallets[index] = tempWallet;
-    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    updateWallets(tempWallets)
     return {
       wallets: tempWallets,
       activeWallet: tempWallet,

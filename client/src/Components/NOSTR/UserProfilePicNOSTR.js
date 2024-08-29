@@ -49,16 +49,10 @@ export default function UserProfilePicNOSTR({
   } = useContext(Context);
   const [showMetadata, setShowMetada] = useState(false);
   const [userFollowers, setUserFollowers] = useState([]);
-  // const mutualFollows = useMemo(() => {
-  //   if (metadata)
-  //     return getMutualFollows(userFollowers, nostrUser?.following || []);
-  //   else return [];
-  // }, [userFollowers]);
   const [mutualFollows, setMutualFollows] = useState([]);
   const [subStart, setSubStart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [initConv, setInitConv] = useState(false);
-  // const containerRef = useRef(null);
   const navigateTo = useNavigate();
 
   const handleClick = (e) => {

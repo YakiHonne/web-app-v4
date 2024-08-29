@@ -25,6 +25,7 @@ export default function Follow({
 }) {
   const {
     nostrUser,
+    userFollowings,
     setNostrUser,
     nostrKeys,
     setToPublish,
@@ -37,14 +38,14 @@ export default function Follow({
 
   useEffect(() => {
     setTags(
-      nostrUser
+      userFollowings
         ? [
-            ...nostrUser.following.map((item) => item[1]),
+            ...userFollowings,
             ...bulkList.map((item) => item.pubkey),
           ]
         : [...bulkList.map((item) => item.pubkey)]
     );
-  }, [nostrUser, toFollowKey, bulkList]);
+  }, [userFollowings, toFollowKey, bulkList]);
 
   const isFollowing = useMemo(() => {
     let memo = checkFollowing(tags, toFollowKey);
@@ -68,7 +69,7 @@ export default function Follow({
         return;
       }
       setIsLoading(true);
-      let tempTags = Array.from(nostrUser?.following || []);
+      let tempTags = Array.from(userFollowings || []);
       if (isFollowing.status) {
         let index = tempTags.findIndex((item) => item[1] === toFollowKey);
         tempTags.splice(index, 1);

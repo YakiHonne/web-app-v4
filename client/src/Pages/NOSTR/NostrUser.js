@@ -270,7 +270,10 @@ export default function NostrUser() {
                   setNotes((prev) => {
                     let existed = prev.find((note) => note.id === event.id);
                     if (existed) return prev;
-                    else return [...prev, tempEvent];
+                    else return [...prev, tempEvent].sort(
+                      (note_1, note_2) =>
+                        note_2.created_at - note_1.created_at
+                    );;
                   });
               }
             },

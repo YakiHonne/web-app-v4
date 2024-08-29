@@ -15,7 +15,7 @@ const checkFollowing = (list, toFollowKey) => {
 };
 
 export default function FlashNewsPreviewCard({ item }) {
-  const { nostrUser, getNostrAuthor, nostrAuthors } = useContext(Context);
+  const { userFollowings, getNostrAuthor, nostrAuthors } = useContext(Context);
   const [authorData, setAuthorData] = useState(getEmptyNostrUser(item.pubkey));
   const [artURL, setArtURL] = useState(`${item.nEvent}`);
   const optionsRef = useRef(null);
@@ -23,8 +23,8 @@ export default function FlashNewsPreviewCard({ item }) {
   const [showPreview, setShowPreview] = useState(false);
 
   const isFollowing = useMemo(() => {
-    return checkFollowing(nostrUser?.following, item.pubkey);
-  }, [nostrUser]);
+    return checkFollowing(userFollowings, item.pubkey);
+  }, [userFollowings]);
 
   useEffect(() => {
     const fetchData = async () => {

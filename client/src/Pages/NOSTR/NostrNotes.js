@@ -25,7 +25,7 @@ import TrendingNotes from "../../Components/NOSTR/TrendingNotes";
 var pool = new SimplePool();
 
 export default function NostrNotes() {
-  const { nostrKeys, nostrUser, addNostrAuthors, mutedList } =
+  const { nostrKeys, nostrUser, addNostrAuthors, mutedList, userFollowings } =
     useContext(Context);
   const [notes, setNotes] = useState([]);
   const memoNotes = useMemo(() => notes, [notes]);
@@ -58,7 +58,10 @@ export default function NostrNotes() {
                 setNotes((prev) => {
                   let existed = prev.find((note) => note.id === event.id);
                   if (existed) return prev;
-                  else return [...prev, event_];
+                  else
+                    return [...prev, event_].sort(
+                      (note_1, note_2) => note_2.created_at - note_1.created_at
+                    );
                 });
                 setIsLoading(false);
               }
@@ -164,9 +167,7 @@ export default function NostrNotes() {
         : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
     if (contentFrom === "followings") {
       let authors =
-        nostrUser && nostrUser.following.length > 0
-          ? [...nostrUser.following.map((item) => item[1])]
-          : [];
+        userFollowings && userFollowings.length > 0 ? userFollowings : [];
       filter = [{ authors, kinds: [1, 6], limit: 10, until: lastEventTime }];
       return {
         relaysToFetchFrom,

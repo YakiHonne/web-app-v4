@@ -523,7 +523,7 @@ export default function NostrNote() {
 
                     <div className="fit-container">{note.note_tree}</div>
 
-                    {note.checkForQuote &&
+                    {/* {note.checkForQuote &&
                       !isRelatedEventLoaded &&
                       !relatedEvent && (
                         <div
@@ -546,7 +546,7 @@ export default function NostrNote() {
                             The quoted note does not seem to be found
                           </p>
                         </div>
-                      )}
+                      )} */}
                     <div className="fit-container fx-scattered box-pad-v-s">
                       <div
                         className="fx-centered"

@@ -42,7 +42,7 @@ export default function LoginWithAPI({ exit }) {
     }
   };
 
-  if (!(nostrKeys && (nostrKeys.ext || nostrKeys.sec))) return;
+  // if (!(nostrKeys && (nostrKeys.ext || nostrKeys.sec))) return;
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div

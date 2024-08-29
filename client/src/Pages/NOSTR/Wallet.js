@@ -33,19 +33,9 @@ import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import AddWallet from "../../Components/NOSTR/AddWallet";
 import UserSearchBar from "../../Components/UserSearchBar";
 import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
+import { getWallets, updateWallets } from "../../Helpers/Helpers";
 const pool = new SimplePool();
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
-
-const getWallets = () => {
-  let wallets = localStorage.getItem("yaki-wallets");
-  if (!wallets) return [];
-  try {
-    wallets = JSON.parse(wallets);
-    return wallets;
-  } catch (err) {
-    return [];
-  }
-};
 
 export default function Wallet() {
   const {
@@ -82,7 +72,7 @@ export default function Wallet() {
         setSelectedWallet(false);
         return;
       }
-      let tempWallets = getWallets()
+      let tempWallets = getWallets();
       setWallets(tempWallets);
       setSelectedWallet(tempWallets.find((wallet) => wallet.active));
       let authors = [];
@@ -120,19 +110,25 @@ export default function Wallet() {
   useEffect(() => {
     if (!nostrKeys) return;
     if (nostrKeys && (nostrKeys?.ext || nostrKeys?.sec)) {
-      if (selectedWallet) {
-        if (selectedWallet.kind === 1) {
+      let tempWallets = getWallets();
+      let selectedWallet_ = tempWallets.find((wallet) => wallet.active);
+      if (selectedWallet_) {
+        if (selectedWallet_.kind === 1) {
           getBalancWebLN();
         }
-        if (selectedWallet.kind === 2) {
-          getAlbyData(selectedWallet);
+        if (selectedWallet_.kind === 2) {
+          getAlbyData(selectedWallet_);
         }
-        if (selectedWallet.kind === 3) {
-          getNWCData(selectedWallet);
+        if (selectedWallet_.kind === 3) {
+          getNWCData(selectedWallet_);
         }
+      }else {
+        setWallets([]);
+        setSelectedWallet(false);
+        setBalance("N/A");
       }
     } else {
-      setBalance(false);
+      setBalance("N/A");
     }
   }, [nostrKeys, selectedWallet, timestamp]);
 
@@ -263,7 +259,7 @@ export default function Wallet() {
     tempWallets[index].active = true;
     setSelectedWallet(wallets[index]);
     setWallets(tempWallets);
-    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    updateWallets(tempWallets);
     setOps("");
     setShowWalletList(false);
   };
@@ -293,14 +289,14 @@ export default function Wallet() {
         setWallets(tempWallets);
         setSelectedWallet(tempWallets[0]);
         setShowDeletionPopup(false);
-        localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+        updateWallets(tempWallets);
         return;
       }
 
       setWallets(tempWallets);
       setShowDeletionPopup(false);
       if (tempWallets.length === 0) setSelectedWallet(false);
-      localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+      updateWallets(tempWallets);
     } catch (err) {
       console.log(err);
     }
@@ -339,7 +335,7 @@ export default function Wallet() {
                   {!(nostrKeys.ext || nostrKeys.sec) && (
                     <PagePlaceholder page={"nostr-wallet"} />
                   )}
-                  {nostrKeys.sec && wallets.length === 0 && (
+                  {(nostrKeys.ext || nostrKeys.sec) && wallets.length === 0 && (
                     <PagePlaceholder page={"nostr-add-wallet"} />
                   )}
                   {(nostrKeys.ext || nostrKeys.sec) && wallets.length > 0 && (
@@ -1638,7 +1634,7 @@ const checkAlbyToken = async (wallets, activeWallet) => {
     let tempWallets = Array.from(wallets);
     let index = wallets.findIndex((item) => item.id === activeWallet.id);
     tempWallets[index] = tempWallet;
-    localStorage.setItem("yaki-wallets", JSON.stringify(tempWallets));
+    updateWallets(tempWallets);
     return {
       wallets: tempWallets,
       activeWallet: tempWallet,

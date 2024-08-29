@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLocation, useParams } from "react-router-dom";
+import { getWallets, updateWallets } from "../../Helpers/Helpers";
 
 export default function WalletAlby() {
   const location = useLocation();
@@ -50,26 +51,25 @@ export default function WalletAlby() {
           },
         };
 
-        let oldVersion = localStorage.getItem("yaki-wallets");
+        let oldVersion = getWallets();
         if (oldVersion) {
           try {
-            oldVersion = JSON.parse(oldVersion);
             oldVersion = oldVersion.map((item) => {
               let updated_item = { ...item };
               updated_item.active = false;
               return updated_item;
             });
             oldVersion.push(alby);
-            localStorage.setItem("yaki-wallets", JSON.stringify(oldVersion));
+            updateWallets(oldVersion);
             navigateTo("/wallet");
             return;
           } catch (err) {
-            localStorage.setItem("yaki-wallets", JSON.stringify([alby]));
+            updateWallets([alby]);
             navigateTo("/wallet");
             return;
           }
         }
-        localStorage.setItem("yaki-wallets", JSON.stringify([alby]));
+        updateWallets([alby]);
         navigateTo("/wallet");
       } catch (err) {
         console.log(err);

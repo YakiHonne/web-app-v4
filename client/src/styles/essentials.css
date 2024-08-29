@@ -299,9 +299,9 @@ hr:last-child {
     justify-content: center;
     align-items: center;
     width: fit-content;
-    padding: 0 var(--16);
-    min-height: 28px;
-    border-radius: var(--border-r-18);
+    padding: 0 var(--10);
+    min-height: 20px;
+    border-radius: var(--border-r-6);
     font-size: var(--12);
     transition: .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     word-break: break-word;
@@ -317,9 +317,9 @@ hr:last-child {
     justify-content: center;
     align-items: center;
     width: fit-content;
-    padding: 0 var(--10);
-    min-height: 20px;
-    border-radius: var(--border-r-18);
+    padding: 0 8px;
+    min-height: 18px;
+    border-radius: var(--border-r-6);
     font-size: var(--10);
     word-break: break-word;
 }

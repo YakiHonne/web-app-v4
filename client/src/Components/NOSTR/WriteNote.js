@@ -163,8 +163,8 @@ export default function WriteNote() {
   };
 
   const handleAddWidget = (data) => {
-    if (note) setNote(note + " " + data.naddr);
-    if (!note) setNote(data.naddr);
+    if (note) setNote(note + " " + `https://yakihonne.com/smart-widget-checker?naddr=${data.naddr}`);
+    if (!note) setNote(`https://yakihonne.com/smart-widget-checker?naddr=${data.naddr}`);
     setWidgetsSet((prev) => [...prev, data]);
     setShowSmartWidgets(false);
   };
@@ -178,7 +178,7 @@ export default function WriteNote() {
 
   const removeWidget = (index) => {
     let tempWidgetSet = Array.from(widgetsSet);
-    setNote(note.replace(tempWidgetSet[index].naddr, ""));
+    setNote(note.replace(`https://yakihonne.com/smart-widget-checker?naddr=${tempWidgetSet[index].naddr}`, ""));
     tempWidgetSet.splice(index, 1);
     setWidgetsSet(tempWidgetSet);
   };

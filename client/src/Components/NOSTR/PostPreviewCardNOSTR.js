@@ -18,7 +18,7 @@ const checkFollowing = (list, toFollowKey) => {
 };
 
 export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
-  const { nostrUser, getNostrAuthor, nostrAuthors } = useContext(Context);
+  const { userFollowings, getNostrAuthor, nostrAuthors } = useContext(Context);
   let [isThumbnailValid, setIsThumbnailValid] = useState(false);
   const [authorData, setAuthorData] = useState(
     getEmptyNostrUser(item.author_pubkey)
@@ -33,8 +33,8 @@ export default function PostPreviewCardNOSTR({ item, highlithedTag = "" }) {
   const [showOptions, setShowOptions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const isFollowing = useMemo(() => {
-    return checkFollowing(nostrUser?.following, item.author_pubkey);
-  }, [nostrUser]);
+    return checkFollowing(userFollowings, item.author_pubkey);
+  }, [userFollowings]);
 
   useEffect(() => {
     let carousel_container = noScrollBarContainerMain.current;

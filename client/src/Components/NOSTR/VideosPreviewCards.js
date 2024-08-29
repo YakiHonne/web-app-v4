@@ -14,7 +14,7 @@ const checkFollowing = (list, toFollowKey) => {
 };
 
 export default function VideosPreviewCards({ item, duration = true }) {
-  const { nostrUser, nostrAuthors, getNostrAuthor } = useContext(Context);
+  const { userFollowings, nostrAuthors, getNostrAuthor } = useContext(Context);
   const optionsRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -26,8 +26,9 @@ export default function VideosPreviewCards({ item, duration = true }) {
   });
   const [isLoaded, setIsLoaded] = useState(false);
   const isFollowing = useMemo(() => {
-    return checkFollowing(nostrUser?.following, item.pubkey);
-  }, [nostrUser]);
+    return checkFollowing(userFollowings, item.pubkey);
+  }, [userFollowings]);
+  
   useEffect(() => {
     if (!isLoaded) {
       let auth = getNostrAuthor(item.pubkey);
