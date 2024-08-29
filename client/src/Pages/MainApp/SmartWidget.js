@@ -30,7 +30,9 @@ import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 
 const pool = new SimplePool();
 
-const getTypeMetada = (type) => {
+const getTypeMetada = (type, isDarkMode) => {
+  let text_color = isDarkMode === "0" ? "#ffffff" : "#1C1B1F";
+  let background_color = isDarkMode === "0" ? "#2f2f2f" : "#e5e5e5";
   if (type === "video")
     return {
       url: "",
@@ -43,7 +45,7 @@ const getTypeMetada = (type) => {
   if (type === "text")
     return {
       content: "Lorem ipsum",
-      text_color: "",
+      text_color,
       weight: "",
       size: "regular",
     };
@@ -59,10 +61,10 @@ const getTypeMetada = (type) => {
   if (type === "zap-poll")
     return {
       content: "",
-      content_text_color: "",
-      options_text_color: "",
-      options_background_color: "",
-      options_foreground_color: "",
+      content_text_color: text_color,
+      options_text_color: "#ffffff",
+      options_background_color: background_color,
+      options_foreground_color: "#ee7700",
     };
 };
 
@@ -181,7 +183,7 @@ const imageAspectRatio = [
 export default function NostrSmartWidget() {
   let { state } = useLocation();
   let nostrKeys = getNostrKeys();
-
+  const { isDarkMode } = useContext(Context);
   const [buildOptions, setBuildOptions] = useState(state ? false : true);
   const [buildOption, setBuildOption] = useState("normal");
   const [template, setTemplate] = useState(
@@ -191,13 +193,27 @@ export default function NostrSmartWidget() {
     state ? state.metadata.metadata.border_color : ""
   );
   const [containerBackgroundColor, setContainerBackgroundColor] = useState(
-    state ? state.metadata.metadata.background_color : ""
+    state
+      ? state.metadata.metadata.background_color
+      : isDarkMode === "0"
+      ? "#252429"
+      : "#F7F7F7"
   );
   const [postingOption, setPostingOption] = useState(state ? state.ops : "");
   const [triggerPublish, setTriggerPublish] = useState(false);
   const [widgetID, setWidgetID] = useState(
     state ? state?.metadata?.d : nanoid()
   );
+
+  useEffect(() => {
+    if (isDarkMode === "1" && containerBackgroundColor === "#252429") {
+      setContainerBackgroundColor("#F7F7F7");
+    }
+    if (isDarkMode === "0" && containerBackgroundColor === "#F7F7F7") {
+      setContainerBackgroundColor("#252429");
+    }
+  }, [isDarkMode]);
+
   const handleSelectTemplate = (comps) => {
     setTemplate(getTemplate(comps));
     setBuildOption("normal");
@@ -407,7 +423,8 @@ const SmartWidgetBuilder = ({
   widgetID,
   triggerPublish,
 }) => {
-  const { nostrKeys, nostrUser, setToast, setToPublish } = useContext(Context);
+  const { nostrKeys, nostrUser, setToast, setToPublish, isDarkMode } =
+    useContext(Context);
   const navigateTo = useNavigate();
   const [showComponents, setShowComponents] = useState(false);
   const [componentsTree, setComponentsTree] = useState(
@@ -447,6 +464,126 @@ const SmartWidgetBuilder = ({
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const repaintComponents = (option) => {
+    let text_color = option === "dark" ? "#ffffff" : "#1C1B1F";
+    let background_color = option === "dark" ? "#2f2f2f" : "#e5e5e5";
+    if (option === "dark") {
+      let tempTemplate = Array.from(componentsTree);
+      tempTemplate = tempTemplate.map((container) => {
+        let left_side = container.left_side.map((comp) => {
+          if (comp.type === "text" && comp.metadata.text_color === "#1C1B1F") {
+            return {
+              ...comp,
+              metadata: {
+                ...comp.metadata,
+                text_color,
+              },
+            };
+          }
+          if (comp.type === "zap-poll") {
+            const tempMetadata = { ...comp.metadata };
+            if (tempMetadata.content_text_color === "#1C1B1F")
+              tempMetadata.content_text_color = text_color;
+            if (tempMetadata.options_background_color === "#e5e5e5")
+              tempMetadata.options_background_color = background_color;
+
+            return {
+              ...comp,
+              metadata: {
+                ...tempMetadata,
+              },
+            };
+          }
+          return comp;
+        });
+        let right_side = container.right_side.map((comp) => {
+          if (comp.type === "text" && comp.metadata.text_color === "#1C1B1F") {
+            return {
+              ...comp,
+              metadata: {
+                ...comp.metadata,
+                text_color,
+              },
+            };
+          }
+          return comp;
+        });
+
+        return {
+          ...container,
+          left_side,
+          right_side,
+        };
+      });
+      return tempTemplate;
+    }
+    if (option === "light") {
+      let tempTemplate = Array.from(componentsTree);
+      tempTemplate = tempTemplate.map((container) => {
+        let left_side = container.left_side.map((comp) => {
+          if (comp.type === "text" && comp.metadata.text_color === "#ffffff") {
+            return {
+              ...comp,
+              metadata: {
+                ...comp.metadata,
+                text_color,
+              },
+            };
+          }
+          if (comp.type === "zap-poll") {
+            const tempMetadata = { ...comp.metadata };
+            if (tempMetadata.content_text_color === "#ffffff")
+              tempMetadata.content_text_color = text_color;
+            if (tempMetadata.options_background_color === "#2f2f2f")
+              tempMetadata.options_background_color = background_color;
+
+            return {
+              ...comp,
+              metadata: {
+                ...tempMetadata,
+              },
+            };
+          }
+          return comp;
+        });
+        let right_side = container.right_side.map((comp) => {
+          if (comp.type === "text" && comp.metadata.text_color === "#ffffff") {
+            return {
+              ...comp,
+              metadata: {
+                ...comp.metadata,
+                text_color,
+              },
+            };
+          }
+          return comp;
+        });
+
+        return {
+          ...container,
+          left_side,
+          right_side,
+        };
+      });
+      return tempTemplate;
+    }
+
+    return [];
+  };
+
+  useEffect(() => {
+    if (isDarkMode === "1" && mainContainerBackgroundColor === "#252429") {
+      let tempComponent = repaintComponents("light");
+      setComponentsTree(tempComponent);
+      setMainContainerBackgroundColor("#F7F7F7");
+    }
+    if (isDarkMode === "0" && mainContainerBackgroundColor === "#F7F7F7") {
+      let tempComponent = repaintComponents("dark");
+      setComponentsTree(tempComponent);
+      setMainContainerBackgroundColor("#252429");
+    }
+  }, [containerBackgroundColor]);
 
   useEffect(() => {
     let sw = {
@@ -500,7 +637,6 @@ const SmartWidgetBuilder = ({
     if (lastDesgin) {
       try {
         let parsedSW = JSON.parse(lastDesgin);
-        console.log(parsedSW);
         setMainContainerBackgroundColor(parsedSW.background_color);
         setMainContainerBorderColor(parsedSW.border_color);
         setComponentsTree(parsedSW.components);
@@ -521,7 +657,7 @@ const SmartWidgetBuilder = ({
       let tempComp = {
         id: tempId,
         type,
-        metadata: getTypeMetada(type),
+        metadata: getTypeMetada(type, isDarkMode),
       };
       if (selectedContainer.side === "left")
         tempArray[index].left_side.push(tempComp);
@@ -1170,9 +1306,13 @@ const SmartWidgetBuilder = ({
                 {mainContainerBackgroundColor && (
                   <div
                     className="round-icon-small"
-                    onClick={() => setMainContainerBackgroundColor("")}
+                    onClick={() =>
+                      setMainContainerBackgroundColor(
+                        isDarkMode === "1" ? "#F7F7F7" : "#252429"
+                      )
+                    }
                   >
-                    <div className="trash"></div>
+                    <div className="switch-arrows"></div>
                   </div>
                 )}
               </div>
@@ -1382,7 +1522,10 @@ const EditContainer = ({
   }, [optionsRef]);
 
   const checkContainerOps = (ops, data) => {
-    if (data.layout === 1 && (metadata.right_side.length > 0 || metadata.left_side.length > 1)) {
+    if (
+      data.layout === 1 &&
+      (metadata.right_side.length > 0 || metadata.left_side.length > 1)
+    ) {
       setShowContainerLayoutWarning({ ops, data });
       return;
     }
@@ -1442,6 +1585,7 @@ const EditContainer = ({
               position: "relative",
               borderColor:
                 selectedContainer?.id === metadata.id ? "var(--black)" : "",
+              backgroundColor: "transparent",
             }}
           >
             {metadata.left_side.length === 0 && (
@@ -1476,6 +1620,7 @@ const EditContainer = ({
                             selectedLayer && selectedLayer.id === comp?.id
                               ? "var(--orange-main)"
                               : "",
+                          backgroundColor: "transparent",
                         }}
                         onClick={() => setSelectedLayer(metadata, comp)}
                       >
@@ -1493,6 +1638,7 @@ const EditContainer = ({
                             selectedLayer && selectedLayer.id === comp?.id
                               ? "var(--orange-main)"
                               : "",
+                          backgroundColor: "transparent",
                         }}
                         onClick={() => setSelectedLayer(metadata, comp)}
                       >
@@ -1535,6 +1681,7 @@ const EditContainer = ({
                             selectedLayer && selectedLayer.id === comp?.id
                               ? "var(--orange-main)"
                               : "",
+                          backgroundColor: "transparent",
                         }}
                         onClick={() => setSelectedLayer(metadata, comp)}
                       >
@@ -1555,6 +1702,7 @@ const EditContainer = ({
                             selectedLayer && selectedLayer.id === comp?.id
                               ? "var(--orange-main)"
                               : "",
+                          backgroundColor: "transparent",
                         }}
                         onClick={() => setSelectedLayer(metadata, comp)}
                       >
@@ -2134,7 +2282,7 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
 };
 
 const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
-  const { nostrUser } = useContext(Context);
+  const { nostrUser, isDarkMode } = useContext(Context);
   const [showAddPoll, setShowAddPoll] = useState(false);
   const [showBrowsePolls, setShowBrowsePolls] = useState(false);
   const [invoiceData, setInvoicedata] = useState(false);
@@ -2339,9 +2487,9 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             {metadata.metadata.text_color && (
               <div
                 className="round-icon-small"
-                onClick={() => handleMetadata("text_color", "")}
+                onClick={() => handleMetadata("text_color", "#ee7700")}
               >
-                <div className="trash"></div>
+                <div className="switch-arrows"></div>
               </div>
             )}
           </div>
@@ -2662,9 +2810,11 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
               {metadata.metadata.content_text_color && (
                 <div
                   className="round-icon-small"
-                  onClick={() => handleMetadata("content_text_color", "")}
+                  onClick={() =>
+                    handleMetadata("content_text_color", "#ffffff")
+                  }
                 >
-                  <div className="trash"></div>
+                  <div className="switch-arrows"></div>
                 </div>
               )}
             </div>
@@ -2705,9 +2855,14 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
               {metadata.metadata.options_text_color && (
                 <div
                   className="round-icon-small"
-                  onClick={() => handleMetadata("options_text_color", "")}
+                  onClick={() =>
+                    handleMetadata(
+                      "options_text_color",
+                      isDarkMode === "0" ? "#ffffff" : "#1C1B1F"
+                    )
+                  }
                 >
-                  <div className="trash"></div>
+                  <div className="switch-arrows"></div>
                 </div>
               )}
             </div>
@@ -2748,9 +2903,14 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
               {metadata.metadata.options_background_color && (
                 <div
                   className="round-icon-small"
-                  onClick={() => handleMetadata("options_background_color", "")}
+                  onClick={() =>
+                    handleMetadata(
+                      "options_background_color",
+                      isDarkMode === "0" ? "#2f2f2f" : "#e5e5e5"
+                    )
+                  }
                 >
-                  <div className="trash"></div>
+                  <div className="switch-arrows"></div>
                 </div>
               )}
             </div>
@@ -2791,9 +2951,11 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
               {metadata.metadata.options_foreground_color && (
                 <div
                   className="round-icon-small"
-                  onClick={() => handleMetadata("options_foreground_color", "")}
+                  onClick={() =>
+                    handleMetadata("options_foreground_color", "#ee7700")
+                  }
                 >
-                  <div className="trash"></div>
+                  <div className="switch-arrows"></div>
                 </div>
               )}
             </div>

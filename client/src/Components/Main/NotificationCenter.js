@@ -1,11 +1,5 @@
 import { SimplePool, nip19 } from "nostr-tools";
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Context } from "../../Context/Context";
 import {
   filterRelays,
@@ -180,7 +174,7 @@ export default function NotificationCenter({ icon = false }) {
       if (subInstance) {
         subInstance.close();
       }
-      setNotifications([])
+      setNotifications([]);
       fetchData();
     }
   }, [nostrKeys, userFollowings]);
@@ -246,7 +240,7 @@ export default function NotificationCenter({ icon = false }) {
               style={{
                 backgroundColor: "transparent",
                 zIndex: 100,
-                top: 'unset'
+                top: "unset",
                 // backgroundColor: "var(--very-dim-gray)",
               }}
             >
@@ -656,10 +650,7 @@ const Notification = ({ event, allEvents, filterByType = false }) => {
                     </Link>
                   )}
                   {type.type === "arts" && (
-                    <Link
-                      target="_blank"
-                      to={`/articles/${relatedEvent.naddr}`}
-                    >
+                    <Link target="_blank" to={`/article/${relatedEvent.naddr}`}>
                       <div className="share-icon"></div>
                     </Link>
                   )}
