@@ -195,12 +195,19 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated Aug 16, 2024
+                  Last updated Aug 30, 2024
                 </p>
               </div>
-              <p className="orange-c p-medium">v3.123.0</p>
+              <p className="orange-c p-medium">v3.124.0</p>
             </div>
             <p>{`
+- The ability to have and manage multiple users.
+- Smart widget sharing.
+- Smart widget editor optimization.
+- Optimizing overall performance.
+- Bug fix.
+`}</p>
+            {/* <p>{`
 - Smart widgets are here! Our new feature.
 - Our new bunny on the right side to notify you about new updates.
 - Notes now appear first in order in the home page.
@@ -210,7 +217,7 @@ const Banner = ({ exit }) => {
 - Minor design changes and scaling.
 - Optimizing singin/signup performance
 - Bug fix.
-`}</p>
+`}</p> */}
             <div className="fit-container fx-centered box-pad-v">
               <p className="orange-c p-medium">
                 {" "}
