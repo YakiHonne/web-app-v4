@@ -7,8 +7,8 @@ import {
   getEmptyNostrUser,
   getParsed3000xContent,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import LoadingDots from "../../Components/LoadingDots";
+import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import LoadingDots from "../LoadingDots";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 const pool = new SimplePool();
 

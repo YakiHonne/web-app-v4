@@ -10,9 +10,9 @@ import {
 } from "nostr-tools";
 import { bytesTohex, filterRelays } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
-import LoadingDots from "../../Components/LoadingDots";
-import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
-import UserSearchBar from "../../Components/UserSearchBar";
+import LoadingDots from "../LoadingDots";
+import NProfilePreviewer from "./NProfilePreviewer";
+import UserSearchBar from "../UserSearchBar";
 import axiosInstance from "../../Helpers/HTTP_Client";
 
 export default function InitiConvo({ exit, receiver = false }) {

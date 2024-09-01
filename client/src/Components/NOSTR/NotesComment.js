@@ -11,10 +11,10 @@ import {
   getEmptyNostrUser,
   getZapper,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import ShowUsersList from "../../Components/NOSTR/ShowUsersList";
+import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import ShowUsersList from "./ShowUsersList";
 import { getNoteTree } from "../../Helpers/Helpers";
-import Date_ from "../../Components/Date_";
+import Date_ from "../Date_";
 import { useNavigate } from "react-router-dom";
 import LoadingDots from "../LoadingDots";
 import QuoteNote from "./QuoteNote";

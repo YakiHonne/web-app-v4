@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../../Context/Context";
 import { getEmptyNostrUser } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/NOSTR/UserProfilePicNOSTR";
-import KindOne from "../../Components/NOSTR/KindOne";
+import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import KindOne from "./KindOne";
 
 export default function KindSix({ event }) {
   const { nostrAuthors, getNostrAuthor } = useContext(Context);
