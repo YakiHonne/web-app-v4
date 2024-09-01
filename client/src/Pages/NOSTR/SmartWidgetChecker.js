@@ -6,11 +6,12 @@ import LoadingDots from "../../Components/LoadingDots";
 import { useLocation } from "react-router-dom";
 import { nip19, SimplePool } from "nostr-tools";
 import { Context } from "../../Context/Context";
-import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
+import { filterRelays, getEmptyNostrUser, getParsed3000xContent } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
 import PreviewWidget from "../../Components/SmartWidget/PreviewWidget";
 import Date_ from "../../Components/Date_";
 import { validateWidgetValues } from "../../Helpers/Helpers";
+import WidgetCard from "../../Components/NOSTR/WidgetCard";
 const pool = new SimplePool();
 const getNaddrParam = (location) => {
   let naddr = new URLSearchParams(location.search).get("naddr");
@@ -98,7 +99,7 @@ export default function SmartWidgetChecker() {
         "url",
         "background_color",
         "type",
-        "pubkey"
+        "pubkey",
       ].includes(key);
       let checkValue = validateWidgetValues(
         value,
@@ -240,7 +241,6 @@ export default function SmartWidgetChecker() {
           {
             async onevent(event) {
               try {
-                
                 if (event.created_at > event_created_at) {
                   event_created_at = event.created_at;
                   let metadata = JSON.parse(event.content);
@@ -249,6 +249,7 @@ export default function SmartWidgetChecker() {
                     ...parsedContent,
                     metadata,
                     metadataElements: Object.entries(metadata),
+                    author: getEmptyNostrUser(event.pubkey),
                     ...event,
                   });
                   setComponentTree(
@@ -411,10 +412,11 @@ export default function SmartWidgetChecker() {
                     </div>
                     {!widget && <PagePlaceholder page={"widgets"} />}
                     {widget && (
-                      <PreviewWidget
-                        widget={widget.metadata}
-                        pubkey={widget.pubkey}
-                      />
+                      <WidgetCard widget={widget} deleteWidget={null} />
+                      // <PreviewWidget
+                      //   widget={widget.metadata}
+                      //   pubkey={widget.pubkey}
+                      // />
                     )}
                   </div>
                   <div

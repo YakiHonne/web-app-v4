@@ -24,7 +24,7 @@ export default function DtoLToggleButton({ isMobile = false, small = false }) {
   const { r, transform, cx, cy, opacity } = useMemo(() => {
     return isDarkMode === "1" ? properties["moon"] : properties["sun"];
   }, [isDarkMode]);
-
+console.log(isDarkMode)
   const svgContainerProps = useSpring({
     transform,
     config: properties.springConfig,

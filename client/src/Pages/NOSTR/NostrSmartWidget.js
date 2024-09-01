@@ -10,7 +10,12 @@ import UploadFile from "../../Components/UploadFile";
 import ZapPollsComp from "../../Components/SmartWidget/ZapPollsComp";
 import AddPoll from "../../Components/NOSTR/AddPoll";
 import relaysOnPlatform from "../../Content/Relays";
-import { decodeBolt11, filterRelays } from "../../Helpers/Encryptions";
+import {
+  decodeBolt11,
+  filterRelays,
+  getEmptyNostrUser,
+  getParsed3000xContent,
+} from "../../Helpers/Encryptions";
 import BrowsePolls from "../../Components/NOSTR/BrowsePolls";
 import widget from "../../media/JSONs/widgets.json";
 import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
@@ -27,6 +32,7 @@ import Date_ from "../../Components/Date_";
 import OptionsDropdown from "../../Components/NOSTR/OptionsDropdown";
 import UserSearchBar from "../../Components/UserSearchBar";
 import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
+import PostNoteWithWidget from "../../Components/NOSTR/PostNoteWithWidget";
 
 const pool = new SimplePool();
 
@@ -206,6 +212,7 @@ export default function NostrSmartWidget() {
   );
 
   useEffect(() => {
+    console.log(isDarkMode, containerBackgroundColor);
     if (isDarkMode === "1" && containerBackgroundColor === "#252429") {
       setContainerBackgroundColor("#F7F7F7");
     }
@@ -452,6 +459,8 @@ const SmartWidgetBuilder = ({
     localStorage.getItem("sw-current-workspace")
   );
   const [mbHide, setMbHide] = useState(true);
+  const [widgetToPostInNote, setWidgetToPostInNote] = useState(false);
+
   const checkContent = () => {
     return !(
       componentsTree.length === 1 &&
@@ -980,15 +989,28 @@ const SmartWidgetBuilder = ({
       relaysToPublish,
       [{ kinds: [30031], ids: [tempEvent.id] }],
       {
-        onevent() {
-          setToast({
-            type: 1,
-            desc: "The smart widget was posted successfully",
+        onevent(event) {
+          // setToast({
+          //   type: 1,
+          //   desc: "The smart widget was posted successfully",
+          // });
+          let metadata = JSON.parse(event.content);
+          let parsedContent = getParsed3000xContent(event.tags);
+          setWidgetToPostInNote({
+            ...parsedContent,
+            metadata,
+            ...event,
+            author: getEmptyNostrUser(event.pubkey),
+            naddr: nip19.naddrEncode({
+              pubkey: event.pubkey,
+              identifier: parsedContent.d,
+              kind: event.kind,
+            }),
           });
           setShowFinalStep(false);
           sub.close();
           deleteDraft();
-          navigateTo("/smart-widgets");
+          // navigateTo("/smart-widgets");
         },
       }
     );
@@ -1032,10 +1054,17 @@ const SmartWidgetBuilder = ({
           isMonoLayout={checkMonoLayer()}
         />
       )}
+      {widgetToPostInNote && (
+        <PostNoteWithWidget
+          widget={widgetToPostInNote}
+          onlyNext={false}
+          exit={() => navigateTo("/smart-widgets")}
+        />
+      )}
       <div className="fit-container fx-centered fx-start-h fx-start-v">
         <div
           style={{ width: "min(100%,800px)", flex: 1.5 }}
-          className={` ${!mbHide ? "mb-hide-800" : ""}`}
+          className={`${!mbHide ? "mb-hide-800" : ""}`}
         >
           <div className="fit-container fx-scattered box-marg-s sticky">
             <div className="fx-centered">
@@ -2487,7 +2516,12 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             {metadata.metadata.text_color && (
               <div
                 className="round-icon-small"
-                onClick={() => handleMetadata("text_color", isDarkMode === "0" ?  "#ffffff" : "#1C1B1F")}
+                onClick={() =>
+                  handleMetadata(
+                    "text_color",
+                    isDarkMode === "0" ? "#ffffff" : "#1C1B1F"
+                  )
+                }
               >
                 <div className="switch-arrows"></div>
               </div>
