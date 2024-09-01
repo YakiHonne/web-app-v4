@@ -11,10 +11,12 @@ import BrowseSmartWidgets from "./BrowseSmartWidgets";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 import MentionSuggestions from "./MentionSuggestions";
 import { nip19 } from "nostr-tools";
+import { useNavigate } from "react-router-dom";
 
-export default function WriteNote() {
+export default function WriteNote({ widget }) {
   const { nostrKeys, nostrUser, isPublishing, setToPublish, setToast } =
     useContext(Context);
+    const navigateTo = useNavigate()
   const [note, setNote] = useState("");
   const [tag, setTag] = useState("");
   const [mention, setMention] = useState("");
@@ -31,13 +33,22 @@ export default function WriteNote() {
   }, [note]);
 
   useEffect(() => {
-    if (!isPublishing) {
+    if (!isPublishing && note) {
       setNote("");
       setTag("");
+      setImgsSet([]);
+      setWidgetsSet([]);
       setShowTagsSuggestions(false);
       setShowMentionSuggestions(false);
+      navigateTo("/notes")
     }
   }, [isPublishing]);
+
+  useEffect(() => {
+    if (widget) {
+      handleAddWidget(widget);
+    }
+  }, []);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -145,8 +156,7 @@ export default function WriteNote() {
         tags,
         allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
       });
-      setImgsSet([]);
-      setWidgetsSet([]);
+     
     } catch (err) {
       console.log(err);
       setToast({
@@ -163,8 +173,14 @@ export default function WriteNote() {
   };
 
   const handleAddWidget = (data) => {
-    if (note) setNote(note + " " + `https://yakihonne.com/smart-widget-checker?naddr=${data.naddr}`);
-    if (!note) setNote(`https://yakihonne.com/smart-widget-checker?naddr=${data.naddr}`);
+    if (note)
+      setNote(
+        note +
+          " " +
+          `https://yakihonne.com/smart-widget-checker?naddr=${data.naddr}`
+      );
+    if (!note)
+      setNote(`https://yakihonne.com/smart-widget-checker?naddr=${data.naddr}`);
     setWidgetsSet((prev) => [...prev, data]);
     setShowSmartWidgets(false);
   };
@@ -178,7 +194,12 @@ export default function WriteNote() {
 
   const removeWidget = (index) => {
     let tempWidgetSet = Array.from(widgetsSet);
-    setNote(note.replace(`https://yakihonne.com/smart-widget-checker?naddr=${tempWidgetSet[index].naddr}`, ""));
+    setNote(
+      note.replace(
+        `https://yakihonne.com/smart-widget-checker?naddr=${tempWidgetSet[index].naddr}`,
+        ""
+      )
+    );
     tempWidgetSet.splice(index, 1);
     setWidgetsSet(tempWidgetSet);
   };
@@ -225,6 +246,7 @@ export default function WriteNote() {
               placeholder="What's on your mind?"
               ref={textareaRef}
               onChange={handleChange}
+              autoFocus
             />
             {showHashSuggestions && (
               <HashSuggestions tag={tag} setSelectedTag={handleSelectingTags} />

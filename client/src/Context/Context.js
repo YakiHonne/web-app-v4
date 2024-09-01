@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../Content/Relays";
 import {
@@ -28,6 +28,7 @@ const toggleColorScheme = (theme) => {
         const newMediaText = !theme
           ? "(prefers-color-scheme: dark)"
           : "(prefers-color-scheme: light)";
+          console.log(newMediaText)
         rule.media.mediaText = newMediaText;
       }
     }
@@ -116,6 +117,7 @@ const ContextProvider = ({ children }) => {
   const [updatedActionFromYakiChest, setUpdatedActionFromYakiChest] =
     useState(false);
   const [balance, setBalance] = useState("N/A");
+  const isDarkModeRef = useRef(isDarkMode);
 
   useEffect(() => {
     let getKeys = () => {
@@ -294,6 +296,57 @@ const ContextProvider = ({ children }) => {
     if (nostrKeys && !isConnectedToYaki) setIsYakiChestLoaded(true);
   }, [nostrKeys, isConnectedToYaki]);
 
+  // useEffect(() => {
+  //   const darkModeMediaQuery = window.matchMedia(
+  //     "(prefers-color-scheme: dark)"
+  //   );
+
+  //   function handleThemeChange(event) {
+  //     console.log(isDarkModeRef)
+  //     if (!event.matches && isDarkModeRef?.current === "0") {
+  //       console.log("light")
+  //       localStorage.setItem("yaki-theme", "1");
+  //       // toggleColorScheme(true);
+  //       setIsDarkMode("1");
+  //     }
+  //     if (event.matches && isDarkModeRef?.current === "1") {
+  //       console.log("dark")
+  //       localStorage.setItem("yaki-theme", "0");
+  //       // toggleColorScheme(false);
+  //       setIsDarkMode("0");
+  //     }
+  //     // if (event.matches) {
+  //     //   if (isDarkModeRef.current === "0") {
+  //     //     console.log(event)
+  //     //     console.log("Dark mode is now enabled", isDarkModeRef.current);
+  //     //     localStorage.setItem("yaki-theme", "1");
+  //     //     toggleColorScheme(false);
+  //     //     setIsDarkMode("1");
+  //     //   }
+  //     // } else {
+  //     //   if (isDarkModeRef.current === "1") {
+  //     //    console.log(event)
+  //     //     console.log("Light mode is now enabled", isDarkModeRef.current);
+  //     //     localStorage.setItem("yaki-theme", "0");
+  //     //     toggleColorScheme(true);
+  //     //     setIsDarkMode("0");
+  //     //   }
+  //     // }
+  //   }
+
+  //   // Initial check
+  //   // handleThemeChange(darkModeMediaQuery);
+
+  //   // Listen for changes
+  //   darkModeMediaQuery.addEventListener("change", handleThemeChange);
+  // }, []);
+
+  useEffect(() => {
+    // Update the ref when the state changes
+    isDarkModeRef.current = isDarkMode;
+  }, [isDarkMode]);
+
+
   const handleDM = (inbox, authors, oldAggregated) => {
     addNostrAuthors(authors);
     let sortedInbox = aggregateUsers(inbox, oldAggregated, nostrKeys.pub);
@@ -441,7 +494,7 @@ const ContextProvider = ({ children }) => {
   const setNostrKeysData = (data) => {
     if (data) {
       localStorage.setItem("_nostruserkeys", JSON.stringify(data));
-      setInitDMS(true)
+      setInitDMS(true);
       if (chatrooms.length > 0) {
         setChatrooms([]);
         cacheDBInit(data);
@@ -984,7 +1037,7 @@ const ContextProvider = ({ children }) => {
         logoutAllAccounts,
         userLogout,
         userRelays,
-        setUserRelays
+        setUserRelays,
       }}
     >
       {children}

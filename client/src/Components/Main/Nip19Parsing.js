@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import {
   filterRelays,
   getBech32,
+  getEmptyNostrUser,
   getHex,
   getParsed3000xContent,
 } from "../../Helpers/Encryptions";
@@ -14,10 +15,11 @@ import KindOne from "./KindOne";
 import LoadingDots from "../LoadingDots";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
+import WidgetCard from "./WidgetCard";
 const pool = new SimplePool();
 
 export default function Nip19Parsing({ addr, minimal = false }) {
-  const { nostrUser } = useContext(Context);
+  const { nostrUser, addNostrAuthors } = useContext(Context);
   const [event, setEvent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [url, setUrl] = useState("/");
@@ -100,7 +102,13 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         if (event.kind === 30031) {
           let metadata = JSON.parse(event.content);
           let parsedContent = getParsed3000xContent(event.tags);
-          setEvent({ ...parsedContent, metadata, ...event });
+          setEvent({
+            ...parsedContent,
+            metadata,
+            ...event,
+            author: getEmptyNostrUser(event.pubkey),
+          });
+          addNostrAuthors([event.pubkey]);
           setIsLoading(false);
         }
         if ([30004, 30005, 30023, 34235].includes(event.kind)) {
@@ -231,7 +239,10 @@ export default function Nip19Parsing({ addr, minimal = false }) {
   if (event.kind === 30031)
     return (
       <div className="fit-container box-pad-v-s">
-        {!minimal && <PreviewWidget widget={event.metadata} pubkey={event.pubkey} />}
+        {!minimal && (
+          <WidgetCard widget={event} deleteWidget={null} options={false} />
+          // <PreviewWidget widget={event.metadata} pubkey={event.pubkey} />
+        )}
         {minimal && <MinimalPreviewWidget widget={event} />}
       </div>
     );

@@ -163,11 +163,11 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
-            navigateTo("/notes");
+            navigateTo("/smart-widgets");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
-            isPage("/smart-widget") ? "active-link" : "inactive-link"
+            isPage("/smart-widgets") ? "active-link" : "inactive-link"
           }`}
         >
           <div className="smart-widget-24"></div>

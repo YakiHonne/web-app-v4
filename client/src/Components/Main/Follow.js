@@ -39,10 +39,7 @@ export default function Follow({
   useEffect(() => {
     setTags(
       userFollowings
-        ? [
-            ...userFollowings,
-            ...bulkList.map((item) => item.pubkey),
-          ]
+        ? [...userFollowings, ...bulkList.map((item) => item.pubkey)]
         : [...bulkList.map((item) => item.pubkey)]
     );
   }, [userFollowings, toFollowKey, bulkList]);
@@ -74,18 +71,13 @@ export default function Follow({
         let index = tempTags.findIndex((item) => item[1] === toFollowKey);
         tempTags.splice(index, 1);
       } else {
-        tempTags.push([
-          "p",
-          toFollowKey,
-          relaysOnPlatform[0],
-          toFollowName || "yakihonne-user",
-        ]);
+        tempTags.push(toFollowKey);
       }
       setToPublish({
         nostrKeys: nostrKeys,
         kind: 3,
         content: "",
-        tags: tempTags,
+        tags: tempTags.map((p) => ["p", p]),
         allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
       });
       setTags(tempTags);
@@ -160,7 +152,9 @@ export default function Follow({
         disabled={isLoading}
         data-tooltip={
           isFollowing.bulk
-            ? `${isFollowing.status ? "Pending to follow" : "Pending to unfollow"}`
+            ? `${
+                isFollowing.status ? "Pending to follow" : "Pending to unfollow"
+              }`
             : `${isFollowing.status ? "Unfollow" : "Follow"}`
         }
         onClick={handleBulkList}

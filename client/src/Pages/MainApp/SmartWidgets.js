@@ -20,6 +20,7 @@ import Footer from "../../Components/Footer";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import ToDeleteGeneral from "../../Components/Main/ToDeleteGeneral";
 import ShareLink from "../../Components/ShareLink";
+import WidgetCard from "../../Components/NOSTR/WidgetCard";
 const pool = new SimplePool();
 
 export default function SmartWidgets() {
@@ -370,142 +371,116 @@ export default function SmartWidgets() {
   );
 }
 
-const WidgetCard = ({ widget, deleteWidget }) => {
-  const { nostrAuthors, getNostrAuthor, nostrKeys, setToast } =
-    useContext(Context);
-  const [authorData, setAuthorData] = useState(widget.author);
+// const WidgetCard = ({ widget, deleteWidget }) => {
+//   const { nostrAuthors, getNostrAuthor, nostrKeys, setToast } =
+//     useContext(Context);
+//   const [authorData, setAuthorData] = useState(widget.author);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let auth = getNostrAuthor(widget.author.pubkey);
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         let auth = getNostrAuthor(widget.author.pubkey);
 
-        if (auth) {
-          setAuthorData(auth);
-        }
-        return;
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchData();
-  }, [nostrAuthors]);
+//         if (auth) {
+//           setAuthorData(auth);
+//         }
+//         return;
+//       } catch (err) {
+//         console.log(err);
+//       }
+//     };
+//     fetchData();
+//   }, [nostrAuthors]);
 
-  const copyNaddr = () => {
-    let naddr = nip19.naddrEncode({
-      pubkey: widget.pubkey,
-      identifier: widget.d,
-      kind: widget.kind,
-    });
-    navigator?.clipboard?.writeText(naddr);
-    setToast({
-      type: 1,
-      desc: `Naddr was copied! 👏`,
-    });
-  };
+//   const copyNaddr = () => {
+//     let naddr = nip19.naddrEncode({
+//       pubkey: widget.pubkey,
+//       identifier: widget.d,
+//       kind: widget.kind,
+//     });
+//     navigator?.clipboard?.writeText(naddr);
+//     setToast({
+//       type: 1,
+//       desc: `Naddr was copied! 👏`,
+//     });
+//   };
 
-  return (
-    <div
-      className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fit-container fx-start-h fx-start-v"
-      style={{ overflow: "visible" }}
-    >
-      <div className="fit-container fx-scattered">
-        <AuthorPreview author={authorData} />
-        <OptionsDropdown
-          options={[
-            <div className="fit-container" onClick={copyNaddr}>
-              <p>Copy naddr</p>
-            </div>,
-            <Link
-              className="fit-container"
-              to={"/smart-widget-builder"}
-              state={{ ops: "clone", metadata: { ...widget } }}
-            >
-              <p>Clone</p>
-            </Link>,
+//   return (
+//     <div
+//       className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fit-container fx-start-h fx-start-v"
+//       style={{ overflow: "visible" }}
+//     >
+//       <div className="fit-container fx-scattered">
+//         <AuthorPreview author={authorData} />
+//         <OptionsDropdown
+//           options={[
+//             <div className="fit-container" onClick={copyNaddr}>
+//               <p>Copy naddr</p>
+//             </div>,
+//             <Link
+//               className="fit-container"
+//               to={"/smart-widget-builder"}
+//               state={{ ops: "clone", metadata: { ...widget } }}
+//             >
+//               <p>Clone</p>
+//             </Link>,
 
-            <Link
-              className="fit-container"
-              to={`/smart-widget-checker?naddr=${nip19.naddrEncode({
-                pubkey: widget.pubkey,
-                identifier: widget.d,
-                kind: widget.kind,
-              })}`}
-            >
-              <p>Check validity</p>
-            </Link>,
-            nostrKeys.pub === widget.pubkey && (
-              <Link
-                className="fit-container"
-                to={"/smart-widget-builder"}
-                state={{ ops: "edit", metadata: { ...widget } }}
-              >
-                <p>Edit</p>
-              </Link>
-            ),
-            nostrKeys.pub === widget.pubkey && (
-              <div className="fit-container" onClick={deleteWidget}>
-                <p className="red-c">Delete</p>
-              </div>
-            ),
-            <ShareLink
-              label="Share widget"
-              path={`/${nip19.naddrEncode({
-                pubkey: widget.pubkey,
-                identifier: widget.d,
-                kind: widget.kind,
-              })}`}
-              title={widget.title || widget.description}
-              description={widget.description || widget.title}
-            />,
-          ]}
-        />
-        {/* <div className="fx-centered">
-          <div
-            className="round-icon-small round-icon-tooltip"
-            data-tooltip="Copy naddr"
-            onClick={copyNaddr}
-          >
-            <div className="copy"></div>
-          </div>
-          <Link
-            className="round-icon-small round-icon-tooltip"
-            data-tooltip="Clone widget"
-            to={"/smart-widget-builder"}
-            state={{ ops: "clone", metadata: { ...widget } }}
-          >
-            <div className="clone"></div>
-          </Link>
-          {nostrKeys.pub === widget.pubkey && (
-            <Link
-              className="round-icon-small round-icon-tooltip"
-              data-tooltip="Edit widget"
-              to={"/smart-widget-builder"}
-              state={{ ops: "edit", metadata: { ...widget } }}
-            >
-              <div className="edit"></div>
-            </Link>
-          )}
-        </div> */}
-      </div>
-      <PreviewWidget widget={widget.metadata} pubkey={widget.pubkey} />
-      {(widget.title || widget.description) && (
-        <div
-          className="fx-centered fx-col fx-start-h fx-start-v fit-container "
-          style={{ rowGap: 0 }}
-        >
-          <p>{widget.title || "Untitled"}</p>
-          {widget.description && (
-            <p className="gray-c p-medium">{widget.description}</p>
-          )}
-          {!widget.description && (
-            <p className="gray-c p-italic p-medium">No description</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+//             <Link
+//               className="fit-container"
+//               to={`/smart-widget-checker?naddr=${nip19.naddrEncode({
+//                 pubkey: widget.pubkey,
+//                 identifier: widget.d,
+//                 kind: widget.kind,
+//               })}`}
+//             >
+//               <p>Check validity</p>
+//             </Link>,
+//             nostrKeys.pub === widget.pubkey && (
+//               <Link
+//                 className="fit-container"
+//                 to={"/smart-widget-builder"}
+//                 state={{ ops: "edit", metadata: { ...widget } }}
+//               >
+//                 <p>Edit</p>
+//               </Link>
+//             ),
+//             nostrKeys.pub === widget.pubkey && (
+//               <div className="fit-container" onClick={deleteWidget}>
+//                 <p className="red-c">Delete</p>
+//               </div>
+//             ),
+//             <ShareLink
+//               label="Share widget"
+//               path={`/${nip19.naddrEncode({
+//                 pubkey: widget.pubkey,
+//                 identifier: widget.d,
+//                 kind: widget.kind,
+//               })}`}
+//               title={widget.title || widget.description}
+//               description={widget.description || widget.title}
+//             />,
+//           ]}
+//         />
+      
+//       </div>
+//       <PreviewWidget widget={widget.metadata} pubkey={widget.pubkey} />
+//       {(widget.title || widget.description) && (
+//         <div
+//           className="fx-centered fx-col fx-start-h fx-start-v fit-container "
+//           style={{ rowGap: 0 }}
+//         >
+//           <p>{widget.title || "Untitled"}</p>
+//           {widget.description && (
+//             <p className="gray-c p-medium">{widget.description}</p>
+//           )}
+//           {!widget.description && (
+//             <p className="gray-c p-italic p-medium">No description</p>
+//           )}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
 
 const NoteCard = ({ note }) => {
   const { nostrAuthors, getNostrAuthor } = useContext(Context);

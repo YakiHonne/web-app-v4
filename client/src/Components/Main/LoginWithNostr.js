@@ -476,7 +476,7 @@ const Login = ({ switchScreen, exit }) => {
   const onLoginWithExt = async () => {
     try {
       setIsLoading(true);
-      await window.nostr?.enable();
+      // await window.nostr?.enable();
       let key = await window.nostr.getPublicKey();
       let user = await getUserFromNOSTR(key);
       if (user) {

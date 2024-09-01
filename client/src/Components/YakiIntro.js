@@ -205,7 +205,8 @@ const Banner = ({ exit }) => {
 - Smart widget sharing.
 - Smart widget editor optimization.
 - Optimizing overall performance.
-- Bug fix.
+- Addressing the issue where users can not login using nos2x extension in Chrome and Brave browsers.
+- General bug fix.
 `}</p>
             {/* <p>{`
 - Smart widgets are here! Our new feature.
