@@ -19,20 +19,20 @@ const DMs_pool = new SimplePool();
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 const toggleColorScheme = (theme) => {
-  // const stylesheets = document.styleSheets;
-  // for (const sheet of stylesheets) {
-  //   const rules = sheet.cssRules || sheet.rules;
+  const stylesheets = document.styleSheets;
+  for (const sheet of stylesheets) {
+    const rules = sheet.cssRules || sheet.rules;
 
-  //   for (const rule of rules) {
-  //     if (rule.media && rule.media.mediaText.includes("prefers-color-scheme")) {
-  //       const newMediaText = !theme
-  //         ? "(prefers-color-scheme: dark)"
-  //         : "(prefers-color-scheme: light)";
-  //         console.log(newMediaText)
-  //       rule.media.mediaText = newMediaText;
-  //     }
-  //   }
-  // }
+    for (const rule of rules) {
+      if (rule.media && rule.media.mediaText.includes("prefers-color-scheme")) {
+        const newMediaText = !theme
+          ? "(prefers-color-scheme: dark)"
+          : "(prefers-color-scheme: light)";
+          console.log(newMediaText)
+        rule.media.mediaText = newMediaText;
+      }
+    }
+  }
 };
 
 const aggregateUsers = (convo, oldAggregated = [], connectedAccountPubkey) => {
