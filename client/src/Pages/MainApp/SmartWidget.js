@@ -16,7 +16,7 @@ import {
   getEmptyNostrUser,
   getParsed3000xContent,
 } from "../../Helpers/Encryptions";
-import BrowsePolls from "../../Components/NOSTR/BrowsePolls";
+import BrowsePolls from "../../Components/Main/BrowsePolls";
 import widget from "../../media/JSONs/widgets.json";
 import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
 import VideoComp from "../../Components/SmartWidget/VideoComp";
@@ -31,8 +31,8 @@ import Select from "../../Components/Main/Select";
 import Date_ from "../../Components/Date_";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import UserSearchBar from "../../Components/UserSearchBar";
-import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
-import PostNoteWithWidget from "../../Components/NOSTR/PostNoteWithWidget";
+import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
+import PostNoteWithWidget from "../../Components/Main/PostNoteWithWidget";
 
 const pool = new SimplePool();
 

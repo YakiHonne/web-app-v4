@@ -11,7 +11,7 @@ import relaysOnPlatform from "../../Content/Relays";
 import PreviewWidget from "../../Components/SmartWidget/PreviewWidget";
 import Date_ from "../../Components/Date_";
 import { validateWidgetValues } from "../../Helpers/Helpers";
-import WidgetCard from "../../Components/NOSTR/WidgetCard";
+import WidgetCard from "../../Components/Main/WidgetCard";
 const pool = new SimplePool();
 const getNaddrParam = (location) => {
   let naddr = new URLSearchParams(location.search).get("naddr");

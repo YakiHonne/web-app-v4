@@ -10,8 +10,10 @@ import {
   unwrapGiftWrap,
 } from "../Helpers/Encryptions";
 import axios from "axios";
-import { getCurrentLevel, levelCount } from "../Helpers/Helpers";
+import { getCurrentLevel, getKeys, levelCount } from "../Helpers/Helpers";
 import axiosInstance from "../Helpers/HTTP_Client";
+import NDK from "@nostr-dev-kit/ndk";
+
 const Context = React.createContext();
 
 const pool = new SimplePool();
@@ -28,14 +30,14 @@ const toggleColorScheme = (theme) => {
         const newMediaText = !theme
           ? "(prefers-color-scheme: dark)"
           : "(prefers-color-scheme: light)";
-          console.log(newMediaText)
+        console.log(newMediaText);
         rule.media.mediaText = newMediaText;
       }
     }
   }
 };
 
-const aggregateUsers = (convo, oldAggregated = [], connectedAccountPubkey) => {
+const aggregateUsers = (convo, oldAggregated = []) => {
   const arr2 = [];
   const map =
     oldAggregated.length > 0
@@ -89,7 +91,6 @@ const ContextProvider = ({ children }) => {
   const [tempUserMeta, setTempUserMeta] = useState(false);
   const [userRelays, setUserRelays] = useState([]);
   const [nostrUserAbout, setNostrUserAbout] = useState(false);
-  const [nostrUserTags, setNostrUserTags] = useState([]);
   const [nostrUserLoaded, setNostrUserLoaded] = useState(false);
   const [initDMS, setInitDMS] = useState(false);
   const [nostrUserTopics, setNostrUserTopics] = useState([]);
@@ -111,6 +112,7 @@ const ContextProvider = ({ children }) => {
   const [isConnectedToYaki, setIsConnectedToYaki] = useState(
     localStorage.getItem("connect_yc") ? true : false
   );
+  const [NDKInstance, setNDKInstance] = useState(null);
   const [yakiChestStats, setYakiChestStats] = useState(false);
   const [isYakiChestLoaded, setIsYakiChestLoaded] = useState(false);
   const [dmsSub, setDmSub] = useState(null);
@@ -120,15 +122,6 @@ const ContextProvider = ({ children }) => {
   const isDarkModeRef = useRef(isDarkMode);
 
   useEffect(() => {
-    let getKeys = () => {
-      try {
-        let keys = localStorage.getItem("_nostruserkeys");
-        keys = JSON.parse(keys);
-        return keys;
-      } catch (err) {
-        return false;
-      }
-    };
     let keys = getKeys();
     let fetchData = async (keys) => {
       getNostrClients();
@@ -150,6 +143,27 @@ const ContextProvider = ({ children }) => {
       cacheDBInit(keys);
     }
   }, []);
+
+  // useEffect(() => {
+  //   ConnectNDK(userRelays || relaysOnPlatform);
+  // }, [userRelays]);
+
+  // const ConnectNDK = async (relays) => {
+  //   try {
+  //     const ndk = new NDK({
+  //       explicitRelayUrls: relays,
+  //     });
+  //     await ndk.connect();
+  //     let sub = ndk.subscribe([{ kinds: [1], limit: 40 }]);
+
+  //     sub.on("event", (event) => {
+  //       console.log(event);
+  //     });
+  //     setNDKInstance(ndk);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   useEffect(() => {
     let sub = null;
@@ -342,10 +356,8 @@ const ContextProvider = ({ children }) => {
   // }, []);
 
   useEffect(() => {
-    // Update the ref when the state changes
     isDarkModeRef.current = isDarkMode;
   }, [isDarkMode]);
-
 
   const handleDM = (inbox, authors, oldAggregated) => {
     addNostrAuthors(authors);
@@ -592,6 +604,7 @@ const ContextProvider = ({ children }) => {
       console.log(err);
     }
   };
+
   const userLogout = async () => {
     let accounts = getConnectedAccounts();
     if (accounts.length < 2) {
@@ -607,7 +620,6 @@ const ContextProvider = ({ children }) => {
       if (accounts.length > 0) handleSwitchAccount(accounts[0]);
     }
   };
-
   const getUserFromNOSTR = (pubkey) => {
     return new Promise((resolve, reject) => {
       try {
@@ -679,35 +691,6 @@ const ContextProvider = ({ children }) => {
             },
             oneose() {
               resolve(topics);
-            },
-          }
-        );
-      } catch (err) {
-        resolve([]);
-      }
-    });
-  };
-
-  const getUserFollowing = (pubkey) => {
-    return new Promise((resolve, reject) => {
-      try {
-        let following = [];
-        const subscription = pool.subscribeMany(
-          relaysOnPlatform,
-          [
-            {
-              kinds: [3],
-              authors: [pubkey],
-            },
-          ],
-          {
-            onevent(event) {
-              const newFollowing = event.tags.filter((tag) => tag[0] === "p");
-              following = [...new Set([...following, ...newFollowing])];
-              resolve(following);
-            },
-            oneose() {
-              resolve([]);
             },
           }
         );
@@ -977,6 +960,7 @@ const ContextProvider = ({ children }) => {
       actions,
     });
   };
+
   return (
     <Context.Provider
       value={{
@@ -987,7 +971,6 @@ const ContextProvider = ({ children }) => {
         setNostrUserAbout,
         tempUserMeta,
         setTempUserMeta,
-        nostrUserTags,
         setNostrUserData,
         setNostrUser,
         nostrUserLoaded,
@@ -1038,6 +1021,7 @@ const ContextProvider = ({ children }) => {
         userLogout,
         userRelays,
         setUserRelays,
+        NDKInstance,
       }}
     >
       {children}

@@ -20,7 +20,7 @@ import Footer from "../../Components/Footer";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import ToDeleteGeneral from "../../Components/Main/ToDeleteGeneral";
 import ShareLink from "../../Components/ShareLink";
-import WidgetCard from "../../Components/NOSTR/WidgetCard";
+import WidgetCard from "../../Components/Main/WidgetCard";
 const pool = new SimplePool();
 
 export default function SmartWidgets() {

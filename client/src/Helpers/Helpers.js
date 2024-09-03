@@ -915,5 +915,6 @@ export {
   validateWidgetValues,
   getWallets,
   updateWallets,
-  getConnectedAccounts
+  getConnectedAccounts,
+  getKeys
 };
