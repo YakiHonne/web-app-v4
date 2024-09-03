@@ -7,10 +7,16 @@ import {
   useLocation,
 } from "react-router-dom";
 import App from "./App";
+import { Provider } from "react-redux";
+import { store } from "./Store/Store";
+import AppInit from "./Context/AppInit";
 
 const root = ReactDOM.createRoot(document.getElementById("main"));
 root.render(
   <Router>
-    <App />
+    <Provider store={store}>
+      <AppInit />
+      {/* <App /> */}
+    </Provider>
   </Router>
 );

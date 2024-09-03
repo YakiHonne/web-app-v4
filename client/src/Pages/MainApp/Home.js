@@ -6,6 +6,7 @@ import React, {
   useState,
   lazy,
 } from "react";
+import { useSelector } from "react-redux";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
@@ -115,6 +116,7 @@ export default function Home() {
     nostrUserTopics,
     mutedList,
   } = useContext(Context);
+  const ndkInstance = useSelector((state) => state.ndkInstance);
   const [posts, setPosts] = useState([]);
   const [flashnews, setFlashnews] = useState([]);
   const [buzzFeed, setBuzzFeed] = useState([]);
