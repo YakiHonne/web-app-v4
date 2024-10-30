@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
-import { Context } from "../../Context/Context";
-import { nip19, SimplePool } from "nostr-tools";
-import { checkForLUDS, filterRelays } from "../../Helpers/Encryptions";
+import React, { useEffect, useState, useRef } from "react";
+import { nip19 } from "nostr-tools";
+import { checkForLUDS } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
 import { getNoteTree, getWallets, updateWallets } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
@@ -18,8 +17,12 @@ import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
 import QRCode from "react-qr-code";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import { webln } from "@getalby/sdk";
-
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
+import { getUser, updateYakiChestStats } from "../../Helpers/Controlers";
+import { setToast } from "../../Store/Slides/Publishers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function ZapPollsComp({
   event,
@@ -30,14 +33,9 @@ export default function ZapPollsComp({
   options_foreground_color,
   edit = false,
 }) {
-  const {
-    nostrUser,
-    nostrKeys,
-    addNostrAuthors,
-    nostrAuthors,
-    getNostrAuthor,
-    setToast,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [poll, setPoll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isVotesLoading, setVotesLoading] = useState(false);
@@ -57,7 +55,7 @@ export default function ZapPollsComp({
     const fetchData = async () => {
       if (callback || !poll) return;
       try {
-        let auth = getNostrAuthor(poll.pubkey);
+        let auth = getUser(poll.pubkey);
         if (auth) {
           let lud = checkForLUDS(auth?.lud06, auth?.lud16);
           setAuthor({ ...auth, lud });
@@ -86,7 +84,7 @@ export default function ZapPollsComp({
           if (tag[0] === "value_minimum") minSats = parseInt(tag[1]) || 0;
           if (tag[0] === "closed_at") closedAt = parseInt(tag[1]) || null;
         }
-        addNostrAuthors([event.pubkey]);
+        saveUsers([event.pubkey]);
         let parsed_content = await getNoteTree(event.content);
         if (closedAt !== null)
           setClosingTime({
@@ -99,7 +97,7 @@ export default function ZapPollsComp({
         setIsLoading(false);
         return;
       }
-      let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
+
       let id;
       try {
         id = nip19.decode(nevent).data.id;
@@ -108,51 +106,52 @@ export default function ZapPollsComp({
         setIsLoading(false);
       }
       if (!id) return;
-      const sub = pool.subscribeMany(
-        relaysToUse,
-        [{ kinds: [6969], ids: [id] }],
-        {
-          async onevent(event) {
-            try {
-              let currentTime = Math.floor(Date.now() / 1000);
-              let options = [];
-              let minSats = null;
-              let maxSats = null;
-              let closedAt = null;
-              for (let tag of event.tags) {
-                if (tag[0] === "poll_option") options.push(tag[2] || "");
-                if (tag[0] === "value_maximum") maxSats = parseInt(tag[1]) || 0;
-                if (tag[0] === "value_minimum") minSats = parseInt(tag[1]) || 0;
-                if (tag[0] === "closed_at") closedAt = parseInt(tag[1]) || null;
-              }
-              let parsed_content = await getNoteTree(event.content);
-              if (closedAt !== null)
-                setClosingTime({
-                  time: closedAt,
-                  status: currentTime > closedAt,
-                });
-              if (minSats !== null) setMinSatsValue(minSats);
-              if (maxSats !== null) setMaxSatsValue(maxSats);
-              addNostrAuthors([event.pubkey]);
-              setPoll({
-                options,
-                content: event.content,
-                parsed_content,
-                ...event,
-              });
-              setIsLoading(false);
-            } catch (err) {
-              console.log(err);
-              setIsLoading(false);
-            }
-          },
-          oneose() {
-            sub.close();
-            pool.close(relaysToUse);
-            setIsLoading(false);
-          },
+      const sub = ndkInstance.subscribe([{ kinds: [6969], ids: [id] }], {
+        closeOnEose: true,
+        cacheUsage: "CACHE_FIRST",
+      });
+
+      sub.on("event", async (event) => {
+        try {
+          let currentTime = Math.floor(Date.now() / 1000);
+          let options = [];
+          let minSats = null;
+          let maxSats = null;
+          let closedAt = null;
+          for (let tag of event.tags) {
+            if (tag[0] === "poll_option") options.push(tag[2] || "");
+            if (tag[0] === "value_maximum") maxSats = parseInt(tag[1]) || 0;
+            if (tag[0] === "value_minimum") minSats = parseInt(tag[1]) || 0;
+            if (tag[0] === "closed_at") closedAt = parseInt(tag[1]) || null;
+          }
+          let parsed_content = await getNoteTree(event.content);
+          if (closedAt !== null)
+            setClosingTime({
+              time: closedAt,
+              status: currentTime > closedAt,
+            });
+          if (minSats !== null) setMinSatsValue(minSats);
+          if (maxSats !== null) setMaxSatsValue(maxSats);
+          saveUsers([event.pubkey]);
+          setPoll({
+            options,
+            content: event.content,
+            parsed_content,
+            ...event,
+          });
+          setIsLoading(false);
+        } catch (err) {
+          console.log(err);
+          setIsLoading(false);
         }
-      );
+      });
+      sub.on("close", () => {
+        setIsLoading(false);
+      });
+      let timeout = setTimeout(() => {
+        sub.stop();
+        clearTimeout(timeout);
+      }, 4000);
     };
     if (!nevent && !event) return;
     getData();
@@ -163,96 +162,83 @@ export default function ZapPollsComp({
       setIsStatsShowing(true);
       setVotesLoading(true);
       if (!poll) return;
-      let pool = new SimplePool();
-      let relaysToPublish = nostrUser
-        ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
-        : relaysOnPlatform;
       let events = [];
       let eose = false;
-      let sub = pool.subscribeMany(
-        relaysToPublish,
-        [{ kinds: [9735], "#e": [poll.id] }],
-        {
-          onevent(zap) {
-            let zapEvent = zap.tags.find((tag) => tag[0] === "description");
-            let zapLNBCAmount = zap.tags.find((tag) => tag[0] === "bolt11");
-            zapLNBCAmount = zapLNBCAmount
-              ? parseInt(
-                  decode(zapLNBCAmount[1]).sections.find(
-                    (section) => section.name === "amount"
-                  ).value
-                ) / 1000
-              : null;
-            zapEvent = zapEvent ? JSON.parse(zapEvent[1]) : null;
+      let sub = ndkInstance.subscribe([{ kinds: [9735], "#e": [poll.id] }], {
+        closeOnEose: true,
+        cacheUsage: "CACHE_FIRST",
+      });
 
-            if (
-              (zapEvent &&
-                closingTime.time &&
-                zapEvent.created_at <= closingTime.time) ||
-              (zapEvent && !closingTime.time)
-            ) {
-              let option = zapEvent.tags.find(
-                (tag) => tag[0] === "poll_option"
-              );
-              option = option ? option[1] : null;
-              if (option) {
-                let tempZapEvent = {
-                  ...zapEvent,
-                  amount: zapLNBCAmount,
-                  option,
-                };
+      sub.on("event", (zap) => {
+        let zapEvent = zap.tags.find((tag) => tag[0] === "description");
+        let zapLNBCAmount = zap.tags.find((tag) => tag[0] === "bolt11");
+        zapLNBCAmount = zapLNBCAmount
+          ? parseInt(
+              decode(zapLNBCAmount[1]).sections.find(
+                (section) => section.name === "amount"
+              ).value
+            ) / 1000
+          : null;
+        zapEvent = zapEvent ? JSON.parse(zapEvent[1]) : null;
 
-                if (zapLNBCAmount !== null) {
-                  if (
-                    (minSatsValue &&
-                      maxSatsValue &&
-                      tempZapEvent.amount >= minSatsValue &&
-                      tempZapEvent.amount <= maxSatsValue) ||
-                    (minSatsValue &&
-                      !maxSatsValue &&
-                      tempZapEvent.amount >= minSatsValue) ||
-                    (maxSatsValue &&
-                      !minSatsValue &&
-                      tempZapEvent.amount <= maxSatsValue) ||
-                    (!maxSatsValue && !minSatsValue)
-                  ) {
-                    if (tempZapEvent.pubkey === nostrKeys.pub)
-                      setIsVoted(option);
-                    let checkExistantIndex = events.findIndex(
-                      (ev) => ev.pubkey === tempZapEvent.pubkey
-                    );
-                    if (checkExistantIndex === -1) events.push(tempZapEvent);
-                    else {
-                      if (
-                        events[checkExistantIndex].amount < tempZapEvent.amount
-                      )
-                        events.splice(checkExistantIndex, 0, tempZapEvent);
-                    }
-                    if (eose) {
-                      setVotes(events);
-                      setTotalSats(
-                        events.reduce(
-                          (total, event) => (total += event.amount),
-                          0
-                        )
-                      );
-                    }
-                  }
+        if (
+          (zapEvent &&
+            closingTime.time &&
+            zapEvent.created_at <= closingTime.time) ||
+          (zapEvent && !closingTime.time)
+        ) {
+          let option = zapEvent.tags.find((tag) => tag[0] === "poll_option");
+          option = option ? option[1] : null;
+          if (option) {
+            let tempZapEvent = {
+              ...zapEvent,
+              amount: zapLNBCAmount,
+              option,
+            };
+
+            if (zapLNBCAmount !== null) {
+              if (
+                (minSatsValue &&
+                  maxSatsValue &&
+                  tempZapEvent.amount >= minSatsValue &&
+                  tempZapEvent.amount <= maxSatsValue) ||
+                (minSatsValue &&
+                  !maxSatsValue &&
+                  tempZapEvent.amount >= minSatsValue) ||
+                (maxSatsValue &&
+                  !minSatsValue &&
+                  tempZapEvent.amount <= maxSatsValue) ||
+                (!maxSatsValue && !minSatsValue)
+              ) {
+                if (tempZapEvent.pubkey === userKeys.pub) setIsVoted(option);
+                let checkExistantIndex = events.findIndex(
+                  (ev) => ev.pubkey === tempZapEvent.pubkey
+                );
+                if (checkExistantIndex === -1) events.push(tempZapEvent);
+                else {
+                  if (events[checkExistantIndex].amount < tempZapEvent.amount)
+                    events.splice(checkExistantIndex, 0, tempZapEvent);
+                }
+                if (eose) {
+                  setVotes(events);
+                  setTotalSats(
+                    events.reduce((total, event) => (total += event.amount), 0)
+                  );
                 }
               }
             }
-          },
-          oneose() {
-            eose = true;
-            setVotes(events);
-            setTotalSats(
-              events.reduce((total, event) => (total += event.amount), 0)
-            );
-            // sub.close();
-            setVotesLoading(false);
-          },
+          }
         }
-      );
+      });
+      sub.on("eose", () => {
+        eose = true;
+        setVotes(events);
+        setTotalSats(
+          events.reduce((total, event) => (total += event.amount), 0)
+        );
+        // sub.close();
+        setVotesLoading(false);
+      });
     } catch (err) {
       console.log(err);
       setVotesLoading(false);
@@ -260,42 +246,52 @@ export default function ZapPollsComp({
   };
 
   const handleShowCashier = (option) => {
-    if (!nostrKeys || (nostrKeys && !(nostrKeys?.sec || nostrKeys?.ext))) {
-      setToast({
-        type: 3,
-        desc: "Please connect using a secret key or an extension to vote",
-      });
+    if (!userKeys || (userKeys && !(userKeys?.sec || userKeys?.ext))) {
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "Please connect using a secret key or an extension to vote",
+        })
+      );
       return;
     }
     if (!callback) {
-      setToast({
-        type: 3,
-        desc: "The author of this poll does not have a lightning address",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The author of this poll does not have a lightning address",
+        })
+      );
       return;
     }
     if (closingTime.status) {
-      setToast({
-        type: 3,
-        desc: "The poll has been closed",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The poll has been closed",
+        })
+      );
       return;
     }
-    if (poll.pukey === nostrKeys.pub) {
-      setToast({
-        type: 3,
-        desc: "You cannot vote on your own poll",
-      });
+    if (poll.pukey === userKeys.pub) {
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "You cannot vote on your own poll",
+        })
+      );
       return;
     }
     if (!isStatsShowing) {
       LoadStats();
     }
     if (isVoted) {
-      setToast({
-        type: 3,
-        desc: "You have already voted on this poll",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "You have already voted on this poll",
+        })
+      );
       return;
     }
 
@@ -387,7 +383,9 @@ export default function ZapPollsComp({
                     // isStatsShowing == index &&
                     // !isVotesLoading &&
                     isStatsShowing
-                      ? `1px solid ${options_foreground_color || "var(--orange-main)"}`
+                      ? `1px solid ${
+                          options_foreground_color || "var(--orange-main)"
+                        }`
                       : "none",
                   backgroundColor:
                     options_background_color || "var(--very-dim-gray)",
@@ -406,11 +404,12 @@ export default function ZapPollsComp({
                     // width: edit ? "30%" : `${percentage}%`,
                     width: edit
                       ? "30%"
-                      : isVoted || poll.pubkey === nostrKeys.pub
+                      : isVoted || poll.pubkey === userKeys.pub
                       ? `${percentage}%`
                       : 0,
                     border: "none",
-                    backgroundColor: options_foreground_color || "var(--orange-main)",
+                    backgroundColor:
+                      options_foreground_color || "var(--orange-main)",
                     transition: ".2s ease-in-out",
                     zIndex: 0,
                   }}
@@ -421,7 +420,6 @@ export default function ZapPollsComp({
                     zIndex: 2,
                     position: "relative",
                   }}
-                
                 >
                   {option}
                 </p>
@@ -441,7 +439,7 @@ export default function ZapPollsComp({
                 {isStatsShowing &&
                   (isVoted ||
                     closingTime.status ||
-                    poll.pubkey === nostrKeys.pub) && (
+                    poll.pubkey === userKeys.pub) && (
                     <p className="orange-c p-medium box-pad-h-m">
                       {votes.length} <span className="gray-c">votes</span>
                     </p>
@@ -449,7 +447,7 @@ export default function ZapPollsComp({
                 {isStatsShowing &&
                   !isVoted &&
                   !closingTime.status &&
-                  poll.pubkey !== nostrKeys.pub && (
+                  poll.pubkey !== userKeys.pub && (
                     <p className="gray-c p-medium box-pad-h-m p-italic">
                       Your vote is required to see the stats
                     </p>
@@ -501,13 +499,9 @@ const Cashier = ({
   isVotesLoading,
   isVoted,
 }) => {
-  const {
-    nostrKeys,
-    setToast,
-    nostrUser,
-    setUpdatedActionFromYakiChest,
-    updateYakiChestStats,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
   const [amount, setAmount] = useState(min !== null ? min : 1);
   const [message, setMessage] = useState("");
   const [invoice, setInvoice] = useState("");
@@ -535,18 +529,22 @@ const Cashier = ({
 
   useEffect(() => {
     if (isVoted) {
-      setToast({
-        type: 3,
-        desc: "You have already voted on this poll",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "You have already voted on this poll",
+        })
+      );
       exit();
       return;
     }
-    if (recipientPubkey === nostrKeys.pub) {
-      setToast({
-        type: 3,
-        desc: "You cannot vote on your own poll",
-      });
+    if (recipientPubkey === userKeys.pub) {
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "You cannot vote on your own poll",
+        })
+      );
       exit();
       return;
     }
@@ -560,8 +558,13 @@ const Cashier = ({
   const onConfirmation = async () => {
     try {
       if (amountWarning) return;
-      if (!nostrKeys || !amount) {
-        setToast({ type: 2, desc: "User is not connected or amount is null!" });
+      if (!userKeys || !amount) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "User is not connected or amount is null!",
+          })
+        );
         return;
       }
       let lnbcInvoice = lnbcAmount ? recipientLNURL : "";
@@ -574,7 +577,7 @@ const Cashier = ({
         ["e", eTag],
         ["poll_option", forContent.index],
       ];
-      const event = await getZapEventRequest(nostrKeys, message, tags);
+      const event = await getZapEventRequest(userKeys, message, tags);
       if (!event) {
         return;
       }
@@ -587,10 +590,12 @@ const Cashier = ({
       );
 
       if (res.data.status === "ERROR") {
-        setToast({
-          type: 2,
-          desc: "Something went wrong when processing payment!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Something went wrong when processing payment!",
+          })
+        );
         return;
       }
       lnbcInvoice = res.data.pr;
@@ -600,8 +605,7 @@ const Cashier = ({
 
       await sendPayment(lnbcInvoice);
 
-      let sub = pool.subscribeMany(
-        relaysOnPlatform,
+      let sub = ndkInstance.subscribe(
         [
           {
             kinds: [9735],
@@ -609,14 +613,14 @@ const Cashier = ({
             since: Math.floor(Date.now() / 1000 - 10),
           },
         ],
-        {
-          onevent(event) {
-            setConfirmation("confirmed");
-            refresh();
-            updateYakiChest();
-          },
-        }
+        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
       );
+
+      sub.on("event", (event) => {
+        setConfirmation("confirmed");
+        refresh();
+        updateYakiChest();
+      });
     } catch (err) {
       console.log(err);
     }
@@ -639,10 +643,12 @@ const Cashier = ({
       return;
     } catch (err) {
       if (err.includes("User rejected")) return;
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
   const sendWithNWC = async (addr_) => {
@@ -655,10 +661,12 @@ const Cashier = ({
     } catch (err) {
       console.log(err);
 
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
   const sendWithAlby = async (addr_, code) => {
@@ -680,10 +688,12 @@ const Cashier = ({
 
   const copyKey = (key) => {
     navigator.clipboard.writeText(key);
-    setToast({
-      type: 1,
-      desc: `LNURL was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `LNURL was copied! 👏`,
+      })
+    );
   };
 
   const updateYakiChest = async () => {
@@ -693,11 +703,11 @@ const Cashier = ({
         let data = await axiosInstance.post("/api/v1/yaki-chest", {
           action_key,
         });
-        console.log(data.data);
+
         let { user_stats, is_updated } = data.data;
 
         if (is_updated) {
-          setUpdatedActionFromYakiChest(is_updated);
+          dispatch(setUpdatedActionFromYakiChest(is_updated));
           updateYakiChestStats(user_stats);
         }
       }
@@ -798,7 +808,7 @@ const Cashier = ({
               mainAccountUser={true}
               ring={false}
             />
-            <p className="gray-c p-medium">{nostrUser.name}</p>
+            <p className="gray-c p-medium">{userMetadata.name}</p>
           </div>
           <div style={{ position: "relative", width: "30%" }}>
             {confirmation === "confirmed" && (
@@ -1038,7 +1048,7 @@ const checkAlbyToken = async (wallets, activeWallet) => {
     let tempWallets = Array.from(wallets);
     let index = wallets.findIndex((item) => item.id === activeWallet.id);
     tempWallets[index] = tempWallet;
-    updateWallets(tempWallets)
+    updateWallets(tempWallets);
     return {
       wallets: tempWallets,
       activeWallet: tempWallet,

@@ -1,19 +1,12 @@
-import React, { useContext, useRef } from "react";
-import { Context } from "../../Context/Context";
+import React, { useRef } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { useState } from "react";
 import { useEffect } from "react";
-import { SimplePool, nip19 } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
+import { nip19 } from "nostr-tools";
 import ToDeletePostNOSTR from "../../Components/Main/ToDeletePostNOSTR";
-import { useLocation } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
-import {
-  filterRelays,
-  getBech32,
-  getEmptyNostrUser,
-} from "../../Helpers/Encryptions";
+import { getBech32, getEmptyuserMetadata, getParsedNote } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
 import KindOne from "../../Components/Main/KindOne";
 import TopCreators from "../../Components/Main/TopCreators";
@@ -21,28 +14,22 @@ import TrendingNotes from "../../Components/Main/TrendingNotes";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import axios from "axios";
-
-var pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function MyNotesHidden() {
-  const { state } = useLocation();
-  const { nostrKeys, nostrUser, isPublishing, setToast } = useContext(Context);
-  const [activeRelay, setActiveRelay] = useState("");
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [notes, setNotes] = useState([]);
   const [trendingNotes, setTrendingNotes] = useState([]);
   const [topCreators, setTopCreators] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [postToDelete, setPostToDelete] = useState(false);
-  const [showRelaysList, setShowRelaysList] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [showAddNote, setShowAddNote] = useState(
-    state ? state?.addNote : false
-  );
   const extrasRef = useRef(null);
-
-  useEffect(() => {
-    setShowAddNote(state ? state?.addNote : false);
-  }, [state]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,42 +37,35 @@ export default function MyNotesHidden() {
         setIsLoading(true);
         setNotes([]);
 
-        let relaysToFetchFrom =
-          activeRelay == ""
-            ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-            : [activeRelay];
-
-        var sub = pool.subscribeMany(
-          relaysToFetchFrom,
-          [{ kinds: [1], authors: [nostrKeys.pub] }],
-          {
-            async onevent(event) {
-              let event_ = await onEvent(event);
-              if (event_) {
-                setNotes((prev) => {
-                  let existed = prev.find((note) => note.id === event.id);
-                  if (existed) return prev;
-                  else return [...prev, event_];
-                });
-                setIsLoading(false);
-              }
-              setIsLoading(false);
-            },
-            oneose() {
-              setIsLoading(false);
-            },
-          }
+        var sub = ndkInstance.subscribe(
+          [{ kinds: [1], authors: [userKeys.pub] }],
+          { cacheUsage: "CACHE_FIRST" }
         );
+        sub.on("event", async (event) => {
+          let event_ = await getParsedNote(event);
+          if (event_) {
+            setNotes((prev) => {
+              let existed = prev.find((note) => note.id === event.id);
+              if (existed) return prev;
+              else return [...prev, event_];
+            });
+            setIsLoading(false);
+          }
+          // setIsLoading(false);
+        });
+        sub.on("eose", () => {
+          setIsLoading(false);
+        });
       } catch (err) {
         console.log(err);
         setIsLoading(false);
       }
     };
-    if (nostrKeys) {
+    if (userKeys) {
       fetchData();
       return;
     }
-  }, [nostrKeys, activeRelay]);
+  }, [userKeys]);
 
   const initDeletedPost = (state) => {
     if (!state) {
@@ -106,23 +86,16 @@ export default function MyNotesHidden() {
       setNotes(tempArray);
     }
   };
-  const switchActiveRelay = (source) => {
-    if (isLoading) return;
-    if (source === activeRelay) return;
-    pool = new SimplePool();
-    setNotes([]);
-    setActiveRelay(source);
-  };
 
   const onEvent = async (event) => {
     try {
-      let checkForComment = event.tags.find(
+      let isComment = event.tags.find(
         (tag) => tag[0] === "e" || tag[0] === "a"
       );
       let label = event.tags.find((tag) => tag[0] === "l");
-      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
+      let isQuote = event.tags.find((tag) => tag[0] === "q");
       if (
-        (checkForComment && event.kind === 1 && !label) ||
+        (isComment && event.kind === 1 && !label) ||
         (label && label[1] !== "smart-widget")
       )
         return false;
@@ -138,11 +111,11 @@ export default function MyNotesHidden() {
         return {
           ...event,
           note_tree,
-          checkForQuote: checkForQuote ? checkForQuote[1] : "",
+          isQuote: isQuote ? isQuote[1] : "",
           author_img,
           author_name,
           author_pubkey,
-          stringifiedEvent: JSON.stringify(event),
+          // stringifiedEvent: JSON.stringify(event),
           nEvent,
         };
       }
@@ -164,7 +137,7 @@ export default function MyNotesHidden() {
           ? nostrBandProfiles.data.profiles
               .filter((profile) => profile.profile)
               .map((profile) => {
-                let author = getEmptyNostrUser(profile.profile.pubkey);
+                let author = getEmptyuserMetadata(profile.profile.pubkey);
                 try {
                   author = JSON.parse(profile.profile.content);
                 } catch (err) {
@@ -205,11 +178,7 @@ export default function MyNotesHidden() {
           post_id={postToDelete.id}
           title={postToDelete.content}
           thumbnail={""}
-          relayToDeleteFrom={
-            activeRelay == ""
-              ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-              : [activeRelay]
-          }
+          relayToDeleteFrom={userRelays}
         />
       )}
       <div>
@@ -238,8 +207,6 @@ export default function MyNotesHidden() {
                 className={`main-page-nostr-container`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowRelaysList(false);
-                  setShowFilter(false);
                 }}
               >
                 <div className="fx-centered fit-container fx-start-h fx-start-v">
@@ -314,9 +281,9 @@ export default function MyNotesHidden() {
                                   "All relays"
                                 )}
                               </button>
-                              {nostrUser &&
-                                nostrUser.relays.length > 0 &&
-                                nostrUser.relays.map((relay) => {
+                              {userMetadata &&
+                                userMetadata.relays.length > 0 &&
+                                userMetadata.relays.map((relay) => {
                                   return (
                                     <button
                                       key={relay}
@@ -344,8 +311,8 @@ export default function MyNotesHidden() {
                                     </button>
                                   );
                                 })}
-                              {(!nostrUser ||
-                                (nostrUser && nostrUser.relays.length === 0)) &&
+                              {(!userMetadata ||
+                                (userMetadata && userMetadata.relays.length === 0)) &&
                                 relays.map((relay) => {
                                   return (
                                     <button
@@ -412,10 +379,12 @@ export default function MyNotesHidden() {
                                       id: note.id,
                                       content: note.content,
                                     })
-                                  : setToast({
-                                      type: 3,
-                                      desc: "An event publishing is in process!",
-                                    });
+                                  : dispatch(
+                                      setToast({
+                                        type: 3,
+                                        desc: "An event publishing is in process!",
+                                      })
+                                    );
                               }}
                             >
                               <div className="trash-24"></div>

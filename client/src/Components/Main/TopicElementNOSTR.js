@@ -1,38 +1,33 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Date_ from "../Date_";
 import { useNavigate } from "react-router-dom";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import { Context } from "../../Context/Context";
 import { getParsed3000xContent } from "../../Helpers/Encryptions";
 import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
+import { getUser } from "../../Helpers/Controlers";
+import { useSelector } from "react-redux";
 
 export default function TopicElementNOSTR({ topic, full = false }) {
   const navigateTo = useNavigate();
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [showDesc, setShowDesc] = useState(false);
-  const { getNostrAuthor, nostrAuthors } = useContext(Context);
   const [authorData, setAuthorData] = useState({
     author_img: "",
     author_pubkey: topic.pubkey,
     author_name: topic.author.name,
   });
   const [curURL, setCurURL] = useState(`${topic.naddr}`);
-  const content = useMemo(() => {
-    return getParsed3000xContent(topic.tags);
-  }, [topic]);
+
   const getDRef = () => {
-    let tempArray = [];
-    for (let tag of topic.tags) {
-      if (tag[0] === "a") {
-        tempArray.push(tag[1].split(":")[2]);
-      }
-    }
-    return tempArray.length >= 10 ? tempArray.length : `0${tempArray.length}`;
+    return topic.items.length >= 10
+      ? topic.items.length
+      : `0${topic.items.length}`;
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(topic.pubkey);
+        let auth = getUser(topic.pubkey);
 
         if (auth) {
           setAuthorData({
@@ -54,14 +49,13 @@ export default function TopicElementNOSTR({ topic, full = false }) {
     fetchData();
   }, [nostrAuthors]);
 
-  if (content?.items?.length === 0) return;
   return (
     <div
       className={`bg-img cover-bg sc-s-18 fx-shrink pointer carousel-item  fx-centered fx-start-h box-pad-h-m box-pad-v-m ${
         full ? "posts-card" : ""
       }`}
       style={{
-        backgroundImage: `url(${content.image})`,
+        backgroundImage: `url(${topic.image})`,
         border: "none",
         height: "150px",
       }}
@@ -92,7 +86,7 @@ export default function TopicElementNOSTR({ topic, full = false }) {
             </div>
 
             <p className=" gray-c">
-              <Date_ toConvert={topic.modified_date} />
+              <Date_ toConvert={new Date(topic.created_at * 1000)} />
             </p>
             <div>
               <p className="gray-c p-small">&#9679;</p>
@@ -103,7 +97,7 @@ export default function TopicElementNOSTR({ topic, full = false }) {
           </div>
         </div>
         <p className="p-big p-two-lines" style={{ color: "white" }}>
-          {content.title}
+          {topic.title}
         </p>
       </div>
     </div>

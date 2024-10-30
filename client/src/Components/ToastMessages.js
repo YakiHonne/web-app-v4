@@ -1,28 +1,122 @@
-import React from "react";
-import { useEffect } from "react";
-import { useContext } from "react";
-import { Context } from "../Context/Context";
+// import React, { useState } from "react";
+// import { useEffect } from "react";
+// import { useDispatch, useSelector } from "react-redux";
+// import { setToast } from "../Store/Slides/Publishers";
+
+// export default function ToastMessages() {
+//   const dispatch = useDispatch();
+//   const toast = useSelector((state) => state.toast);
+//   const { desc, type } = toast || {};
+//   const [timer, setTimer] = useState(null)
+//   const [playAnimation, setPlayAnimation] = useState(false);
+
+//   useEffect(() => {
+//     if (!toast) return;
+//     const startTimer = () => {
+//       if (timer) clearTimeout(timer);
+//       setPlayAnimation(true);
+//       let _ = setTimeout(() => {
+//         dispatch(setToast(false));
+//         setPlayAnimation(false)
+//       }, 4000);
+//       setTimer(_)
+//     };
+//     startTimer()
+//   }, [toast]);
+
+//   const close = () => {
+//     dispatch(setToast(false));
+//   };
+//   if (!toast) return;
+//   // if (type === 1)
+//   //   return (
+//   //     <div className="toast-message success-toast fx-scattered popout">
+//   //       <div className="fx-centered">
+//   //         <div className="icon">
+//   //           <div className="success"></div>
+//   //         </div>
+//   //         <p className="p-medium" style={{color: "black"}}>{desc}</p>
+//   //       </div>
+//   //       <div className="close-toast" onClick={close}>
+//   //         <p>&#10005;</p>
+//   //       </div>
+//   //     </div>
+//   //   );
+//   // if (type === 2)
+//   // return (
+//   //   <div className="toast-message fail-toast fx-scattered popout">
+//   //     <div className="fx-centered">
+//   //       <div className="icon">
+//   //         <div className="warning"></div>
+//   //       </div>
+//   //       <p className="p-medium" style={{color: "black"}}>{desc}</p>
+//   //     </div>
+//   //     <div className="close-toast" onClick={close}>
+//   //       <p>&#10005;</p>
+//   //     </div>
+//   //   </div>
+//   // );
+//   // if (type === 3)
+//   return (
+//     <div className={`toast-message warning-toast fx-scattered ${playAnimation ? 'slide-up-down' : ''}`} style={{ animationDuration: '4s'}}>
+//       <div className="fx-centered">
+//         <div className="icon">
+//           <div className="warning"></div>
+//         </div>
+//         <p className="p-medium">
+//           {desc}
+//         </p>
+//       </div>
+//       <div className="close-toast" onClick={close}>
+//         <p>&#10005;</p>
+//       </div>
+//     </div>
+//   );
+// }
+
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../Store/Slides/Publishers";
 
 export default function ToastMessages() {
-  const { toast, setToast } = useContext(Context);
+  const dispatch = useDispatch();
+  const toast = useSelector((state) => state.toast);
   const { desc, type } = toast || {};
-  
+
+  const [timer, setTimer] = useState(null);
+
   useEffect(() => {
-    let timeout = setTimeout(() => {
-      setToast(false);
+    if (!desc) return;
+
+    if (timer) {
+      clearTimeout(timer);
+    }
+
+    const newTimer = setTimeout(() => {
+      dispatch(setToast(false));
     }, 4000);
+
+    setTimer(newTimer);
+
     return () => {
-      clearTimeout(timeout);
+      if (newTimer) {
+        clearTimeout(newTimer);
+      }
     };
-  }, [toast]);
+  }, [desc, dispatch]);
 
   const close = () => {
-    setToast(false);
+    if (timer) clearTimeout(timer);
+    dispatch(setToast(false));
   };
 
+  if (!desc) return null;
   if (type === 1)
     return (
-      <div className="toast-message success-toast fx-scattered popout">
+      <div
+        className={`toast-message warning-toast fx-scattered slide-up-down`}
+        style={{ animationDuration: "4s" }}
+      >
         <div className="fx-centered">
           <div className="icon">
             <div className="success"></div>
@@ -36,7 +130,10 @@ export default function ToastMessages() {
     );
   if (type === 2)
     return (
-      <div className="toast-message fail-toast fx-scattered popout">
+      <div
+        className={`toast-message warning-toast fx-scattered slide-up-down`}
+        style={{ animationDuration: "4s" }}
+      >
         <div className="fx-centered">
           <div className="icon">
             <div className="warning"></div>
@@ -50,7 +147,10 @@ export default function ToastMessages() {
     );
   if (type === 3)
     return (
-      <div className="toast-message warning-toast fx-scattered popout">
+      <div
+        className={`toast-message warning-toast fx-scattered slide-up-down`}
+        style={{ animationDuration: "4s" }}
+      >
         <div className="fx-centered">
           <div className="icon">
             <div className="warning"></div>

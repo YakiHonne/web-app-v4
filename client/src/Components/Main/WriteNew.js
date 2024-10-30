@@ -1,12 +1,12 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LoginWithNostr from "./LoginWithNostr";
-import { Context } from "../../Context/Context";
+import { useSelector } from "react-redux";
+import { redirectToLogin } from "../../Helpers/Helpers";
 
 export default function WriteNew({ exit }) {
-  const { nostrKeys } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
   const [redirectLinks, setRedirectLinks] = useState(false);
-  const [login, setLogin] = useState(false);
 
   return (
     <>
@@ -19,13 +19,13 @@ export default function WriteNew({ exit }) {
           internalExit={() => setRedirectLinks(false)}
         />
       )}
-      {login && <LoginWithNostr exit={() => setLogin(false)} />}
+
       <button
         className="btn btn-full btn-orange fx-centered "
         style={{ padding: 0 }}
         onClick={() =>
-          !(nostrKeys.ext || nostrKeys.sec)
-            ? setLogin(true)
+          !(userKeys.ext || userKeys.sec)
+            ? redirectToLogin()
             : setRedirectLinks(true)
         }
       >
@@ -48,7 +48,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
       }}
     >
       <div
-        className="sc-s-18 box-pad-h-m box-pad-v fx-centered fx-col"
+        className="sc-s-18 box-pad-h-m box-pad-v fx-centered fx-col bg-sp"
         style={{ width: "min(100%,400px)", position: "relative" }}
       >
         <div
@@ -63,13 +63,13 @@ const RedictingLinks = ({ exit, internalExit }) => {
         <h4 className="box-marg-s">New publication</h4>
         <div className="fx-centered fx-wrap" onClick={exit}>
           <Link
-            to={"/notes"}
-            state={{ addFN: true }}
+            to="/dashboard"
+            state={{ tabNumber: 1, filter: "notes", init: true }}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
             style={{
               width: "48%",
               padding: "2rem",
-              backgroundColor: "var(--c1-side)",
+              backgroundColor: "transparent",
             }}
           >
             <div
@@ -84,7 +84,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
             style={{
               width: "48%",
               padding: "2rem",
-              backgroundColor: "var(--c1-side)",
+              backgroundColor: "transparent",
             }}
           >
             <div
@@ -93,31 +93,15 @@ const RedictingLinks = ({ exit, internalExit }) => {
             ></div>
             <div>Article</div>
           </div>
-          <Link
-            to={"/my-flash-news"}
-            state={{ addFN: true }}
-            className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
-            style={{
-              width: "48%",
-              padding: "2rem",
-              backgroundColor: "var(--c1-side)",
-            }}
-          >
-            <div
-              className="news-plus-24"
-              style={{ width: "32px", height: "32px" }}
-            ></div>
-            <div>Flash news</div>
-          </Link>
 
           <Link
-            to={"/my-curations"}
-            state={{ addCuration: true }}
+            to="/dashboard"
+            state={{ tabNumber: 1, filter: "curations", init: true }}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
             style={{
               width: "48%",
               padding: "2rem",
-              backgroundColor: "var(--c1-side)",
+              backgroundColor: "transparent",
             }}
           >
             <div
@@ -133,7 +117,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
             style={{
               width: "48%",
               padding: "2rem",
-              backgroundColor: "var(--c1-side)",
+              backgroundColor: "transparent",
             }}
           >
             <div
@@ -143,13 +127,12 @@ const RedictingLinks = ({ exit, internalExit }) => {
             <div style={{ width: "max-content" }}>Smart widget</div>
           </Link>
           <Link
-            to={"/my-videos"}
-            state={{ addVideo: true }}
+            to="/dashboard"
+            state={{ tabNumber: 1, filter: "videos", init: true }}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
             style={{
-              width: "48%",
               padding: "2rem",
-              backgroundColor: "var(--c1-side)",
+              backgroundColor: "transparent",
             }}
           >
             <div

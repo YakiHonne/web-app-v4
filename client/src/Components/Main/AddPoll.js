@@ -1,12 +1,15 @@
-import React, { useContext, useState } from "react";
-import { Context } from "../../Context/Context";
-import { finalizeEvent, nip19, SimplePool } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
-import { filterRelays } from "../../Helpers/Encryptions";
+import React, { useState } from "react";
+import { finalizeEvent, nip19 } from "nostr-tools";
 import LoadingDots from "../LoadingDots";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function AddPoll({ exit, setNevent }) {
-  const { nostrUser, nostrKeys, setToast, setToPublish } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [content, setContent] = useState("");
   const [options, setOptions] = useState([]);
   const [tempOption, setTempOption] = useState("");
@@ -43,41 +46,49 @@ export default function AddPoll({ exit, setNevent }) {
     tempArray.splice(index, 1);
     setOptions(tempArray);
   };
+
   const postPoll = async () => {
     let created_at = Math.floor(Date.now() / 1000);
     let closed_at = closedAt
       ? Math.floor(new Date(closedAt).getTime() / 1000)
       : false;
     let tempOptions = options.filter((option) => option);
-    let relaysToPublish = nostrUser
-      ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
-      : relaysOnPlatform;
+    let relaysToPublish = userRelays;
+
     if (!content) {
-      setToast({
-        type: 3,
-        desc: "The content must not stay empty",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The content must not stay empty",
+        })
+      );
       return;
     }
     if (tempOptions.length <= 1) {
-      setToast({
-        type: 3,
-        desc: "The poll should have at least two options.",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The poll should have at least two options.",
+        })
+      );
       return;
     }
     if (closed_at && closed_at <= created_at) {
-      setToast({
-        type: 3,
-        desc: "The poll closing time must be greater than the current time",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The poll closing time must be greater than the current time",
+        })
+      );
       return;
     }
     if (minSats !== "" && maxSats !== "" && minSats > maxSats) {
-      setToast({
-        type: 3,
-        desc: "The maximum satoshi must be greater than the minimum satochi",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The maximum satoshi must be greater than the minimum satochi",
+        })
+      );
       return;
     }
     let tags = options.map((option, index) => [
@@ -85,7 +96,7 @@ export default function AddPoll({ exit, setNevent }) {
       `${index}`,
       option,
     ]);
-    tags.push(["p", nostrKeys.pub]);
+    tags.push(["p", userKeys.pub]);
     tags.push([
       "client",
       "Yakihonne",
@@ -101,7 +112,7 @@ export default function AddPoll({ exit, setNevent }) {
       content: content,
       tags,
     };
-    if (nostrKeys.ext) {
+    if (userKeys.ext) {
       try {
         tempEvent = await window.nostr.signEvent(tempEvent);
       } catch (err) {
@@ -109,31 +120,33 @@ export default function AddPoll({ exit, setNevent }) {
         return false;
       }
     } else {
-      tempEvent = finalizeEvent(tempEvent, nostrKeys.sec);
+      tempEvent = finalizeEvent(tempEvent, userKeys.sec);
     }
-    setToPublish({
-      eventInitEx: tempEvent,
-      allRelays: relaysToPublish,
-    });
+    dispatch(
+      setToPublish({
+        eventInitEx: tempEvent,
+        allRelays: relaysToPublish,
+      })
+    );
     let nEvent = nip19.neventEncode({
       id: tempEvent.id,
-      pubkey: nostrKeys.pub,
+      pubkey: userKeys.pub,
     });
-    let pool = new SimplePool();
-    let sub = pool.subscribeMany(
-      relaysToPublish,
-      [{ kinds: [6969], ids: [tempEvent.id] }],
-      {
-        onevent() {
-          setToast({
-            type: 1,
-            desc: "Poll was posted successfully",
-          });
-          setNevent(nEvent);
-          sub.close();
-        },
-      }
-    );
+    let sub = ndkInstance.subscribe([{ kinds: [6969], ids: [tempEvent.id] }], {
+      closeOnEose: true,
+      cacheUsage: "CACHE_FIRST",
+    });
+
+    sub.on("event", () => {
+      dispatch(
+        setToast({
+          type: 1,
+          desc: "Poll was posted successfully",
+        })
+      );
+      setNevent(nEvent);
+      sub.stop();
+    });
   };
   return (
     <div className="fixed-container box-pad-h fx-centered">

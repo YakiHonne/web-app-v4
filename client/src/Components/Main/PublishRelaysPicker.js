@@ -1,7 +1,7 @@
-import React, { useContext, useState } from "react";
-import { Context } from "../../Context/Context";
+import React, { useState } from "react";
 import relaysOnPlatform from "../../Content/Relays";
 import TopicsTags from "../../Content/TopicsTags";
+import { useSelector } from "react-redux";
 
 const getSuggestions = (custom) => {
   if (!custom) return [];
@@ -11,8 +11,12 @@ const getSuggestions = (custom) => {
   );
 };
 
-export default function PublishRelaysPicker({ confirmPublishing, exit, button = "Publish" }) {
-  const { nostrUser } = useContext(Context);
+export default function PublishRelaysPicker({
+  confirmPublishing,
+  exit,
+  button = "Publish",
+}) {
+  const userRelays = useSelector((state) => state.userRelays);
   const [relaysToPublish, setRelaysToPublish] = useState([...relaysOnPlatform]);
   const [allRelays, setAllRelays] = useState([...relaysOnPlatform]);
 
@@ -33,7 +37,10 @@ export default function PublishRelaysPicker({ confirmPublishing, exit, button = 
   };
 
   return (
-    <section className="fixed-container fx-centered" style={{zIndex: "10001"}}>
+    <section
+      className="fixed-container fx-centered"
+      style={{ zIndex: "10001" }}
+    >
       <div
         className="fx-centered fx-col slide-up box-pad-h"
         style={{
@@ -51,7 +58,7 @@ export default function PublishRelaysPicker({ confirmPublishing, exit, button = 
           className="fit-container fx-centered fx-wrap"
           style={{ maxHeight: "40vh", overflow: "scroll" }}
         >
-          {nostrUser?.relays?.length == 0 &&
+          {userRelays.length == 0 &&
             allRelays.map((url, index) => {
               if (index === 0)
                 return (
@@ -85,8 +92,8 @@ export default function PublishRelaysPicker({ confirmPublishing, exit, button = 
                 </label>
               );
             })}
-          {nostrUser?.relays?.length > 0 &&
-            nostrUser.relays.map((url, index) => {
+          {userRelays.length > 0 &&
+            userRelays.map((url, index) => {
               if (index < 1)
                 return (
                   <label
@@ -130,7 +137,9 @@ export default function PublishRelaysPicker({ confirmPublishing, exit, button = 
         >
           {button}
         </button>
-        <button className="btn btn-text-red" onClick={exit}>Exit</button>
+        <button className="btn btn-text-red" onClick={exit}>
+          Exit
+        </button>
       </div>
     </section>
   );

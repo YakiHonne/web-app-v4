@@ -1,25 +1,21 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  filterRelays,
   getBech32,
-  getEmptyNostrUser,
+  getEmptyuserMetadata,
   getHex,
-  getParsed3000xContent,
+  getParsedRepEvent,
 } from "../../Helpers/Encryptions";
-import { SimplePool, nip19 } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import { Link } from "react-router-dom";
-import { Context } from "../../Context/Context";
-import relaysOnPlatform from "../../Content/Relays";
 import { getNoteTree } from "../../Helpers/Helpers";
 import KindOne from "./KindOne";
 import LoadingDots from "../LoadingDots";
-import PreviewWidget from "../SmartWidget/PreviewWidget";
 import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
 import WidgetCard from "./WidgetCard";
-const pool = new SimplePool();
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function Nip19Parsing({ addr, minimal = false }) {
-  const { nostrUser, addNostrAuthors } = useContext(Context);
   const [event, setEvent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [url, setUrl] = useState("/");
@@ -66,94 +62,102 @@ export default function Nip19Parsing({ addr, minimal = false }) {
 
       if (addr.startsWith("nevent") || addr.startsWith("note")) {
         let data = nip19.decode(addr);
-
         filter.push({
           kinds: [1],
           ids: [data.data.id || data.data],
         });
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       setIsLoading(false);
       return;
     }
-    let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
 
-    const sub = pool.subscribeManyEose(relaysToUse, filter, {
-      async onevent(event) {
-        if (event.kind === 0) {
-          let content = JSON.parse(event.content);
-          setEvent({
-            kind: event.kind,
-            picture: content.picture || "",
-            name:
-              content.name || getBech32("npub", event.pubkey).substring(0, 10),
-            display_name:
-              content.display_name ||
-              getBech32("npub", event.pubkey).substring(0, 10),
-          });
-        }
-        if (event.kind === 1) {
-          let parsedEvent = await onEvent(event);
-          setEvent(parsedEvent);
-          setIsLoading(false);
-        }
-
-        if (event.kind === 30031) {
-          let metadata = JSON.parse(event.content);
-          let parsedContent = getParsed3000xContent(event.tags);
-          setEvent({
-            ...parsedContent,
-            metadata,
-            ...event,
-            author: getEmptyNostrUser(event.pubkey),
-          });
-          addNostrAuthors([event.pubkey]);
-          setIsLoading(false);
-        }
-        if ([30004, 30005, 30023, 34235].includes(event.kind)) {
-          let titleTag = event.tags.find((tag) => tag[0] === "title");
-          let title = "";
-          if (titleTag) title = titleTag[1];
-          if (!title) {
-            if ([30004, 30005].includes(event.kind))
-              title = "Untitled curation";
-            if ([30023].includes(event.kind)) title = "Untitled Article";
-            if ([34235].includes(event.kind)) title = "Untitled video";
-          }
-          setEvent({
-            kind: event.kind,
-            title,
-          });
-        }
-      },
-      oneose() {
-        setIsLoading(false);
-        sub.close();
-        pool.close(relaysToUse);
-      },
+    const sub = ndkInstance.subscribe(filter, {
+      closeOnEose: true,
+      // cacheUsage: "ONLY_RELAY",
+      cacheUsage: "CACHE_FIRST",
+      groupableDelay: 500,
+      subId: "nip19-parsing"
     });
+
+    sub.on("event", async (event) => {
+      if (event.kind === 0) {
+        let content = JSON.parse(event.content);
+        setEvent({
+          kind: event.kind,
+          picture: content.picture || "",
+          name:
+            content.name || getBech32("npub", event.pubkey).substring(0, 10),
+          display_name:
+            content.display_name ||
+            getBech32("npub", event.pubkey).substring(0, 10),
+        });
+      }
+      if (event.kind === 1) {
+        let parsedEvent = await onEvent(event);
+        setEvent(parsedEvent);
+        setIsLoading(false);
+      }
+
+      if (event.kind === 30031) {
+        let metadata = JSON.parse(event.content);
+        let parsedContent = getParsedRepEvent(event);
+        setEvent({
+          ...parsedContent,
+          metadata,
+          ...event,
+          author: getEmptyuserMetadata(event.pubkey),
+        });
+        saveUsers([event.pubkey]);
+        setIsLoading(false);
+      }
+      if ([30004, 30005, 30023, 34235].includes(event.kind)) {
+        let titleTag = event.tags.find((tag) => tag[0] === "title");
+        let title = "";
+        if (titleTag) title = titleTag[1];
+        if (!title) {
+          if ([30004, 30005].includes(event.kind)) title = "Untitled curation";
+          if ([30023].includes(event.kind)) title = "Untitled Article";
+          if ([34235].includes(event.kind)) title = "Untitled video";
+        }
+        setEvent({
+          kind: event.kind,
+          title,
+        });
+      }
+    });
+    sub.on("close", () => {
+      setIsLoading(false);
+    });
+    let timeout = setTimeout(() => {
+      sub.stop();
+      clearTimeout(timeout);
+    }, 4000);
+    return () => {
+      sub.stop();
+    };
   }, []);
 
   const onEvent = async (event) => {
     try {
-      let checkForComment = event.tags.find((tag) => tag[0] === "e");
-      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
-      if (checkForComment && event.kind === 1) return false;
+      let isComment = event.tags.find((tag) => tag[0] === "e");
+      let isQuote = event.tags.find((tag) => tag[0] === "q");
+      // if (isComment && event.kind === 1) return false;
       let nEvent = nip19.neventEncode({
         id: event.id,
         author: event.pubkey,
       });
-      let stringifiedEvent = JSON.stringify(event);
+      // let stringifiedEvent = JSON.stringify(event);
       if (event.kind === 1) {
         let note_tree = await getNoteTree(event.content);
         return {
           ...event,
           note_tree,
-          stringifiedEvent,
-          checkForQuote:
-            checkForQuote && !event.content.includes("nostr:nevent")
-              ? checkForQuote[1]
+          // stringifiedEvent,
+          isQuote:
+            isQuote && !event.content.includes("nostr:nevent")
+              ? isQuote[1]
               : "",
           nEvent,
         };
@@ -163,7 +167,6 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       return false;
     }
   };
-
   if (
     event?.kind === 1 ||
     ((addr.startsWith("nevent") || addr.startsWith("note")) && addr.length > 20)

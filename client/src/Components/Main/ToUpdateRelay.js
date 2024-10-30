@@ -1,22 +1,17 @@
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
 import LoadingScreen from "../LoadingScreen";
 import LoadingDots from "../LoadingDots";
-import { filterRelays } from "../../Helpers/Encryptions";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
-export default function ToUpdateRelay({ exit, exitAndRefresh }) {
-  const {
-    setToast,
-    nostrUser,
-    isPublishing,
-    setNostrUser,
-    setUserRelays,
-    nostrKeys,
-    setToPublish
-  } = useContext(Context);
-  const [tempNostrUserRelays, setTempNostrUserRelays] = useState(
-    nostrUser?.relays || []
+export default function ToUpdateRelay({ exit }) {
+  const dispatch = useDispatch();
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const [tempuserMetadataRelays, setTempuserMetadataRelays] = useState(
+    userRelays || []
   );
   const [allRelays, setAllRelays] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -32,10 +27,12 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
         setAllRelays(data.data);
         setIsLoaded(true);
       } catch {
-        setToast({
-          type: 2,
-          desc: "Error has occurred!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Error has occurred!",
+          })
+        );
         exit();
       }
     };
@@ -47,41 +44,45 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
       deleteRelay(url);
       return;
     }
-    setTempNostrUserRelays([...tempNostrUserRelays, url]);
+    setTempuserMetadataRelays([...tempuserMetadataRelays, url]);
   };
   const addCustomRelay = () => {
     if (customRelay) {
       if (customRelay.startsWith("wss://")) {
         if (checkIfRelayExist(customRelay)) {
           setCustomRelay("");
-          setToast({
-            type: 3,
-            desc: "Relay is already on list!",
-          });
+          dispatch(
+            setToast({
+              type: 3,
+              desc: "Relay is already on list!",
+            })
+          );
           return false;
         }
-        setTempNostrUserRelays([...tempNostrUserRelays, customRelay]);
+        setTempuserMetadataRelays([...tempuserMetadataRelays, customRelay]);
         setCustomRelay("");
-        return [...tempNostrUserRelays, customRelay];
+        return [...tempuserMetadataRelays, customRelay];
       } else {
-        setToast({
-          type: 2,
-          desc: "Relay format is invalid!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Relay format is invalid!",
+          })
+        );
         return false;
       }
     } else {
-      return tempNostrUserRelays;
+      return tempuserMetadataRelays;
     }
   };
   const deleteRelay = (url) => {
-    let index = tempNostrUserRelays.findIndex((item) => item === url);
-    let tempArray = Array.from(tempNostrUserRelays);
+    let index = tempuserMetadataRelays.findIndex((item) => item === url);
+    let tempArray = Array.from(tempuserMetadataRelays);
     tempArray.splice(index, 1);
-    setTempNostrUserRelays(tempArray);
+    setTempuserMetadataRelays(tempArray);
   };
   const checkIfRelayExist = (input) => {
-    let status = tempNostrUserRelays.find((item) => item === input);
+    let status = tempuserMetadataRelays.find((item) => item === input);
     return status ? true : false;
   };
   const handleSearchRelay = (e) => {
@@ -99,31 +100,31 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
     let relaysToAdd = addCustomRelay();
     if (relaysToAdd === false) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
-    saveInKind10002()
+    saveInKind10002();
     exit();
   };
-
 
   const saveInKind10002 = async () => {
     try {
       let tags = convertArrayToKind10002();
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 10002,
-        content: "",
-        tags: tags,
-        allRelays: tempNostrUserRelays,
-      });
-      let tempUser = { ...nostrUser };
-      tempUser.relays = tempNostrUserRelays;
-      setNostrUser(tempUser);
-      setUserRelays(tempNostrUserRelays)
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 10002,
+          content: "",
+          tags: tags,
+          allRelays: tempuserMetadataRelays,
+        })
+      );
+
       return true;
     } catch (err) {
       console.log(err);
@@ -133,7 +134,7 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
 
   const convertArrayToKind10002 = () => {
     let tempArray = [];
-    for (let relay of tempNostrUserRelays) {
+    for (let relay of tempuserMetadataRelays) {
       tempArray.push(["r", relay]);
     }
     return tempArray;
@@ -271,7 +272,7 @@ export default function ToUpdateRelay({ exit, exitAndRefresh }) {
             >
               <h4>My relays</h4>
             </div>
-            {tempNostrUserRelays.map((relay, index) => {
+            {tempuserMetadataRelays.map((relay, index) => {
               // if ([0, 1,2,3,4].includes(index))
               //   return (
               //     <div

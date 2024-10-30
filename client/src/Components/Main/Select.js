@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-export default function Select({ options, value, disabled, setSelectedValue, defaultLabel = "-- Options --" }) {
+export default function Select({
+  options,
+  value,
+  disabled,
+  setSelectedValue,
+  defaultLabel = "-- Options --",
+  revert = false,
+}) {
   const [showOptions, setShowOptions] = useState(false);
   const selectedValue = useMemo(() => {
     return options.find((option) => option?.value === value);
@@ -26,18 +33,19 @@ export default function Select({ options, value, disabled, setSelectedValue, def
     >
       <div
         className="fit-container fx-scattered if option pointer"
-        style={{height: "48px", padding: "rem"}}
+        style={{ height: "var(--40)", padding: "1rem" }}
         onClick={() => (disabled ? null : setShowOptions(!showOptions))}
       >
         <p>{selectedValue?.display_name || defaultLabel}</p>
-        <div className="arrow"></div>
+        <div className="arrow-12"></div>
       </div>
       {showOptions && (
         <div
           style={{
             position: "absolute",
             right: 0,
-            top: "110%",
+            top: revert ? 0 : "110%",
+            transform: revert ? "translateY(calc(-100% - 5px))" : "none",
             // border: "none",
             minWidth: "200px",
             width: "max-content",
@@ -64,7 +72,9 @@ export default function Select({ options, value, disabled, setSelectedValue, def
               >
                 <div
                   className={
-                    selectedValue?.value === option?.value ? "orange-c" : "gray-c"
+                    selectedValue?.value === option?.value
+                      ? "orange-c"
+                      : "gray-c"
                   }
                 >
                   {option?.display_name}

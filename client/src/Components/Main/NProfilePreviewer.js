@@ -1,15 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
-import { SimplePool, nip19 } from "nostr-tools";
-import { Context } from "../../Context/Context";
-import {
-  filterRelays,
-  getBech32,
-  getEmptyNostrUser,
-} from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
+import React, { useEffect, useState } from "react";
+import { nip19 } from "nostr-tools";
+import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { Link } from "react-router-dom";
-const pool = new SimplePool();
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function NProfilePreviewer({
   pubkey,
@@ -19,38 +13,39 @@ export default function NProfilePreviewer({
   onClose,
   setMetataData = () => null,
 }) {
-  const { nostrUser } = useContext(Context);
-  const [author, setAuthor] = useState(getEmptyNostrUser(pubkey));
+  const [author, setAuthor] = useState(getEmptyuserMetadata(pubkey));
 
   useEffect(() => {
-    let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
     let last_created_at = 0;
-    const sub = pool.subscribeMany(
-      relaysToUse,
-      [{ kinds: [0], authors: [pubkey] }],
-      {
-        onevent(event) {
-          if (event.created_at > last_created_at) {
-            last_created_at = event.created_at;
-            let content = JSON.parse(event.content);
-            setMetataData(content);
-            setAuthor({
-              picture: content.picture || "",
-              name:
-                content.name ||
-                getBech32("npub", event.pubkey).substring(0, 10),
-              display_name:
-                content.display_name ||
-                getBech32("npub", event.pubkey).substring(0, 10),
-            });
-          }
-        },
-        oneose() {
-          sub.close();
-          pool.close(relaysToUse);
-        },
+    const sub = ndkInstance.subscribe([{ kinds: [0], authors: [pubkey] }], {
+      cacheUsage: "CACHE_FIRST",
+      groupable: false,
+    });
+
+    sub.on("event", (event) => {
+      if (event.created_at > last_created_at) {
+        last_created_at = event.created_at;
+        let content = JSON.parse(event.content);
+        setMetataData(content);
+        setAuthor({
+          picture: content.picture || "",
+          name:
+            content.name || getBech32("npub", event.pubkey).substring(0, 10),
+          display_name:
+            content.display_name ||
+            getBech32("npub", event.pubkey).substring(0, 10),
+        });
+        sub.stop();
       }
-    );
+    });
+
+    let timeout = setTimeout(() => {
+      sub.stop();
+      clearTimeout(timeout);
+    }, 4000);
+    return () => {
+      sub.stop();
+    };
   }, []);
 
   return (

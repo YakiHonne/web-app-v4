@@ -1,52 +1,60 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
+import React, { useEffect, useState } from "react";
 import LoadingDots from "../LoadingDots";
 import { LoginToAPI } from "../../Helpers/Helpers";
+import { useDispatch, useSelector } from "react-redux";
+import { initiFirstLoginStats } from "../../Helpers/Controlers";
+import { setIsConnectedToYaki } from "../../Store/Slides/YakiChest";
+import { setToast } from "../../Store/Slides/Publishers";
 
 export default function LoginWithAPI({ exit }) {
-  const { nostrKeys, setToast, setIsConnectedToYaki, initiFirstLoginStats } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    if (nostrKeys && !(nostrKeys.ext || nostrKeys.sec)) exit();
-  }, [nostrKeys]);
+    if (userKeys && !(userKeys.ext || userKeys.sec)) exit();
+  }, [userKeys]);
 
   const connect = async (e) => {
     try {
       e.stopPropagation();
       setIsLoading(true);
-      let secretKey = nostrKeys.ext ? false : nostrKeys.sec;
+      let secretKey = userKeys.ext ? false : userKeys.sec;
 
-      let data = await LoginToAPI(nostrKeys.pub, secretKey);
+      let data = await LoginToAPI(userKeys.pub, secretKey);
       if (data) {
         localStorage.setItem("connect_yc", `${new Date().getTime()}`);
         if (data.is_new) {
           initiFirstLoginStats(data);
         }
-        setIsConnectedToYaki(true);
+        dispatch(setIsConnectedToYaki(true));
         exit();
       }
       if (!data)
-        setToast({
-          type: 2,
-          desc: "An error occured while connecting, please try again.",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "An error occured while connecting, please try again.",
+          })
+        );
       setIsLoading(false);
     } catch (err) {
       console.log(err);
       setIsLoading(false);
-      setToast({
-        type: 2,
-        desc: "An error occured while connecting, please try again.",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occured while connecting, please try again.",
+        })
+      );
     }
   };
 
-  // if (!(nostrKeys && (nostrKeys.ext || nostrKeys.sec))) return;
+  // if (!(userKeys && (userKeys.ext || userKeys.sec))) return;
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div
-        className="sc-s-18  fx-centered fx-col"
+        className="sc-s-18  fx-centered fx-col bg-sp slide-up"
         style={{ width: "min(100%, 400px)", padding: "2rem" }}
       >
         <h4>Yakihonne's Chest!</h4>

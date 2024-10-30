@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   decodeUrlOrAddress,
   encodeLud06,
@@ -10,15 +10,20 @@ import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import QRCode from "react-qr-code";
 import relaysOnPlatform from "../../Content/Relays";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
-import { Context } from "../../Context/Context";
-import { SimplePool } from "nostr-tools";
 import LoadingDots from "../LoadingDots";
 import LoginWithNostr from "./LoginWithNostr";
 import { webln } from "@getalby/sdk";
 import { decode } from "light-bolt11-decoder";
-import { getWallets, updateWallets } from "../../Helpers/Helpers";
-
-const pool = new SimplePool();
+import {
+  getWallets,
+  redirectToLogin,
+  updateWallets,
+} from "../../Helpers/Helpers";
+import { useDispatch, useSelector } from "react-redux";
+import { updateYakiChestStats } from "../../Helpers/Controlers";
+import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
+import { setToast } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function ZapTip({
   recipientLNURL,
@@ -31,16 +36,18 @@ export default function ZapTip({
   onlyIcon = false,
   smallIcon = false,
   custom = false,
+  setReceivedEvent,
+  isZapped = false
 }) {
   const [callback, setCallback] = useState(false);
   const [showCashier, setCashier] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [lnbcAmount, setLnbcAmount] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       if (callback) return;
       try {
+        if (!recipientLNURL) return;
         if (recipientLNURL.startsWith("lnbc") && recipientLNURL.length > 24) {
           try {
             let decoded = decode(recipientLNURL);
@@ -54,7 +61,9 @@ export default function ZapTip({
             return;
           }
         }
-        const data = await axios.get(decodeUrlOrAddress(recipientLNURL));
+        let url = decodeUrlOrAddress(recipientLNURL);
+        if (!url) return;
+        const data = await axios.get(url);
         setCallback(data.data.callback);
       } catch (err) {
         console.error(err);
@@ -97,6 +106,7 @@ export default function ZapTip({
             exit={() => setCashier(false)}
             forContent={forContent}
             lnbcAmount={lnbcAmount}
+            setReceivedEvent={setReceivedEvent}
           />
         )}
         <button
@@ -145,11 +155,10 @@ export default function ZapTip({
   if (!senderPubkey)
     return (
       <>
-        {showLogin && <LoginWithNostr exit={() => setShowLogin(false)} />}
         {onlyIcon && (
           <div
             className={smallIcon ? "bolt" : "bolt-24"}
-            onClick={() => setShowLogin(true)}
+            onClick={() => redirectToLogin(true)}
           ></div>
         )}
         {!onlyIcon && (
@@ -157,7 +166,7 @@ export default function ZapTip({
             className={`${
               smallIcon ? "round-icon-small" : "round-icon"
             }  round-icon-tooltip`}
-            onClick={() => setShowLogin(true)}
+            onClick={() => redirectToLogin(true)}
             data-tooltip="Zap"
           >
             <div className={smallIcon ? "lightning" : "lightning-24"}></div>
@@ -178,11 +187,12 @@ export default function ZapTip({
           eTag={eTag}
           exit={() => setCashier(false)}
           forContent={forContent}
+          setReceivedEvent={setReceivedEvent}
         />
       )}
       {onlyIcon && (
         <div
-          className={smallIcon ? "bolt" : "bolt-24"}
+          className={smallIcon ? isZapped ? "bolt-bold" : "bolt" : isZapped ? "bolt-bold-24" : "bolt-24"}
           onClick={() => setCashier(true)}
         ></div>
       )}
@@ -212,14 +222,11 @@ const Cashier = ({
   exit,
   forContent,
   lnbcAmount,
+  setReceivedEvent,
 }) => {
-  const {
-    nostrKeys,
-    setToast,
-    nostrUser,
-    setUpdatedActionFromYakiChest,
-    updateYakiChestStats,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
   const [amount, setAmount] = useState(
     lnbcAmount ? parseInt(lnbcAmount.value) / 1000 : 1
   );
@@ -256,11 +263,18 @@ const Cashier = ({
 
   const onConfirmation = async () => {
     try {
-      if (!nostrKeys || !amount) {
-        setToast({ type: 2, desc: "User is not connected or amount is null!" });
+      if (!userKeys || !amount) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "User is not connected or amount is null!",
+          })
+        );
         return;
       }
       let lnbcInvoice = lnbcAmount ? recipientLNURL : "";
+      let eventCreatedAt = Math.floor(Date.now() / 1000);
+      let eventToPublish = null
       if (!lnbcAmount) {
         let sats = amount * 1000;
         let tags = [
@@ -271,10 +285,11 @@ const Cashier = ({
         ];
         if (aTag) tags.push(["a", aTag]);
         if (eTag) tags.push(["e", eTag]);
-        const event = await getZapEventRequest(nostrKeys, message, tags);
+        const event = await getZapEventRequest(userKeys, message, tags, eventCreatedAt);
         if (!event) {
           return;
         }
+        eventToPublish = event;
         let tempRecipientLNURL = recipientLNURL.includes("@")
           ? encodeLud06(decodeUrlOrAddress(recipientLNURL))
           : recipientLNURL;
@@ -287,21 +302,27 @@ const Cashier = ({
           //   },
           // });
           const res = await axios(
-            `${callback}${callback.includes("?") ? "&" : "?"}amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
+            `${callback}${
+              callback.includes("?") ? "&" : "?"
+            }amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
           );
           if (res.data.status === "ERROR") {
-            setToast({
-              type: 2,
-              desc: "Something went wrong when processing payment!",
-            });
+            dispatch(
+              setToast({
+                type: 2,
+                desc: "Something went wrong when processing payment!",
+              })
+            );
             return;
           }
           lnbcInvoice = res.data.pr;
         } catch (err) {
-          setToast({
-            type: 2,
-            desc: "Something went wrong when creating the invoice!",
-          });
+          dispatch(
+            setToast({
+              type: 2,
+              desc: "Something went wrong when creating the invoice!",
+            })
+          );
           return;
         }
       }
@@ -310,35 +331,44 @@ const Cashier = ({
 
       await sendPayment(lnbcInvoice);
 
-      let sub = pool.subscribeMany(
-        relaysOnPlatform,
-        [
-          {
-            kinds: [9735],
-            "#p": [recipientPubkey],
-            since: Math.floor(Date.now() / 1000 - 10),
-          },
-        ],
-        {
-          onevent(event) {
-            setConfirmation("confirmed");
-            updateYakiChest();
-          },
-        }
-      );
+      if (eventToPublish) {
+        console.log("first")
+        let sub = ndkInstance.subscribe(
+          [
+            {
+              kinds: [9735],
+              "#p": [recipientPubkey],
+              since: eventCreatedAt - 500,
+            },
+          ],
+          { groupable: false, cacheUsage: "CACHE_FIRST" }
+        );
+
+        sub.on("event", (event) => {
+         
+          setReceivedEvent(event.rawEvent());
+          setConfirmation("confirmed");
+          updateYakiChest();
+          sub.stop()
+        });
+      } else {
+        console.log("second")
+        setConfirmation("confirmed");
+        updateYakiChest();
+      }
     } catch (err) {
       console.log(err);
     }
   };
 
   const sendPayment = async (addr) => {
-    if (selectedWallet.kind === 1) sendWithWebLN(addr);
+    if (selectedWallet.kind === 1) await sendWithWebLN(addr);
     if (selectedWallet.kind === 2) {
       let checkTokens = await checkAlbyToken(wallets, selectedWallet);
       setWallets(checkTokens.wallets);
       sendWithAlby(addr, checkTokens.activeWallet.data.access_token);
     }
-    if (selectedWallet.kind === 3) sendWithNWC(addr);
+    if (selectedWallet.kind === 3) await sendWithNWC(addr);
   };
 
   const sendWithWebLN = async (addr_) => {
@@ -348,10 +378,12 @@ const Cashier = ({
       return;
     } catch (err) {
       if (err.includes("User rejected")) return;
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
   const sendWithNWC = async (addr_) => {
@@ -364,10 +396,12 @@ const Cashier = ({
     } catch (err) {
       console.log(err);
 
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
   const sendWithAlby = async (addr_, code) => {
@@ -389,10 +423,12 @@ const Cashier = ({
 
   const copyKey = (key) => {
     navigator.clipboard.writeText(key);
-    setToast({
-      type: 1,
-      desc: `LNURL was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `LNURL was copied! 👏`,
+      })
+    );
   };
 
   const updateYakiChest = async () => {
@@ -402,11 +438,11 @@ const Cashier = ({
         let data = await axiosInstance.post("/api/v1/yaki-chest", {
           action_key,
         });
-        console.log(data.data);
+
         let { user_stats, is_updated } = data.data;
 
         if (is_updated) {
-          setUpdatedActionFromYakiChest(is_updated);
+          dispatch(setUpdatedActionFromYakiChest(is_updated));
           updateYakiChestStats(user_stats);
         }
       }
@@ -474,7 +510,7 @@ const Cashier = ({
               mainAccountUser={true}
               ring={false}
             />
-            <p className="gray-c p-medium">{nostrUser.name}</p>
+            <p className="gray-c p-medium">{userMetadata.name}</p>
           </div>
           {recipientPubkey && (
             <>
@@ -716,7 +752,7 @@ const checkAlbyToken = async (wallets, activeWallet) => {
     let tempWallets = Array.from(wallets);
     let index = wallets.findIndex((item) => item.id === activeWallet.id);
     tempWallets[index] = tempWallet;
-    updateWallets(tempWallets)
+    updateWallets(tempWallets);
     return {
       wallets: tempWallets,
       activeWallet: tempWallet,

@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { Helmet } from "react-helmet";
-import { Context } from "../../Context/Context";
 import {
   SimplePool,
   nip04,
@@ -22,17 +21,22 @@ import EmojisList from "../../Components/EmojisList";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/Main/InitConvo";
 import axiosInstance from "../../Helpers/HTTP_Client";
+import { updateYakiChestStats } from "../../Helpers/Controlers";
+import { useDispatch, useSelector } from "react-redux";
+import { setToPublish } from "../../Store/Slides/Publishers";
+import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
+import { setUserChatrooms } from "../../Store/Slides/UserData";
+import { checkCurrentConvo } from "../../Helpers/DB";
 
 export default function DMS() {
-  const {
-    nostrKeys,
-    chatrooms,
-    setChatrooms,
-    chatContacts,
-    initDMS,
-    userFollowings,
-    mutedList,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userChatrooms = useSelector((state) => state.userChatrooms);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const initDMS = useSelector((state) => state.initDMS);
+  const userMutedList = useSelector((state) => state.userMutedList);
+  const userFollowings = useSelector((state) => state.userFollowings);
+
   const [selectedConvo, setSelectedConvo] = useState(false);
   const [isConvoLoading, setIsConvoLoading] = useState(false);
   const [sortedInbox, setSortedInbox] = useState([]);
@@ -53,49 +57,46 @@ export default function DMS() {
     let followings = 0;
     let known = 0;
     let unknown = 0;
-    let tempChatrooms = chatrooms
-      .map((chatroom) => {
-        let contact = chatContacts.find(
-          (contact) => contact.pubkey === chatroom.pubkey
-        );
+    let tempChatrooms = userChatrooms.map((chatroom) => {
+      let contact = nostrAuthors.find(
+        (contact) => contact.pubkey === chatroom.pubkey
+      );
 
-        let isFollowing = userFollowings?.includes(chatroom.pubkey)
-          ? "following"
-          : false;
-        let isUnknown = false;
-        let isKnown = false;
-        if (!isFollowing) {
-          isUnknown = chatroom.convo.find(
-            (conv) => conv.pubkey === nostrKeys.pub
-          )
-            ? false
-            : "unknown";
+      let isFollowing = userFollowings?.includes(chatroom.pubkey)
+        ? "following"
+        : false;
+      let isUnknown = false;
+      let isKnown = false;
+      if (!isFollowing) {
+        isUnknown = chatroom.convo.find((conv) => conv.pubkey === userKeys.pub)
+          ? false
+          : "unknown";
 
-          if (!isUnknown) isKnown = "known";
-        }
-        if (isFollowing) followings = followings + 1;
-        if (isUnknown) unknown = unknown + 1;
-        if (isKnown) known = known + 1;
-        if (contact)
-          return {
-            ...contact,
-            ...chatroom,
-            type: isFollowing || isUnknown || isKnown,
-          };
+        if (!isUnknown) isKnown = "known";
+      }
+      if (isFollowing) followings = followings + 1;
+      if (isUnknown) unknown = unknown + 1;
+      if (isKnown) known = known + 1;
+      if (contact)
         return {
+          ...contact,
           ...chatroom,
-          picture: "",
-          display_name: chatroom.pubkey.substring(0, 10),
-          name: chatroom.pubkey.substring(0, 10),
           type: isFollowing || isUnknown || isKnown,
         };
-      })
-      .filter((chatroom) => !mutedList.includes(chatroom.pubkey));
-    
+      return {
+        ...chatroom,
+        picture: "",
+        display_name: chatroom.pubkey.substring(0, 10),
+        name: chatroom.pubkey.substring(0, 10),
+        type: isFollowing || isUnknown || isKnown,
+      };
+    });
+    // .filter((chatroom) => !userMutedList.includes(chatroom.pubkey));
+
     setMsgsCount({ followings, known, unknown });
     setSortedInbox(tempChatrooms);
     if (selectedConvo) {
-      let updatedConvo = chatrooms.find(
+      let updatedConvo = userChatrooms.find(
         (inbox) => inbox.pubkey === selectedConvo.pubkey
       );
       handleSelectedConversation(
@@ -109,16 +110,16 @@ export default function DMS() {
       );
     }
     setInitConv(false);
-  }, [chatrooms, chatContacts, userFollowings]);
+  }, [userChatrooms, nostrAuthors, userFollowings]);
 
   useEffect(() => {
-    // if (!nostrKeys) {
-    if (!nostrKeys) setSortedInbox([]);
+    // if (!userKeys) {
+    if (!userKeys) setSortedInbox([]);
     setSelectedConvo(false);
     setIsConvoLoading(false);
     // }
-  }, [nostrKeys]);
-  
+  }, [userKeys]);
+
   const handleSelectedConversation = async (
     conversation,
     ignoreLoading = false
@@ -183,6 +184,7 @@ export default function DMS() {
       if (selectedConvo) setContentType(selectedConvo.type);
       return;
     }
+
     setShowSearch(true);
   };
 
@@ -195,30 +197,19 @@ export default function DMS() {
       last_message: event.last_message,
       checked: true,
     };
-    let tempSortedInbox = Array.from(sortedInbox);
-    let tempUnsortedInbox = Array.from(chatrooms);
-    let findIndex = tempSortedInbox.findIndex(
-      (item) => item.pubkey === event.pubkey
-    );
-    tempSortedInbox[findIndex].checked = true;
-    tempUnsortedInbox[findIndex].checked = true;
-    setSortedInbox(tempSortedInbox);
-    setChatrooms(tempUnsortedInbox);
-    let openDB = indexedDB.open("yaki-nostr", 3);
-    openDB.onsuccess = () => {
-      let db = openDB.result;
-      db.onversionchange = function () {
-        db.close();
-        alert("Database is outdated, please reload the page.");
-      };
-      let transaction = db.transaction(["chatrooms"], "readwrite");
-      let chatrooms_ = transaction.objectStore("chatrooms");
-
-      chatrooms_.put(tempEvent, event.pubkey);
-    };
+    checkCurrentConvo(tempEvent, userKeys.pub);
+    // let tempSortedInbox = Array.from(sortedInbox);
+    // let tempUnsortedInbox = Array.from(userChatrooms);
+    // let findIndex = tempSortedInbox.findIndex(
+    //   (item) => item.pubkey === event.pubkey
+    // );
+    // tempSortedInbox[findIndex].checked = true;
+    // tempUnsortedInbox[findIndex].checked = true;
+    // setSortedInbox(tempSortedInbox);
+    // dispatch(setUserChatrooms(tempUnsortedInbox));
   };
 
-  if (!nostrKeys)
+  if (!userKeys)
     return (
       <div>
         <Helmet>
@@ -256,7 +247,7 @@ export default function DMS() {
       </div>
     );
 
-  if (!(nostrKeys.sec || nostrKeys.ext))
+  if (!(userKeys.sec || userKeys.ext))
     return (
       <div>
         <Helmet>
@@ -666,19 +657,17 @@ export default function DMS() {
 }
 
 const ConversationBox = ({ convo, back }) => {
-  const {
-    nostrKeys,
-    nostrUser,
-    setToPublish,
-    isDarkMode,
-    setUpdatedActionFromYakiChest,
-    updateYakiChestStats,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const convoContainerRef = useRef(null);
   const inputFieldRef = useRef(null);
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(
-    // nostrKeys.sec || window?.nostr?.nip44 ? false : true
+    // userKeys.sec || window?.nostr?.nip44 ? false : true
     true
   );
   const [replayOn, setReplayOn] = useState("");
@@ -699,29 +688,23 @@ const ConversationBox = ({ convo, back }) => {
   }, [convo]);
 
   const handleSendMessage = async () => {
-    if (
-      !message ||
-      !nostrKeys ||
-      (nostrKeys && !(nostrKeys.ext || nostrKeys.sec))
-    )
+    if (!message || !userKeys || (userKeys && !(userKeys.ext || userKeys.sec)))
       return;
 
-    let relaysToPublish = nostrUser
-      ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
-      : relaysOnPlatform;
+    let relaysToPublish = userRelays;
     // setMessage("");
     // setReplayOn(false);
     // setShowProgress(true);
     if (legacy) {
       let encryptedMessage = "";
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         encryptedMessage = await window.nostr.nip04.encrypt(
           convo.pubkey,
           message
         );
       } else {
         encryptedMessage = await nip04.encrypt(
-          nostrKeys.sec,
+          userKeys.sec,
           convo.pubkey,
           message
         );
@@ -739,20 +722,16 @@ const ConversationBox = ({ convo, back }) => {
         content: encryptedMessage,
         tags,
       };
-      if (nostrKeys.ext) {
-        try {
-          tempEvent = await window.nostr.signEvent(tempEvent);
-        } catch (err) {
-          console.log(err);
-          return false;
-        }
-      } else {
-        tempEvent = finalizeEvent(tempEvent, nostrKeys.sec);
-      }
-      setToPublish({
-        eventInitEx: tempEvent,
-        allRelays: relaysToPublish,
-      });
+
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 4,
+          content: encryptedMessage,
+          tags,
+          allRelays: relaysToPublish,
+        })
+      );
     }
     if (!legacy) {
       let { sender_event, receiver_event } = await getGiftWrap();
@@ -774,9 +753,6 @@ const ConversationBox = ({ convo, back }) => {
         updateYakiChest(action_key);
       }
     }
-    // setMessage("");
-    // setReplayOn(false);
-    // setShowProgress(true);
   };
 
   const updateYakiChest = async (action_key) => {
@@ -787,7 +763,7 @@ const ConversationBox = ({ convo, back }) => {
       let { user_stats, is_updated } = data.data;
 
       if (is_updated) {
-        setUpdatedActionFromYakiChest(is_updated);
+        dispatch(setUpdatedActionFromYakiChest(is_updated));
         updateYakiChestStats(user_stats);
       }
     } catch (err) {
@@ -801,7 +777,7 @@ const ConversationBox = ({ convo, back }) => {
 
     let [signedKind13_1, signedKind13_2] = await Promise.all([
       getEventKind13(convo.pubkey),
-      getEventKind13(nostrKeys.pub),
+      getEventKind13(userKeys.pub),
     ]);
 
     let content_1 = nip44.v2.encrypt(
@@ -810,7 +786,7 @@ const ConversationBox = ({ convo, back }) => {
     );
     let content_2 = nip44.v2.encrypt(
       JSON.stringify(signedKind13_2),
-      nip44.v2.utils.getConversationKey(g_sk_2, nostrKeys.pub)
+      nip44.v2.utils.getConversationKey(g_sk_2, userKeys.pub)
     );
     let event_1 = {
       created_at: Math.floor(Date.now() / 1000) - 432000,
@@ -821,7 +797,7 @@ const ConversationBox = ({ convo, back }) => {
     let event_2 = {
       created_at: Math.floor(Date.now() / 1000) - 432000,
       kind: 1059,
-      tags: [["p", nostrKeys.pub]],
+      tags: [["p", userKeys.pub]],
       content: content_2,
     };
     event_1 = finalizeEvent(event_1, g_sk_1);
@@ -831,12 +807,12 @@ const ConversationBox = ({ convo, back }) => {
 
   const getEventKind14 = () => {
     let event = {
-      pubkey: nostrKeys.pub,
+      pubkey: userKeys.pub,
       created_at: Math.floor(Date.now() / 1000),
       kind: 14,
       tags: [
         ["p", convo.pubkey],
-        ["p", nostrKeys.pub],
+        ["p", userKeys.pub],
       ],
       content: message,
     };
@@ -848,10 +824,10 @@ const ConversationBox = ({ convo, back }) => {
 
   const getEventKind13 = async (pubkey) => {
     let unsignedKind14 = getEventKind14();
-    let content = nostrKeys.sec
+    let content = userKeys.sec
       ? nip44.default.v2.encrypt(
           JSON.stringify(unsignedKind14),
-          nip44.v2.utils.getConversationKey(nostrKeys.sec, pubkey)
+          nip44.v2.utils.getConversationKey(userKeys.sec, pubkey)
         )
       : await window.nostr.nip44.encrypt(
           pubkey,
@@ -863,8 +839,8 @@ const ConversationBox = ({ convo, back }) => {
       tags: [],
       content,
     };
-    event = nostrKeys.sec
-      ? finalizeEvent(event, nostrKeys.sec)
+    event = userKeys.sec
+      ? finalizeEvent(event, userKeys.sec)
       : await window.nostr.signEvent(event);
     return event;
   };
@@ -872,7 +848,7 @@ const ConversationBox = ({ convo, back }) => {
   const getReply = (ID) => {
     let msg = convo.convo.find((conv) => conv.id === ID);
     if (!msg) return false;
-    return { content: msg.raw_content, self: msg.pubkey === nostrKeys.pub };
+    return { content: msg.raw_content, self: msg.pubkey === userKeys.pub };
   };
 
   if (!convo) return;
@@ -913,7 +889,7 @@ const ConversationBox = ({ convo, back }) => {
             </p>
           </div>
         </div>
-        {(nostrKeys.sec || window?.nostr?.nip44) && (
+        {(userKeys.sec || window?.nostr?.nip44) && (
           <div
             className="fx-centered round-icon-tooltip"
             data-tooltip={legacy ? "Switch NIP-44 on" : "Switch back to legacy"}
@@ -1108,7 +1084,7 @@ const ConversationBox = ({ convo, back }) => {
           <div>
             <p className="gray-c p-medium">
               Reply to{" "}
-              {replayOn.pubkey === nostrKeys.pub ? (
+              {replayOn.pubkey === userKeys.pub ? (
                 "yourself"
               ) : (
                 <>

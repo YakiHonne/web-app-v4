@@ -1,12 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import LoadingDots from "../LoadingDots";
-import { Context } from "../../Context/Context";
-import relaysOnPlatform from "../../Content/Relays";
 import { nanoid } from "nanoid";
-import { filterRelays } from "../../Helpers/Encryptions";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 export default function AddBookmark({ bookmark, exit, tags = [] }) {
-  const { nostrKeys, setToast, setToPublish, nostrUser } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [title, setTitle] = useState(bookmark?.title || "");
   const [description, setDescription] = useState(bookmark?.description || "");
   const [image, setImage] = useState(bookmark?.image || "");
@@ -16,18 +18,19 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
     try {
       setIsLoading(true);
       let tempTags = getTags(title, description, image);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 30003,
-        content: "",
-        tags: tempTags,
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 30003,
+          content: "",
+          tags: tempTags,
+          allRelays: userRelays,
+        })
+      );
       setIsLoading(false);
       exit();
     } catch (err) {
+      setIsLoading(false);
       console.log(err);
       setToast({
         type: 2,
@@ -37,7 +40,7 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
   };
 
   const getTags = (title, description, image) => {
-    let tempTags = Array.from(tags);
+    let tempTags = structuredClone(tags);
     let checkStatus = false;
     for (let tag of tempTags) {
       if (tag[0] === "d") {
@@ -68,26 +71,21 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
         tempTags[i][1] = image;
       }
     }
+
     return tempTags;
   };
 
   const handleShowRelaysPicker = () => {
     if (!title) {
       setIsLoading(false);
-      setToast({
-        type: 3,
-        desc: "Missing title",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "Missing title",
+        })
+      );
       return;
     }
-    // if (!description) {
-    //   setIsLoading(false);
-    //   setToast({
-    //     type: 3,
-    //     desc: "Missing description",
-    //   });
-    //   return;
-    // }
     handleDataUpload();
   };
 

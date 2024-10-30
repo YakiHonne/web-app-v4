@@ -1,9 +1,10 @@
-import React, { useContext, useMemo, useState } from "react";
-import { Context } from "../../Context/Context";
+import React, { useMemo, useState } from "react";
 import LoginWithNostr from "./LoginWithNostr";
 import BookmarksPicker from "./BookmarksPicker";
+import { useSelector } from "react-redux";
+import { redirectToLogin } from "../../Helpers/Helpers";
 
-export default function SaveArticleAsBookmark({
+export default function BookmarkEvent({
   pubkey = "",
   d = "",
   kind = 30023,
@@ -12,8 +13,8 @@ export default function SaveArticleAsBookmark({
   extraData = "",
   label = false,
 }) {
-  const { nostrKeys, nostrUserBookmarks } = useContext(Context);
-  const [toLogin, setToLogin] = useState(false);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userBookmarks = useSelector((state) => state.userBookmarks);
   const [showBookmarksPicker, setShowBookmarksPicker] = useState(false);
   const itemTypes = {
     a: `${kind}:${pubkey}:${d}`,
@@ -21,12 +22,12 @@ export default function SaveArticleAsBookmark({
     t: extraData,
   };
   const isBookmarked = useMemo(() => {
-    return nostrKeys
-      ? nostrUserBookmarks.find((bookmark) =>
-          bookmark.tags.find((item) => item[1] === itemTypes[itemType])
+    return userKeys
+      ? userBookmarks.find((bookmark) =>
+          bookmark.items.find((item) => item === itemTypes[itemType])
         )
       : false;
-  }, [nostrUserBookmarks, nostrKeys]);
+  }, [userBookmarks, userKeys]);
 
   return (
     <>
@@ -41,11 +42,11 @@ export default function SaveArticleAsBookmark({
           extraData={extraData}
         />
       )}
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
+
       <div
         className="fx-scattered  pointer"
         onClick={() =>
-          !nostrKeys ? setToLogin(true) : setShowBookmarksPicker(true)
+          !userKeys ? redirectToLogin() : setShowBookmarksPicker(true)
         }
       >
         {label && <p>{label}</p>}

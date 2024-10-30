@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import AddYakiWallet from "./AddYakiWallet";
 
-export default function AddWallet({ exit }) {
+export default function AddWallet({ exit, refresh }) {
   return (
     <div
       className="fixed-container fx-centered box-pad-h"
@@ -12,15 +13,21 @@ export default function AddWallet({ exit }) {
       }}
     >
       <div
-        className="sc-s box-pad-h box-pad-v fx-centered fx-col"
+        className="sc-s-18 box-pad-h box-pad-v fx-centered fx-col bg-sp"
         style={{ width: "min(100%,500px)", position: "relative" }}
       >
         <div className="close">
           <div></div>
         </div>
         <h4 className="box-marg-s">Add wallet</h4>
+     
+        <AddYakiWallet refresh={refresh}/>
+        <div className="fit-container fx-centered">
+          <p>Or use yours</p>
+        </div>
         <Link
           className="fit-container fx-scattered sc-s-18 box-pad-h-s box-pad-v-s option pointer"
+          style={{ backgroundColor: "transparent" }}
           to={"/wallet/nwc"}
         >
           <div className="fx-centered">
@@ -39,6 +46,7 @@ export default function AddWallet({ exit }) {
         </Link>
         <div
           className="fit-container fx-scattered sc-s-18 box-pad-h-s box-pad-v-s option pointer"
+          style={{ backgroundColor: "transparent" }}
           onClick={() =>
             (window.location.href = process.env.REACT_APP_ALBY_ALBY_CONNECT)
           }
@@ -57,7 +65,11 @@ export default function AddWallet({ exit }) {
             <div className="plus-sign"></div>
           </div>
         </div>
-        <p className="gray-c p-medium p-centered">Note: All the data related to your wallet will be safely and securely stored locally and are never shared outside the confines of the application.</p>
+        <p className="gray-c p-medium p-centered">
+          Note: All the data related to your wallet will be safely and securely
+          stored locally and are never shared outside the confines of the
+          application.
+        </p>
       </div>
     </div>
   );

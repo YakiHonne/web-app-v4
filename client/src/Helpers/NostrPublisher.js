@@ -1,21 +1,21 @@
 import { finalizeEvent } from "nostr-tools";
 import axiosInstance from "./HTTP_Client";
 
-const getZapEventRequest = async (nostrKeys, content, tags = []) => {
+const getZapEventRequest = async (userKeys, content, tags = [], created_at) => {
   let event = {
     kind: 9734,
     content,
-    created_at: Math.floor(Date.now() / 1000),
+    created_at:created_at || Math.floor(Date.now() / 1000),
     tags,
   };
-  if (nostrKeys.ext) {
+  if (userKeys.ext) {
     try {
       event = await window.nostr.signEvent(event);
     } catch {
       return false;
     }
   } else {
-    event = finalizeEvent(event, nostrKeys.sec);
+    event = finalizeEvent(event, userKeys.sec);
   }
   return encodeURI(JSON.stringify(event));
 };

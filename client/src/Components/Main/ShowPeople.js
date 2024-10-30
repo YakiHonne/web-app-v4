@@ -1,14 +1,17 @@
-import { SimplePool } from "nostr-tools";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import relaysOnPlatform from "../../Content/Relays";
-import { filterRelays, getParsedAuthor } from "../../Helpers/Encryptions";
+import {
+  filterRelays,
+  getParsedAuthor,
+  getParsedRepEvent,
+} from "../../Helpers/Encryptions";
 import LoadingScreen from "../LoadingScreen";
 import Follow from "./Follow";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import ShortenKey from "./ShortenKey";
-import { Context } from "../../Context/Context";
-
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 const getBulkListStats = (list) => {
   let toFollow = list.filter((item) => item.to_follow).length;
@@ -17,15 +20,11 @@ const getBulkListStats = (list) => {
 };
 
 export default function ShowPeople({ exit, list, type = "following" }) {
-  const {
-    userFollowings,
-    nostrUser,
-    setNostrUser,
-    nostrKeys,
-    setToPublish,
-    isPublishing,
-    setToast,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const userFollowings = useSelector((state) => state.userFollowings);
   const [people, setPeople] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [bulkList, setBulkList] = useState([]);
@@ -36,45 +35,48 @@ export default function ShowPeople({ exit, list, type = "following" }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let _list =
-          type === "following"
-            ? list.map((item) => item[1])
-            : list.map((item) => item.pubkey);
+        if (type !== "following") {
+          setPeople(list);
+          if (list.length > 0) setIsLoaded(true);
+          return;
+        }
 
-        let sub = pool.subscribeMany(
-          relaysOnPlatform,
-          [{ kinds: [0], authors: _list }],
-          {
-            onevent(event) {
-              setPeople((data) => {
-                let newF = [...data, getParsedAuthor(event)];
-                let netF = newF.filter((item, index, newF) => {
-                  if (
-                    newF.findIndex((_item) => item.pubkey === _item.pubkey) ===
-                    index
-                  )
-                    return item;
-                });
-                return netF;
-              });
-              setIsLoaded(true);
-            },
-          }
-        );
+        let sub = ndkInstance.subscribe([{ kinds: [0], authors: list }], {
+          closeOnEose: true,
+          cacheUsage: "CACHE_FIRST",
+          groupable: false,
+        });
+
+        sub.on("event", (event) => {
+          setPeople((data) => {
+            let newF = [...data, getParsedAuthor(event)];
+            let netF = newF.filter((item, index, newF) => {
+              if (
+                newF.findIndex((_item) => item.pubkey === _item.pubkey) ===
+                index
+              )
+                return item;
+            });
+            return netF;
+          });
+          setIsLoaded(true);
+        });
       } catch (err) {
         console.log(err);
       }
     };
     fetchData();
-  }, []);
+  }, [list]);
 
   const followUnfollow = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       const toUnfollowList = bulkList
@@ -82,104 +84,110 @@ export default function ShowPeople({ exit, list, type = "following" }) {
         .map((item) => item.pubkey);
 
       let tempTags = Array.from(
-        userFollowings?.filter(
-          (item) => !toUnfollowList.includes(item)
-        ) || []
+        userFollowings
+          ?.filter((item) => !toUnfollowList.includes(item))
+          .map((item) => ["p", item]) || []
       );
       for (let item of bulkList) {
         if (item.to_follow)
-          tempTags.push([
-            "p",
-            item.pubkey,
-            relaysOnPlatform[0],
-            item.name || "yakihonne-user",
-          ]);
+          tempTags.push(["p", item.pubkey, relaysOnPlatform[0]]);
       }
 
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 3,
-        content: "",
-        tags: tempTags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 3,
+          content: "",
+          tags: tempTags,
+          allRelays: userRelays,
+        })
+      );
 
-      let tempUser = {
-        ...nostrUser,
-      };
-      tempUser.following = tempTags;
-      setNostrUser({ ...tempUser });
       exit();
     } catch (err) {
       console.log(err);
     }
   };
-  if (!isLoaded) return <LoadingScreen />;
+  if (!isLoaded) return <LoadingScreen onClick={exit} />;
   return (
     <>
       <ArrowUp />
       <div
-        className="fixed-container box-pad-h box-pad-v fx-centered fx-start-v "
-        style={{
-          padding: "2rem",
-          overflow: "scroll",
-          scrollBehavior: "smooth",
-        }}
+        className="fixed-container fx-centered fx-start-v"
         onClick={(e) => {
           e.stopPropagation();
           exit();
         }}
       >
-        <div style={{ width: "min(100%, 500px)", position: "relative" }}>
-          <div className="close" onClick={exit}>
-            <div></div>
-          </div>
-          <div className="fit-container fx-centered">
-            <h3 className="p-caps">{type}</h3>
-          </div>
-          <div
-            className="fit-container fx-centered fx-start-v fx-col box-marg-full"
-            style={{ rowGap: "24px" }}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            {people.map((item) => {
-              return (
-                <div
-                  className="fx-scattered fit-container fx-start-v "
-                  key={item.pubkey + item.name}
-                >
-                  <div
-                    className="fx-centered fx-start-v"
-                    style={{ columnGap: "24px" }}
-                  >
-                    <UserProfilePicNOSTR
-                      size={48}
-                      img={item.picture}
-                      user_id={item.pubkey}
-                    />
-                    <div className="fx-centered fx-col fx-start-v">
-                      <ShortenKey id={item.pubkeyhashed} />
-                      <p>{item.name}</p>
-                      <p className="gray-c p-medium p-four-lines">
-                        {item.about}
-                      </p>
-                    </div>
-                  </div>
-                  <Follow
-                    toFollowKey={item.pubkey}
-                    toFollowName={item.name}
-                    bulk={true}
-                    bulkList={bulkList}
-                    setBulkList={setBulkList}
-                  />
-                </div>
-              );
-            })}
+        <div
+          className="fx-centered fx-col fx-start-v fx-start-h sc-s-18 bg-sp"
+          style={{
+            overflow: "scroll",
+            scrollBehavior: "smooth",
+            height: "100vh",
+            width: "min(100%, 550px)",
+            position: "relative",
+            borderRadius: 0,
+            gap: 0,
+          }}
+        >
+        <div
+          className="fit-container fx-centered sticky"
+          style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
+        >
+          <div className="fx-scattered fit-container box-pad-h">
+            <h4 className="p-caps">{type}</h4>
+            <div
+              className="close"
+              style={{ position: "static" }}
+              onClick={exit}
+            >
+              <div></div>
+            </div>
           </div>
         </div>
+        <div
+          className="fit-container fx-centered fx-start-v fx-col box-pad-h box-pad-v "
+          style={{ rowGap: "24px" }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {people.map((item) => {
+            return (
+              <div
+                className="fx-scattered fit-container fx-start-v "
+                key={item.pubkey + item.name}
+              >
+                <div
+                  className="fx-centered fx-start-v"
+                  style={{ columnGap: "24px" }}
+                >
+                  <UserProfilePicNOSTR
+                    size={48}
+                    img={item.picture}
+                    user_id={item.pubkey}
+                    ring={false}
+                  />
+                  <div className="fx-centered fx-col fx-start-v">
+                    <p>{item.display_name}</p>
+                    <p className="gray-c p-medium p-four-lines">{item.about}</p>
+                  </div>
+                </div>
+                <Follow
+                  toFollowKey={item.pubkey}
+                  toFollowName={item.display_name}
+                  bulk={true}
+                  bulkList={bulkList}
+                  setBulkList={setBulkList}
+                />
+              </div>
+            );
+          })}
+        </div>
+        </div>
       </div>
+
       {bulkList.length > 0 && (
         <div
           className="fit-container fx-centered fx-col slide-up"
@@ -187,9 +195,7 @@ export default function ShowPeople({ exit, list, type = "following" }) {
             position: "fixed",
             bottom: 0,
             left: "0",
-            // transform: "translateX(-50%)",
-            background: "var(--white)",
-            // width: "min(100%, 800px)",
+
             zIndex: 10000,
           }}
         >

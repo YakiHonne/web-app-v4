@@ -400,7 +400,7 @@ router.get("/api/v1/yaki-chest/stats", auth_user, async (req, res) => {
         tiers,
       });
     }
-    console.log(user_impact_last_updated, current_time);
+
     if (
       !user_impact_last_updated ||
       (user_impact_last_updated &&

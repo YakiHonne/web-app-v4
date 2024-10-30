@@ -12,7 +12,7 @@ export default function MinimalPreviewWidget({ widget }) {
         <div className="fx-centered fx-col fx-start-h fx-start-v">
           <p>{widget?.title}</p>
           {widget.description && (
-            <p className="gray-c p-medium">{widget.description}</p>
+            <p className="gray-c p-medium p-two-lines">{widget.description}</p>
           )}
         </div>
         <button
@@ -34,7 +34,7 @@ const FullWidget = ({ widget, exit }) => {
           width: "min(100%, 600px)",
           maxHeight: "95vh",
           overflow: "scroll",
-          backgroundColor: "var(--white)"
+          backgroundColor: "var(--white)",
         }}
         className="box-pad-h-m sc-s-18"
       >

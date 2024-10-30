@@ -24,5 +24,5 @@ const nostrClientsSlice = createSlice({
 export const { setNostrAuthors } = nostrAuthorsSlice.actions;
 export const { setNostrClients } = nostrClientsSlice.actions;
 
-export const { NostrAuthorsReducer } = nostrAuthorsSlice.reducer;
-export const { NostrClientsReducer } = nostrClientsSlice.reducer;
+export const NostrAuthorsReducer = nostrAuthorsSlice.reducer;
+export const NostrClientsReducer = nostrClientsSlice.reducer;

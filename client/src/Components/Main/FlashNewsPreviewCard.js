@@ -1,13 +1,14 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
-import { Context } from "../../Context/Context";
 
-import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
-import { getEmptyNostrUser } from "../../Helpers/Encryptions";
+import BookmarkEvent from "./BookmarkEvent";
+import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import ShareLink from "../ShareLink";
 import MediaPreview from "./MediaPreview";
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -15,8 +16,12 @@ const checkFollowing = (list, toFollowKey) => {
 };
 
 export default function FlashNewsPreviewCard({ item }) {
-  const { userFollowings, getNostrAuthor, nostrAuthors } = useContext(Context);
-  const [authorData, setAuthorData] = useState(getEmptyNostrUser(item.pubkey));
+  const userFollowings = useSelector((state) => state.userFollowings);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+
+  const [authorData, setAuthorData] = useState(
+    getEmptyuserMetadata(item.pubkey)
+  );
   const [artURL, setArtURL] = useState(`${item.nEvent}`);
   const optionsRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
@@ -29,7 +34,7 @@ export default function FlashNewsPreviewCard({ item }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(item.pubkey);
+        let auth = getUser(item.pubkey);
         if (auth) {
           setAuthorData(auth);
         }
@@ -198,12 +203,12 @@ export default function FlashNewsPreviewCard({ item }) {
                       <Link
                         className="fit-container "
                         onClick={(e) => e.stopPropagation()}
-                        to={`/uncensored-notes/${item.nEvent}`}
+                        to={`/verify-notes/${item.nEvent}`}
                       >
-                        See all uncensored notes
+                        See all attempts
                       </Link>
                     </div>
-                    <SaveArticleAsBookmark
+                    <BookmarkEvent
                       label="Bookmark Flash news"
                       pubkey={item.id}
                       itemType="e"

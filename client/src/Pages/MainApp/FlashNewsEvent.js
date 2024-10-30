@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingScreen from "../../Components/LoadingScreen";
-import { nip19, finalizeEvent, SimplePool } from "nostr-tools";
+import { nip19, finalizeEvent } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import {
   checkForLUDS,
@@ -11,7 +11,6 @@ import {
   getBolt11,
   getZapper,
 } from "../../Helpers/Encryptions";
-import { Context } from "../../Context/Context";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
@@ -24,14 +23,18 @@ import ZapTip from "../../Components/Main/ZapTip";
 import LoadingDots from "../../Components/LoadingDots";
 import axios from "axios";
 import UN from "../../Components/Main/UN";
-import SaveArticleAsBookmark from "../../Components/Main/SaveArticleAsBookmark";
-import { getNoteTree } from "../../Helpers/Helpers";
+import BookmarkEvent from "../../Components/Main/BookmarkEvent";
+import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
 import LoginWithNostr from "../../Components/Main/LoginWithNostr";
 import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import HomeFN from "../../Components/Main/HomeFN";
-const pool = new SimplePool();
+import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { getUser } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 const checkForSavedCommentOptions = () => {
   try {
@@ -128,22 +131,16 @@ const getnews = (news) => {
   };
 };
 export default function FlashNewsEvent() {
-  const {
-    nostrUser,
-    nostrKeys,
-    isPublishing,
-    setToPublish,
-    nostrAuthors,
-    setToast,
-    getNostrAuthor,
-    addNostrAuthors,
-  } = useContext(Context);
   const { nevent } = useParams();
   const navigateTo = useNavigate();
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [news, setNews] = useState(false);
-  const [importantFN, setImportantFN] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [toLogin, setToLogin] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [author, setAuthor] = useState("");
   const [usersList, setUsersList] = useState(false);
@@ -153,23 +150,21 @@ export default function FlashNewsEvent() {
   const [zapsCount, setZapsCount] = useState(0);
   const [zappers, setZappers] = useState([]);
   const isVoted = useMemo(() => {
-    return nostrKeys
+    return userKeys
       ? upvoteReaction
           .concat(downvoteReaction)
-          .find((item) => item.pubkey === nostrKeys.pub)
+          .find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [upvoteReaction, downvoteReaction, nostrKeys]);
+  }, [upvoteReaction, downvoteReaction, userKeys]);
 
   const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+
   useEffect(() => {
     try {
       const id = nip19.decode(nevent)?.data.id;
       const auth_pubkey = nip19.decode(nevent)?.data.author;
 
-      let sub = pool.subscribeMany(
-        nostrUser
-          ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-          : relaysOnPlatform,
+      let sub = ndkInstance.subscribe(
         [
           {
             kinds: [7],
@@ -181,25 +176,24 @@ export default function FlashNewsEvent() {
             "#e": [id],
           },
         ],
-        {
-          onevent(event) {
-            if (event.kind === 9735) {
-              let sats = decodeBolt11(getBolt11(event));
-              let zapper = getZapper(event);
-              setZappers((prev) => {
-                return [...prev, zapper];
-              });
-              setZapsCount((prev) => prev + sats);
-            }
-            if (event.kind === 7) {
-              if (event.content === "+")
-                setUpvoteReaction((upvoteNews) => [...upvoteNews, event]);
-              if (event.content === "-")
-                setDownvoteReaction((downvoteNews) => [...downvoteNews, event]);
-            }
-          },
-        }
+        { cacheUsage: "CACHE_FIRST" }
       );
+      sub.on("event", (event) => {
+        if (event.kind === 9735) {
+          let sats = decodeBolt11(getBolt11(event));
+          let zapper = getZapper(event);
+          setZappers((prev) => {
+            return [...prev, zapper];
+          });
+          setZapsCount((prev) => prev + sats);
+        }
+        if (event.kind === 7) {
+          if (event.content === "+")
+            setUpvoteReaction((upvoteNews) => [...upvoteNews, event]);
+          if (event.content === "-")
+            setDownvoteReaction((downvoteNews) => [...downvoteNews, event]);
+        }
+      });
     } catch (err) {
       console.log(err);
       setIsLoaded(true);
@@ -211,10 +205,7 @@ export default function FlashNewsEvent() {
       try {
         setIsLoaded(false);
         const id = nip19.decode(nevent)?.data.id;
-        const [data, important] = await Promise.all([
-          axios.get(API_BASE_URL + "/api/v1/flashnews/" + id),
-          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
-        ]);
+        const data = await axios.get(API_BASE_URL + "/api/v1/flashnews/" + id);
 
         let tempEvent = getnews(data.data);
         let note_tree = await getNoteTree(data.data.content);
@@ -225,7 +216,6 @@ export default function FlashNewsEvent() {
           ...data.data,
           note_tree,
         });
-        setImportantFN(important.data);
         setAuthor(author);
         setIsLoaded(true);
       } catch (err) {
@@ -239,31 +229,30 @@ export default function FlashNewsEvent() {
     e.stopPropagation();
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
 
         setIsLoading(false);
 
@@ -281,18 +270,18 @@ export default function FlashNewsEvent() {
       }
 
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "+",
-        tags: [
-          ["e", news.id],
-          ["p", news.author.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "+",
+          tags: [
+            ["e", news.id],
+            ["p", news.author.pubkey],
+          ],
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -304,31 +293,30 @@ export default function FlashNewsEvent() {
     e.stopPropagation();
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
         setIsLoading(false);
         if (isVoted.content === "-") {
           let tempArray = Array.from(downvoteReaction);
@@ -343,18 +331,18 @@ export default function FlashNewsEvent() {
         setUpvoteReaction(tempArray);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "-",
-        tags: [
-          ["e", news.id],
-          ["p", news.author.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "-",
+          tags: [
+            ["e", news.id],
+            ["p", news.author.pubkey],
+          ],
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -367,7 +355,6 @@ export default function FlashNewsEvent() {
   if (!news) return navigateTo("/flash-news");
   return (
     <>
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -439,9 +426,7 @@ export default function FlashNewsEvent() {
                         <h4>By {author.name}</h4>
                         <p className="gray-c">
                           <Date_
-                            toConvert={new Date(
-                              news.created_at * 1000
-                            ).toString()}
+                            toConvert={new Date(news.created_at * 1000)}
                             time={true}
                           />
                         </p>
@@ -498,7 +483,7 @@ export default function FlashNewsEvent() {
                     <Link
                       className="fit-container"
                       onClick={(e) => e.stopPropagation()}
-                      to={`/uncensored-notes/${news.nEvent}`}
+                      to={`/verify-notes/${news.nEvent}`}
                     >
                       <div
                         className="fx-scattered fit-container option if pointer"
@@ -507,7 +492,7 @@ export default function FlashNewsEvent() {
                           backgroundColor: "var(--very-dim-gray)",
                         }}
                       >
-                        <p className="gray-c">See all uncensored notes</p>
+                        <p className="gray-c">See all attempts</p>
                         <div
                           className="arrow"
                           style={{ transform: "rotate(-90deg)" }}
@@ -527,7 +512,7 @@ export default function FlashNewsEvent() {
                                 author.lud16
                               )}
                               recipientPubkey={author.pubkey}
-                              senderPubkey={nostrUser.pubkey}
+                              senderPubkey={userMetadata.pubkey}
                               recipientInfo={{
                                 name: author.name,
                                 picture: author.picture,
@@ -680,7 +665,7 @@ export default function FlashNewsEvent() {
                           data-tooltip="Bookmark flash news"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <SaveArticleAsBookmark
+                          <BookmarkEvent
                             pubkey={news.id}
                             itemType="e"
                             kind="1"
@@ -690,6 +675,7 @@ export default function FlashNewsEvent() {
                     </div>
                     <CommentsSection
                       id={news.id}
+                      notePubkey={author.pubkey}
                       nEvent={nevent}
                       setNetCommentsCount={setNetCommentsCount}
                     />
@@ -709,17 +695,7 @@ export default function FlashNewsEvent() {
                   <div className="sticky fit-container">
                     <SearchbarNOSTR />
                   </div>
-                  <div
-                    className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                    style={{
-                      backgroundColor: "var(--dim-gray)",
-                      rowGap: "24px",
-                      border: "none",
-                    }}
-                  >
-                    <h4>Important Flash News</h4>
-                    <HomeFN flashnews={importantFN} />
-                  </div>
+                  <ImportantFlashNews />
 
                   <Footer />
                 </div>
@@ -732,26 +708,18 @@ export default function FlashNewsEvent() {
   );
 }
 
-const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
+const CommentsSection = ({ id, nEvent, setNetCommentsCount, notePubkey }) => {
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [comments, setComments] = useState([]);
-
-  const {
-    nostrUser,
-    nostrKeys,
-    addNostrAuthors,
-    setToPublish,
-    isPublishing,
-    setToast,
-  } = useContext(Context);
-
-  const [toLogin, setToLogin] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [selectedComment, setSelectedComment] = useState(false);
   const [selectedCommentIndex, setSelectedCommentIndex] = useState(false);
-  const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
-    useState(false);
   const [netComments, setNetComments] = useState([]);
 
   useEffect(() => {
@@ -772,31 +740,34 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
     parsedCom();
   }, [comments]);
 
-  const postNewComment = async (suffix) => {
+  const postNewComment = async () => {
     try {
-      if (!nostrKeys || !newComment) {
+      if (!userKeys || !newComment) {
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let tempComment = suffix
-        ? `${newComment} — This is a comment on: https://yakihonne.com/flash-news/${nEvent}`
-        : newComment;
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 1,
-        content: tempComment,
-        tags: [["e", id, "", "root"]],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      let tempComment = newComment;
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 1,
+          content: tempComment,
+          tags: [
+            ["e", id, "", "root"],
+            ["p", notePubkey],
+          ],
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
       setNewComment("");
@@ -816,34 +787,34 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
 
   useEffect(() => {
     let tempComment = [];
-    const sub = pool.subscribeMany(
-      nostrUser
-        ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-        : relaysOnPlatform,
+    const sub = ndkInstance.subscribe(
       [
         {
           kinds: [1],
           "#e": [id],
         },
       ],
-      {
-        onevent(event) {
-          let is_un = event.tags.find((tag) => tag[0] === "l");
-          if (!(is_un && is_un[1] === "UNCENSORED NOTE")) {
-            tempComment.push(event);
-            setComments((prev) => {
-              let newCom = [...prev, event];
-              return newCom.sort(
-                (item_1, item_2) => item_2.created_at - item_1.created_at
-              );
-            });
-          }
-        },
-        oneose() {
-          addNostrAuthors(tempComment.map((item) => item.pubkey));
-        },
-      }
+      { cacheUsage: "CACHE_FIRST" }
     );
+
+    sub.on("event", (event) => {
+      let is_un = event.tags.find((tag) => tag[0] === "l");
+      if (!(is_un && is_un[1] === "UNCENSORED NOTE")) {
+        tempComment.push(event);
+        setComments((prev) => {
+          let newCom = [...prev, event];
+          return newCom.sort(
+            (item_1, item_2) => item_2.created_at - item_1.created_at
+          );
+        });
+      }
+    });
+    sub.on("eose", () => {
+      saveUsers(tempComment.map((item) => item.pubkey));
+    });
+    return () => {
+      sub.stop();
+    };
   }, []);
 
   const refreshComments = (index) => {
@@ -853,17 +824,8 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
   };
   return (
     <div className="fit-container fx-centered fx-col box-pad-v-m">
-      {showCommentsSuffixOption && (
-        <AddSuffixToComment
-          post={postNewComment}
-          comment={newComment}
-          exit={() => setShowCommentsSuffixOption(false)}
-          nEvent={nEvent}
-        />
-      )}
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
       <div className="fit-container fx-centered fx-col fx-start-h fx-start-v">
-        {nostrKeys && (
+        {userKeys && (
           <div className="fit-container fx-end-v fx-centered">
             <UserProfilePicNOSTR
               ring={false}
@@ -880,7 +842,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
 
             <button
               className="btn btn-normal fx-centered"
-              onClick={() => newComment && setShowCommentsSuffixOption(true)}
+              onClick={() => newComment && postNewComment()}
             >
               {isLoading && <LoadingDots />}
               {!isLoading && <>Post</>}
@@ -897,11 +859,11 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
             <div className="comment-24"></div>
           </div>
         )}
-        {!nostrKeys && (
+        {!userKeys && (
           <div className="fit-container fx-centered">
             <button
               className="btn btn-normal fx-centered"
-              onClick={() => setToLogin(true)}
+              onClick={() => redirectToLogin()}
             >
               Login to comment
             </button>
@@ -932,123 +894,13 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount }) => {
               }}
               nEvent={nEvent}
               noteID={id}
+              notePubkey={notePubkey}
             />
           );
         })}
       </div>
     </div>
   );
-};
-
-const AddSuffixToComment = ({ exit, post, comment = "", nEvent }) => {
-  const isSaved = checkForSavedCommentOptions();
-  const [isSave, setIsSave] = useState(true);
-
-  const saveOption = () => {
-    localStorage.setItem(
-      "comment-with-suffix",
-      JSON.stringify({ keep_suffix: isSave })
-    );
-  };
-
-  if (isSaved !== -1) {
-    post(isSaved);
-    exit();
-    return;
-  }
-  if (isSaved === -1)
-    return (
-      <div
-        className="fixed-container fx-centered box-pad-h"
-        style={{ zIndex: "10000" }}
-      >
-        <section
-          className="sc-s box-pad-h box-pad-v"
-          style={{ width: "min(100%, 500px)" }}
-        >
-          <h4 className="p-centered">Be meaningful 🥳</h4>
-          <p className="p-centered box-pad-v-m">
-            Let your comments be recognized on NOSTR notes clients by adding
-            where did you comment. <br />
-            Choose what suits you best!
-          </p>
-
-          <div className="fit-container fx-centered fx-col">
-            <label
-              className="sc-s-18 fit-container fx-centered box-pad-h-m box-pad-v-m fx-start-h fx-start-v"
-              htmlFor="suffix"
-              style={{
-                opacity: !isSave ? ".6" : 1,
-                filter: !isSave ? "grayscale(100%)" : "none",
-              }}
-            >
-              <input
-                type="radio"
-                id="suffix"
-                name="suffix"
-                checked={isSave}
-                value={isSave}
-                onChange={() => setIsSave(true)}
-              />
-              <div>
-                <p className="gray-c p-small">Your comment with suffix</p>
-                <p className="p-two-lines p-medium">{comment}</p>
-                <p className="p-medium orange-c">
-                  — This is a comment on: https://yakihonne.com/flash-news/
-                  {nEvent}
-                </p>
-              </div>
-            </label>
-            <label
-              className="sc-s-18 fit-container fx-centered box-pad-h-m box-pad-v-m fx-start-v fx-start-h"
-              htmlFor="no-suffix"
-              style={{
-                opacity: isSave ? ".6" : 1,
-                filter: isSave ? "grayscale(100%)" : "none",
-              }}
-            >
-              <input
-                type="radio"
-                id="no-suffix"
-                name="suffix"
-                checked={!isSave}
-                value={isSave}
-                onChange={() => setIsSave(false)}
-              />
-              <div>
-                <p className="gray-c p-small">Your comment without suffix</p>
-                <p className="p-two-lines p-medium">{comment}</p>
-              </div>
-            </label>
-            <div>
-              <p className="p-medium gray-c box-pad-v-s">
-                {" "}
-                This can always be changed in your account settings
-              </p>
-            </div>
-            <div className="fit-container fx-centered fx-col">
-              <button
-                className="btn btn-normal btn-full"
-                onClick={() => {
-                  saveOption();
-                  post(isSave);
-                  exit();
-                }}
-              >
-                Post &amp; remember my choice
-              </button>
-              <button
-                className="btn btn-text"
-                onClick={exit}
-                style={{ height: "max-content" }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
 };
 
 const Comment = ({
@@ -1059,9 +911,12 @@ const Comment = ({
   action = true,
   nEvent,
   noteID,
+  notePubkey,
 }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
   const [toggleReply, setToggleReply] = useState(false);
@@ -1069,17 +924,16 @@ const Comment = ({
   const handleCommentDeletion = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+      let relaysToPublish = userRelays;
       let created_at = Math.floor(Date.now() / 1000);
       let tags = [["e", comment.id]];
 
@@ -1089,7 +943,7 @@ const Comment = ({
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
           refresh(index);
@@ -1100,12 +954,14 @@ const Comment = ({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
-      setToPublish({
-        eventInitEx: event,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          eventInitEx: event,
+          allRelays: relaysToPublish,
+        })
+      );
 
       refresh(index);
       setIsLoading(false);
@@ -1148,11 +1004,11 @@ const Comment = ({
                 author_img: "",
                 author_name: comment.pubkey.substring(0, 20),
                 author_pubkey: comment.pubkey,
-                on: new Date(comment.created_at * 1000).toISOString(),
+                on: new Date(comment.created_at * 1000),
               }}
             />
           </div>
-          {comment.pubkey === nostrKeys.pub && action && (
+          {comment.pubkey === userKeys.pub && action && (
             <div
               className="fx-centered pointer"
               style={{ columnGap: "3px" }}
@@ -1202,6 +1058,7 @@ const Comment = ({
             all={comment.count}
             nEvent={nEvent}
             noteID={noteID}
+            notePubkey={notePubkey}
             toggleReply={toggleReply}
             setToggleReply={setToggleReply}
           />
@@ -1213,54 +1070,63 @@ const Comment = ({
 
 const CommentsReplies = ({
   comment,
-
   all,
   nEvent,
   refresh,
   noteID,
+  notePubkey,
   toggleReply,
   setToggleReply,
 }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
 
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectReplyTo, setSelectReplyTo] = useState(false);
-  const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
-    useState(false);
   const ref = useRef(null);
 
-  const postNewComment = async (suffix) => {
+  const postNewComment = async () => {
     try {
-      if (!nostrKeys || !newComment) {
+      if (!userKeys || !newComment) {
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
 
-      let tempComment = suffix
-        ? `${newComment} — This is a comment on: https://yakihonne.com/flash-news/${nEvent}`
-        : newComment;
-      let tags = [["e", noteID, "", "root"]];
-      if (selectReplyTo) tags.push(["e", selectReplyTo.id, "", "reply"]);
-      if (!selectReplyTo) tags.push(["e", comment.id, "", "reply"]);
+      let tempComment = newComment;
+      let tags = [
+        ["e", noteID, "", "root"],
+        ["p", notePubkey],
+      ];
+      if (selectReplyTo) {
+        tags.push(["p", selectReplyTo.pubkey]);
+        tags.push(["e", selectReplyTo.id, "", "reply"]);
+      }
+      if (!selectReplyTo) {
+        tags.push(["p", comment.pubkey]);
+        tags.push(["e", comment.id, "", "reply"]);
+      }
 
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 1,
-        content: tempComment,
-        tags,
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 1,
+          content: tempComment,
+          tags,
+          allRelays: userRelays,
+        })
+      );
       setIsLoading(false);
       setNewComment("");
     } catch (err) {
@@ -1270,7 +1136,7 @@ const CommentsReplies = ({
 
   return (
     <>
-      {toggleReply && nostrKeys && (
+      {toggleReply && userKeys && (
         <div className="fixed-container fx-centered box-pad-h" ref={ref}>
           <div
             className="fx-centered fx-wrap"
@@ -1292,7 +1158,7 @@ const CommentsReplies = ({
                         author_img: "",
                         author_name: comment.pubkey.substring(0, 20),
                         author_pubkey: comment.pubkey,
-                        on: new Date(comment.created_at * 1000).toISOString(),
+                        on: new Date(comment.created_at * 1000),
                       }}
                     />
                   </div>
@@ -1302,16 +1168,8 @@ const CommentsReplies = ({
                   style={{ columnGap: "16px" }}
                 >
                   <div style={{ minWidth: "24px" }}></div>
-                  {/* <div
-                    className="fx-centered fx-start-h fx-wrap fit-container"
-                    style={{ rowGap: 0, columnGap: "4px" }}
-                  > */}
-                  <div className="fit-container">
-                    {comment.content_tree}
-                    {/* {getNoteTree(
-                      comment.content.split(" — This is a comment on:")[0]
-                    )} */}
-                  </div>
+
+                  <div className="fit-container">{comment.content_tree}</div>
                 </div>
               </div>
             )}
@@ -1333,7 +1191,7 @@ const CommentsReplies = ({
                         author_pubkey: selectReplyTo.pubkey,
                         on: new Date(
                           selectReplyTo.created_at * 1000
-                        ).toISOString(),
+                        ),
                       }}
                     />
                   </div>
@@ -1343,16 +1201,8 @@ const CommentsReplies = ({
                   style={{ columnGap: "16px" }}
                 >
                   <div style={{ minWidth: "24px" }}></div>
-                  {/* <div
-                    className="fx-centered fx-start-h fx-wrap fit-container"
-                    style={{ rowGap: 0, columnGap: "4px" }}
-                  > */}
-                  <div className="fit-container">
-                    {comment.content_tree}
-                    {/* {getNoteTree(
-                      selectReplyTo.content.split(" — This is a comment on:")[0]
-                    )} */}
-                  </div>
+
+                  <div className="fit-container">{comment.content_tree}</div>
                 </div>
               </div>
             )}
@@ -1367,7 +1217,7 @@ const CommentsReplies = ({
             <div className="fx-centered fit-container fx-end-h">
               <button
                 className="btn btn-normal  fx-centered"
-                onClick={() => newComment && setShowCommentsSuffixOption(true)}
+                onClick={() => newComment && postNewComment()}
               >
                 {isLoading && <LoadingDots />}
                 {!isLoading && <>Post a comment</>}
@@ -1386,14 +1236,7 @@ const CommentsReplies = ({
           </div>
         </div>
       )}
-      {showCommentsSuffixOption && (
-        <AddSuffixToComment
-          post={postNewComment}
-          comment={newComment}
-          exit={() => setShowCommentsSuffixOption(false)}
-          nEvent={nEvent}
-        />
-      )}
+
       <div
         className="fx-col fit-container fx-centered"
         style={{
@@ -1426,8 +1269,11 @@ const Reply = ({
   setSelectReplyTo,
   setToggleReply,
 }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
   const [seeReply, setSeeReply] = useState(false);
@@ -1445,17 +1291,16 @@ const Reply = ({
   const handleCommentDeletion = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+      let relaysToPublish = userRelays;
       let created_at = Math.floor(Date.now() / 1000);
       let tags = [["e", comment.id]];
 
@@ -1465,7 +1310,7 @@ const Reply = ({
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
         } catch (err) {
@@ -1475,12 +1320,14 @@ const Reply = ({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
-      setToPublish({
-        eventInitEx: event,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          eventInitEx: event,
+          allRelays: relaysToPublish,
+        })
+      );
 
       refresh(index);
       setIsLoading(false);
@@ -1518,11 +1365,11 @@ const Reply = ({
                 author_img: "",
                 author_name: comment.pubkey.substring(0, 20),
                 author_pubkey: comment.pubkey,
-                on: new Date(comment.created_at * 1000).toISOString(),
+                on: new Date(comment.created_at * 1000),
               }}
             />
           </div>
-          {comment.pubkey === nostrKeys.pub && (
+          {comment.pubkey === userKeys.pub && (
             <div
               className="fx-centered pointer"
               style={{ columnGap: "3px" }}
@@ -1576,7 +1423,7 @@ const Reply = ({
           className="fx-centered fx-start-h fit-container"
           style={{ columnGap: "16px" }}
           onClick={() => {
-            nostrKeys
+            userKeys
               ? setSelectReplyTo({
                   id: comment.id,
                   content: comment.content,
@@ -1595,13 +1442,13 @@ const Reply = ({
 };
 
 const AuthorPreview = ({ author }) => {
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [authorData, setAuthorData] = useState("");
-  const { getNostrAuthor, nostrAuthors } = useContext(Context);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(author.author_pubkey);
+        let auth = getUser(author.author_pubkey);
 
         if (auth)
           setAuthorData({

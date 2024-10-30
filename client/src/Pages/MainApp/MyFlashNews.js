@@ -1,6 +1,6 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { nip19, finalizeEvent } from "nostr-tools";
 import axios from "axios";
-import { nip19, finalizeEvent, SimplePool } from "nostr-tools";
-import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import QRCode from "react-qr-code";
 import { useLocation } from "react-router-dom";
@@ -13,12 +13,10 @@ import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import relaysOnPlatform from "../../Content/Relays";
-
-import { Context } from "../../Context/Context";
 import {
   encryptEventData,
   filterRelays,
-  getParsed3000xContent,
+  getParsedRepEvent,
   shortenKey,
 } from "../../Helpers/Encryptions";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
@@ -27,12 +25,14 @@ import { getNoteTree } from "../../Helpers/Helpers";
 import FlashNewsCard from "../../Components/Main/FlashNewsCard";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import HomeFN from "../../Components/Main/HomeFN";
+import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
-const pool = new SimplePool();
 const MAX_CHAR = 1000;
 const TIME_THRESHOLD = 1706482800;
-
+const elPerPage = 4;
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 const extractPostData = (post) => {
@@ -97,25 +97,24 @@ const getTimes = () => {
 const timeInit = getTimes();
 
 export default function MyFlashNews() {
-  const { nostrUser, nostrUserLoaded, nostrKeys, addNostrAuthors, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+
   const { state } = useLocation();
   const [showAddNews, setShowAddNews] = useState(state?.addFN ? true : false);
   const [contentType, setContentType] = useState("self");
   const [flashNews, setFlashNews] = useState([]);
-  const [myFlashNews, setMyFlashNews] = useState([]);
   const [onlyImportant, setOnlyImportant] = useState(false);
   const [onlyHasNews, setOnlyHasNews] = useState(true);
   const [firstEventTime, setFirstEventTime] = useState(timeInit.since);
   const [lastEventTime, setLastEventTime] = useState(timeInit.until);
   const [isLoading, setIsLoading] = useState(false);
   const [specificDate, setSpecificDate] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
-  const [importantFN, setImportantFN] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(false);
   const [page, setPage] = useState(0);
-  const [elPerPage, setElPerPage] = useState(4);
+
   const [total, setTotal] = useState(0);
   const [ratings, setRatings] = useState([]);
 
@@ -129,14 +128,14 @@ export default function MyFlashNews() {
           params: {
             from: firstEventTime,
             to: lastEventTime,
-            pubkey: nostrKeys.pub,
+            pubkey: userKeys.pub,
             page,
             elPerPage,
           },
         });
       if (!specificDate)
         data = await axios.get(API_BASE_URL + "/api/v2/flashnews", {
-          params: { pubkey: nostrKeys.pub, page, elPerPage },
+          params: { pubkey: userKeys.pub, page, elPerPage },
         });
 
       let tempFN = [{ date: firstEventTime, news: [] }];
@@ -183,8 +182,8 @@ export default function MyFlashNews() {
       setIsLoading(false);
     };
 
-    if (nostrKeys) fetchData();
-  }, [lastEventTime, contentType, page, nostrKeys]);
+    if (userKeys) fetchData();
+  }, [lastEventTime, contentType, page, userKeys]);
 
   useEffect(() => {
     if (state) {
@@ -233,7 +232,7 @@ export default function MyFlashNews() {
   useEffect(() => {
     setFirstEventTime(timeInit.since);
     setLastEventTime(timeInit.until);
-    setShowOptions(false);
+
     setShowCalendar(false);
     setFlashNews([]);
     setOnlyImportant(false);
@@ -241,7 +240,7 @@ export default function MyFlashNews() {
 
     setPage(0);
     setTotal(0);
-  }, [nostrKeys]);
+  }, [userKeys]);
 
   useEffect(() => {
     let flashNewsIDs =
@@ -255,25 +254,21 @@ export default function MyFlashNews() {
 
     let tempRating = [];
     if (flashNewsIDs.length === 0 || isLoading) return;
-    let relaysToUse = nostrUser
-      ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-      : relaysOnPlatform;
 
-    const sub = pool.subscribeMany(
-      relaysToUse,
+    const sub = ndkInstance.subscribe(
       [
         {
           kinds: [7],
           "#e": flashNewsIDs,
         },
       ],
-      {
-        onevent(event) {
-          tempRating.push(event);
-          setRatings((prev) => [...prev, event]);
-        },
-      }
+      { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
     );
+
+    sub.on("event", (event) => {
+      tempRating.push(event);
+      setRatings((prev) => [...prev, event]);
+    });
   }, [isLoading]);
 
   const handleSelectingDates = (e, data) => {
@@ -282,10 +277,12 @@ export default function MyFlashNews() {
     tempDateFirst.setHours(0, 0, 0);
     tempDateLast.setHours(23, 59, 59);
     if (Math.floor(tempDateLast.getTime() / 1000) === lastEventTime) {
-      setToast({
-        type: 3,
-        desc: "The date you're choosing is already on screen!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The date you're choosing is already on screen!",
+        })
+      );
       return;
     }
     setSpecificDate(true);
@@ -304,20 +301,7 @@ export default function MyFlashNews() {
     setFirstEventTime(timeInit.since);
     setLastEventTime(timeInit.until);
   };
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [important] = await Promise.all([
-          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
-        ]);
 
-        setImportantFN(important.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchData();
-  }, []);
   const refreshMyFlashNews = () => {
     let tempFlashNews = Array.from(flashNews);
     tempFlashNews[noteToDelete.index_1].news.splice(noteToDelete.index_2, 1);
@@ -387,7 +371,7 @@ export default function MyFlashNews() {
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             <ArrowUp />
-            {/* {(nostrKeys?.sec || nostrKeys?.ext) && (
+            {/* {(userKeys?.sec || userKeys?.ext) && (
             <div
               style={{
                 position: "fixed",
@@ -468,7 +452,6 @@ export default function MyFlashNews() {
                           data-tooltip="Choose date"
                           onClick={() => {
                             setShowCalendar(!showCalendar);
-                            setShowOptions(false);
                           }}
                         >
                           <div className="calendar"></div>
@@ -518,7 +501,7 @@ export default function MyFlashNews() {
                               <Date_
                                 toConvert={new Date(
                                   fn.date * 1000
-                                ).toISOString()}
+                                )}
                               />
                             </h4>
                           </div>
@@ -690,17 +673,7 @@ export default function MyFlashNews() {
                 <div className="sticky fit-container">
                   <SearchbarNOSTR />
                 </div>
-                <div
-                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                  style={{
-                    backgroundColor: "var(--c1-side)",
-                    rowGap: "24px",
-                    border: "none",
-                  }}
-                >
-                  <h4>Important Flash News</h4>
-                  <HomeFN flashnews={importantFN} />
-                </div>
+                <ImportantFlashNews />
                 <Footer />
               </div>
             </div>
@@ -713,15 +686,11 @@ export default function MyFlashNews() {
 }
 
 const AddNews = ({ exit }) => {
-  const {
-    nostrUserAbout,
-    nostrUserLoaded,
-    nostrUser,
-    nostrKeys,
-    setToPublish,
-    setToast,
-    isPublishing,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const [note, setNote] = useState("");
   // const [currentWordsCount, setCurrentWordsCount] = useState(0);
   const [postAsType, setPostAsType] = useState(0);
@@ -767,92 +736,87 @@ const AddNews = ({ exit }) => {
     const fetchData = async () => {
       try {
         setPosts([]);
-        let relaysToFetchFrom = filterRelays(
-          nostrUser?.relays || [],
-          relaysOnPlatform
+
+        var sub = ndkInstance.subscribe(
+          [{ kinds: [30023, 30004], authors: [userKeys.pub] }],
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
 
-        var sub = pool.subscribeMany(
-          relaysToFetchFrom,
-          [{ kinds: [30023, 30004], authors: [nostrKeys.pub] }],
-          {
-            onevent(event) {
-              let d = event.tags.find((tag) => tag[0] === "d")[1];
-              let naddr = nip19.naddrEncode({
-                identifier: d,
-                pubkey: event.pubkey,
-                kind: event.kind,
-              });
-              if (event.kind === 30023)
-                setPosts((prev) => {
-                  let index = prev.findIndex(
-                    (item) => item.d === d && item.kind === event.kind
-                  );
-                  let newP = Array.from(prev);
-                  if (index === -1) newP = [...newP, extractPostData(event)];
-                  if (index !== -1) {
-                    if (prev[index].created_at < event.created_at) {
-                      newP.splice(index, 1);
-                      newP.push(extractPostData(event));
-                    }
-                  }
+        sub.on("event", (event) => {
+          let d = event.tags.find((tag) => tag[0] === "d")[1];
+          let naddr = nip19.naddrEncode({
+            identifier: d,
+            pubkey: event.pubkey,
+            kind: event.kind,
+          });
+          if (event.kind === 30023)
+            setPosts((prev) => {
+              let index = prev.findIndex(
+                (item) => item.d === d && item.kind === event.kind
+              );
+              let newP = Array.from(prev);
+              if (index === -1) newP = [...newP, extractPostData(event)];
+              if (index !== -1) {
+                if (prev[index].created_at < event.created_at) {
+                  newP.splice(index, 1);
+                  newP.push(extractPostData(event));
+                }
+              }
 
-                  newP = newP.sort(
-                    (item_1, item_2) => item_2.created_at - item_1.created_at
-                  );
+              newP = newP.sort(
+                (item_1, item_2) => item_2.created_at - item_1.created_at
+              );
 
-                  return newP;
-                });
-              if (event.kind === 30004)
-                setCurations((prev) => {
-                  let content = getParsed3000xContent(event.tags);
-                  let index = prev.findIndex((item) => item.d === d);
-                  let newP = Array.from(prev);
-                  if (index === -1)
-                    newP = [
-                      ...newP,
-                      {
-                        ...event,
-                        ...content,
-                        naddr,
-                        created_at: event.created_at,
-                        d,
-                      },
-                    ];
-                  if (index !== -1) {
-                    if (prev[index].created_at < event.created_at) {
-                      newP.splice(index, 1);
-                      newP.push({
-                        ...event,
-                        ...content,
-                        naddr,
-                        created_at: event.created_at,
-                        d,
-                      });
-                    }
-                  }
+              return newP;
+            });
+          if (event.kind === 30004)
+            setCurations((prev) => {
+              let content = getParsedRepEvent(event);
+              let index = prev.findIndex((item) => item.d === d);
+              let newP = Array.from(prev);
+              if (index === -1)
+                newP = [
+                  ...newP,
+                  {
+                    ...event,
+                    ...content,
+                    naddr,
+                    created_at: event.created_at,
+                    d,
+                  },
+                ];
+              if (index !== -1) {
+                if (prev[index].created_at < event.created_at) {
+                  newP.splice(index, 1);
+                  newP.push({
+                    ...event,
+                    ...content,
+                    naddr,
+                    created_at: event.created_at,
+                    d,
+                  });
+                }
+              }
 
-                  newP = newP.sort(
-                    (item_1, item_2) => item_2.created_at - item_1.created_at
-                  );
+              newP = newP.sort(
+                (item_1, item_2) => item_2.created_at - item_1.created_at
+              );
 
-                  return newP;
-                });
-            },
-          }
-        );
+              return newP;
+            });
+        });
       } catch (err) {
         console.log(err);
       }
     };
-    if (nostrKeys && nostrUserLoaded) {
+    if (userKeys) {
       fetchData();
       return;
     }
-    if (!nostrKeys && nostrUserLoaded) {
+    if (!userKeys) {
       // setIsLoaded(true);
     }
-  }, [nostrKeys, nostrUserLoaded]);
+  }, [userKeys]);
 
   const handleNoteOnChange = (e) => {
     let value = e.target.value.replace(/[^\S\r\n]+/g, " ");
@@ -862,38 +826,43 @@ const AddNews = ({ exit }) => {
   const handlePublishing = async () => {
     try {
       if (currentWordsCount === 0 && !note) {
-        setToast({
-          type: 3,
-          desc: "Your note is empty!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "Your note is empty!",
+          })
+        );
         return;
       }
       if (MAX_CHAR - currentWordsCount < 0) {
-        setToast({
-          type: 3,
-          desc: "Your note has exceeded the maximum character number.",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "Your note has exceeded the maximum character number.",
+          })
+        );
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       if (!pricing) {
-        setToast({
-          type: 3,
-          desc: "An error occured while communicating with the server!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An error occured while communicating with the server!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
       if (flag) tags.push(["important", `${created_at}`]);
@@ -913,7 +882,7 @@ const AddNews = ({ exit }) => {
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
         } catch (err) {
@@ -922,7 +891,7 @@ const AddNews = ({ exit }) => {
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
 
       let extras = flag ? pricing?.flag_pricing || 21 : 0;
@@ -940,8 +909,8 @@ const AddNews = ({ exit }) => {
       ];
 
       var zapEvent = await getZapEventRequest(
-        nostrKeys,
-        `${nostrUserAbout.name} paid for a flash news note.`,
+        userKeys,
+        `${userMetadata.name} paid for a flash news note.`,
         zapTags
       );
       if (!zapEvent) {
@@ -955,10 +924,12 @@ const AddNews = ({ exit }) => {
 
       if (res.data.status === "ERROR") {
         setIsLoading(false);
-        setToast({
-          type: 2,
-          desc: "Something went wrong when processing payment!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Something went wrong when processing payment!",
+          })
+        );
         return;
       }
 
@@ -976,8 +947,7 @@ const AddNews = ({ exit }) => {
         }
       }
 
-      let sub = pool.subscribeMany(
-        relaysOnPlatform,
+      let sub = ndkInstance.subscribe(
         [
           {
             kinds: [9735],
@@ -985,35 +955,36 @@ const AddNews = ({ exit }) => {
             "#e": [event.id],
           },
         ],
-        {
-          onevent() {
-            setInvoice("");
-            setToPublish({
-              eventInitEx: event,
-              allRelays: filterRelays(
-                nostrUser?.relays || [],
-                relaysOnPlatform
-              ),
-            });
-            localStorage.setItem("fn_yaki_postAsType", `${0}`);
-            localStorage.setItem("fn_yaki_selectedLinkedOption", "");
-            localStorage.setItem("fn_yaki_note", "");
-            localStorage.setItem("fn_yaki_source", "");
-            localStorage.setItem("fn_yaki_keywords", JSON.stringify([]));
-            localStorage.setItem("fn_yaki_flag", `${false}`);
-            setTimeout(() => {
-              window.location.href = "/my-flash-news";
-            }, 6000);
-          },
-        }
+        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
       );
+
+      sub.on("event", () => {
+        setInvoice("");
+        dispatch(
+          setToPublish({
+            eventInitEx: event,
+            allRelays: userRelays,
+          })
+        );
+        localStorage.setItem("fn_yaki_postAsType", `${0}`);
+        localStorage.setItem("fn_yaki_selectedLinkedOption", "");
+        localStorage.setItem("fn_yaki_note", "");
+        localStorage.setItem("fn_yaki_source", "");
+        localStorage.setItem("fn_yaki_keywords", JSON.stringify([]));
+        localStorage.setItem("fn_yaki_flag", `${false}`);
+        setTimeout(() => {
+          window.location.href = "/my-flash-news";
+        }, 6000);
+      });
     } catch (err) {
       setIsLoading(false);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while publishing this note",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while publishing this note",
+        })
+      );
     }
   };
 
@@ -1035,10 +1006,12 @@ const AddNews = ({ exit }) => {
   };
   const copyKey = (key) => {
     navigator.clipboard.writeText(key);
-    setToast({
-      type: 1,
-      desc: `LNURL was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `LNURL was copied! 👏`,
+      })
+    );
   };
 
   useEffect(() => {
@@ -1371,7 +1344,7 @@ const AddNews = ({ exit }) => {
             style={{
               color: MAX_CHAR - currentWordsCount < 0 ? "var(--red-main)" : "",
             }}
-            placeholder={`What's on your mind, ${nostrUserAbout.name}?`}
+            placeholder={`What's on your mind, ${userMetadata.name}?`}
             value={note}
             onChange={handleNoteOnChange}
           />

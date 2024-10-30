@@ -1,9 +1,10 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import LoadingDots from "../LoadingDots";
 import { deleteFromS3, uploadToS3 } from "../../Helpers/NostrPublisher";
-import { Context } from "../../Context/Context";
 import { nanoid } from "nanoid";
 import PublishRelaysPicker from "./PublishRelaysPicker";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 export default function AddCurationNOSTR({
   curation,
@@ -12,7 +13,9 @@ export default function AddCurationNOSTR({
   mandatoryKind = false,
   tags = [],
 }) {
-  const { nostrKeys, setToast, setToPublish } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+
   const [title, setTitle] = useState(curation?.title || "");
   const [excerpt, setExcerpt] = useState(curation?.description || "");
   const [thumbnail, setThumbnail] = useState("");
@@ -35,35 +38,41 @@ export default function AddCurationNOSTR({
     try {
       setIsLoading(true);
 
-      if (!selectedRelays || !selectedRelays.length) {
-        setIsLoading(false);
-        setToast({
-          type: 3,
-          desc: "No relay was selected!",
-        });
-        return;
-      }
+      // if (!selectedRelays || !selectedRelays.length) {
+      //   setIsLoading(false);
+      //   dispatch(
+      //     setToast({
+      //       type: 3,
+      //       desc: "No relay was selected!",
+      //     })
+      //   );
+      //   return;
+      // }
 
       if (curation?.thumbnail && thumbnail) deleteFromS3(curation?.thumbnail);
       let cover = thumbnail
-        ? await uploadToS3(thumbnail, nostrKeys.pub)
+        ? await uploadToS3(thumbnail, userKeys.pub)
         : thumbnailUrl;
       let tempTags = getTags(title, excerpt, cover);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: curation?.kind || kind,
-        content: "",
-        tags: tempTags,
-        allRelays: selectedRelays,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: curation?.kind || kind,
+          content: "",
+          tags: tempTags,
+          allRelays: [],
+        })
+      );
       setIsLoading(false);
       exit();
     } catch (err) {
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error has occurred!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occurred!",
+        })
+      );
     }
   };
 
@@ -113,34 +122,44 @@ export default function AddCurationNOSTR({
     setThumbnailPrev(value);
     setThumbnail("");
   };
-  const confirmPublishing = (relays) => {
-    handleDataUpload(relays);
-    setShowRelaysPicker(false);
+  const confirmPublishing = () => {
+    handleDataUpload();
+    // setShowRelaysPicker(false);
   };
+  // const confirmPublishing = (relays) => {
+  //   handleDataUpload(relays);
+  //   setShowRelaysPicker(false);
+  // };
 
   const handleShowRelaysPicker = () => {
     if (!thumbnail && !thumbnailPrev) {
       setIsLoading(false);
-      setToast({
-        type: 3,
-        desc: "Missing thumbnail image",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "Missing thumbnail image",
+        })
+      );
       return;
     }
     if (!title) {
       setIsLoading(false);
-      setToast({
-        type: 3,
-        desc: "Missing title",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "Missing title",
+        })
+      );
       return;
     }
     if (!excerpt) {
       setIsLoading(false);
-      setToast({
-        type: 3,
-        desc: "Missing description",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "Missing description",
+        })
+      );
       return;
     }
     setShowRelaysPicker(true);
@@ -151,25 +170,25 @@ export default function AddCurationNOSTR({
       className="fixed-container fx-centered box-pad-h"
       style={{ zIndex: "10001" }}
     >
-      {showRelaysPicker && (
+      {/* {showRelaysPicker && (
         <PublishRelaysPicker
           confirmPublishing={confirmPublishing}
           exit={() => setShowRelaysPicker(false)}
           button={curation ? "update curation" : "add curation"}
         />
-      )}
+      )} */}
       <section
         className="fx-centered fx-col sc-s"
         style={{ width: "600px", rowGap: 0 }}
       >
-        <div className="fit-container fx-scattered box-pad-h box-pad-v">
+        {/* <div className="fit-container fx-scattered box-pad-h box-pad-v">
           <div className="fx-centered pointer" onClick={exit}>
             <div className="arrow" style={{ transform: "rotate(90deg)" }}></div>
             <p className="gray-c">back</p>
           </div>
           <h4>{curation ? "Update curation" : "Add curation"}</h4>
         </div>
-        <hr />
+        <hr /> */}
         <div
           className="fit-container fx-centered fx-col"
           //   style={{ rowGap: "32px" }}
@@ -306,19 +325,21 @@ export default function AddCurationNOSTR({
         </div>
         <hr />
         {!curation && (
-          <div className="box-pad-v-m">
-            <button className="btn btn-normal" onClick={handleShowRelaysPicker}>
-              {isLoading ? <LoadingDots /> : <>Next</>}
+          <div className="box-pad-v-m fx-centered">
+            <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
+            <button className="btn btn-normal" onClick={confirmPublishing}>
+              {isLoading ? <LoadingDots /> : <>Publish</>}
             </button>
           </div>
         )}
         {curation && (
           <div className="box-pad-v-m fx-centered">
+            <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
             <button
               className="btn btn-normal"
               onClick={() => handleDataUpload(relaysToPublish)}
             >
-              {isLoading ? <LoadingDots /> : <>Update in same relays</>}
+              {isLoading ? <LoadingDots /> : <>Update curation</>}
             </button>
             {/* <button className="btn btn-gst" onClick={handleShowRelaysPicker}>
               {isLoading ? <LoadingDots /> : <>Republish in more relays</>}

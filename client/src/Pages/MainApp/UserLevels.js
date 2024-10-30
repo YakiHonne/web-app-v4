@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
-import { Context } from "../../Context/Context";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import ProgressBar from "../../Components/ProgressBar";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
@@ -15,6 +14,9 @@ import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import { getCurrentLevel, levelCount } from "../../Helpers/Helpers";
 import { HashLink } from "react-router-hash-link";
+import { userLogout } from "../../Helpers/Controlers";
+import { useSelector } from "react-redux";
+import LoadingLogo from "../../Components/LoadingLogo";
 
 let chart_ = [
   { action: "flashnews_post", all_time_points: 0, last_updated: null },
@@ -53,7 +55,8 @@ const orderChart = (array) => {
 };
 
 export default function UserLevels() {
-  const { nostrKeys, isConnectedToYaki, userLogout } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const isConnectedToYaki = useSelector((state) => state.isConnectedToYaki);
   const [oneTimeRewardStats, setOneTimeRewardStats] = useState([]);
   const [repeatedRewardsStats, setRepeatedRewardsStats] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -70,7 +73,7 @@ export default function UserLevels() {
       try {
         setIsLoaded(false);
         const data = await axiosInstance.get("/api/v1/yaki-chest/stats");
-        if (data.data.user_stats.pubkey !== nostrKeys.pub) {
+        if (data.data.user_stats.pubkey !== userKeys.pub) {
           userLogout();
           setIsLoaded(false);
           return;
@@ -162,11 +165,11 @@ export default function UserLevels() {
         setIsLoaded(false);
       }
     };
-    if (nostrKeys && isConnectedToYaki) fetchData();
-  }, [nostrKeys, isConnectedToYaki]);
+    if (userKeys && isConnectedToYaki) fetchData();
+  }, [userKeys, isConnectedToYaki]);
 
   useEffect(() => {
-    if (!nostrKeys) {
+    if (!userKeys) {
       setOneTimeRewardStats([]);
       setRepeatedRewardsStats([]);
       setHeaderStats(false);
@@ -207,11 +210,11 @@ export default function UserLevels() {
             <div className="fit-container fx-centered fx-start-h">
               <div
                 style={{ width: "min(100%,1400px)" }}
-                className="fx-centered fx-start-v fx-start-h"
+                className="fx-centered fx-start-v"
               >
                 <div
-                  style={{ width: "min(100%, 700px)" }}
-                  className={`fx-centered  fx-wrap box-pad-h`}
+                  // style={{ width: "min(100%, 700px)" }}
+                  className={`fx-centered  fx-wrap box-pad-h main-middle`}
                 >
                   {isConnectedToYaki && (
                     <>
@@ -644,7 +647,7 @@ export default function UserLevels() {
                           className="fit-container fx-centered"
                           style={{ height: "80vh" }}
                         >
-                          <div className="loader"></div>
+                          <LoadingLogo size={100}/>
                         </div>
                       )}
                     </>
@@ -654,9 +657,9 @@ export default function UserLevels() {
                   )}
                 </div>
 
-                <div
+                {/* <div
                   style={{ width: "min(100%, 400px)" }}
-                  className={`fx-centered  fx-wrap box-pad-h extras-homepage box-pad-v sticky`}
+                  className={`fx-centered  fx-wrap box-pad-h extras-homepage box-pad-v sticky fx-start-h fx-start-v`}
                 >
                   <SearchbarNOSTR />
                   <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
@@ -777,7 +780,7 @@ export default function UserLevels() {
                     </div>
                   </div>
                   <Footer />
-                </div>
+                </div> */}
               </div>
             </div>
           </main>
@@ -847,7 +850,7 @@ const TierDemo = ({ tier, exit }) => {
       </div>
     </div>
   );
- };
+};
 const PointsDesc = ({ exit }) => {
   return (
     <div className="fixed-container fx-centered box-pad-h">

@@ -1,8 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
+import React, { useEffect, useState } from "react";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Follow from "./Follow";
 import LoadingDots from "../LoadingDots";
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
 
 export default function TopCreators({ top_creators = [], kind = "articles" }) {
   const [creators, setCreators] = useState(top_creators);
@@ -54,12 +55,11 @@ export default function TopCreators({ top_creators = [], kind = "articles" }) {
 
 const AuthorPreview = ({ author, kind }) => {
   const [authorData, setAuthorData] = useState("");
-  const { getNostrAuthor, nostrAuthors } = useContext(Context);
-
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(author.pubkey);
+        let auth = getUser(author.pubkey);
 
         if (auth) setAuthorData(auth);
         return;
@@ -82,11 +82,18 @@ const AuthorPreview = ({ author, kind }) => {
         />
         <div>
           <p>{author.display_name || author.name}</p>
-          <div className="fx-centered fx-start-h">
-            <p className="c1-c p-medium">
-              {author.articles_number} <span className="gray-c">{kind}</span>
+          {!kind && (
+            <p className="gray-c p-medium">
+              @{author.name || author.display_name}
             </p>
-          </div>
+          )}
+          {kind && (
+            <div className="fx-centered fx-start-h">
+              <p className="c1-c p-medium">
+                {author.articles_number} <span className="gray-c">{kind}</span>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -101,11 +108,18 @@ const AuthorPreview = ({ author, kind }) => {
       />
       <div>
         <p>{authorData.display_name || authorData.name}</p>
-        <div className="fx-centered fx-start-h">
-          <p className="c1-c p-medium">
-            {author.articles_number} <span className="gray-c">{kind}</span>
-          </p>
-        </div>
+        {!kind && (
+            <p className="gray-c p-medium">
+              @{authorData.name || authorData.display_name}
+            </p>
+          )}
+          {kind && (
+            <div className="fx-centered fx-start-h">
+              <p className="c1-c p-medium">
+                {authorData.articles_number} <span className="gray-c">{kind}</span>
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );

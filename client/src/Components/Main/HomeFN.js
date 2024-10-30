@@ -16,6 +16,7 @@ export default function HomeFN({ flashnews }) {
   useEffect(() => {
     var innerTimeout;
     const handleScroll = () => {
+      if (!noScrollBarContainer) return;
       if (
         noScrollBarContainer.current.scrollHeight -
           noScrollBarContainer.current.scrollTop ===

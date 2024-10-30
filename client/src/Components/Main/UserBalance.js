@@ -1,32 +1,32 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SatsToUSD from "./SatsToUSD";
-import { Context } from "../../Context/Context";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { webln } from "@getalby/sdk";
 import LoadingDots from "../LoadingDots";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
+import { useDispatch, useSelector } from "react-redux";
+import { setUserBalance } from "../../Store/Slides/UserData";
 
 export default function UserBalance() {
   const navigateTo = useNavigate();
-  const { nostrKeys, balance, setBalance, tempChannel, setTempChannel } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userBalance = useSelector((state) => state.userBalance);
   const [wallets, setWallets] = useState(getWallets());
   const [selectedWallet, setSelectedWallet] = useState(
     wallets.find((wallet) => wallet.active)
   );
   const [isLoading, setIsLoading] = useState(false);
-
   const [isHidden, setIsHidden] = useState(
     localStorage.getItem("isSatsHidden")
       ? localStorage.getItem("isSatsHidden")
       : ""
   );
-
   useEffect(() => {
     if (["/wallet"].includes(window.location.pathname)) return;
-    if (!nostrKeys) return;
-    if (nostrKeys && (nostrKeys?.ext || nostrKeys?.sec)) {
+    if (!userKeys) return;
+    if (userKeys && (userKeys?.ext || userKeys?.sec)) {
       let tempWallets = getWallets();
       let selectedWallet_ = tempWallets.find((wallet) => wallet.active);
       if (selectedWallet_) {
@@ -42,30 +42,31 @@ export default function UserBalance() {
       } else {
         setWallets([]);
         setSelectedWallet(false);
-        setBalance("N/A");
+        dispatch(setUserBalance("N/A"));
       }
     } else {
-      setBalance("N/A");
+      dispatch(setUserBalance("N/A"));
     }
-  }, [nostrKeys, selectedWallet]);
+  }, [userKeys, selectedWallet]);
 
   useEffect(() => {
-    if (tempChannel && !window.location.pathname.includes("users")) {
+    if (!window.location.pathname.includes("users")) {
       let tempWallets = getWallets();
       setWallets(tempWallets);
       setSelectedWallet(tempWallets.find((wallet) => wallet.active));
-      setTempChannel(false);
     }
-  }, [tempChannel]);
+  }, []);
 
   const getBalancWebLN = async () => {
     try {
       setIsLoading(true);
       await window.webln.enable();
       let data = await window.webln.getBalance();
-      // localStorage.setItem("wallet-balance", `${data.balance}`);
+
+      localStorage.setItem("wallet-userBalance", `${data.balance}`);
+
+      dispatch(setUserBalance(data.balance));
       setIsLoading(false);
-      setBalance(data.balance);
     } catch (err) {
       console.log(err);
       setIsLoading(false);
@@ -79,7 +80,7 @@ export default function UserBalance() {
         checkTokens.activeWallet.data.access_token
       );
       setWallets(checkTokens.wallets);
-      setBalance(b);
+      dispatch(setUserBalance(b));
       setIsLoading(false);
     } catch (err) {
       console.log(err);
@@ -99,22 +100,20 @@ export default function UserBalance() {
       return 0;
     }
   };
-
   const getNWCData = async (activeWallet) => {
     try {
       setIsLoading(true);
       const nwc = new webln.NWC({ nostrWalletConnectUrl: activeWallet.data });
       await nwc.enable();
-      const balanceResponse = await nwc.getBalance();
+      const userBalanceResponse = await nwc.getBalance();
 
-      setBalance(balanceResponse.balance);
+      dispatch(setUserBalance(userBalanceResponse.balance));
       setIsLoading(false);
     } catch (err) {
       console.log(err);
       setIsLoading(false);
     }
   };
-
   const handleSatsDisplay = (e) => {
     e.stopPropagation();
     if (isHidden) {
@@ -127,11 +126,11 @@ export default function UserBalance() {
     localStorage.setItem("isSatsHidden", ts);
   };
 
-  if (!(nostrKeys && (nostrKeys?.ext || nostrKeys?.sec))) return;
-  if (nostrKeys?.sec && balance == "N/A")
+  if (!(userKeys && (userKeys?.ext || userKeys?.sec))) return;
+  if (userKeys?.sec && userBalance == "N/A")
     return (
       <Link
-        className="fit-container fx-centered fx-start-h box-pad-h-m balance-container mb-hide"
+        className="fit-container fx-centered fx-start-h box-pad-h-m userBalance-container mb-hide"
         style={{ borderLeft: "2px solid var(--orange-main)", margin: ".75rem" }}
         to={"/wallet"}
       >
@@ -144,7 +143,7 @@ export default function UserBalance() {
     );
   return (
     <div
-      className="fit-container fx-scattered box-pad-h-m balance-container mb-hide"
+      className="fit-container fx-scattered box-pad-h-m userBalance-container mb-hide"
       style={{ borderLeft: "2px solid var(--orange-main)", margin: ".75rem" }}
       onClick={(e) => {
         e.stopPropagation();
@@ -155,15 +154,15 @@ export default function UserBalance() {
         className="fx-centered fx-col fit-container fx-start-v "
         style={{ rowGap: 0 }}
       >
-        {!isLoading && (
+       
           <div className="fx-centered">
-            {!isHidden && <h3>{balance}</h3>}
+            {!isHidden && <h3>{userBalance}</h3>}
             {isHidden && <h3>*****</h3>}
             <div className="sats-24"></div>
           </div>
-        )}
-        {isLoading && <LoadingDots />}
-        <SatsToUSD sats={balance} isHidden={isHidden} />
+     
+        {/* {isLoading && <LoadingDots />} */}
+        <SatsToUSD sats={userBalance} isHidden={isHidden} />
       </div>
       {!isHidden && (
         <div className="eye-closed-24" onClick={handleSatsDisplay}></div>

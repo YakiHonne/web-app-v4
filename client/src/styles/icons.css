@@ -29,6 +29,7 @@
 .success,
 .weechat-logo,
 .arrow-24,
+.arrow-12,
 .bold-24,
 .bounties-24,
 .code-24,
@@ -327,7 +328,31 @@
 .copy,
 .smart-widget-draft,
 .smart-widget-draft-24,
-.bunny-icon {
+.bunny-icon,
+.total-events,
+.total-events-24,
+.succeeded-events,
+.succeeded-events-24,
+.failed-events,
+.failed-events-24,
+.theme,
+.theme-24,
+.cache,
+.cache-24,
+.arrow-12,
+.dashboard,
+.dashboard-24,
+.dashboard-bold,
+.dashboard-bold-24,
+.bolt-bold,
+.bolt-bold-24,
+.discover,
+.discover-24,
+.discover-bold,
+.discover-bold-24,
+.info,
+.info-24,
+.yaki-logomark {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -649,7 +674,27 @@
     .layers,
     .layers-24,
     .smart-widget-draft,
-    .smart-widget-draft-24 {
+    .smart-widget-draft-24,
+    .total-events,
+    .total-events-24,
+    .succeeded-events,
+    .succeeded-events-24,
+    .failed-events,
+    .failed-events-24,
+    .theme,
+    .theme-24,
+    .cache,
+    .cache-24,
+    .arrow-12,
+    .dashboard,
+    .dashboard-24,
+    .dashboard-bold,
+    .dashboard-bold-24,
+    .discover,
+    .discover-24,
+    .discover-bold,
+    .discover-bold-24,
+    .yaki-logomark {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -839,9 +884,25 @@
 .info-tt,
 .smart-widget-checker,
 .layers,
-.smart-widget-draft {
+.smart-widget-draft,
+.total-events,
+.succeeded-events,
+.failed-events,
+.theme,
+.cache,
+.dashboard,
+.dashboard-bold,
+.bolt-bold,
+.discover,
+.discover-bold,
+.info {
     min-width: 16px;
     min-height: 16px;
+}
+
+.arrow-12 {
+    min-width: 12px;
+    min-height: 12px;
 }
 
 .arrow-24,
@@ -1009,12 +1070,24 @@
 .info-tt-24,
 .smart-widget-checker-24,
 .layers-24,
-.smart-widget-draft-24 {
+.smart-widget-draft-24,
+.total-events-24,
+.succeeded-events-24,
+.failed-events-24,
+.theme-24,
+.cache-24,
+.dashboard-24,
+.dashboard-bold-24,
+.bolt-bold-24,
+.discover-24,
+.discover-bold-24,
+.info-24 {
     min-width: 20px;
     min-height: 20px;
 }
 
-.play-vid-58 {
+.play-vid-58,
+.yaki-logomark {
     min-width: 48px;
     min-height: 48px;
 }
@@ -1022,6 +1095,65 @@
 .bunny-icon {
     min-width: 8rem;
     min-height: 8rem;
+}
+
+
+.yaki-logomark,
+.yaki-logomark-24 {
+    background-image: url('../media/icons/yaki-logomark.svg');
+    min-width: 28px;
+    min-height: 28px;
+}
+.info,
+.info-24 {
+    background-image: url('../media/icons/info.svg');
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.discover,
+.discover-24 {
+    background-image: url('../media/icons/discover.svg');
+}
+
+.discover-bold,
+.discover-bold-24 {
+    background-image: url('../media/icons/discover-bold.svg');
+}
+
+.dashboard,
+.dashboard-24 {
+    background-image: url('../media/icons/dashboard.svg');
+}
+
+.dashboard-bold,
+.dashboard-bold-24 {
+    background-image: url('../media/icons/dashboard-bold.svg');
+}
+
+.cache,
+.cache-24 {
+    background-image: url('../media/icons/cache.svg');
+}
+
+.theme,
+.theme-24 {
+    background-image: url('../media/icons/theme.svg');
+}
+
+.total-events,
+.total-events-24 {
+    background-image: url('../media/icons/total-events.svg');
+}
+
+.succeeded-events,
+.succeeded-events-24 {
+    background-image: url('../media/icons/succeeded-events.svg');
+}
+
+.failed-events,
+.failed-events-24 {
+    background-image: url('../media/icons/failed-events.svg');
 }
 
 .bunny-icon {
@@ -1611,9 +1743,9 @@
     background-image: url('../media/icons/bolt.svg');
 }
 
-/* .bolt:hover, .bolt-24:hover {
+.bolt-bold, .bolt-bold-24 {
     background-image: url('../media/icons/bolt-bold-c1.svg');
-} */
+}
 
 .arrow-up {
     background-image: url('../media/icons/arrow-up.svg');
@@ -1724,7 +1856,7 @@
     background-image: url('../media/icons/admin.svg');
 }
 
-.arrow, .arrow-24 {
+.arrow, .arrow-24, .arrow-12 {
     background-image: url('../media/icons/arrow.svg');
 }
 

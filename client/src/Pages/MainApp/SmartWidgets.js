@@ -1,30 +1,27 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { Context } from "../../Context/Context";
-import { nip19, SimplePool } from "nostr-tools";
+import React, { useEffect, useRef, useState } from "react";
+import { nip19 } from "nostr-tools";
 import { Helmet } from "react-helmet";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { getNoteTree } from "../../Helpers/Helpers";
 import ArrowUp from "../../Components/ArrowUp";
-import relaysOnPlatform from "../../Content/Relays";
 import {
-  filterRelays,
-  getEmptyNostrUser,
-  getParsed3000xContent,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
 } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import { Link } from "react-router-dom";
-import PreviewWidget from "../../Components/SmartWidget/PreviewWidget";
 import Footer from "../../Components/Footer";
-import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import ToDeleteGeneral from "../../Components/Main/ToDeleteGeneral";
-import ShareLink from "../../Components/ShareLink";
 import WidgetCard from "../../Components/Main/WidgetCard";
-const pool = new SimplePool();
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function SmartWidgets() {
-  const { nostrUser, nostrKeys, addNostrAuthors } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
   const [comWidgets, setComWidgets] = useState([]);
   const [myWidgets, setMyWidgets] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -37,110 +34,116 @@ export default function SmartWidgets() {
   const extrasRef = useRef(null);
 
   useEffect(() => {
-    const { relays, filter } = getFilter();
+    const { filter } = getFilter();
     let events = [];
     setIsLoading(true);
-    let subscription = pool.subscribeMany(relays, filter, {
-      onevent(event) {
-        try {
-          let metadata = JSON.parse(event.content);
-          let parsedContent = getParsed3000xContent(event.tags);
-          events.push(event.pubkey);
-          if (contentSource === "community") {
-            setComWidgets((prev) => {
-              let element = prev.find((widget) => widget.id === event.id);
-              if (element) return prev;
-              return [
-                {
-                  ...parsedContent,
-                  metadata,
-                  ...event,
-                  author: getEmptyNostrUser(event.pubkey),
-                },
-                ...prev,
-              ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
-            });
-          }
-          if (contentSource === "self") {
-            setMyWidgets((prev) => {
-              let element = prev.find((widget) => widget.id === event.id);
-              if (element) return prev;
-              return [
-                {
-                  ...parsedContent,
-                  metadata,
-                  ...event,
-                  author: getEmptyNostrUser(event.pubkey),
-                },
-                ...prev,
-              ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
-            });
-          }
-        } catch (err) {
-          console.log(err);
-          setIsLoading(false);
-        }
-      },
-      oneose() {
-        addNostrAuthors([...new Set(events)]);
-        setIsLoading(false);
-      },
+    let subscription = ndkInstance.subscribe(filter, {
+      closeOnEose: true,
+      cacheUsage: "CACHE_FIRST",
     });
+
+    subscription.on("event", (event) => {
+      try {
+        let metadata = JSON.parse(event.content);
+        let parsedContent = getParsedRepEvent(event);
+        events.push(event.pubkey);
+        if (contentSource === "community") {
+          setComWidgets((prev) => {
+            let element = prev.find((widget) => widget.id === event.id);
+            if (element) return prev;
+            return [
+              {
+                ...parsedContent,
+                metadata,
+                ...event,
+                author: getEmptyuserMetadata(event.pubkey),
+              },
+              ...prev,
+            ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
+          });
+        }
+        if (contentSource === "self") {
+          setMyWidgets((prev) => {
+            let element = prev.find((widget) => widget.id === event.id);
+            if (element) return prev;
+            return [
+              {
+                ...parsedContent,
+                metadata,
+                ...event,
+                author: getEmptyuserMetadata(event.pubkey),
+              },
+              ...prev,
+            ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
+          });
+        }
+      } catch (err) {
+        console.log(err);
+        setIsLoading(false);
+      }
+    });
+    subscription.on("eose", () => {
+      saveUsers([...new Set(events)]);
+      setIsLoading(false);
+    });
+
     setSub(subscription);
   }, [contentSource, myWidgetsLE, comWidgetsLE]);
 
   useEffect(() => {
-    if (!nostrKeys) handleContentSource("community");
-  }, [nostrKeys]);
+    if (!userKeys) handleContentSource("community");
+  }, [userKeys]);
 
   useEffect(() => {
-    let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
     let events = [];
+    let limit = 1;
     setIsLoading(true);
-    let subscription = pool.subscribeMany(
-      relaysToUse,
+    let subscription = ndkInstance.subscribe(
       [{ kinds: [1], "#l": ["smart-widget"], limit: 6 }],
-      {
-        async onevent(event) {
-          try {
-            let parsedContent = await getNoteTree(event.content, true);
-            events.push(event.pubkey);
-            let nEvent = nip19.neventEncode({
-              author: event.pubkey,
-              id: event.id,
-            });
-            setNotes((prev) => {
-              let element = prev.find((widget) => widget.id === event.id);
-              if (element) return prev;
-              return [
-                {
-                  parsedContent,
-                  nEvent,
-                  ...event,
-                },
-                ...prev,
-              ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
-            });
-          } catch (err) {
-            console.log(err);
-          }
-        },
-        oneose() {
-          addNostrAuthors([...new Set(events)]);
-        },
-      }
+      { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
     );
+
+    subscription.on("event", async (event) => {
+      try {
+        if (limit >= 6) {
+          subscription.stop();
+          return;
+        }
+        limit += 1;
+        let parsedContent = await getNoteTree(event.content, true);
+        events.push(event.pubkey);
+        let nEvent = nip19.neventEncode({
+          author: event.pubkey,
+          id: event.id,
+        });
+        setNotes((prev) => {
+          let element = prev.find((widget) => widget.id === event.id);
+          if (element) return prev;
+          return [
+            {
+              parsedContent,
+              nEvent,
+              ...event,
+            },
+            ...prev,
+          ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    });
+    subscription.on("close", () => {
+      saveUsers([...new Set(events)]);
+    });
   }, []);
 
   const getFilter = () => {
-    let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
     if (contentSource === "self") {
       return {
-        relays: relaysToUse,
         filter: [
           {
             kinds: [30031],
-            authors: [nostrKeys.pub],
+            authors: [userKeys.pub],
             until: myWidgetsLE,
             limit: 10,
           },
@@ -148,7 +151,6 @@ export default function SmartWidgets() {
       };
     }
     return {
-      relays: relaysToUse,
       filter: [{ kinds: [30031], until: comWidgetsLE, limit: 4 }],
     };
   };
@@ -183,16 +185,16 @@ export default function SmartWidgets() {
 
   const handleContentSource = (source) => {
     if (source === contentSource) return;
-    sub?.close();
+    if (sub) sub.stop();
     setContentSource(source);
   };
 
   const handleRefreshData = async () => {
     setMyWidgets((widgets) =>
-      widgets.filter((widget) => widget.id !== selectedWidgetID)
+      widgets.filter((widget) => widget.id !== selectedWidgetID.id)
     );
     setComWidgets((widgets) =>
-      widgets.filter((widget) => widget.id !== selectedWidgetID)
+      widgets.filter((widget) => widget.id !== selectedWidgetID.id)
     );
     setSelectedWidgetID(false);
   };
@@ -228,7 +230,8 @@ export default function SmartWidgets() {
           cancel={() => setSelectedWidgetID(false)}
           title={""}
           kind="Smart widget"
-          eventId={selectedWidgetID}
+          aTag={`${selectedWidgetID.naddrData.kind}:${selectedWidgetID.naddrData.pubkey}:${selectedWidgetID.naddrData.identifier}`}
+          eventId={selectedWidgetID.id}
           refresh={handleRefreshData}
         />
       )}
@@ -237,16 +240,17 @@ export default function SmartWidgets() {
         <div className="main-container">
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
+            <div className="fx-centered fit-container fx-start-h fx-start-v" style={{gap: 0}}>
               <div
-                className="box-pad-h-m  fit-container fx-col fx-centered fx-start-h fx-start-v"
-                style={{ flex: 1.5, maxWidth: "700px" }}
+                className="box-pad-h-m  fit-container fx-col fx-centered fx-start-h fx-start-v main-middle"
+                style={{  gap: 0 }}
               >
                 <div
                   className="fit-container sticky fx-centered fx-col"
                   style={{ rowGap: "16px" }}
                 >
-                  <div className="fit-container fx-centered ">
+                  <div className="fit-container fx-scattered ">
+                    <h4>Smart widgets</h4>
                     <Link to="/smart-widget-checker">
                       <div
                         className="round-icon-small round-icon-tooltip"
@@ -255,7 +259,7 @@ export default function SmartWidgets() {
                         <div className="smart-widget-checker"></div>
                       </div>
                     </Link>
-                    <div
+                    {/* <div
                       className={`list-item fx-centered fx ${
                         contentSource === "community"
                           ? "selected-list-item"
@@ -265,7 +269,7 @@ export default function SmartWidgets() {
                     >
                       <p>Community</p>
                     </div>
-                    {nostrKeys && (
+                    {userKeys && (
                       <div
                         className={`list-item fx-centered fx ${
                           contentSource === "self" ? "selected-list-item" : ""
@@ -274,13 +278,11 @@ export default function SmartWidgets() {
                       >
                         <p>My smart widget</p>
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
                 <div
-                  className={`fit-container fx-col fx-centered fx-start-h fx-start-v ${
-                    !nostrKeys ? "box-pad-v" : ""
-                  }`}
+                  className={`fit-container fx-col fx-centered fx-start-h fx-start-v`}
                   style={{ width: "min(100%,700px)" }}
                 >
                   {contentSource === "community" &&
@@ -289,7 +291,7 @@ export default function SmartWidgets() {
                         <WidgetCard
                           widget={widget}
                           key={widget.id}
-                          deleteWidget={() => setSelectedWidgetID(widget.id)}
+                          deleteWidget={() => setSelectedWidgetID(widget)}
                         />
                       );
                     })}
@@ -299,7 +301,7 @@ export default function SmartWidgets() {
                         <WidgetCard
                           widget={widget}
                           key={widget.id}
-                          deleteWidget={() => setSelectedWidgetID(widget.id)}
+                          deleteWidget={() => setSelectedWidgetID(widget)}
                         />
                       );
                     })}
@@ -324,11 +326,12 @@ export default function SmartWidgets() {
                           extrasRef.current?.getBoundingClientRect().height || 0
                         }px)`
                       : 0,
+                      padding: '0 1rem'
                 }}
-                className={`fx-centered  fx-wrap  box-pad-v sticky extras-homepage`}
+                className={`fx-centered  fx-wrap fx-start-v  box-pad-v sticky extras-homepage`}
                 ref={extrasRef}
               >
-                <div className="sticky fit-container">
+                <div className="sticky fit-container" style={{}}>
                   <SearchbarNOSTR />
                 </div>
                 <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
@@ -354,7 +357,7 @@ export default function SmartWidgets() {
                     }}
                   >
                     <div className="fx-centered fx-start-h">
-                      <h4>Trending notes</h4>
+                      <h4>Notes with widgets</h4>
                     </div>
                     {notes.map((note) => {
                       return <NoteCard note={note} key={note.id} />;
@@ -371,125 +374,16 @@ export default function SmartWidgets() {
   );
 }
 
-// const WidgetCard = ({ widget, deleteWidget }) => {
-//   const { nostrAuthors, getNostrAuthor, nostrKeys, setToast } =
-//     useContext(Context);
-//   const [authorData, setAuthorData] = useState(widget.author);
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         let auth = getNostrAuthor(widget.author.pubkey);
-
-//         if (auth) {
-//           setAuthorData(auth);
-//         }
-//         return;
-//       } catch (err) {
-//         console.log(err);
-//       }
-//     };
-//     fetchData();
-//   }, [nostrAuthors]);
-
-//   const copyNaddr = () => {
-//     let naddr = nip19.naddrEncode({
-//       pubkey: widget.pubkey,
-//       identifier: widget.d,
-//       kind: widget.kind,
-//     });
-//     navigator?.clipboard?.writeText(naddr);
-//     setToast({
-//       type: 1,
-//       desc: `Naddr was copied! 👏`,
-//     });
-//   };
-
-//   return (
-//     <div
-//       className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fit-container fx-start-h fx-start-v"
-//       style={{ overflow: "visible" }}
-//     >
-//       <div className="fit-container fx-scattered">
-//         <AuthorPreview author={authorData} />
-//         <OptionsDropdown
-//           options={[
-//             <div className="fit-container" onClick={copyNaddr}>
-//               <p>Copy naddr</p>
-//             </div>,
-//             <Link
-//               className="fit-container"
-//               to={"/smart-widget-builder"}
-//               state={{ ops: "clone", metadata: { ...widget } }}
-//             >
-//               <p>Clone</p>
-//             </Link>,
-
-//             <Link
-//               className="fit-container"
-//               to={`/smart-widget-checker?naddr=${nip19.naddrEncode({
-//                 pubkey: widget.pubkey,
-//                 identifier: widget.d,
-//                 kind: widget.kind,
-//               })}`}
-//             >
-//               <p>Check validity</p>
-//             </Link>,
-//             nostrKeys.pub === widget.pubkey && (
-//               <Link
-//                 className="fit-container"
-//                 to={"/smart-widget-builder"}
-//                 state={{ ops: "edit", metadata: { ...widget } }}
-//               >
-//                 <p>Edit</p>
-//               </Link>
-//             ),
-//             nostrKeys.pub === widget.pubkey && (
-//               <div className="fit-container" onClick={deleteWidget}>
-//                 <p className="red-c">Delete</p>
-//               </div>
-//             ),
-//             <ShareLink
-//               label="Share widget"
-//               path={`/${nip19.naddrEncode({
-//                 pubkey: widget.pubkey,
-//                 identifier: widget.d,
-//                 kind: widget.kind,
-//               })}`}
-//               title={widget.title || widget.description}
-//               description={widget.description || widget.title}
-//             />,
-//           ]}
-//         />
-      
-//       </div>
-//       <PreviewWidget widget={widget.metadata} pubkey={widget.pubkey} />
-//       {(widget.title || widget.description) && (
-//         <div
-//           className="fx-centered fx-col fx-start-h fx-start-v fit-container "
-//           style={{ rowGap: 0 }}
-//         >
-//           <p>{widget.title || "Untitled"}</p>
-//           {widget.description && (
-//             <p className="gray-c p-medium">{widget.description}</p>
-//           )}
-//           {!widget.description && (
-//             <p className="gray-c p-italic p-medium">No description</p>
-//           )}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
 const NoteCard = ({ note }) => {
-  const { nostrAuthors, getNostrAuthor } = useContext(Context);
-  const [authorData, setAuthorData] = useState(getEmptyNostrUser(note.pubkey));
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const [authorData, setAuthorData] = useState(
+    getEmptyuserMetadata(note.pubkey)
+  );
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(note.pubkey);
+        let auth = getUser(note.pubkey);
 
         if (auth) {
           setAuthorData(auth);

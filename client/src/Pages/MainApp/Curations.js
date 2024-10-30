@@ -1,32 +1,29 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
-import relaysOnPlatform from "../../Content/Relays";
 import { nip19 } from "nostr-tools";
 import Date_ from "../../Components/Date_";
 import { Link } from "react-router-dom";
 import {
-  filterRelays,
   getBech32,
-  getEmptyNostrUser,
-  getParsed3000xContent,
+  getParsedRepEvent,
 } from "../../Helpers/Encryptions";
-import { SimplePool } from "nostr-tools";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../../Components/LoadingDots";
 import Footer from "../../Components/Footer";
 
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import bannedList from "../../Content/BannedList";
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
-const pool = new SimplePool();
+export default function Curations() {
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userMutedList = useSelector((state) => state.userMutedList);
 
-export default function NostrCurations() {
-  const { addNostrAuthors, nostrUser, mutedList } = useContext(Context);
-  const [relays, setRelays] = useState(relaysOnPlatform);
-  const [showRelaysList, setShowRelaysList] = useState(false);
   const [activeRelay, setActiveRelay] = useState("");
   const [curations, setCurations] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -38,121 +35,113 @@ export default function NostrCurations() {
       try {
         setIsLoading(true);
         let curationsAuthors = [];
-        let relaysToFetchFrom =
-          (activeRelay && [activeRelay]) ||
-          (!nostrUser
-            ? relaysOnPlatform
-            : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]);
-        let sub = pool.subscribeMany(
-          relaysToFetchFrom,
+
+        let sub = ndkInstance.subscribe(
           [{ kinds: [30004, 30005], limit: 50, until: lastEventTime }],
-          {
-            onevent(curation) {
-              if (![...bannedList, ...mutedList].includes(curation.pubkey)) {
-                curationsAuthors.push(curation.pubkey);
-                let content = getParsed3000xContent(curation.tags);
-                let identifier = curation.tags.find((tag) => tag[0] === "d")[1];
-                let naddr = nip19.naddrEncode({
-                  identifier: curation.tags.find((tag) => tag[0] === "d")[1],
-                  pubkey: curation.pubkey,
-                  kind: curation.kind,
-                });
-                delete content.published_at;
-                let modified_date = new Date(
-                  curation.created_at * 1000
-                ).toISOString();
-                let added_date = new Date(
-                  curation.created_at * 1000
-                ).toISOString();
-                let published_at = curation.created_at;
-                for (let tag of curation.tags) {
-                  if (tag[0] === "published_at") {
-                    published_at = tag[1] || curation.created_at;
-                    added_date =
-                      tag[1].length > 10
-                        ? new Date(parseInt(tag[1])).toISOString()
-                        : new Date(parseInt(tag[1]) * 1000).toISOString();
-                  }
-                }
-                setCurations((prev) => {
-                  let index = prev.findIndex(
-                    (item) => item.identifier === identifier
-                  );
-                  let newP = Array.from(prev);
-                  if (index === -1)
-                    newP = [
-                      ...newP,
-                      {
-                        ...curation,
-                        naddr,
-                        identifier,
-                        naddrData: {
-                          identifier: curation.tags.find(
-                            (tag) => tag[0] === "d"
-                          )[1],
-                          pubkey: curation.pubkey,
-                          kind: curation.kind,
-                        },
-                        author: {
-                          name: curation.pubkey.substring(0, 10),
-                          img: "",
-                        },
-                        added_date,
-                        modified_date,
-                        published_at,
-                        ...content,
-                      },
-                    ];
-                  if (index !== -1) {
-                    if (prev[index].created_at < curation.created_at) {
-                      newP.splice(index, 1);
-                      newP.push({
-                        ...curation,
-                        naddr,
-                        identifier,
-                        naddrData: {
-                          identifier: curation.tags.find(
-                            (tag) => tag[0] === "d"
-                          )[1],
-                          pubkey: curation.pubkey,
-                          kind: curation.kind,
-                        },
-                        author: {
-                          name: curation.pubkey.substring(0, 10),
-                          img: "",
-                        },
-                        added_date,
-                        modified_date,
-                        published_at,
-                        ...content,
-                      });
-                    }
-                  }
-
-                  newP = newP.sort(
-                    (item_1, item_2) => item_2.created_at - item_1.created_at
-                  );
-
-                  return newP;
-                });
-                setIsLoaded(true);
-              }
-            },
-            oneose() {
-              setIsLoaded(true);
-              setIsLoading(false);
-              addNostrAuthors(curationsAuthors);
-              pool.close(relaysToFetchFrom);
-              sub.close();
-            },
-          }
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
+
+        sub.on("event", (curation) => {
+          if (![...bannedList, ...userMutedList].includes(curation.pubkey)) {
+            curationsAuthors.push(curation.pubkey);
+            let content = getParsedRepEvent(curation);
+            let identifier = curation.tags.find((tag) => tag[0] === "d")[1];
+            let naddr = nip19.naddrEncode({
+              identifier: curation.tags.find((tag) => tag[0] === "d")[1],
+              pubkey: curation.pubkey,
+              kind: curation.kind,
+            });
+            delete content.published_at;
+            let modified_date = new Date(
+              curation.created_at * 1000
+            ).toISOString();
+            let added_date = new Date(curation.created_at * 1000).toISOString();
+            let published_at = curation.created_at;
+            for (let tag of curation.tags) {
+              if (tag[0] === "published_at") {
+                published_at = tag[1] || curation.created_at;
+                added_date =
+                  tag[1].length > 10
+                    ? new Date(parseInt(tag[1])).toISOString()
+                    : new Date(parseInt(tag[1]) * 1000).toISOString();
+              }
+            }
+            setCurations((prev) => {
+              let index = prev.findIndex(
+                (item) => item.identifier === identifier
+              );
+              let newP = Array.from(prev);
+              if (index === -1)
+                newP = [
+                  ...newP,
+                  {
+                    ...curation,
+                    naddr,
+                    identifier,
+                    naddrData: {
+                      identifier: curation.tags.find(
+                        (tag) => tag[0] === "d"
+                      )[1],
+                      pubkey: curation.pubkey,
+                      kind: curation.kind,
+                    },
+                    author: {
+                      name: curation.pubkey.substring(0, 10),
+                      img: "",
+                    },
+                    added_date,
+                    modified_date,
+                    published_at,
+                    ...content,
+                  },
+                ];
+              if (index !== -1) {
+                if (prev[index].created_at < curation.created_at) {
+                  newP.splice(index, 1);
+                  newP.push({
+                    ...curation,
+                    naddr,
+                    identifier,
+                    naddrData: {
+                      identifier: curation.tags.find(
+                        (tag) => tag[0] === "d"
+                      )[1],
+                      pubkey: curation.pubkey,
+                      kind: curation.kind,
+                    },
+                    author: {
+                      name: curation.pubkey.substring(0, 10),
+                      img: "",
+                    },
+                    added_date,
+                    modified_date,
+                    published_at,
+                    ...content,
+                  });
+                }
+              }
+
+              newP = newP.sort(
+                (item_1, item_2) => item_2.created_at - item_1.created_at
+              );
+
+              return newP;
+            });
+            setIsLoaded(true);
+          }
+        });
+        sub.on("eose", () => {
+          setIsLoaded(true);
+          setIsLoading(false);
+          saveUsers(curationsAuthors);
+          sub.stop();
+        });
       } catch (err) {
         console.log(err);
       }
     };
-    if (Array.isArray(mutedList)) fetchData();
-  }, [lastEventTime, activeRelay, mutedList]);
+    if (Array.isArray(userMutedList)) fetchData();
+  }, [lastEventTime, activeRelay, userMutedList]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -177,27 +166,6 @@ export default function NostrCurations() {
         ?.removeEventListener("scroll", handleScroll);
   }, [isLoading]);
 
-  const getDRef = (tags) => {
-    let tempArray = [];
-    for (let tag of tags) {
-      if (tag[0] === "a") {
-        tempArray.push(tag[1].split(":")[2]);
-      }
-    }
-    return tempArray;
-  };
-  const getUserFromNOSTR = async (pubkey) => {
-    try {
-      let author = await pool.get(relaysOnPlatform, {
-        kinds: [0],
-        authors: [pubkey],
-      });
-
-      return author || getEmptyNostrUser(pubkey);
-    } catch (err) {
-      console.log(err);
-    }
-  };
   const switchActiveRelay = (source) => {
     if (source === activeRelay) return;
 
@@ -258,124 +226,7 @@ export default function NostrCurations() {
                   <div className="fit-container fx-scattered box-marg-s sticky">
                     <span className="fx-centered">
                       <h4>{curations.length} Curations</h4>
-                      {activeRelay && (
-                        <p className="orange-c">
-                          (From {activeRelay.replace("wss://", "")})
-                        </p>
-                      )}
                     </span>
-                    <div style={{ position: "relative", zIndex: 100 }}>
-                      <div
-                        style={{ position: "relative" }}
-                        className="round-icon round-icon-tooltip"
-                        data-tooltip={
-                          activeRelay
-                            ? `${activeRelay} is ${
-                                isLoading ? "connecting" : "connected"
-                              }`
-                            : "All relays"
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowRelaysList(!showRelaysList);
-                        }}
-                      >
-                        <div className="server"></div>
-                      </div>
-                      {showRelaysList && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: 0,
-                            bottom: "-5px",
-                            backgroundColor: "var(--dim-gray)",
-                            border: "none",
-                            transform: "translateY(100%)",
-                            maxWidth: "300px",
-                            rowGap: "12px",
-                          }}
-                          className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                        >
-                          <h5>Relays</h5>
-                          <button
-                            className={`btn-text-gray pointer fx-centered`}
-                            style={{
-                              width: "max-content",
-                              fontSize: "1rem",
-                              textDecoration: "none",
-                              color: activeRelay === "" ? "var(--c1)" : "",
-                              transition: ".4s ease-in-out",
-                            }}
-                            onClick={() => {
-                              switchActiveRelay("");
-                              setShowRelaysList(false);
-                            }}
-                          >
-                            {isLoading && activeRelay === "" ? (
-                              <>Connecting...</>
-                            ) : (
-                              "All relays"
-                            )}
-                          </button>
-                          {nostrUser &&
-                            nostrUser.relays.length > 0 &&
-                            nostrUser.relays.map((relay) => {
-                              return (
-                                <button
-                                  key={relay}
-                                  className={`btn-text-gray pointer fx-centered `}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === relay ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay(relay);
-                                    setShowRelaysList(false);
-                                  }}
-                                >
-                                  {isLoading && relay === activeRelay ? (
-                                    <>Connecting...</>
-                                  ) : (
-                                    relay.split("wss://")[1]
-                                  )}
-                                </button>
-                              );
-                            })}
-                          {(!nostrUser ||
-                            (nostrUser && nostrUser.relays.length === 0)) &&
-                            relays.map((relay) => {
-                              return (
-                                <button
-                                  key={relay}
-                                  className={`btn-text-gray pointer fx-centered`}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === relay ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay(relay);
-                                    setShowRelaysList(false);
-                                  }}
-                                >
-                                  {isLoading && relay === activeRelay ? (
-                                    <>Connecting..</>
-                                  ) : (
-                                    relay.split("wss://")[1]
-                                  )}
-                                </button>
-                              );
-                            })}
-                        </div>
-                      )}
-                    </div>
                   </div>
                   <div
                     className="fx-centered fit-container fx-wrap fx-stretch"
@@ -479,7 +330,8 @@ export default function NostrCurations() {
 }
 
 const CurationPreviewCard = ({ curation }) => {
-  const { nostrUser, getNostrAuthor, nostrAuthors } = useContext(Context);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+
   const [artURL, setArtURL] = useState(`${curation.naddr}`);
   const [authorData, setAuthorData] = useState({
     author_img: "",
@@ -489,7 +341,7 @@ const CurationPreviewCard = ({ curation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(curation.pubkey);
+        let auth = getUser(curation.pubkey);
 
         if (auth) {
           setAuthorData({

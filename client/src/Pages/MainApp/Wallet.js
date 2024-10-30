@@ -1,25 +1,19 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { SimplePool } from "nostr-tools";
+import React, { useEffect, useRef, useState } from "react";
 import { webln } from "@getalby/sdk";
-import { Context } from "../../Context/Context";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import axios from "axios";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import HomeFN from "../../Components/Main/HomeFN";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import * as secp from "@noble/secp256k1";
 import SatsToUSD from "../../Components/Main/SatsToUSD";
 import {
-  decodeBolt11,
   decodeUrlOrAddress,
   encodeLud06,
-  filterRelays,
   getBech32,
-  getBolt11,
-  getEmptyNostrUser,
+  getEmptyuserMetadata,
   getHex,
   getZapper,
   shortenKey,
@@ -34,19 +28,19 @@ import AddWallet from "../../Components/Main/AddWallet";
 import UserSearchBar from "../../Components/UserSearchBar";
 import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
-const pool = new SimplePool();
-const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+import { useDispatch, useSelector } from "react-redux";
+import { setUserBalance } from "../../Store/Slides/UserData";
+import { setToast } from "../../Store/Slides/Publishers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
 
 export default function Wallet() {
-  const {
-    nostrKeys,
-    nostrUser,
-    addNostrAuthors,
-    nostrAuthors,
-    balance,
-    setBalance,
-  } = useContext(Context);
-  const [importantFN, setImportantFN] = useState(false);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userBalance = useSelector((state) => state.userBalance);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+
   const [transactions, setTransactions] = useState([]);
   const [walletTransactions, setWalletTransactions] = useState([]);
   const [displayMessage, setDisplayMessage] = useState(false);
@@ -58,59 +52,62 @@ export default function Wallet() {
   const [isLoading, setIsLoading] = useState(false);
   const [showAddWallet, setShowAddWallet] = useState(false);
   const [showWalletsList, setShowWalletList] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [totalAmount, setTotalAmount] = useState([]);
   const [timestamp, setTimestamp] = useState(Date.now());
-  // const [balance, setBalance] = useState("N/A");
   const [showDeletionPopup, setShowDeletionPopup] = useState(false);
   const walletListRef = useRef(null);
 
   useEffect(() => {
+    let timeout = null;
     try {
-      if (!nostrKeys) {
+      if (!userKeys) {
         setWallets([]);
         setSelectedWallet(false);
         return;
       }
-      let tempWallets = getWallets();
-      setWallets(tempWallets);
-      setSelectedWallet(tempWallets.find((wallet) => wallet.active));
-      let authors = [];
-      let sub = pool.subscribeMany(
-        nostrUser
-          ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-          : relaysOnPlatform,
-        [
-          {
-            kinds: [9735],
-            "#p": [nostrKeys.pub],
-          },
-        ],
-        {
-          async onevent(event) {
-            let sats = decodeBolt11(getBolt11(event));
-            let zapper = getZapper(event);
-            authors.push(zapper.pubkey);
-            setTransactions((prev) => {
-              return [...prev, zapper];
-            });
-            setTotalAmount((prev) => prev + sats);
-          },
-          oneose() {
-            addNostrAuthors(authors);
-          },
-        }
-      );
+      setIsLoading(true);
+      timeout = setTimeout(() => {
+        let tempWallets = getWallets();
+
+        setWallets(tempWallets);
+        setSelectedWallet(tempWallets.find((wallet) => wallet.active));
+
+        let authors = [];
+        let sub = ndkInstance.subscribe(
+          [
+            {
+              kinds: [9735],
+              "#p": [userKeys.pub],
+            },
+          ],
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+        );
+
+        sub.on("event", async (event) => {
+          let zapper = getZapper(event);
+          authors.push(zapper.pubkey);
+          setTransactions((prev) => {
+            let zap = prev.find((zap) => zap.id === zapper.id);
+            if (!zap) return [...prev, zapper];
+            return prev;
+          });
+        });
+        sub.on("eose", () => {
+          saveUsers(authors);
+        });
+      }, 1000);
     } catch (err) {
       console.log(err);
-      setIsLoaded(true);
     }
-  }, [nostrKeys]);
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [userKeys]);
 
   useEffect(() => {
-    if (!nostrKeys) return;
-    if (nostrKeys && (nostrKeys?.ext || nostrKeys?.sec)) {
+    if (!userKeys) return;
+    if (userKeys && (userKeys?.ext || userKeys?.sec)) {
       let tempWallets = getWallets();
+
       let selectedWallet_ = tempWallets.find((wallet) => wallet.active);
       if (selectedWallet_) {
         if (selectedWallet_.kind === 1) {
@@ -122,15 +119,15 @@ export default function Wallet() {
         if (selectedWallet_.kind === 3) {
           getNWCData(selectedWallet_);
         }
-      }else {
+      } else {
         setWallets([]);
         setSelectedWallet(false);
-        setBalance("N/A");
+        dispatch(setUserBalance("N/A"));
       }
     } else {
-      setBalance("N/A");
+      dispatch(setUserBalance("N/A"));
     }
-  }, [nostrKeys, selectedWallet, timestamp]);
+  }, [userKeys, selectedWallet, timestamp]);
 
   useEffect(() => {
     let handleOffClick = (e) => {
@@ -150,9 +147,10 @@ export default function Wallet() {
       setIsLoading(true);
       await window.webln.enable();
       let data = await window.webln.getBalance();
-      // localStorage.setItem("wallet-balance", `${data.balance}`);
+      // localStorage.setItem("wallet-userBalance", `${data.userBalance}`);
       setIsLoading(false);
-      setBalance(data.balance);
+
+      dispatch(setUserBalance(data.balance));
     } catch (err) {
       console.log(err);
       setIsLoading(false);
@@ -169,7 +167,7 @@ export default function Wallet() {
         checkTokens.activeWallet.data.access_token
       );
       setWallets(checkTokens.wallets);
-      setBalance(b);
+      dispatch(setUserBalance(b));
       setWalletTransactions(t);
       setIsLoading(false);
     } catch (err) {
@@ -179,12 +177,12 @@ export default function Wallet() {
   };
   const getBalanceAlbyAPI = async (code) => {
     try {
-      const data = await axios.get("https://api.getalby.com/balance", {
+      const data = await axios.get("https://api.getalby.com/userBalance", {
         headers: {
           Authorization: `Bearer ${code}`,
         },
       });
-      return data.data.balance;
+      return data.data.userBalance;
     } catch (err) {
       console.log(err);
       return 0;
@@ -205,7 +203,7 @@ export default function Wallet() {
           return event.metadata.zap_request.pubkey;
         });
       sendersMetadata = [...new Set(sendersMetadata)];
-      addNostrAuthors(sendersMetadata);
+      saveUsers(sendersMetadata);
 
       return data.data;
     } catch (err) {
@@ -221,8 +219,9 @@ export default function Wallet() {
       await nwc.enable();
       const ONE_WEEK_IN_SECONDS = 60 * 60 * 24 * 7;
 
-      const balance_ = await nwc.getBalance();
-      setBalance(balance_.balance);
+      const userBalance_ = await nwc.getBalance();
+
+      dispatch(setUserBalance(userBalance_.balance));
       const transactions_ = await nwc.listTransactions({
         from: Math.floor(new Date().getTime() / 1000 - ONE_WEEK_IN_SECONDS),
         until: Math.ceil(new Date().getTime() / 1000),
@@ -236,7 +235,7 @@ export default function Wallet() {
           return event.metadata.zap_request.pubkey;
         });
       sendersMetadata = [...new Set(sendersMetadata)];
-      addNostrAuthors(sendersMetadata);
+      saveUsers(sendersMetadata);
       setWalletTransactions(transactions_.transactions);
       setIsLoading(false);
       nwc.close();
@@ -264,21 +263,6 @@ export default function Wallet() {
     setShowWalletList(false);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoaded(false);
-        const [important] = await Promise.all([
-          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
-        ]);
-        setImportantFN(important.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchData();
-  }, []);
-
   const handleDelete = () => {
     try {
       let tempWallets = wallets.filter(
@@ -302,9 +286,22 @@ export default function Wallet() {
     }
   };
 
+  let handleAddWallet = () => {
+    let tempWallets = getWallets();
+    let selectedWallet_ = tempWallets.find((wallet) => wallet.active);
+    setWallets(tempWallets);
+    setSelectedWallet(selectedWallet_);
+    setShowAddWallet(false)
+  };
+
   return (
     <>
-      {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} />}
+      {showAddWallet && (
+        <AddWallet
+          exit={() => setShowAddWallet(false)}
+          refresh={handleAddWallet}
+        />
+      )}
       {showDeletionPopup && (
         <DeletionPopUp
           exit={() => setShowDeletionPopup(false)}
@@ -330,15 +327,15 @@ export default function Wallet() {
             <SidebarNOSTR />
             <main className="main-page-nostr-container">
               <ArrowUp />
-              <div className="fx-centered fit-container fx-start-h fx-start-v">
-                <div style={{ flex: 1.5 }} className="box-pad-h-m">
-                  {!(nostrKeys.ext || nostrKeys.sec) && (
+              <div className="fx-centered fit-container  fx-start-v">
+                <div className="box-pad-h-m main-middle">
+                  {!(userKeys.ext || userKeys.sec) && (
                     <PagePlaceholder page={"nostr-wallet"} />
                   )}
-                  {(nostrKeys.ext || nostrKeys.sec) && wallets.length === 0 && (
-                    <PagePlaceholder page={"nostr-add-wallet"} />
+                  {(userKeys.ext || userKeys.sec) && wallets.length === 0 && (
+                    <PagePlaceholder page={"nostr-add-wallet"} onClick={handleAddWallet}/>
                   )}
-                  {(nostrKeys.ext || nostrKeys.sec) && wallets.length > 0 && (
+                  {(userKeys.ext || userKeys.sec) && wallets.length > 0 && (
                     <div>
                       <div
                         className="fit-container box-pad-v-m fx-scattered"
@@ -349,7 +346,7 @@ export default function Wallet() {
                         </div>
                         <div className="fx-centered">
                           <div
-                            className="round-icon round-icon-tooltip"
+                            className="round-icon round-icon-small round-icon-tooltip"
                             data-tooltip="Add wallet"
                             onClick={() => setShowAddWallet(true)}
                           >
@@ -361,13 +358,14 @@ export default function Wallet() {
                           >
                             {selectedWallet && (
                               <div
-                                className="if fx-scattered option pointer"
+                                className="fit-container fx-scattered if option pointer"
+                                style={{ height: "var(--40)", padding: "1rem" }}
                                 onClick={() =>
                                   setShowWalletList(!showWalletsList)
                                 }
                               >
                                 <p>{selectedWallet.entitle}</p>
-                                <div className="arrow"></div>
+                                <div className="arrow-12"></div>
                               </div>
                             )}
                             {showWalletsList && (
@@ -444,29 +442,37 @@ export default function Wallet() {
                         </div>
                       </div>
                       <div
-                        className="fx-scattered box-pad-h fit-container  gradient-border fx-wrap"
+                        className="fx-scattered box-pad-h fit-container fx-col fx-wrap"
+                        // className="fx-scattered box-pad-h fit-container  gradient-border fx-wrap"
                         style={{
                           position: "relative",
-                          padding: "2rem",
+                          padding: "1rem",
                         }}
                       >
                         {!isLoading && (
-                          <div className="fx-centered fx-col fx-start-v">
+                          <div className="fx-centered fx-col box-pad-v">
                             <h5>Balance</h5>
                             <div className="fx-centered">
-                              <h2 className="orange-c">{balance}</h2>
+                              <h2 className="orange-c">{userBalance}</h2>
                               <p className="gray-c">Sats</p>
                             </div>
-                            <SatsToUSD sats={balance} />
+                            <SatsToUSD sats={userBalance} />
                           </div>
                         )}
-                        {isLoading && <LoadingDots />}
-                        <div className="fx-centered">
+                        {isLoading && (
+                          <div
+                            className="fx-centered fx-col box-pad-v"
+                            style={{ height: "150px" }}
+                          >
+                            <LoadingDots />
+                          </div>
+                        )}
+                        <div className="fx-centered fit-container">
                           <button
                             className={
                               selectedWallet
-                                ? "btn btn-gray "
-                                : "btn btn-disabled"
+                                ? "btn btn-gray  fx"
+                                : "btn btn-disabled fx"
                             }
                             onClick={() =>
                               selectedWallet ? setOps("receive") : null
@@ -478,8 +484,8 @@ export default function Wallet() {
                           <button
                             className={
                               selectedWallet
-                                ? "btn btn-orange "
-                                : "btn btn-disabled"
+                                ? "btn btn-orange  fx"
+                                : "btn btn-disabled fx"
                             }
                             onClick={() =>
                               selectedWallet ? setOps("send") : null
@@ -524,19 +530,24 @@ export default function Wallet() {
                                 <p className="gray-c">
                                   Received payments from Nostr
                                 </p>
-                                {transactions.map((transaction) => {
+                                {transactions.map((transaction, index) => {
                                   let author =
                                     nostrAuthors.find(
                                       (author) =>
                                         author.pubkey === transaction.pubkey
-                                    ) || getEmptyNostrUser(transaction.pubkey);
+                                    ) ||
+                                    getEmptyuserMetadata(transaction.pubkey);
                                   return (
                                     <div
                                       key={transaction.id}
-                                      className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
+                                      className="fit-container fx-scattered fx-col box-pad-v-m"
                                       style={{
                                         border: "none",
                                         overflow: "visible",
+                                        borderTop:
+                                          index !== 0
+                                            ? "1px solid var(--very-dim-gray)"
+                                            : "",
                                       }}
                                     >
                                       <div className="fit-container fx-scattered">
@@ -1104,7 +1115,7 @@ export default function Wallet() {
                     </div>
                   )}
                 </div>
-                <div
+                {/* <div
                   className=" fx-centered fx-col fx-start-v extras-homepage"
                   style={{
                     position: "sticky",
@@ -1116,19 +1127,9 @@ export default function Wallet() {
                   <div className="sticky fit-container">
                     <SearchbarNOSTR />
                   </div>
-                  <div
-                    className=" fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
-                    }}
-                  >
-                    <h4>Important Flash News</h4>
-                    <HomeFN flashnews={importantFN} />
-                  </div>
+                  <ImportantFlashNews />
                   <Footer />
-                </div>
+                </div> */}
               </div>
             </main>
           </div>
@@ -1145,7 +1146,9 @@ const SendPayment = ({
   setWallets,
   refreshTransactions,
 }) => {
-  const { nostrKeys, setToast } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+
   const [isZap, setIsZap] = useState(false);
   const [invoiceData, setInvoicedata] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -1165,20 +1168,24 @@ const SendPayment = ({
       setIsLoading(true);
       await window.webln.enable();
       let res = await window.webln.sendPayment(addr_);
-      setToast({
-        type: 1,
-        desc: `Successfully sent ${res.route.total_amt} sats, with ${res.route.total_fees} fees`,
-      });
+      dispatch(
+        setToast({
+          type: 1,
+          desc: `Successfully sent ${res.route.total_amt} sats, with ${res.route.total_fees} fees`,
+        })
+      );
       reInitParams();
       setIsLoading(false);
     } catch (err) {
       console.log(err);
       setIsLoading(false);
       if (err.includes("User rejected")) return;
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
   const sendWithNWC = async (addr_) => {
@@ -1188,10 +1195,12 @@ const SendPayment = ({
       await nwc.enable();
       const res = await nwc.sendPayment(addr_);
 
-      setToast({
-        type: 1,
-        desc: `Successfully sent.`,
-      });
+      dispatch(
+        setToast({
+          type: 1,
+          desc: `Successfully sent.`,
+        })
+      );
       reInitParams();
       setIsLoading(false);
       nwc.close();
@@ -1199,10 +1208,12 @@ const SendPayment = ({
       console.log(err);
       setIsLoading(false);
       if (err.includes("User rejected")) return;
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
   const sendWithAlby = async (addr_, code) => {
@@ -1220,18 +1231,22 @@ const SendPayment = ({
       setIsLoading(false);
       reInitParams();
       refreshTransactions();
-      setToast({
-        type: 1,
-        desc: `Successfully sent ${data.data.amount} sats, with ${data.data.fee} fees`,
-      });
+      dispatch(
+        setToast({
+          type: 1,
+          desc: `Successfully sent ${data.data.amount} sats, with ${data.data.fee} fees`,
+        })
+      );
       return data.data;
     } catch (err) {
       console.log(err);
       setIsLoading(false);
-      setToast({
-        type: 2,
-        desc: `An error occured while making the transactions`,
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: `An error occured while making the transactions`,
+        })
+      );
       return 0;
     }
   };
@@ -1241,26 +1256,32 @@ const SendPayment = ({
       try {
         let hex = pubkey;
         if (amount === 0) {
-          setToast({
-            type: 3,
-            desc: "The amount needs to be more than 0.",
-          });
+          dispatch(
+            setToast({
+              type: 3,
+              desc: "The amount needs to be more than 0.",
+            })
+          );
           return;
         }
         if (isZap && !pubkey) {
-          setToast({
-            type: 3,
-            desc: "pubkey is missing",
-          });
+          dispatch(
+            setToast({
+              type: 3,
+              desc: "pubkey is missing",
+            })
+          );
           return;
         }
         if (pubkey.startsWith("npub")) {
           hex = getHex(pubkey);
           if (!hex) {
-            setToast({
-              type: 3,
-              desc: "pubkey's format is invalid.",
-            });
+            dispatch(
+              setToast({
+                type: 3,
+                desc: "pubkey's format is invalid.",
+              })
+            );
             return;
           }
         }
@@ -1269,10 +1290,12 @@ const SendPayment = ({
           !pubkey.startsWith("npub") &&
           !secp.utils.isValidPrivateKey(pubkey)
         ) {
-          setToast({
-            type: 3,
-            desc: "pubkey's format is invalid.",
-          });
+          dispatch(
+            setToast({
+              type: 3,
+              desc: "pubkey's format is invalid.",
+            })
+          );
           return;
         }
         const data = await axios.get(decodeUrlOrAddress(addr));
@@ -1299,10 +1322,12 @@ const SendPayment = ({
         }
       } catch (err) {
         console.log(err);
-        setToast({
-          type: 2,
-          desc: "An error occured while parsing your address",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "An error occured while parsing your address",
+          })
+        );
       }
     }
     if (!invoiceData) {
@@ -1332,7 +1357,7 @@ const SendPayment = ({
     ];
 
     const event = isZap
-      ? await getZapEventRequest(nostrKeys, comment, tags)
+      ? await getZapEventRequest(userKeys, comment, tags)
       : {};
     return event;
   };
@@ -1439,7 +1464,7 @@ const SendPayment = ({
 };
 
 const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
-  const { setToast } = useContext(Context);
+  const dispatch = useDispatch();
   const [comment, setComment] = useState("");
   const [amount, setAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -1459,10 +1484,12 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
       console.log(err);
       setIsLoading(false);
       if (err.includes("User rejected")) return;
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
   const generateWithNWC = async () => {
@@ -1481,10 +1508,12 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
       console.log(err);
       setIsLoading(false);
       if (err.includes("User rejected")) return;
-      setToast({
-        type: 2,
-        desc: "An error has occured",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occured",
+        })
+      );
     }
   };
 
@@ -1527,10 +1556,12 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
 
   const copyKey = (key) => {
     navigator.clipboard.writeText(key);
-    setToast({
-      type: 1,
-      desc: `LNURL was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `LNURL was copied! 👏`,
+      })
+    );
   };
 
   return (

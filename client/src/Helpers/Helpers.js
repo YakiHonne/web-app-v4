@@ -1,5 +1,10 @@
-import { nip19, nip44 } from "nostr-tools";
-import { decryptEventData, getHex } from "./Encryptions";
+import { finalizeEvent, nip19, nip44 } from "nostr-tools";
+import {
+  decryptEventData,
+  encodeBase64URL,
+  getHex,
+  removeObjDuplicants,
+} from "./Encryptions";
 import IMGElement from "../Components/Main/IMGElement";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
@@ -7,7 +12,10 @@ import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import React from "react";
 import Carousel from "../Components/Main/Carousel";
 import Nip19Parsing from "../Components/Main/Nip19Parsing";
-
+import { store } from "../Store/Store";
+import { setToast } from "../Store/Slides/Publishers";
+import { uploadToS3 } from "./NostrPublisher";
+import { customHistory } from "./History";
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
@@ -26,8 +34,9 @@ const getLoginsParams = async (publicKey, secretKey) => {
       pubkey: publicKey,
       sent_at: Math.floor(new Date().getTime() / 1000),
     });
+
     let password = secretKey
-      ? nip44.default.v2.encrypt(
+      ? nip44.v2.encrypt(
           content,
           nip44.v2.utils.getConversationKey(
             secretKey,
@@ -80,7 +89,8 @@ const isImageUrl = async (url) => {
     return new Promise((resolve, reject) => {
       if (/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url))
         resolve({ type: "image" });
-      if (/(https?:\/\/[^ ]*\.(?:mp4))/i.test(url)) resolve({ type: "video" });
+      if (/(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(url))
+        resolve({ type: "video" });
       const img = new Image();
 
       img.onload = () => {
@@ -173,7 +183,7 @@ const getNoteTree = async (note, minimal = false) => {
                   name="media"
                   width={"100%"}
                   className="sc-s-18"
-                  style={{ margin: "1rem auto" }}
+                  style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
                 >
                   <source src={el} type="video/mp4" />
                 </video>
@@ -277,7 +287,7 @@ const getLinkFromAddr = (addr) => {
       let data = nip19.decode(addr);
 
       if (data.data.kind === 30023) return `/article/${addr}`;
-      if (data.data.kind === 30004) return `/curations/${addr}`;
+      if ([30004, 30005].includes(data.data.kind)) return `/curations/${addr}`;
       if (data.data.kind === 34235 || data.data.kind === 34236)
         return `/videos/${addr}`;
       if (data.data.kind === 30031)
@@ -290,16 +300,21 @@ const getLinkFromAddr = (addr) => {
       let hex = getHex(addr.replace(",", "").replace(".", ""));
       return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
     }
-    if (addr.startsWith("nevent") || addr.startsWith("note")) {
+    if (addr.startsWith("nevent")) {
       let data = nip19.decode(addr);
       return `/notes/${nip19.neventEncode({
         author: data.data.author,
         id: data.data.id,
       })}`;
     }
+    if (addr.startsWith("note")) {
+      let data = nip19.decode(addr);
+      return `/notes/${nip19.noteEncode(data.data)}`;
+    }
 
     return addr;
   } catch (err) {
+    // console.log(err);
     return addr;
   }
 };
@@ -505,6 +520,7 @@ const getAuthPubkeyFromNip05 = async (nip05Addr) => {
     return data.data.names[addressParts[0]];
   } catch (err) {
     console.error(err);
+    return false;
   }
 };
 
@@ -854,24 +870,27 @@ const getWallets = () => {
 //     return [];
 //   }
 // };
-const updateWallets = (wallets_) => {
-  let nostkeys = getKeys();
+const updateWallets = (wallets_, pubkey_) => {
+  let userKeys = getKeys();
   let wallets = localStorage.getItem("yaki-wallets");
+  if (!userKeys && !pubkey_) return;
 
-  if (!nostkeys) return;
   try {
     wallets = wallets ? JSON.parse(wallets) : [];
+    let pubkey = userKeys?.pub || pubkey_;
     let wallets_index = wallets.findIndex(
-      (wallet) => wallet?.pubkey === nostkeys.pub
+      (wallet) => wallet?.pubkey === pubkey
     );
     if (wallets_index !== -1) {
       wallets[wallets_index].wallets = wallets_;
     }
     if (wallets_index === -1) {
-      wallets.push({ pubkey: nostkeys.pub, wallets: wallets_ });
+      wallets.push({ pubkey, wallets: wallets_ });
     }
     localStorage.setItem("yaki-wallets", JSON.stringify(wallets));
+    return wallets;
   } catch (err) {
+    console.log(err);
     localStorage.removeItem("yaki-wallets");
     return [];
   }
@@ -898,6 +917,198 @@ const getConnectedAccounts = () => {
   }
 };
 
+const toggleColorScheme = (theme) => {
+  const stylesheets = document.styleSheets;
+  for (const sheet of stylesheets) {
+    const rules = sheet.cssRules || sheet.rules;
+    for (const rule of rules) {
+      if (rule.media && rule.media.mediaText.includes("prefers-color-scheme")) {
+        const newMediaText = !theme
+          ? "(prefers-color-scheme: dark)"
+          : "(prefers-color-scheme: light)";
+
+        rule.media.mediaText = newMediaText;
+      }
+    }
+  }
+};
+
+const getCAEATooltip = (published_at, created_at) => {
+  return `CA ${new Date(published_at * 1000).toISOString().split("T")[0]}, EA ${
+    new Date(created_at * 1000).toISOString().split("T")[0]
+  }`;
+};
+
+const FileUpload = async (file, method = "nostr.build", userKeys) => {
+  if (method === "yakihonne") {
+    let imageURL = await uploadToS3(file, userKeys.pub);
+    if (imageURL) return imageURL;
+    if (!imageURL) {
+      store.dispatch(
+        setToast({
+          type: 2,
+          desc: "Error uploading file",
+        })
+      );
+    }
+
+    return false;
+  }
+  if (method === "nostr.build") {
+    let event = {
+      kind: 27235,
+      content: "",
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [
+        ["u", "https://nostr.build/api/v2/nip96/upload"],
+        ["method", "POST"],
+      ],
+    };
+    if (userKeys.ext) {
+      try {
+        event = await window.nostr.signEvent(event);
+      } catch (err) {
+        store.dispatch(
+          setToast({
+            type: 2,
+            desc: "Error uploading file",
+          })
+        );
+        console.log(err);
+        return false;
+      }
+    } else {
+      event = finalizeEvent(event, userKeys.sec);
+    }
+    let encodeB64 = encodeBase64URL(JSON.stringify(event));
+    let fd = new FormData();
+    fd.append("file", file);
+    try {
+      let imageURL = await axios.post(
+        "https://nostr.build/api/v2/nip96/upload",
+        fd,
+        {
+          headers: {
+            "Content-Type": "multipart/formdata",
+            Authorization: `Nostr ${encodeB64}`,
+          },
+        }
+      );
+
+      return imageURL.data.nip94_event.tags.find((tag) => tag[0] === "url")[1];
+    } catch (err) {
+      store.dispatch(
+        setToast({
+          type: 2,
+          desc: "Error uploading file",
+        })
+      );
+      return false;
+    }
+  }
+};
+
+const extractNip19 = (note) => {
+  let note_ = note.split(" ");
+  let tags = [];
+  let processedNote = [];
+  for (let word of note_) {
+    let decoded = decodeNip19(word);
+    if (decoded) {
+      tags.push(decoded.tag);
+      processedNote.push(decoded.scheme);
+    } else processedNote.push(word);
+  }
+  return { tags: removeObjDuplicants(tags), content: processedNote.join(" ") };
+};
+
+const decodeNip19 = (word) => {
+  try {
+    let word_ = word.replace("@", "").replace("nostr:", "");
+
+    if (word_.startsWith("npub")) {
+      let decoded = nip19.decode(word_);
+      return {
+        tag: ["p", decoded.data, "mention"],
+        id: decoded.data,
+        scheme: `nostr:${word_}`,
+      };
+    }
+    if (word_.startsWith("nprofile")) {
+      let decoded = nip19.decode(word_);
+      return {
+        tag: ["p", decoded.data.pubkey, "mention"],
+        id: decoded.data.pubkey,
+        scheme: `nostr:${word_}`,
+      };
+    }
+    if (word_.startsWith("nevent")) {
+      let decoded = nip19.decode(word_);
+      return {
+        tag: ["e", decoded.data.id, "mention"],
+        id: decoded.data.id,
+        scheme: `nostr:${word_}`,
+      };
+    }
+    if (word_.startsWith("note")) {
+      let decoded = nip19.decode(word_);
+      return {
+        tag: ["e", decoded.data, "mention"],
+        id: decoded.data,
+        scheme: `nostr:${word_}`,
+      };
+    }
+    if (word_.startsWith("naddr")) {
+      let decoded = nip19.decode(word_);
+      return {
+        tag: [
+          "a",
+          `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier}`,
+          "mention",
+        ],
+        id: `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier}`,
+        scheme: `nostr:${word_}`,
+      };
+    }
+  } catch (err) {
+    return false;
+  }
+};
+
+const straightUp = () => {
+  let el = document.querySelector(".main-page-nostr-container");
+  if (!el) return;
+  el.scrollTop = 0;
+};
+
+const compactContent = (note) => {
+  if (!note) return "";
+  let content = note.split(" ");
+  let compactedContent = [];
+  for (let word of content) {
+    let replacedNostrPrefix = word.replace("nostr:", "").replace("@", "");
+    if (
+      replacedNostrPrefix.startsWith("npub") ||
+      replacedNostrPrefix.startsWith("nprofile") ||
+      replacedNostrPrefix.startsWith("naddr") ||
+      replacedNostrPrefix.startsWith("note") ||
+      replacedNostrPrefix.startsWith("nevent")
+    )
+      compactedContent.push(`@${replacedNostrPrefix.substring(0, 10)}`);
+    else compactedContent.push(word);
+  }
+  return compactedContent.join(" ");
+};
+
+const redirectToLogin = () => {
+  customHistory.push("/login");
+};
+
+const isHex = (str) => {
+  const hexRegex = /^[0-9a-fA-F]+$/;
+  return hexRegex.test(str) && str.length % 2 === 0;
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -916,5 +1127,13 @@ export {
   getWallets,
   updateWallets,
   getConnectedAccounts,
-  getKeys
+  getKeys,
+  toggleColorScheme,
+  getCAEATooltip,
+  FileUpload,
+  extractNip19,
+  straightUp,
+  compactContent,
+  redirectToLogin,
+  isHex,
 };

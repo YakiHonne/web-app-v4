@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useContext } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import MDEditor, {
   commands,
@@ -14,15 +13,13 @@ import MDEditor, {
   unorderedListCommand,
   orderedListCommand,
   checkedListCommand,
-  comment
+  comment,
 } from "@uiw/react-md-editor";
-import { Context } from "../../Context/Context";
 import { useState } from "react";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import ToPublishNOSTR from "../../Components/Main/ToPublishNOSTR";
 import LoadingScreen from "../../Components/LoadingScreen";
-import { useLocation } from "react-router-dom";
-import { SimplePool } from "nostr-tools";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import ToPublishDraftsNOSTR from "../../Components/Main/ToPublishDraftsNOSTR";
 import katex from "katex";
@@ -31,6 +28,8 @@ import axiosInstance from "../../Helpers/HTTP_Client";
 import { getComponent } from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
 
 const getUploadsHistory = () => {
   let history = localStorage.getItem("YakihonneUploadsHistory");
@@ -43,6 +42,7 @@ const getUploadsHistory = () => {
 export default function WritingArticle() {
   const { state } = useLocation();
   const {
+    post_pubkey,
     post_id,
     post_kind,
     post_title,
@@ -53,7 +53,11 @@ export default function WritingArticle() {
     post_content,
     post_published_at,
   } = state || {};
-  const { nostrKeys, setToast, isDarkMode } = useContext(Context);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const isDarkMode = useSelector((state) => state.isDarkMode);
+
   const [content, setContent] = useState(
     post_content || localStorage.getItem("yai-last-article-content") || ""
   );
@@ -70,7 +74,12 @@ export default function WritingArticle() {
   const [showUploadsHistory, setShowUploadsHistory] = useState(false);
   const [isEdit, setIsEdit] = useState(true);
   const [triggerHTMLWarning, setTriggerHTMLWarning] = useState(false);
-  const [showGPT, setShowGPT] = useState(false);
+
+  useEffect(() => {
+    if (state && userKeys && userKeys.pub !== post_pubkey) {
+      navigate(window.location.pathname, { replace: true, state: null });
+    }
+  }, [state, navigate, userKeys]);
 
   useEffect(() => {
     if (!title && !content) return;
@@ -89,6 +98,7 @@ export default function WritingArticle() {
     element.style.height = "auto";
     element.style.height = `${element.scrollHeight}px`;
     localStorage.setItem("yai-last-article-title", value);
+    localStorage.setItem("yai-last-article-time", Math.floor(Date.now()/1000));
     setTitle(value);
     if (!value || value === "\n") {
       setTitle("");
@@ -118,7 +128,7 @@ export default function WritingArticle() {
       try {
         let fd = new FormData();
         fd.append("file", img);
-        fd.append("pubkey", nostrKeys.pub);
+        fd.append("pubkey", userKeys.pub);
         let data = await axiosInstance.post("/api/v1/file-upload", fd, {
           headers: { "Content-Type": "multipart/formdata" },
         });
@@ -129,30 +139,22 @@ export default function WritingArticle() {
         setUploadsHistory([...uploadsHistory, data.data.image_path]);
         return data.data.image_path;
       } catch {
-        setToast({
-          type: 2,
-          desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
+          })
+        );
         return false;
       }
     }
   };
 
   const hasHTMLOutsideCodeblocks = () => {
-    // Combine codeblock patterns for exclusion
-    // const codeblockPatterns = [
-    //   /`([^`]+)`/g,
-    //   /``([^`]+)``/g,
-    //   /```([^`]+)```/g,
-    // ].join("|");
     const codeblockPatterns = /```([^`]+)```|``([^`]+)``|`([^`]+)`/g;
-
-    // Exclude codeblocks and allowed tags
     const excludedTags =
       /(<iframe[^>]*>(?:.|\n)*?<\/iframe>)|(<video[^>]*>(?:.|\n)*?<\/video>)|(<source[^>]*>)|(<img[^>]*>)|(<>)|<\/>/g;
 
-    // /(<iframe[^>]*>(?:.|\n)*?<\/iframe>)|(<video[^>]*>(?:.|\n)*?<\/video>)|(<source[^>]*>)|(<img[^>]*>)/g;
-    // /(<iframe[^>]*>(?:.|\n)*?<\/iframe>)|(<video[^>]*>(?:.|\n)*?<\/video>)|(<source[^>]*>)/g;
     let tempContent = content;
     const sanitizedText = tempContent
       .replace(new RegExp(codeblockPatterns, "g"), "")
@@ -160,22 +162,7 @@ export default function WritingArticle() {
 
     let res = /<[^>]*>/.test(sanitizedText);
 
-    // const codeblockPatterns = [
-    //   /`([^`]+)`/g,
-    //   /``([^`]+)``/g,
-    //   /```([^`]+)```/g,
-    // ].join("|");
-
-    // // Exclude codeblocks and then check for remaining HTML
-    // let res = /<[^>]+>/.test(
-    //   content.replace(new RegExp(codeblockPatterns, "g"), "")
-    // );
-
     if (res) {
-      // setToast({
-      //   type: 3,
-      //   desc: "Your article contains HTML elements outside a codeblock, new standards are set to ensure the same content displaying accross all NOSTR clients.",
-      // });
       setTriggerHTMLWarning(true);
     } else {
       setTriggerHTMLWarning(false);
@@ -185,10 +172,10 @@ export default function WritingArticle() {
 
   const handleSetContent = (data) => {
     localStorage.setItem("yai-last-article-content", data);
+    localStorage.setItem("yai-last-article-time", Math.floor(Date.now()/1000));
     setContent(data);
   };
 
-  // if (!nostrKeys) return <LoadingScreen />;
   return (
     <>
       {showPublishingScreen && (
@@ -272,9 +259,9 @@ export default function WritingArticle() {
                   // style={{ width: "min(100%,1000px)" }}
                   className="box-pad-h-m fit-container"
                 >
-                  {nostrKeys && (
+                  {userKeys && (
                     <>
-                      {(nostrKeys.sec || nostrKeys.ext) && (
+                      {(userKeys.sec || userKeys.ext) && (
                         <>
                           <div className="fit-container nostr-article box-pad-v">
                             <div className="fx-scattered box-marg-s fit-container">
@@ -653,12 +640,12 @@ export default function WritingArticle() {
                           </div>
                         </>
                       )}
-                      {!nostrKeys.sec && !nostrKeys.ext && (
+                      {!userKeys.sec && !userKeys.ext && (
                         <PagePlaceholder page={"nostr-unauthorized"} />
                       )}
                     </>
                   )}
-                  {!nostrKeys && (
+                  {!userKeys && (
                     <PagePlaceholder page={"nostr-not-connected"} />
                   )}
                 </div>
@@ -672,13 +659,16 @@ export default function WritingArticle() {
 }
 
 const UploadHistoryList = ({ exit, list = [] }) => {
-  const { setToast } = useContext(Context);
+  const dispatch = useDispatch();
+
   const copyLink = (link) => {
     navigator.clipboard.writeText(link);
-    setToast({
-      type: 1,
-      desc: `Link was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `Link was copied! 👏`,
+      })
+    );
   };
   return (
     <div

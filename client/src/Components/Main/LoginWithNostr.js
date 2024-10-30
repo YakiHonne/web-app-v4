@@ -1,17 +1,15 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import heroNostr from "../../media/images/nostr-login.png";
 import heroNostr2 from "../../media/images/nostr-login-2.png";
 import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools";
-import { Context } from "../../Context/Context";
 import {
   getBech32,
   shortenKey,
   getHex,
-  getEmptyNostrUser,
+  getEmptyuserMetadata,
   bytesTohex,
 } from "../../Helpers/Encryptions";
 import * as secp from "@noble/secp256k1";
-import { SimplePool } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
 import ProfilePictureUploaderNOSTR from "./ProfilePictureUploaderNOSTR";
@@ -21,17 +19,16 @@ import ymaQR from "../../media/images/yma-qr.png";
 import s8e from "../../media/images/s8-e-yma.png";
 import LoginWithAPI from "./LoginWithAPI";
 import { updateWallets } from "../../Helpers/Helpers";
-
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { setUserKeys } from "../../Store/Slides/UserData";
+import { getUserFromNOSTR } from "../../Helpers/Controlers";
 
 export default function LoginWithNostr({ exit }) {
-  const {
-    setToast,
-    setNostrUserData,
-    setNostrKeysData,
-    nostrKeys,
-    setToPublish,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+
   const [login, setLogin] = useState(true);
   const [accountInit, setAccountInit] = useState(false);
   const [finishInit, setFinishInit] = useState(false);
@@ -41,8 +38,8 @@ export default function LoginWithNostr({ exit }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const exitScreen = () => {
-    if (nostrKeys) {
-      onLogin(nostrKeys.sec);
+    if (userKeys) {
+      onLogin(userKeys.sec);
       exit();
       return;
     }
@@ -60,18 +57,17 @@ export default function LoginWithNostr({ exit }) {
         if (user) {
           let keys = {
             pub: hex,
-          }
-          setNostrUserData(user, keys);
-          setNostrKeysData(keys);
+          };
+          dispatch(setUserKeys(keys));
         }
-
-        // exit();
         return;
       } catch (err) {
-        setToast({
-          type: 2,
-          desc: "Invalid public key!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Invalid public key!",
+          })
+        );
       }
     }
     if (inputKey.startsWith("nsec")) {
@@ -83,19 +79,18 @@ export default function LoginWithNostr({ exit }) {
             let keys = {
               sec: hex,
               pub: getPublicKey(hex),
-            }
-            setNostrUserData(user, keys);
-            setNostrKeysData(keys);
+            };
+            dispatch(setUserKeys(keys));
           }
-
-          // exit();
           return;
         }
       } catch (err) {
-        setToast({
-          type: 2,
-          desc: "Invalid private key!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Invalid private key!",
+          })
+        );
       }
     }
     if (secp.utils.isValidPrivateKey(inputKey)) {
@@ -104,62 +99,42 @@ export default function LoginWithNostr({ exit }) {
         let keys = {
           sec: inputKey,
           pub: getPublicKey(inputKey),
-        }
-        setNostrUserData(user, keys);
-        setNostrKeysData(keys);
+        };
+        dispatch(setUserKeys(keys));
       }
 
       // exit();
       return;
     }
-    setToast({
-      type: 2,
-      desc: "Invalid private key!",
-    });
+    dispatch(
+      setToast({
+        type: 2,
+        desc: "Invalid private key!",
+      })
+    );
   };
 
-  const getUserFromNOSTR = (pubkey) => {
-    return new Promise((resolve, reject) => {
-      try {
-        const subscription = pool.subscribeMany(
-          relaysOnPlatform,
-          [
-            {
-              kinds: [0],
-              authors: [pubkey],
-            },
-          ],
-          {
-            onevent(event) {
-              resolve(event);
-            },
-            oneose() {
-              resolve(getEmptyNostrUser(pubkey));
-            },
-          }
-        );
-      } catch (err) {
-        resolve(getEmptyNostrUser(pubkey));
-      }
-    });
-  };
   const publish = async () => {
     setIsLoading(true);
-    let prevUserData = await getUserFromNOSTR(nostrKeys.pub);
-    let content = JSON.parse(prevUserData.content);
+    let content = { ...userMetadata };
+    delete content.pubkey;
+    delete content.created_at;
+    content.display_name = name;
     content.name = name;
-    setNostrUserData({ content, pubkey: nostrKeys.pub }, nostrKeys);
+
     let event = {
       kind: 0,
       content: JSON.stringify(content),
       created_at: Math.floor(Date.now() / 1000),
       tags: [],
     };
-    event = finalizeEvent(event, nostrKeys.sec);
-    setToPublish({
-      eventInitEx: event,
-      allRelays: relaysOnPlatform,
-    });
+    event = finalizeEvent(event, userKeys.sec);
+    dispatch(
+      setToPublish({
+        eventInitEx: event,
+        allRelays: relaysOnPlatform,
+      })
+    );
 
     setIsLoading(false);
     setEndInit(true);
@@ -173,9 +148,9 @@ export default function LoginWithNostr({ exit }) {
       setShowYakiChest(false);
       return;
     }
-
     exit();
   };
+
   return (
     <div
       style={{
@@ -236,7 +211,9 @@ export default function LoginWithNostr({ exit }) {
               className="fx-centered fx-col box-pad-h"
               style={{ height: "30vh", zIndex: 1, position: "relative" }}
             >
-              <h3 className="white-c p-centered">Welcome to Yakihonne</h3>
+              <h3 className="p-centered" style={{ color: "white" }}>
+                Welcome to Yakihonne
+              </h3>
               <p className="gray-c p-centered p-big box-pad-v-m">
                 Enjoy the experience of owning your own data!
               </p>
@@ -371,7 +348,7 @@ export default function LoginWithNostr({ exit }) {
 }
 
 const Login = ({ switchScreen, exit }) => {
-  const { setToast, setNostrUserData, setNostrKeysData } = useContext(Context);
+  const dispatch = useDispatch();
   const [key, setKey] = useState("");
   const [checkExt, setCheckExt] = useState(window.nostr ? true : false);
   const [isLoading, setIsLoading] = useState(false);
@@ -387,18 +364,20 @@ const Login = ({ switchScreen, exit }) => {
           let keys = {
             pub: hex,
           };
-          setNostrUserData(user, keys);
-          setNostrKeysData(keys);
+
+          dispatch(setUserKeys(keys));
         }
         setIsLoading(false);
         exit();
         return;
       } catch (err) {
         setIsLoading(false);
-        setToast({
-          type: 2,
-          desc: "Invalid public key!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Invalid public key!",
+          })
+        );
       }
     }
     if (inputKey.startsWith("nsec")) {
@@ -411,8 +390,8 @@ const Login = ({ switchScreen, exit }) => {
               sec: hex,
               pub: getPublicKey(hex),
             };
-            setNostrUserData(user, keys);
-            setNostrKeysData(keys);
+
+            dispatch(setUserKeys(keys));
           }
           setIsLoading(false);
           exit();
@@ -420,10 +399,12 @@ const Login = ({ switchScreen, exit }) => {
         }
       } catch (err) {
         setIsLoading(false);
-        setToast({
-          type: 2,
-          desc: "Invalid private key!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Invalid private key!",
+          })
+        );
       }
     }
     if (secp.utils.isValidPrivateKey(inputKey)) {
@@ -433,80 +414,56 @@ const Login = ({ switchScreen, exit }) => {
           sec: inputKey,
           pub: getPublicKey(inputKey),
         };
-        setNostrUserData(user, keys);
-        setNostrKeysData(keys);
+
+        dispatch(setUserKeys(keys));
       }
       setIsLoading(false);
       exit();
       return;
     }
     setIsLoading(false);
-    setToast({
-      type: 2,
-      desc: "Invalid private key!",
-    });
-  };
-
-  const getUserFromNOSTR = (pubkey) => {
-    return new Promise((resolve, reject) => {
-      try {
-        const subscription = pool.subscribeMany(
-          relaysOnPlatform,
-          [
-            {
-              kinds: [0],
-              authors: [pubkey],
-            },
-          ],
-          {
-            onevent(event) {
-              resolve(event);
-            },
-            oneose() {
-              resolve(getEmptyNostrUser(pubkey));
-            },
-          }
-        );
-      } catch (err) {
-        resolve(getEmptyNostrUser(pubkey));
-      }
-    });
+    dispatch(
+      setToast({
+        type: 2,
+        desc: "Invalid private key!",
+      })
+    );
   };
 
   const onLoginWithExt = async () => {
     try {
       setIsLoading(true);
-      // await window.nostr?.enable();
+
       let key = await window.nostr.getPublicKey();
-      let user = await getUserFromNOSTR(key);
-      if (user) {
-        let keys = {
-          pub: key,
-          ext: true,
-        };
-        setNostrUserData(user, keys);
-        setNostrKeysData(keys);
-        let extWallet = [
-          {
-            id: Date.now(),
-            kind: 1,
-            entitle: "WebLN",
-            active: true,
-            data: "",
-          },
-        ];
-        updateWallets(extWallet);
-      }
+      let keys = {
+        pub: key,
+        ext: true,
+      };
+      let extWallet = [
+        {
+          id: Date.now(),
+          kind: 1,
+          entitle: "WebLN",
+          active: true,
+          data: "",
+        },
+      ];
+      let wallet = updateWallets(extWallet, keys.pub);
+      if (wallet.length > 0) dispatch(setUserKeys(keys));
+
+      // }
       setIsLoading(false);
       exit();
       return;
     } catch (err) {
       console.log(err);
       setIsLoading(false);
-      setToast({
-        type: 2,
-        desc: "Invalid public key!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "Invalid public key!",
+        })
+      );
     }
   };
 
@@ -559,7 +516,7 @@ const Login = ({ switchScreen, exit }) => {
 };
 
 const Signup = ({ switchScreen, continueSignup }) => {
-  const { setToast, setNostrKeysData, setNostrUserData } = useContext(Context);
+  const dispatch = useDispatch();
   let [sk, setSk] = useState(bytesTohex(generateSecretKey()));
   let [pk, setPk] = useState(getPublicKey(sk));
   let [nsec, setSec] = useState(getBech32("nsec", sk));
@@ -567,20 +524,20 @@ const Signup = ({ switchScreen, continueSignup }) => {
 
   const copyKey = (keyType, key) => {
     navigator.clipboard.writeText(key);
-    setToast({
-      type: 1,
-      desc: `${keyType} key was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `${keyType} key was copied! 👏`,
+      })
+    );
   };
 
   const initilizeAccount = () => {
-    let user = getEmptyNostrUser(pk);
     let keys = {
       pub: pk,
       sec: sk,
     };
-    setNostrUserData(user, keys);
-    setNostrKeysData(keys);
+    dispatch(setUserKeys(keys));
     continueSignup();
   };
 
@@ -629,68 +586,3 @@ const Signup = ({ switchScreen, continueSignup }) => {
     </div>
   );
 };
-
-// const LoginWithAPI = ({ exit }) => {
-//   const { nostrKeys, setToast, setIsConnectedToYaki } = useContext(Context);
-//   const [isLoading, setIsLoading] = useState(false);
-//   useEffect(() => {
-//     if (nostrKeys && !(nostrKeys.ext || nostrKeys.sec)) exit();
-//   }, [nostrKeys]);
-
-//   const connect = async (e) => {
-//     try {
-//       e.stopPropagation();
-//       setIsLoading(true);
-//       let secretKey = nostrKeys.ext ? false : nostrKeys.sec;
-
-//       let data = await LoginToAPI(nostrKeys.pub, secretKey);
-//       if (data) {
-//         localStorage.setItem("connect_yc", `${new Date().getTime()}`);
-//         setIsConnectedToYaki(true);
-//         exit();
-//       }
-//       if (!data)
-//         setToast({
-//           type: 2,
-//           desc: "An error occured while connecting, please try again.",
-//         });
-//       setIsLoading(false);
-//     } catch (err) {
-//       console.log(err);
-//       setIsLoading(false);
-//       setToast({
-//         type: 2,
-//         desc: "An error occured while connecting, please try again.",
-//       });
-//     }
-//   };
-
-//   if (!(nostrKeys && (nostrKeys.ext || nostrKeys.sec))) return;
-//   return (
-//     <div className="fixed-container fx-centered box-pad-h">
-//       <div
-//         className="sc-s-18  fx-centered fx-col"
-//         style={{ width: "min(100%, 400px)", padding: "2rem" }}
-//       >
-//         <h4>Yakihonne's Chest!</h4>
-//         <p className="gray-c p-centered">
-//           Login to Yakihonne's chest, accumulate points by being active on the
-//           platform and win precious awards!
-//         </p>
-//         <div className="chest"></div>
-//         <button
-//           className="btn btn-normal btn-full"
-//           onClick={connect}
-//           disabled={isLoading}
-//         >
-//           {isLoading ? <LoadingDots /> : "Log in"}
-//         </button>
-//         {!isLoading && (
-//           <button className="btn btn-text btn-small" onClick={exit}>
-//             No, I'm good
-//           </button>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };

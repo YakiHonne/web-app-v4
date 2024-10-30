@@ -1,6 +1,5 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Context } from "../../Context/Context";
 import ShortenKey from "./ShortenKey";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { getBech32, minimizeKey } from "../../Helpers/Encryptions";
@@ -10,27 +9,26 @@ import DtoLToggleButton from "../DtoLToggleButton";
 import { useMemo } from "react";
 import WriteNew from "./WriteNew";
 import NotificationCenter from "./NotificationCenter";
-import { getConnectedAccounts } from "../../Helpers/Helpers";
+import { getConnectedAccounts, redirectToLogin } from "../../Helpers/Helpers";
 import LoginWithNostr from "./LoginWithNostr";
+import { useSelector } from "react-redux";
+import {
+  handleSwitchAccount,
+  logoutAllAccounts,
+  userLogout,
+} from "../../Helpers/Controlers";
 
 export default function MenuMobile({ toggleLogin, exit }) {
-  const {
-    nostrUser,
-    nostrUserLoaded,
-    userLogout,
-    logoutAllAccounts,
-    nostrKeys,
-    chatrooms,
-    nostrUserAbout,
-    handleSwitchAccount,
-  } = useContext(Context);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userChatrooms = useSelector((state) => state.userChatrooms);
+
   const isNewMsg = useMemo(() => {
-    return chatrooms.find((chatroom) => !chatroom.checked);
-  }, [chatrooms]);
+    return userChatrooms.find((chatroom) => !chatroom.checked);
+  }, [userChatrooms]);
   const [pubkey, setPubkey] = useState(
-    nostrKeys.pub ? getBech32("npub", nostrKeys.pub) : ""
+    userKeys.pub ? getBech32("npub", userKeys.pub) : ""
   );
-  const [triggerLogin, setTriggerLogin] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const navigateTo = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
@@ -38,13 +36,13 @@ export default function MenuMobile({ toggleLogin, exit }) {
   const [showWritingOptions, setShowWritingOptions] = useState(false);
   const accounts = useMemo(() => {
     return getConnectedAccounts();
-  }, [nostrKeys, nostrUserAbout]);
+  }, [userKeys, userMetadata]);
   const settingsRef = useRef(null);
   const myContentRef = useRef(null);
   const writingOpt = useRef(null);
   useEffect(() => {
-    nostrKeys.pub ? setPubkey(getBech32("npub", nostrKeys.pub)) : setPubkey("");
-  }, [nostrKeys]);
+    userKeys.pub ? setPubkey(getBech32("npub", userKeys.pub)) : setPubkey("");
+  }, [userKeys]);
 
   useEffect(() => {
     const handleOffClick = (e) => {
@@ -89,14 +87,14 @@ export default function MenuMobile({ toggleLogin, exit }) {
   };
 
   return (
-    <div className={`menu-login ${dismissed ? "dismiss" : "slide-up"}`}>
-      <div className="fit-container fx-centered sticky" onClick={dismiss}>
-        {/* <div className="close-button"> */}
-        <div className="arrow"></div>
-        {/* </div> */}
+    <div className={`menu-login ${dismissed ? "dismiss" : "slide-right"}`}>
+      <div className="fit-container fx-centered fx-start-h sticky" onClick={dismiss}>
+        <div className="close-button">
+        <div className="arrow" style={{rotate: '-90deg'}}></div>
+        </div>
       </div>
-      {triggerLogin && <LoginWithNostr exit={() => setTriggerLogin(false)} />}
-      {!nostrUser && nostrUserLoaded && (
+
+      {!userMetadata && (
         <>
           <div className="fit-container fx-scattered">
             <h4>Join us</h4>
@@ -107,7 +105,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           <hr style={{ margin: "1rem 0" }} />
         </>
       )}
-      {nostrUser && nostrUserLoaded && (
+      {userMetadata && (
         <div
           className="fx-centered fx-start-h box-pad-v fit-container"
           style={{ columnGap: "16px" }}
@@ -119,7 +117,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
             ring={false}
           />
           <div className="fx-centered fx-start-h fx-start-v">
-            <p>{nostrUser.name || minimizeKey(pubkey)}</p>
+            <p>{userMetadata.name || minimizeKey(pubkey)}</p>
             <ShortenKey id={pubkey} />
           </div>
         </div>
@@ -139,28 +137,17 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
-            navigateTo("/articles");
+            navigateTo("/discover");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
-            isPage("/articles") ? "active-link" : "inactive-link"
+            isPage("/discover") ? "active-link" : "inactive-link"
           }`}
         >
-          <div className="posts-24"></div>
-          <div className="p-big">Articles</div>
+          <div className="discover-24"></div>
+          <div className="p-big">Discover</div>
         </div>
-        <div
-          onClick={() => {
-            navigateTo("/notes");
-            dismiss();
-          }}
-          className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
-            isPage("/notes") ? "active-link" : "inactive-link"
-          }`}
-        >
-          <div className="posts-24"></div>
-          <div className="p-big">Notes</div>
-        </div>
+
         <div
           onClick={() => {
             navigateTo("/smart-widgets");
@@ -173,68 +160,19 @@ export default function MenuMobile({ toggleLogin, exit }) {
           <div className="smart-widget-24"></div>
           <div className="p-big">Smart widget</div>
         </div>
+
         <div
           onClick={() => {
-            navigateTo("/flash-news");
+            navigateTo("/verify-notes");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
-            isPage("/flash-news") ? "active-link" : "inactive-link"
-          }`}
-        >
-          <div className="note-24"></div>
-          <div className="p-big">Flash news</div>
-        </div>
-        <div
-          onClick={() => {
-            navigateTo("/uncensored-notes");
-            dismiss();
-          }}
-          className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
-            isPage("/uncensored-notes") ? "active-link" : "inactive-link"
+            isPage("/verify-notes") ? "active-link" : "inactive-link"
           }`}
         >
           <div className="news-24"></div>
-          <div className="p-big">Uncensored notes</div>
+          <div className="p-big">Verify notes</div>
         </div>
-        <div
-          onClick={() => {
-            navigateTo("/videos");
-            dismiss();
-          }}
-          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-            isPage("/videos") ? "active-link" : "inactive-link"
-          }`}
-        >
-          <div className="play-24"></div>
-          <div className="link-label p-big">Videos</div>
-        </div>
-        <div
-          onClick={() => {
-            navigateTo("/curations");
-            dismiss();
-          }}
-          className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
-            isPage("/curations") ? "active-link" : "inactive-link"
-          }`}
-        >
-          <div className="curation-24"></div>
-          <div className="p-big">Curations</div>
-        </div>
-
-        <div
-          onClick={() => {
-            navigateTo("/buzz-feed");
-            dismiss();
-          }}
-          className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-            isPage("/buzz-feed") ? "active-link" : "inactive-link"
-          }`}
-        >
-          <div className="buzz-24"></div>
-          <div className="link-label p-big">Buzz feed</div>
-        </div>
-
         <div
           onClick={() => {
             navigateTo("/messages");
@@ -259,144 +197,40 @@ export default function MenuMobile({ toggleLogin, exit }) {
             ></div>
           )}
         </div>
-        <NotificationCenter />
-        <div
-          className="fx-start-h fx-centered fit-container fx-col"
-          ref={myContentRef}
-        >
-          {nostrKeys && (
+        <NotificationCenter dismiss={dismiss} mobile={true} />
+        {userKeys && (
+          <div
+            className="fit-container fx-centered fx-col fx-end-v"
+            style={{
+              position: "relative",
+            }}
+          >
             <div
               className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                showMyContent ||
-                isPage("/my-flash-news") ||
-                isPage("/my-curations") ||
-                isPage("/my-articles") ||
-                isPage("/bookmarks")
-                  ? "active-link"
-                  : "inactive-link"
+                isPage("/dashboard") ? "active-link" : "inactive-link"
               }`}
-              style={{ position: "relative" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMyContent(!showMyContent);
+              onClick={() => {
+                navigateTo("/dashboard");
+                dismiss();
               }}
             >
               <div className="fx-centered">
-                <div className="folder-24"></div>
-                <div className="link-label p-big">My content</div>
-              </div>
-              <div className="arrow"></div>
-            </div>
-          )}
-          {showMyContent && nostrKeys && (
-            <div
-              className="fit-container fx-centered fx-start-v fx-col pointer slide-down"
-              style={{
-                paddingLeft: "2rem",
-                zIndex: "900",
-                rowGap: 0,
-              }}
-            >
-              <div
-                className="fx-centered fx-col fx-start-v fit-container"
-                style={{ rowGap: "6px" }}
-              >
                 <div
-                  onClick={() => {
-                    navigateTo("/my-notes");
-                    dismiss();
-                  }}
-                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/my-notes") ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ borderRadius: 0 }}
-                >
-                  <div className="note-24"></div>
-                  <div className="link-label p-big">Notes</div>
-                </div>
-                <hr />
-
-                <div
-                  onClick={() => {
-                    navigateTo("/my-articles");
-                    dismiss();
-                  }}
-                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/my-articles") ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ borderRadius: 0 }}
-                >
-                  <div className="posts-24"></div>
-                  <div className="link-label p-big">Articles</div>
-                </div>
-                <hr />
-
-                <div
-                  onClick={() => {
-                    navigateTo("/my-flash-news");
-                    dismiss();
-                  }}
-                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/my-flash-news") ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ borderRadius: 0 }}
-                >
-                  <div className="news-24"></div>
-                  <div className="link-label p-big">Flash news</div>
-                </div>
-                <hr />
-
-                <div
-                  onClick={() => {
-                    navigateTo("/my-videos");
-                    dismiss();
-                  }}
-                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/my-videos") ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ borderRadius: 0 }}
-                >
-                  <div className="stories-24"></div>
-                  <div className="link-label p-big">Videos</div>
-                </div>
-                <hr />
-                <div
-                  onClick={() => {
-                    navigateTo("/my-curations");
-                    dismiss();
-                  }}
-                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/my-curations") ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ borderRadius: 0 }}
-                >
-                  <div className="stories-24"></div>
-                  <div className="link-label p-big">Curations</div>
-                </div>
-                <hr />
-                <div
-                  onClick={() => {
-                    navigateTo("/bookmarks");
-                    dismiss();
-                  }}
-                  className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                    isPage("/bookmarks") ? "active-link" : "inactive-link"
-                  }`}
-                  style={{ borderRadius: 0 }}
-                >
-                  <div className="bookmark-i-24"></div>
-                  <div className="link-label p-big">Bookmarks</div>
-                </div>
+                  className={
+                    isPage("/dashboard") ? "dashboard-bold-24" : "dashboard-24"
+                  }
+                ></div>
+                <div className="link-label p-big">Dashboard</div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <WriteNew exit={dismiss} />
       </div>
-      {nostrUser && nostrUserLoaded && (
+      {userMetadata && (
         <>
-          <hr style={{ margin: "2rem 0" }} />
+          <div className="box-pad-v-s"></div>
           <div className="fit-container fx-centered fx-start-v fx-col pointer">
             <div
               className="fx-centered fx-col fx-start-v fit-container"
@@ -407,7 +241,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 onClick={() => {
                   navigateTo(
                     `/users/${nip19.nprofileEncode({
-                      pubkey: nostrKeys.pub,
+                      pubkey: userKeys.pub,
                       relays: relaysOnPlatform,
                     })}`
                   );
@@ -438,7 +272,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
             <div
               className="fit-container fx-centered fx-start-h box-pad-v-s  box-pad-h-s"
               onClick={() => {
-                userLogout();
+                userLogout(userKeys.pub);
               }}
             >
               <div className="logout-24"></div>
@@ -446,9 +280,9 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 Logout
                 <span className="sticker sticker-normal sticker-orange-side">
                   {" "}
-                  {nostrUserAbout.name ||
-                    nostrUserAbout.display_name ||
-                    minimizeKey(nostrKeys.pub)}
+                  {userMetadata.name ||
+                    userMetadata.display_name ||
+                    minimizeKey(userKeys.pub)}
                 </span>
               </p>
             </div>
@@ -465,7 +299,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                     className="fit-container sc-s-18 box-pad-h-s box-pad-v-s fx-scattered option pointer"
                     style={{
                       backgroundColor:
-                        nostrKeys.pub !== account.pubkey
+                        userKeys.pub !== account.pubkey
                           ? "transparent"
                           : "var(--dim-gray)",
                       border: "none",
@@ -492,7 +326,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                         <p className="p-one-line">
                           {account.display_name ||
                             account.name ||
-                            minimizeKey(nostrKeys.pub)}
+                            minimizeKey(userKeys.pub)}
                         </p>
                         <p className="gray-c p-medium p-one-line">
                           @
@@ -503,7 +337,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                       </div>
                     </div>
                     <div>
-                      {nostrKeys.pub !== account.pubkey && (
+                      {userKeys.pub !== account.pubkey && (
                         <div
                           className="fx-centered"
                           style={{
@@ -514,7 +348,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                           }}
                         ></div>
                       )}
-                      {nostrKeys.pub === account.pubkey && (
+                      {userKeys.pub === account.pubkey && (
                         <div
                           className="fx-centered"
                           style={{
@@ -548,7 +382,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               }}
               onClick={(e) => {
                 // e.stopPropagation();
-                setTriggerLogin(true);
+                redirectToLogin();
               }}
             >
               <div className="plus-sign"></div>
@@ -574,24 +408,6 @@ export default function MenuMobile({ toggleLogin, exit }) {
           </div>
         </>
       )}
-
-      <div className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s">
-        <div>
-          <div className="pointer fx-centered ">
-            <DtoLToggleButton isMobile={true} />
-          </div>
-        </div>
-      </div>
-      <div
-        className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
-        onClick={() => {
-          navigateTo(`/yakihonne-mobile-app`);
-          dismiss();
-        }}
-      >
-        <div className="mobile-24"></div>
-        <p className="p-big">Get the app</p>
-      </div>
     </div>
   );
 }

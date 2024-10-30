@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getHex } from "../../Helpers/Encryptions";
+import { getHex, getParsedRepEvent } from "../../Helpers/Encryptions";
 import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
-import { nip19, SimplePool } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
 import axios from "axios";
-
-const pool = new SimplePool();
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { saveFetchedUsers } from "../../Helpers/DB";
 
 export default function SearchbarNOSTR() {
   const navigateTo = useNavigate();
@@ -24,16 +24,11 @@ export default function SearchbarNOSTR() {
       timer = setTimeout(async () => {
         try {
           let authorsNB = await getUsersFromCache(keyword);
+          saveFetchedUsers(authorsNB)
           setSearchAuthorsRes([...(authorsNB || [])]);
           setIsLoading(false);
           let posts = await getPostsFromNOSTR(keyword);
-
-          // let [authorsNB, posts] = await Promise.all([
-          //   getUsersFromCache(keyword),
-          //   getPostsFromNOSTR(keyword),
-          // ]);
-
-          setSearchPostsRes(posts);
+          setSearchPostsRes(posts.map(event => getParsedRepEvent(event)));
         } catch (err) {
           console.log(err);
           setIsLoading(false);
@@ -72,7 +67,7 @@ export default function SearchbarNOSTR() {
 
   const getPostsFromNOSTR = async (tag) => {
     try {
-      let posts = await pool.querySync(relaysOnPlatform, {
+      let posts = await ndkInstance.fetchEvents({
         kinds: [30023],
         "#t": [tag],
       });
@@ -80,36 +75,6 @@ export default function SearchbarNOSTR() {
     } catch (err) {
       console.log(err);
     }
-  };
-
-  const getPostDetails = (post) => {
-    let thumbnail = "";
-    let title = "";
-    let summary = "";
-    let d = "";
-    let added_date = new Date(post.created_at * 1000).toDateString();
-    for (let tag of post.tags) {
-      if (tag[0] === "image") thumbnail = tag[1];
-      if (tag[0] === "title") title = tag[1];
-      if (tag[0] === "summary") summary = tag[1];
-      if (tag[0] === "d") d = tag[1];
-    }
-
-    let naddr = nip19.naddrEncode({
-      identifier: d,
-      pubkey: post.pubkey,
-      kind: 30023,
-    });
-    return {
-      id: post.id,
-      thumbnail,
-      summary,
-      author_pubkey: post.pubkey,
-      title,
-      added_date,
-      created_at: post.created_at,
-      naddr,
-    };
   };
 
   const handleKeyword = (e) => {
@@ -193,7 +158,7 @@ export default function SearchbarNOSTR() {
               overflowX: "hidden",
               zIndex: "1000",
               borderColor: "var(--dim-gray)",
-              gap: 0
+              gap: 0,
             }}
           >
             {isLoading && (
@@ -249,19 +214,18 @@ export default function SearchbarNOSTR() {
               <>
                 <h5 className="box-pad-h-s box-pad-v-s">ARTICLES</h5>
                 {searchPostsRes.map((post) => {
-                  let details = getPostDetails(post);
                   return (
                     <div
-                      key={details.id}
+                      key={post.id}
                       className="fx-centered fx-start-h box-pad-v-s box-pad-h-s fit-container pointer search-bar-post"
                       onClick={() => {
-                        navigateTo(`/article/${details.naddr}`);
+                        navigateTo(`/article/${post.naddr}`);
                       }}
                     >
                       <div
                         className="bg-img cover-bg"
                         style={{
-                          backgroundImage: `url(${details.thumbnail})`,
+                          backgroundImage: `url(${post.thumbnail})`,
                           minWidth: "48px",
                           aspectRatio: "1/1",
                           borderRadius: "var(--border-r-50)",
@@ -272,9 +236,11 @@ export default function SearchbarNOSTR() {
                           className="fx-centered fx-col fx-start-v box-pad-h-s"
                           style={{ rowGap: 0 }}
                         >
-                          <p className="orange-c">{details.title}</p>
+                          <p className="orange-c">{post.title}</p>
                           <p className="gray-c p-medium">
-                            <Date_ toConvert={details.added_date} />
+                            <Date_
+                              toConvert={new Date(post.published_at * 1000)}
+                            />
                           </p>
                         </div>
                       </div>

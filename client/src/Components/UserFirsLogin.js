@@ -1,9 +1,13 @@
-import React, { useContext } from "react";
+import React from "react";
 import ProgressCirc from "./ProgressCirc";
-import { Context } from "../Context/Context";
+import { useDispatch, useSelector } from "react-redux";
+import { setUserFirstLoginYakiChest } from "../Store/Slides/YakiChest";
 
 export default function UserFirsLogin() {
-  const { userFirstLoginYakiChest, setUserFirstLoginYakiChest } = useContext(Context);
+  const userFirstLoginYakiChest = useSelector(
+    (state) => state.userFirstLoginYakiChest
+  );
+  const dispatch = useDispatch();
 
   if (!userFirstLoginYakiChest) return;
   return (
@@ -41,7 +45,11 @@ export default function UserFirsLogin() {
         <div className="fit-container fx-centered fx-wrap">
           {userFirstLoginYakiChest.actions.map((action, index) => {
             return (
-              <div className="fx-centered slide-right" style={{animationDelay: `${index*0.1}s`}} key={index}>
+              <div
+                className="fx-centered slide-right"
+                style={{ animationDelay: `${index * 0.1}s` }}
+                key={index}
+              >
                 <p className="p-medium">{action.display_name}</p>
                 <div className="checkmark"></div>
               </div>
@@ -49,7 +57,12 @@ export default function UserFirsLogin() {
           })}
         </div>
         <div>
-          <button className="btn btn-normal" onClick={() => setUserFirstLoginYakiChest(false)}>Woohoo!</button>
+          <button
+            className="btn btn-normal"
+            onClick={() => dispatch(setUserFirstLoginYakiChest(false))}
+          >
+            Woohoo!
+          </button>
         </div>
       </div>
     </div>

@@ -1,28 +1,26 @@
-import { nip19, SimplePool } from "nostr-tools";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { nip19 } from "nostr-tools";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 import ArrowUp from "../../Components/ArrowUp";
 import Date_ from "../../Components/Date_";
-import LoadingScreen from "../../Components/LoadingScreen";
 import AddBookmark from "../../Components/Main/AddBookMark";
-import SaveArticleAsBookmark from "../../Components/Main/SaveArticleAsBookmark";
+import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import ToDeleteBookmark from "../../Components/Main/ToDeleteBookmark";
 import PagePlaceholder from "../../Components/PagePlaceholder";
-import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
-import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
+import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import LoadingDots from "../../Components/LoadingDots";
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { setUserBookmarks } from "../../Store/Slides/UserData";
+import Select from "../../Components/Main/Select";
 
-export default function NostrBookmarks() {
-  const {
-    nostrUserBookmarks,
-    nostrUserLoaded,
-    nostrKeys,
-    setNostrUserBookmarks,
-  } = useContext(Context);
+export default function Bookmarks() {
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userBookmarks = useSelector((state) => state.userBookmarks);
+
   const [showAddBookmark, setShowAddBookmark] = useState(false);
   const [toEditBookmark, setToEditBookmark] = useState(false);
   const [toDeleteBookmark, setToDeleteBoormark] = useState(false);
@@ -30,42 +28,42 @@ export default function NostrBookmarks() {
 
   useEffect(() => {
     if (showBookmarkDetails) {
-      let item = nostrUserBookmarks.find((item) =>
+      let item = userBookmarks.find((item) =>
         item.tags.find(
           (tag) => tag[0] === "d" && tag[1] === showBookmarkDetails.d
         )
       );
 
       if (item) {
-        let bookmarkContent = getParsed3000xContent(item.tags);
+        let bookmarkContent = getParsedRepEvent(item);
         setShowBookmarkDetails({
           ...item,
           ...bookmarkContent,
+          aTag: `${bookmarkContent.kind}:${bookmarkContent.pubkey}:${bookmarkContent.d}`,
         });
       }
     }
-  }, [nostrUserBookmarks]);
+  }, [userBookmarks]);
 
   const getDRef = () => {
     let tempArray = [];
-    for (let tag of nostrUserBookmarks) {
+    for (let tag of userBookmarks) {
       tempArray.push(tag.split(":").splice(2, 100).join(":"));
     }
     return tempArray;
   };
 
   const handleBookmarkDeletion = () => {
-    let tempArr = Array.from(nostrUserBookmarks);
+    let tempArr = Array.from(userBookmarks);
     let index = tempArr.findIndex(
       (bookmark) => bookmark.id === toDeleteBookmark.id
     );
     tempArr.splice(index, 1);
-    setNostrUserBookmarks(tempArr);
+    dispatch(setUserBookmarks(tempArr));
     setToDeleteBoormark(false);
     setShowBookmarkDetails(false);
   };
 
-  if (!nostrUserLoaded) return <LoadingScreen />;
   return (
     <div>
       <Helmet>
@@ -84,6 +82,7 @@ export default function NostrBookmarks() {
           title={toDeleteBookmark.title}
           exitAndRefresh={handleBookmarkDeletion}
           exit={() => setToDeleteBoormark(false)}
+          aTag={toDeleteBookmark.aTag}
         />
       )}
       {showAddBookmark && (
@@ -100,15 +99,15 @@ export default function NostrBookmarks() {
             <ArrowUp />
             <div className="fx-centered fit-container fx-start-h fx-start-v">
               <div style={{ flex: 1 }}>
-                {!nostrKeys && <PagePlaceholder page={"nostr-not-connected"} />}
-                {nostrKeys && (
+                {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
+                {userKeys && (
                   <div className="fit-container box-pad-h-m box-pad-v">
-                    {nostrUserBookmarks.length > 0 && (
+                    {userBookmarks.length > 0 && (
                       <>
                         {!showBookmarkDetails && (
                           <>
                             <div className="fit-container fx-scattered">
-                              <h4> {nostrUserBookmarks.length} Bookmarks</h4>
+                              <h4> {userBookmarks.length} Bookmarks</h4>
                               <div
                                 className="round-icon round-icon-tooltip"
                                 data-tooltip={"Add new bookmark"}
@@ -121,7 +120,7 @@ export default function NostrBookmarks() {
                               className="fx-centered fit-container box-pad-v fx-wrap"
                               style={{ rowGap: "16px", columnGap: "16px" }}
                             >
-                              {nostrUserBookmarks.map((bookmark, index) => {
+                              {userBookmarks.map((bookmark, index) => {
                                 return (
                                   <div
                                     key={bookmark.id}
@@ -131,7 +130,7 @@ export default function NostrBookmarks() {
                                       e.stopPropagation();
                                       setShowBookmarkDetails({
                                         ...bookmark,
-                                        ...bookmark.bookmarkContent,
+                                        aTag: `${bookmark.kind}:${bookmark.pubkey}:${bookmark.d}`,
                                       });
                                     }}
                                   >
@@ -145,28 +144,22 @@ export default function NostrBookmarks() {
                                           style={{
                                             aspectRatio: "5/6",
                                             minWidth: "120px",
-                                            backgroundImage: `url(${bookmark.bookmarkContent.image})`,
+                                            backgroundImage: `url(${bookmark.image})`,
                                             backgroundColor: "var(--dim-gray)",
                                           }}
                                         ></div>
                                         <div className="fx-scattered fx-col fx-start-v box-pad-h-m box-pad-v-m">
                                           <div>
                                             <p className="p-caps">
-                                              {bookmark.bookmarkContent.title}
+                                              {bookmark.title}
                                             </p>
                                             <p className="gray-c p-four-lines p-medium">
-                                              {
-                                                bookmark.bookmarkContent
-                                                  .description
-                                              }
+                                              {bookmark.description}
                                             </p>
                                           </div>
                                           <p className="gray-c p-medium">
-                                            {
-                                              bookmark.bookmarkContent.items
-                                                .length
-                                            }{" "}
-                                            item(s) &#8226;{" "}
+                                            {bookmark.items.length} item(s)
+                                            &#8226;{" "}
                                             <span className="orange-c">
                                               Edited{" "}
                                               <Date_
@@ -206,7 +199,7 @@ export default function NostrBookmarks() {
                         )}
                       </>
                     )}
-                    {nostrUserBookmarks.length === 0 && (
+                    {userBookmarks.length === 0 && (
                       <PagePlaceholder page={"nostr-no-bookmarks"} />
                     )}
                   </div>
@@ -226,7 +219,6 @@ const BookmarkContent = ({
   setToEditBookmark,
   setToDeleteBoormark,
 }) => {
-  const { nostrUser } = useContext(Context);
   const [content, setContent] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [postKind, setPostKind] = useState(0);
@@ -258,62 +250,58 @@ const BookmarkContent = ({
     aDs.length > 0 && filter.push({ kinds: aKinds, "#d": aDs });
     eIDs.length > 0 && filter.push({ kinds: [1], ids: eIDs });
     setIsLoading(true);
-    let sub = pool.subscribeMany(
-      filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-      filter,
-      {
-        onevent(event) {
-          if ([30004, 30005, 30023, 34235].includes(event.kind)) {
-            let identifier = event.tags.find((tag) => tag[0] === "d")[1];
-            setContent((prev) => {
-              let status = prev.findIndex(
-                (item) => item.identifier === identifier
-              );
+    let sub = ndkInstance.subscribe(filter, {
+      cacheUsage: "CACHE_FIRST",
+    });
 
-              let temp = Array.from(prev);
-              var newP;
-              if (status !== -1) {
-                if (prev[status].created_at < event.created_at) {
-                  temp.splice(status, 1);
-                  newP = [...temp, { ...event, identifier }];
-                } else {
-                  newP = [...temp];
-                }
-              } else newP = [...temp, { ...event, identifier }];
-              newP = newP.sort(
-                (item_1, item_2) => item_2.created_at - item_1.created_at
-              );
-              return newP;
-            });
-            return;
-          }
-          setContent((prev) => {
-            let l = event.tags.find((tag) => tag[0] === "l" && tag[1]);
-            let kind = l
-              ? event.kind === 1 && l[1] === "FLASH NEWS"
-                ? 1
-                : 11
-              : 111;
-            let tempEvent = { ...event };
-            tempEvent.kind = kind;
-            let newP = content.find((item) => item.id === tempEvent.id)
-              ? [...prev]
-              : [...prev, tempEvent];
-            newP = newP.sort(
-              (item_1, item_2) => item_2.created_at - item_1.created_at
-            );
-            return newP;
-          });
-          events.push(event);
-        },
-        oneose() {
-          setIsLoading(false);
-        },
+    sub.on("event", (event) => {
+      console.log(event);
+      if ([30004, 30005, 30023, 34235].includes(event.kind)) {
+        let identifier = event.tags.find((tag) => tag[0] === "d")[1];
+        setContent((prev) => {
+          let status = prev.findIndex((item) => item.identifier === identifier);
+
+          let temp = Array.from(prev);
+          var newP;
+          if (status !== -1) {
+            if (prev[status].created_at < event.created_at) {
+              temp.splice(status, 1);
+              newP = [...temp, { ...event, identifier }];
+            } else {
+              newP = [...temp];
+            }
+          } else newP = [...temp, { ...event, identifier }];
+          newP = newP.sort(
+            (item_1, item_2) => item_2.created_at - item_1.created_at
+          );
+          return newP;
+        });
+        return;
       }
-    );
+      setContent((prev) => {
+        let l = event.tags.find((tag) => tag[0] === "l" && tag[1]);
+        let kind = l
+          ? event.kind === 1 && l[1] === "FLASH NEWS"
+            ? 1
+            : 11
+          : 111;
+        let tempEvent = { ...event };
+        tempEvent.kind = kind;
+        let newP = content.find((item) => item.id === tempEvent.id)
+          ? [...prev]
+          : [...prev, tempEvent];
+        newP = newP.sort(
+          (item_1, item_2) => item_2.created_at - item_1.created_at
+        );
+        return newP;
+      });
+      setIsLoading(false);
+      events.push(event);
+    });
+    sub.on("close", () => {
+      setIsLoading(false);
+    });
   }, []);
-
-  const getKind = (l) => {};
 
   return (
     <div
@@ -402,7 +390,7 @@ const BookmarkContent = ({
           <div className="fx-centered fx-col" style={{ marginTop: "1rem" }}>
             <div className="box-marg-s fit-container fx-scattered">
               <h4 className="gray-c fit-container fx-start-h">List</h4>
-              <div style={{ position: "relative", zIndex: "100" }}>
+              {/* <div style={{ position: "relative", zIndex: "100" }}>
                 <div
                   style={{ position: "relative" }}
                   className="round-icon"
@@ -541,7 +529,8 @@ const BookmarkContent = ({
                     </label>
                   </div>
                 )}
-              </div>
+              </div> */}
+              
             </div>
             {itemsNumber === 0 && (
               <div
@@ -555,7 +544,7 @@ const BookmarkContent = ({
               </div>
             )}
             {content.map((item) => {
-              let content = getParsed3000xContent(item.tags);
+              let content = getParsedRepEvent(item);
               let naddr = [30004, 30023, 30005, 34235].includes(item.kind)
                 ? nip19.naddrEncode({
                     identifier: content.d,
@@ -662,7 +651,7 @@ const BookmarkContent = ({
                       >
                         <div className="share-icon-24"></div>
                       </Link>
-                      <SaveArticleAsBookmark
+                      <BookmarkEvent
                         pubkey={item.pubkey}
                         kind={item.kind}
                         d={content.d}
@@ -720,7 +709,7 @@ const BookmarkContent = ({
                       <Link target={"_blank"} to={`/flash-news/${nEvent}`}>
                         <div className="share-icon-24"></div>
                       </Link>
-                      <SaveArticleAsBookmark
+                      <BookmarkEvent
                         pubkey={item.id}
                         kind={item.kind}
                         itemType="e"
@@ -777,11 +766,7 @@ const BookmarkContent = ({
                       <Link target={"_blank"} to={`/buzz-feed/${nEvent}`}>
                         <div className="share-icon-24"></div>
                       </Link>
-                      <SaveArticleAsBookmark
-                        pubkey={item.id}
-                        kind={1}
-                        itemType="e"
-                      />
+                      <BookmarkEvent pubkey={item.id} kind={1} itemType="e" />
                     </div>
                   </div>
                 );
@@ -834,11 +819,7 @@ const BookmarkContent = ({
                       <Link target={"_blank"} to={`/notes/${nEvent}`}>
                         <div className="share-icon-24"></div>
                       </Link>
-                      <SaveArticleAsBookmark
-                        pubkey={item.id}
-                        kind={1}
-                        itemType="e"
-                      />
+                      <BookmarkEvent pubkey={item.id} kind={1} itemType="e" />
                     </div>
                   </div>
                 );
@@ -899,7 +880,7 @@ const BookmarkContent = ({
                       >
                         <div className="share-icon-24"></div>
                       </Link>
-                      <SaveArticleAsBookmark
+                      <BookmarkEvent
                         pubkey={item.pubkey}
                         kind={item.kind}
                         d={content.d}

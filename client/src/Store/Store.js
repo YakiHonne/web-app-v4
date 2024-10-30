@@ -1,5 +1,4 @@
 import { configureStore } from "@reduxjs/toolkit";
-import NDKInstanceReducer from "./Slides/NDKInstance";
 import {
   UserMetadataReducer,
   UserKeysReducer,
@@ -9,32 +8,48 @@ import {
   UserChatContactsReducer,
   UserFollowingsReducer,
   UserMutedListReducer,
+  UserBalanceReducer,
+  UserFollowingsRelaysReducer,
+  WalletsReducer,
+  SelectedWalletReducer,
+  UserAllRelaysReducer,
+  UserInterestListReducer,
 } from "./Slides/UserData";
 import {
   UserFirstLoginYakiChestReducer,
   IsConnectedToYakiReducer,
   YakiChestStatsReducer,
   IsYakiChestLoadedReducer,
+  UpdatedActionFromYakiChestSliceReducer,
 } from "./Slides/YakiChest";
 import { NostrAuthorsReducer, NostrClientsReducer } from "./Slides/Profiles";
 import {
   ToastReducer,
   ToPublishReducer,
-  PublishingReducer,
+  IsPublishingReducer,
 } from "./Slides/Publishers";
-import { IsDarkModeReducer, InitDMSReducer } from "./Slides/Extras";
+import {
+  IsDarkModeReducer,
+  InitDMSReducer,
+  FollowersCountSLReducer,
+  ImportantFlashNewsReducer,
+  TrendingUsersReducer,
+  RecentTagsReducer,
+} from "./Slides/Extras";
 
 export const store = configureStore({
   reducer: {
-    ndkInstance: NDKInstanceReducer,
     userMetadata: UserMetadataReducer,
     userKeys: UserKeysReducer,
     userBookmarks: UserBookmarksReducer,
     userRelays: UserRelaysReducer,
+    userInterestList: UserInterestListReducer,
+    userAllRelays: UserAllRelaysReducer,
     userChatrooms: UserChatroomsReducer,
     userChatContacts: UserChatContactsReducer,
     userFollowings: UserFollowingsReducer,
     userMutedList: UserMutedListReducer,
+    userBalance: UserBalanceReducer,
     userFirstLoginYakiChest: UserFirstLoginYakiChestReducer,
     isConnectedToYaki: IsConnectedToYakiReducer,
     yakiChestStats: YakiChestStatsReducer,
@@ -43,8 +58,16 @@ export const store = configureStore({
     nostrClients: NostrClientsReducer,
     toast: ToastReducer,
     toPublish: ToPublishReducer,
-    publishing: PublishingReducer,
+    isPublishing: IsPublishingReducer,
     isDarkMode: IsDarkModeReducer,
     initDMS: InitDMSReducer,
+    followersCountSL: FollowersCountSLReducer,
+    updatedActionFromYakiChest: UpdatedActionFromYakiChestSliceReducer,
+    userFollowingsRelays: UserFollowingsRelaysReducer,
+    importantFlashNews: ImportantFlashNewsReducer,
+    trendingUsers: TrendingUsersReducer,
+    recentTags: RecentTagsReducer,
+    wallets: WalletsReducer,
+    selectedWallet: SelectedWalletReducer,
   },
 });

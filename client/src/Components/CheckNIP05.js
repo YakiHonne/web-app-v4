@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-export default function CheckNIP05({ address = "", pubkey = "" }) {
+export default function CheckNIP05({
+  address = "",
+  pubkey = "",
+  smallSize = true,
+}) {
   let addressParts = address.split("@");
   let [isChecked, setIsChecked] = useState(false);
 
@@ -20,8 +24,14 @@ export default function CheckNIP05({ address = "", pubkey = "" }) {
   if (!address) return;
   return (
     <div className="fx-centered">
-      {!isChecked && <div className="gray-c p-medium">{address}</div>}
-      {isChecked && <div className="orange-c p-medium">{address}</div>}
+      {!isChecked && (
+        <div className={`gray-c ${smallSize ? "p-medium" : ""}`}>{address}</div>
+      )}
+      {isChecked && (
+        <div className={`orange-c  ${smallSize ? "p-medium" : ""}`}>
+          {address}
+        </div>
+      )}
       {isChecked && <div className="checkmark-c1"></div>}
     </div>
   );

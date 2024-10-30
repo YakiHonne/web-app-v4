@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Context } from "../Context/Context";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setUpdatedActionFromYakiChest } from "../Store/Slides/YakiChest";
 
 const getColor = (percentage) => {
   if (percentage >= 0 && percentage <= 25) return "#BE0202";
@@ -24,8 +25,10 @@ export default function ProgressCirc({
   tooltip = false,
   sidebar = false,
 }) {
-  const { setUpdatedActionFromYakiChest, updatedActionFromYakiChest } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const updatedActionFromYakiChest = useSelector(
+    (state) => state.updatedActionFromYakiChest
+  );
   const [progress, setProgress] = useState(0);
   const [initAnimation, setInitAnimation] = useState(false);
   const [color, setColor] = useState(
@@ -52,7 +55,7 @@ export default function ProgressCirc({
       }, 1800);
       timeout2 = setTimeout(() => {
         setInitAnimation(false);
-        setUpdatedActionFromYakiChest(false);
+        dispatch(setUpdatedActionFromYakiChest(false));
       }, 3300);
     }
     return () => {

@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingScreen from "../../Components/LoadingScreen";
-import { nip19, finalizeEvent, SimplePool } from "nostr-tools";
+import { nip19, finalizeEvent } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import {
   checkForLUDS,
@@ -11,7 +11,6 @@ import {
   getBolt11,
   getZapper,
 } from "../../Helpers/Encryptions";
-import { Context } from "../../Context/Context";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
@@ -22,12 +21,14 @@ import { Link } from "react-router-dom";
 import Date_ from "../../Components/Date_";
 import ZapTip from "../../Components/Main/ZapTip";
 import LoadingDots from "../../Components/LoadingDots";
-import SaveArticleAsBookmark from "../../Components/Main/SaveArticleAsBookmark";
+import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import {
+  extractNip19,
   getAuthPubkeyFromNip05,
   getNoteTree,
   getVideoContent,
   getVideoFromURL,
+  redirectToLogin,
 } from "../../Helpers/Helpers";
 import LoginWithNostr from "../../Components/Main/LoginWithNostr";
 import Footer from "../../Components/Footer";
@@ -35,8 +36,12 @@ import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import Follow from "../../Components/Main/Follow";
 import AddArticleToCuration from "../../Components/Main/AddArticleToCuration";
-import ReportArticle from "../../Components/Main/ReportArticle";
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { getUser } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { customHistory } from "../../Helpers/History";
 
 const checkForSavedCommentOptions = () => {
   try {
@@ -103,23 +108,19 @@ const getOnReply = (comments, comment_id) => {
 };
 
 export default function Video() {
-  const {
-    nostrUser,
-    nostrKeys,
-    isPublishing,
-    setToPublish,
-    setToast,
-    addNostrAuthors,
-    getNostrAuthor,
-    nostrAuthors,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const { id, AuthNip05, VidIdentifier } = useParams();
   const navigateTo = useNavigate();
   const [video, setVideo] = useState(false);
   const [parsedAddr, setParsedAddr] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [expandDescription, setExpandDescription] = useState(false);
-  const [toLogin, setToLogin] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [author, setAuthor] = useState({
     picture: "",
@@ -140,18 +141,18 @@ export default function Video() {
   const [showOptions, setShowOptions] = useState(false);
   const [showAddArticleToCuration, setShowArticleToCuration] = useState(false);
   const isReported = useMemo(() => {
-    return nostrKeys
-      ? reporters.find((item) => item.pubkey === nostrKeys.pub)
+    return userKeys
+      ? reporters.find((item) => item.pubkey === userKeys.pub)
       : false;
   }, [reporters]);
   const optionsRef = useRef(null);
   const isVoted = useMemo(() => {
-    return nostrKeys
+    return userKeys
       ? upvoteReaction
           .concat(downvoteReaction)
-          .find((item) => item.pubkey === nostrKeys.pub)
+          .find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [upvoteReaction, downvoteReaction, nostrKeys]);
+  }, [upvoteReaction, downvoteReaction, userKeys]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -162,10 +163,7 @@ export default function Video() {
         setNetCommentsCount(0);
         let naddrData = await checkURL();
         setParsedAddr(naddrData);
-        let sub = pool.subscribeMany(
-          nostrUser
-            ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-            : relaysOnPlatform,
+        let sub = ndkInstance.subscribe(
           [
             {
               kinds: naddrData.kinds,
@@ -180,50 +178,36 @@ export default function Video() {
                 `${34236}:${naddrData.pubkey}:${naddrData.identifier}`,
               ],
             },
-            {
-              kinds: [1984],
-
-              "#a": [
-                `${34235}:${naddrData.pubkey}:${naddrData.identifier}`,
-                `${34236}:${naddrData.pubkey}:${naddrData.identifier}`,
-              ],
-            },
           ],
-          {
-            onevent(event) {
-              if (event.kind === 1984) {
-                setReporters((prev) => [...prev, event]);
-              }
-              if (event.kind === 7) {
-                if (event.content === "+")
-                  setUpvoteReaction((upvoteNews) => [...upvoteNews, event]);
-                if (event.content === "-")
-                  setDownvoteReaction((downvoteNews) => [
-                    ...downvoteNews,
-                    event,
-                  ]);
-              }
-              if (event.kind === 34237) {
-                setVideoViews((prev) => (prev += 1));
-              }
-              if (event.kind === 9735) {
-                let sats = decodeBolt11(getBolt11(event));
-                let zapper = getZapper(event);
-                setZappers((prev) => {
-                  return [...prev, zapper];
-                });
-                setZapsCount((prev) => prev + sats);
-              }
-
-              if (naddrData.kinds.includes(event.kind)) {
-                addNostrAuthors([event.pubkey]);
-                let parsedEvent = getVideoContent(event);
-                setVideo(parsedEvent);
-                setIsLoaded(true);
-              }
-            },
-          }
+          { cacheUsage: "CACHE_FIRST" }
         );
+
+        sub.on("event", (event) => {
+          if (event.kind === 7) {
+            if (event.content === "+")
+              setUpvoteReaction((upvoteNews) => [...upvoteNews, event]);
+            if (event.content === "-")
+              setDownvoteReaction((downvoteNews) => [...downvoteNews, event]);
+          }
+          if (event.kind === 34237) {
+            setVideoViews((prev) => (prev += 1));
+          }
+          if (event.kind === 9735) {
+            let sats = decodeBolt11(getBolt11(event));
+            let zapper = getZapper(event);
+            setZappers((prev) => {
+              return [...prev, zapper];
+            });
+            setZapsCount((prev) => prev + sats);
+          }
+
+          if (naddrData.kinds.includes(event.kind)) {
+            saveUsers([event.pubkey]);
+            let parsedEvent = getVideoContent(event);
+            setVideo(parsedEvent);
+            setIsLoaded(true);
+          }
+        });
       } catch (err) {
         console.log(err);
       }
@@ -235,33 +219,29 @@ export default function Video() {
     try {
       let count = 0;
       let moreVideosAuthorsPubkeys = [];
-      let sub = pool.subscribeMany(
-        nostrUser
-          ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-          : relaysOnPlatform,
+      let sub = ndkInstance.subscribe(
         [
           {
             kinds: [34235, 34236],
             limit: 5,
           },
         ],
-        {
-          onevent(event) {
-            count += 1;
-            if (count < 7) {
-              moreVideosAuthorsPubkeys.push(event.pubkey);
-              setMorePosts((prev) => {
-                if (!prev.find((prev_) => prev_.id === event.id))
-                  return [...prev, getVideoContent(event)];
-                else return prev;
-              });
-            }
-          },
-          oneose() {
-            addNostrAuthors(moreVideosAuthorsPubkeys);
-          },
-        }
+        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
       );
+      sub.on("event", (event) => {
+        count += 1;
+        if (count < 7) {
+          moreVideosAuthorsPubkeys.push(event.pubkey);
+          setMorePosts((prev) => {
+            if (!prev.find((prev_) => prev_.id === event.id))
+              return [...prev, getVideoContent(event)];
+            else return prev;
+          });
+        }
+      });
+      sub.on("eose", () => {
+        saveUsers(moreVideosAuthorsPubkeys);
+      });
     } catch (err) {
       console.log(err);
       setIsLoaded(true);
@@ -270,7 +250,7 @@ export default function Video() {
 
   useEffect(() => {
     try {
-      let auth = getNostrAuthor(video.pubkey);
+      let auth = getUser(video.pubkey);
 
       if (auth) {
         setAuthor(auth);
@@ -281,19 +261,21 @@ export default function Video() {
   }, [nostrAuthors]);
 
   useEffect(() => {
-    if (video && nostrKeys && (nostrKeys.sec || nostrKeys.ext)) {
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 34237,
-        content: "",
-        tags: [
-          ["a", `${video.kind}:${video.pubkey}:${video.d}`],
-          ["d", `${video.kind}:${video.pubkey}:${video.d}`],
-        ],
-        allRelays: relaysOnPlatform,
-      });
+    if (video && userKeys && (userKeys.sec || userKeys.ext)) {
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 34237,
+          content: "",
+          tags: [
+            ["a", `${video.kind}:${video.pubkey}:${video.d}`],
+            ["d", `${video.kind}:${video.pubkey}:${video.d}`],
+          ],
+          allRelays: userRelays,
+        })
+      );
     }
-  }, [video, nostrKeys]);
+  }, [video, userKeys]);
 
   useEffect(() => {
     const handleOffClick = (e) => {
@@ -310,31 +292,30 @@ export default function Video() {
     e.stopPropagation();
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
 
         setIsLoading(false);
 
@@ -352,18 +333,18 @@ export default function Video() {
       }
 
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "+",
-        tags: [
-          ["a", `${video.kind}:${video.pubkey}:${parsedAddr.identifier}`],
-          ["p", video.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "+",
+          tags: [
+            ["a", `${video.kind}:${video.pubkey}:${parsedAddr.identifier}`],
+            ["p", video.pubkey],
+          ],
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -375,31 +356,30 @@ export default function Video() {
     e.stopPropagation();
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
         setIsLoading(false);
         if (isVoted.content === "-") {
           let tempArray = Array.from(downvoteReaction);
@@ -414,18 +394,18 @@ export default function Video() {
         setUpvoteReaction(tempArray);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "-",
-        tags: [
-          ["a", `${video.kind}:${video.pubkey}:${parsedAddr.identifier}`],
-          ["p", video.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "-",
+          tags: [
+            ["a", `${video.kind}:${video.pubkey}:${parsedAddr.identifier}`],
+            ["p", video.pubkey],
+          ],
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -459,19 +439,6 @@ export default function Video() {
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
-      {showReportPrompt && (
-        <ReportArticle
-          title={video.title}
-          exit={() => setShowReportPrompt(false)}
-          naddrData={{
-            pubkey: parsedAddr.pubkey,
-            identifier: parsedAddr.identifier,
-          }}
-          isReported={isReported}
-          kind={video.kind}
-        />
-      )}
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -513,20 +480,20 @@ export default function Video() {
             <main className="main-page-nostr-container">
               <ArrowUp />
 
-              <div className="fit-container fx-centered fx-start-h fx-start-v">
+              <div className="fit-container fx-centered fx-start-v">
                 <div
-                  style={{ width: "min(100%,700px)" }}
-                  className="box-pad-h-m"
+                  // style={{ width: "min(100%,700px)" }}
+                  className="main-middle"
                 >
-                  <Link
+                  <div
                     className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m"
-                    to={"/videos"}
+                    onClick={() => customHistory.back()}
                   >
                     <div className="round-icon-small">
                       <div className="arrow" style={{ rotate: "90deg" }}></div>
                     </div>
-                    <div>Back to videos</div>
-                  </Link>
+                    <div>Back</div>
+                  </div>
                   <div className="box-pad-h-m">
                     {getVideoFromURL(video.url)}
                     <div
@@ -559,7 +526,7 @@ export default function Video() {
                                 author.lud16
                               )}
                               recipientPubkey={author.pubkey}
-                              senderPubkey={nostrUser.pubkey}
+                              senderPubkey={userMetadata.pubkey}
                               recipientInfo={{
                                 name: author.name,
                                 img: author.picture,
@@ -707,7 +674,7 @@ export default function Video() {
                               }}
                               className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
                             >
-                              {nostrKeys && nostrKeys.pub !== video.pubkey && (
+                              {userKeys && userKeys.pub !== video.pubkey && (
                                 <>
                                   <div
                                     className="fit-container fx-centered fx-start-h pointer"
@@ -717,7 +684,7 @@ export default function Video() {
                                   >
                                     <p>Add to curation</p>
                                   </div>
-                                  <SaveArticleAsBookmark
+                                  <BookmarkEvent
                                     label="Bookmark video"
                                     pubkey={video.pubkey}
                                     kind={video.kind}
@@ -776,9 +743,7 @@ export default function Video() {
                         <p className="p-small gray-c">&#9679;</p>
                         <p className="gray-c p-medium">
                           <Date_
-                            toConvert={new Date(
-                              video.published_at * 1000
-                            ).toString()}
+                            toConvert={new Date(video.published_at * 1000)}
                             time={true}
                           />
                         </p>
@@ -823,7 +788,7 @@ export default function Video() {
                     />
                   </div>
                 </div>
-                {morePosts.length > 0 && (
+                {/* {morePosts.length > 0 && (
                   <div
                     className=" fx-centered fx-col fx-start-v extras-homepage"
                     style={{
@@ -901,7 +866,7 @@ export default function Video() {
                     <Footer />
                     <div className="box-marg-full"></div>
                   </div>
-                )}
+                )} */}
               </div>
             </main>
           </div>
@@ -917,25 +882,18 @@ const CommentsSection = ({
   nEvent,
   setNetCommentsCount,
 }) => {
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [comments, setComments] = useState([]);
-
-  const {
-    nostrUser,
-    nostrKeys,
-    addNostrAuthors,
-    setToPublish,
-    isPublishing,
-    setToast,
-  } = useContext(Context);
-
-  const [toLogin, setToLogin] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [selectedComment, setSelectedComment] = useState(false);
   const [selectedCommentIndex, setSelectedCommentIndex] = useState(false);
-  const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
-    useState(false);
+
   const [netComments, setNetComments] = useState([]);
 
   useEffect(() => {
@@ -956,34 +914,37 @@ const CommentsSection = ({
     parsedCom();
   }, [comments]);
 
-  const postNewComment = async (suffix) => {
+  const postNewComment = async () => {
     try {
-      if (!nostrKeys || !newComment) {
+      if (!userKeys || !newComment) {
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let tempComment = suffix
-        ? `${newComment} — This is a comment on: https://yakihonne.com/videos/${nEvent}`
-        : newComment;
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 1,
-        content: tempComment,
-        tags: [
-          ["a", aTag, "", "root"],
-          ["p", author_pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      let extracted = extractNip19(newComment);
+      let content = extracted.content;
+      let tags = [
+        ["a", aTag, "", "root"],
+        ["p", author_pubkey],
+        ...extracted.tags,
+      ];
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 1,
+          content,
+          tags,
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
       setNewComment("");
@@ -1000,37 +961,41 @@ const CommentsSection = ({
     tempArray_1.splice(indexToDelete, 1);
     setComments(tempArray_1);
   };
-  
+
   useEffect(() => {
     let tempComment = [];
-    const sub = pool.subscribeMany(
-      nostrUser
-        ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-        : relaysOnPlatform,
+    const sub = ndkInstance.subscribe(
       [
         {
           kinds: [1],
           "#a": [aTag],
         },
       ],
-      {
-        onevent(event) {
-          let is_un = event.tags.find((tag) => tag[0] === "l");
-          if (!(is_un && is_un[1] === "UNCENSORED NOTE")) {
-            tempComment.push(event);
-            setComments((prev) => {
-              let newCom = [...prev, event];
-              return newCom.sort(
-                (item_1, item_2) => item_2.created_at - item_1.created_at
-              );
-            });
-          }
-        },
-        oneose() {
-          addNostrAuthors(tempComment.map((item) => item.pubkey));
-        },
-      }
+      { cacheUsage: "CACHE_FIRST" }
     );
+
+    sub.on("event", (event) => {
+      let is_un = event.tags.find((tag) => tag[0] === "l");
+      if (!(is_un && is_un[1] === "UNCENSORED NOTE")) {
+        tempComment.push(event);
+        setComments((prev) => {
+          let newCom = [...prev, event];
+          return newCom.sort(
+            (item_1, item_2) => item_2.created_at - item_1.created_at
+          );
+        });
+      }
+    });
+    sub.on("close", () => {
+      saveUsers(tempComment.map((item) => item.pubkey));
+    });
+    let timeout = setTimeout(() => {
+      sub.stop();
+      clearTimeout(timeout);
+    }, 2000);
+    return () => {
+      sub.stop();
+    };
   }, []);
 
   const refreshComments = (index) => {
@@ -1040,17 +1005,8 @@ const CommentsSection = ({
   };
   return (
     <div className="fit-container fx-centered fx-col box-pad-v-m">
-      {showCommentsSuffixOption && (
-        <AddSuffixToComment
-          post={postNewComment}
-          comment={newComment}
-          exit={() => setShowCommentsSuffixOption(false)}
-          nEvent={nEvent}
-        />
-      )}
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
       <div className="fit-container fx-centered fx-col fx-start-h fx-start-v">
-        {nostrKeys && (
+        {userKeys && (
           <div className="fit-container fx-end-v fx-centered">
             <UserProfilePicNOSTR
               ring={false}
@@ -1066,7 +1022,7 @@ const CommentsSection = ({
             />
             <button
               className="btn btn-normal fx-centered"
-              onClick={() => newComment && setShowCommentsSuffixOption(true)}
+              onClick={() => newComment && postNewComment()}
             >
               {isLoading && <LoadingDots />}
               {!isLoading && <>Post</>}
@@ -1083,11 +1039,11 @@ const CommentsSection = ({
             <div className="comment-24"></div>
           </div>
         )}
-        {!nostrKeys && (
+        {!userKeys && (
           <div className="fit-container fx-centered">
             <button
               className="btn btn-normal fx-centered"
-              onClick={() => setToLogin(true)}
+              onClick={() => redirectToLogin()}
             >
               Login to comment
             </button>
@@ -1128,117 +1084,6 @@ const CommentsSection = ({
   );
 };
 
-const AddSuffixToComment = ({ exit, post, comment = "", nEvent }) => {
-  const isSaved = checkForSavedCommentOptions();
-  const [isSave, setIsSave] = useState(true);
-
-  const saveOption = () => {
-    localStorage.setItem(
-      "comment-with-suffix",
-      JSON.stringify({ keep_suffix: isSave })
-    );
-  };
-
-  if (isSaved !== -1) {
-    post(isSaved);
-    exit();
-    return;
-  }
-  if (isSaved === -1)
-    return (
-      <div
-        className="fixed-container fx-centered box-pad-h"
-        style={{ zIndex: "10000" }}
-      >
-        <section
-          className="sc-s box-pad-h box-pad-v"
-          style={{ width: "min(100%, 500px)" }}
-        >
-          <h4 className="p-centered">Be meaningful 🥳</h4>
-          <p className="p-centered box-pad-v-m">
-            Let your comments be recognized on NOSTR notes clients by adding
-            where did you comment. <br />
-            Choose what suits you best!
-          </p>
-
-          <div className="fit-container fx-centered fx-col">
-            <label
-              className="sc-s-18 fit-container fx-centered box-pad-h-m box-pad-v-m fx-start-h fx-start-v"
-              htmlFor="suffix"
-              style={{
-                opacity: !isSave ? ".6" : 1,
-                filter: !isSave ? "grayscale(100%)" : "none",
-              }}
-            >
-              <input
-                type="radio"
-                id="suffix"
-                name="suffix"
-                checked={isSave}
-                value={isSave}
-                onChange={() => setIsSave(true)}
-              />
-              <div>
-                <p className="gray-c p-small">Your comment with suffix</p>
-                <p className="p-two-lines p-medium">{comment}</p>
-                <p className="p-medium orange-c">
-                  — This is a comment on: https://yakihonne.com/video/
-                  {nEvent}
-                </p>
-              </div>
-            </label>
-            <label
-              className="sc-s-18 fit-container fx-centered box-pad-h-m box-pad-v-m fx-start-v fx-start-h"
-              htmlFor="no-suffix"
-              style={{
-                opacity: isSave ? ".6" : 1,
-                filter: isSave ? "grayscale(100%)" : "none",
-              }}
-            >
-              <input
-                type="radio"
-                id="no-suffix"
-                name="suffix"
-                checked={!isSave}
-                value={isSave}
-                onChange={() => setIsSave(false)}
-              />
-              <div>
-                <p className="gray-c p-small">Your comment without suffix</p>
-                <p className="p-two-lines p-medium">{comment}</p>
-              </div>
-            </label>
-            <div>
-              <p className="p-medium gray-c box-pad-v-s">
-                {" "}
-                This can always be changed in your account settings
-              </p>
-            </div>
-            <div className="fit-container fx-centered fx-col">
-              <button
-                className="btn btn-normal btn-full"
-                onClick={() => {
-                  saveOption();
-                  post(isSave);
-                  exit();
-                }}
-              >
-                Post &amp; remember my choice
-              </button>
-              <button
-                className="btn btn-text"
-                onClick={exit}
-                style={{ height: "max-content" }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
-};
-
 const Comment = ({
   comment,
   refresh,
@@ -1249,8 +1094,10 @@ const Comment = ({
   nEvent,
   aTag,
 }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
   const [toggleReply, setToggleReply] = useState(false);
@@ -1258,17 +1105,16 @@ const Comment = ({
   const handleCommentDeletion = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+      let relaysToPublish = userRelays;
       let created_at = Math.floor(Date.now() / 1000);
       let tags = [["e", comment.id]];
 
@@ -1278,7 +1124,7 @@ const Comment = ({
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
           refresh(index);
@@ -1289,12 +1135,14 @@ const Comment = ({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
-      setToPublish({
-        eventInitEx: event,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          eventInitEx: event,
+          allRelays: relaysToPublish,
+        })
+      );
 
       refresh(index);
       setIsLoading(false);
@@ -1337,11 +1185,11 @@ const Comment = ({
                 author_img: "",
                 author_name: comment.pubkey.substring(0, 20),
                 author_pubkey: comment.pubkey,
-                on: new Date(comment.created_at * 1000).toISOString(),
+                on: new Date(comment.created_at * 1000),
               }}
             />
           </div>
-          {comment.pubkey === nostrKeys.pub && action && (
+          {comment.pubkey === userKeys.pub && action && (
             <div
               className="fx-centered pointer"
               style={{ columnGap: "3px" }}
@@ -1410,14 +1258,14 @@ const CommentsReplies = ({
   toggleReply,
   setToggleReply,
 }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
-  const [login, setLogin] = useState(false);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectReplyTo, setSelectReplyTo] = useState(false);
-  const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
-    useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -1425,36 +1273,37 @@ const CommentsReplies = ({
       // ref.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [toggleReply]);
-  const postNewComment = async (suffix) => {
+  const postNewComment = async () => {
     try {
-      if (!nostrKeys || !newComment) {
+      if (!userKeys || !newComment) {
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
 
-      let tempComment = suffix
-        ? `${newComment} — This is a comment on: https://yakihonne.com/video/${nEvent}`
-        : newComment;
-      let tags = [["a", aTag, "", "root"]];
+      let extracted = extractNip19(newComment);
+      let content = extracted.content;
+      let tags = [["a", aTag, "", "root"], ...extracted.tags];
       if (selectReplyTo) tags.push(["e", selectReplyTo.id, "", "reply"]);
       if (!selectReplyTo) tags.push(["e", comment.id, "", "reply"]);
 
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 1,
-        content: tempComment,
-        tags,
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 1,
+          content,
+          tags,
+          allRelays: userRelays,
+        })
+      );
       setIsLoading(false);
       setNewComment("");
       setSelectReplyTo(false);
@@ -1466,7 +1315,7 @@ const CommentsReplies = ({
 
   return (
     <>
-      {toggleReply && nostrKeys && (
+      {toggleReply && userKeys && (
         <div className="fixed-container fx-centered box-pad-h" ref={ref}>
           <div
             className="fx-centered fx-wrap"
@@ -1488,7 +1337,7 @@ const CommentsReplies = ({
                         author_img: "",
                         author_name: comment.pubkey.substring(0, 20),
                         author_pubkey: comment.pubkey,
-                        on: new Date(comment.created_at * 1000).toISOString(),
+                        on: new Date(comment.created_at * 1000),
                       }}
                     />
                   </div>
@@ -1517,9 +1366,7 @@ const CommentsReplies = ({
                         author_img: "",
                         author_name: selectReplyTo.pubkey.substring(0, 20),
                         author_pubkey: selectReplyTo.pubkey,
-                        on: new Date(
-                          selectReplyTo.created_at * 1000
-                        ).toISOString(),
+                        on: new Date(selectReplyTo.created_at * 1000),
                       }}
                     />
                   </div>
@@ -1544,7 +1391,7 @@ const CommentsReplies = ({
             <div className="fx-centered fit-container fx-end-h">
               <button
                 className="btn btn-normal  fx-centered"
-                onClick={() => newComment && setShowCommentsSuffixOption(true)}
+                onClick={() => newComment && postNewComment()}
               >
                 {isLoading && <LoadingDots />}
                 {!isLoading && <>Post a comment</>}
@@ -1563,14 +1410,7 @@ const CommentsReplies = ({
           </div>
         </div>
       )}
-      {showCommentsSuffixOption && (
-        <AddSuffixToComment
-          post={postNewComment}
-          comment={newComment}
-          exit={() => setShowCommentsSuffixOption(false)}
-          nEvent={nEvent}
-        />
-      )}
+
       <div
         className="fx-col fit-container fx-centered"
         style={{
@@ -1603,8 +1443,11 @@ const Reply = ({
   setSelectReplyTo,
   setToggleReply,
 }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
   const [seeReply, setSeeReply] = useState(false);
@@ -1622,17 +1465,16 @@ const Reply = ({
   const handleCommentDeletion = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+      let relaysToPublish = userRelays;
       let created_at = Math.floor(Date.now() / 1000);
       let tags = [["e", comment.id]];
 
@@ -1642,7 +1484,7 @@ const Reply = ({
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
         } catch (err) {
@@ -1652,12 +1494,14 @@ const Reply = ({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
-      setToPublish({
-        eventInitEx: event,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          eventInitEx: event,
+          allRelays: relaysToPublish,
+        })
+      );
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -1693,11 +1537,11 @@ const Reply = ({
                 author_img: "",
                 author_name: comment.pubkey.substring(0, 20),
                 author_pubkey: comment.pubkey,
-                on: new Date(comment.created_at * 1000).toISOString(),
+                on: new Date(comment.created_at * 1000),
               }}
             />
           </div>
-          {comment.pubkey === nostrKeys.pub && (
+          {comment.pubkey === userKeys.pub && (
             <div
               className="fx-centered pointer"
               style={{ columnGap: "3px" }}
@@ -1750,7 +1594,7 @@ const Reply = ({
           className="fx-centered fx-start-h fit-container"
           style={{ columnGap: "16px" }}
           onClick={() => {
-            nostrKeys
+            userKeys
               ? setSelectReplyTo({
                   id: comment.id,
                   content: comment.content_tree,
@@ -1770,12 +1614,12 @@ const Reply = ({
 
 const AuthorPreview = ({ author }) => {
   const [authorData, setAuthorData] = useState("");
-  const { getNostrAuthor, nostrAuthors } = useContext(Context);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(author.author_pubkey);
+        let auth = getUser(author.author_pubkey);
 
         if (auth)
           setAuthorData({
@@ -1870,7 +1714,7 @@ const ToDeleteComment = ({ comment, exit, handleCommentDeletion }) => {
 };
 
 const AuthorPreviewExtra = ({ pubkey }) => {
-  const { nostrAuthors, getNostrAuthor } = useContext(Context);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [author, setAuthor] = useState({
     pubkey,
     name: getBech32("npub", pubkey).substring(0, 10),
@@ -1879,7 +1723,7 @@ const AuthorPreviewExtra = ({ pubkey }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
     if (!isLoaded) {
-      let auth = getNostrAuthor(pubkey);
+      let auth = getUser(pubkey);
       if (auth) {
         setAuthor(auth);
         setIsLoaded(true);

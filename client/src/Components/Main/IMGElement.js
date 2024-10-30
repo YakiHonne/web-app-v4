@@ -45,12 +45,15 @@ export default function IMGElement({ src }) {
         }}
         className="sc-s-18"
         style={{
-          margin: ".5rem auto 0",
+          margin: ".5rem 0 .5rem 0",
           cursor: "zoom-in",
+          maxWidth: "100%",
           // aspectRatio: "16/9",
-          objectFit: "cover",
+          objectFit: "fit",
+          
+          maxHeight: "1000px"
         }}
-        width={"100%"}
+        // width={"100%"}
         src={src}
         alt="el"
         loading="lazy"

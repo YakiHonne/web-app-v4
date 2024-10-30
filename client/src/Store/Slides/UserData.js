@@ -36,6 +36,24 @@ const userRelaysSlice = createSlice({
     },
   },
 });
+const userAllRelaysSlice = createSlice({
+  name: "userAllRelays",
+  initialState: [],
+  reducers: {
+    setUserAllRelays(state, action) {
+      return action.payload;
+    },
+  },
+});
+const userInterestList = createSlice({
+  name: "userInterestList",
+  initialState: [],
+  reducers: {
+    setUserInterestList(state, action) {
+      return action.payload;
+    },
+  },
+});
 const userChatroomsSlice = createSlice({
   name: "userChatrooms",
   initialState: [],
@@ -74,18 +92,36 @@ const userMutedListSlice = createSlice({
 });
 const userBalanceSlice = createSlice({
   name: "userBalance",
-  initialState: "N/A",
+  initialState: localStorage.getItem("wallet-userBalance") || "N/A",
   reducers: {
     setUserBalance(state, action) {
       return action.payload;
     },
   },
 });
-const lastMessageTimestampSlice = createSlice({
-  name: "lastMessageTimestamp",
-  initialState: undefined,
+const walletsSlice = createSlice({
+  name: "wallets",
+  initialState: [],
   reducers: {
-    setLastMessageTimestamp(state, action) {
+    setWallets(state, action) {
+      return action.payload;
+    },
+  },
+});
+const selectedWalletSlice = createSlice({
+  name: "selectedWallet",
+  initialState: null,
+  reducers: {
+    setSelectedWallet(state, action) {
+      return action.payload;
+    },
+  },
+});
+const userFollowingsRelaysSlice = createSlice({
+  name: "userFollowingsRelays",
+  initialState: [],
+  reducers: {
+    setUserFollowingsRelays(state, action) {
       return action.payload;
     },
   },
@@ -94,21 +130,29 @@ const lastMessageTimestampSlice = createSlice({
 export const { setUserMetadata } = userMetadataSlice.actions;
 export const { setUserKeys } = userKeysSlice.actions;
 export const { setUserBookmarks } = userBookmarksSlice.actions;
+export const { setUserInterestList } = userInterestList.actions;
 export const { setUserRelays } = userRelaysSlice.actions;
+export const { setUserAllRelays } = userAllRelaysSlice.actions;
 export const { setUserChatrooms } = userChatroomsSlice.actions;
 export const { setUserChatContacts } = userChatContactsSlice.actions;
 export const { setUserFollowings } = userFollowingsSlice.actions;
 export const { setUserMutedList } = userMutedListSlice.actions;
-export const { setLastMessageTimestamp } = lastMessageTimestampSlice.actions;
 export const { setUserBalance } = userBalanceSlice.actions;
+export const { setUserFollowingsRelays } = userFollowingsRelaysSlice.actions;
+export const { setWallets } = walletsSlice.actions;
+export const { setSelectedWallet } = selectedWalletSlice.actions;
 
 export const UserMetadataReducer = userMetadataSlice.reducer;
 export const UserKeysReducer = userKeysSlice.reducer;
+export const UserInterestListReducer = userInterestList.reducer;
 export const UserBookmarksReducer = userBookmarksSlice.reducer;
 export const UserRelaysReducer = userRelaysSlice.reducer;
+export const UserAllRelaysReducer = userAllRelaysSlice.reducer;
 export const UserChatroomsReducer = userChatroomsSlice.reducer;
 export const UserChatContactsReducer = userChatContactsSlice.reducer;
 export const UserFollowingsReducer = userFollowingsSlice.reducer;
 export const UserMutedListReducer = userMutedListSlice.reducer;
-export const LastMessageTimestampReducer = lastMessageTimestampSlice.reducer;
-export const UserBalanceSliceReducer = userBalanceSlice.reducer;
+export const UserBalanceReducer = userBalanceSlice.reducer;
+export const UserFollowingsRelaysReducer = userFollowingsRelaysSlice.reducer;
+export const WalletsReducer = walletsSlice.reducer;
+export const SelectedWalletReducer = selectedWalletSlice.reducer;

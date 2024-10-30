@@ -1,8 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getLinkFromAddr } from "../../Helpers/Helpers";
 import ZapTip from "../Main/ZapTip";
-import { Context } from "../../Context/Context";
-import { getEmptyNostrUser, getHex } from "../../Helpers/Encryptions";
+import { getEmptyuserMetadata, getHex } from "../../Helpers/Encryptions";
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
 
 const getPubkey = (pubkey, url) => {
   if (!url || url.startsWith("lnbc")) return false;
@@ -22,21 +23,24 @@ export default function ButtonComp({
   recipientPubkey,
   type,
 }) {
-  const { nostrKeys, nostrAuthors, getNostrAuthor } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   let pubkey = getPubkey(recipientPubkey, url);
-  const [author, setAuthor] = useState(pubkey ? getEmptyNostrUser(pubkey) : false);
+  const [author, setAuthor] = useState(
+    pubkey ? getEmptyuserMetadata(pubkey) : false
+  );
 
   useEffect(() => {
     if (pubkey) {
       try {
-        let auth = getNostrAuthor(pubkey);
+        let auth = getUser(pubkey);
         if (auth) {
           setAuthor(auth);
         }
-      } catch (err) { 
+      } catch (err) {
         console.log(err);
       }
-    } 
+    }
   }, [nostrAuthors]);
 
   const getUrl = () => {
@@ -93,7 +97,7 @@ export default function ButtonComp({
     <ZapTip
       recipientLNURL={url}
       recipientPubkey={pubkey}
-      senderPubkey={nostrKeys.pub}
+      senderPubkey={userKeys.pub}
       recipientInfo={{
         name: author.display_name || author.name,
         img: author.picture,

@@ -1,9 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
 import { nanoid } from "nanoid";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { InitEvent } from "../../Helpers/Controlers";
 
 export default function ToPublishDraftsNOSTR({
   postContent = "",
@@ -12,13 +14,15 @@ export default function ToPublishDraftsNOSTR({
   exit,
   warning = false,
 }) {
-  const { setToast, nostrKeys, nostrUser, setToPublish } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
   const navigateTo = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
   const [screen, setScreen] = useState(1);
   const [relaysToPublish, setRelaysToPublish] = useState([...relaysOnPlatform]);
-  const [publishingState, setPublishingState] = useState([]);
+  const [publishingState, setIsPublishingState] = useState([]);
   const [allRelays, setAllRelays] = useState([...relaysOnPlatform]);
 
   const Submit = async (kind = 30023) => {
@@ -37,53 +41,25 @@ export default function ToPublishDraftsNOSTR({
         ["title", postTitle],
         ["summary", ""],
       ];
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: kind,
-        content: postContent,
-        tags: tags,
-        allRelays: relaysToPublish,
-      });
-      navigateTo("/my-articles");
+
+      let eventInitEx = await InitEvent(kind, postContent, tags);
+      if (!eventInitEx) return;
+      dispatch(
+        setToPublish({
+          eventInitEx,
+          allRelays: relaysToPublish,
+        })
+      );
+      navigateTo("/dashboard", { state: { tabNumber: 1, filter: "drafts" } });
       exit();
       return;
-      // let temPublishingState = await publishPost(
-      //   nostrKeys,
-      //   kind,
-      //   postContent,
-      //   tags,
-      //   relaysToPublish
-      // );
-
-      // setIsLoading(false);
-      // if (!temPublishingState) {
-      //   setToast({
-      //     type: 2,
-      //     desc: "Publishing was cancelled!",
-      //   });
-      //   return;
-      // }
-      // if (temPublishingState.find((item) => item.status)) {
-      //   setPublishingState(temPublishingState);
-      //   setScreen(3);
-      //   setToast({
-      //     type: 1,
-      //     desc:
-      //       kind === 30024
-      //         ? "Your draft has been successfully saved!"
-      //         : "Your article has been successfully posted on Nostr.",
-      //   });
-      //   return;
-      // }
-      // setToast({
-      //   type: 2,
-      //   desc: "Your article has been declined on the chosen relays.",
-      // });
     } catch (err) {
-      setToast({
-        type: 2,
-        desc: "An error has occurred!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occurred!",
+        })
+      );
     }
   };
 
@@ -107,26 +83,17 @@ export default function ToPublishDraftsNOSTR({
     <section className="fixed-container fx-centered">
       {screen === 1 && (
         <div
-          className="fx-centered fx-col slide-up box-pad-h sc-s-d box-pad-v"
+          className="fx-centered fx-col slide-up box-pad-h sc-s-18 box-pad-v bg-sp"
           style={{
             width: "500px",
-            borderColor: "var(--orange-main)",
           }}
         >
-          {/* <div className="fx-centered pointer" onClick={exit}>
-            <div className="arrow" style={{ transform: "rotate(90deg)" }}></div>
-            <p className="gray-c">back to editor</p>
-          </div> */}
-
           <div className="fx-centered fx-col">
             <h4 className="p-centered">Save your draft</h4>
-            <p className="gray-c p-medium">list of available relays</p>
-            <p className="c1-c p-medium box-marg-s">
-              (for more custom relays, check your settings)
-            </p>
+            <p className="gray-c box-pad-v-s">Do you wish to publish your draft?</p>
           </div>
           {warning && (
-            <div className="sc-s-18 box-pad-v-s box-pad-h-s">
+            <div className="sc-s-18 box-pad-v-s box-pad-h-s box-marg-s">
               <p className="orange-c p-medium p-centered">Warning</p>
               <p className="gray-c p-medium p-centered">
                 Your article contains HTML elements which most likely will not
@@ -134,11 +101,11 @@ export default function ToPublishDraftsNOSTR({
               </p>
             </div>
           )}
-          <div
+          {/* <div
             className="fit-container fx-centered fx-wrap"
             style={{ maxHeight: "40vh", overflow: "scroll" }}
           >
-            {nostrUser?.relays?.length == 0 &&
+            {userRelays.length == 0 &&
               allRelays.map((url, index) => {
                 if (index === 0)
                   return (
@@ -172,24 +139,8 @@ export default function ToPublishDraftsNOSTR({
                   </label>
                 );
               })}
-            {nostrUser?.relays?.length > 0 &&
-              nostrUser.relays.map((url, index) => {
-                // if (index < 2)
-                //   return (
-                //     <label
-                //       className="fx-centered fx-start-h fit-container if if-disabled"
-                //       htmlFor={`${url}-${index}`}
-                //       key={`${url}-${index}`}
-                //     >
-                //       <input
-                //         type="checkbox"
-                //         id={`${url}-${index}`}
-                //         checked
-                //         readOnly
-                //       />
-                //       <p className="c1-c">{url.split("wss://")[1]}</p>
-                //     </label>
-                //   );
+            {userRelays.length > 0 &&
+              userRelays.map((url, index) => {
                 return (
                   <label
                     className="fx-centered fx-start-h fit-container if"
@@ -206,19 +157,21 @@ export default function ToPublishDraftsNOSTR({
                   </label>
                 );
               })}
+          </div> */}
+          <div className="fx-centered fit-container">
+            <button
+              className={`btn btn-full  ${
+                relaysToPublish.length === 0 ? "btn-disabled" : "btn-normal"
+              }`}
+              onClick={() => Submit(30024)}
+              disabled={isLoading}
+            >
+              {isLoading ? <LoadingDots /> : "Save draft"}
+            </button>
+            <button className="btn btn-gst-red btn-full" onClick={exit}>
+              Cancel
+            </button>
           </div>
-          <button
-            className={`btn btn-full  ${
-              relaysToPublish.length === 0 ? "btn-disabled" : "btn-normal"
-            }`}
-            onClick={() => Submit(30024)}
-            disabled={isLoading}
-          >
-            {isLoading ? <LoadingDots /> : "Save draft"}
-          </button>
-          <button className="btn btn-gst-red btn-full" onClick={exit}>
-            Cancel
-          </button>
         </div>
       )}
       {screen === 3 && (

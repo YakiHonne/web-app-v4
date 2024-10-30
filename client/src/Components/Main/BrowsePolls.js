@@ -1,16 +1,18 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
-import { nip19, SimplePool } from "nostr-tools";
-import { filterRelays, getBech32 } from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
+import React, { useEffect, useState } from "react";
+import { nip19 } from "nostr-tools";
+import { getBech32 } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import MinimalZapPollPreview from "./MinimalZapPollPreview";
 import LoadingDots from "../LoadingDots";
-
-const pool = new SimplePool();
+import { useSelector } from "react-redux";
+import { saveUsers } from "../../Helpers/DB";
+import { getUser } from "../../Helpers/Controlers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function BrowsePolls({ setNevent, exit }) {
-  const { nostrKeys, nostrUser, addNostrAuthors } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [myPolls, setMyPolls] = useState([]);
   const [comPolls, setComPolls] = useState([]);
   const [myPollsLE, setMyPollsLE] = useState(undefined);
@@ -24,46 +26,49 @@ export default function BrowsePolls({ setNevent, exit }) {
       setIsLoading(true);
       const { relays, filter } = getFilter();
       let events = [];
-      const subscription = pool.subscribeMany(relays, filter, {
-        async onevent(event) {
-          events.push(event.pubkey);
-          let nEvent = nip19.neventEncode({
-            id: event.id,
-            pubkey: event.pub,
-          });
-          try {
-            if (selectedOption === "self") {
-              setMyPolls((prev) => {
-                let index = prev.findIndex((item) => item.id === event.id);
-                if (index === -1)
-                  return [{ ...event, nEvent }, ...prev].sort(
-                    (ev_1, ev_2) => ev_2.created_at - ev_1.created_at
-                  );
-                return prev;
-              });
-            }
-            if (selectedOption === "com") {
-              setComPolls((prev) => {
-                let index = prev.findIndex((item) => item.id === event.id);
-                if (index === -1)
-                  return [{ ...event, nEvent }, ...prev].sort(
-                    (ev_1, ev_2) => ev_2.created_at - ev_1.created_at
-                  );
-                return prev;
-              });
-            }
-            // setIsLoading(false);
-          } catch (err) {
-            console.log(err);
-            setIsLoading(false);
-          }
-        },
-        oneose() {
-          addNostrAuthors([...new Set(events)]);
-          pool.close(relays);
-          setIsLoading(false);
-        },
+      const subscription = ndkInstance.subscribe(filter, {
+        closeOnEose: true,
+        cacheUsage: "CACHE_FIRST",
       });
+
+      subscription.on("event", async (event) => {
+        events.push(event.pubkey);
+        let nEvent = nip19.neventEncode({
+          id: event.id,
+          pubkey: event.pub,
+        });
+        try {
+          if (selectedOption === "self") {
+            setMyPolls((prev) => {
+              let index = prev.findIndex((item) => item.id === event.id);
+              if (index === -1)
+                return [{ ...event, nEvent }, ...prev].sort(
+                  (ev_1, ev_2) => ev_2.created_at - ev_1.created_at
+                );
+              return prev;
+            });
+          }
+          if (selectedOption === "com") {
+            setComPolls((prev) => {
+              let index = prev.findIndex((item) => item.id === event.id);
+              if (index === -1)
+                return [{ ...event, nEvent }, ...prev].sort(
+                  (ev_1, ev_2) => ev_2.created_at - ev_1.created_at
+                );
+              return prev;
+            });
+          }
+          // setIsLoading(false);
+        } catch (err) {
+          console.log(err);
+          setIsLoading(false);
+        }
+      });
+      subscription.on("eose", () => {
+        saveUsers([...new Set(events)]);
+        setIsLoading(false);
+      });
+
       setSub(subscription);
     };
 
@@ -71,14 +76,14 @@ export default function BrowsePolls({ setNevent, exit }) {
   }, [myPollsLE, comPollsLE, selectedOption]);
 
   const getFilter = () => {
-    let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
+    let relaysToUse = userRelays;
     if (selectedOption === "self") {
       return {
         relays: relaysToUse,
         filter: [
           {
             kinds: [6969],
-            authors: [nostrKeys.pub],
+            authors: [userKeys.pub],
             until: myPollsLE,
             limit: 10,
           },
@@ -116,7 +121,7 @@ export default function BrowsePolls({ setNevent, exit }) {
 
   const handleContentSource = (source) => {
     if (selectedOption === source) return;
-    sub?.close();
+    sub?.stop();
     setSelectedOption(source);
   };
   return (
@@ -221,7 +226,7 @@ export default function BrowsePolls({ setNevent, exit }) {
 }
 
 const AuthorPreview = ({ pubkey }) => {
-  const { nostrAuthors, getNostrAuthor } = useContext(Context);
+  let nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [author, setAuthor] = useState({
     pubkey: pubkey,
     display_name: getBech32("npub", pubkey).substring(0, 10),
@@ -229,7 +234,7 @@ const AuthorPreview = ({ pubkey }) => {
     picture: "",
   });
   useEffect(() => {
-    let auth = getNostrAuthor(pubkey);
+    let auth = getUser(pubkey);
     if (auth) {
       setAuthor(auth);
     }

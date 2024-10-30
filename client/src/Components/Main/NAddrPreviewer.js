@@ -1,58 +1,53 @@
-import React, { useContext, useEffect, useState } from "react";
-import { SimplePool, nip19 } from "nostr-tools";
-import { Context } from "../../Context/Context";
-import { filterRelays } from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
+import React, { useEffect, useState } from "react";
+import { nip19 } from "nostr-tools";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { Link } from "react-router-dom";
-const pool = new SimplePool();
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function NAddrPreviewer({ pubkey, d, kind, relays = [] }) {
-  const { nostrUser } = useContext(Context);
   const [event, setEvent] = useState({ title: "Untitled", naddr: "/" });
   useEffect(() => {
-    let relaysToUse = filterRelays(nostrUser?.relays || [], [
-      ...relaysOnPlatform,
-      ...relays,
-    ]);
-    const sub = pool.subscribeMany(
-      relaysToUse,
+    const sub = ndkInstance.subscribe(
       [{ kinds: [kind], authors: [pubkey], "#d": [d] }],
-      {
-        onevent(event) {
-          let naddr = nip19.naddrEncode({
-            identifier: d,
-            pubkey,
-            kind,
-          });
-          if ([30004, 30023].includes(kind)) {
-            let title = event.tags.find((tag) => tag[0] === "title");
-            title = title ? title[1] : "Untitled";
-            setEvent({
-              title,
-              naddr:
-                kind === 30023
-                  ? `/article/${naddr}`
-                  : kind === 30004
-                  ? `/curations/${naddr}`
-                  : window.location.pathname,
-            });
-          }
-          if (kind === 31990) {
-            setEvent({
-              ...JSON.parse(event.content),
-              keywords:
-                event.tags
-                  .filter((tag) => tag[0] === "t" && tag[1])
-                  .map((tag) => tag[1]) || [],
-            });
-          }
-        },
-        oneose() {
-          pool.close(relaysToUse);
-        },
-      }
+      { closeOnEose: true, cacheUsage: "CACHE_FIRST", groupableDelay: 500 }
     );
+
+    sub.on("event", (event) => {
+      let naddr = nip19.naddrEncode({
+        identifier: d,
+        pubkey,
+        kind,
+      });
+      if ([30004, 30023].includes(kind)) {
+        let title = event.tags.find((tag) => tag[0] === "title");
+        title = title ? title[1] : "Untitled";
+        setEvent({
+          title,
+          naddr:
+            kind === 30023
+              ? `/article/${naddr}`
+              : kind === 30004
+              ? `/curations/${naddr}`
+              : window.location.pathname,
+        });
+      }
+      if (kind === 31990) {
+        setEvent({
+          ...JSON.parse(event.content),
+          keywords:
+            event.tags
+              .filter((tag) => tag[0] === "t" && tag[1])
+              .map((tag) => tag[1]) || [],
+        });
+      }
+    });
+    let timeout = setTimeout(() => {
+      sub.stop();
+      clearTimeout(timeout);
+    }, 4000);
+    return () => {
+      sub.stop();
+    };
   }, []);
 
   if (![30004, 30023, 31990].includes(kind))

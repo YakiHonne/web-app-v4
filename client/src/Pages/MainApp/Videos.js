@@ -1,9 +1,8 @@
-import React, { useContext, useMemo, useRef } from "react";
-import { Context } from "../../Context/Context";
+import React, { useMemo, useRef } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { useState } from "react";
 import { useEffect } from "react";
-import { nip19, SimplePool } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import Date_ from "../../Components/Date_";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,7 +11,7 @@ import { Helmet } from "react-helmet";
 import {
   filterRelays,
   getBech32,
-  getEmptyNostrUser,
+  getEmptyuserMetadata,
 } from "../../Helpers/Encryptions";
 import Footer from "../../Components/Footer";
 import bannedList from "../../Content/BannedList";
@@ -22,8 +21,10 @@ import TopCreators from "../../Components/Main/TopCreators";
 import { getNoteTree, getVideoContent } from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import axios from "axios";
-
-var pool = new SimplePool();
+import { useSelector } from "react-redux";
+import { getUser, handleReceivedEvents } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 const getTopCreators = (videos) => {
   if (!videos) return [];
@@ -68,15 +69,14 @@ const getCreatorStats = (pubkey, videos) => {
 };
 
 export default function Videos() {
-  const { nostrUser, addNostrAuthors, mutedList } = useContext(Context);
-  const navigateTo = useNavigate();
-  const [relays, setRelays] = useState(relaysOnPlatform);
+  const userRelays = useSelector((state) => state.userRelays);
+  const userMutedList = useSelector((state) => state.userMutedList);
+  
   const [activeRelay, setActiveRelay] = useState("");
   const [videos, setVideos] = useState([]);
   const [trendingNotes, setTrendingNotes] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showRelaysList, setShowRelaysList] = useState(false);
   const [landscapeMode, setLandscapeMode] = useState(true);
   const [vidsLastEventTime, setVidsLastEventTime] = useState(undefined);
   const extrasRef = useRef(null);
@@ -90,35 +90,31 @@ export default function Videos() {
         setIsLoaded(false);
         setIsLoading(true);
 
-        let { filter, relaysToFetchFrom } = getArtsFilter();
+        let { filter } = getArtsFilter();
 
         let events = [];
-        pool.subscribeMany(relaysToFetchFrom, filter, {
-          onevent(event) {
-            if (![...bannedList, ...mutedList].includes(event.pubkey)) {
-              let parsedEvent = getVideoContent(event);
-              events.push(parsedEvent);
-              setVideos((prev) => {
-                return prev.find((video) => video.id === event.id)
-                  ? prev
-                  : [parsedEvent, ...prev].sort(
-                      (video_1, video_2) =>
-                        video_2.created_at - video_1.created_at
-                    );
-              });
-            }
-          },
-          oneose() {
-            onEOSE(events);
-          },
+        let sub = ndkInstance.subscribe(filter, {
+          closeOnEose: true,
+          cacheUsage: "CACHE_FIRST",
+        });
+
+        sub.on("event", (event) => {
+          let parsedEvent = getVideoContent(event);
+          setVideos((prev) => {
+            return handleReceivedEvents(prev, parsedEvent);
+          });
+          events.push(parsedEvent);
+        });
+        sub.on("eose", () => {
+          onEOSE(events);
         });
       } catch (err) {
         console.log(err);
         setIsLoading(false);
       }
     };
-    if (Array.isArray(mutedList)) fetchData();
-  }, [vidsLastEventTime, activeRelay, landscapeMode, mutedList]);
+    if (Array.isArray(userMutedList)) fetchData();
+  }, [vidsLastEventTime, activeRelay, landscapeMode, userMutedList]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -153,7 +149,7 @@ export default function Videos() {
           let tempTrendingNotes = await Promise.all(
             trendingNotes.data?.videos.slice(0, 5).map(async (item) => {
               let note_tree = await getNoteTree(item.event.content);
-              let author_parsed = getEmptyNostrUser(item.pubkey);
+              let author_parsed = getEmptyuserMetadata(item.pubkey);
               let nEvent = nip19.neventEncode({
                 id: item.id,
                 author: item.pubkey,
@@ -187,9 +183,7 @@ export default function Videos() {
 
     if (activeRelay) relaysToFetchFrom = [activeRelay];
     if (!activeRelay)
-      relaysToFetchFrom = !nostrUser
-        ? relaysOnPlatform
-        : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
+      relaysToFetchFrom = userRelays
 
     filter = [
       {
@@ -207,42 +201,12 @@ export default function Videos() {
   const onEOSE = (events) => {
     if (events) {
       let filteredEvents = events.filter((event) => event);
-      addNostrAuthors(filteredEvents.map((item) => item.pubkey));
+      saveUsers(filteredEvents.map((item) => item.pubkey));
     }
-    if (activeRelay) pool.close([activeRelay]);
-    if (!activeRelay)
-      pool.close(
-        !nostrUser
-          ? relaysOnPlatform
-          : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-      );
     setIsLoaded(true);
     setIsLoading(false);
-    // relaySub.close();
   };
 
-  const switchActiveRelay = (source) => {
-    if (!isLoaded) return;
-    if (source === activeRelay) return;
-    let relaysToClose =
-      activeRelay == ""
-        ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-        : [activeRelay];
-    pool.close(relaysToClose);
-    pool = new SimplePool();
-    setVidsLastEventTime(undefined);
-    setVideos([]);
-    setActiveRelay(source);
-  };
-
-  const handleVideoTypes = () => {
-    if (!isLoaded) return;
-    setVideos([]);
-    setVidsLastEventTime(undefined);
-    setLandscapeMode(!landscapeMode);
-  };
-
-  //   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
       <div>
@@ -275,149 +239,14 @@ export default function Videos() {
               className={`main-page-nostr-container`}
               onClick={(e) => {
                 e.stopPropagation();
-                setShowRelaysList(false);
               }}
             >
               <div className="fx-centered fit-container fx-start-h fx-start-v">
-                <div
-                  style={{ width: "min(100%,550px)" }}
-                  className="box-pad-h-m"
-                >
-                  <div
-                    className="box-pad-v-m fit-container fx-scattered sticky"
-                    //   style={{
-                    //     position: "relative",
-                    //     zIndex: "100",
-                    //   }}
-                  >
+                <div style={{ flex: 1.8 }} className="box-pad-h-m">
+                  <div className="box-pad-v-m fit-container fx-scattered sticky">
                     <div className="fx-centered fx-col fx-start-v">
                       <div className="fx-centered">
                         <h4>{videos.length} Videos</h4>
-                      </div>
-                      <p className="gray-c p-medium">
-                        (In{" "}
-                        {activeRelay === ""
-                          ? "all relays"
-                          : activeRelay.split("wss://")[1]}
-                        )
-                      </p>
-                    </div>
-                    <div className="fx-centered">
-                      {/* <div
-                      className="round-icon"
-                      style={{ rotate: landscapeMode ? "0deg" : "-90deg" }}
-                      onClick={handleVideoTypes}
-                    >
-                      <div className="mobile"></div>
-                    </div> */}
-                      <div style={{ position: "relative" }}>
-                        <div
-                          style={{ position: "relative" }}
-                          className="round-icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowRelaysList(!showRelaysList);
-                          }}
-                        >
-                          <div className="server"></div>
-                        </div>
-                        {showRelaysList && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              right: 0,
-                              bottom: "-5px",
-                              backgroundColor: "var(--dim-gray)",
-                              border: "none",
-                              transform: "translateY(100%)",
-                              maxWidth: "300px",
-                              rowGap: "12px",
-                            }}
-                            className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                          >
-                            <h5>Relays</h5>
-                            <button
-                              className={`btn-text-gray pointer fx-centered`}
-                              style={{
-                                width: "max-content",
-                                fontSize: "1rem",
-                                textDecoration: "none",
-                                color: activeRelay === "" ? "var(--c1)" : "",
-                                transition: ".4s ease-in-out",
-                              }}
-                              onClick={() => {
-                                switchActiveRelay("");
-                                setShowRelaysList(false);
-                              }}
-                            >
-                              {isLoading && activeRelay === "" ? (
-                                <>Connecting...</>
-                              ) : (
-                                "All relays"
-                              )}
-                            </button>
-                            {nostrUser &&
-                              nostrUser.relays.length > 0 &&
-                              nostrUser.relays.map((relay) => {
-                                return (
-                                  <button
-                                    key={relay}
-                                    className={`btn-text-gray pointer fx-centered `}
-                                    style={{
-                                      width: "max-content",
-                                      fontSize: "1rem",
-                                      textDecoration: "none",
-                                      color:
-                                        activeRelay === relay
-                                          ? "var(--c1)"
-                                          : "",
-                                      transition: ".4s ease-in-out",
-                                    }}
-                                    onClick={() => {
-                                      switchActiveRelay(relay);
-                                      setShowRelaysList(false);
-                                    }}
-                                  >
-                                    {isLoading && relay === activeRelay ? (
-                                      <>Connecting...</>
-                                    ) : (
-                                      relay.split("wss://")[1]
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            {(!nostrUser ||
-                              (nostrUser && nostrUser.relays.length === 0)) &&
-                              relays.map((relay) => {
-                                return (
-                                  <button
-                                    key={relay}
-                                    className={`btn-text-gray pointer fx-centered`}
-                                    style={{
-                                      width: "max-content",
-                                      fontSize: "1rem",
-                                      textDecoration: "none",
-                                      color:
-                                        activeRelay === relay
-                                          ? "var(--c1)"
-                                          : "",
-                                      transition: ".4s ease-in-out",
-                                    }}
-                                    onClick={() => {
-                                      switchActiveRelay(relay);
-                                      setShowRelaysList(false);
-                                    }}
-                                  >
-                                    {isLoading && relay === activeRelay ? (
-                                      <>Connecting..</>
-                                    ) : (
-                                      relay.split("wss://")[1]
-                                    )}
-                                  </button>
-                                );
-                              })}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -593,7 +422,7 @@ export default function Videos() {
 }
 
 const AuthorPreview = ({ pubkey }) => {
-  const { nostrAuthors, getNostrAuthor } = useContext(Context);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [author, setAuthor] = useState({
     pubkey,
     name: getBech32("npub", pubkey).substring(0, 10),
@@ -602,7 +431,7 @@ const AuthorPreview = ({ pubkey }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
     if (!isLoaded) {
-      let auth = getNostrAuthor(pubkey);
+      let auth = getUser(pubkey);
       if (auth) {
         setAuthor(auth);
         setIsLoaded(true);

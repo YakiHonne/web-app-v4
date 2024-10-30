@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
@@ -10,30 +10,32 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { encryptEventData, filterRelays } from "../../Helpers/Encryptions";
 import { nip19, finalizeEvent } from "nostr-tools";
 import LoadingScreen from "../../Components/LoadingScreen";
-import { Context } from "../../Context/Context";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../../Components/LoadingDots";
 import PagePlaceholder from "../../Components/PagePlaceholder";
-import { getNoteTree } from "../../Helpers/Helpers";
+import {
+  extractNip19,
+  getNoteTree,
+  redirectToLogin,
+} from "../../Helpers/Helpers";
 import LoginWithNostr from "../../Components/Main/LoginWithNostr";
 import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 const MAX_CHAR = 500;
 
 export default function UNEvent() {
-  const {
-    nostrUserAbout,
-    nostrUser,
-    nostrKeys,
-    isPublishing,
-    setToPublish,
-    setToast,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const { nevent } = useParams();
-  const navigateTo = useNavigate();
   const [flashNews, setFlashNews] = useState({});
   const [source, setSource] = useState();
   const [uncensoredNotes, setUncensoredNotes] = useState([]);
@@ -42,22 +44,18 @@ export default function UNEvent() {
   const [noteType, setNoteType] = useState(true);
   const [content, setContent] = useState("");
   const [balance, setBalance] = useState(0);
-  const [contentType, setContentType] = useState("new");
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [timestamp, setTimestamp] = useState(Date.now());
-  const [toLogin, setToLogin] = useState(false);
   const isContributed = useMemo(() => {
     let isThereInNH = flashNews
       ? flashNews?.sealed_not_helpful_notes?.find(
-          (un) => JSON.parse(un.content).pubkey === nostrKeys?.pub
+          (un) => JSON.parse(un.content).pubkey === userKeys?.pub
         )
       : false;
-    let isThereInUN = uncensoredNotes.find(
-      (un) => un.pubkey === nostrKeys?.pub
-    );
+    let isThereInUN = uncensoredNotes.find((un) => un.pubkey === userKeys?.pub);
     return isThereInUN || isThereInNH ? true : false;
-  }, [uncensoredNotes, nostrKeys, flashNews]);
+  }, [uncensoredNotes, userKeys, flashNews]);
   const currentWordsCount = useMemo(() => {
     let value = note.replace(/[^\S\r\n]+/g, " ");
     let wordsArray = value
@@ -120,31 +118,34 @@ export default function UNEvent() {
     try {
       let parsedData = nip19.decode(nevent);
       if (currentWordsCount === 0) {
-        setToast({
-          type: 3,
-          desc: "You must write something!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "You must write something!",
+          })
+        );
         return;
       }
       if (MAX_CHAR - currentWordsCount < 0) {
-        setToast({
-          type: 3,
-          desc: "Your note has exceeded the maximum character number.",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "Your note has exceeded the maximum character number.",
+          })
+        );
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+      let relaysToPublish = userRelays;
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
 
@@ -158,14 +159,15 @@ export default function UNEvent() {
       tags.push(["yaki_flash_news", encryptEventData(`${created_at}`)]);
       tags.push(["type", noteType ? "-" : "+"]);
       if (source) tags.push(["source", source]);
-
+      let parsed = extractNip19(note);
+      let content = parsed.content;
       let event = {
         kind: 1,
-        content: note,
+        content,
         created_at,
-        tags,
+        tags: [...tags, ...parsed.tags],
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
         } catch (err) {
@@ -174,13 +176,15 @@ export default function UNEvent() {
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
 
-      setToPublish({
-        eventInitEx: event,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          eventInitEx: event,
+          allRelays: relaysToPublish,
+        })
+      );
 
       setTimeout(() => {
         setIsLoading(false);
@@ -191,10 +195,12 @@ export default function UNEvent() {
     } catch (err) {
       setIsLoading(true);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while publishing this note",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while publishing this note",
+        })
+      );
     }
   };
 
@@ -238,11 +244,9 @@ export default function UNEvent() {
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             <ArrowUp />
-            {/* <NavbarNOSTR /> */}
-            {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
             <div className="fit-container fx-centered fx-start-v fx-start-h">
               <div style={{ flex: 1.5 }} className="box-pad-h-s">
-                <Link className="fit-container" to="/uncensored-notes">
+                <Link className="fit-container" to="/verify-notes">
                   <div
                     className="fit-container fx-centered fx-start-h box-pad-v-m sticky"
                     style={{
@@ -278,15 +282,13 @@ export default function UNEvent() {
                           <p className="gray-c">&#x2022;</p>
                           <p className="gray-c">
                             <Date_
-                              toConvert={new Date(
-                                flashNews.created_at * 1000
-                              ).toISOString()}
+                              toConvert={new Date(flashNews.created_at * 1000)}
                               time={true}
                             />
                           </p>
                         </div>
                         <ShareLink
-                          path={`/uncensored-notes/${flashNews.nEvent}`}
+                          path={`/verify-notes/${flashNews.nEvent}`}
                           title={
                             flashNews.author.display_name ||
                             flashNews.author.name
@@ -312,8 +314,8 @@ export default function UNEvent() {
                     > */}
                         <div className="fit-container">{content}</div>
                       </div>
-                      {nostrKeys &&
-                        nostrKeys.pub !== flashNews.author.pubkey &&
+                      {userKeys &&
+                        userKeys.pub !== flashNews.author.pubkey &&
                         !isContributed &&
                         !sealedNote && (
                           <div
@@ -359,7 +361,7 @@ export default function UNEvent() {
                                         : "",
                                   }}
                                   placeholder={`What do you think about this ${
-                                    nostrUserAbout.name || ""
+                                    userMetadata.name || ""
                                   }?`}
                                   value={note}
                                   onChange={handleNoteOnChange}
@@ -407,7 +409,7 @@ export default function UNEvent() {
                             </div>
                           </div>
                         )}
-                      {!nostrKeys && (
+                      {!userKeys && (
                         <div className="fit-container fx-centered fx-col box-pad-h box-pad-v sc-s-18">
                           <h4>Spread your voice!</h4>
                           <p
@@ -419,7 +421,7 @@ export default function UNEvent() {
                           </p>
                           <button
                             className="btn btn-normal"
-                            onClick={() => setToLogin(true)}
+                            onClick={() => redirectToLogin()}
                           >
                             Login
                           </button>
@@ -544,7 +546,7 @@ export default function UNEvent() {
                   >
                     {" "}
                   </div>
-                  <h4>Read about Uncensored Notes</h4>
+                  <h4>Read about verifying notes</h4>
                   <p className="gray-c">
                     We've made an article for you to help you understand our
                     purpose
@@ -559,7 +561,7 @@ export default function UNEvent() {
                   </Link>
                 </div>
                 <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
-                  <h4>Uncensored notes values</h4>
+                  <h4>Verifying notes values</h4>
                   <ul>
                     <li className="gray-c">
                       Contribute to build understanding

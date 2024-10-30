@@ -1,13 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { webln } from "@getalby/sdk";
 import { Link, useNavigate } from "react-router-dom";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../../Components/LoadingDots";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
+import { useDispatch } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
 
 export default function WalletNWC() {
-  const { setToast } = useContext(Context);
+  const dispatch = useDispatch();
   const navigateTo = useNavigate();
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -22,10 +23,12 @@ export default function WalletNWC() {
       let addr = new URLSearchParams(url).get("lud16");
       if (!addr) {
         setIsLoading(false);
-        setToast({
-          type: 2,
-          desc: "Could not extract your lightning address.",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Could not extract your lightning address.",
+          })
+        );
         return;
       }
       let nwcNode = {
@@ -62,10 +65,12 @@ export default function WalletNWC() {
     } catch (err) {
       console.log(err);
       setIsLoading(false);
-      setToast({
-        type: 2,
-        desc: "Invalid input, please check your NWC URL",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "Invalid input, please check your NWC URL",
+        })
+      );
     }
   };
 

@@ -144,7 +144,7 @@
         transform: translateY(10px);
     }
 
-    20% {
+    5% {
         opacity: 1;
         transform: translateY(0);
     }
@@ -251,11 +251,11 @@
 }
 @keyframes slide-down {
     0% {
-        transform: translateY(0);
+        transform: translateX(0);
     }
 
     100% {
-        transform: translateY(50%);
+        transform: translateX(50%);
         opacity: 0;
     }
 }

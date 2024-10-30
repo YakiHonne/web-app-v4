@@ -1,22 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
-import App from "./App";
+import { BrowserRouter as Router, unstable_HistoryRouter as HistoryRouter, } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./Store/Store";
 import AppInit from "./Context/AppInit";
+import App from "./App";
+import { customHistory } from "./Helpers/History";
 
 const root = ReactDOM.createRoot(document.getElementById("main"));
 root.render(
-  <Router>
+  <HistoryRouter history={customHistory}>
     <Provider store={store}>
       <AppInit />
-      {/* <App /> */}
+      <App />
     </Provider>
-  </Router>
+  </HistoryRouter>
 );
+

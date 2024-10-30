@@ -1,14 +1,15 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
-import { getEmptyNostrUser } from "../../Helpers/Encryptions";
+import React, { useEffect, useState } from "react";
+import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import KindOne from "../../Components/Main/KindOne";
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
 
 export default function KindSix({ event }) {
-  const { nostrAuthors, getNostrAuthor } = useContext(Context);
-  const [user, setUser] = useState(getEmptyNostrUser(event.pubkey));
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   useEffect(() => {
-    let auth = getNostrAuthor(event.pubkey);
+    let auth = getUser(event.pubkey);
 
     if (auth) {
       setUser(auth);
@@ -17,21 +18,20 @@ export default function KindSix({ event }) {
 
   return (
     <div
-      className="box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v fit-container"
+      className="fx-centered fx-col fx-start-v fit-container"
       style={{
-        backgroundColor: "var(--c1-side)",
-        rowGap: "10px",
+        rowGap: "0px",
         overflow: "visible",
       }}
     >
       <div
         className="fx-centered fx-start-h sc-s-18 box-pad-h-s box-pad-v-s round-icon-tooltip pointer"
-        style={{ overflow: "visible" }}
+        style={{ overflow: "visible", marginLeft: "1rem" , marginTop: "1rem" }}
         data-tooltip={`${user.display_name} reposted this on ${new Date(
           event.created_at * 1000
         ).toLocaleDateString()}, ${new Date(
-            event.created_at * 1000
-          ).toLocaleTimeString()}`}
+          event.created_at * 1000
+        ).toLocaleTimeString()}`}
       >
         <UserProfilePicNOSTR
           size={20}
@@ -45,7 +45,7 @@ export default function KindSix({ event }) {
         </div>
         <div className="switch-arrows"></div>
       </div>
-      <KindOne event={event.relatedEvent} />
+      <KindOne event={event.relatedEvent} border={true} />
     </div>
   );
 }

@@ -1,6 +1,5 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
 import axiosInstance from "../../Helpers/HTTP_Client";
@@ -8,6 +7,10 @@ import { nanoid } from "nanoid";
 import TopicsTags from "../../Content/TopicsTags";
 import UserSearchBar from "../UserSearchBar";
 import NProfilePreviewer from "./NProfilePreviewer";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { finalizeEvent } from "nostr-tools";
+import { extractNip19 } from "../../Helpers/Helpers";
 
 const getSuggestions = (custom) => {
   if (!custom) return [];
@@ -28,9 +31,12 @@ export default function ToPublishNOSTR({
   tags,
   edit = false,
   exit,
-  warning = false
+  warning = false,
 }) {
-  const { setToast, nostrKeys, nostrUser, setToPublish } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const navigateTo = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState(tags || []);
   const [thumbnail, setThumbnail] = useState("");
@@ -42,10 +48,10 @@ export default function ToPublishNOSTR({
   const [contentSensitive, setContentSensitive] = useState(false);
   const [screen, setScreen] = useState(1);
   const [finalStepContent, setFinalStepContent] = useState(0);
-  const [zapSplit, setZapSplit] = useState([["zap", nostrKeys.pub, "", "100"]]);
+  const [zapSplit, setZapSplit] = useState([["zap", userKeys.pub, "", "100"]]);
   const [zapSplitEnabled, setZapSplitEnabled] = useState(false);
   const [relaysToPublish, setRelaysToPublish] = useState([...relaysOnPlatform]);
-  const [publishingState, setPublishingState] = useState([]);
+  const [publishingState, setIsPublishingState] = useState([]);
   const [deleteDraft, setDeleteDraft] = useState(
     postKind === 30024 ? true : false
   );
@@ -57,10 +63,12 @@ export default function ToPublishNOSTR({
   const handleImageUpload = (e) => {
     let file = e.target.files[0];
     if (file && !file.type.includes("image/")) {
-      setToast({
-        type: 2,
-        desc: "Image type is unsupported!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "Image type is unsupported!",
+        })
+      );
       return;
     }
     if (file) {
@@ -80,7 +88,7 @@ export default function ToPublishNOSTR({
     try {
       setIsLoading(true);
       if (postThumbnail && thumbnail) deleteFromS3(postThumbnail);
-
+      let created_at = Math.floor(Date.now() / 1000);
       let cover = thumbnail ? await uploadToS3(thumbnail) : thumbnailUrl || "";
 
       let tags = [
@@ -92,7 +100,7 @@ export default function ToPublishNOSTR({
         [
           "published_at",
           edit
-            ? postPublishedAt || `${Math.floor(Date.now() / 1000)}`
+            ? `${postPublishedAt}` || `${Math.floor(Date.now() / 1000)}`
             : `${Math.floor(Date.now() / 1000)}`,
         ],
         ["d", edit || nanoid()],
@@ -107,82 +115,92 @@ export default function ToPublishNOSTR({
       if (contentSensitive) {
         tags.push(["L", "content-warning"]);
       }
-
-      setToPublish({
-        nostrKeys: nostrKeys,
+      let processedContent = extractNip19(postContent);
+      let tempEvent = {
+        created_at,
         kind: kind,
-        content: postContent,
-        tags: tags,
-        allRelays: relaysToPublish,
-      });
+        content: processedContent.content,
+        tags: [...tags, ...processedContent.tags],
+      };
+      if (userKeys.ext) {
+        try {
+          tempEvent = await window.nostr.signEvent(tempEvent);
+        } catch (err) {
+          console.log(err);
+          setIsLoading(false);
+          return false;
+        }
+      } else {
+        tempEvent = finalizeEvent(tempEvent, userKeys.sec);
+      }
+      dispatch(
+        setToPublish({
+          eventInitEx: tempEvent,
+          allRelays: relaysToPublish,
+        })
+      );
+      // dispatch(
+      //   setToPublish({
+      //     userKeys: userKeys,
+      //     kind: kind,
+      //     content: postContent,
+      //     tags: tags,
+      //     allRelays: relaysToPublish,
+      //   })
+      // );
       if (deleteDraft) {
-        setTimeout(() => {
-          setToPublish({
-            nostrKeys,
+        setTimeout(async () => {
+          let tempEvent = {
+            created_at,
             kind: 5,
             content: "A draft to delete",
             tags: [["e", postId]],
-            allRelays: relaysToPublish,
-          });
-          console.log("first");
+          };
+          if (userKeys.ext) {
+            try {
+              tempEvent = await window.nostr.signEvent(tempEvent);
+            } catch (err) {
+              console.log(err);
+              setIsLoading(false);
+              navigateTo("/dashboard", { state: { tabNumber: 1 } });
+              exit();
+              return false;
+            }
+          } else {
+            tempEvent = finalizeEvent(tempEvent, userKeys.sec);
+          }
+          dispatch(
+            setToPublish({
+              eventInitEx: tempEvent,
+              allRelays: relaysToPublish,
+            })
+          );
+          // dispatch(
+          //   setToPublish({
+          //     userKeys,
+          //     kind: 5,
+          //     content: "A draft to delete",
+          //     tags: [["e", postId]],
+          //     allRelays: relaysToPublish,
+          //   })
+          // );
+
           setIsLoading(false);
-          // navigateTo("/my-articles");
+          navigateTo("/dashboard", { state: { tabNumber: 1 } });
           exit();
-        }, 6000);
+        }, 5000);
         return;
       }
-      navigateTo("/my-articles");
+      navigateTo("/dashboard", { state: { tabNumber: 1 } });
       exit();
       return;
-      // let temPublishingState = await publishPost(
-      //   nostrKeys,
-      //   kind,
-      //   postContent,
-      //   tags,
-      //   relaysToPublish
-      // );
-
-      // if (!temPublishingState) {
-      //   setToast({
-      //     type: 2,
-      //     desc: "Publishing was cancelled!",
-      //   });
-      //   setIsLoading(false);
-      //   return;
-      // }
-      // if (deleteDraft) {
-      //   await deletePost(nostrKeys, postId, relaysToPublish);
-      //   setIsLoading(false);
-      // }
-      // setIsLoading(false);
-      // if (temPublishingState.find((item) => item.status)) {
-      //   if (postThumbnail && thumbnail) deleteFromS3(postThumbnail);
-      //   setPublishingState(temPublishingState);
-      //   setScreen(3);
-      //   setToast({
-      //     type: 1,
-      //     desc:
-      //       kind === 30024
-      //         ? "Your draft has been successfully saved!"
-      //         : "Your article has been successfully posted on Nostr.",
-      //   });
-      //   return;
-      // }
-      // setToast({
-      //   type: 2,
-      //   desc: "Your article has been declined on the chosen relays.",
-      // });
-      // } else {
-      //   setToast({
-      //     type: 2,
-      //     desc: "Would you please upload a cover to your article.",
-      //   });
-      // }
     } catch (err) {
-      setToast({
-        type: 2,
-        desc: "An error has occurred!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occurred!",
+        })
+      );
       setIsLoading(false);
     }
   };
@@ -212,16 +230,18 @@ export default function ToPublishNOSTR({
       try {
         let fd = new FormData();
         fd.append("file", img);
-        fd.append("pubkey", nostrKeys.pub);
+        fd.append("pubkey", userKeys.pub);
         let data = await axiosInstance.post("/api/v1/file-upload", fd, {
           headers: { "Content-Type": "multipart/formdata" },
         });
         return data.data.image_path;
       } catch {
-        setToast({
-          type: 2,
-          desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
+          })
+        );
         return false;
       }
     }
@@ -260,7 +280,7 @@ export default function ToPublishNOSTR({
   };
 
   const handleZapAmount = (amount, pubkey) => {
-    let tempAmount = amount ? Math.abs(amount) : 0
+    let tempAmount = amount ? Math.abs(amount) : 0;
     let findPubkeyIndex = zapSplit.findIndex((item) => item[1] === pubkey);
     if (findPubkeyIndex !== -1) {
       let tempZapSplit = Array.from(zapSplit);
@@ -274,474 +294,341 @@ export default function ToPublishNOSTR({
     return Math.floor((amount * 100) / allAmount);
   };
   return (
-    <section className="fixed-container fx-centered">
-      {screen === 1 && (
-        <div
-          className="fx-centered fx-col slide-down box-pad-h"
-          style={{
-            // width: "100%",
-            // maxWidth: "500px",
-            flex: "1 1 500px",
-            maxWidth: "500px",
-          }}
-        >
-          <div className="fx-centered pointer" onClick={exit}>
-            <div className="arrow" style={{ transform: "rotate(90deg)" }}></div>
-            <p className="gray-c">back to editor</p>
-          </div>
-          <h4 className="p-centered">Publish your article</h4>
-          <p className="gray-c p-medium box-marg-s">let's finish the job</p>
-         {warning && <div className="sc-s-18 box-pad-v-s box-pad-h-s">
-            <p className="orange-c p-medium p-centered">Warning</p>
-            <p className="gray-c p-medium p-centered">Your article contains HTML elements which most likely will not be rendered on some clients or platforms.</p>
-          </div>}
+    <section className="fixed-container fx-centered box-pad-h">
+      <div
+        style={{
+          width: "min(100%, 500px)",
+          height: "100vh",
+          overflow: "scroll",
+          borderRadius: 0,
+        }}
+        className="sc-s-18 fx-col fx-centered fx-start-h fx-start-v bg-sp"
+      >
+        <div className="box-pad-h-m fit-container fx-centered fx-col">
           <div
-            className=" fx-centered fx-start-v fx-stretch fit-container"
-            // style={{ width: "500px", }}
+            className="fit-container box-pad-v-m box-pad-h-m fx-centered fx-start-h pointer"
+            style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
+            onClick={exit}
           >
-            <div className="fx-centered fx-col fit-container">
+            <div className="round-icon-small">
               <div
-                className="fit-container fx-centered fx-col sc-s box-pad-h bg-img cover-bg"
+                className="arrow-12"
+                style={{ transform: "rotate(90deg)" }}
+              ></div>
+            </div>
+            <p className="gray-c">Back to editor</p>
+          </div>
+
+          <div className="box-pad-v-m fx-centered fx-col fx-start-h fit-container">
+            <h4 className="p-centered">Publish your article</h4>
+            <p className="gray-c p-medium">let's finish the job</p>
+          </div>
+          {warning && (
+            <div className="sc-s-18 box-pad-v-s box-pad-h-s">
+              <p className="orange-c p-medium p-centered">Warning</p>
+              <p className="gray-c p-medium p-centered">
+                Your article contains HTML elements which most likely will not
+                be rendered on some clients or platforms.
+              </p>
+            </div>
+          )}
+
+          <div className="fx-centered fx-col fit-container">
+            <div
+              className="fit-container fx-centered fx-col sc-s-18 box-pad-h bg-img cover-bg"
+              style={{
+                position: "relative",
+                height: "200px",
+                backgroundImage: `url(${thumbnailPrev})`,
+                backgroundColor: "var(--dim-gray)",
+                // borderStyle: thumbnailPrev ? "none" : "dotted",
+              }}
+            >
+              {thumbnailPrev && (
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    position: "absolute",
+                    right: "16px",
+                    top: "16px",
+                    backgroundColor: "var(--dim-gray)",
+                    borderRadius: "var(--border-r-50)",
+                    zIndex: 10,
+                  }}
+                  className="fx-centered pointer"
+                  onClick={initThumbnail}
+                >
+                  <div className="trash"></div>
+                </div>
+              )}
+
+              {!thumbnailPrev && (
+                <>
+                  {/* <div className="image-24"></div> */}
+                  <p className="gray-c p-medium">(thumbnail preview)</p>
+                </>
+              )}
+            </div>
+            <div className="fit-container fx-centered">
+              <input
+                type="text"
+                className="if ifs-full"
+                placeholder="Image url..."
+                value={thumbnailUrl}
+                onChange={handleThumbnailValue}
+              />
+              <label
+                htmlFor="image-up"
+                className="fit-container fx-centered fx-col box-pad-h sc-s pointer bg-img cover-bg"
                 style={{
                   position: "relative",
-                  height: "200px",
-                  backgroundImage: `url(${thumbnailPrev})`,
-                  backgroundColor: "var(--dim-gray)",
-                  // borderStyle: thumbnailPrev ? "none" : "dotted",
+                  minHeight: "50px",
+                  minWidth: "50px",
+                  maxWidth: "50px",
                 }}
               >
-                {thumbnailPrev && (
-                  <div
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      position: "absolute",
-                      right: "16px",
-                      top: "16px",
-                      backgroundColor: "var(--dim-gray)",
-                      borderRadius: "var(--border-r-50)",
-                      zIndex: 10,
-                    }}
-                    className="fx-centered pointer"
-                    onClick={initThumbnail}
-                  >
-                    <div className="trash"></div>
-                  </div>
-                )}
+                <div className="upload-file-24"></div>
+                <input
+                  type="file"
+                  id="image-up"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    opacity: 0,
+                  }}
+                  value={thumbnail.fileName}
+                  onChange={handleImageUpload}
+                  // disabled={thumbnail}
+                  className="pointer"
+                  accept="image/jpg,image/png,image/gif"
+                />
+              </label>
+            </div>
+            <textarea
+              className="txt-area fit-container"
+              placeholder="Write a description (optional)"
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+            ></textarea>
+            <label
+              className="fx-centered fx-start-h fit-container if"
+              htmlFor={"content-sensitive-checkbox"}
+            >
+              <input
+                type="checkbox"
+                id={"content-sensitive-checkbox"}
+                checked={contentSensitive}
+                onChange={() => setContentSensitive(!contentSensitive)}
+              />
+              <p className={contentSensitive ? "" : "gray-c"}>
+                This is a sensitive content
+              </p>
+            </label>
+            <div style={{ position: "relative" }} className="fit-container">
+              {topicSuggestions.length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-10px",
+                    left: 0,
+                    width: "100%",
+                    maxHeight: "200px",
+                    transform: "translateY(-100%)",
+                    overflow: "scroll",
+                  }}
+                  className="sc-s-18 fx-centered fx-start-v fx-start-h fx-col box-pad-h-m box-pad-v-m"
+                >
+                  <h5>Topics suggestions</h5>
+                  {topicSuggestions.map((item, index) => {
+                    return (
+                      <button
+                        key={`${item}-${index}`}
+                        className={`btn-text-gray pointer fit-container`}
+                        style={{
+                          textAlign: "left",
+                          width: "100%",
+                          paddingLeft: 0,
+                          fontSize: "1rem",
+                          textDecoration: "none",
 
-                {!thumbnailPrev && (
-                  <>
-                    {/* <div className="image-24"></div> */}
-                    <p className="gray-c p-medium">(thumbnail preview)</p>
-                  </>
-                )}
-              </div>
-              <div className="fit-container fx-centered">
+                          transition: ".4s ease-in-out",
+                        }}
+                        onClick={(e) => {
+                          item.replace(/\s/g, "").length
+                            ? setSelectedCategories([
+                                ...selectedCategories,
+                                item.trim(),
+                              ])
+                            : dispatch(
+                                setToast({
+                                  type: 3,
+                                  desc: "Your tag contains only spaces!",
+                                })
+                              );
+
+                          setTempTag("");
+                          e.stopPropagation();
+                        }}
+                      >
+                        {item}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <form
+                className="fit-container fx-scattered"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  tempTag.replace(/\s/g, "").length
+                    ? setSelectedCategories([
+                        ...selectedCategories,
+                        tempTag.trim(),
+                      ])
+                    : dispatch(
+                        setToast({
+                          type: 3,
+                          desc: "Your tag contains only spaces!",
+                        })
+                      );
+                  setTempTag("");
+                }}
+                style={{ position: "relative" }}
+              >
                 <input
                   type="text"
                   className="if ifs-full"
-                  placeholder="Image url..."
-                  value={thumbnailUrl}
-                  onChange={handleThumbnailValue}
+                  placeholder="keyword (optional)"
+                  value={tempTag}
+                  onChange={(e) => setTempTag(e.target.value)}
                 />
-                <label
-                  htmlFor="image-up"
-                  className="fit-container fx-centered fx-col box-pad-h sc-s pointer bg-img cover-bg"
-                  style={{
-                    position: "relative",
-                    minHeight: "50px",
-                    minWidth: "50px",
-                    maxWidth: "50px",
-                  }}
-                >
-                  <div className="upload-file-24"></div>
-                  <input
-                    type="file"
-                    id="image-up"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      opacity: 0,
-                    }}
-                    value={thumbnail.fileName}
-                    onChange={handleImageUpload}
-                    // disabled={thumbnail}
-                    className="pointer"
-                    accept="image/jpg,image/png,image/gif"
-                  />
-                </label>
-              </div>
-              <textarea
-                className="txt-area fit-container"
-                placeholder="Write a description (optional)"
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-              ></textarea>
-              <label
-                className="fx-centered fx-start-h fit-container if"
-                htmlFor={"content-sensitive-checkbox"}
-              >
-                <input
-                  type="checkbox"
-                  id={"content-sensitive-checkbox"}
-                  checked={contentSensitive}
-                  onChange={() => setContentSensitive(!contentSensitive)}
-                />
-                <p className={contentSensitive ? "" : "gray-c"}>
-                  This is a sensitive content
-                </p>
-              </label>
-              <div style={{ position: "relative" }} className="fit-container">
-                {topicSuggestions.length > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "-10px",
-                      left: 0,
-                      width: "100%",
-                      maxHeight: "200px",
-                      transform: "translateY(-100%)",
-                      overflow: "scroll",
-                    }}
-                    className="sc-s-18 fx-centered fx-start-v fx-start-h fx-col box-pad-h-m box-pad-v-m"
+                {tempTag && (
+                  <button
+                    className="btn btn-normal"
+                    style={{ minWidth: "max-content" }}
                   >
-                    <h5>Topics suggestions</h5>
-                    {topicSuggestions.map((item, index) => {
-                      return (
-                        <button
-                          key={`${item}-${index}`}
-                          className={`btn-text-gray pointer fit-container`}
-                          style={{
-                            textAlign: "left",
-                            width: "100%",
-                            paddingLeft: 0,
-                            fontSize: "1rem",
-                            textDecoration: "none",
-
-                            transition: ".4s ease-in-out",
-                          }}
-                          onClick={(e) => {
-                            item.replace(/\s/g, "").length
-                              ? setSelectedCategories([
-                                  ...selectedCategories,
-                                  item.trim(),
-                                ])
-                              : setToast({
-                                  type: 3,
-                                  desc: "Your tag contains only spaces!",
-                                });
-
-                            setTempTag("");
-                            e.stopPropagation();
-                          }}
-                        >
-                          {item}
-                        </button>
-                      );
-                    })}
-                  </div>
+                    Add tag
+                  </button>
                 )}
-                <form
-                  className="fit-container fx-scattered"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    tempTag.replace(/\s/g, "").length
-                      ? setSelectedCategories([
-                          ...selectedCategories,
-                          tempTag.trim(),
-                        ])
-                      : setToast({
-                          type: 3,
-                          desc: "Your tag contains only spaces!",
-                        });
-                    setTempTag("");
-                  }}
-                  style={{ position: "relative" }}
-                >
-                  <input
-                    type="text"
-                    className="if ifs-full"
-                    placeholder="keyword (optional)"
-                    value={tempTag}
-                    onChange={(e) => setTempTag(e.target.value)}
-                  />
-                  {tempTag && (
-                    <button
-                      className="btn btn-normal"
-                      style={{ minWidth: "max-content" }}
-                    >
-                      Add tag
-                    </button>
-                  )}
-                </form>
-              </div>
-              {selectedCategories.length > 0 && (
-                <div className="fit-container box-pad-v-m fx-centered fx-col fx-start-h">
-                  <p className="p-medium gray-c fit-container p-left">
-                    Selected categories
-                  </p>
-                  <div className="fit-container  fx-scattered fx-wrap fx-start-h">
-                    {selectedCategories.map((item, index) => {
-                      return (
-                        <div
-                          key={`${item}-${index}`}
-                          className="sticker sticker-gray-c1"
-                          style={{ columnGap: "8px" }}
-                        >
-                          <span>{item}</span>
-                          <p
-                            className="p-medium pointer"
-                            onClick={() => removeCategory(item)}
-                          >
-                            &#10005;
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <button
-                className="btn btn-normal fx-centered"
-                onClick={() => setScreen(2)}
-              >
-                Next{" "}
-                <div className="arrow" style={{ filter: "invert()" }}></div>
-              </button>
-              {/* <button
-              className={`btn btn-full ${
-                thumbnailPrev && desc && selectedCategories.length > 0
-                  ? "btn-normal"
-                  : "btn-disabled"
-              }`}
-              disabled={
-                !(thumbnailPrev && desc && selectedCategories.length > 0)
-              }
-              onClick={Submit}
-            >
-              {isLoading ? <LoadingDots /> : "Publish"}
-            </button> */}
+              </form>
             </div>
-          </div>
-        </div>
-      )}
-      {screen === 2 && (
-        <div
-          className="fx-centered fx-col slide-up box-pad-h"
-          style={{
-            width: "500px",
-          }}
-        >
-          <button
-            className="btn btn-normal fx-centered box-marg-s"
-            onClick={() => setScreen(1)}
-            disabled={isLoading}
-          >
-            Previous{" "}
-            <div
-              className="arrow"
-              style={{ filter: "invert()", transform: "rotate(-180deg)" }}
-            ></div>
-          </button>
-          <div className="box-pad-v-s"> </div>
-          <div
-            className="fx-scattered fit-container pointer"
-            onClick={() => setFinalStepContent(finalStepContent !== 0 ? 0 : 1)}
-          >
-            <h4 className="p-centered">Choose relays</h4>
-            <div className="arrow"></div>
-          </div>
-          {finalStepContent === 1 && (
-            <>
-              <div className="fit-container">
-                <p className="gray-c p-medium">list of available relays</p>
-                <p className="c1-c p-medium box-marg-s">
-                  (for more custom relays, check your settings)
+            {selectedCategories.length > 0 && (
+              <div className="fit-container box-pad-v-m fx-centered fx-col fx-start-h">
+                <p className="p-medium gray-c fit-container p-left">
+                  Selected categories
                 </p>
-              </div>
-              <div
-                className="fit-container fx-centered fx-wrap"
-                style={{ maxHeight: "40vh", overflow: "scroll" }}
-              >
-                {nostrUser?.relays?.length == 0 &&
-                  allRelays.map((url, index) => {
-                    if (index === 0)
-                      return (
-                        <label
-                          className="fx-centered fx-start-h fit-container if"
-                          htmlFor={`${url}-${index}`}
-                          key={`${url}-${index}`}
-                        >
-                          <input
-                            type="checkbox"
-                            id={`${url}-${index}`}
-                            checked
-                            readOnly
-                          />
-                          <p>{url.split("wss://")[1]}</p>
-                        </label>
-                      );
+                <div className="fit-container  fx-scattered fx-wrap fx-start-h">
+                  {selectedCategories.map((item, index) => {
                     return (
-                      <label
-                        className="fx-centered fx-start-h fit-container if"
-                        htmlFor={`${url}-${index}`}
-                        key={`${url}-${index}`}
+                      <div
+                        key={`${item}-${index}`}
+                        className="sticker sticker-gray-c1"
+                        style={{ columnGap: "8px" }}
                       >
-                        <input
-                          type="checkbox"
-                          id={`${url}-${index}`}
-                          checked={checkIfChecked(url)}
-                          onChange={() => handleRelaysToPublish(url)}
-                        />
-                        <p>{url.split("wss://")[1]}</p>
-                      </label>
+                        <span>{item}</span>
+                        <p
+                          className="p-medium pointer"
+                          onClick={() => removeCategory(item)}
+                        >
+                          &#10005;
+                        </p>
+                      </div>
                     );
                   })}
-                {nostrUser?.relays?.length > 0 &&
-                  nostrUser.relays.map((url, index) => {
-                    if (index < 2)
-                      return (
-                        <label
-                          className="fx-centered fx-start-h fit-container if if-disabled"
-                          htmlFor={`${url}-${index}`}
-                          key={`${url}-${index}`}
-                        >
-                          <input
-                            type="checkbox"
-                            id={`${url}-${index}`}
-                            checked
-                            readOnly
-                          />
-                          <p className="c1-c">{url.split("wss://")[1]}</p>
-                        </label>
-                      );
-                    return (
-                      <label
-                        className="fx-centered fx-start-h fit-container if"
-                        htmlFor={`${url}-${index}`}
-                        key={`${url}-${index}`}
-                      >
-                        <input
-                          type="checkbox"
-                          id={`${url}-${index}`}
-                          checked={checkIfChecked(url)}
-                          onChange={() => handleRelaysToPublish(url)}
-                        />
-                        <p>{url.split("wss://")[1]}</p>
-                      </label>
-                    );
-                  })}
+                </div>
               </div>
-            </>
-          )}
+            )}
+            {/* <button
+                  className="btn btn-normal fx-centered"
+                  onClick={() => setScreen(2)}
+                >
+                  Next{" "}
+                  <div className="arrow" style={{ filter: "invert()" }}></div>
+                </button> */}
+          </div>
 
-          <div className="fit-container box-pad-v-m">
-            <hr />
-            <hr />
-          </div>
-          <div
-            className="fx-scattered fit-container pointer"
-            onClick={() => setFinalStepContent(finalStepContent !== 0 ? 0 : 2)}
+          <label
+            htmlFor="zap-split"
+            className="if ifs-full fx-centered fx-start-h"
+            style={{
+              borderColor: zapSplitEnabled ? "var(--blue-main)" : "",
+            }}
           >
-            <h4 className="p-centered">Revenues split</h4>
-            <div className="arrow"></div>
-          </div>
-          {finalStepContent === 2 && (
+            <input
+              type="checkbox"
+              id="zap-split"
+              checked={zapSplitEnabled}
+              onChange={() =>
+                !isLoading && setZapSplitEnabled(!zapSplitEnabled)
+              }
+            />
+            <p className={zapSplitEnabled ? "" : "gray-c"}>
+              I want to share this article's revenues
+            </p>
+          </label>
+
+          {zapSplitEnabled && (
             <>
-              <div className="box-pad-v-s"> </div>
-              <label
-                htmlFor="zap-split"
-                className="if ifs-full fx-centered fx-start-h"
-                style={{
-                  borderColor: zapSplitEnabled ? "var(--blue-main)" : "",
-                }}
+              <UserSearchBar
+                onClick={(pubkey) => handleAddZapSplit(pubkey, "add")}
+              />
+              <div
+                className="fit-container fx-wrap fx-centered"
+                // style={{ maxHeight: "30vh", overflow: "scroll" }}
               >
-                <input
-                  type="checkbox"
-                  id="zap-split"
-                  checked={zapSplitEnabled}
-                  onChange={() =>
-                    !isLoading && setZapSplitEnabled(!zapSplitEnabled)
-                  }
-                />
-                <p className={zapSplitEnabled ? "" : "gray-c"}>
-                  I want to share this article's revenues
-                </p>
-              </label>
-              {zapSplitEnabled && (
-                <>
-                  <UserSearchBar
-                    onClick={(pubkey) => handleAddZapSplit(pubkey, "add")}
-                  />
-                  <div
-                    className="fit-container fx-wrap fx-centered"
-                    style={{ maxHeight: "30vh", overflow: "scroll" }}
-                  >
-                    {zapSplit.map((item, index) => {
-                      const percentage = calculatePercentage(item[3]) || 0;
-                      return (
+                {zapSplit.map((item, index) => {
+                  const percentage = calculatePercentage(item[3]) || 0;
+                  return (
+                    <div
+                      className="fit-container fx-scattered fx-stretch"
+                      key={item[1]}
+                    >
+                      <NProfilePreviewer
+                        pubkey={item[1]}
+                        margin={false}
+                        close={true}
+                        onClose={() =>
+                          zapSplit.length > 1 &&
+                          handleAddZapSplit(item[1], "remove")
+                        }
+                      />
+                      <div
+                        style={{ width: "35%" }}
+                        className="sc-s-18 fx-centered fx-col fx-start-v"
+                      >
                         <div
-                          className="fit-container fx-scattered fx-stretch"
-                          key={item[1]}
+                          style={{
+                            position: "relative",
+                          }}
                         >
-                          <NProfilePreviewer
-                            pubkey={item[1]}
-                            margin={false}
-                            close={true}
-                            onClose={() =>
-                              zapSplit.length > 1 &&
-                              handleAddZapSplit(item[1], "remove")
+                          <input
+                            type="number"
+                            className="if ifs-full if-no-border"
+                            placeholder="portion"
+                            value={item[3]}
+                            max={100}
+                            style={{ height: "100%" }}
+                            onChange={(e) =>
+                              handleZapAmount(e.target.value, item[1])
                             }
                           />
-                          <div
-                            style={{ width: "35%" }}
-                            className="sc-s-18 fx-centered fx-col fx-start-v"
-                          >
-                            <div
-                              style={{
-                                position: "relative",
-                              }}
-                            >
-                              <input
-                                type="number"
-                                className="if ifs-full if-no-border"
-                                placeholder="portion"
-                                value={item[3]}
-                                max={100}
-                                style={{ height: "100%" }}
-                                onChange={(e) =>
-                                  handleZapAmount(e.target.value, item[1])
-                                }
-                              />
-                              {/* <p
-                                className="p-medium gray-c"
-                                style={{
-                                  position: "absolute",
-                                  right: "1rem",
-                                  top: "50%",
-                                  transform: "translateY(-50%)",
-                                }}
-                              >
-                                sats
-                              </p> */}
-                            </div>
-                            <hr />
-                            <p className="orange-c p-medium box-pad-h-m">
-                              {percentage}%
-                            </p>
-                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+                        <hr />
+                        <p className="orange-c p-medium box-pad-h-m">
+                          {percentage}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </>
           )}
-          <div className="box-pad-v-m"> </div>
+
           {postKind === 30024 && (
             <>
               <hr className="box-marg-s" />
@@ -762,82 +649,24 @@ export default function ToPublishNOSTR({
               </label>
             </>
           )}
+        </div>
+        <div className="fit-container box-pad-v-m fx-scattered  pointer box-pad-h-m">
+          {postKind !== 30024 && (
+            <button
+              className="btn btn-full  btn-gst-red"
+              onClick={() => !isLoading && Submit(30024)}
+            >
+              {isLoading ? <LoadingDots /> : "Save as draft"}
+            </button>
+          )}
           <button
             className="btn btn-full  btn-normal"
             onClick={() => !isLoading && Submit(30023)}
           >
             {isLoading ? <LoadingDots /> : "Publish"}
           </button>
-
-          {postKind !== 30024 && (
-            <button
-              className="btn btn-full  btn-text-red"
-              onClick={() => !isLoading && Submit(30024)}
-            >
-              {isLoading ? <LoadingDots /> : "Save as draft"}
-            </button>
-          )}
         </div>
-      )}
-      {screen === 3 && (
-        <div
-          className="fx-centered fx-col slide-up box-pad-h"
-          style={{
-            width: "500px",
-          }}
-        >
-          <div className="fit-container fx-scattered fx-stretch fx-wrap">
-            <div className="fx-centered fx-col" style={{ flex: "1 1 300px" }}>
-              <h4 className="box-marg-s">Successful relays</h4>
-              {publishingState.map((relay, index) => {
-                if (relay.status)
-                  return (
-                    <div
-                      className="fx-centered fx-start-h"
-                      key={`${relay.url}-${index}`}
-                    >
-                      <div className="">👌🏻</div>
-                      <p>{relay.url}</p>
-                    </div>
-                  );
-              })}
-            </div>
-            <div
-              style={{
-                height: "100px",
-                width: "1px",
-                borderRight: "1px solid var(--dim-gray)",
-                flex: "1 1 300px",
-              }}
-            ></div>
-            {publishingState.filter((relay) => !relay.status).length > 0 && (
-              <div className="fx-centered fx-col" style={{ flex: "1 1 300px" }}>
-                <h4 className="box-marg-s">Failed relays</h4>
-                {publishingState.map((relay, index) => {
-                  if (!relay.status)
-                    return (
-                      <div
-                        className="fx-centered fx-start-h"
-                        key={`${relay.url}-${index}`}
-                      >
-                        <div className="p-medium">❌</div>
-                        <p className="red-c">{relay.url}</p>
-                      </div>
-                    );
-                })}
-              </div>
-            )}
-          </div>
-          <div className="box-pad-v-s fx-centered">
-            <button
-              className="btn btn-normal"
-              onClick={() => navigateTo("/my-articles")}
-            >
-              Done!
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </section>
   );
 }

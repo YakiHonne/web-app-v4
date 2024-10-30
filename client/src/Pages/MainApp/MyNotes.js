@@ -1,95 +1,72 @@
-import React, { useContext, useRef } from "react";
-import { Context } from "../../Context/Context";
+import React, { useRef } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { useState } from "react";
 import { useEffect } from "react";
-import { SimplePool, nip19 } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import ToDeletePostNOSTR from "../../Components/Main/ToDeletePostNOSTR";
-import { useLocation } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
-import {
-  filterRelays,
-  getBech32,
-  getEmptyNostrUser,
-} from "../../Helpers/Encryptions";
-import { getNoteTree } from "../../Helpers/Helpers";
+import { filterRelays, getParsedNote } from "../../Helpers/Encryptions";
 
 import KindOne from "../../Components/Main/KindOne";
-import TopCreators from "../../Components/Main/TopCreators";
 import TrendingNotes from "../../Components/Main/TrendingNotes";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import axios from "axios";
-
-var pool = new SimplePool();
+import { useSelector } from "react-redux";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import TrendingUsers from "../../Components/Main/TrendingUsers";
 
 export default function MyNotes() {
-  const { state } = useLocation();
-  const { nostrKeys, nostrUser } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [activeRelay, setActiveRelay] = useState("");
   const [notes, setNotes] = useState([]);
   const [trendingNotes, setTrendingNotes] = useState([]);
-  const [topCreators, setTopCreators] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [postToDelete, setPostToDelete] = useState(false);
-  const [showRelaysList, setShowRelaysList] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [showAddNote, setShowAddNote] = useState(
-    state ? state?.addNote : false
-  );
   const extrasRef = useRef(null);
-
-  useEffect(() => {
-    setShowAddNote(state ? state?.addNote : false);
-  }, [state]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         setNotes([]);
-
-        let relaysToFetchFrom =
-          activeRelay == ""
-            ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-            : [activeRelay];
-
-        var sub = pool.subscribeMany(
-          relaysToFetchFrom,
-          [{ kinds: [1], authors: [nostrKeys.pub] }],
-          {
-            async onevent(event) {
-              let event_ = await onEvent(event);
-              if (event_) {
-                setNotes((prev) => {
-                  let existed = prev.find((note) => note.id === event.id);
-                  if (existed) return prev;
-                  else
-                    return [...prev, event_].sort(
-                      (note_1, note_2) => note_2.created_at - note_1.created_at
-                    );
-                });
-                setIsLoading(false);
-              }
-              setIsLoading(false);
-            },
-            oneose() {
-              setIsLoading(false);
-            },
-          }
+        var sub = ndkInstance.subscribe(
+          [{ kinds: [1], authors: [userKeys.pub] }],
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
+
+        sub.on("event", async (event) => {
+          let event_ = await getParsedNote(event);
+          if (event_ && !(event_.isComment || event_.isFlashNews)) {
+            setNotes((prev) => {
+              let existed = prev.find((note) => note.id === event.id);
+              if (existed) return prev;
+              else
+                return [...prev, event_].sort(
+                  (note_1, note_2) => note_2.created_at - note_1.created_at
+                );
+            });
+            setIsLoading(false);
+          }
+          setIsLoading(false);
+        });
+        sub.on("eose", () => {
+          setIsLoading(false);
+        });
       } catch (err) {
         console.log(err);
         setIsLoading(false);
       }
     };
-    if (nostrKeys) {
+    if (userKeys) {
       fetchData();
       return;
     }
-  }, [nostrKeys, activeRelay]);
+  }, [userKeys, activeRelay]);
 
   const initDeletedPost = (state) => {
     if (!state) {
@@ -110,85 +87,14 @@ export default function MyNotes() {
     }
   };
 
-  const switchActiveRelay = (source) => {
-    if (isLoading) return;
-    if (source === activeRelay) return;
-    pool = new SimplePool();
-    setNotes([]);
-    setActiveRelay(source);
-  };
-
-  const onEvent = async (event) => {
-    try {
-      let checkForComment = event.tags.find(
-        (tag) => tag[0] === "e" || tag[0] === "a"
-      );
-      let checkForL = event.tags.find((tag) => tag[0] === "l");
-      checkForL = checkForL ? checkForL[1] : "";
-
-      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
-      if (
-        (checkForComment && event.kind === 1 && !checkForL) ||
-        (checkForComment &&
-          event.kind === 1 &&
-          checkForL &&
-          checkForL !== "smart-widget")
-      )
-        return false;
-      if (checkForL && checkForL !== "smart-widget") return false;
-      let author_img = "";
-      let author_name = getBech32("npub", event.pubkey).substring(0, 10);
-      let author_pubkey = event.pubkey;
-      let nEvent = nip19.neventEncode({
-        id: event.id,
-        author: event.pubkey,
-      });
-      if (event.kind === 1) {
-        let note_tree = await getNoteTree(event.content);
-        return {
-          ...event,
-          note_tree,
-          checkForQuote: checkForQuote ? checkForQuote[1] : "",
-          author_img,
-          author_name,
-          author_pubkey,
-          stringifiedEvent: JSON.stringify(event),
-          nEvent,
-        };
-      }
-    } catch (err) {
-      console.log(err);
-      return false;
-    }
-  };
-
   useEffect(() => {
     const getTrendingNotes = async () => {
       try {
-        let [nostrBandNotes, nostrBandProfiles] = await Promise.all([
-          axios.get("https://api.nostr.band/v0/trending/notes"),
-          axios.get("https://api.nostr.band/v0/trending/profiles"),
-        ]);
+        let nostrBandNotes = await axios.get(
+          "https://api.nostr.band/v0/trending/notes"
+        );
         let tNotes = nostrBandNotes.data?.notes.splice(0, 10) || [];
 
-        let profiles = nostrBandProfiles.data.profiles
-          ? nostrBandProfiles.data.profiles
-              .filter((profile) => profile.profile)
-              .map((profile) => {
-                let author = getEmptyNostrUser(profile.profile.pubkey);
-                try {
-                  author = JSON.parse(profile.profile.content);
-                } catch (err) {
-                  console.log(err);
-                }
-                return {
-                  pubkey: profile.profile.pubkey,
-                  articles_number: profile.new_followers_count,
-                  ...author,
-                };
-              })
-          : [];
-        setTopCreators(profiles.slice(0, 6));
         setTrendingNotes(
           tNotes.map((note) => {
             return {
@@ -217,9 +123,7 @@ export default function MyNotes() {
           title={postToDelete.content}
           thumbnail={""}
           relayToDeleteFrom={
-            activeRelay == ""
-              ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-              : [activeRelay]
+            userRelays
           }
         />
       )}
@@ -249,8 +153,6 @@ export default function MyNotes() {
                 className={`main-page-nostr-container`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowRelaysList(false);
-                  setShowFilter(false);
                 }}
               >
                 <div className="fx-centered fit-container fx-start-h fx-start-v">
@@ -337,21 +239,7 @@ export default function MyNotes() {
                         <TrendingNotes notes={trendingNotes} />
                       </div>
                     )}
-                    <div
-                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                      style={{
-                        backgroundColor: "var(--c1-side)",
-                        rowGap: "24px",
-                        border: "none",
-                        overflow: "visible",
-                      }}
-                    >
-                      <h4>Trending users</h4>
-                      <TopCreators
-                        top_creators={topCreators}
-                        kind="Followers"
-                      />
-                    </div>
+                    <TrendingUsers />
                     <Footer />
                   </div>
                 </div>

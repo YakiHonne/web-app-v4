@@ -1,9 +1,11 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
 import { filterRelays } from "../../Helpers/Encryptions";
 import LoadingDots from "../LoadingDots";
 import LoginWithNostr from "./LoginWithNostr";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { redirectToLogin } from "../../Helpers/Helpers";
 
 const FOLLOWING = <div className="user-followed-w-24"></div>;
 const FOLLOW = <div className="user-to-follow-24"></div>;
@@ -17,22 +19,17 @@ const checkFollowing = (list, toFollowKey) => {
 export default function Follow({
   toFollowKey,
   toFollowName,
-  setTimestamp,
   bulk = false,
   bulkList = [],
   setBulkList = null,
   size = "normal",
 }) {
-  const {
-    nostrUser,
-    userFollowings,
-    setNostrUser,
-    nostrKeys,
-    setToPublish,
-    isPublishing,
-    setToast,
-  } = useContext(Context);
-  const [login, setLogin] = useState(false);
+  const dispatch = useDispatch();
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userFollowings = useSelector((state) => state.userFollowings);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [tags, setTags] = useState([]);
 
@@ -59,10 +56,12 @@ export default function Follow({
   const followUnfollow = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
@@ -73,20 +72,17 @@ export default function Follow({
       } else {
         tempTags.push(toFollowKey);
       }
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 3,
-        content: "",
-        tags: tempTags.map((p) => ["p", p]),
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
-      });
-      setTags(tempTags);
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 3,
+          content: "",
+          tags: tempTags.map((p) => ["p", p]),
+          allRelays: [...filterRelays(relaysOnPlatform, userRelays)],
+        })
+      );
+      // setTags(tempTags);å
       setIsLoading(false);
-      let tempUser = {
-        ...nostrUser,
-      };
-      tempUser.following = tempTags;
-      setNostrUser({ ...tempUser });
     } catch (err) {
       console.log(err);
       setIsLoading(false);
@@ -109,23 +105,22 @@ export default function Follow({
     ]);
   };
 
-  if (!nostrUser)
+  if (!userMetadata)
     return (
       <>
-        {login && <LoginWithNostr exit={() => setLogin(false)} />}
         <div
           className={`round-icon round-icon-tooltip btn-gst  ${
             size === "small" ? "round-icon-small" : ""
           }`}
           disabled={isLoading}
-          onClick={() => setLogin(true)}
+          onClick={() => redirectToLogin()}
           data-tooltip={"Login to follow"}
         >
           {FOLLOW}
         </div>
       </>
     );
-  if (!toFollowKey || toFollowKey === nostrKeys.pub)
+  if (!toFollowKey || toFollowKey === userKeys.pub)
     return (
       <div
         className={`round-icon if-disabled  ${
