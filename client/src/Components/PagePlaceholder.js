@@ -14,16 +14,15 @@ import HeroYakiChest from "../media/images/trophy.png";
 import HeroWallet from "../media/images/wallet.png";
 import HeroWidgets from "../media/images/widgets.png";
 import HeroWidgetsDraft from "../media/images/draft.png";
-import LoginWithNostr from "./Main/LoginWithNostr";
-import { useContext } from "react";
-import { Context } from "../Context/Context";
 import { Link } from "react-router-dom";
 import LoginWithAPI from "./Main/LoginWithAPI";
 import AddWallet from "./Main/AddWallet";
+import { useSelector } from "react-redux";
+import { userLogout } from "../Helpers/Controlers";
+import { redirectToLogin } from "../Helpers/Helpers";
 
 export default function PagePlaceholder({ page, onClick = null }) {
-  const { userLogout, nostrKeys } = useContext(Context);
-  const [triggerLogin, setTriggerLogin] = useState(false);
+  const userKeys = useSelector((state) => state.userKeys);
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [showAddWallet, setShowAddWallet] = useState(false);
   if (page === "404")
@@ -58,7 +57,6 @@ export default function PagePlaceholder({ page, onClick = null }) {
   if (page === "nostr-not-connected")
     return (
       <>
-        {triggerLogin && <LoginWithNostr exit={() => setTriggerLogin(false)} />}
         <div className="fit-container fx-centered">
           <div className="fx-centered fx-col" style={{ height: "80vh" }}>
             <h2 className="box-marg-s p-centered">You're not connected</h2>
@@ -76,7 +74,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
             ></div>
             <button
               className="btn btn-normal"
-              onClick={() => setTriggerLogin(true)}
+              onClick={() => redirectToLogin()}
             >
               Login
             </button>
@@ -309,7 +307,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
               You need to connect to Yakihonne point system in order to gain
               points and win rewards.
             </p>
-            {nostrKeys && (nostrKeys.ext || nostrKeys.sec) && (
+            {userKeys && (userKeys.ext || userKeys.sec) && (
               <button
                 className="btn btn-normal"
                 onClick={() => setShowYakiChest(true)}
@@ -324,7 +322,6 @@ export default function PagePlaceholder({ page, onClick = null }) {
   if (page === "nostr-wallet")
     return (
       <>
-        {triggerLogin && <LoginWithNostr exit={() => setTriggerLogin(false)} />}
         <div className="fit-container fx-centered">
           <div className="fx-centered fx-col" style={{ height: "80vh" }}>
             <div
@@ -342,11 +339,9 @@ export default function PagePlaceholder({ page, onClick = null }) {
             </p>
             <button
               className="btn btn-normal"
-              onClick={() =>
-                nostrKeys ? userLogout() : setTriggerLogin(true)
-              }
+              onClick={() => (userKeys ? userLogout() : redirectToLogin())}
             >
-              {nostrKeys ? "reconnect" : "Login"}
+              {userKeys ? "reconnect" : "Login"}
             </button>
           </div>
         </div>
@@ -355,7 +350,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
   if (page === "nostr-add-wallet")
     return (
       <>
-        {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} />}
+        {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} refresh={onClick ? onClick : () => null}/>}
         <div className="fit-container fx-centered">
           <div
             className="fx-centered fx-col"
@@ -454,7 +449,9 @@ export default function PagePlaceholder({ page, onClick = null }) {
               Your drafts list is empty, any created or cloned widgets will be
               automatically saved here!
             </p>
-            <button className="btn btn-normal" onClick={onClick}>Add a widget</button>
+            <button className="btn btn-normal" onClick={onClick}>
+              Add a widget
+            </button>
           </div>
         </div>
       </>

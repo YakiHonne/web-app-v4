@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import LoadingScreen from "../LoadingScreen";
 import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import Date_ from "../Date_";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { Relay, SimplePool, nip19 } from "nostr-tools";
-import { filterRelays } from "../../Helpers/Encryptions";
+import { Relay, nip19 } from "nostr-tools";
 import PublishRelaysPicker from "./PublishRelaysPicker";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
-const pool = new SimplePool();
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { useDispatch, useSelector } from "react-redux";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function AddArticlesToCuration({
   curation,
@@ -20,19 +20,14 @@ export default function AddArticlesToCuration({
   postKind = 30023,
 }) {
   const { title, image, description } = curation;
-  const {
-    nostrUser,
-    nostrKeys,
-    nostrUserLoaded,
-    setToast,
-    setToPublish,
-    isPublishing,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userMetadata);
+  const isPublishing = useSelector((state) => state.userMetadata);
+
   const [posts, setPosts] = useState([]);
   const [NostrPosts, setNostrPosts] = useState([]);
   const [searchedPostsByNaddr, setSearchedPostByNaddr] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoadedTwo, setIsLoadedTwo] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeRelay, setActiveRelay] = useState(relaysOnPlatform[0]);
   const [searchedPost, setSearchedPost] = useState("");
@@ -41,7 +36,7 @@ export default function AddArticlesToCuration({
   const [sub, setSub] = useState(null);
   const [initScreen, setInitScreen] = useState(true);
   const [lastEventTime, setLastEventTime] = useState(undefined);
-  const [showRelaysList, setShowRelaysList] = useState(false);
+
   const [showRelaysPicker, setShowRelaysPicker] = useState(false);
   const label = postKind === 30023 ? "article" : "video";
 
@@ -71,28 +66,26 @@ export default function AddArticlesToCuration({
 
       setSub(sub);
     } else {
-      let sub = pool.subscribeMany(
-        nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
+      let sub = ndkInstance.subscribe(
         [
           {
             kinds: [postKind],
-            authors: [nostrUser.pubkey],
+            authors: [userKeys.pubkey],
             limit: 10,
             until: lastEventTime,
           },
         ],
-        {
-          onevent(event) {
-            onEvent(event);
-          },
-          oneose() {
-            setIsLoaded(true);
-            setIsLoading(false);
-          },
-        }
+        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
       );
+
+      sub.on("event", (event) => {
+        onEvent(event);
+      });
+      sub.on("eose", () => {
+        setIsLoaded(true);
+        setIsLoading(false);
+      });
+
       setSub(sub);
     }
   };
@@ -101,7 +94,7 @@ export default function AddArticlesToCuration({
     let thumbnail = "";
     let title = "";
     let d = "";
-    let added_date = new Date(event.created_at * 1000).toDateString();
+    let added_date = new Date(event.created_at * 1000)
     for (let tag of event.tags) {
       if (tag[0] === "image" || tag[0] === "thumb") thumbnail = tag[1];
       if (tag[0] === "title") title = tag[1];
@@ -133,10 +126,13 @@ export default function AddArticlesToCuration({
       dRefs.length > 0
         ? await Promise.all(
             dRefs.map((dref) => {
-              let ev = pool.get(relaysOnPlatform, {
-                kinds: [postKind],
-                "#d": [dref],
-              });
+              let ev = ndkInstance.fetchEvent(
+                {
+                  kinds: [postKind],
+                  "#d": [dref],
+                },
+                { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+              );
               return ev;
             })
           )
@@ -147,7 +143,7 @@ export default function AddArticlesToCuration({
       let thumbnail = "";
       let title = "";
       let d = "";
-      let added_date = new Date(event.created_at * 1000).toDateString();
+      let added_date = new Date(event.created_at * 1000)
       for (let tag of event.tags) {
         if (tag[0] === "image" || tag[0] === "thumb") thumbnail = tag[1];
         if (tag[0] === "title") title = tag[1];
@@ -164,18 +160,19 @@ export default function AddArticlesToCuration({
     });
 
     setPosts(sortPostsOnCuration(postsOnCuration));
-    setIsLoadedTwo(true);
   };
 
-  const saveUpdate = async (selectedRelays) => {
+  const saveUpdate = async () => {
     setIsLoading(true);
-    if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
-      return;
-    }
+    // if (isPublishing) {
+    //   dispatch(
+    //     setToast({
+    //       type: 3,
+    //       desc: "An event publishing is in process!",
+    //     })
+    //   );
+    //   return;
+    // }
     let tempTags = [
       [
         "client",
@@ -201,13 +198,15 @@ export default function AddArticlesToCuration({
       tempTags.push(["a", `${postKind}:${post.author_pubkey}:${post.d}`, ""]);
     }
 
-    setToPublish({
-      nostrKeys: nostrKeys,
-      kind: curationKind,
-      content: "",
-      tags: tempTags,
-      allRelays: selectedRelays,
-    });
+    dispatch(
+      setToPublish({
+        userKeys: userKeys,
+        kind: curationKind,
+        content: "",
+        tags: tempTags,
+        allRelays: [],
+      })
+    );
     exit();
     setIsLoading(false);
   };
@@ -290,15 +289,13 @@ export default function AddArticlesToCuration({
     try {
       let parsedData = nip19.decode(input);
       setIsLoading(true);
-      let post = await pool.get(
-        nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
+      let post = await ndkInstance.fetchEvent(
         {
           kinds: [postKind],
           authors: [parsedData.data.pubkey],
           "#d": [parsedData.data.identifier],
-        }
+        },
+        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
       );
 
       if (post) {
@@ -306,7 +303,7 @@ export default function AddArticlesToCuration({
         let thumbnail = "";
         let title = "";
         let d = "";
-        let added_date = new Date(post.created_at * 1000).toDateString();
+        let added_date = new Date(post.created_at * 1000)
         for (let tag of post.tags) {
           if (tag[0] === "image" || tag[0] === "thumb") thumbnail = tag[1];
           if (tag[0] === "title") title = tag[1];
@@ -326,31 +323,34 @@ export default function AddArticlesToCuration({
           ...prev,
         ]);
       } else {
-        setToast({
-          type: 2,
-          desc: `Could not found the ${label}.`,
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: `Could not found the ${label}.`,
+          })
+        );
       }
       setIsLoading(false);
     } catch (err) {
-      setToast({
-        type: 2,
-        desc: "Invalid Naddr",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "Invalid Naddr",
+        })
+      );
     }
   };
 
-  if (!nostrUserLoaded) return <LoadingScreen />;
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
-      {showRelaysPicker && (
+      {/* {showRelaysPicker && (
         <PublishRelaysPicker
           confirmPublishing={confirmPublishing}
           exit={() => setShowRelaysPicker(false)}
           button={`Add ${label}s`}
         />
-      )}
+      )} */}
       <section
         className="fixed-container fx-centered fx-col fx-start-h"
         style={{ overflow: "scroll" }}
@@ -359,7 +359,7 @@ export default function AddArticlesToCuration({
           className="box-pad-h box-pad-v fx-centered fx-col  art-t-cur-container"
           style={{ width: "min(100%, 800px)", height: "calc(100vh - 10rem)" }}
         >
-          <div className="fit-container fx-start-h fx-centered">
+          {/* <div className="fit-container fx-start-h fx-centered">
             <button
               className="btn btn-gst-nc fx-centered"
               style={{ scale: ".8" }}
@@ -368,7 +368,7 @@ export default function AddArticlesToCuration({
               <div className="arrow" style={{ rotate: "90deg" }}></div>
               Back
             </button>
-          </div>
+          </div> */}
           {!initScreen && (
             <>
               <div
@@ -518,6 +518,7 @@ export default function AddArticlesToCuration({
                 </div>
               </div>
               <div className="fx-centered fit-container box-pad-v-m">
+              <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
                 <button
                   className="btn btn-normal fx-centered"
                   onClick={() => setInitScreen(true)}
@@ -531,12 +532,13 @@ export default function AddArticlesToCuration({
                 <button
                   className="btn btn-normal"
                   onClick={() =>
-                    relaysToPublish.length === 0
-                      ? setShowRelaysPicker(true)
-                      : saveUpdate(relaysToPublish)
+                    // relaysToPublish.length === 0
+                    //   ? setShowRelaysPicker(true)
+                    //   : saveUpdate(relaysToPublish)
+                    saveUpdate()
                   }
                 >
-                  {isLoading ? <LoadingDots /> : "Next"}
+                  {isLoading ? <LoadingDots /> : "Update curation"}
                 </button>
               </div>
             </>
@@ -553,7 +555,6 @@ export default function AddArticlesToCuration({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowRelaysList(false);
                 }}
               >
                 <div
@@ -591,115 +592,6 @@ export default function AddArticlesToCuration({
                     >
                       Search by Naddr
                     </button>
-                  </div>
-                  <div className="fx-centered fx-start-h nostr-uer-relays">
-                    {contentFrom === "relays" && (
-                      <div style={{ position: "relative" }}>
-                        <div
-                          style={{ position: "relative" }}
-                          className="round-icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowRelaysList(!showRelaysList);
-                          }}
-                        >
-                          <div className="server"></div>
-                        </div>
-                        {showRelaysList && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              right: 0,
-                              bottom: "-5px",
-                              backgroundColor: "var(--dim-gray)",
-                              border: "none",
-                              transform: "translateY(100%)",
-                              maxWidth: "300px",
-                              rowGap: "12px",
-                            }}
-                            className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                          >
-                            <h5>Relays</h5>
-                            {nostrUser &&
-                              nostrUser.relays.length > 0 &&
-                              nostrUser.relays.map((relay) => {
-                                return (
-                                  <button
-                                    key={relay}
-                                    className={`btn-text-gray pointer fx-centered `}
-                                    style={{
-                                      width: "max-content",
-                                      fontSize: "1rem",
-                                      textDecoration: "none",
-                                      color:
-                                        activeRelay === relay
-                                          ? "var(--c1)"
-                                          : "",
-                                      transition: ".4s ease-in-out",
-                                    }}
-                                    onClick={(e) => {
-                                      if (sub) {
-                                        sub.unsub();
-                                        setSub(null);
-                                      }
-                                      setActiveRelay(relay);
-                                      setNostrPosts([]);
-                                      setSearchRes([]);
-                                      setSearchedPost("");
-                                      setLastEventTime(undefined);
-                                      setShowRelaysList(!showRelaysList);
-                                    }}
-                                  >
-                                    {isLoading && relay === activeRelay ? (
-                                      <>Connecting...</>
-                                    ) : (
-                                      relay.split("wss://")[1]
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            {(!nostrUser ||
-                              (nostrUser && nostrUser.relays.length === 0)) &&
-                              relaysOnPlatform.map((relay) => {
-                                return (
-                                  <button
-                                    key={relay}
-                                    className={`btn-text-gray pointer fx-centered`}
-                                    style={{
-                                      width: "max-content",
-                                      fontSize: "1rem",
-                                      textDecoration: "none",
-                                      color:
-                                        activeRelay === relay
-                                          ? "var(--c1)"
-                                          : "",
-                                      transition: ".4s ease-in-out",
-                                    }}
-                                    onClick={(e) => {
-                                      if (sub) {
-                                        sub.unsub();
-                                        setSub(null);
-                                      }
-                                      setActiveRelay(relay);
-                                      setNostrPosts([]);
-                                      setSearchRes([]);
-                                      setSearchedPost("");
-                                      setLastEventTime(undefined);
-                                      setShowRelaysList(!showRelaysList);
-                                    }}
-                                  >
-                                    {isLoading && relay === activeRelay ? (
-                                      <>Connecting..</>
-                                    ) : (
-                                      relay.split("wss://")[1]
-                                    )}
-                                  </button>
-                                );
-                              })}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
                 {contentFrom !== "search" && (
@@ -797,7 +689,6 @@ export default function AddArticlesToCuration({
                           >
                             {NostrPosts.map((item) => {
                               let status = checkIfBelongs(item.id);
-                              // if (item.thumbnail)
                               return (
                                 <div
                                   key={item.id}
@@ -922,6 +813,7 @@ export default function AddArticlesToCuration({
                 )}
               </div>
               <div className="fx-centered box-pad-v-m">
+                <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
                 {!isLoading && (
                   // <div className="fx-centered fit-container">
                   <button
@@ -951,478 +843,7 @@ export default function AddArticlesToCuration({
             </>
           )}
         </div>
-        {/* <div
-        className=" fx-centered fx-col"
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "var(--white)",
-          width: "min(100%, 800px)",
-        }}
-      >
-        <hr />
-        <div className="box-pad-h-m box-pad-v-m fit-container fx-centered">
-          <button className="btn btn-gst fx" onClick={exit}>
-            {isLoading ? <LoadingDots /> : "cancel"}
-          </button>
-          <button className="btn btn-normal fx" onClick={saveUpdate}>
-            {isLoading ? <LoadingDots /> : "update"}
-          </button>
-        </div>
-      </div> */}
       </section>
     </>
   );
-  // return (
-  //   <section
-  //     className="fixed-container fx-centered fx-start-v"
-  //     style={{ overflow: "scroll" }}
-  //   >
-  //     <div
-  //       className="box-pad-h box-pad-v fx-centered  art-t-cur-container"
-  //       style={{ width: "min(100%, 1000px)" }}
-  //     >
-  //       <section
-  //         className="box-pad-v"
-  //         style={{ flex: "1 1 600px", opacity: "1", animation: "none" }}
-  //       >
-  //         <div className="fit-container fx-centered fx-col box-marg-s scrolldown-mb">
-  //           <p className="p-medium">Scroll down here</p>
-  //           <div className="arrow"></div>
-  //         </div>
-  //         <div
-  //           className="fit-container sc-s fx-scattered fx-col"
-  //           style={{ height: "100%" }}
-  //         >
-  //           <div className="fit-container">
-  //             <div className="fit-container desc">
-  //               <div
-  //                 className="bg-img cover-bg fit-container"
-  //                 style={{
-  //                   backgroundImage: `url(${thumbnail})`,
-  //                   height: "200px",
-  //                 }}
-  //               ></div>
-  //               <div className="fit-container box-pad-v box-pad-h">
-  //                 <div className="fit-container fx-centered fx-start-v fx-col">
-  //                   <h4 className="p-maj">{title}</h4>
-  //                   <p className="p-three-lines">{excerpt}</p>
-  //                 </div>
-  //               </div>
-  //             </div>
-  //             <hr />
-  //             <div
-  //               style={{
-  //                 overflow: "scroll",
-  //                 overflowX: "hidden",
-  //               }}
-  //               className="posts-container"
-  //             >
-  //               {posts.length === 0 && (
-  //                 <div
-  //                   className="fit-container fx-centered fx-col"
-  //                   style={{ height: "25vh", width: "min(100%,500px)" }}
-  //                 >
-  //                   <p className="gray-c italic-txt">
-  //                     No articles belong to this curation
-  //                   </p>
-  //                 </div>
-  //               )}
-  //               {posts.length > 0 && (
-  //                 <div
-  //                   className={`fx-centered fx-wrap fx-start-v box-pad-h box-pad-v`}
-  //                   // style={{ height: "900px" }}
-  //                 >
-  //                   <p className="gray-c">Articles</p>
-  //                   <DragDropContext onDragEnd={handleDragEnd}>
-  //                     <Droppable droppableId="set-carrousel">
-  //                       {(provided, snapshot) => (
-  //                         <div
-  //                           ref={provided.innerRef}
-  //                           style={{
-  //                             borderRadius: "var(--border-r-18)",
-  //                             transition: ".2s ease-in-out",
-  //                             backgroundColor: snapshot.isDraggingOver
-  //                               ? "var(--very-dim-gray)"
-  //                               : "",
-  //                             height: "100%",
-  //                             ...provided.droppableProps.style,
-  //                           }}
-  //                           className="box-pad-v-m fit-container fx-centered fx-start-h fx-start-v fx-col"
-  //                         >
-  //                           {posts.map((item, index) => {
-  //                             // if (item.thumbnail)
-  //                             return (
-  //                               <Draggable
-  //                                 key={item.id}
-  //                                 draggableId={`${item.id}`}
-  //                                 index={index}
-  //                               >
-  //                                 {(provided, snapshot) => (
-  //                                   <div
-  //                                     {...provided.draggableProps}
-  //                                     {...provided.dragHandleProps}
-  //                                     ref={provided.innerRef}
-  //                                     style={{
-  //                                       borderRadius: "var(--border-r-18)",
-  //                                       boxShadow: snapshot.isDragging
-  //                                         ? "14px 12px 105px -41px rgba(0, 0, 0, 0.55)"
-  //                                         : "",
-  //                                       ...provided.draggableProps.style,
-  //                                     }}
-  //                                     className="fit-container"
-  //                                   >
-  //                                     {/* <div
-  //                                         key={item.id}
-  //                                         className="fx-scattered sc-s fx-shrink fit-container box-pad-h-s box-pad-v-s pointer"
-  //                                       > */}
-  //                                     <div
-  //                                       className="sc-s fx-scattered box-pad-v-s box-pad-h-s fit-container"
-  //                                       style={{
-  //                                         borderColor: snapshot.isDragging
-  //                                           ? "var(--c1)"
-  //                                           : "",
-  //                                       }}
-  //                                     >
-  //                                       <div
-  //                                         className="bg-img cover-bg"
-  //                                         style={{
-  //                                           minWidth: "50px",
-  //                                           minHeight: "50px",
-  //                                           backgroundImage: `url(${item.thumbnail})`,
-  //                                           borderRadius: "var(--border-r-50)",
-  //                                         }}
-  //                                       ></div>
-  //                                       <div
-  //                                         className="fit-container fx-centered fx-start-h fx-start-v fx-col"
-  //                                         style={{ rowGap: 0 }}
-  //                                       >
-  //                                         <p className="gray-c p-medium">
-  //                                           On{" "}
-  //                                           <Date_
-  //                                             toConvert={item.added_date}
-  //                                           />
-  //                                         </p>
-  //                                         <p className="p-one-line">
-  //                                           {item.title}
-  //                                         </p>
-  //                                       </div>
-  //                                       <div
-  //                                         className="box-pad-h-m"
-  //                                         onClick={() => handleAddArticle(item)}
-  //                                       >
-  //                                         <div className="trash"></div>
-  //                                       </div>
-  //                                     </div>
-  //                                   </div>
-  //                                 )}
-  //                               </Draggable>
-  //                             );
-  //                           })}
-  //                           {provided.placeholder}
-  //                         </div>
-  //                       )}
-  //                     </Droppable>
-  //                   </DragDropContext>
-  //                 </div>
-  //               )}
-  //             </div>
-  //           </div>
-  //           <div className="fit-container">
-  //             <hr />
-  //             <div className="box-pad-h-m box-pad-v-m fit-container fx-centered">
-  //               <button className="btn btn-gst fx" onClick={exit}>
-  //                 {isLoading ? <LoadingDots /> : "cancel"}
-  //               </button>
-  //               <button className="btn btn-normal fx" onClick={saveUpdate}>
-  //                 {isLoading ? <LoadingDots /> : "update"}
-  //               </button>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </section>
-  //       <section
-  //         className="box-pad-h sc-s box-pad-v"
-  //         style={{
-  //           flex: "1 1 600px",
-  //           overflow: "hidden",
-  //           backgroundColor: "var(--white)",
-  //         }}
-  //       >
-  //         {/* <h3>All articles</h3> */}
-  //         <div className="fx-scattered fit-container">
-  //           <div
-  //             className="fx-scattered sc-s pointer profile-switcher"
-  //             style={{
-  //               position: "relative",
-  //               width: "180px",
-  //               height: "45px",
-  //               border: "none",
-  //               backgroundColor: "var(--dim-gray)",
-  //               columnGap: 0,
-  //               opacity: !isLoaded ? ".4" : 1,
-  //             }}
-  //             onClick={switchContentSource}
-  //           >
-  //             <div
-  //               style={{
-  //                 position: "absolute",
-  //                 left: 0,
-  //                 top: 0,
-  //                 transform: contentFrom !== "relays" ? "translateX(100%)" : "",
-  //                 transition: ".2s ease-in-out",
-  //                 height: "100%",
-  //                 width: "50%",
-  //                 backgroundColor: "var(--c1)",
-  //                 borderRadius: "var(--border-r-32)",
-  //               }}
-  //             ></div>
-  //             <p
-  //               className={`p-medium fx p-centered pointer ${
-  //                 contentFrom !== "relays" ? "" : "white-c"
-  //               }`}
-  //               style={{
-  //                 position: "relative",
-  //                 zIndex: 10,
-  //                 transition: ".2s ease-in-out",
-  //               }}
-  //             >
-  //               All relays
-  //             </p>
-  //             <p
-  //               className={`p-medium fx p-centered pointer ${
-  //                 contentFrom !== "relays" ? "white-c" : ""
-  //               }`}
-  //               style={{
-  //                 position: "relative",
-  //                 zIndex: 10,
-  //                 transition: ".2s ease-in-out",
-  //               }}
-  //             >
-  //               My articles
-  //             </p>
-  //           </div>
-  //           <div
-  //             className="fx-centered fx-start-h nostr-uer-relays"
-  //             // style={{
-  //             //   height: "100px",
-  //             //   overflow: "scroll",
-  //             //   overflowY: "hidden",
-  //             // }}
-  //           >
-  //             {contentFrom === "relays" && (
-  //               <select
-  //                 className="if select"
-  //                 onChange={(e) => {
-  //                   if (sub) {
-  //                     sub.unsub();
-  //                     setSub(null);
-  //                   }
-  //                   setActiveRelay(e.target.value);
-  //                   setNostrPosts([]);
-  //                   setSearchRes([]);
-  //                   setSearchedPost("");
-  //                 }}
-  //               >
-  //                 {nostrUser &&
-  //                   nostrUser.relays.length > 0 &&
-  //                   nostrUser.relays.map((relay) => {
-  //                     return (
-  //                       <option
-  //                         key={relay}
-  //                         className="box-pad-h box-pad-v-m sc-s fx-shrink pointer fx-centered"
-  //                         style={{
-  //                           width: "max-content",
-  //                           filter: activeRelay === relay ? "invert()" : "",
-  //                           transition: ".4s ease-in-out",
-  //                         }}
-  //                         value={relay}
-  //                         // onClick={() => {
-  //                         //   setActiveRelay(relay);
-  //                         //   setNostrPosts([]);
-  //                         //   setSearchedPost("");
-  //                         //   setSearchRes([]);
-  //                         // }}
-  //                       >
-  //                         {isLoading && relay === activeRelay ? (
-  //                           <>Connecting</>
-  //                         ) : (
-  //                           relay.split("wss://")[1]
-  //                         )}
-  //                       </option>
-  //                     );
-  //                   })}
-  //                 {(!nostrUser ||
-  //                   (nostrUser && nostrUser.relays.length === 0)) &&
-  //                   relaysOnPlatform.map((relay) => {
-  //                     return (
-  //                       <option
-  //                         key={relay}
-  //                         className="box-pad-h box-pad-v-m sc-s fx-shrink pointer fx-centered"
-  //                         style={{
-  //                           width: "max-content",
-  //                           filter: activeRelay === relay ? "invert()" : "",
-  //                           transition: ".4s ease-in-out",
-  //                         }}
-  //                         value={relay}
-  //                         // onClick={() => {
-  //                         //   setActiveRelay(relay);
-  //                         //   setNostrPosts([]);
-  //                         //   setSearchedPost("");
-  //                         //   searchedPost([]);
-  //                         // }}
-  //                       >
-  //                         {isLoading && relay === activeRelay ? (
-  //                           <>Connecting</>
-  //                         ) : (
-  //                           relay.split("wss://")[1]
-  //                         )}
-  //                       </option>
-  //                     );
-  //                   })}
-  //               </select>
-  //             )}
-  //           </div>
-  //         </div>
-  //         <div className="fit-container box-pad-v">
-  //           <input
-  //             type="search"
-  //             value={searchedPost}
-  //             className="if ifs-full"
-  //             placeholder="Search article by title..."
-  //             onChange={handleSearchPostInNOSTR}
-  //             style={{ backgroundColor: "var(--white)" }}
-  //           />
-  //         </div>
-  //         {searchedPost ? (
-  //           <>
-  //             {searchRes.length === 0 && (
-  //               <div className="fit-container box-marg-full fx-centered">
-  //                 <p className="gray-c italic-txt">No article was found</p>
-  //               </div>
-  //             )}
-  //             {searchRes.length > 0 && (
-  //               <div
-  //                 className={`fx-centered fx-start-h fx-col posts-cards ${
-  //                   isLoading ? "flash" : ""
-  //                 }`}
-  //                 style={{
-  //                   height: "70%",
-  //                   overflow: "scroll",
-  //                   overflowX: "hidden",
-  //                 }}
-  //               >
-  //                 {searchRes.map((item) => {
-  //                   let status = checkIfBelongs(item.id);
-  //                   // if (item.thumbnail)
-  //                   return (
-  //                     <div
-  //                       key={item.id}
-  //                       className="fx-scattered sc-s fx-shrink fit-container box-pad-h-s box-pad-v-s pointer"
-  //                       onClick={() => handleAddArticle(item)}
-  //                       style={{
-  //                         borderColor: status ? "var(--green-main)" : "",
-  //                       }}
-  //                     >
-  //                       <div
-  //                         className="bg-img cover-bg"
-  //                         style={{
-  //                           minWidth: "50px",
-  //                           minHeight: "50px",
-  //                           backgroundImage: `url(${item.thumbnail})`,
-  //                           borderRadius: "var(--border-r-50)",
-  //                         }}
-  //                       ></div>
-  //                       <div
-  //                         className="fit-container fx-centered fx-start-h fx-start-v fx-col"
-  //                         style={{ rowGap: 0 }}
-  //                       >
-  //                         <p className="gray-c p-medium">
-  //                           On <Date_ toConvert={item.added_date} />
-  //                         </p>
-  //                         <p className="p-one-line fit-container">
-  //                           {item.title}
-  //                         </p>
-  //                       </div>
-  //                       {status ? (
-  //                         <div className="box-pad-h-m">
-  //                           <p className="green-c p-big">&#10003;</p>
-  //                         </div>
-  //                       ) : (
-  //                         <div className="box-pad-h-m">
-  //                           <p className="p-big">&#43;</p>
-  //                         </div>
-  //                       )}
-  //                     </div>
-  //                   );
-  //                 })}
-  //               </div>
-  //             )}
-  //           </>
-  //         ) : (
-  //           <>
-  //             {NostrPosts.length > 0 && (
-  //               <div
-  //                 className={`fx-centered fx-start-h fx-col ${
-  //                   isLoading ? "flash" : ""
-  //                 }`}
-  //                 style={{
-  //                   height: "70%",
-  //                   overflow: "scroll",
-  //                   overflowX: "hidden",
-  //                 }}
-  //               >
-  //                 {NostrPosts.map((item) => {
-  //                   let status = checkIfBelongs(item.id);
-  //                   // if (item.thumbnail)
-  //                   return (
-  //                     <div
-  //                       key={item.id}
-  //                       className="fx-scattered sc-s fx-shrink fit-container box-pad-h-s box-pad-v-s pointer"
-  //                       onClick={() => handleAddArticle(item)}
-  //                       style={{
-  //                         borderColor: status ? "var(--green-main)" : "",
-  //                       }}
-  //                     >
-  //                       <div
-  //                         className="bg-img cover-bg"
-  //                         style={{
-  //                           minWidth: "50px",
-  //                           minHeight: "50px",
-  //                           backgroundImage: `url(${item.thumbnail})`,
-  //                           backgroundColor: "vaR(--dim-gray)",
-  //                           borderRadius: "var(--border-r-50)",
-  //                         }}
-  //                       ></div>
-  //                       <div
-  //                         className="fit-container fx-centered fx-start-h fx-start-v fx-col"
-  //                         style={{ rowGap: 0 }}
-  //                       >
-  //                         <p className="gray-c p-medium">
-  //                           On <Date_ toConvert={item.added_date} />
-  //                         </p>
-  //                         <p className="p-one-line">{item.title}</p>
-  //                       </div>
-  //                       {status ? (
-  //                         <div className="box-pad-h-m">
-  //                           <p className="green-c p-big">&#10003;</p>
-  //                         </div>
-  //                       ) : (
-  //                         <div className="box-pad-h-m">
-  //                           <p className="p-big">&#43;</p>
-  //                         </div>
-  //                       )}
-  //                     </div>
-  //                   );
-  //                 })}
-  //               </div>
-  //             )}
-  //           </>
-  //         )}
-  //       </section>
-  //     </div>
-  //   </section>
-  // );
 }

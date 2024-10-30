@@ -1,18 +1,23 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { Helmet } from "react-helmet";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
 import { useLocation } from "react-router-dom";
-import { nip19, SimplePool } from "nostr-tools";
-import { Context } from "../../Context/Context";
-import { filterRelays, getEmptyNostrUser, getParsed3000xContent } from "../../Helpers/Encryptions";
+import { nip19 } from "nostr-tools";
+import {
+  filterRelays,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
+} from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
-import PreviewWidget from "../../Components/SmartWidget/PreviewWidget";
 import Date_ from "../../Components/Date_";
 import { validateWidgetValues } from "../../Helpers/Helpers";
-import WidgetCard from "../../Components/NOSTR/WidgetCard";
-const pool = new SimplePool();
+import WidgetCard from "../../Components/Main/WidgetCard";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+
 const getNaddrParam = (location) => {
   let naddr = new URLSearchParams(location.search).get("naddr");
   return naddr || "";
@@ -20,7 +25,8 @@ const getNaddrParam = (location) => {
 
 export default function SmartWidgetChecker() {
   const location = useLocation();
-  const { setToast, nostrUser } = useContext(Context);
+  const dispatch = useDispatch();
+  const userMetadata = useSelector((state) => state.userMetadata);
   const naddrParam = getNaddrParam(location);
   const [widget, setWidget] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -223,14 +229,10 @@ export default function SmartWidgetChecker() {
       try {
         setIsLoading(true);
         let parsedNaddr = nip19.decode(naddr);
-        let relaysToUse = filterRelays(
-          nostrUser?.relays || [],
-          relaysOnPlatform
-        );
+
         const { data } = parsedNaddr;
         let event_created_at = 0;
-        const sub = pool.subscribeMany(
-          relaysToUse,
+        const sub = ndkInstance.subscribe(
           [
             {
               kinds: [30031],
@@ -238,76 +240,76 @@ export default function SmartWidgetChecker() {
               "#d": [data.identifier],
             },
           ],
-          {
-            async onevent(event) {
-              try {
-                if (event.created_at > event_created_at) {
-                  event_created_at = event.created_at;
-                  let metadata = JSON.parse(event.content);
-                  let parsedContent = getParsed3000xContent(event.tags);
-                  setWidget({
-                    ...parsedContent,
-                    metadata,
-                    metadataElements: Object.entries(metadata),
-                    author: getEmptyNostrUser(event.pubkey),
-                    ...event,
-                  });
-                  setComponentTree(
-                    metadata.components?.map((cont) => {
-                      let tempComp = { ...cont };
-                      delete tempComp.left_side;
-                      delete tempComp.right_side;
-                      let container = Object.entries(tempComp);
-                      let left_side = cont.left_side
-                        ? cont.left_side?.map((comp) => {
-                            return {
-                              metadata: comp.metadata
-                                ? Object.entries(comp.metadata)
-                                : null,
-                              properties: Object.entries(comp),
-                            };
-                          })
-                        : null;
-                      let right_side = cont.right_side
-                        ? cont.right_side?.map((comp) => {
-                            return {
-                              metadata: comp.metadata
-                                ? Object.entries(comp.metadata)
-                                : null,
-                              properties: Object.entries(comp),
-                            };
-                          })
-                        : tempComp?.layout == 1
-                        ? []
-                        : null;
-
-                      return {
-                        container,
-                        left_side,
-                        right_side,
-                      };
-                    }) || []
-                  );
-                  setIsLoading(false);
-                }
-              } catch (err) {
-                console.log(err);
-                setIsLoading(false);
-              }
-            },
-            oneose() {
-              sub.close();
-              pool.close(relaysToUse);
-              setIsLoading(false);
-            },
-          }
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
+
+        sub.on("event", async (event) => {
+          try {
+            if (event.created_at > event_created_at) {
+              event_created_at = event.created_at;
+              let metadata = JSON.parse(event.content);
+              let parsedContent = getParsedRepEvent(event);
+              setWidget({
+                ...parsedContent,
+                metadata,
+                metadataElements: Object.entries(metadata),
+                author: getEmptyuserMetadata(event.pubkey),
+                ...event,
+              });
+              setComponentTree(
+                metadata.components?.map((cont) => {
+                  let tempComp = { ...cont };
+                  delete tempComp.left_side;
+                  delete tempComp.right_side;
+                  let container = Object.entries(tempComp);
+                  let left_side = cont.left_side
+                    ? cont.left_side?.map((comp) => {
+                        return {
+                          metadata: comp.metadata
+                            ? Object.entries(comp.metadata)
+                            : null,
+                          properties: Object.entries(comp),
+                        };
+                      })
+                    : null;
+                  let right_side = cont.right_side
+                    ? cont.right_side?.map((comp) => {
+                        return {
+                          metadata: comp.metadata
+                            ? Object.entries(comp.metadata)
+                            : null,
+                          properties: Object.entries(comp),
+                        };
+                      })
+                    : tempComp?.layout == 1
+                    ? []
+                    : null;
+
+                  return {
+                    container,
+                    left_side,
+                    right_side,
+                  };
+                }) || []
+              );
+              setIsLoading(false);
+            }
+          } catch (err) {
+            console.log(err);
+            setIsLoading(false);
+          }
+        });
+        sub.on("eose", () => {
+          setIsLoading(false);
+        });
       } catch (err) {
         console.log(err);
-        setToast({
-          type: 2,
-          desc: "Invalid naddr",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Invalid naddr",
+          })
+        );
         setIsLoading(false);
       }
     }
@@ -315,10 +317,12 @@ export default function SmartWidgetChecker() {
 
   const copyMetadata = () => {
     navigator?.clipboard?.writeText(JSON.stringify(widget.metadata));
-    setToast({
-      type: 1,
-      desc: `Widget metadata was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `Widget metadata was copied! 👏`,
+      })
+    );
   };
 
   const clearPage = () => {

@@ -1,6 +1,10 @@
+@media only screen and (max-width: 1990px) {
+  html {
+    font-size: 15px;
+  }
+}
+
 @media only screen and (max-width: 1450px) {
-
-
   .main-page-nostr-container {
     flex: 4;
   }
@@ -134,14 +138,15 @@
     display: none;
   }
 
-
+  .main-middle {
+    width: 100%;
+  }
 
   .posts-cards {
     width: 100%;
   }
 
   .wmde-markdown pre {
-
     width: 400px !important;
   }
 
@@ -167,6 +172,7 @@
   html {
     font-size: 14px;
   }
+
   .author-info-post-p, .un-banners {
     display: none;
   }
@@ -307,7 +313,8 @@
   .main-container {
     padding: 0;
   }
-/* 
+
+  /* 
   .list-item:hover {
     background-color: var(--c1-side);
     color: var(--black);
@@ -321,9 +328,9 @@
      pointer-events: none;
 } */
 
-.sw-container .round-icon-small {
-  display: flex;
-}
+  .sw-container .round-icon-small {
+    display: flex;
+  }
 
 }
 

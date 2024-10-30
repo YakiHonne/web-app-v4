@@ -1,10 +1,8 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import LoadingDots from "./LoadingDots";
-import { uploadToS3 } from "../Helpers/NostrPublisher";
-import { Context } from "../Context/Context";
-import { finalizeEvent } from "nostr-tools";
-import { encodeBase64URL } from "../Helpers/Encryptions";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../Store/Slides/Publishers";
+import { FileUpload } from "../Helpers/Helpers";
 
 export default function UploadFile({
   kind = "image/*",
@@ -14,94 +12,30 @@ export default function UploadFile({
   setIsUploadsLoading,
   setFileMetadata,
 }) {
-  const { nostrKeys, setToast } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const dispatch = useDispatch();
+
   const [method, setMethod] = useState("nostr.build");
   const [isLoading, setIsLoading] = useState(false);
 
   const Upload = async (e) => {
     let file = e.target.files[0];
-    if (!file && (!nostrKeys.sec || !nostrKeys.ext)) {
-      setToast({
-        type: 2,
-        desc: "It's either you selected a corrupted file or you're not logged-in using your secret key/extension",
-      });
+    if (!file && (!userKeys.sec || !userKeys.ext)) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "It's either you selected a corrupted file or you're not logged-in using your secret key/extension",
+        })
+      );
       return;
     }
     setFileMetadata(file);
-    if (method === "yakihonne") {
-      setIsLoading(true);
-      setIsUploadsLoading(true);
-      let imageURL = await uploadToS3(file, nostrKeys.pub);
-      if (imageURL) setImageURL(imageURL);
-      if (!imageURL) {
-        setToast({
-          type: 2,
-          desc: "Error uploading file",
-        });
-      }
-      setIsLoading(false);
-      setIsUploadsLoading(false);
-      return;
-    }
-    if (method === "nostr.build") {
-      setIsLoading(true);
-      setIsUploadsLoading(true);
-      let event = {
-        kind: 27235,
-        content: "",
-        created_at: Math.floor(Date.now() / 1000),
-        tags: [
-          ["u", "https://nostr.build/api/v2/nip96/upload"],
-          ["method", "POST"],
-        ],
-      };
-      if (nostrKeys.ext) {
-        try {
-          event = await window.nostr.signEvent(event);
-        } catch (err) {
-          setIsLoading(false);
-          setIsUploadsLoading(false);
-          setToast({
-            type: 2,
-            desc: "Error uploading file",
-          });
-          console.log(err);
-          return false;
-        }
-      } else {
-        event = finalizeEvent(event, nostrKeys.sec);
-      }
-      let encodeB64 = encodeBase64URL(JSON.stringify(event));
-      let fd = new FormData();
-      fd.append("file", file);
-      try {
-        let imageURL = await axios.post(
-          "https://nostr.build/api/v2/nip96/upload",
-          fd,
-          {
-            headers: {
-              "Content-Type": "multipart/formdata",
-              Authorization: `Nostr ${encodeB64}`,
-            },
-          }
-        );
-
-        setImageURL(
-          imageURL.data.nip94_event.tags.find((tag) => tag[0] === "url")[1]
-        );
-        setIsLoading(false);
-        setIsUploadsLoading(false);
-        return;
-      } catch (err) {
-        setIsLoading(false);
-        setIsUploadsLoading(false);
-        setToast({
-          type: 2,
-          desc: "Error uploading file",
-        });
-        return;
-      }
-    }
+    setIsLoading(true);
+    setIsUploadsLoading(true);
+    let url = await FileUpload(file, method, userKeys);
+    if (url) setImageURL(url);
+    setIsLoading(false);
+    setIsUploadsLoading(false);
   };
 
   return (

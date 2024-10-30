@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
@@ -9,18 +9,20 @@ import { Link } from "react-router-dom";
 import { getClaimingData } from "../../Helpers/Encryptions";
 import { nip19 } from "nostr-tools";
 import UN from "../../Components/Main/UN";
-import { Context } from "../../Context/Context";
 import Counter from "../../Components/Counter";
 import LoadingDots from "../../Components/LoadingDots";
-import { getNoteTree } from "../../Helpers/Helpers";
+import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
 import LoginWithNostr from "../../Components/Main/LoginWithNostr";
 import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function UncensoredNotes() {
-  const { nostrKeys, mutedList } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMutedList = useSelector((state) => state.userMutedList);
   const [flashNews, setFlashNews] = useState([]);
   const [myRewards, setMyRewards] = useState([]);
   const [rewards, setRewards] = useState([]);
@@ -30,7 +32,6 @@ export default function UncensoredNotes() {
   const [isLoadingGlobal, setIsLoadingGlobal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [flashnewsToRefresh, setFlashNewsToRefresh] = useState(false);
-  const [toLogin, setToLogin] = useState(false);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const elPerPage = 8;
@@ -70,14 +71,14 @@ export default function UncensoredNotes() {
     };
     const fetchMyRewardsData = async () => {
       try {
-        if (!nostrKeys || (nostrKeys && !nostrKeys.sec && !nostrKeys.ext)) {
+        if (!userKeys || (userKeys && !userKeys.sec && !userKeys.ext)) {
           setMyRewards([]);
           return;
         }
         setIsLoading(true);
         let PATH = "/api/v1/my-rewards";
         let opt = {
-          params: { pubkey: nostrKeys.pub },
+          params: { pubkey: userKeys.pub },
         };
         let [data, REWARDS, BALANCE] = await Promise.all([
           axios.get(API_BASE_URL + PATH, opt),
@@ -93,9 +94,9 @@ export default function UncensoredNotes() {
         setIsLoading(false);
       }
     };
-    if (contentType && Array.isArray(mutedList)) fetchFNData();
+    if (contentType && Array.isArray(userMutedList)) fetchFNData();
     if (!contentType) fetchMyRewardsData();
-  }, [contentType, timestamp, nostrKeys, page, mutedList]);
+  }, [contentType, timestamp, userKeys, page, userMutedList]);
 
   useEffect(() => {
     const fetchFNData = async () => {
@@ -160,7 +161,7 @@ export default function UncensoredNotes() {
   return (
     <div>
       <Helmet>
-        <title>Yakihonne | Uncensored notes</title>
+        <title>Yakihonne | Verify notes</title>
         <meta
           name="description"
           content={
@@ -176,12 +177,12 @@ export default function UncensoredNotes() {
 
         <meta
           property="og:url"
-          content={`https://yakihonne.com/uncensored-notes`}
+          content={`https://yakihonne.com/verify-notes`}
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
-        <meta property="og:title" content="Yakihonne | Uncensored notes" />
-        <meta property="twitter:title" content="Yakihonne | Uncensored notes" />
+        <meta property="og:title" content="Yakihonne | Verify notes" />
+        <meta property="twitter:title" content="Yakihonne | Verify notes" />
         <meta
           property="twitter:description"
           content={
@@ -194,10 +195,11 @@ export default function UncensoredNotes() {
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             <ArrowUp />
-            {/* <NavbarNOSTR /> */}
-            {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
-            <div className="fit-container fx-centered fx-start-v fx-start-h box-pad-h-m">
-              <div style={{ flex: 2 }} className="box-pad-h-m">
+            <div
+              className="fit-container fx-centered fx-start-v fx-start-h"
+              style={{ gap: 0 }}
+            >
+              <div className="main-middle">
                 <div
                   className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h un-banner"
                   style={{
@@ -230,67 +232,40 @@ export default function UncensoredNotes() {
                   </div>
                 </div>
                 <div
-                  className="fit-container fx-scattered box-pad-v-m"
+                  className="fit-container fx-scattered box-pad-v-m  box-pad-h-m"
                   style={{
                     position: "sticky",
                     background: "var(--white)",
                     top: "0",
-
+                    gap: 0,
                     zIndex: "100",
+                    borderBottom: "1px solid var(--very-dim-gray)"
                   }}
                 >
                   <div className="fx-centered" style={{ columnGap: "16px" }}>
                     <div
-                      // style={{
-                      //   padding: ".5rem 1rem",
-                      //   borderBottom: `2px solid ${
-                      //     contentType == "new" ? "var(--c1)" : "var(--dim-gray)"
-                      //   }`,
-                      // }}
                       onClick={() => handleContentType("new")}
                       className={`list-item ${
                         contentType == "new" ? "selected-list-item" : ""
                       }`}
                     >
-                      {/* <span className={contentType === "new" ? "c1-c" : "gray-c"}> */}
                       New
-                      {/* </span> */}
                     </div>
                     <div
-                      // style={{
-                      //   padding: ".5rem 1rem",
-                      //   borderBottom: `2px solid ${
-                      //     contentType == "nmh" ? "var(--c1)" : "var(--dim-gray)"
-                      //   }`,
-                      // }}
                       onClick={() => handleContentType("nmh")}
                       className={`list-item ${
                         contentType == "nmh" ? "selected-list-item" : ""
                       }`}
                     >
-                      {/* <span className={contentType === "nmh" ? "c1-c" : "gray-c"}> */}
                       Needs your help
-                      {/* </span> */}
                     </div>
                     <div
-                      // style={{
-                      //   padding: ".5rem 1rem",
-                      //   borderBottom: `2px solid ${
-                      //     contentType == "sealed"
-                      //       ? "var(--c1)"
-                      //       : "var(--dim-gray)"
-                      //   }`,
-                      // }}
                       onClick={() => handleContentType("sealed")}
                       className={`list-item ${
                         contentType == "sealed" ? "selected-list-item" : ""
                       }`}
                     >
-                      {/* <span
-                      className={contentType === "sealed" ? "c1-c" : "gray-c"}
-                    > */}
                       Rated helpful
-                      {/* </span> */}
                     </div>
                   </div>
                   <div className="fx-centered">
@@ -313,9 +288,12 @@ export default function UncensoredNotes() {
                   </div>
                 </div>
                 {contentType && (
-                  <div className="fit-container fx-centered fx-col ">
+                  <div
+                    className="fit-container fx-centered fx-col "
+                    style={{ gap: 0 }}
+                  >
                     {flashNews.map((fn) => {
-                      if (!mutedList.includes(fn.author.pubkey))
+                      if (!userMutedList.includes(fn.author.pubkey))
                         return (
                           <FlashNewsCard
                             key={fn.flashnews.id}
@@ -340,8 +318,8 @@ export default function UncensoredNotes() {
                         />
                       );
                     })}
-                    {nostrKeys &&
-                      (nostrKeys.sec || nostrKeys.ext) &&
+                    {userKeys &&
+                      (userKeys.sec || userKeys.ext) &&
                       !myRewards.length && (
                         <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
                           <h4>You have no rewards!</h4>
@@ -359,7 +337,7 @@ export default function UncensoredNotes() {
                           </Link>
                         </div>
                       )}
-                    {!nostrKeys && (
+                    {!userKeys && (
                       <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
                         <h4>Get rewarded!</h4>
                         <p
@@ -371,13 +349,13 @@ export default function UncensoredNotes() {
                         </p>
                         <button
                           className="btn btn-normal"
-                          onClick={() => setToLogin(true)}
+                          onClick={() => redirectToLogin()}
                         >
                           Login
                         </button>
                       </div>
                     )}
-                    {nostrKeys && !nostrKeys.sec && !nostrKeys.ext && (
+                    {userKeys && !userKeys.sec && !userKeys.ext && (
                       <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
                         <h4>Not authorized!</h4>
                         <p
@@ -408,7 +386,7 @@ export default function UncensoredNotes() {
                   position: "sticky",
                   top: 0,
                 }}
-                className="box-pad-h-m  fx-centered fx-col un-banners"
+                className="box-pad-h-m  fx-centered fx-col extras-homepage"
               >
                 <div className="sticky fit-container">
                   <SearchbarNOSTR />
@@ -451,7 +429,7 @@ export default function UncensoredNotes() {
                   >
                     {" "}
                   </div>
-                  <h4>Read about Uncensored Notes</h4>
+                  <h4>Read about verifying notes</h4>
                   <p className="gray-c">
                     We've made an article for you to help you understand our
                     purpose
@@ -466,7 +444,7 @@ export default function UncensoredNotes() {
                   </Link>
                 </div>
                 <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
-                  <h4>Uncensored notes values</h4>
+                  <h4>Verifying notes values</h4>
                   <ul>
                     <li className="gray-c">
                       Contribute to build understanding
@@ -512,8 +490,12 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
   };
   return (
     <div
-      className="fit-container fx-centered fx-start-h fx-start-v box-marg-s sc-s-18 box-pad-h-m box-pad-v-m"
-      style={{ columnGap: "10px", overflow: "visible" }}
+      className="fit-container fx-centered fx-start-h fx-start-v box-pad-v  box-pad-h-m"
+      style={{
+        columnGap: "10px",
+        overflow: "visible",
+        borderBottom: "1px solid var(--very-dim-gray)",
+      }}
     >
       <div>
         <UserProfilePicNOSTR
@@ -534,9 +516,7 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
             <p className="gray-c">&#x2022;</p>
             <p className="gray-c">
               <Date_
-                toConvert={new Date(
-                  data.flashnews.created_at * 1000
-                ).toISOString()}
+                toConvert={new Date(data.flashnews.created_at * 1000)}
                 time={true}
               />
             </p>
@@ -581,13 +561,13 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
         <div className="fit-container fx-scattered">
           <Link
             className="fit-container"
-            to={`/uncensored-notes/${data.flashnews.nEvent}`}
+            to={`/verify-notes/${data.flashnews.nEvent}`}
           >
             <div
-              className="fx-scattered fit-container option if pointer"
-              style={{ border: "none", backgroundColor: "var(--blue-side)" }}
+              className="fx-scattered fit-container option btn pointer"
+              style={{ border: "none", backgroundColor: "var(--dim-gray)" }}
             >
-              <p className="blue-c">See all uncensored notes</p>
+              <p className="c1-c">See all attempts</p>
               <div
                 className="arrow"
                 style={{ transform: "rotate(-90deg)" }}
@@ -622,7 +602,8 @@ const MyRewardedItem = ({
   isLoading,
   setIsLoading,
 }) => {
-  let { nostrKeys, setToast } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
   let [claimPermission, setClaimPermission] = useState(false);
 
   const [showNote, setShowNote] = useState(false);
@@ -630,21 +611,19 @@ const MyRewardedItem = ({
   const claimReward = async () => {
     try {
       setIsLoading(true);
-      let _data = await getClaimingData(
-        nostrKeys.pub,
-        rwdItem.id,
-        rwdItem.kind
-      );
+      let _data = await getClaimingData(userKeys.pub, rwdItem.id, rwdItem.kind);
       if (!_data.status) {
-        setToast({
-          type: 2,
-          desc: _data.message,
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: _data.message,
+          })
+        );
         setIsLoading(false);
         return;
       }
       const data = await axios.post(API_BASE_URL + "/api/v1/reward-claiming", {
-        pubkey: nostrKeys.pub,
+        pubkey: userKeys.pub,
         _data: _data.message,
       });
       setTimestamp(Date.now());
@@ -652,10 +631,12 @@ const MyRewardedItem = ({
     } catch (err) {
       console.log(err);
       setIsLoading(false);
-      setToast({
-        type: 2,
-        desc: err.response.data.message,
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: err.response.data.message,
+        })
+      );
     }
   };
 
@@ -769,7 +750,7 @@ const MyRewardedItem = ({
             <Link
               className="btn-text-gray"
               target="_blank"
-              to={`/uncensored-notes/${nip19.neventEncode({
+              to={`/verify-notes/${nip19.neventEncode({
                 id: rwdItem.tags.find((tag) => tag[0] === "e")[1],
               })}`}
             >

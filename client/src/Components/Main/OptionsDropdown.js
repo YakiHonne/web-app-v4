@@ -1,11 +1,12 @@
 import React, { Fragment, useEffect, useRef, useState } from "react";
 
-export default function OptionsDropdown({ options }) {
+export default function OptionsDropdown({ options, border = false }) {
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef(null);
 
   useEffect(() => {
     const handleOffClick = (e) => {
+      e.stopPropagation()
       if (optionsRef.current && !optionsRef.current.contains(e.target))
         setShowOptions(false);
     };
@@ -18,10 +19,11 @@ export default function OptionsDropdown({ options }) {
   return (
     <div style={{ position: "relative" }} ref={optionsRef}>
       <div
-        className="round-icon-small round-icon-tooltip"
-        style={{ border: "none" }}
+        className={`${border ? "round-icon": "round-icon-small"} round-icon-tooltip`}
+        style={{ border: border ? "" : "none" }}
         data-tooltip="Options"
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation()
           setShowOptions(!showOptions);
         }}
       >
@@ -41,19 +43,19 @@ export default function OptionsDropdown({ options }) {
         <div
           style={{
             position: "absolute",
-            right: 0,
+            right: '5px',
             top: "110%",
             backgroundColor: "var(--dim-gray)",
             border: "none",
-            minWidth: "200px",
+            minWidth: "150px",
             width: "max-content",
             zIndex: 1000,
-            rowGap: "12px",
+            rowGap: "10px",
           }}
-          className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v pointer"
+          className="box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-col fx-start-v pointer"
         >
           {options.map((option, index) => {
-            return <Fragment key={index} >{option}</Fragment>;
+            return <Fragment key={index}>{option}</Fragment>;
           })}
         </div>
       )}

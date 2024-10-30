@@ -1,32 +1,34 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
-import { Context } from "../../Context/Context";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
-import Date_ from "../../Components/Date_";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
-import relaysOnPlatform from "../../Content/Relays";
-import LoadingScreen from "../../Components/LoadingScreen";
-import { Relay, SimplePool } from "nostr-tools";
 import {
   decodeUrlOrAddress,
   encodeLud06,
-  filterRelays,
   getBech32,
+  getEmptyuserMetadata,
 } from "../../Helpers/Encryptions";
 import ToChangeProfilePic from "../../Components/Main/ToChangeProfilePic";
 import { shortenKey } from "../../Helpers/Encryptions";
 import ToUpdateRelay from "../../Components/Main/ToUpdateRelay";
 import axios from "axios";
 import { Helmet } from "react-helmet";
-import TopicTagsSelection from "../../Components/TopicTagsSelection";
 import Footer from "../../Components/Footer";
 import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import LoginWithAPI from "../../Components/Main/LoginWithAPI";
 import AddWallet from "../../Components/Main/AddWallet";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { getUser, userLogout } from "../../Helpers/Controlers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { Link } from "react-router-dom";
+import DtoLToggleButton from "../../Components/DtoLToggleButton";
+import ZapTip from "../../Components/Main/ZapTip";
+import { nip19 } from "nostr-tools";
 
 const checkForSavedCommentOptions = () => {
   try {
@@ -42,25 +44,20 @@ const checkForSavedCommentOptions = () => {
 };
 
 export default function Settings() {
-  const {
-    nostrUser,
-    nostrUserLoaded,
-    nostrKeys,
-    nostrUserAbout,
-    nostrUserTags,
-    userLogout,
-    setNostrUserAbout,
-    setNostrUser,
-    userRelays,
-    setToast,
-    isPublishing,
-    setToPublish,
-    yakiChestStats,
-    isYakiChestLoaded,
-    setTempChannel,
-    setUserRelays
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const userAllRelays = useSelector((state) => state.userAllRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const isYakiChestLoaded = useSelector((state) => state.isYakiChestLoaded);
+  const yakiChestStats = useSelector((state) => state.yakiChestStats);
+
+  const relaysContainer = useRef(null);
+
   const [isLoading, setIsLoading] = useState(false);
+  const [showRelaysInfo, setShowRelaysInfo] = useState(false);
+  const [allRelays, setAllRelays] = useState([]);
   const [timestamp, setTimestamp] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState(false);
   const [userName, setUserName] = useState(false);
@@ -85,102 +82,83 @@ export default function Settings() {
   const [showDeletionPopup, setShowDeletionPopup] = useState(false);
   const extrasRef = useRef();
 
-  const saveOption = () => {
-    localStorage.setItem(
-      "comment-with-suffix",
-      JSON.stringify({ keep_suffix: !isSave })
-    );
-    setIsSave(!isSave);
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await axios.get("https://api.nostr.watch/v1/online");
+        setAllRelays(data.data);
+      } catch {}
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
-    setTempUserRelays(userRelays);
+    if (userKeys) {
+      handleAddWallet();
+    } else setWallets([]);
+  }, [userKeys]);
+
+  useEffect(() => {
+    setTempUserRelays(userAllRelays);
     setRelaysStatus(
-      userRelays.map((item) => {
-        return { url: item, connected: false };
+      userAllRelays.map((item) => {
+        return { url: item.url, connected: false };
       })
     );
   }, [userRelays]);
+
   useEffect(() => {
-    setLud06(nostrUserAbout.lud06);
-    setLud16(nostrUserAbout.lud16);
-    setUserNIP05(nostrUserAbout.nip05);
-  }, [nostrUserAbout]);
+    setLud06(userMetadata.lud06);
+    setLud16(userMetadata.lud16);
+    setUserNIP05(userMetadata.nip05);
+  }, [userMetadata]);
 
   useEffect(() => {
     const CheckRelays = async () => {
       try {
-        await Promise.allSettled(
-          tempUserRelays.map(async (relay, index) => {
-            let connected = await Relay.connect(relay);
-            if (connected._connected) {
-              let tempRelays_ = Array.from(relaysStatus);
-              tempRelays_[index].connected = true;
-              setRelaysStatus(tempRelays_);
-            }
-          })
-        );
+        tempUserRelays.map(async (relay, index) => {
+          let connected = ndkInstance.pool.getRelay(relay.url);
+          if (connected.connected) {
+            let tempRelays_ = Array.from(relaysStatus);
+            tempRelays_[index].connected = true;
+            setRelaysStatus(tempRelays_);
+          }
+        });
       } catch (err) {}
     };
 
     if (tempUserRelays) CheckRelays();
   }, [tempUserRelays]);
 
-  const updateInfos = async () => {
-    let content = { ...nostrUserAbout };
-    content.name = userName !== false ? userName : content.name;
-    content.display_name =
-      userDisplayName !== false ? userDisplayName : content.display_name;
-    content.about = userAbout !== false ? userAbout : content.about || "";
-    content.nip05 = userNIP05 !== false ? userNIP05 : content.nip05 || "";
-    content.website =
-      userWebsite !== false ? userWebsite : content.website || "";
-
-    if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
-      return;
-    }
-
-    setToPublish({
-      nostrKeys: nostrKeys,
-      kind: 0,
-      content: JSON.stringify(content),
-      tags: nostrUserTags || [],
-      allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-    });
-
-    // setUserAbout(false);
-    // setUserName(false);
-    // setUserDisplayName(false);
-    // setUserWebsite(false);
-    triggerCancelEdit();
-    setSelectedTab("");
-    setNostrUserAbout(content);
-  };
-
   const copyKey = (keyType, key) => {
     navigator.clipboard.writeText(key);
-    setToast({
-      type: 1,
-      desc: `${keyType} key was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `${keyType} key was copied! 👏`,
+      })
+    );
   };
 
-  const removeRelayFromList = (index) => {
-    let tempArray = Array.from(tempUserRelays);
-    tempArray.splice(index, 1);
-    setTempUserRelays(tempArray);
+  const removeRelayFromList = (action, index) => {
+    let tempArray = tempUserRelays.map((relay) => ({ ...relay }));
+    if (action) {
+      delete tempArray[index].toDelete;
+      setTempUserRelays(tempArray);
+    } else {
+      tempArray[index].toDelete = true;
+      setTempUserRelays(tempArray);
+    }
   };
 
   const saveRelays = async () => {
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     saveInKind10002();
@@ -190,17 +168,17 @@ export default function Settings() {
   const saveInKind10002 = async () => {
     try {
       let tags = convertArrayToKind10002();
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 10002,
-        content: "",
-        tags: tags,
-        allRelays: tempUserRelays,
-      });
-      let tempUser = { ...nostrUser };
-      tempUser.relays = tempUserRelays;
-      setNostrUser(tempUser);
-      setUserRelays(tempUserRelays);
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 10002,
+          content: "",
+          tags: tags,
+          allRelays: tempUserRelays
+            .filter((relay) => relay.write)
+            .map((relay) => relay.url),
+        })
+      );
       return true;
     } catch (err) {
       console.log(err);
@@ -211,17 +189,24 @@ export default function Settings() {
   const convertArrayToKind10002 = () => {
     let tempArray = [];
     for (let relay of tempUserRelays) {
-      tempArray.push(["r", relay]);
+      if (!relay.toDelete) {
+        let status =
+          relay.read && relay.write ? "" : relay.read ? "read" : "write";
+        if (status) tempArray.push(["r", relay.url, status]);
+        if (!status) tempArray.push(["r", relay.url]);
+      }
     }
     return tempArray;
   };
 
   const uploadCover = async (upload = false, file) => {
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     let cover = file;
@@ -233,69 +218,42 @@ export default function Settings() {
         if (upload) {
           let fd = new FormData();
           fd.append("file", cover);
-          fd.append("pubkey", nostrKeys.pub);
+          fd.append("pubkey", userKeys.pub);
           let data = await axiosInstance.post("/api/v1/file-upload", fd, {
             headers: { "Content-Type": "multipart/formdata" },
           });
           uploadedImage = data.data.image_path;
           content = getUserContent(data.data.image_path);
-          deleteFromS3(nostrUserAbout.banner);
+          deleteFromS3(userMetadata.banner);
         }
 
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 0,
-          content,
-          tags: nostrUserTags,
-          allRelays: [
-            ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-          ],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 0,
+            content,
+            tags: [],
+            allRelays: userRelays,
+          })
+        );
 
-        setNostrUserAbout(JSON.parse(content));
         setIsLoading(false);
       } catch (err) {
         setIsLoading(false);
         console.log(err);
-        setToast({
-          type: 2,
-          desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
+          })
+        );
       }
-    }
-  };
-
-  const clearCover = async () => {
-    if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
-      return;
-    }
-    try {
-      setIsLoading(true);
-      const content = getUserContent("");
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 0,
-        content,
-        tags: nostrUserTags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-      });
-
-      deleteFromS3(nostrUserAbout.banner);
-      setIsLoading(false);
-      setNostrUserAbout(JSON.parse(content));
-    } catch (err) {
-      setIsLoading(false);
-      console.log(err);
     }
   };
 
   const getUserContent = (banner) => {
     let content = {
-      ...nostrUserAbout,
+      ...userMetadata,
     };
     content.banner = banner;
     return JSON.stringify(content);
@@ -309,43 +267,6 @@ export default function Settings() {
       return true;
     }
     return false;
-  };
-
-  const handleLUD16 = async (e) => {
-    let add = e.target.value;
-    let tempAdd = encodeLud06(decodeUrlOrAddress(add));
-    setLud16(add);
-    if (!tempAdd) setLud06("");
-    if (tempAdd) {
-      let data = await axios.get(decodeUrlOrAddress(add));
-
-      setLud16(JSON.parse(data.data.metadata)[0][1]);
-      setLud06(tempAdd);
-    }
-  };
-
-  const updateLightning = async () => {
-    if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
-      return;
-    }
-    if (!(lud06 && lud16)) return;
-    let content = { ...nostrUserAbout };
-    content.lud06 = lud06;
-    content.lud16 = lud16;
-
-    setToPublish({
-      nostrKeys: nostrKeys,
-      kind: 0,
-      content: JSON.stringify(content),
-      tags: nostrUserTags,
-      allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
-    });
-    setNostrUserAbout(content);
-    setSelectedTab("");
   };
 
   const handleDelete = () => {
@@ -381,29 +302,47 @@ export default function Settings() {
     tempWallets[index].active = true;
     updateWallets(tempWallets);
     setWallets(tempWallets);
-    setTempChannel(Date.now());
   };
 
-  const triggerEdit = () => {
-    setUserName(nostrUserAbout.name);
-    setUserDisplayName(nostrUserAbout.display_name);
-    setUserWebsite(nostrUserAbout.website);
-    setUserAbout(nostrUserAbout.about);
-    setIsOnEdit(true);
-  };
-  const triggerCancelEdit = () => {
-    setUserName(false);
-    setUserDisplayName(false);
-    setUserWebsite(false);
-    setUserAbout(false);
-    setIsOnEdit(false);
+  const changeRelayStatus = (status, index) => {
+    let tempArray = tempUserRelays.map((relay) => ({ ...relay }));
+    tempArray[index].read = ["read", ""].includes(status) ? true : false;
+    tempArray[index].write = ["write", ""].includes(status) ? true : false;
+
+    setTempUserRelays(tempArray);
   };
 
-  if (!nostrUserLoaded) return <LoadingScreen />;
+  const addRelay = (url) => {
+    setTempUserRelays((prev) => {
+      let isThere = prev.find((relay) => relay.url === url);
+      if (!isThere) return [...prev, { url, read: true, write: true }];
+      return prev;
+    });
+    let timeout = setTimeout(() => {
+      if (relaysContainer.current) {
+        relaysContainer.current.scrollTop =
+          relaysContainer.current.scrollHeight;
+      }
+      clearTimeout(timeout);
+    }, 50);
+  };
+
+  let handleAddWallet = () => {
+    let tempWallets = getWallets();
+    setWallets(tempWallets);
+    setShowAddWallet(false);
+  };
+
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
-      {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} />}
+      {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} refresh={handleAddWallet}/>}
+      {showRelaysInfo && (
+        <RelaysInfo
+          url={showRelaysInfo}
+          exit={() => setShowRelaysInfo(false)}
+        />
+      )}
       {showDeletionPopup && (
         <DeletionPopUp
           exit={() => setShowDeletionPopup(false)}
@@ -413,7 +352,7 @@ export default function Settings() {
       {showCoverUploader && (
         <CoverUploader
           exit={() => setCoverUploader(false)}
-          oldThumbnail={nostrUserAbout.banner}
+          oldThumbnail={userMetadata.banner}
           uploadCover={uploadCover}
         />
       )}
@@ -438,9 +377,6 @@ export default function Settings() {
           }}
         />
       )}
-      {showTopicsPicker && (
-        <TopicTagsSelection exit={() => setShowTopicsPicker(false)} />
-      )}
       {showMutedList && <MutedList exit={() => setShowMutedList(false)} />}
       <div>
         <Helmet>
@@ -457,786 +393,588 @@ export default function Settings() {
                 pointerEvents: isLoading ? "none" : "auto",
               }}
             >
-              <div className="fx-centered fit-container fx-start-h fx-start-v">
-                <div style={{ flex: 2 }}>
-                  {nostrUser && (nostrKeys.sec || nostrKeys.ext) && (
+              <div className="fx-centered fit-container  fx-start-v ">
+                <div className="main-middle">
+                  {userMetadata && (userKeys.sec || userKeys.ext) && (
                     <>
-                      <div className="fit-container fx-centered fx-col">
+                      <h3 className="box-pad-h box-pad-v-m">Settings</h3>
+                      <div
+                        className="fit-container fx-scattered pointer box-pad-v-m box-pad-h-m"
+                        style={{
+                          borderBottom: "1px solid var(--very-dim-gray)",
+                          borderTop: "1px solid var(--very-dim-gray)",
+                        }}
+                      >
+                        <UserProfilePicNOSTR
+                          mainAccountUser={true}
+                          size={64}
+                          ring={false}
+                        />
+                        <div className="fx-centered">
+                          <Link
+                            to={`/users/${nip19.nprofileEncode({
+                              pubkey: userKeys.pub,
+                            })}`}
+                          >
+                            <button className="btn btn-normal">
+                              view profile
+                            </button>
+                          </Link>
+                          <Link to={"/settings/profile"}>
+                            <button className="btn btn-gray">
+                              Edit profile
+                            </button>
+                          </Link>
+                        </div>
+                      </div>
+                      <div
+                        className="fit-container fx-centered fx-col"
+                        style={{ gap: 0 }}
+                      >
                         <div
-                          className="fit-container profile-cover fx-centered fx-end-h fx-col bg-img cover-bg"
+                          className="fit-container fx-scattered fx-col pointer"
                           style={{
-                            height: "20vh",
-                            position: "relative",
-                            backgroundImage: nostrUserAbout.banner
-                              ? `url(${nostrUserAbout.banner})`
-                              : "",
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
                           }}
                         >
                           <div
-                            className="fx-centered pointer round-icon round-icon-tooltip"
-                            data-tooltip={"Update cover"}
-                            style={{
-                              // width: "36px",
-                              // height: "36px",
-                              // borderRadius: "var(--border-r-50)",
-                              backgroundColor: "var(--dim-gray)",
-                              position: "absolute",
-                              right: nostrUserAbout.banner ? "62px" : "16px",
-                              top: "16px",
-                            }}
-                            onClick={() => setCoverUploader(true)}
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "keys"
+                                ? setSelectedTab("")
+                                : setSelectedTab("keys")
+                            }
                           >
-                            {isLoading ? (
-                              <LoadingDots />
-                            ) : (
-                              <div className="edit-24"></div>
-                            )}
+                            <div className="fx-centered fx-start-h">
+                              <div className="key-icon-24"></div>
+                              <p>Your keys</p>
+                            </div>
+                            <div className="arrow"></div>
                           </div>
-
-                          {nostrUserAbout.banner && (
-                            <div
-                              className="fx-centered pointer round-icon round-icon-tooltip"
-                              data-tooltip={"Delete cover"}
-                              style={{
-                                // width: "36px",
-                                // height: "36px",
-                                // borderRadius: "var(--border-r-50)",
-                                backgroundColor: "var(--dim-gray)",
-                                position: "absolute",
-                                right: "16px",
-                                top: "16px",
-                              }}
-                              onClick={clearCover}
-                            >
-                              <div className="trash-24"></div>
+                          <hr />
+                          {selectedTab === "keys" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <p className="c1-c p-left fit-container">
+                                Your secret key
+                              </p>
+                              <div
+                                className={`fx-scattered if pointer fit-container ${
+                                  userKeys.sec ? "dashed-onH" : "if-disabled"
+                                }`}
+                                style={{ borderStyle: "dashed" }}
+                                onClick={() =>
+                                  userKeys.sec
+                                    ? copyKey(
+                                        "Private",
+                                        getBech32("nsec", userKeys.sec)
+                                      )
+                                    : null
+                                }
+                              >
+                                <p>
+                                  {userKeys.sec ? (
+                                    shortenKey(getBech32("nsec", userKeys.sec))
+                                  ) : (
+                                    <span className="italic-txt gray-c">
+                                      {userKeys.ext
+                                        ? "check your extension settings"
+                                        : "No secret key is provided"}
+                                    </span>
+                                  )}
+                                </p>
+                                {userKeys.sec && (
+                                  <div className="copy-24"></div>
+                                )}
+                              </div>
+                              <p className="c1-c p-left fit-container">
+                                Your public key
+                              </p>
+                              <div
+                                className="fx-scattered if pointer dashed-onH fit-container"
+                                style={{ borderStyle: "dashed" }}
+                                onClick={() =>
+                                  copyKey(
+                                    "Public",
+                                    getBech32("npub", userKeys.pub)
+                                  )
+                                }
+                              >
+                                <p>
+                                  {shortenKey(getBech32("npub", userKeys.pub))}
+                                </p>
+                                <div className="copy-24"></div>
+                              </div>
                             </div>
                           )}
                         </div>
-                        <div className="fit-container fx-col fx-centered box-pad-h">
-                          <div
-                            style={{
-                              border: "6px solid var(--white)",
-                              borderRadius: "var(--border-r-50)",
-                              position: "relative",
-                              overflow: "hidden",
-                            }}
-                            className="settings-profile-pic"
-                          >
-                            <UserProfilePicNOSTR
-                              img={nostrUserAbout.picture}
-                              size={120}
-                              ring={false}
-                            />
-                            <div
-                              style={{
-                                position: "absolute",
-                                left: 0,
-                                top: 0,
-                                width: "100%",
-                                height: "100%",
-                                zIndex: 1,
-                                backgroundColor: "rgba(0,0,0,.5)",
-                              }}
-                              className="fx-centered pointer toggle"
-                              onClick={() => setShowProfilePicChanger(true)}
-                            >
-                              <div
-                                className="image-24"
-                                style={{ filter: "invert()" }}
-                              ></div>
-                            </div>
-                          </div>
-                          <div className="box-pad-v-s fx-centered fx-col fit-container">
-                            {userName === false && (
-                              <>
-                                <p className="gray-c">
-                                  <Date_ toConvert={nostrUser.added_date} />
-                                </p>
-                              </>
-                            )}
-                            <div
-                              className="fx-centered fit-container"
-                              style={{ columnGap: "10px" }}
-                            >
-                              {userDisplayName !== false ? (
-                                <form
-                                  onSubmit={(e) => {
-                                    e.preventDefault();
-                                    updateInfos();
-                                  }}
-                                  className="fit-container fx-centered"
-                                >
-                                  <input
-                                    className="if ifs-full"
-                                    placeholder="Name"
-                                    value={userDisplayName}
-                                    onChange={(e) =>
-                                      setUserDisplayName(e.target.value)
-                                    }
-                                  />
-                                </form>
-                              ) : (
-                                <>
-                                  {nostrUserAbout.display_name && (
-                                    <h4>{nostrUserAbout.display_name}</h4>
-                                  )}
-                                  {!nostrUserAbout.display_name && (
-                                    <h4 className="p-italic gray-c">Name</h4>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                            <div
-                              className="fx-centered fit-container"
-                              style={{ columnGap: "10px" }}
-                            >
-                              {userName !== false ? (
-                                <form
-                                  onSubmit={(e) => {
-                                    e.preventDefault();
-                                    updateInfos();
-                                  }}
-                                  className="fit-container fx-centered"
-                                >
-                                  <input
-                                    className="if ifs-full"
-                                    placeholder="Username"
-                                    value={userName}
-                                    onChange={(e) =>
-                                      setUserName(e.target.value)
-                                    }
-                                  />
-                                </form>
-                              ) : (
-                                <>
-                                  <p className="gray-c">
-                                    @{nostrUserAbout.name || "Username"}
-                                  </p>
-                                </>
-                              )}
-                            </div>
-
-                            <div
-                              className="fx-centered fit-container"
-                              style={{ columnGap: "10px" }}
-                            >
-                              {userAbout !== false ? (
-                                <form
-                                  onSubmit={(e) => {
-                                    e.preventDefault();
-                                    updateInfos();
-                                  }}
-                                  className="fit-container fx-centered "
-                                >
-                                  <textarea
-                                    className="txt-area box-pad-v-m ifs-full"
-                                    placeholder="About"
-                                    rows={20}
-                                    value={userAbout}
-                                    onChange={(e) =>
-                                      setUserAbout(e.target.value)
-                                    }
-                                  />
-                                </form>
-                              ) : (
-                                <>
-                                  <p
-                                    style={{ maxWidth: "600px" }}
-                                    className="p-centered"
-                                  >
-                                    {nostrUserAbout.about || (
-                                      <span className="gray-c italic-txt">
-                                        About yourself
-                                      </span>
-                                    )}
-                                  </p>
-                                </>
-                              )}
-                            </div>
-                            <div
-                              className="fx-centered fit-container"
-                              style={{ columnGap: "10px" }}
-                            >
-                              {userWebsite !== false ? (
-                                <form
-                                  onSubmit={(e) => {
-                                    e.preventDefault();
-                                    updateInfos();
-                                  }}
-                                  className="fit-container fx-centered"
-                                >
-                                  <input
-                                    className="if ifs-full"
-                                    placeholder="website"
-                                    value={userWebsite}
-                                    onChange={(e) =>
-                                      setUserWebsite(e.target.value)
-                                    }
-                                  />
-                                </form>
-                              ) : (
-                                <>
-                                  {nostrUserAbout.website && (
-                                    <div className="fx-centered fx-start-h">
-                                      <div className="link"></div>
-                                      <a
-                                        href={
-                                          nostrUserAbout.website
-                                            .toLowerCase()
-                                            .includes("http")
-                                            ? nostrUserAbout.website
-                                            : `https://${nostrUserAbout.website}`
-                                        }
-                                        className="orange-c"
-                                        target="_blank"
-                                      >
-                                        {nostrUserAbout.website || "N/A"}
-                                      </a>
-                                    </div>
-                                  )}
-                                  {!nostrUserAbout.website && (
-                                    <p className="gray-c italic-txt">
-                                      Your website
-                                    </p>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                            {!isOnEdit && (
-                              <div
-                                className="round-icon round-icon-tooltip"
-                                data-tooltip="Edit profile"
-                                onClick={triggerEdit}
-                              >
-                                <div className="edit-24"></div>
-                              </div>
-                            )}
-                            {isOnEdit && (
-                              <div className="fx-centered fit-container">
-                                <button
-                                  className="btn btn-normal fx"
-                                  onClick={updateInfos}
-                                >
-                                  Update
-                                </button>
-                                <button
-                                  className="btn btn-gst-red fx"
-                                  onClick={triggerCancelEdit}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        {/* <div
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
                           style={{
-                            columnGap: "5px",
-                            position: "absolute",
-                            left: "16px",
-                            top: "16px",
-                            // width: "130px",
+                            overflow: "visible",
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
                           }}
-                          className="pointer"
                         >
                           <div
-                            className="fit-container sticker sticker-gray-black"
-                            style={{ columnGap: "5px" }}
-                            onClick={() => setCoverUploader(true)}
+                            className="fx-scattered fit-container box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "relays"
+                                ? setSelectedTab("")
+                                : setSelectedTab("relays")
+                            }
                           >
-                            {isLoading ? (
-                              <LoadingDots />
-                            ) : (
-                              <>
-                                <p>+</p>
-                                <p className="p-medium">Upload cover</p>
-                              </>
-                            )}
-                          </div>
-                        </div> */}
-                      </div>
-                      <div className="fit-container fx-centered box-pad-v box-pad-h-m">
-                        <div className="fit-container fx-centered fx-col">
-                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                            <div
-                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                              onClick={() =>
-                                selectedTab === "keys"
-                                  ? setSelectedTab("")
-                                  : setSelectedTab("keys")
-                              }
-                            >
-                              <div className="fx-centered fx-start-h">
-                                <div className="key-icon-24"></div>
-                                <p>Your keys</p>
-                              </div>
-                              <div className="arrow"></div>
+                            <div className="fx-centered fx-start-h">
+                              <div className="server-24"></div>
+                              <p>Relays settings</p>
                             </div>
-                            <hr />
-                            {selectedTab === "keys" && (
-                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                                <p className="c1-c p-left fit-container">
-                                  Your secret key
-                                </p>
-                                <div
-                                  className={`fx-scattered if pointer fit-container ${
-                                    nostrKeys.sec ? "dashed-onH" : "if-disabled"
-                                  }`}
-                                  style={{ borderStyle: "dashed" }}
-                                  onClick={() =>
-                                    nostrKeys.sec
-                                      ? copyKey(
-                                          "Private",
-                                          getBech32("nsec", nostrKeys.sec)
-                                        )
-                                      : null
-                                  }
-                                >
-                                  <p>
-                                    {nostrKeys.sec ? (
-                                      shortenKey(
-                                        getBech32("nsec", nostrKeys.sec)
-                                      )
-                                    ) : (
-                                      <span className="italic-txt gray-c">
-                                        {nostrKeys.ext
-                                          ? "check your extension settings"
-                                          : "No secret key is provided"}
-                                      </span>
-                                    )}
-                                  </p>
-                                  {nostrKeys.sec && (
-                                    <div className="copy-24"></div>
-                                  )}
-                                </div>
-                                <p className="c1-c p-left fit-container">
-                                  Your public key
-                                </p>
-                                <div
-                                  className="fx-scattered if pointer dashed-onH fit-container"
-                                  style={{ borderStyle: "dashed" }}
-                                  onClick={() =>
-                                    copyKey(
-                                      "Public",
-                                      getBech32("npub", nostrKeys.pub)
-                                    )
-                                  }
-                                >
-                                  <p>
-                                    {shortenKey(
-                                      getBech32("npub", nostrKeys.pub)
-                                    )}
-                                  </p>
-                                  <div className="copy-24"></div>
-                                </div>
-                              </div>
-                            )}
+                            <div className="arrow"></div>
                           </div>
-                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                            <div
-                              className="fx-scattered fit-container box-pad-h-m box-pad-v-m "
-                              onClick={() =>
-                                selectedTab === "relays"
-                                  ? setSelectedTab("")
-                                  : setSelectedTab("relays")
-                              }
-                            >
-                              <div className="fx-centered fx-start-h">
-                                <div className="server-24"></div>
-                                <p>Relays settings</p>
-                              </div>
-                              <div className="arrow"></div>
-                            </div>
-                            <hr />
-                            {selectedTab === "relays" && (
-                              <>
+
+                          {selectedTab === "relays" && (
+                            <>
+                              {tempUserRelays.length > 0 && (
                                 <div
-                                  className="fit-container fx-col fx-centered  fx-start-v box-pad-h-m box-pad-v-m fx-start-h"
+                                  className="fit-container fx-col fx-centered  fx-start-v fx-start-h"
                                   style={{
                                     maxHeight: "40vh",
                                     overflow: "scroll",
                                     overflowX: "hidden",
+                                    gap: 0,
                                   }}
+                                  ref={relaysContainer}
                                 >
-                                  {/* {relaysOnPlatform.map((relay, index) => {
-                            return (
-                              <div
-                                key={`${relay}-${index}`}
-                                className="if fit-container fx-centered  fx-start-h if-disabled fx-shrink"
-                              >
-                                <p className="c1-c">{relay}</p>
-                              </div>
-                            );
-                          })} */}
                                   {tempUserRelays?.map((relay, index) => {
-                                    if (index < relaysOnPlatform.length)
-                                      return (
-                                        <div
-                                          key={`${relay}-${index}`}
-                                          className="if fit-container fx-centered  fx-start-h if-disabled fx-shrink"
-                                        >
-                                          <p className="c1-c">{relay}</p>
-                                        </div>
-                                      );
+                                    let status =
+                                      relay.read && relay.write
+                                        ? ""
+                                        : relay.read
+                                        ? "read"
+                                        : "write";
                                     return (
                                       <div
                                         key={`${relay}-${index}`}
-                                        className="if fit-container fx-scattered fx-shrink"
+                                        className="fit-container fx-centered fx-col fx-shrink box-pad-v-s box-pad-h-s"
+                                        style={{
+                                          overflow: "visible",
+                                          backgroundColor: relay.toDelete
+                                            ? "var(--red-side)"
+                                            : "",
+                                          borderBottom:
+                                            "1px solid var(--very-dim-gray)",
+                                          gap: 0,
+                                        }}
                                       >
-                                        <p>{relay}</p>
-                                        <div
-                                          onClick={() =>
-                                            removeRelayFromList(index)
-                                          }
-                                        >
-                                          <div className="trash"></div>
+                                        <div className="fx-scattered fit-container box-pad-h-s box-pad-v-s">
+                                          <div
+                                            className="fx-centered option"
+                                            style={{
+                                              border: "none",
+                                              backgroundColor: "transparent",
+                                            }}
+                                            onClick={() =>
+                                              setShowRelaysInfo(relay.url)
+                                            }
+                                          >
+                                            <RelayImage url={relay.url} />
+                                            <p>{relay.url}</p>
+                                            <div className="info-tt"></div>
+                                          </div>
+                                          <div>
+                                            {!relay.toDelete && (
+                                              <div
+                                                onClick={() =>
+                                                  removeRelayFromList(
+                                                    false,
+                                                    index
+                                                  )
+                                                }
+                                                className="round-icon-small"
+                                              >
+                                                <div className="trash"></div>
+                                              </div>
+                                            )}
+                                            {relay.toDelete && (
+                                              <div
+                                                onClick={() =>
+                                                  removeRelayFromList(
+                                                    true,
+                                                    index
+                                                  )
+                                                }
+                                                className="round-icon-small"
+                                              >
+                                                <div className="switch-arrows"></div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <div className="fit-container fx-centered fx-start-h box-pad-h-m box-marg-s">
+                                          <button
+                                            className={`btn btn-small ${
+                                              status === "read"
+                                                ? "btn-normal"
+                                                : "btn-gray"
+                                            }`}
+                                            onClick={() =>
+                                              changeRelayStatus("read", index)
+                                            }
+                                          >
+                                            Read only
+                                          </button>
+                                          <button
+                                            className={`btn btn-small ${
+                                              status === "write"
+                                                ? "btn-normal"
+                                                : "btn-gray"
+                                            }`}
+                                            onClick={() =>
+                                              changeRelayStatus("write", index)
+                                            }
+                                          >
+                                            Write only
+                                          </button>
+                                          <button
+                                            className={`btn btn-small ${
+                                              status === ""
+                                                ? "btn-normal"
+                                                : "btn-gray"
+                                            }`}
+                                            onClick={() =>
+                                              changeRelayStatus("", index)
+                                            }
+                                          >
+                                            Read-Write
+                                          </button>
                                         </div>
                                       </div>
                                     );
                                   })}
                                 </div>
-                                <div className="fx-centered fx-end-h fit-container box-pad-h box-marg-s">
-                                  <button
-                                    className="btn btn-gst"
-                                    onClick={() => setShowRelaysUpdater(true)}
-                                    disabled={isLoading}
-                                  >
-                                    {isLoading ? <LoadingDots /> : "Add relay"}
-                                  </button>
-                                  <button
-                                    className={`btn ${
-                                      Object.entries(nostrUser.relays)
-                                        .length !== tempUserRelays.length
-                                        ? "btn-normal"
-                                        : "btn-disabled"
-                                    }`}
-                                    onClick={saveRelays}
-                                    disabled={
-                                      !(
-                                        Object.entries(nostrUser.relays)
-                                          .length !== tempUserRelays.length
-                                      ) || isLoading
-                                    }
-                                  >
-                                    {isLoading ? <LoadingDots /> : "Save"}
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                            <div
-                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                              onClick={() =>
-                                selectedTab === "nip05"
-                                  ? setSelectedTab("")
-                                  : setSelectedTab("nip05")
-                              }
-                            >
-                              <div className="fx-centered fx-start-h">
-                                <div className="nip05-24"></div>
-                                <p>NIP-05 address</p>
-                              </div>
-                              <div className="arrow"></div>
-                            </div>
-                            <hr />
-
-                            {selectedTab === "nip05" && (
-                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                                <p className="gray-c p-medium fit-container p-left">
-                                  NIP-05
-                                </p>
-                                <input
-                                  type="text"
-                                  className="if ifs-full"
-                                  value={userNIP05}
-                                  onChange={(e) => setUserNIP05(e.target.value)}
-                                  placeholder={"Enter your NIP-05 address"}
+                              )}
+                              <div className="fx-centered fx-end-h fit-container box-pad-h box-pad-v-s">
+                                <AddRelays
+                                  allRelays={allRelays}
+                                  userAllRelays={tempUserRelays}
+                                  addRelay={addRelay}
                                 />
-
-                                <div className="fit-container fx-centered fx-end-h">
-                                  <button
-                                    className="btn btn-normal"
-                                    onClick={updateInfos}
-                                  >
-                                    Save
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                            <div
-                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                              onClick={() =>
-                                selectedTab === "moderation"
-                                  ? setSelectedTab("")
-                                  : setSelectedTab("moderation")
-                              }
-                            >
-                              <div className="fx-centered fx-start-h">
-                                <div className="content-s-24"></div>
-                                <p>Content moderation</p>
-                              </div>
-                              <div className="arrow"></div>
-                            </div>
-                            <hr />
-                            {selectedTab === "moderation" && (
-                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                                <div className="fx-scattered fit-container">
-                                  <p>Topics customization</p>
-                                  <div
-                                    className="btn-text-gray"
-                                    style={{ marginRight: ".75rem" }}
-                                    onClick={() => setShowTopicsPicker(true)}
-                                  >
-                                    Edit
-                                  </div>
-                                </div>
-                                <hr style={{ margin: ".5rem" }} />
-                                <div className="fx-scattered fit-container">
-                                  <p>Muted list</p>
-                                  <div
-                                    className="btn-text-gray"
-                                    style={{ marginRight: ".75rem" }}
-                                    onClick={() => setShowMutedList(true)}
-                                  >
-                                    Edit
-                                  </div>
-                                </div>
-                                <hr style={{ margin: ".5rem" }} />
-                                <div className="fx-scattered fit-container">
-                                  <p>Crossposting comments suffix</p>
-                                  <div
-                                    className={`toggle ${
-                                      isSave === -1 ? "toggle-dim-gray" : ""
-                                    } ${
-                                      isSave !== -1 && isSave
-                                        ? "toggle-c1"
-                                        : "toggle-dim-gray"
-                                    }`}
-                                    onClick={saveOption}
-                                  ></div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="fit-container sc-s-18 fx-scattered fx-col pointer">
-                            <div
-                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                              onClick={() =>
-                                selectedTab === "lnurls"
-                                  ? setSelectedTab("")
-                                  : setSelectedTab("lnurls")
-                              }
-                            >
-                              <div className="fx-centered fx-start-h">
-                                <div className="lightning"></div>
-                                <p>Lightning addresses</p>
-                              </div>
-                              <div className="arrow"></div>
-                            </div>
-                            <hr />
-
-                            {selectedTab === "lnurls" && (
-                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                                <p className="gray-c p-medium fit-container p-left">
-                                  LUD-16
-                                </p>
-                                <input
-                                  type="text"
-                                  className="if ifs-full"
-                                  value={lud16}
-                                  onChange={handleLUD16}
-                                  placeholder={
-                                    "Enter your address LUD-06 or LUD-16"
-                                  }
-                                />
-                                <p className="gray-c p-medium fit-container p-left">
-                                  LUD-06
-                                </p>
-                                <input
-                                  type="text"
-                                  className="if if-disabled ifs-full"
-                                  value={lud06}
-                                  placeholder={"-"}
-                                  disabled
-                                  onChange={null}
-                                />
-                                {((nostrUserAbout.lud16 !== lud16 && lud06) ||
-                                  !lud16) && (
-                                  <div className="fit-container fx-centered fx-end-h">
-                                    <button
-                                      className="btn btn-normal"
-                                      onClick={updateLightning}
-                                    >
-                                      Save
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            className="fit-container sc-s-18 fx-scattered fx-col pointer"
-                            style={{ overflow: "visible" }}
-                          >
-                            <div
-                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                              onClick={() =>
-                                selectedTab === "wallets"
-                                  ? setSelectedTab("")
-                                  : setSelectedTab("wallets")
-                              }
-                            >
-                              <div className="fx-centered fx-start-h">
-                                <div className="wallet-24"></div>
-                                <p>Wallets</p>
-                              </div>
-                              <div className="arrow"></div>
-                            </div>
-                            <hr />
-
-                            {selectedTab === "wallets" && (
-                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                                <div className="fit-container fx-scattered">
-                                  <div>
-                                    <p className="gray-c">Add wallet</p>
-                                  </div>
-                                  <div className="fx-centered">
-                                    <div
-                                      className="round-icon-small round-icon-tooltip"
-                                      data-tooltip="Add wallet"
-                                      onClick={() => setShowAddWallet(true)}
-                                    >
-                                      <div
-                                        style={{ rotate: "-45deg" }}
-                                        className="p-medium"
-                                      >
-                                        &#10005;
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                {wallets.map((wallet) => {
-                                  return (
-                                    <div
-                                      className="sc-s-18 box-pad-h-m box-pad-v-m fx-scattered fit-container"
-                                      key={wallet.id}
-                                      style={{ overflow: "visible" }}
-                                    >
-                                      <div className="fx-centered">
-                                        <div className="fx-centered">
-                                          {wallet.kind === 1 && (
-                                            <div className="webln-logo-24"></div>
-                                          )}
-                                          {wallet.kind === 2 && (
-                                            <div className="alby-logo-24"></div>
-                                          )}
-                                          {wallet.kind === 3 && (
-                                            <div className="nwc-logo-24"></div>
-                                          )}
-                                          <p>{wallet.entitle}</p>
-                                          {wallet.active && (
-                                            <div
-                                              style={{
-                                                minWidth: "8px",
-                                                aspectRatio: "1/1",
-                                                backgroundColor:
-                                                  "var(--green-main)",
-                                                borderRadius:
-                                                  "var(--border-r-50)",
-                                              }}
-                                            ></div>
-                                          )}
-                                        </div>
-                                        <div className="fx-centered"></div>
-                                      </div>
-                                      <div className="fx-centered">
-                                        {!wallet.active && (
-                                          <div
-                                            className="round-icon-small round-icon-tooltip"
-                                            data-tooltip="Switch wallet"
-                                            onClick={() =>
-                                              handleSelectWallet(wallet.id)
-                                            }
-                                          >
-                                            <div className="switch-arrows"></div>
-                                          </div>
-                                        )}
-                                        {wallet.kind !== 1 && (
-                                          <div
-                                            className="round-icon-small round-icon-tooltip"
-                                            data-tooltip="Remove wallet"
-                                            onClick={() =>
-                                              setShowDeletionPopup(wallet)
-                                            }
-                                          >
-                                            <p className="red-c">&minus;</p>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                          <div className="fit-container sc-s-18 fx-scattered box-pad-h-m box-pad-v-m pointer">
-                            <div className="fx-centered fx-start-h">
-                              <div className="cup-24"></div>
-                              <p>Yaki chest</p>
-                            </div>
-                            {yakiChestStats && isYakiChestLoaded && (
-                              <div className="fx-centered">
-                                <p className="green-c p-medium">Connected</p>
-                                <div
-                                  style={{
-                                    minWidth: "8px",
-                                    aspectRatio: "1/1",
-                                    backgroundColor: "var(--green-main)",
-                                    borderRadius: "var(--border-r-50)",
-                                  }}
-                                ></div>
-                              </div>
-                            )}
-                            {!yakiChestStats && isYakiChestLoaded && (
-                              <div className="fx-centered">
                                 <button
-                                  className="btn btn-small btn-normal"
-                                  onClick={() => setShowYakiChest(true)}
+                                  className={`btn ${
+                                    JSON.stringify(userAllRelays) !==
+                                    JSON.stringify(tempUserRelays)
+                                      ? "btn-normal"
+                                      : "btn-disabled"
+                                  }`}
+                                  onClick={saveRelays}
+                                  disabled={
+                                    JSON.stringify(userAllRelays) ===
+                                      JSON.stringify(tempUserRelays) ||
+                                    isLoading
+                                  }
                                 >
-                                  Connect
+                                  {isLoading ? <LoadingDots /> : "Save"}
                                 </button>
                               </div>
-                            )}
-                            {!isYakiChestLoaded && (
-                              <div className="fx-centered">
-                                <LoadingDots />
-                              </div>
-                            )}
-                          </div>
+                            </>
+                          )}
+                        </div>
+
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
+                          }}
+                        >
                           <div
-                            className="fit-container sc-s-18 fx-scattered box-pad-h-m box-pad-v-m pointer"
-                            onClick={userLogout}
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "moderation"
+                                ? setSelectedTab("")
+                                : setSelectedTab("moderation")
+                            }
                           >
                             <div className="fx-centered fx-start-h">
-                              <div className="logout-24"></div>
-                              <p>Logout</p>
+                              <div className="content-s-24"></div>
+                              <p>Content moderation</p>
                             </div>
+                            <div className="arrow"></div>
+                          </div>
+                          {selectedTab === "moderation" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              {/* <div className="fx-scattered fit-container">
+                                <p>Topics customization</p>
+                                <div
+                                  className="btn-text-gray"
+                                  style={{ marginRight: ".75rem" }}
+                                  onClick={() => setShowTopicsPicker(true)}
+                                >
+                                  Edit
+                                </div>
+                              </div> */}
+                              {/* <hr style={{ margin: ".5rem" }} /> */}
+                              <div className="fx-scattered fit-container">
+                                <p>Muted list</p>
+                                <div
+                                  className="btn-text-gray"
+                                  style={{ marginRight: ".75rem" }}
+                                  onClick={() => setShowMutedList(true)}
+                                >
+                                  Edit
+                                </div>
+                              </div>
+                              {/* <hr style={{ margin: ".5rem" }} />
+                              <div className="fx-scattered fit-container">
+                                <p>Crossposting comments suffix</p>
+                                <div
+                                  className={`toggle ${
+                                    isSave === -1 ? "toggle-dim-gray" : ""
+                                  } ${
+                                    isSave !== -1 && isSave
+                                      ? "toggle-c1"
+                                      : "toggle-dim-gray"
+                                  }`}
+                                  onClick={saveOption}
+                                ></div>
+                              </div> */}
+                            </div>
+                          )}
+                        </div>
+
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            overflow: "visible",
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                          }}
+                        >
+                          <div
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "wallets"
+                                ? setSelectedTab("")
+                                : setSelectedTab("wallets")
+                            }
+                          >
+                            <div className="fx-centered fx-start-h">
+                              <div className="wallet-24"></div>
+                              <p>Wallets</p>
+                            </div>
+                            <div className="arrow"></div>
+                          </div>
+                          <hr />
+
+                          {selectedTab === "wallets" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <div className="fit-container fx-scattered">
+                                <div>
+                                  <p className="gray-c">Add wallet</p>
+                                </div>
+                                <div className="fx-centered">
+                                  <div
+                                    className="round-icon-small round-icon-tooltip"
+                                    data-tooltip="Add wallet"
+                                    onClick={() => setShowAddWallet(true)}
+                                  >
+                                    <div
+                                      style={{ rotate: "-45deg" }}
+                                      className="p-medium"
+                                    >
+                                      &#10005;
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              {wallets.map((wallet) => {
+                                return (
+                                  <div
+                                    className="sc-s-18 box-pad-h-m box-pad-v-m fx-scattered fit-container"
+                                    key={wallet.id}
+                                    style={{ overflow: "visible" }}
+                                  >
+                                    <div className="fx-centered">
+                                      <div className="fx-centered">
+                                        {wallet.kind === 1 && (
+                                          <div className="webln-logo-24"></div>
+                                        )}
+                                        {wallet.kind === 2 && (
+                                          <div className="alby-logo-24"></div>
+                                        )}
+                                        {wallet.kind === 3 && (
+                                          <div className="nwc-logo-24"></div>
+                                        )}
+                                        <p>{wallet.entitle}</p>
+                                        {wallet.active && (
+                                          <div
+                                            style={{
+                                              minWidth: "8px",
+                                              aspectRatio: "1/1",
+                                              backgroundColor:
+                                                "var(--green-main)",
+                                              borderRadius:
+                                                "var(--border-r-50)",
+                                            }}
+                                          ></div>
+                                        )}
+                                      </div>
+                                      <div className="fx-centered"></div>
+                                    </div>
+                                    <div className="fx-centered">
+                                      {!wallet.active && (
+                                        <div
+                                          className="round-icon-small round-icon-tooltip"
+                                          data-tooltip="Switch wallet"
+                                          onClick={() =>
+                                            handleSelectWallet(wallet.id)
+                                          }
+                                        >
+                                          <div className="switch-arrows"></div>
+                                        </div>
+                                      )}
+                                      {wallet.kind !== 1 && (
+                                        <div
+                                          className="round-icon-small round-icon-tooltip"
+                                          data-tooltip="Remove wallet"
+                                          onClick={() =>
+                                            setShowDeletionPopup(wallet)
+                                          }
+                                        >
+                                          <p className="red-c">&minus;</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
+                          }}
+                        >
+                          <div
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "theme"
+                                ? setSelectedTab("")
+                                : setSelectedTab("theme")
+                            }
+                          >
+                            <div className="fx-centered fx-start-h">
+                              <div className="theme-24"></div>
+                              <p>Appearance</p>
+                            </div>
+                            <div className="arrow"></div>
+                          </div>
+                          {selectedTab === "theme" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <div className="fx-scattered fit-container">
+                                <DtoLToggleButton />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="fit-container fx-scattered box-pad-h-m box-pad-v-m pointer"
+                          style={{
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                          }}
+                        >
+                          <div className="fx-centered fx-start-h">
+                            <div className="cup-24"></div>
+                            <p>Yaki chest</p>
+                          </div>
+                          {yakiChestStats && isYakiChestLoaded && (
+                            <div className="fx-centered">
+                              <p className="green-c p-medium">Connected</p>
+                              <div
+                                style={{
+                                  minWidth: "8px",
+                                  aspectRatio: "1/1",
+                                  backgroundColor: "var(--green-main)",
+                                  borderRadius: "var(--border-r-50)",
+                                }}
+                              ></div>
+                            </div>
+                          )}
+                          {!yakiChestStats && isYakiChestLoaded && (
+                            <div className="fx-centered">
+                              <button
+                                className="btn btn-small btn-normal"
+                                onClick={() => setShowYakiChest(true)}
+                              >
+                                Connect
+                              </button>
+                            </div>
+                          )}
+                          {!isYakiChestLoaded && (
+                            <div className="fx-centered">
+                              <LoadingDots />
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="fit-container fx-scattered box-pad-h-m box-pad-v-m pointer"
+                          onClick={userLogout}
+                        >
+                          <div className="fx-centered fx-start-h">
+                            <div className="logout-24"></div>
+                            <p>Logout</p>
+                          </div>
+                        </div>
+                        <div
+                          className="fit-container fx-centered fx-col"
+                          style={{ height: "350px" }}
+                        >
+                          <div className="yakihonne-logo-128"></div>
+                          <p
+                            className="p-centered gray-c"
+                            style={{ maxWidth: "400px" }}
+                          >
+                            We strive to make the best out of Nostr, support us
+                            below or send us your valuable feedback.
+                          </p>
+                          <p className="c1-c">
+                            v{process.env.REACT_APP_APP_VERSION}
+                          </p>
+                          <div className="fx-centered">
+                            <ZapTip
+                              recipientLNURL={process.env.REACT_APP_YAKI_LUD16}
+                              recipientPubkey={
+                                process.env.REACT_APP_YAKI_PUBKEY
+                              }
+                              senderPubkey={userKeys.pub}
+                              recipientInfo={{
+                                name: "Yakihonne",
+                                picture:
+                                  "https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png",
+                              }}
+                            />
+                            <a href="mailto:contact@yakihonne.com">
+                              <div
+                                className="round-icon round-icon-tooltip"
+                                data-tooltip="Send us your feedback"
+                              >
+                                <div className="env"></div>
+                              </div>
+                            </a>
                           </div>
                         </div>
                       </div>
                     </>
                   )}
-                  {nostrUser && !nostrKeys.sec && !nostrKeys.ext && (
+                  {userMetadata && !userKeys.sec && !userKeys.ext && (
                     <PagePlaceholder page={"nostr-unauthorized"} />
                   )}
-                  {!nostrUser && (
+                  {!userMetadata && (
                     <PagePlaceholder page={"nostr-not-connected"} />
                   )}
                 </div>
-                {nostrUser && (
+                {/* {userMetadata && (
                   <div
                     className="box-pad-h-s fx-centered fx-col fx-start-v extras-homepage"
                     style={{
@@ -1258,7 +996,7 @@ export default function Settings() {
                       <SearchbarNOSTR />
                     </div>
                     <div
-                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered box-marg-s"
                       style={{
                         backgroundColor: "var(--c1-side)",
                         rowGap: "24px",
@@ -1266,47 +1004,68 @@ export default function Settings() {
                         overflow: "visible",
                       }}
                     >
-                      <h4>My relays</h4>
-                      <div className="fx-centered fx-centered fx-wrap">
-                        {relaysStatus.map((relay, index) => {
-                          return (
-                            <div
-                              key={index}
-                              className="fit-container fx-scattered"
-                            >
-                              <p>{relay.url}</p>
-                              {relay?.connected && (
+                      {relaysStatus.length > 0 && (
+                        <div className=" fx-centered fx-col fx-start-v fit-container">
+                          <h4>My relays</h4>
+                          <div className="fx-centered fx-centered fx-wrap">
+                            {relaysStatus.map((relay, index) => {
+                              return (
                                 <div
-                                  style={{
-                                    minWidth: "8px",
-                                    aspectRatio: "1/1",
-                                    backgroundColor: "var(--green-main)",
-                                    borderRadius: "var(--border-r-50)",
-                                  }}
-                                  className="round-icon-tooltip pointer"
-                                  data-tooltip="connected"
-                                ></div>
-                              )}
-                              {!relay?.connected && (
-                                <div
-                                  style={{
-                                    minWidth: "8px",
-                                    aspectRatio: "1/1",
-                                    backgroundColor: "var(--red-main)",
-                                    borderRadius: "var(--border-r-50)",
-                                  }}
-                                  className="round-icon-tooltip pointer"
-                                  data-tooltip="not connected"
-                                ></div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                                  key={index}
+                                  className="fit-container fx-scattered"
+                                >
+                                  <p>{relay.url}</p>
+                                  {relay?.connected && (
+                                    <div
+                                      style={{
+                                        minWidth: "8px",
+                                        aspectRatio: "1/1",
+                                        backgroundColor: "var(--green-main)",
+                                        borderRadius: "var(--border-r-50)",
+                                      }}
+                                      className="round-icon-tooltip pointer"
+                                      data-tooltip="connected"
+                                    ></div>
+                                  )}
+                                  {!relay?.connected && (
+                                    <div
+                                      style={{
+                                        minWidth: "8px",
+                                        aspectRatio: "1/1",
+                                        backgroundColor: "var(--red-main)",
+                                        borderRadius: "var(--border-r-50)",
+                                      }}
+                                      className="round-icon-tooltip pointer"
+                                      data-tooltip="not connected"
+                                    ></div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {relaysStatus.length === 0 && (
+                        <div
+                          className="fx-centered fx-col"
+                          style={{ height: "200px" }}
+                        >
+                          <h4>No relays</h4>
+                          <p className="gray-c p-centered">
+                            Add your favorite relays to your list
+                          </p>
+                          <button
+                            className="btn btn-normal btn-small"
+                            onClick={() => setSelectedTab("relays")}
+                          >
+                            Add relays
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <Footer />
                   </div>
-                )}
+                )} */}
               </div>
             </main>
           </div>
@@ -1317,40 +1076,41 @@ export default function Settings() {
 }
 
 const MutedList = ({ exit }) => {
-  const {
-    nostrUser,
-    nostrKeys,
-    mutedList,
-    isPublishing,
-    setToast,
-    setToPublish,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMutedList = useSelector((state) => state.userMutedList);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const muteUnmute = async (index) => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
 
-      let tempTags = Array.from(mutedList.map((pubkey) => ["p", pubkey]));
+      let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
 
       tempTags.splice(index, 1);
 
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 10000,
-        content: "",
-        tags: tempTags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 10000,
+          content: "",
+          tags: tempTags,
+          allRelays: userRelays,
+        })
+      );
     } catch (err) {
       console.log(err);
     }
   };
-  if (!Array.isArray(mutedList)) return;
+  if (!Array.isArray(userMutedList)) return;
   return (
     <div className="fixed-container box-pad-h fx-centered">
       <div
@@ -1360,15 +1120,15 @@ const MutedList = ({ exit }) => {
         <div className="close" onClick={exit}>
           <div></div>
         </div>
-        {mutedList.length > 0 && (
+        {userMutedList.length > 0 && (
           <h4 className="p-centered box-marg-s">Muted list</h4>
         )}
-        {mutedList.length > 0 && (
+        {userMutedList.length > 0 && (
           <div
             className="fit-container fx-centered fx-col fx-start-v fx-start-h"
             style={{ maxHeight: "40vh", overflow: "scroll" }}
           >
-            {mutedList.map((pubkey, index) => {
+            {userMutedList.map((pubkey, index) => {
               return (
                 <div key={pubkey} className="fit-container fx-shrink">
                   <NProfilePreviewer
@@ -1382,7 +1142,7 @@ const MutedList = ({ exit }) => {
             })}
           </div>
         )}
-        {mutedList.length === 0 && (
+        {userMutedList.length === 0 && (
           <div
             className="fx-centered fx-col fit-container"
             style={{ height: "20vh" }}
@@ -1400,7 +1160,7 @@ const MutedList = ({ exit }) => {
 };
 
 const CoverUploader = ({ exit, oldThumbnail, uploadCover }) => {
-  const { setToast } = useContext(Context);
+  const dispatch = useDispatch();
   const [thumbnail, setThumbnail] = useState("");
   const [thumbnailPrev, setThumbnailPrev] = useState(oldThumbnail || "");
   const [thumbnailUrl, setThumbnailUrl] = useState(oldThumbnail || "");
@@ -1408,10 +1168,12 @@ const CoverUploader = ({ exit, oldThumbnail, uploadCover }) => {
   const handleImageUpload = (e) => {
     let file = e.target.files[0];
     if (file && !file.type.includes("image/")) {
-      setToast({
-        type: 2,
-        desc: "Image type is unsupported!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "Image type is unsupported!",
+        })
+      );
       return;
     }
     if (file) {
@@ -1576,5 +1338,242 @@ const DeletionPopUp = ({ exit, handleDelete }) => {
         </div>
       </section>
     </section>
+  );
+};
+
+const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
+  const [showList, setShowList] = useState(false);
+  const [searchedRelay, setSearchedRelay] = useState("");
+
+  const searchedRelays = useMemo(() => {
+    let tempRelay = allRelays.filter((relay) => {
+      if (
+        !userAllRelays.map((_) => _.url).includes(relay) &&
+        relay.includes(searchedRelay)
+      )
+        return relay;
+    });
+    return tempRelay;
+  }, [userAllRelays, searchedRelay, allRelays]);
+  const optionsRef = useRef(null);
+
+  useEffect(() => {
+    const handleOffClick = (e) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target))
+        setShowList(false);
+    };
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [optionsRef]);
+
+  const handleOnChange = (e) => {
+    let value = e.target.value;
+    setSearchedRelay(value);
+  };
+
+  return (
+    <div
+      style={{ position: "relative" }}
+      className="fit-container"
+      ref={optionsRef}
+      onClick={() => setShowList(true)}
+    >
+      <input
+        placeholder="Search or add relay"
+        className="if ifs-full"
+        value={searchedRelay}
+        onChange={handleOnChange}
+      />
+      {showList && (
+        <div
+          className="fit-container sc-s-18 fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-m"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: "calc(100% + 5px)",
+            maxHeight: "200px",
+            overflow: "scroll",
+            zIndex: "200",
+          }}
+        >
+          {searchedRelays.map((relay) => {
+            return (
+              <div
+                className="fx-scattered fit-container"
+                onClick={() => addRelay(relay)}
+              >
+                <p>{relay}</p>
+                <div className="plus-sign"></div>
+              </div>
+            );
+          })}
+          {searchedRelays.length === 0 && searchedRelay && (
+            <div
+              className="fx-scattered fit-container"
+              onClick={() => {
+                addRelay("wss://" + searchedRelay.replace("wss://", ""));
+                setSearchedRelay("");
+              }}
+            >
+              <p>{searchedRelay}</p>
+              <div className="plus-sign"></div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const RelaysInfo = ({ url, exit }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [relayInfo, setRelayInfo] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const info = await axios.get(url.replace("wss", "https"), {
+          headers: {
+            Accept: "application/nostr+json",
+          },
+        });
+
+        let owner = info.data.pubkey
+          ? getUser(info.data.pubkey) || getEmptyuserMetadata(info.data.pubkey)
+          : false;
+
+        setRelayInfo({ ...info.data, owner });
+        setIsLoading(false);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <div className="fixed-container box-pad-h fx-centered">
+      <div
+        className="sc-s box-pad-h box-pad-v"
+        style={{
+          width: "min(100%,500px)",
+          position: "relative",
+        }}
+      >
+        <div className="close" onClick={exit}>
+          <div></div>
+        </div>
+        {isLoading && (
+          <div
+            className="fx-centered fit-container"
+            style={{ height: "300px" }}
+          >
+            <LoadingDots />
+          </div>
+        )}
+        {!isLoading && (
+          <div className="fx-centered fx-col">
+            <div className="fit-container fx-centered">
+              {!relayInfo.icon && <RelayImage url={url} size={64} />}
+            </div>
+            <h4>{relayInfo.name}</h4>
+            <p className="gray-c p-centered">{relayInfo.description}</p>
+            <div
+              className="box-pad-v fit-container fx-centered fx-col"
+              style={{
+                borderTop: "1px solid var(--very-dim-gray)",
+                borderBottom: "1px solid var(--very-dim-gray)",
+              }}
+            >
+              <div className="fx-scattered fit-container">
+                <p>Owner</p>
+                <div className="fx-centered">
+                  {relayInfo.owner && (
+                    <p>
+                      {relayInfo.owner.display_name || relayInfo.owner.name}
+                    </p>
+                  )}
+                  {!relayInfo.owner && <p>N/A</p>}
+                  {relayInfo.owner && (
+                    <UserProfilePicNOSTR
+                      img={relayInfo.owner.picture}
+                      size={24}
+                      mainAccountUser={false}
+                      ring={false}
+                      user_id={relayInfo.pubkey}
+                    />
+                  )}
+                </div>
+              </div>
+              <hr />
+              <div className="fx-scattered fit-container">
+                <p style={{ minWidth: "max-content" }}>Contact</p>
+                <p className="p-one-line">{relayInfo.contact || "N/A"}</p>
+              </div>
+              <hr />
+              <div className="fx-scattered fit-container">
+                <p>Software</p>
+                <p>{relayInfo.software.split("/")[4]}</p>
+              </div>
+              <hr />
+              <div className="fx-scattered fit-container">
+                <p>Version</p>
+                <p>{relayInfo.version}</p>
+              </div>
+              <hr />
+            </div>
+            <div className="box-pad-v-m fx-centered fx-col">
+              <p className="gray-c p-centered p-medium box-marg-s">
+                Supported nips
+              </p>
+              <div className="fx-centered fx-wrap ">
+                {relayInfo.supported_nips.map((nip) => {
+                  return (
+                    <div key={nip} className="fx-centered round-icon">
+                      {nip}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const RelayImage = ({ url, size = 24 }) => {
+  return (
+    <div
+      style={{
+        minWidth: `${size}px`,
+        aspectRatio: "1/1",
+        position: "relative",
+      }}
+      className="sc-s fx-centered"
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          zIndex: 2,
+          backgroundImage: `url(${url.replace(
+            "wss://",
+            "https://"
+          )}/favicon.ico)`,
+        }}
+        className="bg-img cover-bg  fit-container fit-height"
+      ></div>
+      <p
+        className={`p-bold p-caps ${size > 24 ? "p-big" : ""}`}
+        style={{ position: "relative", zIndex: 1 }}
+      >
+        {url.split(".")[1].charAt(0)}
+      </p>
+    </div>
   );
 };

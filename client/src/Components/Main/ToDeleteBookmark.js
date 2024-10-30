@@ -1,39 +1,44 @@
-import React, { useContext, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
+import React, { useState } from "react";
 import LoadingDots from "../LoadingDots";
-import { filterRelays } from "../../Helpers/Encryptions";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 export default function ToDeleteBookmark({
   exit,
   exitAndRefresh,
   post_id,
   title,
+  aTag
 }) {
-  const { setToast, nostrKeys, nostrUser, setToPublish } = useContext(Context);
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
 
+  const [isLoading, setIsLoading] = useState(false);
   const handleDelete = () => {
     try {
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 5,
-        content: "This event will be deleted!",
-        tags: [["e", post_id]],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 5,
+          content: "This event will be deleted!",
+          tags: [["e", post_id]],
+          aTag,
+          allRelays: userRelays
+        })
+      );
       setIsLoading(false);
       exitAndRefresh();
     } catch (err) {
       setIsLoading(false);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while deleting this bookmark.",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while deleting this bookmark.",
+        })
+      );
     }
   };
 

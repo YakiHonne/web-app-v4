@@ -1,6 +1,6 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { nip19, finalizeEvent } from "nostr-tools";
 import axios from "axios";
-import { nip19, finalizeEvent, SimplePool } from "nostr-tools";
-import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import QRCode from "react-qr-code";
 import { Link } from "react-router-dom";
@@ -13,11 +13,11 @@ import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
+import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
 import {
   encryptEventData,
   filterRelays,
-  getParsed3000xContent,
+  getParsedRepEvent,
   shortenKey,
 } from "../../Helpers/Encryptions";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
@@ -26,10 +26,11 @@ import { getNoteTree } from "../../Helpers/Helpers";
 import FlashNewsCard from "../../Components/Main/FlashNewsCard";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import HomeFN from "../../Components/Main/HomeFN";
 import bannedList from "../../Content/BannedList";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
-const pool = new SimplePool();
 const MAX_CHAR = 1000;
 const TIME_THRESHOLD = 1706482800;
 
@@ -97,14 +98,14 @@ const getTimes = () => {
 const timeInit = getTimes();
 
 export default function FlashNews() {
-  const { nostrUser, nostrUserLoaded, nostrKeys, mutedList, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userMutedList = useSelector((state) => state.userMutedList);
 
   const [showAddNews, setShowAddNews] = useState(false);
   const [contentType, setContentType] = useState("all");
   const [flashNews, setFlashNews] = useState([]);
-  const [importantFN, setImportantFN] = useState([]);
-  const [myFlashNews, setMyFlashNews] = useState([]);
   const [onlyImportant, setOnlyImportant] = useState(false);
   const [onlyHasNews, setOnlyHasNews] = useState(true);
   const [firstEventTime, setFirstEventTime] = useState(timeInit.since);
@@ -159,14 +160,14 @@ export default function FlashNews() {
             params: {
               from: firstEventTime,
               to: lastEventTime,
-              pubkey: nostrKeys.pub,
+              pubkey: userKeys.pub,
               page,
               elPerPage,
             },
           });
         if (!specificDate)
           data = await axios.get(API_BASE_URL + "/api/v2/flashnews", {
-            params: { pubkey: nostrKeys.pub, page, elPerPage },
+            params: { pubkey: userKeys.pub, page, elPerPage },
           });
 
         let tempFN = [{ date: firstEventTime, news: [] }];
@@ -214,8 +215,8 @@ export default function FlashNews() {
       setIsLoading(false);
     };
 
-    if (Array.isArray(mutedList)) fetchData();
-  }, [lastEventTime, contentType, page, mutedList]);
+    if (Array.isArray(userMutedList)) fetchData();
+  }, [lastEventTime, contentType, page, userMutedList]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -256,7 +257,7 @@ export default function FlashNews() {
   }, [isLoading]);
 
   useEffect(() => {
-    if (!nostrKeys && contentType === "self") {
+    if (!userKeys && contentType === "self") {
       setFirstEventTime(timeInit.since);
       setLastEventTime(timeInit.until);
       setShowOptions(false);
@@ -268,22 +269,7 @@ export default function FlashNews() {
       setPage(0);
       setTotal(0);
     }
-  }, [nostrKeys]);
-
-  useEffect(() => {
-    const fetchImportantFlashNEws = async () => {
-      try {
-        let data = await axios.get(
-          API_BASE_URL + "/api/v1/mb/flashnews/important"
-        );
-
-        setImportantFN(data.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchImportantFlashNEws();
-  }, []);
+  }, [userKeys]);
 
   useEffect(() => {
     let flashNewsIDs =
@@ -297,40 +283,25 @@ export default function FlashNews() {
 
     let tempRating = [];
     if (flashNewsIDs.length === 0 || isLoading) return;
-    let relaysToUse = nostrUser
-      ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-      : relaysOnPlatform;
 
-    const sub = pool.subscribeMany(
-      relaysToUse,
+    const sub = ndkInstance.subscribe(
       [
         {
           kinds: [7],
           "#e": flashNewsIDs,
         },
       ],
-      {
-        onevent(event) {
-          tempRating.push(event);
-          setRatings((prev) => [...prev, event]);
-        },
-      }
+      { cacheUsage: "CACHE_FIRST" }
     );
-  }, [isLoading]);
 
-  // const switchContentType = () => {
-  //   if (contentType === "self") setContentType("all");
-  //   if (contentType === "all") setContentType("self");
-  //   setFirstEventTime(timeInit.since);
-  //   setLastEventTime(timeInit.until);
-  //   setShowOptions(false);
-  //   setShowCalendar(false);
-  //   setFlashNews([]);
-  //   setOnlyImportant(false);
-  //   setSpecificDate(false);
-  //   setPage(0);
-  //   setTotal(0);
-  // };
+    sub.on("event", (event) => {
+      tempRating.push(event);
+      setRatings((prev) => [...prev, event]);
+    });
+    return () => {
+      sub.stop();
+    };
+  }, [isLoading]);
 
   const handleSelectingDates = (e, data) => {
     let tempDateFirst = new Date(data);
@@ -338,10 +309,12 @@ export default function FlashNews() {
     tempDateFirst.setHours(0, 0, 0);
     tempDateLast.setHours(23, 59, 59);
     if (Math.floor(tempDateLast.getTime() / 1000) === lastEventTime) {
-      setToast({
-        type: 3,
-        desc: "The date you're choosing is already on screen!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The date you're choosing is already on screen!",
+        })
+      );
       return;
     }
     setSpecificDate(true);
@@ -429,7 +402,7 @@ export default function FlashNews() {
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             <ArrowUp />
-            {/* {(nostrKeys?.sec || nostrKeys?.ext) && (
+            {/* {(userKeys?.sec || userKeys?.ext) && (
             <div
               style={{
                 position: "fixed",
@@ -449,7 +422,7 @@ export default function FlashNews() {
           )} */}
             {/* <NavbarNOSTR /> */}
             <div className="fx-centered fit-container  fx-start-h fx-start-v">
-              <div style={{ flex: 1.5, paddingLeft: "1rem" }}>
+              <div style={{ paddingLeft: "1rem" }} className="main-middle">
                 {/* <div style={{ width: "min(100%,600px)" }}> */}
                 <div
                   className="fit-container fx-scattered"
@@ -530,7 +503,7 @@ export default function FlashNews() {
                         )}
                       </div>
                     </div>
-                    {nostrKeys && (
+                    {userKeys && (
                       <div style={{ position: "relative" }}>
                         <div
                           className="round-icon round-icon-tooltip"
@@ -638,9 +611,10 @@ export default function FlashNews() {
                         )}
                         {fn.news.map((news, index) => {
                           let ratingStats = getRatingStats(news.id);
-                          let isBanned = [...bannedList, ...mutedList].includes(
-                            news.author.pubkey
-                          );
+                          let isBanned = [
+                            ...bannedList,
+                            ...userMutedList,
+                          ].includes(news.author.pubkey);
 
                           if (!onlyImportant && !isBanned)
                             return (
@@ -757,17 +731,7 @@ export default function FlashNews() {
                 <div className="sticky fit-container">
                   <SearchbarNOSTR />
                 </div>
-                <div
-                  className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                  style={{
-                    backgroundColor: "var(--c1-side)",
-                    rowGap: "24px",
-                    border: "none",
-                  }}
-                >
-                  <h4>Important Flash News</h4>
-                  <HomeFN flashnews={importantFN} />
-                </div>
+                <ImportantFlashNews />
                 <Footer />
               </div>
             </div>
@@ -779,15 +743,12 @@ export default function FlashNews() {
 }
 
 const AddNews = ({ exit }) => {
-  const {
-    nostrUserAbout,
-    nostrUserLoaded,
-    nostrUser,
-    nostrKeys,
-    setToPublish,
-    setToast,
-    isPublishing,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [note, setNote] = useState("");
   // const [currentWordsCount, setCurrentWordsCount] = useState(0);
   const [postAsType, setPostAsType] = useState(0);
@@ -829,92 +790,87 @@ const AddNews = ({ exit }) => {
     const fetchData = async () => {
       try {
         setPosts([]);
-        let relaysToFetchFrom = filterRelays(
-          nostrUser?.relays || [],
-          relaysOnPlatform
+
+        var sub = ndkInstance.subscribe(
+          [{ kinds: [30023, 30004], authors: [userKeys.pub] }],
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
 
-        var sub = pool.subscribeMany(
-          relaysToFetchFrom,
-          [{ kinds: [30023, 30004], authors: [nostrKeys.pub] }],
-          {
-            onevent(event) {
-              let d = event.tags.find((tag) => tag[0] === "d")[1];
-              let naddr = nip19.naddrEncode({
-                identifier: d,
-                pubkey: event.pubkey,
-                kind: event.kind,
-              });
-              if (event.kind === 30023)
-                setPosts((prev) => {
-                  let index = prev.findIndex(
-                    (item) => item.d === d && item.kind === event.kind
-                  );
-                  let newP = Array.from(prev);
-                  if (index === -1) newP = [...newP, extractPostData(event)];
-                  if (index !== -1) {
-                    if (prev[index].created_at < event.created_at) {
-                      newP.splice(index, 1);
-                      newP.push(extractPostData(event));
-                    }
-                  }
+        sub.on("event", (event) => {
+          let d = event.tags.find((tag) => tag[0] === "d")[1];
+          let naddr = nip19.naddrEncode({
+            identifier: d,
+            pubkey: event.pubkey,
+            kind: event.kind,
+          });
+          if (event.kind === 30023)
+            setPosts((prev) => {
+              let index = prev.findIndex(
+                (item) => item.d === d && item.kind === event.kind
+              );
+              let newP = Array.from(prev);
+              if (index === -1) newP = [...newP, extractPostData(event)];
+              if (index !== -1) {
+                if (prev[index].created_at < event.created_at) {
+                  newP.splice(index, 1);
+                  newP.push(extractPostData(event));
+                }
+              }
 
-                  newP = newP.sort(
-                    (item_1, item_2) => item_2.created_at - item_1.created_at
-                  );
+              newP = newP.sort(
+                (item_1, item_2) => item_2.created_at - item_1.created_at
+              );
 
-                  return newP;
-                });
-              if (event.kind === 30004)
-                setCurations((prev) => {
-                  let content = getParsed3000xContent(event.tags);
-                  let index = prev.findIndex((item) => item.d === d);
-                  let newP = Array.from(prev);
-                  if (index === -1)
-                    newP = [
-                      ...newP,
-                      {
-                        ...event,
-                        ...content,
-                        naddr,
-                        created_at: event.created_at,
-                        d,
-                      },
-                    ];
-                  if (index !== -1) {
-                    if (prev[index].created_at < event.created_at) {
-                      newP.splice(index, 1);
-                      newP.push({
-                        ...event,
-                        ...content,
-                        naddr,
-                        created_at: event.created_at,
-                        d,
-                      });
-                    }
-                  }
+              return newP;
+            });
+          if (event.kind === 30004)
+            setCurations((prev) => {
+              let content = getParsedRepEvent(event);
+              let index = prev.findIndex((item) => item.d === d);
+              let newP = Array.from(prev);
+              if (index === -1)
+                newP = [
+                  ...newP,
+                  {
+                    ...event,
+                    ...content,
+                    naddr,
+                    created_at: event.created_at,
+                    d,
+                  },
+                ];
+              if (index !== -1) {
+                if (prev[index].created_at < event.created_at) {
+                  newP.splice(index, 1);
+                  newP.push({
+                    ...event,
+                    ...content,
+                    naddr,
+                    created_at: event.created_at,
+                    d,
+                  });
+                }
+              }
 
-                  newP = newP.sort(
-                    (item_1, item_2) => item_2.created_at - item_1.created_at
-                  );
+              newP = newP.sort(
+                (item_1, item_2) => item_2.created_at - item_1.created_at
+              );
 
-                  return newP;
-                });
-            },
-          }
-        );
+              return newP;
+            });
+        });
       } catch (err) {
         console.log(err);
       }
     };
-    if (nostrKeys && nostrUserLoaded) {
+    if (userKeys) {
       fetchData();
       return;
     }
-    if (!nostrKeys && nostrUserLoaded) {
+    if (!userKeys) {
       // setIsLoaded(true);
     }
-  }, [nostrKeys, nostrUserLoaded]);
+  }, [userKeys]);
 
   const handleNoteOnChange = (e) => {
     let value = e.target.value.replace(/[^\S\r\n]+/g, " ");
@@ -924,38 +880,43 @@ const AddNews = ({ exit }) => {
   const handlePublishing = async () => {
     try {
       if (currentWordsCount === 0 && !note) {
-        setToast({
-          type: 3,
-          desc: "Your note is empty!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "Your note is empty!",
+          })
+        );
         return;
       }
       if (MAX_CHAR - currentWordsCount < 0) {
-        setToast({
-          type: 3,
-          desc: "Your note has exceeded the maximum character number.",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "Your note has exceeded the maximum character number.",
+          })
+        );
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       if (!pricing) {
-        setToast({
-          type: 3,
-          desc: "An error occured while communicating with the server!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An error occured while communicating with the server!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
       if (flag) tags.push(["important", `${created_at}`]);
@@ -975,7 +936,7 @@ const AddNews = ({ exit }) => {
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
         } catch (err) {
@@ -984,14 +945,11 @@ const AddNews = ({ exit }) => {
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
 
       let extras = flag ? pricing?.flag_pricing || 21 : 0;
       let sats = ((pricing.fn_pricing || 800) + extras) * 1000;
-
-      // let extras = flag ? 1 : 0;
-      // let sats = (1 + extras) * 1000;
 
       let zapTags = [
         ["relays", ...relaysOnPlatform],
@@ -1002,8 +960,8 @@ const AddNews = ({ exit }) => {
       ];
 
       var zapEvent = await getZapEventRequest(
-        nostrKeys,
-        `${nostrUserAbout.name} paid for a flash news note.`,
+        userKeys,
+        `${userMetadata.name} paid for a flash news note.`,
         zapTags
       );
       if (!zapEvent) {
@@ -1017,15 +975,17 @@ const AddNews = ({ exit }) => {
 
       if (res.data.status === "ERROR") {
         setIsLoading(false);
-        setToast({
-          type: 2,
-          desc: "Something went wrong when processing payment!",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Something went wrong when processing payment!",
+          })
+        );
         return;
       }
 
       setInvoice(res.data.pr);
-      
+
       const { webln } = window;
       if (webln) {
         try {
@@ -1038,8 +998,7 @@ const AddNews = ({ exit }) => {
         }
       }
 
-      let sub = pool.subscribeMany(
-        relaysOnPlatform,
+      let sub = ndkInstance.subscribe(
         [
           {
             kinds: [9735],
@@ -1047,35 +1006,36 @@ const AddNews = ({ exit }) => {
             "#e": [event.id],
           },
         ],
-        {
-          onevent() {
-            setInvoice("");
-            setToPublish({
-              eventInitEx: event,
-              allRelays: filterRelays(
-                nostrUser?.relays || [],
-                relaysOnPlatform
-              ),
-            });
-            localStorage.setItem("fn_yaki_postAsType", `${0}`);
-            localStorage.setItem("fn_yaki_selectedLinkedOption", "");
-            localStorage.setItem("fn_yaki_note", "");
-            localStorage.setItem("fn_yaki_source", "");
-            localStorage.setItem("fn_yaki_keywords", JSON.stringify([]));
-            localStorage.setItem("fn_yaki_flag", `${false}`);
-            setTimeout(() => {
-              window.location.href = "/flash-news";
-            }, 3000);
-          },
-        }
+        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
       );
+
+      sub.on("event", () => {
+        setInvoice("");
+        dispatch(
+          setToPublish({
+            eventInitEx: event,
+            allRelays: userRelays,
+          })
+        );
+        localStorage.setItem("fn_yaki_postAsType", `${0}`);
+        localStorage.setItem("fn_yaki_selectedLinkedOption", "");
+        localStorage.setItem("fn_yaki_note", "");
+        localStorage.setItem("fn_yaki_source", "");
+        localStorage.setItem("fn_yaki_keywords", JSON.stringify([]));
+        localStorage.setItem("fn_yaki_flag", `${false}`);
+        setTimeout(() => {
+          window.location.href = "/flash-news";
+        }, 3000);
+      });
     } catch (err) {
       setIsLoading(false);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while publishing this note",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while publishing this note",
+        })
+      );
     }
   };
 
@@ -1097,10 +1057,12 @@ const AddNews = ({ exit }) => {
   };
   const copyKey = (key) => {
     navigator.clipboard.writeText(key);
-    setToast({
-      type: 1,
-      desc: `LNURL was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `LNURL was copied! 👏`,
+      })
+    );
   };
 
   useEffect(() => {
@@ -1433,7 +1395,7 @@ const AddNews = ({ exit }) => {
             style={{
               color: MAX_CHAR - currentWordsCount < 0 ? "var(--red-main)" : "",
             }}
-            placeholder={`What's on your mind, ${nostrUserAbout.name}?`}
+            placeholder={`What's on your mind, ${userMetadata.name}?`}
             value={note}
             onChange={handleNoteOnChange}
           />

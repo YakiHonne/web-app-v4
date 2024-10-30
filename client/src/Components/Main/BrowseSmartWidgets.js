@@ -1,19 +1,21 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { Context } from "../../Context/Context";
-import { nip19, SimplePool } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
+import React, { useEffect, useState } from "react";
+import { nip19 } from "nostr-tools";
 import {
-  filterRelays,
-  getEmptyNostrUser,
-  getParsed3000xContent,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
 } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
-const pool = new SimplePool();
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function BrowseSmartWidgets({ setWidget, exit }) {
-  const { nostrUser, nostrKeys, addNostrAuthors } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [comWidgets, setComWidgets] = useState([]);
   const [myWidgets, setMyWidgets] = useState([]);
   const [contentSource, setContentSource] = useState("community");
@@ -23,67 +25,70 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
   const [sub, setSub] = useState(false);
 
   useEffect(() => {
-    const { relays, filter } = getFilter();
+    const { filter } = getFilter();
     let events = [];
     setIsLoading(true);
-    let subscription = pool.subscribeMany(relays, filter, {
-      onevent(event) {
-        try {
-          let metadata = JSON.parse(event.content);
-          let parsedContent = getParsed3000xContent(event.tags);
-          events.push(event.pubkey);
-          if (contentSource === "community") {
-            setComWidgets((prev) => {
-              let element = prev.find((widget) => widget.id === event.id);
-              if (element) return prev;
-              return [
-                {
-                  ...parsedContent,
-                  metadata,
-                  ...event,
-                  author: getEmptyNostrUser(event.pubkey),
-                },
-                ...prev,
-              ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
-            });
-          }
-          if (contentSource === "self") {
-            setMyWidgets((prev) => {
-              let element = prev.find((widget) => widget.id === event.id);
-              if (element) return prev;
-              return [
-                {
-                  ...parsedContent,
-                  metadata,
-                  ...event,
-                  author: getEmptyNostrUser(event.pubkey),
-                },
-                ...prev,
-              ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
-            });
-          }
-        } catch (err) {
-          console.log(err);
-          setIsLoading(false);
-        }
-      },
-      oneose() {
-        addNostrAuthors([...new Set(events)]);
-        setIsLoading(false);
-      },
+    let subscription = ndkInstance.subscribe(filter, {
+      closeOnEose: true,
+      cacheUsage: "CACHE_FIRST",
     });
+    subscription.on("event", (event) => {
+      try {
+        let metadata = JSON.parse(event.content);
+        let parsedContent = getParsedRepEvent(event);
+        events.push(event.pubkey);
+        if (contentSource === "community") {
+          setComWidgets((prev) => {
+            let element = prev.find((widget) => widget.id === event.id);
+            if (element) return prev;
+            return [
+              {
+                ...parsedContent,
+                metadata,
+                ...event,
+                author: getEmptyuserMetadata(event.pubkey),
+              },
+              ...prev,
+            ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
+          });
+        }
+        if (contentSource === "self") {
+          setMyWidgets((prev) => {
+            let element = prev.find((widget) => widget.id === event.id);
+            if (element) return prev;
+            return [
+              {
+                ...parsedContent,
+                metadata,
+                ...event,
+                author: getEmptyuserMetadata(event.pubkey),
+              },
+              ...prev,
+            ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
+          });
+        }
+      } catch (err) {
+        console.log(err);
+        setIsLoading(false);
+      }
+    });
+    subscription.on("eose", () => {
+      saveUsers([...new Set(events)]);
+      setIsLoading(false);
+    });
+
     setSub(subscription);
   }, [contentSource, myWidgetsLE, comWidgetsLE]);
 
   const getFilter = () => {
-    let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
+    let relaysToUse = userRelays;
     if (contentSource === "self") {
       return {
         relays: relaysToUse,
         filter: [
           {
             kinds: [30031],
-            authors: [nostrKeys.pub],
+            authors: [userKeys.pub],
             until: myWidgetsLE,
             limit: 10,
           },
@@ -123,7 +128,7 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
 
   const handleContentSource = (source) => {
     if (source === contentSource) return;
-    sub?.close();
+    if (sub) sub.stop();
     setContentSource(source);
   };
 
@@ -219,13 +224,13 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
 }
 
 const WidgetCard = ({ setWidget, widget }) => {
-  const { nostrAuthors, getNostrAuthor, nostrKeys } = useContext(Context);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [authorData, setAuthorData] = useState(widget.author);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(widget.author.pubkey);
+        let auth = getUser(widget.author.pubkey);
 
         if (auth) {
           setAuthorData(auth);

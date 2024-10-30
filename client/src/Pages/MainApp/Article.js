@@ -1,11 +1,10 @@
-import React, { useContext, useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { nip19, SimplePool } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import katex from "katex";
 import "katex/dist/katex.css";
 import { Helmet } from "react-helmet";
-import { Context } from "../../Context/Context";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import relaysOnPlatform from "../../Content/Relays";
 import {
@@ -14,15 +13,16 @@ import {
   decodeBolt11,
   filterRelays,
   getBolt11,
-  getEmptyNostrUser,
-  getParsed3000xContent,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
   getZapper,
-  getBech32,
   minimizeKey,
+  getParsedAuthor,
 } from "../../Helpers/Encryptions";
 import {
   getAuthPubkeyFromNip05,
   getComponent,
+  redirectToLogin,
   shuffleArray,
 } from "../../Helpers/Helpers";
 import LoadingScreen from "../../Components/LoadingScreen";
@@ -37,31 +37,31 @@ import NumberShrink from "../../Components/NumberShrink";
 import LoadingDots from "../../Components/LoadingDots";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import ArrowUp from "../../Components/ArrowUp";
-import SaveArticleAsBookmark from "../../Components/Main/SaveArticleAsBookmark";
+import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import AddArticleToCuration from "../../Components/Main/AddArticleToCuration";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import CheckNOSTRClient from "../../Components/Main/CheckNOSTRClient";
 import placeholder from "../../media/images/nostr-thumbnail-ph.svg";
 import ShareLink from "../../Components/ShareLink";
-import TopicsTags from "../../Content/TopicsTags";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import ReportArticle from "../../Components/Main/ReportArticle";
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import TopicsTags from "../../Content/TopicsTags";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
-export default function NostrArticle() {
+export default function Article() {
   const navigateTo = useNavigate();
   const { id, AuthNip05, ArtIdentifier } = useParams();
   const reportRef = useRef(null);
-  const {
-    setToast,
-    nostrUser,
-    nostrKeys,
-    setToPublish,
-    isPublishing,
-    isDarkMode,
-  } = useContext(Context);
+
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isDarkMode = useSelector((state) => state.isDarkMode);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [isLoaded, setIsLoaded] = useState(false);
-  const [toLogin, setToLogin] = useState(false);
   const [author, setAuthor] = useState(false);
   const [post, setPost] = useState({});
   const [curationsOf, setCurationsOf] = useState([]);
@@ -81,15 +81,15 @@ export default function NostrArticle() {
   const [isLoading, setIsLoading] = useState(false);
   const sideContentRef = useRef(null);
   const isVoted = useMemo(() => {
-    return nostrKeys
+    return userKeys
       ? upvoteReaction
           .concat(downvoteReaction)
-          .find((item) => item.pubkey === nostrKeys.pub)
+          .find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [upvoteReaction, downvoteReaction, nostrKeys]);
+  }, [upvoteReaction, downvoteReaction, userKeys]);
   const isReported = useMemo(() => {
-    return nostrKeys
-      ? reporters.find((item) => item.pubkey === nostrKeys.pub)
+    return userKeys
+      ? reporters.find((item) => item.pubkey === userKeys.pub)
       : false;
   }, [reporters]);
 
@@ -118,105 +118,65 @@ export default function NostrArticle() {
         let tempArt = false;
         let lastCreatedAtInUser = 0;
         let lastCreatedAtInArticle = 0;
-        let authorsRelay = [];
-        let attempt = 1;
-        let sub = () => {
-          pool.subscribeMany(
-            nostrUser
-              ? [
-                  ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                  "wss://nostr.wine",
-                  "wss://nos.lol",
-                  ...authorsRelay,
-                ]
-              : [
-                  ...relaysOnPlatform,
-                  "wss://nostr.wine",
-                  "wss://nos.lol",
-                  ...authorsRelay,
-                ],
-            [
-              {
-                kinds: [30023],
-                "#d": [naddrData.identifier],
-              },
-              {
-                kinds: [30004],
-                "#a": [`30023:${naddrData.pubkey}:${naddrData.identifier}`],
-              },
-              {
-                kinds: [0, 10002],
-                authors: [naddrData.pubkey],
-              },
-            ],
+        console.log(naddrData)
+        let sub = ndkInstance.subscribe(
+          [
             {
-              onevent(event) {
-                if (event.kind === 30004) {
-                  setCurationsOf((prev) => {
-                    let parsedEvent = getParsed3000xContent(event.tags);
-                    parsedEvent.naddr = nip19.naddrEncode({
-                      identifier: parsedEvent.d,
-                      pubkey: event.pubkey,
-                      kind: 30004,
-                    });
+              kinds: [30023],
+              "#d": [naddrData.identifier],
+            },
+            {
+              kinds: [30004],
+              "#a": [`30023:${naddrData.pubkey}:${naddrData.identifier}`],
+            },
+            {
+              kinds: [0, 10002],
+              authors: [naddrData.pubkey],
+            },
+          ],
+          { cacheUsage: "CACHE_FIRST" }
+        );
 
-                    let check_cur = prev.find(
-                      (cur) => cur.title === parsedEvent.title
-                    );
-                    if (!check_cur) return [...prev, parsedEvent];
-                    else return prev;
-                  });
-                }
-                if (event.kind === 10002) {
-                  authorsRelay = Array.from(
-                    event.tags
-                      .filter((tag) => tag[0] === "r")
-                      .map((tag) => tag[1])
-                  );
-                }
-                if (event.kind === 0) {
-                  tempAuth = { ...event };
-                  if (lastCreatedAtInUser < event.created_at) {
-                    lastCreatedAtInUser = event.created_at;
-                    setAuthor(getParsedAuthor(event));
-                  }
-                }
-                if (event.kind === 30023) {
-                  tempArt = { ...event };
-                  if (lastCreatedAtInArticle < event.created_at) {
-                    lastCreatedAtInArticle = event.created_at;
-                    setPost(getParsedPostBody(event));
-                  }
-                }
-                if (tempArt && tempAuth) {
-                  setIsLoaded(true);
-                }
-              },
-              oneose() {
-                if (!tempArt) {
-                  if (attempt === 1 && authorsRelay.length > 0) {
-                    sub();
-                    attempt = attempt + 1;
-                  } else {
-                    setToast({
-                      type: 2,
-                      desc: "An error has occured",
-                    });
-                    setTimeout(() => {
-                      window.location = "/";
-                    }, 2000);
-                  }
-                  return;
-                }
-                if (!tempAuth) {
-                  setAuthor(getEmptyNostrUser(tempArt.pubkey));
-                }
-                setIsLoaded(true);
-              },
+        sub.on("event", (event) => {
+          if (event.kind === 30004) {
+            setCurationsOf((prev) => {
+              let parsedEvent = getParsedRepEvent(event);
+              let check_cur = prev.find(
+                (cur) => cur.title === parsedEvent.title
+              );
+              if (!check_cur) return [...prev, parsedEvent];
+              else return prev;
+            });
+          }
+          if (event.kind === 0) {
+            tempAuth = { ...event };
+            if (lastCreatedAtInUser < event.created_at) {
+              lastCreatedAtInUser = event.created_at;
+              setAuthor(getParsedAuthor(event));
             }
-          );
-        };
-        sub();
+          }
+          if (event.kind === 30023) {
+        
+            tempArt = { ...event };
+            if (lastCreatedAtInArticle < event.created_at) {
+              lastCreatedAtInArticle = event.created_at;
+              setPost(getParsedPostBody(event));
+            }
+          }
+          if (tempArt && tempAuth) {
+            setIsLoaded(true);
+          }
+        });
+        sub.on("close", () => {
+          if (!tempAuth) {
+            setAuthor(getEmptyuserMetadata(tempArt.pubkey));
+          }
+          setIsLoaded(true);
+        });
+        let timeout = setTimeout(() => {
+          sub.stop();
+          clearTimeout(timeout);
+        }, 4000);
       } catch (err) {
         navigateTo("/");
       }
@@ -233,14 +193,7 @@ export default function NostrArticle() {
         let tags = shuffleArray(
           tempArray_2.map((item) => [item.main_tag, ...item.sub_tags]).flat()
         );
-        let sub = pool.subscribeMany(
-          nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-                "wss://nos.lol",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine", "wss://nos.lol"],
+        let sub = ndkInstance.subscribe(
           [
             {
               kinds: [30023],
@@ -248,15 +201,15 @@ export default function NostrArticle() {
               limit: 5,
             },
           ],
-          {
-            onevent(event) {
-              if (count < 5) {
-                count = count + 1;
-                setReadMore((prev) => [...prev, getParsedPostBody(event)]);
-              }
-            },
-          }
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
+
+        sub.on("event", (event) => {
+          if (count < 5) {
+            count = count + 1;
+            setReadMore((prev) => [...prev, getParsedPostBody(event)]);
+          }
+        });
       } catch (err) {
         console.log(err);
       }
@@ -266,8 +219,7 @@ export default function NostrArticle() {
 
   useEffect(() => {
     if (!naddrData) return;
-    const sub = pool.subscribeMany(
-      [...relaysOnPlatform, "wss://nostr.wine"],
+    const sub = ndkInstance.subscribe(
       [
         {
           kinds: [7, 1, 1984],
@@ -279,46 +231,46 @@ export default function NostrArticle() {
           "#a": [`30023:${naddrData.pubkey}:${naddrData.identifier}`],
         },
       ],
-      {
-        onevent(event) {
-          if (event.kind === 1984) {
-            setReporters((prev) => {
-              return [...prev, event];
-            });
-          }
-          if (event.kind === 9735) {
-            let sats = decodeBolt11(getBolt11(event));
-            let zapper = getZapper(event);
-            setZappers((prev) => {
-              return [...prev, zapper];
-            });
-            setZapsCount((prev) => prev + sats);
-          }
-          if (event.kind === 1) {
-            setComments((prev) => {
-              let newCom = [...prev, event];
-              return newCom.sort(
-                (item_1, item_2) => item_2.created_at - item_1.created_at
-              );
-            });
-          }
-          if (event.content === "+")
-            setUpvoteReaction((upvoteArticle) => [...upvoteArticle, event]);
-          if (event.content === "-")
-            setDownvoteReaction((downvoteArticle) => [
-              ...downvoteArticle,
-              event,
-            ]);
-        },
-      }
+      { cacheUsage: "CACHE_FIRST" }
     );
+
+    sub.on("event", (event) => {
+      if (event.kind === 1984) {
+        setReporters((prev) => {
+          return [...prev, event];
+        });
+      }
+      if (event.kind === 9735) {
+        let sats = decodeBolt11(getBolt11(event));
+        let zapper = getZapper(event);
+        setZappers((prev) => {
+          return [...prev, zapper];
+        });
+        setZapsCount((prev) => prev + sats);
+      }
+      if (event.kind === 1) {
+        setComments((prev) => {
+          let newCom = [...prev, event];
+          return newCom.sort(
+            (item_1, item_2) => item_2.created_at - item_1.created_at
+          );
+        });
+      }
+      if (event.content === "+")
+        setUpvoteReaction((upvoteArticle) => [...upvoteArticle, event]);
+      if (event.content === "-")
+        setDownvoteReaction((downvoteArticle) => [...downvoteArticle, event]);
+    });
+    return () => {
+      sub.stop();
+    };
   }, [naddrData]);
 
   const getParsedPostBody = (data) => {
     let tempPost = {
       content: data.content,
-      modified_date: new Date(data.created_at * 1000).toISOString(),
-      added_date: new Date(data.created_at * 1000).toISOString(),
+      modified_date: new Date(data.created_at * 1000),
+      added_date: new Date(data.created_at * 1000),
       published_at: data.created_at,
     };
     let tags = [];
@@ -357,49 +309,33 @@ export default function NostrArticle() {
     return tempPost;
   };
 
-  const getParsedAuthor = (data) => {
-    let content = JSON.parse(data.content) || {};
-    let tempAuthor = {
-      name: content?.display_name || content?.name || "",
-      picture: content?.picture || "",
-      lud06: content?.lud06 || "",
-      lud16: content?.lud16 || "",
-      nip05: content?.nip05 || "",
-      pubkey: data.pubkey,
-      pubkeyhashed: getBech32("npub", data.pubkey),
-    };
-    return tempAuthor;
-  };
-
   const upvoteArticle = async () => {
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
-
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
         setIsLoading(false);
 
         if (isVoted.content === "+") {
@@ -416,18 +352,18 @@ export default function NostrArticle() {
       }
 
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "+",
-        tags: [
-          ["a", `30023:${naddrData.pubkey}:${naddrData.identifier}`],
-          ["p", naddrData.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "+",
+          tags: [
+            ["a", `30023:${naddrData.pubkey}:${naddrData.identifier}`],
+            ["p", naddrData.pubkey],
+          ],
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -438,31 +374,30 @@ export default function NostrArticle() {
   const downvoteArticle = async () => {
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin(true);
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
         setIsLoading(false);
         if (isVoted.content === "-") {
           let tempArray = Array.from(downvoteReaction);
@@ -477,25 +412,19 @@ export default function NostrArticle() {
         setUpvoteReaction(tempArray);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "-",
-        tags: [
-          ["a", `30023:${naddrData.pubkey}:${naddrData.identifier}`],
-          ["p", naddrData.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
-      // let temPublishingState = await publishPost(
-      //   nostrKeys,
-      //   7,
-      //   "-",
-      //   [["a", `30023:${naddrData.pubkey}:${naddrData.identifier}`]],
-      //   relaysOnPlatform
-      // );
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "-",
+          tags: [
+            ["a", `30023:${naddrData.pubkey}:${naddrData.identifier}`],
+            ["p", naddrData.pubkey],
+          ],
+          allRelays: userRelays,
+        })
+      );
+
       setIsLoading(false);
     } catch (err) {
       console.log(err);
@@ -557,7 +486,7 @@ export default function NostrArticle() {
         <meta property="twitter:description" content={post.description} />
         <meta property="twitter:image" content={post.image} />
       </Helmet>
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}
+      
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -571,14 +500,7 @@ export default function NostrArticle() {
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
             <ArrowUp />
-            {showReportPrompt && (
-              <ReportArticle
-                title={post.title}
-                exit={() => setShowReportPrompt(false)}
-                naddrData={naddrData}
-                isReported={isReported}
-              />
-            )}
+
             {showAddArticleToCuration && (
               <AddArticleToCuration
                 d={`30023:${naddrData.pubkey}:${naddrData.identifier}`}
@@ -589,11 +511,11 @@ export default function NostrArticle() {
             <div className="fit-container fx-centered fx-start-h">
               <div
                 // style={{ width: "min(100%,1400px)" }}
-                className="fx-centered fx-start-v fx-start-h fx-wrap"
+                style={{ gap: 0 }}
+                className="fx-centered fx-start-v fx-start-h fx-wrap "
               >
                 <div
-                  style={{ flex: "1 1 550px" }}
-                  className={`fit-container fx-centered fx-wrap box-pad-h-m box-pad-v-m article-mw`}
+                  className={`fit-container fx-centered fx-wrap box-pad-h-m box-pad-v-m article-mw main-middle`}
                 >
                   <div className="fit-container nostr-article" dir="auto">
                     <div
@@ -690,7 +612,7 @@ export default function NostrArticle() {
                               )}
                               // recipientLNURL={author.lud06 || author.lud16}
                               recipientPubkey={author.pubkey}
-                              senderPubkey={nostrKeys.pub}
+                              senderPubkey={userKeys.pub}
                               recipientInfo={{
                                 name: author.name,
                                 img: author.picture,
@@ -709,7 +631,7 @@ export default function NostrArticle() {
                           className="fx-centered fx-start-h fx-wrap box-marg-s box-pad-h-m"
                           style={{ marginLeft: 0 }}
                         >
-                          {post.tags.map((tag, index) => {
+                          {post.items?.map((tag, index) => {
                             return (
                               <Link
                                 key={`${tag}-${index}`}
@@ -746,7 +668,7 @@ export default function NostrArticle() {
                                   )}
                                   // recipientLNURL={author.lud06 || author.lud16}
                                   recipientPubkey={author.pubkey}
-                                  senderPubkey={nostrKeys.pub}
+                                  senderPubkey={userKeys.pub}
                                   recipientInfo={{
                                     name: author.name,
                                     img: author.picture,
@@ -775,7 +697,7 @@ export default function NostrArticle() {
                               className="fx-centered pointer"
                               style={{ columnGap: "8px" }}
                               onClick={() => {
-                                !nostrKeys && setToLogin(true);
+                                !userKeys && redirectToLogin();
                               }}
                             >
                               <div className="comment-24"></div>
@@ -891,7 +813,7 @@ export default function NostrArticle() {
                               className="round-icon round-icon-tooltip"
                               data-tooltip={"Bookmark article"}
                             >
-                              <SaveArticleAsBookmark
+                              <BookmarkEvent
                                 pubkey={post.author_pubkey}
                                 d={post.d}
                               />
@@ -1062,78 +984,18 @@ export default function NostrArticle() {
                 <div
                   style={{
                     flex: "1 1 300px",
-                    padding: "1rem",
+
                     position: "sticky",
                     top: `min(calc(100dvh - ${
                       sideContentRef.current?.getBoundingClientRect().height ||
                       0
                     }px),0px)`,
                   }}
-                  className="fx-centered fx-col fx-start-v fx-start-h article-extras-mw"
+                  className="fx-centered fx-col fx-start-v fx-start-h article-extras-mw box-pad-v-m"
                   ref={sideContentRef}
                 >
                   <SearchbarNOSTR />
-                  <div
-                    className="extras-homepage fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-h-m box-pad-v-m sc-s-18"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      border: "none",
-                      rowGap: "16px",
-                    }}
-                  >
-                    <p className="gray-c">Related curations</p>
-                    <div className="fx-centered fx-wrap fit-container">
-                      {curationsOf.map((post) => {
-                        return (
-                          <Link
-                            className="fit-container fx-scattered"
-                            key={post.id}
-                            to={`/curations/${post.naddr}`}
-                            target="_blank"
-                          >
-                            <div className="fx-centered">
-                              {post.image && (
-                                <div
-                                  className=" bg-img cover-bg sc-s-18 "
-                                  style={{
-                                    backgroundImage: `url(${post.image})`,
-                                    minWidth: "24px",
-                                    aspectRatio: "1/1",
-                                    borderRadius: "var(--border-r-50)",
-                                    border: "none",
-                                  }}
-                                ></div>
-                              )}
-                              <div>
-                                <p className="orange-c p-one-line">
-                                  {post.title}
-                                </p>
-                                {/* <p className="gray-c p-medium">
-                                <Date_
-                                  toConvert={new Date(post.published_at * 1000)}
-                                />
-                              </p> */}
-                              </div>
-                            </div>
-                            <div className="share-icon"></div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                    {curationsOf.length === 0 && isLoading && (
-                      <div
-                        style={{ height: "40vh" }}
-                        className="fit-container fx-centered"
-                      >
-                        <LoadingDots />
-                      </div>
-                    )}
-                    {curationsOf.length === 0 && !isLoading && (
-                      <p className="gray-c p-medium p-italic">
-                        This article does not belong to any curation.
-                      </p>
-                    )}
-                  </div>
+
                   <div
                     className="extras-homepage fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-h-m box-pad-v-m sc-s-18"
                     style={{

@@ -1,28 +1,23 @@
-import React, { useContext, useMemo } from "react";
-import { Context } from "../../Context/Context";
+import React, { useMemo } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { useState } from "react";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { useEffect } from "react";
-import { nip19, SimplePool } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
 import Date_ from "../../Components/Date_";
 import ToDeletePostNOSTR from "../../Components/Main/ToDeletePostNOSTR";
 import placeholder from "../../media/images/nostr-thumbnail-ph.svg";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
-import { convertDate, filterRelays } from "../../Helpers/Encryptions";
-import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
+import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import Footer from "../../Components/Footer";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import HomeFN from "../../Components/Main/HomeFN";
-import axios from "axios";
-
-var pool = new SimplePool();
-
-const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { getCAEATooltip } from "../../Helpers/Helpers";
 
 const randomColors = Array(100)
   .fill(0, 0, 100)
@@ -34,18 +29,17 @@ const randomColors = Array(100)
   });
 
 export default function MyPosts() {
-  const { nostrKeys, nostrUser, nostrUserLoaded, isPublishing, setToast } =
-    useContext(Context);
   const navigateTo = useNavigate();
-  const [relays, setRelays] = useState(relaysOnPlatform);
-  const [importantFN, setImportantFN] = useState(false);
-  const [activeRelay, setActiveRelay] = useState("");
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [posts, setPosts] = useState([]);
-  const [tempPosts, setTempPosts] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [postToDelete, setPostToDelete] = useState(false);
-  const [showRelaysList, setShowRelaysList] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [postKind, setPostKind] = useState(0);
   const articlesNumber = useMemo(() => {
@@ -62,123 +56,55 @@ export default function MyPosts() {
       try {
         setIsLoading(true);
         setPosts([]);
-        setTempPosts([]);
+
         let tPosts = [];
-        let relaysToFetchFrom =
-          activeRelay == ""
-            ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-            : [activeRelay];
-        pool.trackRelays = true;
-        var sub = pool.subscribeMany(
-          relaysToFetchFrom,
-          [{ kinds: [30023, 30024], authors: [nostrKeys.pub] }],
-          {
-            onevent(event) {
-              let d = event.tags.find((tag) => tag[0] === "d")[1];
-              tPosts.push({ id: event.id, kind: event.kind, d });
-              setPosts((prev) => {
-                let index = prev.findIndex(
-                  (item) => item.d === d && item.kind === event.kind
-                );
-                let newP = Array.from(prev);
-                if (index === -1) newP = [...newP, extractData(event)];
-                if (index !== -1) {
-                  if (prev[index].created_at < event.created_at) {
-                    newP.splice(index, 1);
-                    newP.push(extractData(event));
-                  }
-                }
-
-                newP = newP.sort(
-                  (item_1, item_2) => item_2.created_at - item_1.created_at
-                );
-
-                return newP;
-              });
-              setIsLoaded(true);
-            },
-            oneose() {
-              setIsLoaded(true);
-              setIsLoading(false);
-              setTempPosts(tPosts);
-            },
-          }
+        var sub = ndkInstance.subscribe(
+          [{ kinds: [30023, 30024], authors: [userKeys.pub] }],
+          { cacheUsage: "CACHE_FIRST" }
         );
+        sub.on("event", (event) => {
+          let d = event.tags.find((tag) => tag[0] === "d")[1];
+          tPosts.push({ id: event.id, kind: event.kind, d });
+          setPosts((prev) => {
+            let index = prev.findIndex(
+              (item) => item.d === d && item.kind === event.kind
+            );
+            let newP = Array.from(prev);
+            if (index === -1) newP = [...newP, getParsedRepEvent(event)];
+            if (index !== -1) {
+              if (prev[index].created_at < event.created_at) {
+                newP.splice(index, 1);
+                newP.push(getParsedRepEvent(event));
+              }
+            }
+            newP = newP.sort(
+              (item_1, item_2) => item_2.created_at - item_1.created_at
+            );
+
+            return newP;
+          });
+          setIsLoaded(true);
+        });
+        sub.on("event:dup", (id, relay) => {
+          // console.log(id, relay)
+        });
+        sub.on("eose", () => {
+          setIsLoaded(true);
+          setIsLoading(false);
+        });
       } catch (err) {
         console.log(err);
         setIsLoading(false);
       }
     };
-    if (nostrKeys && nostrUserLoaded) {
+    if (userKeys) {
       fetchData();
       return;
     }
-    if (!nostrKeys && nostrUserLoaded) {
+    if (!userKeys) {
       setIsLoaded(true);
     }
-  }, [nostrKeys, nostrUserLoaded, activeRelay]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [important] = await Promise.all([
-          axios.get(API_BASE_URL + "/api/v1/mb/flashnews/important"),
-        ]);
-
-        setImportantFN(important.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const extractData = (post) => {
-    let modified_date = new Date(post.created_at * 1000).toISOString();
-    let added_date = new Date(post.created_at * 1000).toISOString();
-    let published_at = post.created_at;
-    let title = "";
-    let thumbnail = "";
-    let summary = "";
-    let d = "";
-    let cat = [];
-
-    for (let tag of post.tags) {
-      if (tag[0] === "d") d = tag[1];
-      if (tag[0] === "published_at") {
-        published_at = tag[1];
-        added_date =
-          tag[1].length > 10
-            ? new Date(parseInt(tag[1])).toISOString()
-            : new Date(parseInt(tag[1]) * 1000).toISOString();
-      }
-      if (tag[0] === "image") thumbnail = tag[1];
-      if (tag[0] === "title") title = tag[1];
-      if (tag[0] === "summary") summary = tag[1];
-      if (tag[0] === "t") cat.push(tag[1]);
-    }
-
-    let naddr = nip19.naddrEncode({
-      identifier: d,
-      pubkey: post.pubkey,
-      kind: post.kind,
-    });
-
-    return {
-      id: post.id,
-      kind: post.kind,
-      content: post.content,
-      title,
-      thumbnail: thumbnail || getImagePlaceholder(),
-      summary,
-      d,
-      cat,
-      added_date,
-      modified_date,
-      published_at,
-      created_at: post.created_at,
-      naddr,
-    };
-  };
+  }, [userKeys]);
 
   const initDeletedPost = (state) => {
     if (!state) {
@@ -187,7 +113,6 @@ export default function MyPosts() {
     }
     removeCurrentPost();
     setPostToDelete(false);
-    // setTimestamp(new Date().getTime());
   };
 
   const removeCurrentPost = () => {
@@ -199,40 +124,8 @@ export default function MyPosts() {
       setPosts(tempArray);
     }
   };
-  const switchActiveRelay = (source) => {
-    if (!isLoaded) return;
-    if (source === activeRelay) return;
-    // relaySub.unsub();
-    // setIsLoading(true);
-    let relaysToClose =
-      activeRelay == ""
-        ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-        : [activeRelay];
-    pool.close(relaysToClose);
-    pool = new SimplePool();
-    setPosts([]);
-    setActiveRelay(source);
-  };
 
-  const checkSeenOn = (d, kind) => {
-    let filteredPosts = tempPosts.filter(
-      (post) => post.d === d && post.kind === kind
-    );
-    let seenOn = [];
-    let seenOnPool = [...pool.seenOn];
-
-    for (let post of filteredPosts) {
-      let postInPool = seenOnPool.find((item) => item[0] === post.id);
-      let relaysPool = postInPool
-        ? [...postInPool[1]].map((item) => item.url)
-        : [];
-      seenOn.push(...relaysPool);
-    }
-    return [...new Set(seenOn)];
-  };
-
-  if (!nostrUserLoaded) return <LoadingScreen />;
-  if (!isLoaded) return <LoadingScreen />;
+  // if (!isLoaded) return <LoadingScreen />;
   return (
     <>
       {postToDelete && (
@@ -242,11 +135,8 @@ export default function MyPosts() {
           post_id={postToDelete.id}
           title={postToDelete.title}
           thumbnail={postToDelete.thumbnail}
-          relayToDeleteFrom={
-            activeRelay == ""
-              ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-              : [activeRelay]
-          }
+          relayToDeleteFrom={userRelays}
+          aTag={postToDelete.aTag}
         />
       )}
 
@@ -288,13 +178,13 @@ export default function MyPosts() {
               className={`main-page-nostr-container`}
               onClick={(e) => {
                 e.stopPropagation();
-                setShowRelaysList(false);
+
                 setShowFilter(false);
               }}
             >
               <div className="fx-centered fit-container fx-start-h fx-start-v">
                 <div style={{ flex: 1.75 }} className="box-pad-h-m">
-                  {nostrUser && (
+                  {userMetadata && (
                     <>
                       <div
                         className="box-pad-v-m fit-container fx-scattered"
@@ -304,19 +194,7 @@ export default function MyPosts() {
                         }}
                       >
                         <div className="fx-centered fx-col fx-start-v">
-                          <div className="fx-centered">
-                            <h4>{articlesNumber} Articles</h4>
-                            <p className="gray-c p-medium">
-                              (In{" "}
-                              {activeRelay === ""
-                                ? "all relays"
-                                : activeRelay.split("wss://")[1]}
-                              )
-                            </p>
-                          </div>
-                          <p className="orange-c">
-                            {activeRelay && "(Switch to all relays to edit)"}
-                          </p>
+                          <h4>{articlesNumber} Articles</h4>
                         </div>
                         <div className="fx-centered">
                           <div style={{ position: "relative" }}>
@@ -325,120 +203,7 @@ export default function MyPosts() {
                               className="round-icon"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setShowRelaysList(!showRelaysList);
-                                setShowFilter(false);
-                              }}
-                            >
-                              <div className="server"></div>
-                            </div>
-                            {showRelaysList && (
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  right: 0,
-                                  bottom: "-5px",
-                                  backgroundColor: "var(--dim-gray)",
-                                  border: "none",
-                                  transform: "translateY(100%)",
-                                  maxWidth: "300px",
-                                  rowGap: "12px",
-                                }}
-                                className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                              >
-                                <h5>Relays</h5>
-                                <button
-                                  className={`btn-text-gray pointer fx-centered`}
-                                  style={{
-                                    width: "max-content",
-                                    fontSize: "1rem",
-                                    textDecoration: "none",
-                                    color:
-                                      activeRelay === "" ? "var(--c1)" : "",
-                                    transition: ".4s ease-in-out",
-                                  }}
-                                  onClick={() => {
-                                    switchActiveRelay("");
-                                    setShowRelaysList(false);
-                                  }}
-                                >
-                                  {isLoading && activeRelay === "" ? (
-                                    <>Connecting...</>
-                                  ) : (
-                                    "All relays"
-                                  )}
-                                </button>
-                                {nostrUser &&
-                                  nostrUser.relays.length > 0 &&
-                                  nostrUser.relays.map((relay) => {
-                                    return (
-                                      <button
-                                        key={relay}
-                                        className={`btn-text-gray pointer fx-centered `}
-                                        style={{
-                                          width: "max-content",
-                                          fontSize: "1rem",
-                                          textDecoration: "none",
-                                          color:
-                                            activeRelay === relay
-                                              ? "var(--c1)"
-                                              : "",
-                                          transition: ".4s ease-in-out",
-                                        }}
-                                        onClick={() => {
-                                          switchActiveRelay(relay);
-                                          setShowRelaysList(false);
-                                        }}
-                                      >
-                                        {isLoading && relay === activeRelay ? (
-                                          <>Connecting...</>
-                                        ) : (
-                                          relay.split("wss://")[1]
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                {(!nostrUser ||
-                                  (nostrUser &&
-                                    nostrUser.relays.length === 0)) &&
-                                  relays.map((relay) => {
-                                    return (
-                                      <button
-                                        key={relay}
-                                        className={`btn-text-gray pointer fx-centered`}
-                                        style={{
-                                          width: "max-content",
-                                          fontSize: "1rem",
-                                          textDecoration: "none",
-                                          color:
-                                            activeRelay === relay
-                                              ? "var(--c1)"
-                                              : "",
-                                          transition: ".4s ease-in-out",
-                                        }}
-                                        onClick={() => {
-                                          switchActiveRelay(relay);
-                                          setShowRelaysList(false);
-                                        }}
-                                      >
-                                        {isLoading && relay === activeRelay ? (
-                                          <>Connecting..</>
-                                        ) : (
-                                          relay.split("wss://")[1]
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                              </div>
-                            )}
-                          </div>
-                          <div style={{ position: "relative" }}>
-                            <div
-                              style={{ position: "relative" }}
-                              className="round-icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
                                 setShowFilter(!showFilter);
-                                setShowRelaysList(false);
                               }}
                             >
                               <div className="filter"></div>
@@ -458,7 +223,6 @@ export default function MyPosts() {
                                 className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setShowRelaysList(false);
                                 }}
                               >
                                 <h5>Filter</h5>
@@ -526,7 +290,7 @@ export default function MyPosts() {
                         {posts.length > 0 && (
                           <>
                             {posts.map((post) => {
-                              let seenOn = checkSeenOn(post.d, post.kind);
+                              // let seenOn = checkSeenOn(post.d, post.kind);
                               if (!postKind)
                                 return (
                                   <div
@@ -551,8 +315,8 @@ export default function MyPosts() {
                                         </div>
                                       </div>
                                     )}
-                                    {(nostrKeys.sec ||
-                                      (!nostrKeys.sec && nostrKeys.ext)) && (
+                                    {(userKeys.sec ||
+                                      (!userKeys.sec && userKeys.ext)) && (
                                       <div
                                         style={{
                                           position: "absolute",
@@ -561,38 +325,35 @@ export default function MyPosts() {
                                         }}
                                         className="fx-centered"
                                       >
-                                        {!activeRelay && (
-                                          <div
-                                            style={{
-                                              width: "48px",
-                                              height: "48px",
-                                              backgroundColor:
-                                                "var(--dim-gray)",
-                                              borderRadius:
-                                                "var(--border-r-50)",
-                                            }}
-                                            className="fx-centered pointer"
-                                            onClick={() =>
-                                              navigateTo("/write-article", {
-                                                state: {
-                                                  post_id: post.id,
-                                                  post_kind: post.kind,
-                                                  post_title: post.title,
-                                                  post_desc: post.summary,
-                                                  post_thumbnail:
-                                                    post.thumbnail,
-                                                  post_tags: post.cat,
-                                                  post_d: post.d,
-                                                  post_content: post.content,
-                                                  post_published_at:
-                                                    post.published_at,
-                                                },
-                                              })
-                                            }
-                                          >
-                                            <div className="write-24"></div>
-                                          </div>
-                                        )}
+                                        <div
+                                          style={{
+                                            width: "48px",
+                                            height: "48px",
+                                            backgroundColor: "var(--dim-gray)",
+                                            borderRadius: "var(--border-r-50)",
+                                          }}
+                                          className="fx-centered pointer"
+                                          onClick={() =>
+                                            navigateTo("/write-article", {
+                                              state: {
+                                                post_pubkey: post.pubkey,
+                                                post_id: post.id,
+                                                post_kind: post.kind,
+                                                post_title: post.title,
+                                                post_desc: post.summary,
+                                                post_thumbnail: post.image,
+                                                post_tags: post.items,
+                                                post_d: post.d,
+                                                post_content: post.content,
+                                                post_published_at:
+                                                  post.published_at,
+                                              },
+                                            })
+                                          }
+                                        >
+                                          <div className="write-24"></div>
+                                        </div>
+
                                         <div
                                           style={{
                                             width: "48px",
@@ -606,12 +367,15 @@ export default function MyPosts() {
                                               ? setPostToDelete({
                                                   id: post.id,
                                                   title: post.title,
-                                                  thumbnail: post.thumbnail,
+                                                  thumbnail: post.image,
+                                                  aTag: `${post.kind}:${post.pubkey}:${post.d}`,
                                                 })
-                                              : setToast({
-                                                  type: 3,
-                                                  desc: "An event publishing is in process!",
-                                                })
+                                              : dispatch(
+                                                  setToast({
+                                                    type: 3,
+                                                    desc: "An event publishing is in process!",
+                                                  })
+                                                )
                                           }
                                         >
                                           <div className="trash-24"></div>
@@ -629,8 +393,8 @@ export default function MyPosts() {
                                           style={{
                                             height: "150px",
                                             backgroundColor: "var(--dim-gray)",
-                                            backgroundImage: post.thumbnail
-                                              ? `url(${post.thumbnail})`
+                                            backgroundImage: post.image
+                                              ? `url(${post.image})`
                                               : `url(${placeholder})`,
                                             borderTopLeftRadius: "18px",
                                             borderTopRightRadius: "18px",
@@ -640,15 +404,18 @@ export default function MyPosts() {
                                           <div className="fx-start-h fx-centered">
                                             <p
                                               className="p-medium gray-c pointer round-icon-tooltip"
-                                              data-tooltip={`created at ${convertDate(
-                                                post.added_date
-                                              )}, edited on ${convertDate(
-                                                post.modified_date
-                                              )}`}
+                                              data-tooltip={getCAEATooltip(
+                                                post.published_at,
+                                                post.created_at
+                                              )}
                                             >
                                               Last modified{" "}
                                               <Date_
-                                                toConvert={post.modified_date}
+                                                toConvert={
+                                                  new Date(
+                                                    post.created_at * 1000
+                                                  )
+                                                }
                                               />
                                             </p>
                                           </div>
@@ -661,12 +428,13 @@ export default function MyPosts() {
                                         onClick={() =>
                                           navigateTo("/write-article", {
                                             state: {
+                                              post_pubkey: post.pubkey,
                                               post_id: post.id,
                                               post_kind: post.kind,
                                               post_title: post.title,
                                               post_desc: post.summary,
-                                              post_thumbnail: post.thumbnail,
-                                              post_tags: post.cat,
+                                              post_thumbnail: post.image,
+                                              post_tags: post.items,
                                               post_d: post.d,
                                               post_content: post.content,
                                             },
@@ -679,8 +447,8 @@ export default function MyPosts() {
                                           style={{
                                             height: "150px",
                                             backgroundColor: "var(--dim-gray)",
-                                            backgroundImage: post.thumbnail
-                                              ? `url(${post.thumbnail})`
+                                            backgroundImage: post.image
+                                              ? `url(${post.image})`
                                               : `url(${placeholder})`,
                                             borderTopLeftRadius: "18px",
                                             borderTopRightRadius: "18px",
@@ -689,15 +457,16 @@ export default function MyPosts() {
                                         <div className="box-pad-h-m box-pad-v-m fit-container">
                                           <p
                                             className="p-medium gray-c pointer round-icon-tooltip"
-                                            data-tooltip={`created at ${convertDate(
-                                              post.added_date
-                                            )}, edited on ${convertDate(
-                                              post.modified_date
-                                            )}`}
+                                            data-tooltip={getCAEATooltip(
+                                              post.published_at,
+                                              post.created_at
+                                            )}
                                           >
                                             Last modified{" "}
                                             <Date_
-                                              toConvert={post.modified_date}
+                                              toConvert={
+                                                new Date(post.created_at * 1000)
+                                              }
                                             />
                                           </p>
                                           <p>{post.title}</p>
@@ -712,7 +481,7 @@ export default function MyPosts() {
                                           Posted on
                                         </p>
                                         <div className="fx-centered">
-                                          {seenOn.map((relay, index) => {
+                                          {post.seenOn.map((relay, index) => {
                                             return (
                                               <div
                                                 style={{
@@ -729,7 +498,6 @@ export default function MyPosts() {
                                               ></div>
                                             );
                                           })}
-                                          {isLoading && <LoadingDots />}
                                         </div>
                                       </div>
                                     </div>
@@ -758,8 +526,8 @@ export default function MyPosts() {
                                         </div>
                                       </div>
                                     )}
-                                    {(nostrKeys.sec ||
-                                      (!nostrKeys.sec && nostrKeys.ext)) && (
+                                    {(userKeys.sec ||
+                                      (!userKeys.sec && userKeys.ext)) && (
                                       <div
                                         style={{
                                           position: "absolute",
@@ -768,38 +536,35 @@ export default function MyPosts() {
                                         }}
                                         className="fx-centered"
                                       >
-                                        {!activeRelay && (
-                                          <div
-                                            style={{
-                                              width: "48px",
-                                              height: "48px",
-                                              backgroundColor:
-                                                "var(--dim-gray)",
-                                              borderRadius:
-                                                "var(--border-r-50)",
-                                            }}
-                                            className="fx-centered pointer"
-                                            onClick={() =>
-                                              navigateTo("/write-article", {
-                                                state: {
-                                                  post_id: post.id,
-                                                  post_kind: post.kind,
-                                                  post_title: post.title,
-                                                  post_desc: post.summary,
-                                                  post_thumbnail:
-                                                    post.thumbnail,
-                                                  post_tags: post.cat,
-                                                  post_d: post.d,
-                                                  post_content: post.content,
-                                                  post_published_at:
-                                                    post.published_at,
-                                                },
-                                              })
-                                            }
-                                          >
-                                            <div className="write-24"></div>
-                                          </div>
-                                        )}
+                                        <div
+                                          style={{
+                                            width: "48px",
+                                            height: "48px",
+                                            backgroundColor: "var(--dim-gray)",
+                                            borderRadius: "var(--border-r-50)",
+                                          }}
+                                          className="fx-centered pointer"
+                                          onClick={() =>
+                                            navigateTo("/write-article", {
+                                              state: {
+                                                post_pubkey: post.pubkey,
+                                                post_id: post.id,
+                                                post_kind: post.kind,
+                                                post_title: post.title,
+                                                post_desc: post.summary,
+                                                post_thumbnail: post.image,
+                                                post_tags: post.items,
+                                                post_d: post.d,
+                                                post_content: post.content,
+                                                post_published_at:
+                                                  post.published_at,
+                                              },
+                                            })
+                                          }
+                                        >
+                                          <div className="write-24"></div>
+                                        </div>
+
                                         <div
                                           style={{
                                             width: "48px",
@@ -813,12 +578,15 @@ export default function MyPosts() {
                                               ? setPostToDelete({
                                                   id: post.id,
                                                   title: post.title,
-                                                  thumbnail: post.thumbnail,
+                                                  thumbnail: post.image,
+                                                  aTag: `${post.kind}:${post.pubkey}:${post.d}`,
                                                 })
-                                              : setToast({
-                                                  type: 3,
-                                                  desc: "An event publishing is in process!",
-                                                })
+                                              : dispatch(
+                                                  setToast({
+                                                    type: 3,
+                                                    desc: "An event publishing is in process!",
+                                                  })
+                                                )
                                           }
                                         >
                                           <div className="trash-24"></div>
@@ -836,8 +604,8 @@ export default function MyPosts() {
                                           style={{
                                             height: "150px",
                                             backgroundColor: "var(--dim-gray)",
-                                            backgroundImage: post.thumbnail
-                                              ? `url(${post.thumbnail})`
+                                            backgroundImage: post.image
+                                              ? `url(${post.image})`
                                               : `url(${placeholder})`,
                                             borderTopLeftRadius: "18px",
                                             borderTopRightRadius: "18px",
@@ -847,15 +615,18 @@ export default function MyPosts() {
                                           <div className="fx-start-h fx-centered">
                                             <p
                                               className="p-medium gray-c pointer round-icon-tooltip"
-                                              data-tooltip={`created at ${convertDate(
-                                                post.added_date
-                                              )}, edited on ${convertDate(
-                                                post.modified_date
-                                              )}`}
+                                              data-tooltip={getCAEATooltip(
+                                                post.published_at,
+                                                post.created_at
+                                              )}
                                             >
                                               Last modified{" "}
                                               <Date_
-                                                toConvert={post.modified_date}
+                                                toConvert={
+                                                  new Date(
+                                                    post.created_at * 1000
+                                                  )
+                                                }
                                               />
                                             </p>
                                           </div>
@@ -868,12 +639,13 @@ export default function MyPosts() {
                                         onClick={() =>
                                           navigateTo("/write-article", {
                                             state: {
+                                              post_pubkey: post.pubkey,
                                               post_id: post.id,
                                               post_kind: post.kind,
                                               post_title: post.title,
                                               post_desc: post.summary,
-                                              post_thumbnail: post.thumbnail,
-                                              post_tags: post.cat,
+                                              post_thumbnail: post.image,
+                                              post_tags: post.items,
                                               post_d: post.d,
                                               post_content: post.content,
                                             },
@@ -886,8 +658,8 @@ export default function MyPosts() {
                                           style={{
                                             height: "150px",
                                             backgroundColor: "var(--dim-gray)",
-                                            backgroundImage: post.thumbnail
-                                              ? `url(${post.thumbnail})`
+                                            backgroundImage: post.image
+                                              ? `url(${post.image})`
                                               : `url(${placeholder})`,
                                             borderTopLeftRadius: "18px",
                                             borderTopRightRadius: "18px",
@@ -896,15 +668,16 @@ export default function MyPosts() {
                                         <div className="box-pad-h-m box-pad-v-m fit-container">
                                           <p
                                             className="p-medium gray-c pointer round-icon-tooltip"
-                                            data-tooltip={`created at ${convertDate(
-                                              post.added_date
-                                            )}, edited on ${convertDate(
-                                              post.modified_date
-                                            )}`}
+                                            data-tooltip={getCAEATooltip(
+                                              post.published_at,
+                                              post.created_at
+                                            )}
                                           >
                                             Last modified{" "}
                                             <Date_
-                                              toConvert={post.modified_date}
+                                              toConvert={
+                                                new Date(post.created_at * 1000)
+                                              }
                                             />
                                           </p>
                                           <p>{post.title}</p>
@@ -918,7 +691,7 @@ export default function MyPosts() {
                                           Posted on
                                         </p>
                                         <div className="fx-centered">
-                                          {seenOn.map((relay, index) => {
+                                          {post.seenOn.map((relay, index) => {
                                             return (
                                               <div
                                                 style={{
@@ -974,7 +747,7 @@ export default function MyPosts() {
                       </div>
                     </>
                   )}
-                  {!nostrUser && (
+                  {!userMetadata && (
                     <PagePlaceholder page={"nostr-not-connected"} />
                   )}
                 </div>
@@ -991,17 +764,7 @@ export default function MyPosts() {
                   <div className="sticky fit-container">
                     <SearchbarNOSTR />
                   </div>
-                  <div
-                    className=" fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                      border: "none",
-                    }}
-                  >
-                    <h4>Important Flash News</h4>
-                    <HomeFN flashnews={importantFN} />
-                  </div>
+                  <ImportantFlashNews />
                   <Footer />
                 </div>
               </div>

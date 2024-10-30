@@ -10,7 +10,7 @@ export default function FourOFour() {
   useEffect(() => {
     if (nevent) {
       const url = getLinkFromAddr(nevent);
-      
+
       if (url !== nevent) {
         navigateTo(url);
       }

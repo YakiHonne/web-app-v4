@@ -1,58 +1,86 @@
-import { finalizeEvent } from "nostr-tools";
-import React, { useContext, useState } from "react";
-import { Context } from "../../Context/Context";
-import { filterRelays } from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
+import { finalizeEvent, kinds } from "nostr-tools";
+import React, { useEffect, useState } from "react";
 import LoadingDots from "../LoadingDots";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function ToDeleteGeneral({
   title,
   kind = "event",
+  aTag = "",
   eventId,
   refresh,
   cancel,
 }) {
-  const { nostrUser, nostrKeys, setToast, setToPublish } = useContext(Context);
+  console.log(aTag);
+  const dispatch = useDispatch();
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
+
+  // useEffect(() => {
+  //   let subscription = ndkInstance.subscribe([{ kinds: [5], "#e": [eventId] }]);
+  //   subscription.on("event", (event) => {
+  //     dispatch(setToast({ type: 1, desc: `${kind} deleted successfully` }));
+  //     subscription.stop();
+  //     refresh();
+  //   });
+  //   return () => {
+  //     if (subscription) subscription.stop();
+  //   };
+  // }, [eventId]);
 
   const deleteEvent = async () => {
     try {
-        setIsLoading(true)
+      setIsLoading(true);
       const created_at = Math.floor(new Date().getTime() / 1000);
-      let relaysToPublish = nostrUser
-        ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
-        : relaysOnPlatform;
-        
+      let relaysToPublish = userRelays;
+
       let tempEvent = {
         created_at,
         kind: 5,
         content: "This event will be deleted!",
         tags: [["e", eventId]],
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           tempEvent = await window.nostr.signEvent(tempEvent);
         } catch (err) {
           console.log(err);
-          setToast({ type: 2, desc: "An error occurred while deleting the event"})
+          dispatch(
+            setToast({
+              type: 2,
+              desc: "An error occurred while deleting the event",
+            })
+          );
           setIsLoading(false);
           return false;
         }
       } else {
-        tempEvent = finalizeEvent(tempEvent, nostrKeys.sec);
+        tempEvent = finalizeEvent(tempEvent, userKeys.sec);
       }
-      setToPublish({
-        eventInitEx: tempEvent,
-        allRelays: relaysToPublish,
-      });
-      setToast({ type: 1, desc: `${kind} deleted successfully` });
+      dispatch(
+        setToPublish({
+          eventInitEx: tempEvent,
+          allRelays: relaysToPublish,
+          aTag,
+        })
+      );
+      dispatch(setToast({ type: 1, desc: `${kind} deleted successfully` }));
       refresh();
     } catch (err) {
-        console.log(err);
-        setToast({ type: 2, desc: "An error occurred while deleting the event"})
+      console.log(err);
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while deleting the event",
+        })
+      );
       setIsLoading(false);
     }
   };
+
   return (
     <section className="fixed-container fx-centered box-pad-h">
       <section
@@ -71,13 +99,13 @@ export default function ToDeleteGeneral({
           <div className="warning"></div>
         </div>
         {title && (
-          <h3 className="p-centered" style={{wordBreak: "break-word"}}>
+          <h3 className="p-centered" style={{ wordBreak: "break-word" }}>
             Delete "{title.substring(0, 20)}
             {title.length > 20 && "..."}"?
           </h3>
         )}
         {!title && (
-          <h3 className="p-centered" style={{wordBreak: "break-word"}}>
+          <h3 className="p-centered" style={{ wordBreak: "break-word" }}>
             Delete event?
           </h3>
         )}

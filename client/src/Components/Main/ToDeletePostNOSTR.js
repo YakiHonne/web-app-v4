@@ -1,13 +1,9 @@
-import React, { useContext, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
-import { deletePost } from "../../Helpers/NostrPublisher";
-import { Context } from "../../Context/Context";
+import React, { useState } from "react";
 import LoadingDots from "../LoadingDots";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import { SimplePool } from "nostr-tools";
-import { filterRelays } from "../../Helpers/Encryptions";
-
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function ToDeletePostNOSTR({
   exit,
@@ -15,32 +11,40 @@ export default function ToDeletePostNOSTR({
   post_id,
   title,
   thumbnail = "",
+  aTag,
   curation = false,
   relayToDeleteFrom,
 }) {
-  const { setToast, nostrKeys, nostrUser, setToPublish } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDeleteDraft = async () => {
     try {
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 5,
-        content: "This event will be deleted!",
-        tags: [["e", post_id]],
-        allRelays: [...relayToDeleteFrom],
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 5,
+          content: "This event will be deleted!",
+          tags: [["e", post_id]],
+          aTag,
+          allRelays: [...relayToDeleteFrom],
+        })
+      );
       if (relayToDeleteFrom.length > 1) initDeleteFromS3(thumbnail);
       setIsLoading(false);
       exitAndRefresh();
     } catch (err) {
       setIsLoading(false);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while deleting this event.",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while deleting this event.",
+        })
+      );
     }
   };
 
@@ -49,10 +53,7 @@ export default function ToDeletePostNOSTR({
       deleteFromS3(img);
       return;
     }
-    const post = await pool.get(
-      filterRelays(nostrUser?.relays || [], relaysOnPlatform),
-      { ids: [post_id] }
-    );
+    const post = await ndkInstance.fetchEvent({ ids: [post_id] });
     if (!post) {
       deleteFromS3(img);
     }
@@ -86,13 +87,13 @@ export default function ToDeletePostNOSTR({
           <div className="warning"></div>
         </div>
         {title && (
-          <h3 className="p-centered" style={{wordBreak: "break-word"}}>
+          <h3 className="p-centered" style={{ wordBreak: "break-word" }}>
             Delete "{title.substring(0, 20)}
             {title.length > 20 && "..."}"?
           </h3>
         )}
         {!title && (
-          <h3 className="p-centered" style={{wordBreak: "break-word"}}>
+          <h3 className="p-centered" style={{ wordBreak: "break-word" }}>
             Delete event?
           </h3>
         )}

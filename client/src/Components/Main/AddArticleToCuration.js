@@ -1,109 +1,61 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { SimplePool } from "nostr-tools";
-import { useContext } from "react";
-import { useEffect } from "react";
-import { useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
-import { filterRelays, getParsed3000xContent } from "../../Helpers/Encryptions";
+import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import AddCurationNOSTR from "./AddCurationNOSTR";
-const pool = new SimplePool();
-pool.trackRelays = true;
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { useDispatch, useSelector } from "react-redux";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+
 export default function AddArticleToCuration({ kind = 30004, d, exit }) {
-  const {
-    nostrKeys,
-    nostrUserLoaded,
-    isPublishing,
-    setToPublish,
-    setToast,
-    nostrUser,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const userMetadata = useSelector((state) => state.userMetadata);
+
   const [curations, setCurations] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddCuration, setShowAddCuration] = useState(false);
-  const [showRelaysPicker, setShowRelaysPicker] = useState(false);
-  const [curationToUpdate, setCurationToUpdate] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let sub = pool.subscribeMany(
-          filterRelays(nostrUser?.relays || [], relaysOnPlatform),
-          [{ kinds: [kind], authors: [nostrKeys.pub] }],
-          {
-            onevent(curation) {
-              setIsLoading(true);
-              let modified_date = new Date(
-                curation.created_at * 1000
-              ).toISOString();
-              let added_date = new Date(
-                curation.created_at * 1000
-              ).toISOString();
-              let published_at = curation.created_at;
-              for (let tag of curation.tags) {
-                if (tag[0] === "published_at") {
-                  published_at = tag[1];
-                  added_date =
-                    tag[1].length > 10
-                      ? new Date(parseInt(tag[1])).toISOString()
-                      : new Date(parseInt(tag[1]) * 1000).toISOString();
-                }
-              }
-
-              setCurations((prev) => {
-                let index = prev.findIndex(
-                  (item) =>
-                    item.tags.find((item_) => item_[0] === "d")[1] ===
-                    curation.tags.find((item_) => item_[0] === "d")[1]
-                );
-                let content = getParsed3000xContent(curation.tags);
-                let tempArray = Array.from(prev);
-                if (index !== -1) {
-                  tempArray.splice(index, 1);
-                  return [
-                    {
-                      ...curation,
-                      ...content,
-                      modified_date,
-                      added_date,
-                      published_at,
-                    },
-                    ...tempArray,
-                  ];
-                }
-                return [
-                  ...tempArray,
-                  {
-                    ...curation,
-                    ...content,
-                    modified_date,
-                    added_date,
-                    published_at,
-                  },
-                ];
-              });
-
-              setIsLoaded(true);
-            },
-            oneose() {
-              setIsLoading(false);
-              setIsLoaded(true);
-            },
-          }
+        let sub = ndkInstance.subscribe(
+          [{ kinds: [kind], authors: [userKeys.pub] }],
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
+
+        sub.on("event", (curation) => {
+          setIsLoading(true);
+          let parsedCuration = getParsedRepEvent(curation);
+          setCurations((prev) => {
+            let index = prev.findIndex((item) => item.d === parsedCuration.d);
+            let tempArray = Array.from(prev);
+            if (index !== -1) {
+              tempArray.splice(index, 1);
+              return [parsedCuration, ...tempArray];
+            }
+            return [...tempArray, parsedCuration];
+          });
+
+          setIsLoaded(true);
+        });
+        sub.on("eose", () => {
+          setIsLoading(false);
+          setIsLoaded(true);
+        });
       } catch (err) {
         console.log(err);
       }
     };
-    if (nostrKeys && nostrUserLoaded) {
+    if (userKeys && userMetadata) {
       fetchData();
       return;
     }
-    if (!nostrKeys && nostrUserLoaded) {
+    if (!userKeys && userMetadata) {
       setIsLoaded(true);
     }
-  }, [nostrKeys, nostrUserLoaded]);
+  }, [userKeys, userMetadata]);
 
   const checkArticleInCuration = (list) => {
     return list.find((item) => item === d);
@@ -111,10 +63,12 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
 
   const saveUpdate = async (curation, selectedRelays) => {
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     let tempTags = [
@@ -131,7 +85,6 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
       ? is_published_at[1]
       : `${Math.floor(Date.now() / 1000)}`;
     tempTags.push(["d", curation.tags.find((item) => item[0] === "d")[1]]);
-    // tempTags.push(["c", "curation"]);
     tempTags.push([
       "title",
       curation.tags.find((item) => item[0] === "title")[1],
@@ -148,40 +101,16 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
     for (let art of curation.items) tempTags.push(["a", art, ""]);
     tempTags.push(["a", d, ""]);
 
-    setToPublish({
-      nostrKeys: nostrKeys,
-      kind: kind,
-      content: "",
-      tags: tempTags,
-      allRelays: selectedRelays,
-    });
-    exit();
-  };
-
-  // const confirmPublishing = (relays) => {
-  //   saveUpdate(curationToUpdate, relays);
-  //   setShowRelaysPicker(false);
-  // };
-
-  const handleShowRelaysPicker = (curation) => {
-    setCurationToUpdate(curation);
-    setShowRelaysPicker(true);
-  };
-
-  const checkSeenOn = (d, kind) => {
-    let filteredPosts = curations.filter(
-      (post) => post.d === d && post.kind === kind
+    dispatch(
+      setToPublish({
+        userKeys: userKeys,
+        kind: kind,
+        content: "",
+        tags: tempTags,
+        allRelays: selectedRelays,
+      })
     );
-    let seenOn = [];
-    let seenOnPool = [...pool.seenOn];
-    for (let post of filteredPosts) {
-      let postInPool = seenOnPool.find((item) => item[0] === post.id);
-      let relaysPool = postInPool
-        ? [...postInPool[1]].map((item) => item.url)
-        : [];
-      seenOn.push(...relaysPool);
-    }
-    return [...new Set(seenOn)];
+    exit();
   };
 
   return (
@@ -192,13 +121,6 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
           mandatoryKind={kind}
         />
       )}
-      {/* {showRelaysPicker && (
-        <PublishRelaysPicker
-          confirmPublishing={confirmPublishing}
-          exit={() => setShowRelaysPicker(false)}
-          button={"Add article"}
-        />
-      )} */}
       <div className="fixed-container fx-centered box-pad-h">
         <section
           className="sc-s box-pad-h box-pad-v fx-centered"
@@ -234,8 +156,6 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
               )}
               {curations.map((curation) => {
                 let status = checkArticleInCuration(curation.items);
-                let seenOn = checkSeenOn(curation.d, curation.kind);
-                // let seenOn = (!isLoading && pool.seenOn(curation.id)) || [];
                 return (
                   <div
                     key={curation.id}
@@ -246,7 +166,7 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
                       status
                         ? null
                         : () => {
-                            saveUpdate(curation, seenOn);
+                            saveUpdate(curation, curation.seenOn);
                           }
                     }
                     style={{ opacity: status ? ".7" : "1" }}

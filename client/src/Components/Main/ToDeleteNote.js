@@ -1,45 +1,45 @@
-import React, { useContext, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
-import { deletePost } from "../../Helpers/NostrPublisher";
-import { Context } from "../../Context/Context";
+import React, { useState } from "react";
 import LoadingDots from "../LoadingDots";
-import axiosInstance from "../../Helpers/HTTP_Client";
-import { SimplePool } from "nostr-tools";
-import { encryptEventData, filterRelays } from "../../Helpers/Encryptions";
-
-const pool = new SimplePool();
+import { encryptEventData } from "../../Helpers/Encryptions";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 export default function ToDeleteNote({ exit, exitAndRefresh, post_id, title }) {
-  const { setToast, nostrKeys, nostrUser, setToPublish } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = () => {
     try {
       setIsLoading(true);
       let created_at = Math.floor(Date.now() / 1000);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        created_at,
-        kind: 5,
-        content: "This event will be deleted!",
-        tags: [
-          ["l", "FLASH NEWS", "f"],
-          ["yaki_flash_news", encryptEventData(`${created_at}`)],
-          ["e", post_id],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          created_at,
+          kind: 5,
+          content: "This event will be deleted!",
+          tags: [
+            ["l", "FLASH NEWS", "f"],
+            ["yaki_flash_news", encryptEventData(`${created_at}`)],
+            ["e", post_id],
+          ],
+          allRelays: userRelays,
+        })
+      );
       setIsLoading(false);
       exitAndRefresh();
     } catch (err) {
       setIsLoading(false);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while deleting this bookmark.",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while deleting this bookmark.",
+        })
+      );
     }
   };
 
@@ -60,7 +60,10 @@ export default function ToDeleteNote({ exit, exitAndRefresh, post_id, title }) {
         >
           <div className="warning"></div>
         </div>
-        <h3 className="p-centered">Delete "{title.substring(0, 20) || "Untitled Note"}{title.length > 20 && "..."}"?</h3>
+        <h3 className="p-centered">
+          Delete "{title.substring(0, 20) || "Untitled Note"}
+          {title.length > 20 && "..."}"?
+        </h3>
         <p className="p-centered gray-c box-pad-v-m">
           You're about to delete this note, do you wish to proceed?
         </p>

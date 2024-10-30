@@ -22,7 +22,7 @@ export default function Footer() {
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/yakihonne-flash-news"} target="_blank">
-          <p className="p-medium gray-c">About flash news</p>
+          <p className="p-medium gray-c">About paid notes</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/yakihonne-mobile-app"} target="_blank">

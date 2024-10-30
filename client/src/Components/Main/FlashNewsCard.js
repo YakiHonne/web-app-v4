@@ -1,15 +1,16 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Date_ from "../Date_";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import NumberShrink from "../NumberShrink";
 import relaysOnPlatform from "../../Content/Relays";
 import ShowUsersList from "./ShowUsersList";
-import { Context } from "../../Context/Context";
 import { filterRelays } from "../../Helpers/Encryptions";
 import UN from "./UN";
-import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
+import BookmarkEvent from "./BookmarkEvent";
 import ShareLink from "../ShareLink";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 export default function FlashNewsCard({
   self = "false",
@@ -19,8 +20,10 @@ export default function FlashNewsCard({
   downvoteReaction = [],
   refreshRating,
 }) {
-  const { nostrKeys, nostrUser, isPublishing, setToast, setToPublish } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const navigateTo = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -31,49 +34,48 @@ export default function FlashNewsCard({
       )
     : false;
   const isContributed = useMemo(() => {
-    return newsContent.is_note_new && nostrKeys
-      ? newsContent.pubkeys_in_new_un.find((pubkey) => pubkey === nostrKeys.pub)
+    return newsContent.is_note_new && userKeys
+      ? newsContent.pubkeys_in_new_un.find((pubkey) => pubkey === userKeys.pub)
       : false;
-  }, [newsContent, nostrKeys]);
+  }, [newsContent, userKeys]);
   const [usersList, setUsersList] = useState(false);
 
   const isVoted = useMemo(() => {
-    return nostrKeys
+    return userKeys
       ? upvoteReaction
           .concat(downvoteReaction)
-          .find((item) => item.pubkey === nostrKeys.pub)
+          .find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [upvoteReaction, downvoteReaction, nostrKeys]);
+  }, [upvoteReaction, downvoteReaction, userKeys]);
 
   const upvoteNews = async (e) => {
     e.stopPropagation();
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
+      if (!userKeys) {
         // setToLogin(true);
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays
+          })
+        );
 
         setIsLoading(false);
 
@@ -91,18 +93,18 @@ export default function FlashNewsCard({
       }
 
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "+",
-        tags: [
-          ["e", newsContent.id],
-          ["p", newsContent.author.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "+",
+          tags: [
+            ["e", newsContent.id],
+            ["p", newsContent.author.pubkey],
+          ],
+          allRelays: userRelays
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -114,31 +116,30 @@ export default function FlashNewsCard({
     e.stopPropagation();
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
+      if (!userKeys) {
         // setToLogin(true);
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays
+          })
+        );
         setIsLoading(false);
         if (isVoted.content === "-") {
           let tempArray = Array.from(downvoteReaction);
@@ -153,18 +154,16 @@ export default function FlashNewsCard({
         refreshRating(isVoted.id);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
+      dispatch(setToPublish({
+        userKeys: userKeys,
         kind: 7,
         content: "-",
         tags: [
           ["e", newsContent.id],
           ["p", newsContent.author.pubkey],
         ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+        allRelays: userRelays
+      }));
 
       setIsLoading(false);
     } catch (err) {
@@ -202,7 +201,7 @@ export default function FlashNewsCard({
       >
         <p className="gray-c">
           <Date_
-            toConvert={new Date(newsContent.created_at * 1000).toISOString()}
+            toConvert={new Date(newsContent.created_at * 1000)}
             timeOnly={true}
           />
         </p>
@@ -341,7 +340,11 @@ export default function FlashNewsCard({
                 }
                 description={newsContent.content}
                 kind={1}
-                shareImgData={{post:newsContent, author: newsContent.author, label: "Flash news"}}
+                shareImgData={{
+                  post: newsContent,
+                  author: newsContent.author,
+                  label: "Flash news",
+                }}
               />
             </div>
           )}
@@ -363,24 +366,24 @@ export default function FlashNewsCard({
             {!self && (
               <>
                 {newsContent.is_note_new &&
-                  newsContent.author.pubkey !== nostrKeys.pub &&
+                  newsContent.author.pubkey !== userKeys.pub &&
                   !isContributed && (
                     <Link
                       className="round-icon round-icon-tooltip pointer"
                       data-tooltip="Write uncensored note"
-                      to={`/uncensored-notes/${newsContent.nEvent}`}
+                      to={`/verify-notes/${newsContent.nEvent}`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="add-note-24"></div>
                     </Link>
                   )}
                 {newsContent.is_note_new &&
-                  newsContent.author.pubkey !== nostrKeys.pub &&
+                  newsContent.author.pubkey !== userKeys.pub &&
                   isContributed && (
                     <Link
                       className="round-icon-tooltip pointer"
                       data-tooltip="Already contributed!"
-                      to={`/uncensored-notes/${newsContent.nEvent}`}
+                      to={`/verify-notes/${newsContent.nEvent}`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div
@@ -401,7 +404,7 @@ export default function FlashNewsCard({
               data-tooltip="Bookmark flash news"
               onClick={(e) => e.stopPropagation()}
             >
-              <SaveArticleAsBookmark
+              <BookmarkEvent
                 pubkey={newsContent.id}
                 itemType="e"
                 kind="1"

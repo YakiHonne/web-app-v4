@@ -1,9 +1,8 @@
-import React, { useContext, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
-import { filterRelays } from "../../Helpers/Encryptions";
+import React, { useState } from "react";
 import Date_ from "../Date_";
 import AddBookmark from "./AddBookMark";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 export default function BookmarksPicker({
   kind,
@@ -14,14 +13,12 @@ export default function BookmarksPicker({
   itemType,
   extraData,
 }) {
-  const {
-    nostrKeys,
-    nostrUserBookmarks,
-    isPublishing,
-    setToPublish,
-    nostrUser,
-    setToast,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userBookmarks = useSelector((state) => state.userBookmarks);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [showAddBookmark, setShowAddBookmark] = useState(false);
   const itemTypes = {
     a: `${kind}:${pubkey}:${d}`,
@@ -34,15 +31,17 @@ export default function BookmarksPicker({
     );
   };
   const bookmarkArticle = (status, bookmark) => {
-    if (!nostrKeys) {
+    if (!userKeys) {
       return false;
     }
 
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     let bookmarkD = bookmark.tags.find((item) => item[0] === "d")[1];
@@ -55,51 +54,56 @@ export default function BookmarksPicker({
         : image || bookmark.tags.find((item) => item[0] === "image")[1];
 
     if (status) {
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 30003,
-        content: "",
-        tags: [
-          [
-            "client",
-            "Yakihonne",
-            "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 30003,
+          content: "",
+          tags: [
+            [
+              "client",
+              "Yakihonne",
+              "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+            ],
+            ["d", bookmarkD],
+            ["image", bookmarkImg],
+            ...bookmark.tags.filter((item) => {
+              if (
+                item[0] !== "d" &&
+                item[0] !== "image" &&
+                item[1] !== itemTypes[itemType]
+              )
+                return item;
+            }),
           ],
-          ["d", bookmarkD],
-          ["image", bookmarkImg],
-          ...bookmark.tags.filter((item) => {
-            if (
-              item[0] !== "d" &&
-              item[0] !== "image" &&
-              item[1] !== itemTypes[itemType]
-            )
-              return item;
-          }),
-        ],
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-      });
+          allRelays: userRelays,
+        })
+      );
 
       return;
     }
     try {
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 30003,
-        content: "",
-        tags: [
-          [
-            "client",
-            "Yakihonne",
-            "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
-          ],["d", bookmarkD],
-          ["image", bookmarkImg],
-          ...bookmark.tags.filter((item) => {
-            if (item[0] !== "d" && item[0] !== "image") return item;
-          }),
-          [itemType, itemTypes[itemType]],
-        ],
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 30003,
+          content: "",
+          tags: [
+            [
+              "client",
+              "Yakihonne",
+              "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+            ],
+            ["d", bookmarkD],
+            ["image", bookmarkImg],
+            ...bookmark.tags.filter((item) => {
+              if (item[0] !== "d" && item[0] !== "image") return item;
+            }),
+            [itemType, itemTypes[itemType]],
+          ],
+          allRelays: userRelays,
+        })
+      );
     } catch (err) {
       console.log(err);
     }
@@ -121,14 +125,13 @@ export default function BookmarksPicker({
           <div className="fx-centered fx-col fit-container">
             <h4 className="box-marg-s">Add to Bookmark</h4>
 
-            {nostrUserBookmarks.length === 0 && (
+            {userBookmarks.length === 0 && (
               <div className="fx-centered" style={{ marginBottom: "1rem" }}>
                 <p className="gray-c">You have no bookmarks</p>
               </div>
             )}
-            {nostrUserBookmarks.map((bookmark) => {
+            {userBookmarks.map((bookmark) => {
               let status = isBookmarked(bookmark);
-              // let bookmarkContent = getParsed3000xContent(bookmark.tags);
               return (
                 <div
                   key={bookmark.id}
@@ -145,17 +148,15 @@ export default function BookmarksPicker({
                         aspectRatio: "1/1",
                         minWidth: "40px",
                         borderRadius: "var(--border-r-50)",
-                        backgroundImage: `url(${bookmark.bookmarkContent.image})`,
+                        backgroundImage: `url(${bookmark.image})`,
                         backgroundColor: "var(--dim-gray)",
                       }}
                     ></div>
                     <div>
-                      <p className="p-one-line">
-                        {bookmark.bookmarkContent.title}
-                      </p>
+                      <p className="p-one-line">{bookmark.title}</p>
 
                       <p className="gray-c p-medium">
-                        {bookmark.bookmarkContent.items.length} item(s) &#8226;{" "}
+                        {bookmark.items.length} item(s) &#8226;{" "}
                         <span className="orange-c">
                           Edited{" "}
                           <Date_

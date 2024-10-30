@@ -1,10 +1,11 @@
 import { bech32 } from "bech32";
 import { Buffer } from "buffer";
-import { nip04, nip44 } from "nostr-tools";
+import { nip04, nip19, nip44 } from "nostr-tools";
 import * as secp from "@noble/secp256k1";
 import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
+import { getNoteTree } from "./Helpers";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -36,9 +37,9 @@ const bytesTohex = (arrayBuffer) => {
 
   return hexOctets.join("");
 };
-const shortenKey = (key) => {
-  let firstHalf = key.substring(0, 10);
-  let secondHalf = key.substring(key.length - 10, key.length);
+const shortenKey = (key, length = 10) => {
+  let firstHalf = key.substring(0, length);
+  let secondHalf = key.substring(key.length - length, key.length);
   return `${firstHalf}....${secondHalf}`;
 };
 const minimizeKey = (key) => {
@@ -46,22 +47,74 @@ const minimizeKey = (key) => {
   return key.substring(key.length - 10, key.length);
 };
 
-const getEmptyNostrUser = (pubkey) => {
+const getEmptyEventStats = (eventID) => {
   return {
-    display_name: getBech32("npub", pubkey).substring(0, 10),
+    event_id: eventID,
+    likes: {
+      likes: [],
+      since: undefined,
+    },
+    reposts: {
+      reposts: [],
+      since: undefined,
+    },
+    replies: {
+      replies: [],
+      since: undefined,
+    },
+    quotes: {
+      quotes: [],
+      since: undefined,
+    },
+    zaps: {
+      total: 0,
+      zaps: [],
+      since: undefined,
+    },
+  };
+};
+const getEmptyuserMetadata = (pubkey) => {
+  return {
     name: getBech32("npub", pubkey).substring(0, 10),
+    display_name: getBech32("npub", pubkey).substring(0, 10),
     picture: "",
     banner: "",
     about: "",
     lud06: "",
     lud16: "",
-    joining_date: new Date(Date.now() / 1000).toISOString(),
     nip05: "",
-    content: `{"name": ""}`,
-    created_at: Date.now() / 1000,
+    website: "",
     pubkey,
-    pubkeyhashed: getBech32("npub", pubkey),
+    created_at: 0,
   };
+};
+const getuserMetadata = (data) => {
+  try {
+    let userAbout = JSON.parse(data.content) || {};
+    let userData = {
+      pubkey: data.pubkey,
+      picture: userAbout?.picture || "",
+      banner: userAbout?.banner || "",
+      display_name:
+        userAbout?.display_name ||
+        userAbout?.name ||
+        getBech32("npub", data.pubkey),
+      name:
+        userAbout?.name ||
+        userAbout?.display_name ||
+        getBech32("npub", data.pubkey),
+      about: userAbout?.about || "",
+      nip05: userAbout?.nip05 || "",
+      lud06: userAbout?.lud06 || "",
+      lud16: userAbout?.lud16 || "",
+      website: userAbout?.website || "",
+      created_at: data.created_at || Math.floor(Date.now() / 1000),
+    };
+    return userData;
+  } catch (err) {
+    console.log(err);
+    return getEmptyuserMetadata(data.pubkey);
+  }
 };
 
 const decodeUrlOrAddress = (lnUrlOrAddress) => {
@@ -127,24 +180,35 @@ const getParsedAuthor = (data) => {
     lud06: content?.lud06 || "",
     lud16: content?.lud16 || "",
     website: content?.website || "",
-    pubkeyhashed: getBech32("npub", data.pubkey),
-    joining_date: new Date(data.created_at * 1000).toISOString(),
     nip05: content?.nip05 || "",
   };
   return tempAuthor;
 };
-const getParsed3000xContent = (tags) => {
+
+const getParsedRepEvent = (event) => {
   try {
     let content = {
-      title: "Untitled",
+      id: event.id,
+      pubkey: event.pubkey,
+      kind: event.kind,
+      content: event.content,
+      created_at: event.created_at,
+      tags: event.tags,
+      author: getEmptyuserMetadata(event.pubkey),
+      title: "",
       description: "",
       image: "",
-      published_at: "",
+      imagePP: getImagePlaceholder(),
+      published_at: event.created_at,
+      contentSensitive: false,
       d: "",
       client: "",
       items: [],
+      seenOn: event.onRelays
+        ? [...new Set(event.onRelays.map((relay) => relay.url))]
+        : [],
     };
-    for (let tag of tags) {
+    for (let tag of event.tags) {
       if (tag[0] === "title") {
         content.title = tag[1];
       }
@@ -158,7 +222,8 @@ const getParsed3000xContent = (tags) => {
         content.d = tag[1];
       }
       if (tag[0] === "published_at") {
-        content.published_at = tag[1];
+        content.published_at =
+          parseInt(tag[1]) !== NaN ? parseInt(tag[1]) : event.created_at;
       }
       if (tag[0] === "client") {
         if (tag.length >= 3 && tag[2].includes("31990")) {
@@ -167,6 +232,8 @@ const getParsed3000xContent = (tags) => {
         if ((tag.length >= 3 && !tag[2].includes("31990")) || tag.length < 3)
           content.client = tag[1];
       }
+      if (tag[0] === "L" && tag[1] === "content-warning")
+        content.contentSensitive = true;
       if (
         tag[0] === "a" ||
         tag[0] === "e" ||
@@ -176,25 +243,90 @@ const getParsed3000xContent = (tags) => {
         content.items.push(tag[1]);
       }
     }
-    if (
-      !content.image
-      // !/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg))/i.test(content.image)
-    )
-      content.image = getImagePlaceholder();
+    content.naddr = content.d
+      ? nip19.naddrEncode({
+          pubkey: event.pubkey,
+          identifier: content.d,
+          kind: event.kind,
+        })
+      : "";
+    content.naddrData = {
+      pubkey: event.pubkey,
+      identifier: content.d,
+      kind: event.kind,
+    };
+    content.aTag = `${event.kind}:${event.pubkey}:${content.d}`;
 
     return content;
-  } catch {
+  } catch (err) {
+    console.log(err);
     return false;
   }
 };
+
+const getParsedNote = async (event) => {
+  try {
+    let isQuote = event.tags.find((tag) => tag[0] === "q");
+    let checkForLabel = event.tags.find((tag) => tag[0] === "l");
+    let isComment = event.tags.find((tag) => tag[0] === "e" || tag[0] === "a");
+    let isFlashNews = false;
+
+    if (checkForLabel && ["UNCENSORED NOTE"].includes(checkForLabel[1]))
+      return false;
+    if (checkForLabel && ["FLASH NEWS"].includes(checkForLabel[1])) {
+      isFlashNews = true;
+    }
+
+    let nEvent = nip19.neventEncode({
+      id: event.id,
+      author: event.pubkey,
+    });
+
+    let rawEvent =
+      typeof event.rawEvent === "function" ? event.rawEvent() : event;
+    let stringifiedEvent = JSON.stringify(rawEvent);
+    let seenOn = event.onRelays
+      ? [...new Set(event.onRelays.map((relay) => relay.url))]
+      : [];
+
+    if (event.kind === 1) {
+      let note_tree = await getNoteTree(event.content);
+
+      return {
+        ...rawEvent,
+        note_tree,
+        stringifiedEvent,
+        isQuote:
+          isQuote && !event.content.includes("nostr:nevent") ? isQuote[1] : "",
+        isComment: isComment ? isComment[1] : false,
+        isFlashNews,
+        nEvent,
+        seenOn,
+      };
+    }
+    if (event.kind === 6) {
+      if (!event.content) return;
+      let relatedEvent = await getParsedNote(JSON.parse(event.content));
+      if (!relatedEvent) return false;
+      return {
+        ...rawEvent,
+        seenOn,
+        relatedEvent,
+      };
+    }
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
 const decodeBolt11 = (address) => {
   let decoded = decode(address);
   let amount = decoded.sections.find((item) => item.name === "amount");
-  return amount.value / 1000;
+  return (amount?.value || 0) / 1000;
 };
 const getBolt11 = (event) => {
   if (!event) return "";
-
   for (let tag of event.tags) {
     if (tag[0] === "bolt11") return tag[1];
   }
@@ -241,17 +373,55 @@ const convertDate = (toConvert) => {
   return `${month} ${day}, ${year}`;
 };
 
+const removeRelayLastSlash = (relay) => {
+  let charToRemove = "/";
+  const escapedChar = charToRemove.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // Escape special characters if any
+  const regex = new RegExp(`^[${escapedChar}]+|[${escapedChar}]+$`, "g");
+  return relay.replace(regex, "");
+};
+
 const filterRelays = (list_1, list_2) => {
   let tempArray = [...list_1, ...list_2];
   return tempArray.filter((item, index, tempArray) => {
     if (tempArray.findIndex((item_1) => item_1 === item) === index) return item;
   });
 };
+
 const removeDuplicants = (list_1, list_2 = []) => {
   let tempArray = [...list_1, ...list_2];
   return tempArray.filter((item, index, tempArray) => {
     if (tempArray.findIndex((item_1) => item_1 === item) === index) return item;
   });
+};
+const removeDuplicatedRelays = (list_1, list_2 = []) => {
+  let tempArray = removeObjDuplicants([...list_1, ...list_2]);
+  return tempArray.map((_) => {
+    return {
+      ..._,
+      url: removeRelayLastSlash(_.url),
+    };
+  });
+};
+const removeObjDuplicants = (list_1, list_2 = []) => {
+  let tempArray = [...list_1, ...list_2];
+  return tempArray.filter((item, index, tempArray) => {
+    if (
+      tempArray.findIndex(
+        (item_1) => JSON.stringify(item_1) === JSON.stringify(item)
+      ) === index
+    )
+      return item;
+  });
+};
+const removeEventsDuplicants = (list_1, list_2 = []) => {
+  let tempArray = [...list_1, ...list_2];
+  return tempArray.filter((item, index, tempArray) => {
+    if (tempArray.findIndex((item_1) => item_1.id === item.id) === index)
+      return item;
+  });
+};
+const sortEvents = (events) => {
+  return events.sort((ev_1, ev_2) => ev_2.created_at - ev_1.created_at);
 };
 
 const encryptEventData = (data) => {
@@ -300,21 +470,17 @@ const getClaimingData = async (pubkey, event_id, kind) => {
   }
 };
 
-const decrypt04 = async (event, nostrkeys) => {
+const decrypt04 = async (event, userKeys) => {
   let pubkey =
-    event.pubkey === nostrkeys.pub
+    event.pubkey === userKeys.pub
       ? event.tags.find((tag) => tag[0] === "p")[1]
       : event.pubkey;
 
   let decryptedMessage = "";
-  if (nostrkeys.ext) {
+  if (userKeys.ext) {
     decryptedMessage = await window.nostr.nip04.decrypt(pubkey, event.content);
-  } else if (nostrkeys.sec) {
-    decryptedMessage = await nip04.decrypt(
-      nostrkeys.sec,
-      pubkey,
-      event.content
-    );
+  } else if (userKeys.sec) {
+    decryptedMessage = await nip04.decrypt(userKeys.sec, pubkey, event.content);
   }
   return decryptedMessage;
 };
@@ -355,7 +521,8 @@ export {
   shortenKey,
   getParsedAuthor,
   getHex,
-  getEmptyNostrUser,
+  getEmptyuserMetadata,
+  getEmptyEventStats,
   minimizeKey,
   decodeUrlOrAddress,
   encodeLud06,
@@ -365,8 +532,12 @@ export {
   checkForLUDS,
   convertDate,
   filterRelays,
+  removeRelayLastSlash,
   removeDuplicants,
-  getParsed3000xContent,
+  removeObjDuplicants,
+  removeDuplicatedRelays,
+  removeEventsDuplicants,
+  getParsedRepEvent,
   encryptEventData,
   decryptEventData,
   getClaimingData,
@@ -374,4 +545,7 @@ export {
   decrypt04,
   unwrapGiftWrap,
   encodeBase64URL,
+  getuserMetadata,
+  getParsedNote,
+  sortEvents,
 };

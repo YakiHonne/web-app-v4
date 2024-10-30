@@ -1,136 +1,116 @@
-import { nip19, SimplePool } from "nostr-tools";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { nip19 } from "nostr-tools";
 import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
-import PostPreviewCardNOSTR from "../../Components/Main/PostPreviewCardNOSTR";
+import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
-import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
-import { getBech32, filterRelays } from "../../Helpers/Encryptions";
+import { getBech32 } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
 import axios from "axios";
 import FlashNewsCard from "../../Components/Main/FlashNewsCard";
 import KindOne from "../../Components/Main/KindOne";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
-const pool = new SimplePool();
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
-const checkTopicInList = (list, topic) => {
-  return list.find(
-    (item) => item.trim().toLowerCase() === topic.trim().toLowerCase()
-  );
-};
 export default function SearchTag() {
   const { tag } = useParams();
-  const {
-    nostrUser,
-    nostrKeys,
-    addNostrAuthors,
-    isPublishing,
-    setToast,
-    setToPublish,
-    nostrUserTopics,
-    setNostrUserTopics,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
+  const isSubscribed = false;
   const [posts, setPosts] = useState([]);
   const [flashnews, setFlashnews] = useState([]);
   const [notes, setNotes] = useState([]);
   const [contentType, setContentType] = useState("n");
   const [isLoaded, setIsLoaded] = useState(false);
-  const isSubscribed = useMemo(() => {
-    return checkTopicInList(nostrUserTopics, tag);
-  }, [nostrUserTopics, tag]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         let authorsIDs = [];
-        let sub = pool.subscribeMany(
-          filterRelays(nostrUser?.relays || [], relaysOnPlatform),
-          [{ kinds: [30023, 1], "#t": [tag] }],
-          {
-            async onevent(event) {
-              authorsIDs.push(event.pubkey);
-              if (event.kind === 30023) {
-                let author_img = "";
-                let author_name = getBech32("npub", event.pubkey).substring(
-                  0,
-                  10
-                );
-                let author_pubkey = event.pubkey;
-                let thumbnail = "";
-                let title = "";
-                let summary = "";
-                let postTags = [];
+        let sub = ndkInstance.subscribe([{ kinds: [30023, 1], "#t": [tag] }], {
+          closeOnEose: true,
+          cacheUsage: "CACHE_FIRST",
+        });
 
-                let d = "";
+        sub.on("event", async (event) => {
+          authorsIDs.push(event.pubkey);
+          if (event.kind === 30023) {
+            let author_img = "";
+            let author_name = getBech32("npub", event.pubkey).substring(0, 10);
+            let author_pubkey = event.pubkey;
+            let thumbnail = "";
+            let title = "";
+            let summary = "";
+            let postTags = [];
 
-                let modified_date = new Date(
-                  event.created_at * 1000
-                ).toISOString();
-                let added_date = new Date(
-                  event.created_at * 1000
-                ).toISOString();
-                let published_at = event.created_at;
-                for (let tag of event.tags) {
-                  if (tag[0] === "published_at") {
-                    published_at = tag[1];
-                    added_date =
-                      tag[1].length > 10
-                        ? new Date(parseInt(tag[1])).toISOString()
-                        : new Date(parseInt(tag[1]) * 1000).toISOString();
-                  }
-                  if (tag[0] === "image") thumbnail = tag[1];
-                  if (tag[0] === "title") title = tag[1];
-                  if (tag[0] === "summary") summary = tag[1];
-                  if (tag[0] === "t") postTags.push(tag[1]);
-                  if (tag[0] === "d") d = tag[1];
-                }
+            let d = "";
 
-                let naddr = nip19.naddrEncode({
-                  identifier: d,
-                  pubkey: author_pubkey,
-                  kind: 30023,
-                });
-
-                setPosts((prev) => {
-                  return [
-                    ...prev,
-                    {
-                      id: event.id,
-                      thumbnail,
-                      summary,
-                      author_img,
-                      author_pubkey,
-                      author_name,
-                      title,
-                      added_date,
-                      modified_date,
-                      published_at,
-                      created_at: event.created_at,
-                      postTags,
-                      naddr,
-                    },
-                  ];
-                });
+            let modified_date = new Date(event.created_at * 1000).toISOString();
+            let added_date = new Date(event.created_at * 1000).toISOString();
+            let published_at = event.created_at;
+            for (let tag of event.tags) {
+              if (tag[0] === "published_at") {
+                published_at = tag[1];
+                added_date =
+                  tag[1].length > 10
+                    ? new Date(parseInt(tag[1])).toISOString()
+                    : new Date(parseInt(tag[1]) * 1000).toISOString();
               }
-              if (event.kind === 1) {
-                let parsedNote = await onEvent(event);
-                if (parsedNote) {
-                  setNotes((prev) => {
-                    let existed = prev.find((note) => note.id === event.id);
-                    if (existed) return prev;
-                    else return [...prev, parsedNote];
-                  });
-                }
-              }
-              setIsLoaded(true);
-            },
-            oneose() {
-              addNostrAuthors(authorsIDs);
-            },
+              if (tag[0] === "image") thumbnail = tag[1];
+              if (tag[0] === "title") title = tag[1];
+              if (tag[0] === "summary") summary = tag[1];
+              if (tag[0] === "t") postTags.push(tag[1]);
+              if (tag[0] === "d") d = tag[1];
+            }
+
+            let naddr = nip19.naddrEncode({
+              identifier: d,
+              pubkey: author_pubkey,
+              kind: 30023,
+            });
+
+            setPosts((prev) => {
+              return [
+                ...prev,
+                {
+                  id: event.id,
+                  thumbnail,
+                  summary,
+                  author_img,
+                  author_pubkey,
+                  author_name,
+                  title,
+                  added_date,
+                  modified_date,
+                  published_at,
+                  created_at: event.created_at,
+                  postTags,
+                  naddr,
+                },
+              ];
+            });
           }
-        );
+          if (event.kind === 1) {
+            let parsedNote = await onEvent(event);
+            if (parsedNote) {
+              setNotes((prev) => {
+                let existed = prev.find((note) => note.id === event.id);
+                if (existed) return prev;
+                else return [...prev, parsedNote];
+              });
+            }
+          }
+          setIsLoaded(true);
+        });
+        sub.on("eose", () => {
+          saveUsers(authorsIDs);
+        });
       } catch (err) {
         console.log(err);
       }
@@ -164,67 +144,46 @@ export default function SearchTag() {
   }, []);
 
   const subscribe = () => {
-    if (!nostrUser) {
+    if (!userMetadata) {
       return;
     }
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
-    setToPublish({
-      nostrKeys: nostrKeys,
-      kind: 30078,
-      content: "",
-      tags: [
-        ["d", "MyFavoriteTopicsInYakihonne"],
-        ...nostrUserTopics.map((item) => ["t", item]),
-        ["t", tag],
-      ],
-      allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
-    });
-    setNostrUserTopics([...nostrUserTopics, tag]);
   };
   const unsubscribe = () => {
-    if (!nostrUser) {
+    if (!userMetadata) {
       return;
     }
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
-    setToPublish({
-      nostrKeys: nostrKeys,
-      kind: 30078,
-      content: "",
-      tags: [
-        ["d", "MyFavoriteTopicsInYakihonne"],
-        ...nostrUserTopics
-          .filter((item) => item !== tag)
-          .map((item) => ["t", item]),
-      ],
-      allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays)],
-    });
-    setNostrUserTopics([...nostrUserTopics.filter((item) => item !== tag)]);
   };
   const onEvent = async (event) => {
     try {
-      let checkForComment = event.tags.find(
+      let isComment = event.tags.find(
         (tag) => tag[0] === "e" || tag[0] === "a"
       );
-      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
+      let isQuote = event.tags.find((tag) => tag[0] === "q");
       let checkForLabel = event.tags.find((tag) => tag[0] === "l");
       if (
         checkForLabel &&
         ["UNCENSORED NOTE", "FLASH NEWS"].includes(checkForLabel[1])
       )
         return false;
-      if (checkForComment && event.kind === 1) return false;
+      if (isComment && event.kind === 1) return false;
       let author_img = "";
       let author_name = getBech32("npub", event.pubkey).substring(0, 10);
       let author_pubkey = event.pubkey;
@@ -237,14 +196,14 @@ export default function SearchTag() {
         return {
           ...event,
           note_tree,
-          checkForQuote:
-            checkForQuote && !event.content.includes("nostr:nevent")
-              ? checkForQuote[1]
+          isQuote:
+            isQuote && !event.content.includes("nostr:nevent")
+              ? isQuote[1]
               : "",
           author_img,
           author_name,
           author_pubkey,
-          stringifiedEvent: JSON.stringify(event),
+          // stringifiedEvent: JSON.stringify(event),
           nEvent,
         };
       }
@@ -367,7 +326,7 @@ export default function SearchTag() {
                             className="fit-container fx-centered"
                           >
                             {" "}
-                            <PostPreviewCardNOSTR
+                            <RepEventPreviewCard
                               item={item}
                               highlithedTag={tag}
                             />

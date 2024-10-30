@@ -1,33 +1,20 @@
 import axios from "axios";
 import { nip19 } from "nostr-tools";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { saveFetchedUsers } from "../../Helpers/DB";
+import { isHex } from "../../Helpers/Helpers";
 
 export default function MentionSuggestions({ mention, setSelectedMention }) {
-  const { nostrAuthors, setNostrAuthors } = useContext(Context);
-  //   const topicSuggestions = useMemo(() => {
-  //     return getSuggestions(nostrAuthors);
-  //   }, [tag]);
-  const [users, setUsers] = useState(nostrAuthors);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+
+  const [users, setUsers] = useState(nostrAuthors.slice(0, 100));
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const filteredUsers = mention
-      ? nostrAuthors.filter((user) => {
-          if (
-            user.display_name?.toLowerCase().includes(mention.toLowerCase()) ||
-            user.name?.toLowerCase().includes(mention.toLowerCase()) ||
-            user.lud06?.toLowerCase().includes(mention.toLowerCase()) ||
-            user.nip05?.toLowerCase().includes(mention.toLowerCase())
-          )
-            return user;
-        })
-      : Array.from(nostrAuthors);
-    setUsers(filteredUsers);
     const getUsersFromCache = async () => {
       try {
         setIsLoading(true);
@@ -36,16 +23,7 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
         let data = await axios.get(
           `${API_BASE_URL}/api/v1/users/search/${mention}`
         );
-        setNostrAuthors((prev) => {
-          return [...prev, ...data.data].filter((item, index) => {
-            if (
-              [...prev, ...data.data].findIndex(
-                (item_) => item_.pubkey === item.pubkey
-              ) === index
-            )
-              return item;
-          });
-        });
+        saveFetchedUsers(data.data);
         setUsers((prev) => {
           let tempData = [...prev, ...data.data];
           return tempData.filter((user, index, tempData) => {
@@ -62,10 +40,32 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
         setIsLoading(false);
       }
     };
+    const searchForUser = () => {
+      const filteredUsers = mention
+        ? nostrAuthors.filter((user) => {
+            if (
+              (typeof user.display_name === "string" &&
+                user.display_name
+                  ?.toLowerCase()
+                  .includes(mention?.toLowerCase())) ||
+              (typeof user.name === "string" &&
+                user.name?.toLowerCase().includes(mention?.toLowerCase())) ||
+              (typeof user.lud06 === "string" &&
+                user.lud06?.toLowerCase().includes(mention?.toLowerCase())) ||
+              (typeof user.nip05 === "string" &&
+                user.nip05?.toLowerCase().includes(mention?.toLowerCase()))
+            )
+              return user;
+          })
+        : Array.from(nostrAuthors.slice(0, 100));
+      setUsers(filteredUsers);
+      getUsersFromCache();
+    };
+
     var timer = setTimeout(null);
     if (mention) {
       timer = setTimeout(async () => {
-        getUsersFromCache();
+        searchForUser();
       }, 400);
     } else {
       clearTimeout(timer);
@@ -74,6 +74,17 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
       clearTimeout(timer);
     };
   }, [mention]);
+
+  const encodePubkey = (pubkey) => {
+    try {
+      if (!isHex(pubkey)) return false;
+      let url = nip19.npubEncode(pubkey);
+      return url;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  };
 
   if (users === false) return;
 
@@ -101,49 +112,52 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
         </>
       )}
       {users.map((user, index) => {
-        let url = nip19.npubEncode(user.pubkey);
-        return (
-          <div
-            key={user.pubkey}
-            className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedMention(url);
-            }}
-            style={{
-              borderTop: index !== 0 ? "1px solid var(--pale-gray)" : "",
-            }}
-          >
-            <div className="fx-centered">
-              <UserProfilePicNOSTR
-                img={user.picture || ""}
-                size={36}
-                user_id={user.pubkey}
-                ring={false}
-              />
-              <div className="fx-centered fx-start-h">
-                <div
-                  className="fx-centered fx-col fx-start-v "
-                  style={{ rowGap: 0 }}
-                >
-                  <p className="p-one-line">{user.display_name || user.name}</p>
-                  <p className="orange-c p-medium p-one-line">
-                    @{user.name || user.display_name}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <Link
-              to={`/${url}`}
+        let url = encodePubkey(user.pubkey);
+        if (url)
+          return (
+            <div
+              key={user.pubkey}
+              className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
               onClick={(e) => {
                 e.stopPropagation();
+                setSelectedMention(url);
               }}
-              target="_blank"
+              style={{
+                borderTop: index !== 0 ? "1px solid var(--pale-gray)" : "",
+              }}
             >
-              <div className="share-icon"></div>
-            </Link>
-          </div>
-        );
+              <div className="fx-centered">
+                <UserProfilePicNOSTR
+                  img={user.picture || ""}
+                  size={36}
+                  user_id={user.pubkey}
+                  ring={false}
+                />
+                <div className="fx-centered fx-start-h">
+                  <div
+                    className="fx-centered fx-col fx-start-v "
+                    style={{ rowGap: 0 }}
+                  >
+                    <p className="p-one-line">
+                      {user.display_name || user.name}
+                    </p>
+                    <p className="orange-c p-medium p-one-line">
+                      @{user.name || user.display_name}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Link
+                to={`/${url}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                target="_blank"
+              >
+                <div className="share-icon"></div>
+              </Link>
+            </div>
+          );
       })}
       {users.length === 0 && !isLoading && (
         <div className="fit-container fx-centered">

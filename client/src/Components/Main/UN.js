@@ -1,13 +1,13 @@
-import React, { Fragment, useContext, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import Date_ from "../Date_";
-import { encryptEventData, filterRelays } from "../../Helpers/Encryptions";
+import { encryptEventData } from "../../Helpers/Encryptions";
 import { finalizeEvent } from "nostr-tools";
-import { Context } from "../../Context/Context";
-import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
 import Counter from "../Counter";
-import { getNoteTree } from "../../Helpers/Helpers";
+import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
 import LoginWithNostr from "./LoginWithNostr";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function UN({
   sealedCauses = [],
@@ -18,17 +18,19 @@ export default function UN({
   action = true,
   scaled = false,
 }) {
-  const { nostrUser, nostrKeys, setToPublish, setToast } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const [content, setContent] = useState("");
 
   let findSource = data.tags.find((tag) => tag[0] === "source");
   let source = findSource ? findSource[1] : "";
   let isVoted =
-    data?.ratings?.find((rating) => rating.pubkey === nostrKeys.pub) || false;
+    data?.ratings?.find((rating) => rating.pubkey === userKeys.pub) || false;
   const [vote, setVote] = useState("");
   const [causes, setCauses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [toLogin, setToLogin] = useState(false);
   const [triggerUndo, setTriggerUndo] = useState(false);
   const platformCauses = {
     "+": [
@@ -52,8 +54,8 @@ export default function UN({
   };
   const [revotingPermission, setRevotingPermission] = useState(true);
   useEffect(() => {
-    if (!nostrKeys) setVote("");
-  }, [nostrKeys]);
+    if (!userKeys) setVote("");
+  }, [userKeys]);
 
   useEffect(() => {
     const parseContent = async () => {
@@ -63,8 +65,8 @@ export default function UN({
     parseContent();
   }, [data]);
   const handleYes = () => {
-    if (!nostrKeys) {
-      setToLogin(true);
+    if (!userKeys) {
+      redirectToLogin();
       return;
     }
     if (vote) {
@@ -82,8 +84,8 @@ export default function UN({
     }
   };
   const handleNo = () => {
-    if (!nostrKeys) {
-      setToLogin(true);
+    if (!userKeys) {
+      redirectToLogin();
       return;
     }
     if (vote) {
@@ -112,10 +114,7 @@ export default function UN({
   const handlePublishing = async () => {
     try {
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+      let relaysToPublish = userRelays;
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
 
@@ -130,7 +129,7 @@ export default function UN({
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
         } catch (err) {
@@ -139,13 +138,15 @@ export default function UN({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
 
-      setToPublish({
-        eventInitEx: event,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          eventInitEx: event,
+          allRelays: relaysToPublish,
+        })
+      );
 
       setTimeout(() => {
         setIsLoading(false);
@@ -156,19 +157,18 @@ export default function UN({
     } catch (err) {
       setIsLoading(true);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while publishing this note",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while publishing this note",
+        })
+      );
     }
   };
   const handleUndo = async () => {
     try {
       setIsLoading(true);
-      let relaysToPublish = filterRelays(
-        nostrUser?.relays || [],
-        relaysOnPlatform
-      );
+      let relaysToPublish = userRelays;
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
 
@@ -182,7 +182,7 @@ export default function UN({
         created_at,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           event = await window.nostr.signEvent(event);
         } catch (err) {
@@ -191,13 +191,15 @@ export default function UN({
           return false;
         }
       } else {
-        event = finalizeEvent(event, nostrKeys.sec);
+        event = finalizeEvent(event, userKeys.sec);
       }
 
-      setToPublish({
-        eventInitEx: event,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          eventInitEx: event,
+          allRelays: relaysToPublish,
+        })
+      );
 
       setTimeout(() => {
         setIsLoading(false);
@@ -209,17 +211,18 @@ export default function UN({
     } catch (err) {
       setIsLoading(true);
       console.log(err);
-      setToast({
-        type: 2,
-        desc: "An error occurred while publishing this note",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error occurred while publishing this note",
+        })
+      );
     }
   };
 
   if (state === "new") return null;
   return (
     <>
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}{" "}
       <div
         className="fit-container sc-s-18 fx-centered fx-col"
         style={{ rowGap: 0, overflow: "visible" }}
@@ -343,18 +346,18 @@ export default function UN({
           <>
             <hr />
             <div className="fit-container fx-scattered box-pad-h-m box-pad-v-s">
-              {data.pubkey === nostrKeys.pub && (
+              {data.pubkey === userKeys.pub && (
                 <p className="gray-c p-medium">
                   Your note awaits the community rating
                 </p>
               )}
-              {flashNewsAuthor === nostrKeys.pub && (
+              {flashNewsAuthor === userKeys.pub && (
                 <p className="gray-c p-medium">
                   This note awaits the community rating
                 </p>
               )}
-              {data.pubkey !== nostrKeys.pub &&
-                flashNewsAuthor !== nostrKeys.pub && (
+              {data.pubkey !== userKeys.pub &&
+                flashNewsAuthor !== userKeys.pub && (
                   <>
                     {!isVoted && (
                       <>

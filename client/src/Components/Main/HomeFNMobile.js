@@ -3,8 +3,10 @@ import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
 import { Link } from "react-router-dom";
 import { nip19 } from "nostr-tools";
+import { useSelector } from "react-redux";
 
-export default function HomeFNMobile({ flashnews }) {
+export default function HomeFNMobile() {
+  const importantFlashNews = useSelector((state) => state.importantFlashNews);
   const noScrollBarContainer = useRef(null);
   const noScrollBarContainerMain = useRef(null);
   const autoScrollTimer = useRef(null);
@@ -66,7 +68,7 @@ export default function HomeFNMobile({ flashnews }) {
     }, scrollDelay);
   };
 
-  if (!flashnews.length)
+  if (!importantFlashNews.length)
     return (
       <div
         className="fit-container fx-centered sc-s-18 skeleton-container home-fn-mobile"
@@ -113,7 +115,7 @@ export default function HomeFNMobile({ flashnews }) {
             }}
             ref={noScrollBarContainer}
           >
-            {flashnews.map((fn, index) => {
+            {importantFlashNews.map((fn, index) => {
               return (
                 <div
                   className="fx-centered fit-container fx-start-h fx-stretch"
@@ -128,7 +130,7 @@ export default function HomeFNMobile({ flashnews }) {
                 >
                   <div className="fx-centered fx-col fx-start-h">
                     <h5 className="gray-c">&#x2022;</h5>
-                    {index + 1 !== flashnews.length && (
+                    {index + 1 !== importantFlashNews.length && (
                       <div
                         style={{
                           backgroundColor: "#555555",
@@ -152,7 +154,9 @@ export default function HomeFNMobile({ flashnews }) {
                           <p className="p-medium gray-c">
                             <Date_
                               toConvert={
-                                new Date(fn.flashnews.created_at * 1000)
+                                new Date(
+                                  fn.flashnews.created_at * 1000
+                                )
                               }
                               time={true}
                             />
@@ -166,7 +170,9 @@ export default function HomeFNMobile({ flashnews }) {
                         author: fn.flashnews.pubkey,
                       })}`}
                     >
-                      <p className="p-two-lines">{fn.flashnews.content}</p>
+                      <p className="p-two-lines">
+                        {fn.flashnews.content}
+                      </p>
                     </Link>
                   </div>
                 </div>

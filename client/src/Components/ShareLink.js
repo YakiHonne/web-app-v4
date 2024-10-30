@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../Context/Context";
+import React, { useEffect, useState } from "react";
 import { nip19 } from "nostr-tools";
 import { getAuthPubkeyFromNip05 } from "../Helpers/Helpers";
 import QRCode from "react-qr-code";
@@ -9,6 +8,8 @@ import axios from "axios";
 import { getBech32 } from "../Helpers/Encryptions";
 import Date_ from "./Date_";
 import UN from "./Main/UN";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../Store/Slides/Publishers";
 
 const getNostrLink = async (path) => {
   let pathSplit = path.split("/");
@@ -39,7 +40,7 @@ const getNostrLink = async (path) => {
     }
     return `nostr:${naddr}`;
   }
-  
+
   let naddr = pathSplit[2] || pathSplit[1];
   return `nostr:${naddr}`;
 };
@@ -59,7 +60,7 @@ export default function ShareLink({
   shareImgData = false,
   kind = false,
 }) {
-  const { setToast } = useContext(Context);
+  const dispatch = useDispatch();
   const [showSharing, setShowSharing] = useState(false);
   const [showCopyURL, setShowCopyURL] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,10 +87,12 @@ export default function ShareLink({
 
   const copyLink = (toCopy, type = "URL") => {
     navigator.clipboard.writeText(toCopy);
-    setToast({
-      type: 1,
-      desc: `${type} was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `${type} was copied! 👏`,
+      })
+    );
   };
   const handleSharing = async (e) => {
     e.stopPropagation();
@@ -116,16 +119,14 @@ export default function ShareLink({
         await navigator
           .share(shareDetails)
           .then(() =>
-            console.log("Hooray! Your content was shared to tha world")
+          console.log("shared")
           );
       } catch (error) {
         console.log(`Oops! I couldn't share to the world because: ${error}`);
       }
     } else {
       setShowSharing(true);
-      console.log(
-        "Web share is currently not supported on this browser. Please provide a callback"
-      );
+  
     }
   };
 
@@ -302,7 +303,7 @@ export default function ShareLink({
 }
 
 const ShareImg = ({ data, kind, path, setIsLoading }) => {
-  const { tempChannel } = useContext(Context);
+  const followersCountSL = useSelector((state) => state.followersCountSL);
   const [ppBase64, setPpBase64] = useState(data.author.picture || "");
   const [thumbnailBase64, setThumbnailBase64] = useState(data.post.image || "");
 
@@ -459,7 +460,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
             </p>
             <p style={{ color: "white" }} className="p-medium">
               <Date_
-                toConvert={new Date(data.post.created_at * 1000).toISOString()}
+                toConvert={new Date(data.post.created_at * 1000)}
                 time={true}
               />
             </p>
@@ -511,7 +512,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 <p className="p-medium gray-c">Followings</p>
               </div>
               <div className="fx-centered">
-                <p style={{ color: "black" }}>{tempChannel.length}</p>
+                <p style={{ color: "black" }}>{followersCountSL.length}</p>
                 <p className="p-medium gray-c">Followers</p>
               </div>
             </div>
@@ -621,7 +622,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 <p className="p-medium gray-c">Followings</p>
               </div>
               <div className="fx-centered">
-                <p style={{ color: "black" }}>{tempChannel.length}</p>
+                <p style={{ color: "black" }}>{followersCountSL.length}</p>
                 <p className="p-medium gray-c">Followers</p>
               </div>
             </div>

@@ -1,231 +1,117 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Context } from "../../Context/Context";
-import relaysOnPlatform from "../../Content/Relays";
-import { SimplePool, nip19 } from "nostr-tools";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   checkForLUDS,
   decodeBolt11,
-  filterRelays,
-  getBech32,
   getBolt11,
-  getEmptyNostrUser,
+  getEmptyEventStats,
+  getEmptyuserMetadata,
+  getParsedNote,
   getZapper,
+  removeObjDuplicants,
 } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
-import { getAuthPubkeyFromNip05, getNoteTree } from "../../Helpers/Helpers";
-import Date_ from "../Date_";
+import Date_ from "../../Components/Date_";
 import { useNavigate } from "react-router-dom";
 import LoadingDots from "../LoadingDots";
 import QuoteNote from "./QuoteNote";
-import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
+import BookmarkEvent from "./BookmarkEvent";
 import ShareLink from "../ShareLink";
 import ZapTip from "./ZapTip";
 import NumberShrink from "../NumberShrink";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { getUser } from "../../Helpers/Controlers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { NDKUser } from "@nostr-dev-kit/ndk";
+import { useLiveQuery } from "dexie-react-hooks";
+import { getEventStats, saveEventStats } from "../../Helpers/DB";
+import OptionsDropdown from "./OptionsDropdown";
+import useNoteStats from "../../Hooks/useNoteStats";
+import Like from "../Reactions/Like";
+import Repost from "../Reactions/Repost";
+import Quote from "../Reactions/Quote";
+import Zap from "../Reactions/Zap";
+import Comments from "../Reactions/Comments";
 
-const pool = new SimplePool();
-
-export default function KindOne({ event, reactions = true }) {
-  const {
-    nostrKeys,
-    nostrUser,
-    nostrAuthors,
-    getNostrAuthor,
-    isPublishing,
-    setToPublish,
-    setToast,
-    mutedList,
-  } = useContext(Context);
+export default function KindOne({ event, reactions = true, border = false }) {
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const userMutedList = useSelector((state) => state.userMutedList);
   const navigate = useNavigate();
-
-  const [user, setUser] = useState(getEmptyNostrUser(event.pubkey));
+  const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   const [isNip05Verified, setIsNip05Verified] = useState(false);
-  const [relatedEvent, setRelatedEvent] = useState(false);
-  const [isRelatedEventLoaded, setIsRelatedEventLoaded] = useState(false);
   const [toggleComment, setToggleComment] = useState(false);
-  const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showQuoteBox, setShowQuoteBox] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
   const [usersList, setUsersList] = useState(false);
-  const [reactions_, setReactions] = useState([]);
-  const [zapsCount, setZapsCount] = useState(0);
-  const [comments, setComments] = useState([]);
-  const [zappers, setZappers] = useState([]);
-  const [quotes, setQuotes] = useState([]);
-  const [reposts, setReposts] = useState([]);
+  const { postActions } = useNoteStats(event?.id, event?.pubkey);
 
-  const optionsRef = useRef(null);
-  const isVoted = useMemo(() => {
-    return nostrKeys
-      ? reactions_.find((item) => item.pubkey === nostrKeys.pub)
+  const isLiked = useMemo(() => {
+    return userKeys
+      ? postActions.likes.likes.find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [reactions_, nostrKeys]);
+  }, [postActions, userKeys]);
+
   const isReposted = useMemo(() => {
-    return nostrKeys
-      ? reposts.find((item) => item.pubkey === nostrKeys.pub)
+    return userKeys
+      ? postActions.reposts.reposts.find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [reposts, nostrKeys]);
+  }, [postActions, userKeys]);
   const isQuoted = useMemo(() => {
-    return nostrKeys
-      ? quotes.find((item) => item.pubkey === nostrKeys.pub)
+    return userKeys
+      ? postActions.quotes.quotes.find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [quotes, nostrKeys]);
+  }, [postActions, userKeys]);
+  const isZapped = useMemo(() => {
+    return userKeys
+      ? postActions.zaps.zaps.find((item) => item.pubkey === userKeys.pub)
+      : false;
+  }, [postActions, userKeys]);
+
   const isMuted = useMemo(() => {
     let checkProfile = () => {
-      if (!Array.isArray(mutedList)) return false;
-      let index = mutedList.findIndex((item) => item === user?.pubkey);
+      if (!Array.isArray(userMutedList)) return false;
+      let index = userMutedList.findIndex((item) => item === user?.pubkey);
       if (index === -1) {
         return false;
       }
       return { index };
     };
     return checkProfile();
-  }, [mutedList, user]);
+  }, [userMutedList, user]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         let tempPubkey = event.pubkey;
-        let auth = getNostrAuthor(tempPubkey);
+        let auth = getUser(tempPubkey);
+
         if (auth) {
           setUser(auth);
+          let ndkUser = new NDKUser({ pubkey: event.pubkey });
+          ndkUser.ndk = ndkInstance;
           let checknip05 = auth.nip05
-            ? await getAuthPubkeyFromNip05(auth.nip05)
+            ? await ndkUser.validateNip05(auth.nip05)
             : false;
+
           if (checknip05) setIsNip05Verified(true);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.log(err);
+      }
     };
     fetchData();
   }, [nostrAuthors]);
-
-  // useEffect(() => {
-  //   if (event.checkForQuote && !relatedEvent) {
-  //     let pool = new SimplePool();
-
-  //     pool.subscribeMany(
-  //       relaysOnPlatform,
-  //       [{ kinds: [1], ids: [event.checkForQuote] }],
-  //       {
-  //         async onevent(event) {
-  //           setRelatedEvent(await onEvent(event));
-  //         },
-  //         oneose() {
-  //           setIsRelatedEventLoaded(true);
-  //         },
-  //       }
-  //     );
-  //   }
-  // }, []);
 
   useEffect(() => {
     if (!isPublishing) {
       setIsLoading(false);
       setToggleComment(false);
-      setComment("");
     }
   }, [isPublishing]);
-
-  useEffect(() => {
-    const handleOffClick = (e) => {
-      if (optionsRef.current && !optionsRef.current.contains(e.target))
-        setShowOptions(false);
-    };
-    document.addEventListener("mousedown", handleOffClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOffClick);
-    };
-  }, [optionsRef]);
-
-  // useEffect(() => {
-  //   try {
-  //     if (reactions === false) return;
-  //     let sub = pool.subscribeMany(
-  //       nostrUser
-  //         ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-  //         : relaysOnPlatform,
-  //       [
-  //         {
-  //           kinds: [6, 7],
-  //           "#e": [event.id],
-  //         },
-  //         {
-  //           kinds: [1],
-  //           "#q": [event.id],
-  //         },
-  //         {
-  //           kinds: [1],
-  //           "#e": [event.id],
-  //         },
-  //         {
-  //           kinds: [9735],
-  //           "#p": [event.pubkey],
-  //           "#e": [event.id],
-  //         },
-  //       ],
-  //       {
-  //         async onevent(event_) {
-  //           if (event_.kind === 9735) {
-  //             let sats = decodeBolt11(getBolt11(event_));
-  //             let zapper = getZapper(event_);
-  //             setZappers((prev) => {
-  //               return [...prev, zapper];
-  //             });
-  //             setZapsCount((prev) => prev + sats);
-  //           }
-  //           if (event_.kind === 7) {
-  //             setReactions((reactions_) => [...reactions_, event_]);
-  //           }
-  //           if (event_.kind === 6) {
-  //             setReposts((reposts) => [...reposts, event_]);
-  //           }
-  //           if (event_.kind === 1) {
-  //             let check_kind1 = await onEvent(event_);
-  //             if (check_kind1.checkForQuote)
-  //               setQuotes((quotes) => [...quotes, event_]);
-  //             if (check_kind1.checkForComment) {
-  //               setComments((comments) => [...comments, event_]);
-  //             }
-  //           }
-  //         },
-  //       }
-  //     );
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // }, []);
-
-  const onEvent = async (event) => {
-    try {
-      let checkForComment = event.tags.find((tag) => tag[0] === "e");
-      let checkForQuote = event.tags.find((tag) => tag[0] === "q");
-      // if (checkForComment && event.kind === 1) return false;
-      let author_img = "";
-      let author_name = getBech32("npub", event.pubkey).substring(0, 10);
-      let author_pubkey = event.pubkey;
-      let nEvent = nip19.neventEncode({
-        id: event.id,
-        author: event.pubkey,
-      });
-      if (event.kind === 1) {
-        let note_tree = await getNoteTree(event.content);
-        return {
-          ...event,
-          note_tree,
-          checkForQuote,
-          checkForComment,
-          author_img,
-          author_name,
-          author_pubkey,
-          nEvent,
-        };
-      }
-    } catch (err) {
-      console.log(err);
-      return false;
-    }
-  };
 
   const onClick = (e) => {
     e.stopPropagation();
@@ -245,61 +131,35 @@ export default function KindOne({ event, reactions = true }) {
     else window.location = `/notes/${event.nEvent}`;
   };
 
-  const commentNote = async (e) => {
-    e.stopPropagation();
-    if (isLoading || !comment) return;
-    if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 1,
-        content: comment,
-        tags: [
-          ["e", event.id, "", "root"],
-          ["p", event.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
-    } catch (err) {
-      console.log(err);
-      setIsLoading(false);
-    }
-  };
-
   const muteUnmute = async () => {
     try {
-      if (!Array.isArray(mutedList)) return;
+      if (!Array.isArray(userMutedList)) return;
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
 
-      let tempTags = Array.from(mutedList.map((pubkey) => ["p", pubkey]));
+      let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
       if (isMuted) {
         tempTags.splice(isMuted.index, 1);
       } else {
         tempTags.push(["p", event.pubkey]);
       }
 
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 10000,
-        content: "",
-        tags: tempTags,
-        allRelays: [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 10000,
+          content: "",
+          tags: tempTags,
+          allRelays: userRelays,
+        })
+      );
     } catch (err) {
       console.log(err);
     }
@@ -308,143 +168,29 @@ export default function KindOne({ event, reactions = true }) {
   const copyID = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(event.nEvent);
-    setToast({
-      type: 1,
-      desc: `Note ID was copied! 👏`,
-    });
-  };
-
-  const reactToNote = async (e) => {
-    e.stopPropagation();
-    if (isLoading) return;
-    if (isPublishing) {
+    dispatch(
       setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
-      return;
-    }
-    try {
-      if (!nostrKeys) {
-        return false;
-      }
-      if (isVoted) {
-        setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This reaction will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
-
-        setIsLoading(false);
-
-        let tempArray = Array.from(reactions_);
-        let index = tempArray.findIndex((item) => item.id === isVoted.id);
-        tempArray.splice(index, 1);
-        setReactions(tempArray);
-        return false;
-      }
-
-      setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "+",
-        tags: [
-          ["e", event.id],
-          ["p", event.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
-
-      setIsLoading(false);
-    } catch (err) {
-      console.log(err);
-      setIsLoading(false);
-    }
-  };
-  const repostNote = async (e) => {
-    e.stopPropagation();
-    if (isLoading) return;
-    if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
-      return;
-    }
-    try {
-      if (!nostrKeys) {
-        return false;
-      }
-      if (isReposted) {
-        setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This repost will be deleted!",
-          tags: [["e", isReposted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
-
-        setIsLoading(false);
-
-        let tempArray = Array.from(reposts);
-        let index = tempArray.findIndex((item) => item.id === isVoted.id);
-        tempArray.splice(index, 1);
-        setReposts(tempArray);
-        return false;
-      }
-
-      setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 6,
-        content: event.stringifiedEvent,
-        tags: [
-          ["e", event.id],
-          ["p", event.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-          : relaysOnPlatform,
-      });
-
-      setIsLoading(false);
-    } catch (err) {
-      console.log(err);
-      setIsLoading(false);
-    }
+        type: 1,
+        desc: `Note ID was copied! 👏`,
+      })
+    );
   };
 
   return (
     <div
-      className={`fit-container ${
-        !toggleComment ? "" : "box-pad-h-m box-pad-v-m sc-s-18"
+      className={`fit-container box-pad-h-m box-pad-v-m ${
+        !reactions ? "sc-s-18" : ""
       }`}
       style={{
         backgroundColor: !toggleComment ? "" : "var(--c1-side)",
         transition: ".2s ease-in-out",
         overflow: "visible",
+        borderBottom: border ? "1px solid var(--very-dim-gray)" : "",
       }}
     >
-      {showQuoteBox && (
+      {/* {showQuoteBox && (
         <QuoteNote note={event} exit={() => setShowQuoteBox(false)} />
-      )}
+      )} */}
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -454,9 +200,8 @@ export default function KindOne({ event, reactions = true }) {
         />
       )}
       <div
-        className="box-pad-h-m box-pad-v-m sc-s-18 fit-container pointer"
+        className=" fit-container pointer"
         style={{
-          backgroundColor: "var(--c1-side)",
           transition: ".2s ease-in-out",
           overflow: "visible",
         }}
@@ -476,7 +221,16 @@ export default function KindOne({ event, reactions = true }) {
               metadata={user}
             />
             <div>
-              <p className="p-bold">{user.display_name || user.name}</p>
+              <div className="fx-centered">
+                <p className="p-bold">{user.display_name || user.name}</p>
+                <p className="gray-c p-medium">&#8226;</p>
+                <p className="gray-c p-medium">
+                  <Date_
+                    toConvert={new Date(event.created_at * 1000)}
+                    time={true}
+                  />
+                </p>
+              </div>
               <p
                 className={`p-medium ${
                   isNip05Verified ? "orange-c round-icon-tooltip" : "gray-c"
@@ -487,149 +241,152 @@ export default function KindOne({ event, reactions = true }) {
               </p>
             </div>
           </div>
-          <p className="gray-c p-medium">
-            <Date_ toConvert={new Date(event.created_at * 1000)} time={true} />
-          </p>
+          {event.isFlashNews && (
+            <div className="sticker sticker-gray-black">Paid</div>
+          )}
         </div>
-        <div className="fx-centered fx-col fit-container">
+        <div
+          className="fx-centered fx-col fit-container"
+          style={{ paddingLeft: "32px" }}
+        >
           <div className="fit-container" onClick={onClick}>
             {event.note_tree}
           </div>
-          {/* {relatedEvent && (
-            <div className="fit-container">
-              <KindOne event={relatedEvent} reactions={false} />
-            </div>
-          )} */}
-          {/* {event.checkForQuote && !isRelatedEventLoaded && !relatedEvent && (
-            <div
-              style={{ backgroundColor: "var(--c1-side)" }}
-              className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
-            >
-              <p className="p-medium gray-c">Loading quoted note</p>
-              <LoadingDots />
-            </div>
-          )}
-
-          {event.checkForQuote && isRelatedEventLoaded && !relatedEvent && (
-            <div
-              style={{ backgroundColor: "var(--c1-side)" }}
-              className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
-            >
-              <p className="p-medium orange-c p-italic">
-                The quoted note does not seem to be found
-              </p>
-            </div>
-          )} */}
         </div>
         {reactions && (
           <div
             className="fx-scattered fit-container"
-            style={{ paddingTop: "1rem" }}
+            style={{ paddingTop: "1rem", paddingLeft: "32px" }}
           >
-            <div className="fx-centered" style={{ columnGap: "16px" }}>
+            <div className="fx-centered" style={{ columnGap: "32px" }}>
               <div className="fx-centered">
                 <div className="icon-tooltip" data-tooltip="Leave a comment">
                   <div
-                    className="comment-icon"
+                    className="comment-24"
                     onClick={() => setToggleComment(!toggleComment)}
                   ></div>
                 </div>
-                <div className="icon-tooltip" data-tooltip="See comments" onClick={redirect}>
-                  <p className="p-medium">{comments.length}</p>
+                <div
+                  className="icon-tooltip"
+                  data-tooltip="See comments"
+                  onClick={redirect}
+                >
+                  <p>{postActions.replies.replies.length}</p>
+                  {/* <p>{comments.length}</p> */}
                 </div>
               </div>
               <div className="fx-centered">
-                <div
+                {/* <div
                   className={"icon-tooltip"}
                   data-tooltip="React"
                   onClick={reactToNote}
                 >
-                  <div className={isVoted ? "heart-bold" : "heart"}></div>
-                </div>
+                  <div className={isLiked ? "heart-bold-24" : "heart-24"}></div>
+                </div> */}
+                <Like isLiked={isLiked} event={event} actions={postActions} />
                 <div
-                  className={`icon-tooltip ${
-                    isVoted ? "orange-c" : ""
-                  } p-medium`}
+                  className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
                   data-tooltip="Reactions from"
                   onClick={(e) => {
                     e.stopPropagation();
-                    reactions_.length > 0 &&
+                    postActions.likes.likes.length > 0 &&
                       setUsersList({
                         title: "Reactions from",
-                        list: reactions_.map((item) => item.pubkey),
+                        list: postActions.likes.likes.map(
+                          (item) => item.pubkey
+                        ),
                         extras: [],
                       });
                   }}
                 >
-                  <NumberShrink value={reactions_.length} />
+                  <NumberShrink value={postActions.likes.likes.length} />
+                  {/* <NumberShrink value={reactions_.length} /> */}
                 </div>
               </div>
               <div
                 className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
                 style={{ columnGap: "8px" }}
               >
-                <div
+                {/* <div
                   className={"icon-tooltip"}
                   data-tooltip="Repost note"
                   onClick={repostNote}
                 >
                   <div
                     className={
-                      isReposted ? "switch-arrows-bold" : "switch-arrows"
+                      isReposted ? "switch-arrows-bold-24" : "switch-arrows-24"
                     }
                   ></div>
-                </div>
+                </div> */}
+                <Repost
+                  isReposted={isReposted}
+                  event={event}
+                  actions={postActions}
+                />
                 <div
-                  className={`icon-tooltip ${
-                    isReposted ? "orange-c" : ""
-                  } p-medium`}
+                  className={`icon-tooltip ${isReposted ? "orange-c" : ""}`}
                   data-tooltip="Reposts from"
                   onClick={(e) => {
                     e.stopPropagation();
-                    reposts.length > 0 &&
+                    postActions.reposts.reposts.length > 0 &&
                       setUsersList({
                         title: "Reposts from",
-                        list: reposts.map((item) => item.pubkey),
+                        list: postActions.reposts.reposts.map(
+                          (item) => item.pubkey
+                        ),
                         extras: [],
                       });
                   }}
                 >
-                  <NumberShrink value={reposts.length} />
+                  <NumberShrink value={postActions.reposts.reposts.length} />
+                  {/* <NumberShrink value={reposts.length} /> */}
                 </div>
               </div>
               <div className="fx-centered">
-                <div className="icon-tooltip" data-tooltip="Quote note">
+                {/* <div className="icon-tooltip" data-tooltip="Quote note">
                   <div
                     className={
-                      isQuoted ? "quote-bold pointer" : "quote pointer"
+                      isQuoted ? "quote-bold-24 pointer" : "quote-24 pointer"
                     }
                     onClick={() => setShowQuoteBox(!showQuoteBox)}
                   ></div>
-                </div>
+                </div> */}
+                <Quote
+                  isQuoted={isQuoted}
+                  event={event}
+                  actions={postActions}
+                />
                 <div
-                  className={`icon-tooltip ${
-                    isQuoted ? "orange-c" : ""
-                  } p-medium`}
+                  className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
                   data-tooltip="Quoters"
                   onClick={(e) => {
                     e.stopPropagation();
-                    quotes.length > 0 &&
+                    postActions.quotes.quotes.length > 0 &&
                       setUsersList({
                         title: "Quoters",
-                        list: quotes.map((item) => item.pubkey),
+                        list: postActions.quotes.quotes.map(
+                          (item) => item.pubkey
+                        ),
                         extras: [],
                       });
                   }}
                 >
-                  <NumberShrink value={quotes.length} />
+                  <NumberShrink value={postActions.quotes.quotes.length} />
+                  {/* <NumberShrink value={quotes.length} /> */}
                 </div>
               </div>
               <div className="fx-centered">
                 <div className="icon-tooltip" data-tooltip="Tip note">
-                  <ZapTip
+                  <Zap
+                    user={user}
+                    event={event}
+                    actions={postActions}
+                    isZapped={isZapped}
+                  />
+                  {/* <ZapTip
                     recipientLNURL={checkForLUDS(user.lud06, user.lud16)}
                     recipientPubkey={event.pubkey}
-                    senderPubkey={nostrUser.pubkey}
+                    senderPubkey={userMetadata.pubkey}
                     recipientInfo={{
                       name: user.name,
                       picture: user.picture,
@@ -637,154 +394,128 @@ export default function KindOne({ event, reactions = true }) {
                     eTag={event.id}
                     forContent={event.content.substring(0, 40)}
                     onlyIcon={true}
-                    smallIcon={true}
-                  />
+                  /> */}
                 </div>
                 <div
-                  className={`icon-tooltip p-medium`}
+                  className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
                   data-tooltip="Zappers"
                   onClick={(e) => {
                     e.stopPropagation();
-                    zapsCount > 0 &&
+                    postActions.zaps.total > 0 &&
                       setUsersList({
                         title: "Zappers",
-                        list: zappers.map((item) => item.pubkey),
-                        extras: zappers,
+                        list: postActions.zaps.zaps.map((item) => item.pubkey),
+                        extras: [],
                       });
                   }}
                 >
-                  <NumberShrink value={zapsCount} />
+                  <NumberShrink value={postActions.zaps.total} />
+                  {/* <NumberShrink value={zapsCount} /> */}
                 </div>
               </div>
             </div>
-            <div style={{ position: "relative" }} ref={optionsRef}>
-              <div
-                className="round-icon-small round-icon-tooltip"
-                style={{ border: "none" }}
-                data-tooltip="Options"
-                onClick={() => {
-                  setShowOptions(!showOptions);
-                }}
-              >
-                <div className="fx-centered fx-col" style={{ rowGap: 0 }}>
-                  <p className="gray-c fx-centered" style={{ height: "6px" }}>
-                    &#x2022;
-                  </p>
-                  <p className="gray-c fx-centered" style={{ height: "6px" }}>
-                    &#x2022;
-                  </p>
-                  <p className="gray-c fx-centered" style={{ height: "6px" }}>
-                    &#x2022;
-                  </p>
-                </div>
-              </div>
-              {showOptions && (
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    top: "110%",
-                    backgroundColor: "var(--dim-gray)",
-                    border: "none",
-                    // transform: "translateY(100%)",
-                    minWidth: "200px",
-                    width: "max-content",
-                    zIndex: 1000,
-                    rowGap: "12px",
-                  }}
-                  className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                >
-                  <div onClick={copyID} className="pointer">
-                    <p>Copy note ID</p>
-                  </div>
-                  {nostrKeys && nostrKeys.pub !== event.pubkey && (
-                    <>
-                      <SaveArticleAsBookmark
-                        label="Bookmark note"
-                        pubkey={event.id}
-                        kind={"1"}
-                        itemType="e"
-                      />
-                    </>
-                  )}
-                  <div className="fit-container fx-centered fx-start-h pointer">
-                    <ShareLink
-                      label="Share note"
-                      path={`/notes/${event.nEvent}`}
-                      title={user.display_name || user.name}
-                      description={event.content}
-                      kind={1}
-                      shareImgData={{
-                        post: event,
-                        author: user,
-                        label: "Note",
-                      }}
+            <OptionsDropdown
+              options={[
+                <div onClick={copyID} className="pointer">
+                  <p>Copy note ID</p>
+                </div>,
+                userKeys && userKeys.pub !== event.pubkey && (
+                  <>
+                    <BookmarkEvent
+                      label="Bookmark note"
+                      pubkey={event.id}
+                      kind={"1"}
+                      itemType="e"
                     />
+                  </>
+                ),
+                <div className="fit-container fx-centered fx-start-h pointer">
+                  <ShareLink
+                    label="Share note"
+                    path={`/notes/${event.nEvent}`}
+                    title={user.display_name || user.name}
+                    description={event.content}
+                    kind={1}
+                    shareImgData={{
+                      post: event,
+                      author: user,
+                      label: "Note",
+                    }}
+                  />
+                </div>,
+                event.pubkey !== userKeys.pub && (
+                  <div
+                    onClick={muteUnmute}
+                    className="fit-container fx-scattered pointer"
+                  >
+                    {isMuted ? (
+                      <p className="red-c">Unmute user</p>
+                    ) : (
+                      <p className="red-c">Mute user</p>
+                    )}
+                    {isMuted ? (
+                      <div className="unmute-24"></div>
+                    ) : (
+                      <div className="mute-24"></div>
+                    )}
                   </div>
-                  {event.pubkey !== nostrKeys.pub && (
-                    <div
-                      onClick={muteUnmute}
-                      className="fit-container fx-scattered pointer"
-                    >
-                      {isMuted ? (
-                        <p className="red-c">Unmute user</p>
-                      ) : (
-                        <p className="red-c">Mute user</p>
-                      )}
-                      {isMuted ? (
-                        <div className="unmute-24"></div>
-                      ) : (
-                        <div className="mute-24"></div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                ),
+              ]}
+            />
           </div>
         )}
       </div>
       {toggleComment && (
-        <div
-          className="fit-container fx-centered fx-start-v slide-up"
-          style={{ paddingTop: ".5rem" }}
-        >
-          <UserProfilePicNOSTR
-            size={48}
-            mainAccountUser={true}
-            allowClick={false}
-            ring={false}
-          />
-          <div className="fit-container fx-centered fx-wrap">
-            <div className="fit-container">
-              <textarea
-                // type="text"
-                className="txt-area ifs-full if "
-                placeholder="Comment on this note"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="fx-centered fit-container fx-end-h">
-              <button
-                className="btn btn-gst-red btn-small"
-                onClick={() => setToggleComment(!toggleComment)}
-                disabled={isLoading}
-              >
-                {isLoading ? <LoadingDots /> : "Cancel"}
-              </button>
-              <button
-                className="btn btn-normal btn-small"
-                onClick={commentNote}
-                disabled={isLoading}
-              >
-                {isLoading ? <LoadingDots /> : "Post"}
-              </button>
-            </div>
-          </div>
-        </div>
+        // <div
+        //   className="fit-container fx-centered fx-start-v slide-up"
+        //   style={{ paddingTop: ".5rem" }}
+        // >
+        //   <UserProfilePicNOSTR
+        //     size={48}
+        //     mainAccountUser={true}
+        //     allowClick={false}
+        //     ring={false}
+        //   />
+        //   <div className="fit-container fx-centered fx-wrap">
+        //     <div className="fit-container">
+        //       <textarea
+        //         // type="text"
+        //         className="txt-area ifs-full if "
+        //         placeholder="Comment on this note"
+        //         value={comment}
+        //         onChange={(e) => setComment(e.target.value)}
+        //         disabled={isLoading}
+        //       />
+        //     </div>
+        //     <div className="fx-centered fit-container fx-end-h">
+        //       <button
+        //         className="btn btn-gst-red btn-small"
+        //         onClick={() => setToggleComment(!toggleComment)}
+        //         disabled={isLoading}
+        //       >
+        //         {isLoading ? <LoadingDots /> : "Cancel"}
+        //       </button>
+        //       <button
+        //         className="btn btn-normal btn-small"
+        //         onClick={commentNote}
+        //         disabled={isLoading}
+        //       >
+        //         {isLoading ? <LoadingDots /> : "Post"}
+        //       </button>
+        //     </div>
+        //   </div>
+        // </div>
+        <Comments
+          exit={() => setToggleComment(false)}
+          replyId={event.id}
+          replyPubkey={event.pubkey}
+          actions={postActions}
+        />
       )}
     </div>
   );
 }
+
+// export default function KindOne({ event, reactions = true }) {
+//   return null
+// }

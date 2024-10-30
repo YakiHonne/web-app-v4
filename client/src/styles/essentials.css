@@ -1,6 +1,7 @@
 @import url(./root.css);
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;800&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&display=swap'); */
 /* @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap'); */
 
 * {
@@ -56,7 +57,7 @@ svg:not(:root) {
 }
 
 html {
-    font-size: 14px;
+    font-size: 16px;
     /* font-size: var(--16); */
     /* scroll-behavior: smooth; */
     background-color: var(--white);
@@ -65,9 +66,10 @@ html {
 }
 
 body {
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'DM sans', sans-serif !important;
     margin: 0;
-    font-weight: 500;
+    font-weight: 400;
+    font-optical-sizing: none;
     line-height: 150%;
     overflow-x: hidden;
 }
@@ -81,19 +83,19 @@ body {
 /* text size */
 
 h1, h2, h3, h4, h5, .h0, .h00 {
-    font-weight: 800;
+    font-weight: 900;
     line-height: 100%;
     color: var(--black);
 }
 
 h1 {
     font-size: var(--64);
-    letter-spacing: -2px;
+    /* letter-spacing: -2px; */
 }
 
 h2 {
     font-size: var(--48);
-    letter-spacing: -.5px;
+    /* letter-spacing: -.5px; */
 }
 
 h3 {
@@ -102,6 +104,8 @@ h3 {
 }
 
 h4 {
+    white-space: pre-wrap;
+    word-break: break-word;
     font-size: var(--24);
 }
 
@@ -433,24 +437,36 @@ hr:last-child {
 /* button style */
 
 .btn {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM sans', sans-serif;
     font-size: var(--16);
     padding: 0 var(--24);
-    height: var(--48);
-    border-radius: var(--border-r-32);
+    height: var(--40);
+    border-radius: var(--border-r-18);
     cursor: pointer;
     transition: .2s ease-in;
 }
 
+
 .btn-small {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM sans', sans-serif;
     font-size: var(--12);
     padding: 0 var(--20);
     height: var(--32);
-    border-radius: var(--border-r-32);
+    border-radius: var(--border-r-18);
     cursor: pointer;
     transition: .2s ease-in;
 }
+
+.btn-small-round {
+    font-family: 'DM sans', sans-serif;
+    font-size: var(--16);
+    height: var(--40);
+    aspect-ratio: 1/1;
+    border-radius: var(--border-r-50);
+    cursor: pointer;
+    transition: .2s ease-in;
+}
+
 
 .btn::first-letter {
     text-transform: capitalize;
@@ -463,19 +479,20 @@ hr:last-child {
 }
 
 .btn-normal:hover {
-    background-color: var(--c3);
+    /* background-color: var(--orange-side); */
+    opacity: .8;
 }
 
 .btn-gst {
     background-color: transparent;
     border: 1px solid var(--c1);
-    color: var(--black);
+    color: var(--c1);
 }
 
 .btn-gray {
-    background-color: #3c3c3c;
+    background-color: var(--dim-gray);
     border: none;
-    color: white;
+    color: var(--black);
 }
 
 .btn-gst:hover {
@@ -532,7 +549,7 @@ hr:last-child {
 }
 
 .btn-text-gray {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM sans', sans-serif;
     background-color: transparent;
     border: none;
     color: var(--gray);
@@ -761,7 +778,7 @@ label {
 .ifc input {
     background-color: transparent;
     border: none;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM sans', sans-serif;
     font-size: var(--16);
     width: 100%;
     padding: 0 3rem 0 1.5rem;
@@ -772,7 +789,7 @@ label {
 }
 
 .if {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM sans', sans-serif;
     font-size: var(--16);
     padding: 0 var(--20);
     height: var(--54);
@@ -793,7 +810,7 @@ label {
 }
 
 .txt-area {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM sans', sans-serif;
     font-size: var(--16);
     padding: var(--20);
     margin-right: 0;
@@ -1432,7 +1449,7 @@ textarea {
     border: none;
     resize: none;
     /* margin-bottom: 1rem; */
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM sans', sans-serif;
     font-size: var(--16);
 }
 
@@ -1540,8 +1557,9 @@ textarea::placeholder, .if::placeholder {
 
 .image-grid {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     align-items: stretch;
     column-gap: 8px;
+    width: 100%
 }

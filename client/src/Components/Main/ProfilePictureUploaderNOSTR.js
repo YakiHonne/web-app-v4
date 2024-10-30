@@ -1,11 +1,13 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { nostrPpPlaceholder } from "../../Content/NostrPPPlaceholder";
-import { Context } from "../../Context/Context";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import { filterRelays } from "../../Helpers/Encryptions";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import UploadFile from "../UploadFile";
 
 export default function ProfilePictureUploaderNOSTR({
   current = "",
@@ -17,19 +19,14 @@ export default function ProfilePictureUploaderNOSTR({
   exit,
   cancel,
 }) {
-  const {
-    nostrKeys,
-    nostrUser,
-    setToast,
-    isPublishing,
-    setToPublish,
-    setNostrUserAbout,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
   const [imgPrev, setImgPrev] = useState(current || nostrPpPlaceholder[0]);
   const [img, setImg] = useState("");
   const [imgUrl, setImgUrl] = useState(current || "");
-  const [allRelays, setAllRelays] = useState([...relaysOnPlatform, ...relays]);
 
   const handleUpload = (e) => {
     let file = e.target.files[0];
@@ -44,10 +41,12 @@ export default function ProfilePictureUploaderNOSTR({
 
   const publish = async () => {
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     setIsLoading(true);
@@ -60,66 +59,16 @@ export default function ProfilePictureUploaderNOSTR({
       ...prevUserData,
       picture: userPicture,
     };
-    setToPublish({
-      nostrKeys: nostrKeys,
-      kind: 0,
-      content: JSON.stringify(content),
-      tags,
-      allRelays: [...filterRelays(relaysOnPlatform, nostrUser.relays || [])],
-    });
-    setNostrUserAbout(content);
+    dispatch(
+      setToPublish({
+        userKeys: userKeys,
+        kind: 0,
+        content: JSON.stringify(content),
+        tags,
+        allRelays: userRelays,
+      })
+    );
     exit();
-    // let event = {
-    //   kind: 0,
-    //   // pubkey: nostrKeys.pub,
-    //   content: JSON.stringify(content),
-    //   created_at: Math.floor(Date.now() / 1000),
-    //   // tags: [["client", "daorayaki.org"]],
-    //   tags,
-    // };
-    // if (nostrKeys.ext) {
-    //   try {
-    //     event = await window.nostr.signEvent(event);
-    //   } catch {
-    //     setIsLoading(false);
-    //   }
-    // } else {
-    //   event.pubkey = nostrKeys.pub;
-    //   event.id = getEventHash(event);
-    //   event.sig = signEvent(event, nostrKeys.sec);
-    // }
-
-    // let relaysToPublish = await Promise.all(
-    //   allRelays.map(async (url) => {
-    //     try {
-    //       let relay = relayInit(url);
-    //       console.log(relay);
-    //       var res = { url: url.split("wss://")[1], status: false };
-    //       relay.on("connect", () => {
-    //         let pub = relay.publish(event);
-    //         pub.on("ok", () => {
-    //           res.status = true;
-    //         });
-    //         pub.on("failed", () => {});
-    //       });
-    //       await relay.connect();
-    //       return res;
-    //     } catch (err) {
-    //       return res;
-    //     }
-    //   })
-    // );
-
-    // if (relaysToPublish.find((item) => item.status)) {
-    //   setIsLoading(false);
-    //   exit();
-    // } else {
-    //   setIsLoading(false);
-    //   setToast({
-    //     type: 2,
-    //     desc: "Failed to proceed to the next step!",
-    //   });
-    // }
     setIsLoading(false);
   };
 
@@ -128,16 +77,18 @@ export default function ProfilePictureUploaderNOSTR({
       try {
         let fd = new FormData();
         fd.append("file", img);
-        fd.append("pubkey", nostrKeys.pub);
+        fd.append("pubkey", userKeys.pub);
         let data = await axiosInstance.post("/api/v1/file-upload", fd, {
           headers: { "Content-Type": "multipart/formdata" },
         });
         return data.data.image_path;
       } catch {
-        setToast({
-          type: 2,
-          desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
+          })
+        );
         return false;
       }
     }
@@ -152,15 +103,15 @@ export default function ProfilePictureUploaderNOSTR({
     <div className="fit-container box-pad-h fx-centered fx-col">
       <div style={{ maxWidth: "380px" }} className="fx-scattered fx-wrap">
         <h3 className="box-marg-s fit-container p-centered">
-          Pick up an image
+          Update profile picture
         </h3>
         <div
           className="fit-container fx-centered  fx-start-v box-pad-v"
           style={{ columnGap: "26px" }}
         >
-          <UserProfilePicNOSTR img={imgPrev} size={100} />
+          <UserProfilePicNOSTR img={imgPrev} size={128} />
         </div>
-        {nostrPpPlaceholder.map((pp) => {
+        {/* {nostrPpPlaceholder.map((pp) => {
           return (
             <div
               onClick={() => {
@@ -195,11 +146,11 @@ export default function ProfilePictureUploaderNOSTR({
           <p style={{ width: "40px" }}>or</p>
           <hr />
           <hr />
-        </div>
-        <div className="fit-container fx-centered">
+        </div> */}
+        {/* <div className="fit-container fx-centered">
           <label
             className="fit-container fx-centered sc-s-d box-pad-h box-pad-v-m"
-            style={{ position: "relative" }}
+            style={{ position: "relative", backgroundColor: "transparent" }}
             htmlFor="image-upload"
           >
             {!img ? (
@@ -235,14 +186,25 @@ export default function ProfilePictureUploaderNOSTR({
               </div>
             )}
           </label>
+        </div> */}
+        <div className="fit-container fx-centered">
+          <input
+            type="text"
+            className="if ifs-full"
+            placeholder="Image url..."
+            value={imgUrl}
+            onChange={handleThumbnailValue}
+          />
+          <UploadFile
+            setImageURL={(url) => {
+              setImgPrev(url);
+              setImgUrl(url);
+            }}
+            round={true}
+            setFileMetadata={() => null}
+            setIsUploadsLoading={setIsLoading}
+          />
         </div>
-        <input
-          type="text"
-          className="if ifs-full"
-          placeholder="Image url..."
-          value={imgUrl}
-          onChange={handleThumbnailValue}
-        />
         <div className="fit-container fx-centered fx-end-h box-pad-v-m">
           {cancelButton && (
             <button
@@ -253,7 +215,7 @@ export default function ProfilePictureUploaderNOSTR({
               {isLoading ? <LoadingDots /> : "Cancel"}
             </button>
           )}
-          {nostrKeys.sec && (
+          {userKeys.sec && (
             <button
               className="btn btn-normal"
               onClick={publish}
@@ -262,7 +224,7 @@ export default function ProfilePictureUploaderNOSTR({
               {isLoading ? <LoadingDots /> : validateButton}
             </button>
           )}
-          {!nostrKeys.sec && nostrKeys.ext && (
+          {!userKeys.sec && userKeys.ext && (
             <button
               className="btn btn-normal"
               onClick={publish}

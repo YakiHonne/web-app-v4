@@ -1,11 +1,10 @@
-import React, { useContext } from "react";
+import React from "react";
 import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
 import ProfilePictureUploaderNOSTR from "./ProfilePictureUploaderNOSTR";
+import { useSelector } from "react-redux";
 
 export default function ToChangeProfilePic({ exit, cancel }) {
-  const { nostrUserAbout, nostrUserTags } = useContext(Context);
-
+  const userMetadata = useSelector((state) => state.userMetadata);
   return (
     <section className="fixed-container fx-centered">
       <div
@@ -16,11 +15,11 @@ export default function ToChangeProfilePic({ exit, cancel }) {
       >
         <ProfilePictureUploaderNOSTR
           relays={relaysOnPlatform}
-          current={nostrUserAbout.picture}
+          current={userMetadata.picture}
           cancelButton={true}
           validateButton={"Update Photo"}
-          prevUserData={nostrUserAbout}
-          tags={nostrUserTags}
+          prevUserData={userMetadata}
+          tags={[]}
           exit={exit}
           cancel={cancel}
         />

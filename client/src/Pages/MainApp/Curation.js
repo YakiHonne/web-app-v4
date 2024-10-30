@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { nip19, SimplePool } from "nostr-tools";
-import { Context } from "../../Context/Context";
+import { nip19 } from "nostr-tools";
 import Helmet from "react-helmet";
 import axios from "axios";
 import {
@@ -11,12 +10,17 @@ import {
   filterRelays,
   getBech32,
   getBolt11,
-  getEmptyNostrUser,
-  getParsed3000xContent,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
   getZapper,
   removeDuplicants,
 } from "../../Helpers/Encryptions";
-import { getAuthPubkeyFromNip05, getVideoContent } from "../../Helpers/Helpers";
+import {
+  getAuthPubkeyFromNip05,
+  getCAEATooltip,
+  getVideoContent,
+  redirectToLogin,
+} from "../../Helpers/Helpers";
 import relaysOnPlatform from "../../Content/Relays";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import Date_ from "../../Components/Date_";
@@ -28,7 +32,7 @@ import NumberShrink from "../../Components/NumberShrink";
 import LoginWithNostr from "../../Components/Main/LoginWithNostr";
 import GeneralComments from "../../Components/Main/GeneralComments";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
-import SaveArticleAsBookmark from "../../Components/Main/SaveArticleAsBookmark";
+import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import ShareLink from "../../Components/ShareLink";
 import Footer from "../../Components/Footer";
@@ -36,8 +40,12 @@ import VideosPreviewCards from "../../Components/Main/VideosPreviewCards";
 import CheckNOSTRClient from "../../Components/Main/CheckNOSTRClient";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import HomeFN from "../../Components/Main/HomeFN";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { getUser } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
-const pool = new SimplePool();
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 const filterRootComments = (all) => {
@@ -64,17 +72,14 @@ const countReplies = (id, all) => {
   return count.sort((a, b) => a.created_at - b.created_at);
 };
 
-export default function NostrCuration() {
-  const {
-    setToast,
-    getNostrAuthor,
-    nostrAuthors,
-    nostrKeys,
-    isPublishing,
-    nostrUser,
-    setToPublish,
-    addNostrAuthors,
-  } = useContext(Context);
+export default function Curation() {
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+
   const { id, CurationKind, AuthNip05, ArtIdentifier } = useParams();
   const navigateTo = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -84,7 +89,6 @@ export default function NostrCuration() {
   const [curationDet, setCurationDet] = useState({});
   const [articlesOnCuration, setArticlesOnCuration] = useState([]);
   const [curationAuthor, setCurationAuthor] = useState({});
-  const [toLogin, setToLogin] = useState(false);
   const [zapsCount, setZapsCount] = useState(0);
   const [upvoteReaction, setUpvoteReaction] = useState([]);
   const [downvoteReaction, setDownvoteReaction] = useState([]);
@@ -95,12 +99,12 @@ export default function NostrCuration() {
   const [usersList, setUsersList] = useState(false);
   const [importantFN, setImportantFN] = useState(false);
   const isVoted = useMemo(() => {
-    return nostrKeys
+    return userKeys
       ? upvoteReaction
           .concat(downvoteReaction)
-          .find((item) => item.pubkey === nostrKeys.pub)
+          .find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [upvoteReaction, downvoteReaction, nostrKeys]);
+  }, [upvoteReaction, downvoteReaction, userKeys]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,104 +112,79 @@ export default function NostrCuration() {
         let naddrData = await checkURL();
 
         let _curation = { created_at: 0 };
-        addNostrAuthors([naddrData.pubkey]);
-        let sub = pool.subscribeMany(
-          !nostrUser
-            ? relaysOnPlatform
-            : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])],
+        saveUsers([naddrData.pubkey]);
+        let sub = ndkInstance.subscribe(
           [
             {
               kinds: [naddrData.kind],
               "#d": [naddrData.identifier],
             },
           ],
-          {
-            onevent(event) {
-              if (event.created_at > _curation.created_at) {
-                _curation = { ...event };
-                let modified_date = new Date(
-                  event.created_at * 1000
-                ).toISOString();
-                let added_date = new Date(
-                  event.created_at * 1000
-                ).toISOString();
-                let published_at = event.created_at;
-                for (let tag of event.tags) {
-                  if (tag[0] === "published_at") {
-                    published_at = tag[1];
-                    added_date =
-                      tag[1].length > 10
-                        ? new Date(parseInt(tag[1])).toISOString()
-                        : new Date(parseInt(tag[1]) * 1000).toISOString();
-                  }
-                }
-                setCuration({ ..._curation, naddr: id });
-                setCurationDet({
-                  pubkey: event.pubkey,
-                  ...getParsed3000xContent(_curation.tags),
-                  author: { name: event.pubkey.substring(0, 10), img: "" },
-                  added_date,
-                  modified_date,
-                  published_at,
-                  naddrData,
-                });
-                setIsLoaded(true);
-              }
-            },
-            oneose() {
-              if (!_curation) {
-                setToast({
-                  type: 2,
-                  desc: "This curation does not exist",
-                });
-                setTimeout(() => {
-                  navigateTo("/curations");
-                }, 2000);
-              } else {
-                let authPubkeys = removeDuplicants(
-                  getAuthPubkeys(_curation.tags)
-                );
-                addNostrAuthors(authPubkeys);
-                let dRefs = getDRef(_curation.tags);
-                if (dRefs.length === 0) setIsArtsLoaded(true);
-                let articles = [];
-                let sub_2 = pool.subscribeMany(
-                  [...relaysOnPlatform, "wss://nos.lol"],
-                  [
-                    {
-                      kinds: naddrData.kind === 30004 ? [30023] : [34235],
-                      "#d": dRefs,
-                    },
-                  ],
-                  {
-                    onevent(article) {
-                      articles.push(article);
-                      setArticlesOnCuration((_articles) => {
-                        let post =
-                          article.kind === 30023
-                            ? getPostsInCuration(article)
-                            : getVideoContent(article);
-                        let newArts = [post, ..._articles];
-
-                        return sortPostsOnCuration(dRefs, newArts);
-                      });
-                    },
-                    oneose() {
-                      setIsArtsLoaded(true);
-                    },
-                  }
-                );
-              }
-              sub.close();
-            },
-          }
+          { cacheUsage: "CACHE_FIRST" }
         );
+
+        sub.on("event", (event) => {
+          if (event.created_at > _curation.created_at) {
+            let parsedCuration = getParsedRepEvent(event);
+
+            _curation = { ...parsedCuration };
+            setCuration({ ...parsedCuration, naddr: id });
+            setCurationDet(parsedCuration);
+            setIsLoaded(true);
+          }
+        });
+        sub.on("eose", () => {
+          if (!_curation) {
+            dispatch(
+              setToast({
+                type: 2,
+                desc: "This curation does not exist",
+              })
+            );
+            setTimeout(() => {
+              navigateTo("/curations");
+            }, 2000);
+          } else {
+            let authPubkeys = removeDuplicants(getAuthPubkeys(_curation.tags));
+            saveUsers(authPubkeys);
+            let dRefs = getDRef(_curation.tags);
+            if (dRefs.length === 0) setIsArtsLoaded(true);
+            let articles = [];
+            let sub_2 = ndkInstance.subscribe(
+              [
+                {
+                  kinds: naddrData.kind === 30004 ? [30023] : [34235],
+                  "#d": dRefs,
+                },
+              ],
+              { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+            );
+
+            sub_2.on("event", (article) => {
+              articles.push(article);
+              setArticlesOnCuration((_articles) => {
+                let post =
+                  article.kind === 30023
+                    ? getPostsInCuration(article)
+                    : getVideoContent(article);
+                let newArts = [post, ..._articles];
+
+                return sortPostsOnCuration(dRefs, newArts);
+              });
+            });
+            sub_2.on("eose", () => {
+              setIsArtsLoaded(true);
+            });
+          }
+        });
       } catch (err) {
         console.log(err);
-        setToast({
-          type: 2,
-          desc: "Problem in connecting with the relay",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Problem in connecting with the relay",
+          })
+        );
         setTimeout(() => {
           navigateTo("/curations");
         }, 2000);
@@ -218,11 +197,7 @@ export default function NostrCuration() {
   useEffect(() => {
     const initSubscription = async () => {
       let naddrData = await checkURL();
-      const sub = pool.subscribeMany(
-        [
-          ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-          "wss://nostr.wine",
-        ],
+      const sub = ndkInstance.subscribe(
         [
           {
             kinds: [7, 1],
@@ -238,35 +213,32 @@ export default function NostrCuration() {
             ],
           },
         ],
-        {
-          onevent(event) {
-            if (event.kind === 1) {
-              setComments((prev) => {
-                let newCom = [...prev, event];
-                return newCom.sort(
-                  (item_1, item_2) => item_2.created_at - item_1.created_at
-                );
-              });
-            }
-            if (event.kind === 9735) {
-              let sats = decodeBolt11(getBolt11(event));
-              let zapper = getZapper(event);
-              setZappers((prev) => {
-                return [...prev, zapper];
-              });
-              setZapsCount((prev) => prev + sats);
-            }
-
-            if (event.content === "+")
-              setUpvoteReaction((upvoteArticle) => [...upvoteArticle, event]);
-            if (event.content === "-")
-              setDownvoteReaction((downvoteArticle) => [
-                ...downvoteArticle,
-                event,
-              ]);
-          },
-        }
+        { cacheUsage: "CACHE_FIRST" }
       );
+
+      sub.on("event", (event) => {
+        if (event.kind === 1) {
+          setComments((prev) => {
+            let newCom = [...prev, event];
+            return newCom.sort(
+              (item_1, item_2) => item_2.created_at - item_1.created_at
+            );
+          });
+        }
+        if (event.kind === 9735) {
+          let sats = decodeBolt11(getBolt11(event));
+          let zapper = getZapper(event);
+          setZappers((prev) => {
+            return [...prev, zapper];
+          });
+          setZapsCount((prev) => prev + sats);
+        }
+
+        if (event.content === "+")
+          setUpvoteReaction((upvoteArticle) => [...upvoteArticle, event]);
+        if (event.content === "-")
+          setDownvoteReaction((downvoteArticle) => [...downvoteArticle, event]);
+      });
     };
     if (curation) initSubscription();
   }, [curation]);
@@ -274,10 +246,10 @@ export default function NostrCuration() {
   useEffect(() => {
     const initAuth = async () => {
       let naddrData = await checkURL();
-      let auth = getNostrAuthor(naddrData.pubkey);
+      let auth = getUser(naddrData.pubkey);
       if (auth) setCurationAuthor(auth);
       else {
-        setCurationAuthor(getEmptyNostrUser(naddrData.pubkey));
+        setCurationAuthor(getEmptyuserMetadata(naddrData.pubkey));
       }
     };
     initAuth();
@@ -292,7 +264,7 @@ export default function NostrCuration() {
       try {
         let tempArts = await Promise.all(
           articlesOnCuration.map(async (article) => {
-            let auth = getNostrAuthor(article.author_pubkey);
+            let auth = getUser(article.author_pubkey);
             let tempArticle = { ...article };
 
             if (auth) {
@@ -416,31 +388,30 @@ export default function NostrCuration() {
   const upvoteCuration = async () => {
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
 
         setIsLoading(false);
         if (isVoted.content === "+") {
@@ -456,21 +427,21 @@ export default function NostrCuration() {
         setDownvoteReaction(tempArray);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "+",
-        tags: [
-          [
-            "a",
-            `${curationDet.naddrData.kind}:${curation.pubkey}:${curationDet.d}`,
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "+",
+          tags: [
+            [
+              "a",
+              `${curationDet.naddrData.kind}:${curation.pubkey}:${curationDet.d}`,
+            ],
+            ["p", curation.pubkey],
           ],
-          ["p", curation.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -481,31 +452,30 @@ export default function NostrCuration() {
   const downvoteCuration = async () => {
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays,
+          })
+        );
         setIsLoading(false);
         if (isVoted.content === "-") {
           let tempArray = Array.from(downvoteReaction);
@@ -520,21 +490,21 @@ export default function NostrCuration() {
         setUpvoteReaction(tempArray);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "-",
-        tags: [
-          [
-            "a",
-            `${curationDet.naddrData.kind}:${curation.pubkey}:${curationDet.d}`,
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "-",
+          tags: [
+            [
+              "a",
+              `${curationDet.naddrData.kind}:${curation.pubkey}:${curationDet.d}`,
+            ],
+            ["p", curation.pubkey],
           ],
-          ["p", curation.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+          allRelays: userRelays,
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -564,7 +534,6 @@ export default function NostrCuration() {
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -593,10 +562,13 @@ export default function NostrCuration() {
       )}
       <div>
         <Helmet>
-          <title>Yakihonne | {curationDet.title}</title>
-          <meta name="description" content={curationDet.description} />
-          <meta property="og:description" content={curationDet.description} />
-          <meta property="og:image" content={curationDet.image} />
+          <title>Yakihonne | {curationDet?.title || ""}</title>
+          <meta name="description" content={curationDet?.description || ""} />
+          <meta
+            property="og:description"
+            content={curationDet?.description || ""}
+          />
+          <meta property="og:image" content={curationDet?.image || ""} />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="700" />
           <meta
@@ -605,30 +577,32 @@ export default function NostrCuration() {
           />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
-          <meta property="og:title" content={curationDet.title} />
-          <meta property="twitter:title" content={curationDet.title} />
+          <meta property="og:title" content={curationDet?.title || ""} />
+          <meta property="twitter:title" content={curationDet?.title || ""} />
           <meta
             property="twitter:description"
-            content={curationDet.description}
+            content={curationDet?.description || ""}
           />
-          <meta property="twitter:image" content={curationDet.image} />
+          <meta property="twitter:image" content={curationDet?.image || ""} />
         </Helmet>
         <div className="fit-container fx-centered">
           <div className="main-container">
             <SidebarNOSTR />
             <main className="main-page-nostr-container">
-              {/* <NavbarNOSTR /> */}
-              <div className="fit-container fx-centered fx-start-h fx-start-v">
+              {/* <NavbarNOSTR /> */} 
+              <div className="fit-container fx-centered fx-start-v">
                 <div
-                  className="fit-container fx-centered fx-start-v fx-col box-pad-h-m box-pad-v-m"
-                  style={{ columnGap: "32px", flex: 2 }}
+                  className="fit-container fx-centered fx-start-v fx-col box-pad-h-m main-middle"
+                  // style={{ columnGap: "32px", flex: 2 }}
                 >
                   <div
-                    className="fit-container sc-s-18 bg-img cover-bg fx-centered fx-end-v box-marg-s"
+                    className="fit-container sc-s bg-img cover-bg fx-centered fx-end-v box-marg-s"
                     style={{
-                      backgroundImage: `url(${curationDet.image})`,
+                      backgroundImage: `url(${curationDet?.image || ""})`,
                       aspectRatio: "10 / 3",
                       border: "none",
+                      borderTopLeftRadius: "0",
+                      borderTopRightRadius: "0",
                     }}
                   ></div>
                   <div
@@ -651,14 +625,17 @@ export default function NostrCuration() {
                       ></div> */}
                           <p
                             className="pointer gray-c round-icon-tooltip"
-                            data-tooltip={`created at ${convertDate(
-                              curationDet.added_date
-                            )}, edited on ${convertDate(
-                              curationDet.modified_date
-                            )}`}
+                            data-tooltip={getCAEATooltip(
+                              curationDet.published_at,
+                              curationDet.created_at
+                            )}
                           >
                             Last modified{" "}
-                            <Date_ toConvert={curationDet.modified_date} />
+                            <Date_
+                              toConvert={
+                                new Date(curationDet.created_at * 1000)
+                              }
+                            />
                           </p>
                           <p className="gray-c p-medium">|</p>
                           <p className="gray-c">
@@ -684,7 +661,7 @@ export default function NostrCuration() {
                         className="round-icon round-icon-tooltip"
                         data-tooltip={"Bookmark curation"}
                       >
-                        <SaveArticleAsBookmark
+                        <BookmarkEvent
                           pubkey={curationDet.naddrData.pubkey}
                           kind={curationDet.naddrData.kind}
                           d={curationDet.naddrData.identifier}
@@ -728,7 +705,7 @@ export default function NostrCuration() {
                             )}
                             // recipientLNURL={curationAuthor.lud06 || curationAuthor.lud16}
                             recipientPubkey={curationAuthor.pubkey}
-                            senderPubkey={nostrUser.pubkey}
+                            senderPubkey={userMetadata.pubkey}
                             recipientInfo={{
                               name: curationAuthor.name,
                               img: curationAuthor.picture,
@@ -965,7 +942,7 @@ export default function NostrCuration() {
                     {/* )} */}
                   </div>
                 </div>
-                <div
+                {/* <div
                   className=" fx-centered fx-col fx-start-v extras-homepage"
                   style={{
                     position: "sticky",
@@ -990,7 +967,7 @@ export default function NostrCuration() {
                     <HomeFN flashnews={importantFN} />
                   </div>
                   <Footer />
-                </div>
+                </div> */}
               </div>
             </main>
           </div>

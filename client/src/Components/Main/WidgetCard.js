@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
+import React, { useEffect, useState } from "react";
 import { nip19 } from "nostr-tools";
 import OptionsDropdown from "./OptionsDropdown";
 import { Link } from "react-router-dom";
@@ -7,16 +6,21 @@ import ShareLink from "../ShareLink";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 import AuthorPreview from "./AuthorPreview";
 import PostNoteWithWidget from "./PostNoteWithWidget";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
+import { getUser } from "../../Helpers/Controlers";
+import PostAsNote from "./PostAsNote";
 export default function WidgetCard({ widget, deleteWidget, options = true }) {
-  const { nostrAuthors, getNostrAuthor, nostrKeys, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const userKeys = useSelector((state) => state.userKeys);
   const [authorData, setAuthorData] = useState(widget.author);
   const [postNoteWithWidgets, setPostNoteWithWidget] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(widget.author.pubkey);
+        let auth = getUser(widget.author.pubkey);
 
         if (auth) {
           setAuthorData(auth);
@@ -36,26 +40,29 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
       kind: widget.kind,
     });
     navigator?.clipboard?.writeText(naddr);
-    setToast({
-      type: 1,
-      desc: `Naddr was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `Naddr was copied! 👏`,
+      })
+    );
   };
 
   return (
     <>
       {postNoteWithWidgets && (
-        <PostNoteWithWidget
-          widget={{
-            ...widget,
-            naddr: nip19.naddrEncode({
-              pubkey: widget.pubkey,
-              identifier: widget.d,
-              kind: widget.kind,
-            }),
-          }}
-          exit={() => setPostNoteWithWidget(false)}
-        />
+        // <PostNoteWithWidget
+        //   widget={{
+        //     ...widget,
+        //     naddr: nip19.naddrEncode({
+        //       pubkey: widget.pubkey,
+        //       identifier: widget.d,
+        //       kind: widget.kind,
+        //     }),
+        //   }}
+        //   exit={() => setPostNoteWithWidget(false)}
+        // />
+        <PostAsNote content={`https://yakihonne.com/smart-widget-checker?naddr=${widget.naddr}`}  exit={() => setPostNoteWithWidget(false)}/>
       )}
 
       <div
@@ -64,60 +71,62 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
       >
         <div className="fit-container fx-scattered">
           <AuthorPreview author={authorData} />
-          {options && <OptionsDropdown
-            options={[
-              <div className="fit-container" onClick={copyNaddr}>
-                <p>Copy naddr</p>
-              </div>,
-              <div
-                className="fit-container"
-                onClick={() => setPostNoteWithWidget(true)}
-              >
-                <p>Post widget in note</p>
-              </div>,
-              <Link
-                className="fit-container"
-                to={"/smart-widget-builder"}
-                state={{ ops: "clone", metadata: { ...widget } }}
-              >
-                <p>Clone</p>
-              </Link>,
-              <Link
-                className="fit-container"
-                to={`/smart-widget-checker?naddr=${nip19.naddrEncode({
-                  pubkey: widget.pubkey,
-                  identifier: widget.d,
-                  kind: widget.kind,
-                })}`}
-              >
-                <p>Check validity</p>
-              </Link>,
-              deleteWidget && nostrKeys.pub === widget.pubkey && (
+          {options && (
+            <OptionsDropdown
+              options={[
+                <div
+                  className="fit-container"
+                  onClick={() => setPostNoteWithWidget(true)}
+                >
+                  <p>Post widget in note</p>
+                </div>,
+                <div className="fit-container" onClick={copyNaddr}>
+                  <p>Copy naddr</p>
+                </div>,
                 <Link
                   className="fit-container"
                   to={"/smart-widget-builder"}
-                  state={{ ops: "edit", metadata: { ...widget } }}
+                  state={{ ops: "clone", metadata: { ...widget } }}
                 >
-                  <p>Edit</p>
-                </Link>
-              ),
-              deleteWidget && nostrKeys.pub === widget.pubkey && (
-                <div className="fit-container" onClick={deleteWidget}>
-                  <p className="red-c">Delete</p>
-                </div>
-              ),
-              <ShareLink
-                label="Share widget"
-                path={`/${nip19.naddrEncode({
-                  pubkey: widget.pubkey,
-                  identifier: widget.d,
-                  kind: widget.kind,
-                })}`}
-                title={widget.title || widget.description}
-                description={widget.description || widget.title}
-              />,
-            ]}
-          />}
+                  <p>Clone</p>
+                </Link>,
+                <Link
+                  className="fit-container"
+                  to={`/smart-widget-checker?naddr=${nip19.naddrEncode({
+                    pubkey: widget.pubkey,
+                    identifier: widget.d,
+                    kind: widget.kind,
+                  })}`}
+                >
+                  <p>Check validity</p>
+                </Link>,
+                deleteWidget && userKeys.pub === widget.pubkey && (
+                  <Link
+                    className="fit-container"
+                    to={"/smart-widget-builder"}
+                    state={{ ops: "edit", metadata: { ...widget } }}
+                  >
+                    <p>Edit</p>
+                  </Link>
+                ),
+                deleteWidget && userKeys.pub === widget.pubkey && (
+                  <div className="fit-container" onClick={deleteWidget}>
+                    <p className="red-c">Delete</p>
+                  </div>
+                ),
+                <ShareLink
+                  label="Share widget"
+                  path={`/${nip19.naddrEncode({
+                    pubkey: widget.pubkey,
+                    identifier: widget.d,
+                    kind: widget.kind,
+                  })}`}
+                  title={widget.title || widget.description}
+                  description={widget.description || widget.title}
+                />,
+              ]}
+            />
+          )}
         </div>
         <PreviewWidget widget={widget.metadata} pubkey={widget.pubkey} />
         {(widget.title || widget.description) && (

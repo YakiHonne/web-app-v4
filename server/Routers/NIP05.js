@@ -1,8 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const cors = require("cors");
 const fs = require("fs");
-
-router.get("/.well-known/nostr.json", (req, res) => {
+const corsOptions = {
+  origin: "*", // Allow all domains
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Specify allowed methods
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+router.get("/.well-known/nostr.json", cors(corsOptions), (req, res) => {
   try {
     const raw_data = fs.readFileSync("./.well-known/nostr.json");
     const names = JSON.parse(raw_data).names;
@@ -29,7 +35,9 @@ router.get("/.well-known/assetlinks.json", (req, res) => {
 });
 router.get("/.well-known/apple-app-site-association", (req, res) => {
   try {
-    const raw_data = fs.readFileSync("./.well-known/apple-app-site-association");
+    const raw_data = fs.readFileSync(
+      "./.well-known/apple-app-site-association"
+    );
     const data = JSON.parse(raw_data);
 
     res.send(data);

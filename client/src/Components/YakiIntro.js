@@ -1,7 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { Context } from "../Context/Context";
-import hero from "../media/images/yaki-intro.jpg";
-import Follow from "./Main/Follow";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 const content = [
@@ -37,8 +34,6 @@ const content = [
 
 export default function YakiIntro() {
   const [swipe, setSwipe] = useState(false);
-  const ref = useRef(null);
-
   const [up, setUp] = useState(false);
 
   useEffect(() => {
@@ -58,10 +53,7 @@ export default function YakiIntro() {
       <div
         style={{
           position: "fixed",
-          // right: "-200px",
-          // bottom: "128px",
-          // transform: "translateY(-50%)",
-          right: "0px",
+          right: "38px",
           bottom: up ? "74px" : "16px",
           transition: ".2s ease-in-out",
           zIndex: "1000000",
@@ -70,18 +62,8 @@ export default function YakiIntro() {
       >
         {!swipe && (
           <div className="slide-right" onClick={() => setSwipe(!swipe)}>
-            {/* <div
-              style={{
-                border: "none",
-                background: "var(--dim-gray)",
-                transform: "rotate(-90deg) translateY(-150px)",
-              }}
-              className="fx-centered pointer sc-s box-pad-h box-pad-v-m "
-              onClick={() => setSwipe(!swipe)}
-            >
-              <div>Hey 👋🏻 Check me!</div>
-            </div> */}
-            <div className="bunny-icon"></div>
+            {/* <div className="bunny-icon"></div> */}
+            <div className="info-24"></div>
           </div>
         )}
       </div>
@@ -90,7 +72,6 @@ export default function YakiIntro() {
 }
 
 const Banner = ({ exit }) => {
-  const { nostrKeys } = useContext(Context);
   return (
     <div
       style={{
@@ -134,6 +115,36 @@ const Banner = ({ exit }) => {
           className="fit-container fit-height fx-centered fx-col fx-start-h fx-start-v box-pad-h-s box-pad-v-s"
           style={{ overflow: "scroll" }}
         >
+          <div
+            className="box-pad-h-m box-pad-v-m fit-container sc-s-18 fx-shrink"
+            style={{
+              position: "relative",
+            }}
+          >
+            <div className="fit-container fx-scattered">
+              <div>
+                <p>Updates</p>
+                <p className="gray-c p-italic p-medium">
+                  Last updated Oct 30, 2024
+                </p>
+              </div>
+              <p className="orange-c p-medium">
+                v{process.env.REACT_APP_APP_VERSION}
+              </p>
+            </div>
+            <p>{`
+- An entirely enhanced app core for faster, more reliable, and solid interaction with the Nostr network.
+- A redesigned UI/UX offering greater content visibility and a more user-friendly experience, featuring a new color palette, modern typeface, and sleek content cards.
+- A refreshed onboarding page to make logging in or creating new accounts quicker and more welcoming.
+- The new Discover page is now the hub for all media content, including articles, videos, and curated posts, offering easy access to what people are sharing and posting recently.
+- A redesigned Notifications page keeps you updated on the activities of those you follow and what others are saying about your published content.
+- A welcoming Dashboard, where you can manage all your published content in one place, quickly and easily.
+- Users without a wallet can now create one directly within Yakihonne to start sending and receiving zaps with their favorite people.
+- The Search feature is now faster, allowing you to paste any Nostr scheme or search for users or content directly from your sidebar.
+- Your published events are now saved in your browser for later management if they fail to publish when relays don't connect on the first try.
+- The Uncensored Notes page has been renamed to Verify Notes, keeping all the features you love, just as before.
+`}</p>
+          </div>
           {content.map((card, index) => {
             return (
               <Link
@@ -156,7 +167,6 @@ const Banner = ({ exit }) => {
                     paddingLeft: card.new ? "25px" : "",
                     top: 0,
                     color: "white",
-                    // color: card.new ? "white" : "var(--gray)",
                     borderTopRightRadius: 0,
                     borderBottomLeftRadius: 0,
                     backgroundColor: "#555555",
@@ -185,131 +195,9 @@ const Banner = ({ exit }) => {
               </Link>
             );
           })}
-          <div
-            className="box-pad-h-m box-pad-v-m fit-container sc-s-18 fx-shrink"
-            style={{
-              position: "relative",
-            }}
-          >
-            <div className="fit-container fx-scattered">
-              <div>
-                <p>Updates</p>
-                <p className="gray-c p-italic p-medium">
-                  Last updated Aug 30, 2024
-                </p>
-              </div>
-              <p className="orange-c p-medium">v3.124.0</p>
-            </div>
-            <p>{`
-- The ability to have and manage multiple users.
-- Smart widget sharing.
-- Smart widget editor optimization.
-- Optimizing overall performance.
-- Addressing the issue where users can not login using nos2x extension in Chrome and Brave browsers.
-- General bug fix.
-`}</p>
-            {/* <p>{`
-- Smart widgets are here! Our new feature.
-- Our new bunny on the right side to notify you about new updates.
-- Notes now appear first in order in the home page.
-- The ability to add smart widgets on notes.
-- The ability to tag people on notes.
-- Mentioned smart widgets and uploaded images are now sorted as a gallery for easy access while creating a note.
-- Minor design changes and scaling.
-- Optimizing singin/signup performance
-- Bug fix.
-`}</p> */}
-            <div className="fit-container fx-centered box-pad-v">
-              <p className="orange-c p-medium">
-                {" "}
-                {">>"} The end 😁 {"<<"}{" "}
-              </p>
-            </div>
-            <div className="box-pad-v"></div>
-            <div className="box-pad-v"></div>
-          </div>
+          <div className="box-pad-v"></div>
         </div>
       </div>
     </div>
   );
 };
-// const Banner = ({ exit }) => {
-//   const { nostrKeys } = useContext(Context);
-//   return (
-//     <div
-//       style={{
-//         position: "fixed",
-//         right: "0",
-//         top: 0,
-//         transition: ".2s ease-in-out",
-//         width: "100vw",
-//         height: "100vh",
-//         zIndex: "100000000",
-//       }}
-//       className="fx-centered fx-end-h box-pad-h"
-//       onClick={(e) => {
-//         e.stopPropagation();
-//         exit();
-//       }}
-//     >
-//       <div
-//         style={{
-//           height: "90%",
-//           width: "min(100%, 400px)",
-//           backgroundImage: `url(${hero})`,
-//           border: "none",
-//           position: "relative",
-//         }}
-//         className="sc-s bg-img cover-bg fx-centered fx-end-v box-pad-h slide-right"
-//         onClick={(e) => {
-//           e.stopPropagation();
-//         }}
-//       >
-//         <div className="close" onClick={exit}>
-//           <div></div>
-//         </div>
-//         <div
-//           style={{
-//             position: "absolute",
-//             left: 0,
-//             top: 0,
-//             width: "100%",
-//             height: "100%",
-//             zIndex: 0,
-//             background:
-//               "linear-gradient(179.82deg, rgba(0, 0, 0, 0) 19.91%, #000000 93.18%)",
-//           }}
-//           className="fx-centered fx-end-v"
-//         ></div>
-//         <div
-//           className="fit-container fx-centered fx-col"
-//           style={{ height: "50%", position: "relative", zIndex: "1" }}
-//         >
-//           <div
-//             className="yakihonne-logo"
-//             style={{ filter: "brightness(0) invert()" }}
-//           ></div>
-//           <p
-//             className="p-centered"
-//             style={{ maxWidth: "400px", color: "white" }}
-//           >
-//             YakiHonne is a Nostr-based decentralized content media protocol,
-//             which supports free curation, creation, publishing, and reporting by
-//             various media.
-//           </p>
-//           {nostrKeys && (
-//             <div className="fit-container fx-centered box-pad-v fx-col">
-//               <Follow
-//                 toFollowKey={
-//                   "20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3"
-//                 }
-//                 toFollowName={"Yakihonne"}
-//               />
-//               {/* <button className="btn btn-normal">Read about us</button> */}
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };

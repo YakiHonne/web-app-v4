@@ -1,9 +1,12 @@
-import React, { useContext, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useSpring, animated } from "react-spring";
-import { Context } from "../Context/Context";
+import { useDispatch, useSelector } from "react-redux";
+import { setIsDarkMode } from "../Store/Slides/Extras";
+import { toggleColorScheme } from "../Helpers/Helpers";
 
 export default function DtoLToggleButton({ isMobile = false, small = false }) {
-  const { isDarkMode, setTheme } = useContext(Context);
+  const dispatch = useDispatch()
+  const isDarkMode = useSelector(state => state.isDarkMode)
   const properties = {
     sun: {
       r: 9,
@@ -24,7 +27,7 @@ export default function DtoLToggleButton({ isMobile = false, small = false }) {
   const { r, transform, cx, cy, opacity } = useMemo(() => {
     return isDarkMode === "1" ? properties["moon"] : properties["sun"];
   }, [isDarkMode]);
-console.log(isDarkMode)
+
   const svgContainerProps = useSpring({
     transform,
     config: properties.springConfig,
@@ -36,7 +39,18 @@ console.log(isDarkMode)
     config: properties.springConfig,
   });
   const linesProps = useSpring({ opacity, config: properties.springConfig });
-
+  const setTheme = () => {
+    if (isDarkMode === "0") {
+      localStorage.setItem("yaki-theme", "1");
+      toggleColorScheme(true);
+      dispatch(setIsDarkMode("1"))
+    }
+    if (isDarkMode === "1") {
+      localStorage.setItem("yaki-theme", "0");
+      toggleColorScheme(false);
+      dispatch(setIsDarkMode("0"))
+    }
+  };
   // if (isMobile)
   return (
     <div

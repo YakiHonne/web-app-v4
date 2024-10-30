@@ -1,23 +1,19 @@
-import React, { useContext, useMemo } from "react";
-import { Context } from "../../Context/Context";
+import React, { useMemo } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { useState } from "react";
 import { useEffect } from "react";
-import { nip19, SimplePool } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
-import { useNavigate } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
-import { filterRelays, getBech32 } from "../../Helpers/Encryptions";
-import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
+import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import Footer from "../../Components/Footer";
-import bannedList from "../../Content/BannedList";
-import PostPreviewCardNOSTR from "../../Components/Main/PostPreviewCardNOSTR";
+import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import ArrowUp from "../../Components/ArrowUp";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import TopCreators from "../../Components/Main/TopCreators";
-import { getEmptyNostrUser } from "../../Helpers/Encryptions";
-var pool = new SimplePool();
+import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
+import { saveUsers } from "../../Helpers/DB";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { handleReceivedEvents } from "../../Helpers/Controlers";
 
 const getTopCreators = (posts) => {
   if (!posts) return [];
@@ -31,7 +27,7 @@ const getTopCreators = (posts) => {
   for (let creator of netCreators) {
     let stats = getCreatorStats(creator.pubkey, posts);
     tempCreators.push({
-      ...getEmptyNostrUser(creator.pubkey),
+      ...getEmptyuserMetadata(creator.pubkey),
       articles_number: stats.articles_number,
     });
   }
@@ -59,48 +55,45 @@ const getCreatorStats = (pubkey, posts) => {
   };
 };
 
-export default function NostrArticles() {
-  const { nostrUser, addNostrAuthors, mutedList } = useContext(Context);
-  const navigateTo = useNavigate();
-  const [relays, setRelays] = useState(relaysOnPlatform);
+export default function Articles() {
   const [activeRelay, setActiveRelay] = useState("");
   const [posts, setPosts] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [postToDelete, setPostToDelete] = useState(false);
-  const [showRelaysList, setShowRelaysList] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
   const [artsLastEventTime, setArtsLastEventTime] = useState(undefined);
   const topCreators = useMemo(() => {
     return getTopCreators(posts);
   }, [posts]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoaded(false);
-        setIsLoading(true);
-        let { filter, relaysToFetchFrom } = getArtsFilter();
-        let events = [];
-        pool.subscribeMany(relaysToFetchFrom, filter, {
-          onevent(event) {
-            if (![...bannedList, ...mutedList].includes(event.pubkey)) {
-              let parsedEvent = onArticlesEvent(event);
-              events.push(parsedEvent);
-            }
-          },
-          oneose() {
-            onEOSE(events);
-          },
-        });
-      } catch (err) {
-        console.log(err);
-        setIsLoading(false);
-      }
-    };
+    setIsLoaded(false);
+    setIsLoading(true);
+    let { filter } = getArtsFilter();
+    let events = [];
 
-    if (Array.isArray(mutedList)) fetchData();
-  }, [artsLastEventTime, activeRelay, mutedList]);
+    let subscription = ndkInstance.subscribe(filter, {
+      cacheUsage: "CACHE_FIRST",
+    });
+
+    subscription.on("event", (event) => {
+      let parsedEvent = getParsedRepEvent(event);
+      setPosts((prev) => {
+        return handleReceivedEvents(prev, parsedEvent);
+      });
+      events.push(parsedEvent.pubkey);
+    });
+    subscription.on("close", () => {
+      saveUsers(events);
+      setIsLoading(false);
+    });
+
+    let timer = setTimeout(() => subscription.stop(), 3000);
+
+    return () => {
+      if (subscription) subscription.stop();
+      clearTimeout(timer);
+    };
+  }, [artsLastEventTime]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -113,6 +106,7 @@ export default function NostrArticles() {
       ) {
         return;
       }
+
       setArtsLastEventTime(posts[posts.length - 1].created_at);
     };
     document
@@ -122,204 +116,15 @@ export default function NostrArticles() {
       document
         .querySelector(".main-page-nostr-container")
         ?.removeEventListener("scroll", handleScroll);
-  }, [isLoaded]);
+  }, [isLoading]);
 
   const getArtsFilter = () => {
-    let relaysToFetchFrom;
-    let filter;
-
-    if (activeRelay) relaysToFetchFrom = [activeRelay];
-    if (!activeRelay)
-      relaysToFetchFrom = !nostrUser
-        ? relaysOnPlatform
-        : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])];
-
-    filter = [{ kinds: [30023], limit: 10, until: artsLastEventTime }];
+    let filter = [{ kinds: [30023], limit: 50, until: artsLastEventTime }];
     return {
-      relaysToFetchFrom,
       filter,
     };
   };
 
-  const onArticlesEvent = (event) => {
-    if (bannedList.includes(event.pubkey)) return;
-    let author_img = "";
-    let author_name = getBech32("npub", event.pubkey).substring(0, 10);
-    let author_pubkey = event.pubkey;
-    let thumbnail = "";
-    let title = "";
-    let summary = "";
-    let from = "";
-    let contentSensitive = false;
-    let postTags = [];
-    let d = "";
-    let modified_date = new Date(event.created_at * 1000).toISOString();
-    let added_date = new Date(event.created_at * 1000).toISOString();
-    let published_at = event.created_at;
-    for (let tag of event.tags) {
-      if (tag[0] === "published_at") {
-        published_at = tag[1];
-        added_date =
-          tag[1].length > 10
-            ? new Date(parseInt(tag[1])).toISOString()
-            : new Date(parseInt(tag[1]) * 1000).toISOString();
-      }
-      if (tag[0] === "image") thumbnail = tag[1];
-      if (tag[0] === "client") from = tag[1];
-      if (tag[0] === "title") title = tag[1];
-      if (tag[0] === "summary") summary = tag[1];
-      if (tag[0] === "t") postTags.push(tag[1]);
-      if (tag[0] === "L" && tag[1] === "content-warning")
-        contentSensitive = true;
-      if (tag[0] === "d") d = tag[1];
-    }
-
-    let naddr = nip19.naddrEncode({
-      identifier: d,
-      pubkey: author_pubkey,
-      kind: 30023,
-    });
-
-    setPosts((_posts) => {
-      let index = _posts.findIndex((item) => item.d === d);
-      let newP = Array.from(_posts);
-      if (index === -1)
-        newP = [
-          ...newP,
-          {
-            id: event.id,
-            pubkey: event.pubkey,
-            kind: event.kind,
-            thumbnail: thumbnail || getImagePlaceholder(),
-            content: event.content,
-            summary,
-            author_img,
-            author_pubkey,
-            author_name,
-            title,
-            added_date,
-            created_at: event.created_at,
-            modified_date,
-            published_at,
-            postTags,
-            naddr,
-            d,
-            contentSensitive,
-            from: from || "N/A",
-          },
-        ];
-      if (index !== -1) {
-        if (_posts[index].created_at < event.created_at) {
-          newP.splice(index, 1);
-          newP.push({
-            id: event.id,
-            pubkey: event.pubkey,
-            kind: event.kind,
-            thumbnail: thumbnail || getImagePlaceholder(),
-            content: event.content,
-            summary,
-            author_img,
-            author_pubkey,
-            author_name,
-            title,
-            added_date,
-            created_at: event.created_at,
-            modified_date,
-            published_at,
-            postTags,
-            naddr,
-            d,
-            contentSensitive,
-            from: from || "N/A",
-          });
-        }
-      }
-
-      newP = newP.sort(
-        (item_1, item_2) => item_2.created_at - item_1.created_at
-      );
-
-      return newP;
-    });
-    setIsLoading(false);
-    return {
-      id: event.id,
-      pubkey: event.pubkey,
-      kind: event.kind,
-      thumbnail: thumbnail || getImagePlaceholder(),
-      summary,
-      author_img,
-      author_pubkey,
-      author_name,
-      title,
-      added_date,
-      created_at: event.created_at,
-      modified_date,
-      published_at,
-      postTags,
-      naddr,
-      d,
-      contentSensitive,
-      from: from || "N/A",
-    };
-  };
-
-  const onEOSE = (events) => {
-    if (events) {
-      let filteredEvents = events.filter((event) => event);
-      addNostrAuthors(filteredEvents.map((item) => item.pubkey));
-    }
-    if (activeRelay) pool.close([activeRelay]);
-    if (!activeRelay)
-      pool.close(
-        !nostrUser
-          ? relaysOnPlatform
-          : [...filterRelays(relaysOnPlatform, nostrUser?.relays || [])]
-      );
-    setIsLoaded(true);
-    setIsLoading(false);
-    // relaySub.close();
-  };
-  const switchActiveRelay = (source) => {
-    if (!isLoaded) return;
-    if (source === activeRelay) return;
-    // relaySub.unsub();
-    // setIsLoading(true);
-    let relaysToClose =
-      activeRelay == ""
-        ? filterRelays(nostrUser?.relays || [], relaysOnPlatform)
-        : [activeRelay];
-    pool.close(relaysToClose);
-    pool = new SimplePool();
-    setPosts([]);
-    setActiveRelay(source);
-    setArtsLastEventTime(undefined);
-  };
-
-  // const extractData = () => {
-  //   let tempArray = [];
-
-  //   for (let post of posts) {
-  //     let el = {
-  //       date: post.added_date,
-  //       link: `https://yakihonne.com/article/${post.naddr}`,
-  //       pubkey: post.author_pubkey,
-  //       npub: getBech32("npub", post.author_pubkey),
-  //       from: post.from || "N/A",
-  //     };
-
-  //     for (let i = 0; i < post.postTags.length; i++) {
-  //       el[`postTags/${i}`] = post.postTags[i];
-  //     }
-  //     tempArray.push(el);
-  //   }
-
-  //   return tempArray;
-  // };
-
-  // console.log(extractData());
-
-  //   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
       <div>
@@ -352,8 +157,6 @@ export default function NostrArticles() {
               className={`main-page-nostr-container`}
               onClick={(e) => {
                 e.stopPropagation();
-                setShowRelaysList(false);
-                setShowFilter(false);
               }}
             >
               <div className="fx-centered fit-container fx-start-h fx-start-v">
@@ -361,135 +164,10 @@ export default function NostrArticles() {
                   style={{ width: "min(100%,700px)" }}
                   className="box-pad-h-m"
                 >
-                  <div
-                    className="box-pad-v-m fit-container fx-scattered sticky"
-                    //   style={{
-                    //     position: "relative",
-                    //     zIndex: "100",
-                    //   }}
-                  >
+                  <div className="box-pad-v-m fit-container fx-scattered sticky">
                     <div className="fx-centered fx-col fx-start-v">
                       <div className="fx-centered">
                         <h4>{posts.length} Articles</h4>
-                      </div>
-                      <p className="gray-c p-medium">
-                        (In{" "}
-                        {activeRelay === ""
-                          ? "all relays"
-                          : activeRelay.split("wss://")[1]}
-                        )
-                      </p>
-                    </div>
-                    <div className="fx-centered">
-                      <div style={{ position: "relative" }}>
-                        <div
-                          style={{ position: "relative" }}
-                          className="round-icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowRelaysList(!showRelaysList);
-                            setShowFilter(false);
-                          }}
-                        >
-                          <div className="server"></div>
-                        </div>
-                        {showRelaysList && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              right: 0,
-                              bottom: "-5px",
-                              backgroundColor: "var(--dim-gray)",
-                              border: "none",
-                              transform: "translateY(100%)",
-                              maxWidth: "300px",
-                              rowGap: "12px",
-                            }}
-                            className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                          >
-                            <h5>Relays</h5>
-                            <button
-                              className={`btn-text-gray pointer fx-centered`}
-                              style={{
-                                width: "max-content",
-                                fontSize: "1rem",
-                                textDecoration: "none",
-                                color: activeRelay === "" ? "var(--c1)" : "",
-                                transition: ".4s ease-in-out",
-                              }}
-                              onClick={() => {
-                                switchActiveRelay("");
-                                setShowRelaysList(false);
-                              }}
-                            >
-                              {isLoading && activeRelay === "" ? (
-                                <>Connecting...</>
-                              ) : (
-                                "All relays"
-                              )}
-                            </button>
-                            {nostrUser &&
-                              nostrUser.relays.length > 0 &&
-                              nostrUser.relays.map((relay) => {
-                                return (
-                                  <button
-                                    key={relay}
-                                    className={`btn-text-gray pointer fx-centered `}
-                                    style={{
-                                      width: "max-content",
-                                      fontSize: "1rem",
-                                      textDecoration: "none",
-                                      color:
-                                        activeRelay === relay
-                                          ? "var(--c1)"
-                                          : "",
-                                      transition: ".4s ease-in-out",
-                                    }}
-                                    onClick={() => {
-                                      switchActiveRelay(relay);
-                                      setShowRelaysList(false);
-                                    }}
-                                  >
-                                    {isLoading && relay === activeRelay ? (
-                                      <>Connecting...</>
-                                    ) : (
-                                      relay.split("wss://")[1]
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            {(!nostrUser ||
-                              (nostrUser && nostrUser.relays.length === 0)) &&
-                              relays.map((relay) => {
-                                return (
-                                  <button
-                                    key={relay}
-                                    className={`btn-text-gray pointer fx-centered`}
-                                    style={{
-                                      width: "max-content",
-                                      fontSize: "1rem",
-                                      textDecoration: "none",
-                                      color:
-                                        activeRelay === relay
-                                          ? "var(--c1)"
-                                          : "",
-                                      transition: ".4s ease-in-out",
-                                    }}
-                                    onClick={() => {
-                                      switchActiveRelay(relay);
-                                      setShowRelaysList(false);
-                                    }}
-                                  >
-                                    {isLoading && relay === activeRelay ? (
-                                      <>Connecting..</>
-                                    ) : (
-                                      relay.split("wss://")[1]
-                                    )}
-                                  </button>
-                                );
-                              })}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -503,7 +181,7 @@ export default function NostrArticles() {
                                 key={post.id}
                                 className="fit-container fx-centered "
                               >
-                                <PostPreviewCardNOSTR item={post} />
+                                <RepEventPreviewCard item={post} />
                               </div>
                             );
                         })}

@@ -1,13 +1,19 @@
+import React, { useState, useEffect, useMemo } from "react";
 import { nip19 } from "nostr-tools";
-import React, { useContext, useState, useEffect, useMemo } from "react";
 import relaysOnPlatform from "../../Content/Relays";
-import { Context } from "../../Context/Context";
-import { filterRelays } from "../../Helpers/Encryptions";
 import Date_ from "../Date_";
 import LoadingDots from "../LoadingDots";
 import LoginWithNostr from "./LoginWithNostr";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import { getNoteTree } from "../../Helpers/Helpers";
+import {
+  extractNip19,
+  getNoteTree,
+  redirectToLogin,
+} from "../../Helpers/Helpers";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { saveUsers } from "../../Helpers/DB";
+import { getUser } from "../../Helpers/Controlers";
 
 const filterRootComments = async (all) => {
   let temp = [];
@@ -60,110 +66,29 @@ const getOnReply = (comments, comment_id) => {
   return tempCom;
 };
 
-// const getNoteTree = (comment) => {
-//   let tree = comment.split(/\s/);
-
-//   let finalTree = tree.map((el, index) => {
-//     if (/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg))/i.test(el))
-//       return (
-//         <img
-//           className="box-pad-v-s"
-//           width={"100%"}
-//           src={el}
-//           alt="el"
-//           key={`${el}-${index}`}
-//         />
-//       );
-//     else if (el.includes("nostr:")) {
-//       let nip19add = el.split("nostr:")[1];
-//       // let url = nip19add.includes("naddr")
-//       //   ? `/article/${nip19add}`
-//       //   : ["nprofile", "npub"].includes(nip19add)
-//       //   ? `/users/${nip19add}`
-//       //   : window.location.pathname;
-//       let url = getLinkFromAddr(nip19add)
-//       return (
-//         <Link
-//           to={url}
-//           className="btn-text-gray"
-//           target={"_blank"}
-//           key={`${el}-${index}`}
-//         >
-//           @{nip19add.substring(0, 10)}
-//         </Link>
-//       );
-//     } else if (/(https?:\/\/)/i.test(el)) {
-//       return (
-//         <a
-//           style={{ wordBreak: "break-word" }}
-//           href={el}
-//           className="btn-text-gray"
-//           key={`${el}-${index}`}
-//         >
-//           {el}
-//         </a>
-//       );
-//     } else
-//       return (
-//         <span style={{ wordBreak: "break-word" }} key={`${el}-${index}`}>
-//           {el}
-//         </span>
-//       );
-//   });
-//   return finalTree;
-// };
-
-// const getLinkFromAddr = (addr) => {
-//   try {
-//     if (addr.includes("naddr")) {
-//       let data = nip19.decode(addr);
-//       return data.data.kind === 30023
-//         ? `/article/${addr}`
-//         : `/curations/${addr}`;
-//     }
-//     if (addr.includes("nprofile")) {
-//       return `/users/${addr}`;
-//     }
-//     if (addr.includes("npub")) {
-//       let hex = getHex(addr);
-//       return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
-//     }
-//     return addr;
-//   } catch (err) {
-//     return addr;
-//   }
-// };
-
 export default function GeneralComments({
   comments = [],
   aTag = "",
   refresh,
   setNetComments,
 }) {
-  const {
-    nostrUser,
-    nostrKeys,
-    addNostrAuthors,
-    setToPublish,
-    isPublishing,
-    setToast,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [mainComments, setMainComments] = useState([]);
-  const [login, setLogin] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [selectedComment, setSelectedComment] = useState(false);
   const [selectedCommentIndex, setSelectedCommentIndex] = useState(false);
-  const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
-    useState(false);
   const [netComments, setNetComments_] = useState([]);
   const [showCommentBox, setShowCommentBox] = useState(
     netComments.length > 0 ? true : false
   );
-  // const netComments = useMemo(() => {
-  //   return filterRootComments(mainComments);
-  // }, [mainComments]);
+
   let aTagSplit = {
     kind: parseInt(aTag.split(":")[0]),
     pubkey: aTag.split(":")[1],
@@ -188,39 +113,40 @@ export default function GeneralComments({
   }, [mainComments]);
   useEffect(() => {
     setMainComments(comments);
-    addNostrAuthors(comments.map((item) => item.pubkey));
+    saveUsers(comments.map((item) => item.pubkey));
   }, [comments]);
 
-  const postNewComment = async (suffix) => {
+  const postNewComment = async () => {
     try {
-      if (!nostrKeys || !newComment) {
+      if (!userKeys || !newComment) {
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      let tempComment = suffix
-        ? `${newComment} — This is a comment on: https://yakihonne.com/${
-            aTagSplit.kind === 30023 ? "article" : "curations"
-          }/${nip19.naddrEncode(aTagSplit)}`
-        : newComment;
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 1,
-        content: tempComment,
-        tags: [
-          ["a", aTag, "", "root"],
-          ["p", aTagSplit.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      let extracted = extractNip19(newComment);
+      let content = extracted.content;
+      let tags = [
+        ["a", aTag, "", "root"],
+        ["p", aTagSplit.pubkey],
+        ...extracted.tags,
+      ];
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 1,
+          content: content,
+          tags,
+          allRelays: userRelays,
+        })
+      );
       setIsLoading(false);
       setNewComment("");
     } catch (err) {
@@ -253,17 +179,8 @@ export default function GeneralComments({
           aTag={aTag}
         />
       )}
-      {login && !nostrKeys && <LoginWithNostr exit={() => setLogin(false)} />}
-      {showCommentsSuffixOption && (
-        <AddSuffixToComment
-          post={postNewComment}
-          comment={newComment}
-          exit={() => setShowCommentsSuffixOption(false)}
-          aTag={aTag}
-        />
-      )}
       <div className="fit-container">
-        {nostrKeys && showCommentBox && (
+        {userKeys && showCommentBox && (
           <div className="fit-container fx-end-v fx-centered fx-col">
             <textarea
               className="txt-area ifs-full"
@@ -273,7 +190,7 @@ export default function GeneralComments({
             />
             <button
               className="btn btn-normal btn-full fx-centered"
-              onClick={() => newComment && setShowCommentsSuffixOption(true)}
+              onClick={() => newComment && postNewComment()}
             >
               {isLoading && <LoadingDots />}
               {!isLoading && (
@@ -281,17 +198,17 @@ export default function GeneralComments({
                   {" "}
                   Comment as{" "}
                   <UserProfilePicNOSTR mainAccountUser={true} size={28} />{" "}
-                  {nostrUser.name}{" "}
+                  {userMetadata.name}{" "}
                 </>
               )}
             </button>
           </div>
         )}
-        {!nostrKeys && showCommentBox && netComments.length > 0 && (
+        {!userKeys && showCommentBox && netComments.length > 0 && (
           <div className="fit-container fx-centered">
             <button
               className="btn btn-normal fx-centered"
-              onClick={() => setLogin(true)}
+              onClick={() => redirectToLogin()}
             >
               Login to comment
             </button>
@@ -315,11 +232,11 @@ export default function GeneralComments({
                 Post a comment
               </button>
             )}
-            {!nostrKeys && showCommentBox && (
+            {!userKeys && showCommentBox && (
               <div className="fit-container fx-centered">
                 <button
                   className="btn btn-normal fx-centered"
-                  onClick={() => setLogin(true)}
+                  onClick={() => redirectToLogin()}
                 >
                   Login to comment
                 </button>
@@ -363,30 +280,34 @@ export default function GeneralComments({
 }
 
 const Comment = ({ comment, refresh, index, onClick, action = true }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
 
   const handleCommentDeletion = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 5,
-        content: "This comment will be deleted!",
-        tags: [["e", comment.id]],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 5,
+          content: "This comment will be deleted!",
+          tags: [["e", comment.id]],
+          allRelays: userRelays,
+        })
+      );
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -428,11 +349,11 @@ const Comment = ({ comment, refresh, index, onClick, action = true }) => {
                 author_img: "",
                 author_name: comment.pubkey.substring(0, 20),
                 author_pubkey: comment.pubkey,
-                on: new Date(comment.created_at * 1000).toISOString(),
+                on: new Date(comment.created_at * 1000),
               }}
             />
           </div>
-          {comment.pubkey === nostrKeys.pub && action && (
+          {comment.pubkey === userKeys.pub && action && (
             <div
               className="fx-centered pointer"
               style={{ columnGap: "3px" }}
@@ -450,15 +371,7 @@ const Comment = ({ comment, refresh, index, onClick, action = true }) => {
           style={{ columnGap: "16px" }}
         >
           <div style={{ minWidth: "24px" }}></div>
-          {/* <div
-            className="fx-centered fx-start-h fx-wrap"
-            style={{ rowGap: 0, columnGap: "4px" }}
-          > */}
-          <div>
-            {comment.content_tree}
-            {/* {getNoteTree(comment.content.split(" — This is a comment on:")[0])} */}
-          </div>
-          {/* <p>{comment.content.split(" — This is a comment on:")[0]}</p> */}
+          <div>{comment.content_tree}</div>
         </div>
 
         {action && (
@@ -483,12 +396,13 @@ const Comment = ({ comment, refresh, index, onClick, action = true }) => {
 };
 
 const Reply = ({ comment, refresh, index, all, setSelectReplyTo }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
+  const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationPrompt, setConfirmationPrompt] = useState(false);
   const [seeReply, setSeeReply] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
 
   const repliedOn = useMemo(() => {
     return getOnReply(
@@ -500,22 +414,24 @@ const Reply = ({ comment, refresh, index, all, setSelectReplyTo }) => {
   const handleCommentDeletion = async () => {
     try {
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 5,
-        content: "This comment will be deleted!",
-        tags: [["e", comment.id]],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 5,
+          content: "This comment will be deleted!",
+          tags: [["e", comment.id]],
+          allRelays: userRelays,
+        })
+      );
       refresh(index);
       setIsLoading(false);
     } catch (err) {
@@ -535,7 +451,7 @@ const Reply = ({ comment, refresh, index, all, setSelectReplyTo }) => {
           }}
         />
       )}
-      {showLogin && <LoginWithNostr exit={() => setShowLogin(false)} />}
+
       <div
         className={`fit-container box-pad-h box-pad-v sc-s-18 fx-centered fx-col fx-shrink  ${
           isLoading ? "flash" : ""
@@ -553,11 +469,11 @@ const Reply = ({ comment, refresh, index, all, setSelectReplyTo }) => {
                 author_img: "",
                 author_name: comment.pubkey.substring(0, 20),
                 author_pubkey: comment.pubkey,
-                on: new Date(comment.created_at * 1000).toISOString(),
+                on: new Date(comment.created_at * 1000),
               }}
             />
           </div>
-          {comment.pubkey === nostrKeys.pub && (
+          {comment.pubkey === userKeys.pub && (
             <div
               className="fx-centered pointer"
               style={{ columnGap: "3px" }}
@@ -607,52 +523,20 @@ const Reply = ({ comment, refresh, index, all, setSelectReplyTo }) => {
           className="fx-centered fx-start-h fit-container"
           style={{ columnGap: "16px" }}
         >
-          {/* <div
-            className="fx-centered fx-start-h fx-wrap"
-            style={{ rowGap: 0, columnGap: "4px" }}
-          > */}
-          <div>
-            {comment.content_tree}
-            {/* {getNoteTree(comment.content.split(" — This is a comment on:")[0])} */}
-          </div>
-          {/* <p>{comment.content.split(" — This is a comment on:")[0]}</p> */}
+          <div>{comment.content_tree}</div>
         </div>
 
-        {/* {repliedOn && (
-          <div
-            className="fx-start-h fx-centerd fit-container"
-            // style={{ width: seeReply ? "100%" : "max-content" }}
-          >
-            <div
-              className="fx-centered fit-container fx-start-h box-pad-h pointer"
-              onClick={() => setSeeReply(!seeReply)}
-            >
-              <p className="c1-c p-medium">Replied to : {repliedOn.content.substring(0,10)}... (See more)</p>
-              <div
-                className="arrow"
-                style={{ transform: seeReply ? "rotate(180deg)" : "" }}
-              ></div>
-            </div>
-
-            <div
-              className="fit-container"
-              style={{ display: seeReply ? "flex" : "none" }}
-            >
-              {" "}
-              <Comment comment={{ ...repliedOn, count: [] }} />{" "}
-            </div>
-          </div>
-        )} */}
         <div
           className="fx-centered fx-start-h fit-container"
           style={{ columnGap: "16px" }}
           onClick={() =>
-            nostrKeys
+            userKeys
               ? setSelectReplyTo({
                   id: comment.id,
+                  pubkey: comment.pubkey,
                   content: comment.content,
                 })
-              : setShowLogin(true)
+              : redirectToLogin()
           }
         >
           <p className="gray-c p-medium pointer btn-text">Reply</p>
@@ -664,13 +548,12 @@ const Reply = ({ comment, refresh, index, all, setSelectReplyTo }) => {
 
 const AuthorPreview = ({ author }) => {
   const [authorData, setAuthorData] = useState("");
-  const { getNostrAuthor, nostrAuthors } =
-    useContext(Context);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let auth = getNostrAuthor(author.author_pubkey);
+        let auth = getUser(author.author_pubkey);
 
         if (auth)
           setAuthorData({
@@ -764,52 +647,57 @@ const ToDeleteComment = ({ comment, exit, handleCommentDeletion }) => {
 };
 
 const CommentsReplies = ({ comment, exit, all, aTag, refresh }) => {
-  const { nostrUser, nostrKeys, setToPublish, isPublishing, setToast } =
-    useContext(Context);
-  const [login, setLogin] = useState(false);
+  const dispatch = useDispatch();
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const userKeys = useSelector((state) => state.userKeys);
+  const isPublishing = useSelector((state) => state.isPublishing);
+
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectReplyTo, setSelectReplyTo] = useState(false);
-  const [showCommentsSuffixOption, setShowCommentsSuffixOption] =
-    useState(false);
-  let aTagSplit = {
-    kind: parseInt(aTag.split(":")[0]),
-    pubkey: aTag.split(":")[1],
-    identifier: aTag.split(":").splice(2, 100).join(":"),
-    relays: relaysOnPlatform,
-  };
-  const postNewComment = async (suffix) => {
+  const postNewComment = async () => {
     try {
-      if (!nostrKeys || !newComment) {
+      if (!userKeys || !newComment) {
         return;
       }
       if (isPublishing) {
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        });
+        dispatch(
+          setToast({
+            type: 3,
+            desc: "An event publishing is in process!",
+          })
+        );
         return;
       }
       setIsLoading(true);
 
-      let tempComment = suffix
-        ? `${newComment} — This is a comment on: https://yakihonne.com/${
-            aTagSplit.kind === 30023 ? "article" : "curations"
-          }/${nip19.naddrEncode(aTagSplit)}`
-        : newComment;
-      let tags = [["a", aTag, "", "root"]];
-      if (selectReplyTo) tags.push(["e", selectReplyTo.id, "", "reply"]);
-      if (!selectReplyTo) tags.push(["e", comment.id, "", "reply"]);
+      let extracted = extractNip19(newComment);
+      let content = extracted.content;
 
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 1,
-        content: tempComment,
-        tags,
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+      let tags = [
+        ["a", aTag, "", "root"],
+        ["p", aTag.split(":")[1]],
+        ...extracted.tags,
+      ];
+      if (selectReplyTo) {
+        tags.push(["p", selectReplyTo.pubkey]);
+        tags.push(["e", selectReplyTo.id, "", "reply"]);
+      }
+      if (!selectReplyTo) {
+        tags.push(["p", comment.pubkey]);
+        tags.push(["e", comment.id, "", "reply"]);
+      }
+
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 1,
+          content: content,
+          tags,
+          allRelays: userRelays,
+        })
+      );
       setIsLoading(false);
       setNewComment("");
       setSelectReplyTo(false);
@@ -820,14 +708,6 @@ const CommentsReplies = ({ comment, exit, all, aTag, refresh }) => {
 
   return (
     <>
-      {showCommentsSuffixOption && (
-        <AddSuffixToComment
-          post={postNewComment}
-          comment={newComment}
-          exit={() => setShowCommentsSuffixOption(false)}
-          aTag={aTag}
-        />
-      )}
       <div className="fixed-container fx-centered">
         <div
           className="sc-s box-pad-h box-pad-v"
@@ -861,7 +741,7 @@ const CommentsReplies = ({ comment, exit, all, aTag, refresh }) => {
               );
             })}
           </div>
-          {nostrUser && (
+          {userMetadata && (
             <div className="fit-container fx-end-v fx-centered fx-col">
               {selectReplyTo && (
                 <div
@@ -889,7 +769,7 @@ const CommentsReplies = ({ comment, exit, all, aTag, refresh }) => {
               />
               <button
                 className="btn btn-normal  fx-centered"
-                onClick={() => newComment && setShowCommentsSuffixOption(true)}
+                onClick={() => newComment && postNewComment()}
               >
                 {isLoading && <LoadingDots />}
                 {!isLoading && (
@@ -900,7 +780,7 @@ const CommentsReplies = ({ comment, exit, all, aTag, refresh }) => {
                       mainAccountUser={true}
                       size={28}
                     />{" "}
-                    {nostrUser.name}{" "}
+                    {userMetadata.name}{" "}
                   </>
                 )}
               </button>
@@ -923,129 +803,4 @@ const checkForSavedCommentOptions = () => {
   } catch {
     return -1;
   }
-};
-
-const AddSuffixToComment = ({ exit, post, comment = "", aTag }) => {
-  const isSaved = checkForSavedCommentOptions();
-  const [isSave, setIsSave] = useState(true);
-  let aTagSplit = {
-    kind: parseInt(aTag.split(":")[0]),
-    pubkey: aTag.split(":")[1],
-    identifier: aTag.split(":").splice(2, 100).join(":"),
-    relays: relaysOnPlatform,
-  };
-
-  let naddr = nip19.naddrEncode(aTagSplit);
-  const saveOption = () => {
-    localStorage.setItem(
-      "comment-with-suffix",
-      JSON.stringify({ keep_suffix: isSave })
-    );
-  };
-
-  if (isSaved !== -1) {
-    post(isSaved);
-    exit();
-  }
-  if (isSaved === -1)
-    return (
-      <div
-        className="fixed-container fx-centered box-pad-h"
-        style={{ zIndex: "10000" }}
-      >
-        <section
-          className="sc-s box-pad-h box-pad-v"
-          style={{ width: "min(100%, 500px)" }}
-        >
-          <h4 className="p-centered">Be meaningful 🥳</h4>
-          <p className="p-centered box-pad-v-m">
-            Let your comments be recognized on NOSTR notes clients by adding
-            where did you comment. <br />
-            Choose what suits you best!
-          </p>
-
-          <div className="fit-container fx-centered fx-col">
-            <label
-              className="sc-s-18 fit-container fx-centered box-pad-h-m box-pad-v-m fx-start-h fx-start-v"
-              htmlFor="suffix"
-              style={{
-                opacity: !isSave ? ".6" : 1,
-                filter: !isSave ? "grayscale(100%)" : "none",
-              }}
-            >
-              <input
-                type="radio"
-                id="suffix"
-                name="suffix"
-                checked={isSave}
-                value={isSave}
-                onChange={() => setIsSave(true)}
-              />
-              <div>
-                <p className="gray-c p-small">Your comment with suffix</p>
-                <p className="p-two-lines p-medium">{comment}</p>
-                <p className="p-medium orange-c">
-                  {aTagSplit === 30023 && (
-                    <> — This is a comment on: https://yakihonne.com/article/</>
-                  )}
-                  {aTagSplit !== 30023 && (
-                    <>
-                      {" "}
-                      — This is a comment on: https://yakihonne.com/curations/
-                    </>
-                  )}
-                  {naddr}
-                </p>
-              </div>
-            </label>
-            <label
-              className="sc-s-18 fit-container fx-centered box-pad-h-m box-pad-v-m fx-start-v fx-start-h"
-              htmlFor="no-suffix"
-              style={{
-                opacity: isSave ? ".6" : 1,
-                filter: isSave ? "grayscale(100%)" : "none",
-              }}
-            >
-              <input
-                type="radio"
-                id="no-suffix"
-                name="suffix"
-                checked={!isSave}
-                value={isSave}
-                onChange={() => setIsSave(false)}
-              />
-              <div>
-                <p className="gray-c p-small">Your comment without suffix</p>
-                <p className="p-two-lines p-medium">{comment}</p>
-              </div>
-            </label>
-            <div>
-              <p className="p-medium gray-c box-pad-v-s">
-                {" "}
-                This can always be changed in your account settings
-              </p>
-            </div>
-            <div className="fit-container fx-centered fx-col">
-              <button
-                className="btn btn-normal btn-full"
-                onClick={() => {
-                  saveOption();
-                  post(isSave);
-                  exit();
-                }}
-              >
-                Post &amp; remember my choice
-              </button>
-              <button
-                className="btn btn-text"
-                onClick={exit}
-                style={{ height: "max-content" }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
 };

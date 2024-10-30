@@ -1,20 +1,22 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Date_ from "../Date_";
-import { Context } from "../../Context/Context";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { getBech32 } from "../../Helpers/Encryptions";
-import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
+import BookmarkEvent from "./BookmarkEvent";
 import ShareLink from "../ShareLink";
 import MediaPreview from "./MediaPreview";
+import { useSelector } from "react-redux";
+import { getUser } from "../../Helpers/Controlers";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
   return list.find((people) => people[1] === toFollowKey) ? true : false;
 };
 
-export default function VideosPreviewCards({ item, duration = true }) {
-  const { userFollowings, nostrAuthors, getNostrAuthor } = useContext(Context);
+export default function VideosPreviewCards({ item }) {
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const userFollowings = useSelector((state) => state.userFollowings);
   const optionsRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -28,10 +30,10 @@ export default function VideosPreviewCards({ item, duration = true }) {
   const isFollowing = useMemo(() => {
     return checkFollowing(userFollowings, item.pubkey);
   }, [userFollowings]);
-  
+
   useEffect(() => {
     if (!isLoaded) {
-      let auth = getNostrAuthor(item.pubkey);
+      let auth = getUser(item.pubkey);
       if (auth) {
         setAuthor(auth);
         setIsLoaded(true);
@@ -245,7 +247,7 @@ export default function VideosPreviewCards({ item, duration = true }) {
                 }}
                 className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
               >
-                <SaveArticleAsBookmark
+                <BookmarkEvent
                   label="Bookmark video"
                   pubkey={item.pubkey}
                   kind={item.kind}
@@ -436,37 +438,3 @@ const AuthorPreview = ({ author }) => {
 //   // );
 // }
 
-// const AuthorPreview = ({ pubkey }) => {
-//   const { nostrAuthors, getNostrAuthor } = useContext(Context);
-//   const [author, setAuthor] = useState({
-//     pubkey,
-//     name: getBech32("npub", pubkey).substring(0, 10),
-//     picture: "",
-//   });
-//   const [isLoaded, setIsLoaded] = useState(false);
-//   useEffect(() => {
-//     if (!isLoaded) {
-//       let auth = getNostrAuthor(pubkey);
-//       if (auth) {
-//         setAuthor(auth);
-//         setIsLoaded(true);
-//       }
-//     }
-//   }, [nostrAuthors]);
-
-//   return (
-//     <div className="fx-centered">
-//       <UserProfilePicNOSTR
-//         size={16}
-//         ring={false}
-//         img={author.picture}
-//         mainAccountUser={false}
-//         user_id={author.pubkey}
-//       />
-
-//       <p className="p-one-line p-medium" style={{ color: "white" }}>
-//         {author.name}
-//       </p>
-//     </div>
-//   );
-// };

@@ -12,7 +12,7 @@
           "/users/*",
           "/curations/*",
           "/flash-news/*",
-          "/uncensored-notes/*",
+          "/verify-notes/*",
           "/buzz-feed/*",
           "/wallet/*",
           "/smart-widget-checker/*"

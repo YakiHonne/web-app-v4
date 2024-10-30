@@ -1,62 +1,53 @@
-import React, { useContext, useEffect, useState } from "react";
-import { SimplePool, nip19 } from "nostr-tools";
-import { Context } from "../../Context/Context";
-import {
-  filterRelays,
-  getBech32,
-  getEmptyNostrUser,
-} from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
+import React, { useEffect, useState } from "react";
+import { nip19 } from "nostr-tools";
+import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { Link } from "react-router-dom";
 import LoadingDots from "../LoadingDots";
-const pool = new SimplePool();
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function NEventPreviewer({ id, pubkey, extraRelays = [] }) {
-  const { nostrUser } = useContext(Context);
   const [note, setNote] = useState("");
-  const [author, setAuthor] = useState(pubkey ? getEmptyNostrUser(pubkey) : "");
+  const [author, setAuthor] = useState(
+    pubkey ? getEmptyuserMetadata(pubkey) : ""
+  );
 
   useEffect(() => {
-    let relaysToUse = filterRelays(
-      nostrUser?.relays || [],
-      filterRelays(extraRelays, relaysOnPlatform)
-    );
-
-    const sub = pool.subscribeMany(
-      relaysToUse,
+    const sub = ndkInstance.subscribe(
       [
         { kinds: [1], ids: [id] },
         { kinds: [0], authors: [pubkey] },
       ],
-      {
-        async onevent(event) {
-          if (event.kind === 0) {
-            let content = JSON.parse(event.content);
-            setAuthor({
-              picture: content.picture || "",
-              name:
-                content.name ||
-                getBech32("npub", event.pubkey).substring(0, 10),
-              display_name:
-                content.display_name ||
-                getBech32("npub", event.pubkey).substring(0, 10),
-            });
-          }
-          if (event.kind === 1) {
-            if (!author) setAuthor(getEmptyNostrUser(event.pubkey));
-            let content = await getNoteTree(event.content);
-
-            setNote(content);
-          }
-        },
-        oneose() {
-          sub.close();
-          pool.close(relaysToUse);
-        },
-      }
+      { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
     );
+
+    sub.on("event", async (event) => {
+      if (event.kind === 0) {
+        let content = JSON.parse(event.content);
+        setAuthor({
+          picture: content.picture || "",
+          name:
+            content.name || getBech32("npub", event.pubkey).substring(0, 10),
+          display_name:
+            content.display_name ||
+            getBech32("npub", event.pubkey).substring(0, 10),
+        });
+      }
+      if (event.kind === 1) {
+        if (!author) setAuthor(getEmptyuserMetadata(event.pubkey));
+        let content = await getNoteTree(event.content);
+
+        setNote(content);
+      }
+    });
+    let timeout = setTimeout(() => {
+      sub.stop();
+      clearTimeout(timeout);
+    }, 4000);
+    return () => {
+      sub.stop();
+    };
   }, []);
 
   // if (!author) return;

@@ -2,7 +2,7 @@ import React from "react";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
 import { Link } from "react-router-dom";
-import { getEmptyNostrUser } from "../../Helpers/Encryptions";
+import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 
 export default function TrendingNotes({ notes }) {
   return (
@@ -10,7 +10,7 @@ export default function TrendingNotes({ notes }) {
       {notes.map((note) => {
         let author = note.author
           ? JSON.parse(note.author.content)
-          : getEmptyNostrUser(note.pubkey);
+          : getEmptyuserMetadata(note.pubkey);
         return (
           <div className="fit-container fx-scattered" key={note.id}>
             <div className="fx-centered fx-col fx-start-v">

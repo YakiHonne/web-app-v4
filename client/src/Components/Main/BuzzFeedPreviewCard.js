@@ -1,7 +1,7 @@
 import React, {  useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Date_ from "../Date_";
-import SaveArticleAsBookmark from "./SaveArticleAsBookmark";
+import BookmarkEvent from "./BookmarkEvent";
 import ShareLink from "../ShareLink";
 
 export default function BuzzFeedPreviewCard({ item }) {
@@ -125,7 +125,7 @@ export default function BuzzFeedPreviewCard({ item }) {
                 <a href={item.source_url} target="_blank">
                   Go to source
                 </a>
-                <SaveArticleAsBookmark
+                <BookmarkEvent
                   label="Bookmark article"
                   pubkey={item.id}
                   itemType="e"

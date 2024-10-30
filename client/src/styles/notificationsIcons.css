@@ -1,0 +1,69 @@
+.not-articles,
+.not-curations,
+.not-mentions,
+.not-notes,
+.not-paid-notes,
+.not-quotes,
+.not-reactions,
+.not-replies-comments,
+.not-reposts,
+.not-smart-widgets,
+.not-videos,
+.not-zaps {
+
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    cursor: pointer;
+    transition: .2s ease-in-out;
+    min-width: 16px;
+    min-height: 16px;
+}
+
+.not-articles {
+    background-image: url('../media/NotificationsIcon/articles.svg');
+}
+
+.not-curations {
+    background-image: url('../media/NotificationsIcon/curations.svg');
+}
+
+.not-mentions {
+    background-image: url('../media/NotificationsIcon/mentions.svg');
+}
+
+.not-notes {
+    background-image: url('../media/NotificationsIcon/notes.svg');
+}
+
+.not-paid-notes {
+    background-image: url('../media/NotificationsIcon/paid-notes.svg');
+}
+
+.not-quotes {
+    background-image: url('../media/NotificationsIcon/quotes.svg');
+}
+
+.not-reactions {
+    background-image: url('../media/NotificationsIcon/reactions.svg');
+}
+
+.not-replies-comments {
+    background-image: url('../media/NotificationsIcon/replies-comments.svg');
+}
+
+.not-reposts {
+    background-image: url('../media/NotificationsIcon/reposts.svg');
+}
+
+.not-smart-widgets {
+    background-image: url('../media/NotificationsIcon/smart-widgets.svg');
+}
+
+.not-videos {
+    background-image: url('../media/NotificationsIcon/videos.svg');
+}
+
+.not-zaps {
+    background-image: url('../media/NotificationsIcon/zaps.svg');
+}

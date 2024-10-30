@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Context } from "../../Context/Context";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function CheckNOSTRClient({ client }) {
-  const { nostrClients } = useContext(Context);
+  const nostrClients  = useSelector(state => state.nostrClients);
   const [clientData, setClientData] = useState({ name: client, url: "" });
 
   useEffect(() => {

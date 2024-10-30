@@ -1,12 +1,13 @@
-import React, { useContext } from "react";
+import React from "react";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import katex from "katex";
 import { getComponent, getVideoFromURL } from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Follow from "./Follow";
+import { useSelector } from "react-redux";
 
 export default function MediaPreview({ kind, data, exit }) {
-  const { isDarkMode } = useContext;
+  const isDarkMode = useSelector((state) => state.isDarkMode);
   let { author, content } = data;
 
   if (kind === "article")
@@ -138,7 +139,7 @@ export default function MediaPreview({ kind, data, exit }) {
                     const html = katex.renderToString(txt, {
                       throwOnError: false,
                     });
-                    console.log("props", txt, className, props);
+
                     return <code dangerouslySetInnerHTML={{ __html: html }} />;
                   }
 

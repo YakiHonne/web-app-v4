@@ -1,6 +1,5 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { Context } from "../../Context/Context";
-import { finalizeEvent, nip19, SimplePool } from "nostr-tools";
+import React, { useEffect, useRef, useState } from "react";
+import { finalizeEvent, nip19 } from "nostr-tools";
 import Lottie from "lottie-react";
 import { Helmet } from "react-helmet";
 import { nanoid } from "nanoid";
@@ -11,12 +10,11 @@ import ZapPollsComp from "../../Components/SmartWidget/ZapPollsComp";
 import AddPoll from "../../Components/Main/AddPoll";
 import relaysOnPlatform from "../../Content/Relays";
 import {
-  decodeBolt11,
   filterRelays,
-  getEmptyNostrUser,
-  getParsed3000xContent,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
 } from "../../Helpers/Encryptions";
-import BrowsePolls from "../../Components/NOSTR/BrowsePolls";
+import BrowsePolls from "../../Components/Main/BrowsePolls";
 import widget from "../../media/JSONs/widgets.json";
 import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
 import VideoComp from "../../Components/SmartWidget/VideoComp";
@@ -31,10 +29,11 @@ import Select from "../../Components/Main/Select";
 import Date_ from "../../Components/Date_";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import UserSearchBar from "../../Components/UserSearchBar";
-import NProfilePreviewer from "../../Components/NOSTR/NProfilePreviewer";
-import PostNoteWithWidget from "../../Components/NOSTR/PostNoteWithWidget";
-
-const pool = new SimplePool();
+import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
+import PostNoteWithWidget from "../../Components/Main/PostNoteWithWidget";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 const getTypeMetada = (type, isDarkMode) => {
   let text_color = isDarkMode === "0" ? "#ffffff" : "#1C1B1F";
@@ -74,11 +73,11 @@ const getTypeMetada = (type, isDarkMode) => {
     };
 };
 
-const getNostrKeys = () => {
-  let nostrKeys = localStorage.getItem("_nostruserkeys");
+const getuserKeys = () => {
+  let userKeys = localStorage.getItem("_userMetadatakeys");
   try {
-    nostrKeys = nostrKeys ? JSON.parse(nostrKeys) : false;
-    return nostrKeys;
+    userKeys = userKeys ? JSON.parse(userKeys) : false;
+    return userKeys;
   } catch (err) {
     console.log(err);
     return false;
@@ -188,8 +187,8 @@ const imageAspectRatio = [
 
 export default function NostrSmartWidget() {
   let { state } = useLocation();
-  let nostrKeys = getNostrKeys();
-  const { isDarkMode } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
+  const isDarkMode = useSelector((state) => state.isDarkMode);
   const [buildOptions, setBuildOptions] = useState(state ? false : true);
   const [buildOption, setBuildOption] = useState("normal");
   const [template, setTemplate] = useState(
@@ -212,7 +211,6 @@ export default function NostrSmartWidget() {
   );
 
   useEffect(() => {
-    console.log(isDarkMode, containerBackgroundColor);
     if (isDarkMode === "1" && containerBackgroundColor === "#252429") {
       setContainerBackgroundColor("#F7F7F7");
     }
@@ -270,9 +268,9 @@ export default function NostrSmartWidget() {
           <main className="main-page-nostr-container">
             <div className="fx-centered fit-container fx-start-h fx-start-v">
               <div className="box-pad-h-m fit-container">
-                {nostrKeys && (
+                {userKeys && (
                   <>
-                    {(nostrKeys.sec || nostrKeys.ext) && (
+                    {(userKeys.sec || userKeys.ext) && (
                       <>
                         {buildOptions && (
                           <>
@@ -322,12 +320,12 @@ export default function NostrSmartWidget() {
                       </>
                     )}
 
-                    {!nostrKeys.sec && !nostrKeys.ext && (
+                    {!userKeys.sec && !userKeys.ext && (
                       <PagePlaceholder page={"nostr-unauthorized"} />
                     )}
                   </>
                 )}
-                {!nostrKeys && <PagePlaceholder page={"nostr-not-connected"} />}
+                {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
               </div>
             </div>
           </main>
@@ -430,8 +428,10 @@ const SmartWidgetBuilder = ({
   widgetID,
   triggerPublish,
 }) => {
-  const { nostrKeys, nostrUser, setToast, setToPublish, isDarkMode } =
-    useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const isDarkMode = useSelector((state) => state.isDarkMode);
   const navigateTo = useNavigate();
   const [showComponents, setShowComponents] = useState(false);
   const [componentsTree, setComponentsTree] = useState(
@@ -868,10 +868,12 @@ const SmartWidgetBuilder = ({
     );
 
     if (content.length === 0) {
-      setToast({
-        type: 3,
-        desc: "The smart widget should have at least one component",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The smart widget should have at least one component",
+        })
+      );
       return;
     }
 
@@ -879,15 +881,15 @@ const SmartWidgetBuilder = ({
   };
   const postWidget = async (title, summary) => {
     let created_at = Math.floor(Date.now() / 1000);
-    let relaysToPublish = nostrUser
-      ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
-      : relaysOnPlatform;
+
     let tags;
     if (!title) {
-      setToast({
-        type: 3,
-        desc: "You need to have a title to your widget",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "You need to have a title to your widget",
+        })
+      );
       setIsLoading(false);
       return;
     }
@@ -924,10 +926,12 @@ const SmartWidgetBuilder = ({
     );
 
     if (content.length === 0) {
-      setToast({
-        type: 3,
-        desc: "The smart widget should have at least one component",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "The smart widget should have at least one component",
+        })
+      );
       setIsLoading(false);
       return;
     }
@@ -969,7 +973,7 @@ const SmartWidgetBuilder = ({
       content: content,
       tags,
     };
-    if (nostrKeys.ext) {
+    if (userKeys.ext) {
       try {
         tempEvent = await window.nostr.signEvent(tempEvent);
       } catch (err) {
@@ -978,42 +982,37 @@ const SmartWidgetBuilder = ({
         return false;
       }
     } else {
-      tempEvent = finalizeEvent(tempEvent, nostrKeys.sec);
+      tempEvent = finalizeEvent(tempEvent, userKeys.sec);
     }
-    setToPublish({
-      eventInitEx: tempEvent,
-      allRelays: relaysToPublish,
-    });
-    let pool = new SimplePool();
-    let sub = pool.subscribeMany(
-      relaysToPublish,
-      [{ kinds: [30031], ids: [tempEvent.id] }],
-      {
-        onevent(event) {
-          // setToast({
-          //   type: 1,
-          //   desc: "The smart widget was posted successfully",
-          // });
-          let metadata = JSON.parse(event.content);
-          let parsedContent = getParsed3000xContent(event.tags);
-          setWidgetToPostInNote({
-            ...parsedContent,
-            metadata,
-            ...event,
-            author: getEmptyNostrUser(event.pubkey),
-            naddr: nip19.naddrEncode({
-              pubkey: event.pubkey,
-              identifier: parsedContent.d,
-              kind: event.kind,
-            }),
-          });
-          setShowFinalStep(false);
-          sub.close();
-          deleteDraft();
-          // navigateTo("/smart-widgets");
-        },
-      }
+    dispatch(
+      setToPublish({
+        eventInitEx: tempEvent,
+        allRelays: [],
+      })
     );
+    let sub = ndkInstance.subscribe([{ kinds: [30031], ids: [tempEvent.id] }], {
+      closeOnEose: true,
+      cacheUsage: "CACHE_FIRST",
+    });
+
+    sub.on("event", (event) => {
+      let metadata = JSON.parse(event.content);
+      let parsedContent = getParsedRepEvent(event);
+      setWidgetToPostInNote({
+        ...parsedContent,
+        metadata,
+        ...event,
+        author: getEmptyuserMetadata(event.pubkey),
+        naddr: nip19.naddrEncode({
+          pubkey: event.pubkey,
+          identifier: parsedContent.d,
+          kind: event.kind,
+        }),
+      });
+      setShowFinalStep(false);
+      sub.stop();
+      deleteDraft();
+    });
   };
 
   const deleteDraft = () => {
@@ -1202,7 +1201,7 @@ const SmartWidgetBuilder = ({
                 return (
                   <EditContainer
                     key={com.id}
-                    pubkey={nostrKeys.pub}
+                    pubkey={userKeys.pub}
                     metadata={com}
                     showComponents={(data) => {
                       setSelectedContainer(data);
@@ -1227,7 +1226,7 @@ const SmartWidgetBuilder = ({
                   <PreviewContainer
                     key={com.id}
                     metadata={com}
-                    pubkey={nostrKeys.pub}
+                    pubkey={userKeys.pub}
                   />
                 );
             })}
@@ -2311,7 +2310,8 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
 };
 
 const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
-  const { nostrUser, isDarkMode } = useContext(Context);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const isDarkMode = useSelector((state) => state.isDarkMode);
   const [showAddPoll, setShowAddPoll] = useState(false);
   const [showBrowsePolls, setShowBrowsePolls] = useState(false);
   const [invoiceData, setInvoicedata] = useState(false);
@@ -2337,7 +2337,6 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
 
   useEffect(() => {
     if (metadata.type === "zap-poll") {
-      let relaysToUse = filterRelays(nostrUser?.relays || [], relaysOnPlatform);
       let id;
       try {
         let event = metadata.metadata.content
@@ -2351,23 +2350,22 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         return;
       }
       if (!id) return;
-      const sub = pool.subscribeMany(
-        relaysToUse,
-        [{ kinds: [6969], ids: [id] }],
-        {
-          async onevent(event) {
-            try {
-              handleMetadata("content", JSON.stringify(event));
-            } catch (err) {
-              console.log(err);
-            }
-          },
-          oneose() {
-            sub.close();
-            pool.close(relaysToUse);
-          },
+      const sub = ndkInstance.subscribe([{ kinds: [6969], ids: [id] }], {
+        closeOnEose: true,
+        cacheUsage: "CACHE_FIRST",
+      });
+
+      sub.on("event", async (event) => {
+        try {
+          handleMetadata("content", JSON.stringify(event));
+        } catch (err) {
+          console.log(err);
         }
-      );
+      });
+      let timeout = setTimeout(() => {
+        sub.stop();
+        clearTimeout(timeout);
+      }, 4000);
     }
     if (metadata.type === "button" && metadata.metadata.type === "zap") {
       if (metadata.metadata.url.startsWith("lnbc")) {
@@ -3138,7 +3136,7 @@ const SWTemplate = ({ template, useTemplate, exit }) => {
 };
 
 const SWDrafts = ({ back, setTemplate }) => {
-  const { nostrKeys } = useContext(Context);
+  const userKeys = useSelector((state) => state.userKeys);
   const [drafts, setDrafts] = useState(getDrafts());
   const deleteDraft = (index) => {
     let tempArray = Array.from(drafts);
@@ -3196,7 +3194,7 @@ const SWDrafts = ({ back, setTemplate }) => {
                   (draft.components[0].left_side.length > 0 ||
                     draft.components[0].right_side.length > 0)) ||
                 draft.components.length > 1 ? (
-                  <PreviewWidget widget={draft} pubkey={nostrKeys.pub} />
+                  <PreviewWidget widget={draft} pubkey={userKeys.pub} />
                 ) : (
                   <div
                     className="fit-container fx-centered fx-col"

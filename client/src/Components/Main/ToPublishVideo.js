@@ -1,12 +1,13 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import relaysOnPlatform from "../../Content/Relays";
 import TopicsTags from "../../Content/TopicsTags";
 import UserSearchBar from "../UserSearchBar";
 import NProfilePreviewer from "./NProfilePreviewer";
 import UploadFile from "../UploadFile";
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 
 const getSuggestions = (custom) => {
   if (!custom) return [];
@@ -17,7 +18,10 @@ const getSuggestions = (custom) => {
 };
 
 export default function ToPublishVideo({ tags, title, edit = false, exit }) {
-  const { setToast, nostrKeys, nostrUser, setToPublish } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
+
   const navigateTo = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [thumbnail, setThumbnail] = useState("");
@@ -25,13 +29,12 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [tempTag, setTempTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [contentSensitive, setContentSensitive] = useState(false);
   const [screen, setScreen] = useState(1);
   const [finalStepContent, setFinalStepContent] = useState(0);
-  const [zapSplit, setZapSplit] = useState([["zap", nostrKeys.pub, "", "100"]]);
+  const [zapSplit, setZapSplit] = useState([["zap", userKeys.pub, "", "100"]]);
   const [zapSplitEnabled, setZapSplitEnabled] = useState(false);
   const [relaysToPublish, setRelaysToPublish] = useState([...relaysOnPlatform]);
-  const [publishingState, setPublishingState] = useState([]);
+  const [publishingState, setIsPublishingState] = useState([]);
 
   const [allRelays, setAllRelays] = useState([...relaysOnPlatform]);
   const topicSuggestions = useMemo(() => {
@@ -40,10 +43,12 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
 
   const handleImageUpload = (file) => {
     if (file && !file.type.includes("image/")) {
-      setToast({
-        type: 2,
-        desc: "Image type is unsupported!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "Image type is unsupported!",
+        })
+      );
       return;
     }
     if (file) {
@@ -69,27 +74,31 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
       }
       tags_.push(["thumb", thumbnailUrl]);
       tags_.push(["image", thumbnailUrl]);
-      tags_.push( [
+      tags_.push([
         "client",
         "Yakihonne",
         "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
       ]);
 
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 34235,
-        content: title,
-        tags: tags_,
-        allRelays: relaysToPublish,
-      });
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 34235,
+          content: title,
+          tags: tags_,
+          allRelays: relaysToPublish,
+        })
+      );
 
       exit();
       return;
     } catch (err) {
-      setToast({
-        type: 2,
-        desc: "An error has occurred!",
-      });
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "An error has occurred!",
+        })
+      );
       setIsLoading(false);
     }
   };
@@ -162,7 +171,10 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
             maxWidth: "500px",
           }}
         >
-          <div className="fx-centered fx-start-h fit-container pointer" onClick={isLoading ? null :exit}>
+          <div
+            className="fx-centered fx-start-h fit-container pointer"
+            onClick={isLoading ? null : exit}
+          >
             <div className="arrow" style={{ transform: "rotate(90deg)" }}></div>
             {isLoading ? <LoadingDots /> : <p className="gray-c">back</p>}
           </div>
@@ -254,10 +266,12 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
                                   ...selectedCategories,
                                   item.trim(),
                                 ])
-                              : setToast({
-                                  type: 3,
-                                  desc: "Your tag contains only spaces!",
-                                });
+                              : dispatch(
+                                  setToast({
+                                    type: 3,
+                                    desc: "Your tag contains only spaces!",
+                                  })
+                                );
 
                             setTempTag("");
                             e.stopPropagation();
@@ -278,10 +292,12 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
                           ...selectedCategories,
                           tempTag.trim(),
                         ])
-                      : setToast({
-                          type: 3,
-                          desc: "Your tag contains only spaces!",
-                        });
+                      : dispatch(
+                          setToast({
+                            type: 3,
+                            desc: "Your tag contains only spaces!",
+                          })
+                        );
                     setTempTag("");
                   }}
                   style={{ position: "relative" }}
@@ -381,7 +397,7 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
                 className="fit-container fx-centered fx-wrap"
                 style={{ maxHeight: "40vh", overflow: "scroll" }}
               >
-                {nostrUser?.relays?.length == 0 &&
+                {userRelays.length == 0 &&
                   allRelays.map((url, index) => {
                     if (index === 0)
                       return (
@@ -415,8 +431,8 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
                       </label>
                     );
                   })}
-                {nostrUser?.relays?.length > 0 &&
-                  nostrUser.relays.map((url, index) => {
+                {userRelays.length > 0 &&
+                  userRelays.map((url, index) => {
                     if (index < 2)
                       return (
                         <label

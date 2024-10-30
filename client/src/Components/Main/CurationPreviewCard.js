@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
 import Date_ from "../Date_";
@@ -12,13 +12,11 @@ import {
   filterRelays,
   getBech32,
   getBolt11,
-  getEmptyNostrUser,
-  getParsed3000xContent,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
   getZapper,
   removeDuplicants,
 } from "../../Helpers/Encryptions";
-import { SimplePool } from "nostr-tools";
-import { Context } from "../../Context/Context";
 import LoadingDots from "../LoadingDots";
 import NumberShrink from "../NumberShrink";
 import LoginWithNostr from "./LoginWithNostr";
@@ -26,7 +24,11 @@ import ShowUsersList from "./ShowUsersList";
 import ZapTip from "./ZapTip";
 import GeneralComments from "./GeneralComments";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
-const pool = new SimplePool();
+import { useDispatch, useSelector } from "react-redux";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { getUser } from "../../Helpers/Controlers";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { redirectToLogin } from "../../Helpers/Helpers";
 
 const filterRootComments = (all) => {
   let temp = [];
@@ -53,16 +55,13 @@ const countReplies = (id, all) => {
 };
 
 export default function CurationPreviewCard({ curationEv }) {
-  const {
-    setToast,
-    nostrKeys,
-    isPublishing,
-    nostrUser,
-    setToPublish,
-    addNostrAuthors,
-    getNostrAuthor,
-    nostrAuthors,
-  } = useContext(Context);
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userMetadata = useSelector((state) => state.userMetadata);
+  const userRelays = useSelector((state) => state.userRelays);
+  const isPublishing = useSelector((state) => state.isPublishing);
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+
   const navigateTo = useNavigate();
   const carousel_container = useRef();
   const carousel = useRef();
@@ -76,7 +75,6 @@ export default function CurationPreviewCard({ curationEv }) {
   const [showArrows, setShowArrows] = useState(false);
   const [showSharing, setShowSharing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [toLogin, setToLogin] = useState(false);
   const [zapsCount, setZapsCount] = useState(0);
   const [upvoteReaction, setUpvoteReaction] = useState([]);
   const [downvoteReaction, setDownvoteReaction] = useState([]);
@@ -86,19 +84,15 @@ export default function CurationPreviewCard({ curationEv }) {
   const [showComments, setShowComments] = useState(false);
   const [usersList, setUsersList] = useState(false);
   const isVoted = useMemo(() => {
-    return nostrKeys
+    return userKeys
       ? upvoteReaction
           .concat(downvoteReaction)
-          .find((item) => item.pubkey === nostrKeys.pub)
+          .find((item) => item.pubkey === userKeys.pub)
       : false;
-  }, [upvoteReaction, downvoteReaction, nostrKeys]);
+  }, [upvoteReaction, downvoteReaction, userKeys]);
 
   useEffect(() => {
-    const sub = pool.subscribeMany(
-      [
-        ...filterRelays(relaysOnPlatform, nostrUser?.relays || []),
-        "wss://nostr.wine",
-      ],
+    const sub = ndkInstance.subscribe(
       [
         {
           kinds: [7, 1],
@@ -114,34 +108,31 @@ export default function CurationPreviewCard({ curationEv }) {
           ],
         },
       ],
-      {
-        onevent(event) {
-          if (event.kind === 1) {
-            setComments((prev) => {
-              let newCom = [...prev, event];
-              return newCom.sort(
-                (item_1, item_2) => item_2.created_at - item_1.created_at
-              );
-            });
-          }
-          if (event.kind === 9735) {
-            let sats = decodeBolt11(getBolt11(event));
-            let zapper = getZapper(event);
-            setZappers((prev) => {
-              return [...prev, zapper];
-            });
-            setZapsCount((prev) => prev + sats);
-          }
-          if (event.content === "+")
-            setUpvoteReaction((upvoteArticle) => [...upvoteArticle, event]);
-          if (event.content === "-")
-            setDownvoteReaction((downvoteArticle) => [
-              ...downvoteArticle,
-              event,
-            ]);
-        },
-      }
+      { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
     );
+
+    sub.on("event", (event) => {
+      if (event.kind === 1) {
+        setComments((prev) => {
+          let newCom = [...prev, event];
+          return newCom.sort(
+            (item_1, item_2) => item_2.created_at - item_1.created_at
+          );
+        });
+      }
+      if (event.kind === 9735) {
+        let sats = decodeBolt11(getBolt11(event));
+        let zapper = getZapper(event);
+        setZappers((prev) => {
+          return [...prev, zapper];
+        });
+        setZapsCount((prev) => prev + sats);
+      }
+      if (event.content === "+")
+        setUpvoteReaction((upvoteArticle) => [...upvoteArticle, event]);
+      if (event.content === "-")
+        setDownvoteReaction((downvoteArticle) => [...downvoteArticle, event]);
+    });
   }, []);
 
   useEffect(() => {
@@ -150,7 +141,7 @@ export default function CurationPreviewCard({ curationEv }) {
         setCuration(curationEv);
         setCurationDet({
           ...curationEv,
-          ...getParsed3000xContent(curationEv.tags),
+          ...getParsedRepEvent(curationEv),
         });
         setIsLoaded(true);
 
@@ -159,8 +150,7 @@ export default function CurationPreviewCard({ curationEv }) {
         let dRefs = getDRef(curationEv.tags);
         let articles = [];
         if (dRefs.length === 0) setIsArtsLoaded(true);
-        let sub = pool.subscribeMany(
-          [...relaysOnPlatform, "wss://nos.lol"],
+        let sub = ndkInstance.subscribe(
           [
             {
               kinds: [30023],
@@ -168,49 +158,47 @@ export default function CurationPreviewCard({ curationEv }) {
             },
             { kinds: [0], authors: authPubkeys },
           ],
-          {
-            onevent(article) {
-              articles.push(article);
-              let post = getPostsInCuration(article);
-              setArticlesOnCuration((_articles) => {
-                let newArts = [post, ..._articles];
-                newArts = newArts.map((art) => {
-                  let author =
-                    articles.find(
-                      (_event) =>
-                        _event.kind === 0 &&
-                        _event.pubkey === art?.author_pubkey
-                    ) || "";
-                  let author_img = author
-                    ? JSON.parse(author.content).picture
-                    : "";
-                  let lud06 = author ? JSON.parse(author.content).lud06 : "";
-                  let lud16 = author ? JSON.parse(author.content).lud16 : "";
-                  let author_name = author
-                    ? JSON.parse(author.content)?.name?.substring(0, 10)
-                    : getBech32("npub", article.pubkey).substring(0, 10);
-
-                  return {
-                    ...art,
-                    author_img,
-                    author_name,
-                  };
-                });
-                return sortPostsOnCuration(dRefs, newArts);
-              });
-              setIsArtsLoaded(true);
-            },
-            oneose() {
-              setIsArtsLoaded(true);
-            },
-          }
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
         );
+        sub.on("event", (article) => {
+          articles.push(article);
+          let post = getPostsInCuration(article);
+          setArticlesOnCuration((_articles) => {
+            let newArts = [post, ..._articles];
+            newArts = newArts.map((art) => {
+              let author =
+                articles.find(
+                  (_event) =>
+                    _event.kind === 0 && _event.pubkey === art?.author_pubkey
+                ) || "";
+              let author_img = author ? JSON.parse(author.content).picture : "";
+              let lud06 = author ? JSON.parse(author.content).lud06 : "";
+              let lud16 = author ? JSON.parse(author.content).lud16 : "";
+              let author_name = author
+                ? JSON.parse(author.content)?.name?.substring(0, 10)
+                : getBech32("npub", article.pubkey).substring(0, 10);
+
+              return {
+                ...art,
+                author_img,
+                author_name,
+              };
+            });
+            return sortPostsOnCuration(dRefs, newArts);
+          });
+          setIsArtsLoaded(true);
+        });
+        sub.on("eose", () => {
+          setIsArtsLoaded(true);
+        });
       } catch (err) {
         console.log(err);
-        setToast({
-          type: 2,
-          desc: "Problem in connecting with the relay",
-        });
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Problem in connecting with the relay",
+          })
+        );
         setTimeout(() => {
           navigateTo("/curations");
         }, 2000);
@@ -232,10 +220,10 @@ export default function CurationPreviewCard({ curationEv }) {
   }, [articlesOnCuration]);
 
   useEffect(() => {
-    let auth = getNostrAuthor(curationEv.pubkey);
+    let auth = getUser(curationEv.pubkey);
     if (auth) setCurationAuthor(auth);
     else {
-      setCurationAuthor(getEmptyNostrUser(curationEv.pubkey));
+      setCurationAuthor(getEmptyuserMetadata(curationEv.pubkey));
     }
   }, [nostrAuthors]);
 
@@ -271,7 +259,7 @@ export default function CurationPreviewCard({ curationEv }) {
     let image = "";
     let title = "";
     let d = "";
-    let added_date = new Date(article.created_at * 1000).toDateString();
+    let added_date = new Date(article.created_at * 1000)
     for (let tag of article.tags) {
       if (tag[0] === "image") image = tag[1];
       if (tag[0] === "title") title = tag[1];
@@ -344,39 +332,40 @@ export default function CurationPreviewCard({ curationEv }) {
     navigator.clipboard.writeText(
       `${window.location.protocol}//${window.location.hostname}/curations/${curationEv.naddr}`
     );
-    setToast({
-      type: 1,
-      desc: `Link was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `Link was copied! 👏`,
+      })
+    );
   };
   const upvoteCuration = async () => {
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays
+          })
+        );
 
         setIsLoading(false);
 
@@ -393,21 +382,21 @@ export default function CurationPreviewCard({ curationEv }) {
         setDownvoteReaction(tempArray);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "+",
-        tags: [
-          [
-            "a",
-            `30004:${curationEv.naddrData.pubkey}:${curationEv.naddrData.identifier}`,
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "+",
+          tags: [
+            [
+              "a",
+              `30004:${curationEv.naddrData.pubkey}:${curationEv.naddrData.identifier}`,
+            ],
+            ["p", curationEv.naddrData.pubkey],
           ],
-          ["p", curationEv.naddrData.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+          allRelays: userRelays
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -418,31 +407,30 @@ export default function CurationPreviewCard({ curationEv }) {
   const downvoteCuration = async () => {
     if (isLoading) return;
     if (isPublishing) {
-      setToast({
-        type: 3,
-        desc: "An event publishing is in process!",
-      });
+      dispatch(
+        setToast({
+          type: 3,
+          desc: "An event publishing is in process!",
+        })
+      );
       return;
     }
     try {
-      if (!nostrKeys) {
-        setToLogin(true);
+      if (!userKeys) {
+        redirectToLogin();
         return false;
       }
       if (isVoted) {
         setIsLoading(true);
-        setToPublish({
-          nostrKeys: nostrKeys,
-          kind: 5,
-          content: "This vote will be deleted!",
-          tags: [["e", isVoted.id]],
-          allRelays: nostrUser
-            ? [
-                ...filterRelays(relaysOnPlatform, nostrUser.relays),
-                "wss://nostr.wine",
-              ]
-            : [...relaysOnPlatform, "wss://nostr.wine"],
-        });
+        dispatch(
+          setToPublish({
+            userKeys: userKeys,
+            kind: 5,
+            content: "This vote will be deleted!",
+            tags: [["e", isVoted.id]],
+            allRelays: userRelays
+          })
+        );
         setIsLoading(false);
         if (isVoted.content === "-") {
           let tempArray = Array.from(downvoteReaction);
@@ -457,21 +445,21 @@ export default function CurationPreviewCard({ curationEv }) {
         setUpvoteReaction(tempArray);
       }
       setIsLoading(true);
-      setToPublish({
-        nostrKeys: nostrKeys,
-        kind: 7,
-        content: "-",
-        tags: [
-          [
-            "a",
-            `30004:${curationEv.naddrData.pubkey}:${curationEv.naddrData.identifier}`,
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 7,
+          content: "-",
+          tags: [
+            [
+              "a",
+              `30004:${curationEv.naddrData.pubkey}:${curationEv.naddrData.identifier}`,
+            ],
+            ["p", curationEv.naddrData.pubkey],
           ],
-          ["p", curationEv.naddrData.pubkey],
-        ],
-        allRelays: nostrUser
-          ? [...filterRelays(relaysOnPlatform, nostrUser.relays)]
-          : relaysOnPlatform,
-      });
+          allRelays: userRelays
+        })
+      );
 
       setIsLoading(false);
     } catch (err) {
@@ -572,7 +560,7 @@ export default function CurationPreviewCard({ curationEv }) {
           </div>
         </div>
       )}
-      {toLogin && <LoginWithNostr exit={() => setToLogin(false)} />}
+      
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -847,7 +835,7 @@ export default function CurationPreviewCard({ curationEv }) {
                     )}
                     // recipientLNURL={curationAuthor.lud06 || curationAuthor.lud16}
                     recipientPubkey={curationAuthor.pubkey}
-                    senderPubkey={nostrUser.pubkey}
+                    senderPubkey={userMetadata.pubkey}
                     recipientInfo={{
                       name: curationAuthor.name,
                       img: curationAuthor.picture,

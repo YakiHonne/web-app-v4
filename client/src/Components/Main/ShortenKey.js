@@ -1,17 +1,20 @@
-import React, { useContext } from "react";
-import { Context } from "../../Context/Context";
+import React from "react";
+import { useDispatch } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
 
 export default function ShortenID({ id }) {
-  const { setToast } = useContext(Context);
+  const dispatch = useDispatch();
   if (!id) return;
   let firstHalf = id.substring(0, 10);
   const copyID = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(id);
-    setToast({
-      type: 1,
-      desc: `Pubkey was copied! 👏`,
-    });
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `Pubkey was copied! 👏`,
+      })
+    );
   };
   return (
     <span

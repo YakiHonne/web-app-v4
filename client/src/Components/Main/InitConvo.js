@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Context } from "../../Context/Context";
+import React, {  useEffect, useState } from "react";
 import {
   SimplePool,
   nip04,
@@ -8,24 +7,23 @@ import {
   generateSecretKey,
   finalizeEvent,
 } from "nostr-tools";
-import { bytesTohex, filterRelays } from "../../Helpers/Encryptions";
+import { bytesTohex } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../../Components/LoadingDots";
 import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import UserSearchBar from "../../Components/UserSearchBar";
 import axiosInstance from "../../Helpers/HTTP_Client";
+import { useDispatch, useSelector } from "react-redux";
+import { updateYakiChestStats } from "../../Helpers/Controlers";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 
 export default function InitiConvo({ exit, receiver = false }) {
-  const {
-    nostrKeys,
-    nostrUser,
-    setToPublish,
-    toPublish,
-    setToast,
-    isPublishing,
-    setUpdatedActionFromYakiChest,
-    updateYakiChestStats,
-  } = useContext(Context);
+  const dispatch = useDispatch()
+  const userKeys = useSelector(state => state.userKeys)
+  const userRelays = useSelector(state => state.userRelays)
+  const isPublishing = useSelector(state => state.isPublishing)
+  const toPublish = useSelector(state => state.toPublish)
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(true);
@@ -38,26 +36,25 @@ export default function InitiConvo({ exit, receiver = false }) {
   const handleSendMessage = async () => {
     if (
       !message ||
-      !nostrKeys ||
+      !userKeys ||
       !selectedPerson ||
-      (nostrKeys && !(nostrKeys.ext || nostrKeys.sec))
+      (userKeys && !(userKeys.ext || userKeys.sec))
     )
       return;
 
-    let relaysToPublish = nostrUser
-      ? filterRelays(relaysOnPlatform, nostrUser?.relays || [])
-      : relaysOnPlatform;
+    let relaysToPublish = userRelays
+
     if (legacy) {
       setIsLoading(true);
       let encryptedMessage = "";
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         encryptedMessage = await window.nostr.nip04.encrypt(
           selectedPerson,
           message
         );
       } else {
         encryptedMessage = await nip04.encrypt(
-          nostrKeys.sec,
+          userKeys.sec,
           selectedPerson,
           message
         );
@@ -72,7 +69,7 @@ export default function InitiConvo({ exit, receiver = false }) {
         content: encryptedMessage,
         tags,
       };
-      if (nostrKeys.ext) {
+      if (userKeys.ext) {
         try {
           tempEvent = await window.nostr.signEvent(tempEvent);
         } catch (err) {
@@ -81,12 +78,12 @@ export default function InitiConvo({ exit, receiver = false }) {
           return false;
         }
       } else {
-        tempEvent = finalizeEvent(tempEvent, nostrKeys.sec);
+        tempEvent = finalizeEvent(tempEvent, userKeys.sec);
       }
-      setToPublish({
+      dispatch(setToPublish({
         eventInitEx: tempEvent,
         allRelays: relaysToPublish,
-      });
+      }));
     }
     if (!legacy) {
       let { sender_event, receiver_event } = await getGiftWrap();
@@ -118,7 +115,7 @@ export default function InitiConvo({ exit, receiver = false }) {
       let { user_stats, is_updated } = data.data;
 
       if (is_updated) {
-        setUpdatedActionFromYakiChest(is_updated);
+        dispatch( setUpdatedActionFromYakiChest(is_updated));
         updateYakiChestStats(user_stats);
       }
       exit();
@@ -134,7 +131,7 @@ export default function InitiConvo({ exit, receiver = false }) {
 
     let [signedKind13_1, signedKind13_2] = await Promise.all([
       getEventKind13(selectedPerson),
-      getEventKind13(nostrKeys.pub),
+      getEventKind13(userKeys.pub),
     ]);
 
     let content_1 = nip44.v2.encrypt(
@@ -143,7 +140,7 @@ export default function InitiConvo({ exit, receiver = false }) {
     );
     let content_2 = nip44.v2.encrypt(
       JSON.stringify(signedKind13_2),
-      nip44.v2.utils.getConversationKey(g_sk_2, nostrKeys.pub)
+      nip44.v2.utils.getConversationKey(g_sk_2, userKeys.pub)
     );
     let event_1 = {
       created_at: Math.floor(Date.now() / 1000) - 432000,
@@ -154,7 +151,7 @@ export default function InitiConvo({ exit, receiver = false }) {
     let event_2 = {
       created_at: Math.floor(Date.now() / 1000) - 432000,
       kind: 1059,
-      tags: [["p", nostrKeys.pub]],
+      tags: [["p", userKeys.pub]],
       content: content_2,
     };
     event_1 = finalizeEvent(event_1, g_sk_1);
@@ -164,12 +161,12 @@ export default function InitiConvo({ exit, receiver = false }) {
 
   const getEventKind14 = () => {
     let event = {
-      pubkey: nostrKeys.pub,
+      pubkey: userKeys.pub,
       created_at: Math.floor(Date.now() / 1000),
       kind: 14,
       tags: [
         ["p", selectedPerson],
-        ["p", nostrKeys.pub],
+        ["p", userKeys.pub],
       ],
       content: message,
     };
@@ -180,10 +177,10 @@ export default function InitiConvo({ exit, receiver = false }) {
 
   const getEventKind13 = async (pubkey) => {
     let unsignedKind14 = getEventKind14();
-    let content = nostrKeys.sec
+    let content = userKeys.sec
       ? nip44.default.v2.encrypt(
           JSON.stringify(unsignedKind14),
-          nip44.v2.utils.getConversationKey(nostrKeys.sec, pubkey)
+          nip44.v2.utils.getConversationKey(userKeys.sec, pubkey)
         )
       : await window.nostr.nip44.encrypt(
           pubkey,
@@ -195,8 +192,8 @@ export default function InitiConvo({ exit, receiver = false }) {
       tags: [],
       content,
     };
-    event = nostrKeys.sec
-      ? finalizeEvent(event, nostrKeys.sec)
+    event = userKeys.sec
+      ? finalizeEvent(event, userKeys.sec)
       : await window.nostr.signEvent(event);
     return event;
   };
@@ -211,25 +208,25 @@ export default function InitiConvo({ exit, receiver = false }) {
       ]);
 
       if (res1.status === "rejected") {
-        setToast({
+        dispatch(setToast({
           type: 2,
           desc: "Error sending the message.",
-        });
+        }));
         return false;
       }
 
-      setToast({
+      dispatch(setToast({
         type: 1,
         desc: "Message sent!",
-      });
+      }));
 
       return true;
     } catch (err) {
       console.log(err);
-      setToast({
+      dispatch(setToast({
         type: 2,
         desc: "Error sending the message.",
-      });
+      }));
       return false;
     }
   };
@@ -280,7 +277,7 @@ export default function InitiConvo({ exit, receiver = false }) {
             >
               {isLoading ? <LoadingDots /> : "Send message"}
             </button>
-            {(nostrKeys.sec || window?.nostr?.nip44) && (
+            {(userKeys.sec || window?.nostr?.nip44) && (
               <div
                 className="fx-centered round-icon-tooltip"
                 data-tooltip={
