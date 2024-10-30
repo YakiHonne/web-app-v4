@@ -14,7 +14,7 @@ import {
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import { getNoteTree } from "../../Helpers/Helpers";
-import Date_ from "../../Components/Date_";
+import Date_ from "../Date_";
 import { useNavigate } from "react-router-dom";
 import LoadingDots from "../LoadingDots";
 import QuoteNote from "./QuoteNote";
