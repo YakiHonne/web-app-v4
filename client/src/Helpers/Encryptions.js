@@ -268,7 +268,14 @@ const getParsedNote = async (event) => {
   try {
     let isQuote = event.tags.find((tag) => tag[0] === "q");
     let checkForLabel = event.tags.find((tag) => tag[0] === "l");
-    let isComment = event.tags.find((tag) => tag[0] === "e" || tag[0] === "a");
+    let isComment = event.tags.find(
+      (tag) => tag.length > 0 && tag[3] === "root"
+    );
+    let isReply = event.tags.find(
+      (tag) => tag.length > 0 && tag[3] === "reply"
+    );
+    // let isComment = event.tags.find((tag) => tag[0] === "e" || tag[0] === "a");
+
     let isFlashNews = false;
 
     if (checkForLabel && ["UNCENSORED NOTE"].includes(checkForLabel[1]))
@@ -298,7 +305,7 @@ const getParsedNote = async (event) => {
         stringifiedEvent,
         isQuote:
           isQuote && !event.content.includes("nostr:nevent") ? isQuote[1] : "",
-        isComment: isComment ? isComment[1] : false,
+        isComment: isReply ? isReply[1] : isComment ? isComment[1] : false,
         isFlashNews,
         nEvent,
         seenOn,
