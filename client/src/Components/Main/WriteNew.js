@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import LoginWithNostr from "./LoginWithNostr";
 import { useSelector } from "react-redux";
 import { redirectToLogin } from "../../Helpers/Helpers";
+import { customHistory } from "../../Helpers/History";
 
 export default function WriteNew({ exit }) {
   const userKeys = useSelector((state) => state.userKeys);
@@ -79,7 +80,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
             <div>Note</div>
           </Link>
           <div
-            onClick={() => navigateTo("/write-article")}
+            onClick={() => customHistory.push("/write-article")}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
             style={{
               width: "48%",

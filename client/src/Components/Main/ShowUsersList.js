@@ -169,34 +169,41 @@ export default function ShowUsersList({ exit, list, title, extras }) {
                   className="fx-scattered fit-container fx-start-v "
                   key={item.pubkey + item.name}
                 >
-                  <div
-                    className="fx-centered fx-start-v"
-                    style={{ columnGap: "24px" }}
-                  >
-                    <UserProfilePicNOSTR
-                      size={48}
-                      img={item.picture}
-                      user_id={item.pubkey}
-                      ring={false}
-                    />
-                    <div className="fx-centered fx-col fx-start-v">
-                      <ShortenKey id={item.pubkeyhashed} />
-                      <p>{item.name}</p>
-                      <p className="gray-c p-medium p-four-lines">
-                        {item.about}
-                      </p>
+                  <div className="fx-centered fx-start-v">
+                    {extras.length > 0 && (
+                      <div
+                        className="fx-centered  round-icon"
+                        style={{ gap: "6px", border: "none" }}
+                      >
+                        <div
+                          className="bolt-bold"
+                          style={{ minWidth: "16px", minHeight: "16px" }}
+                        ></div>
+                        <span className="c1-c p-bold">
+                          <NumberShrink value={getZaps(item.pubkey)} />
+                        </span>
+                      </div>
+                    )}
+                    <div
+                      className="fx-centered fx-start-v"
+                      style={{ columnGap: "24px" }}
+                    >
+                      <UserProfilePicNOSTR
+                        size={48}
+                        img={item.picture}
+                        user_id={item.pubkey}
+                        ring={false}
+                      />
+                      <div className="fx-centered fx-col fx-start-v">
+                        <ShortenKey id={item.pubkeyhashed} />
+                        <p>{item.name}</p>
+                        <p className="gray-c p-medium p-two-lines">
+                          {item.about}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <div className="fx-centered">
-                    {extras.length > 0 && (
-                      <div
-                        className="fx-centered box-pad-h-m"
-                        style={{ minWidth: "32px" }}
-                      >
-                        <div className="bolt"></div>
-                        <NumberShrink value={getZaps(item.pubkey)} />
-                      </div>
-                    )}
                     <Follow
                       toFollowKey={item.pubkey}
                       toFollowName={item.name}

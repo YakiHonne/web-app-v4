@@ -89,11 +89,11 @@ app.use("/", NIP05);
 app.use("/", Ops);
 
 app.use(
-  require("prerender-node").set(
-    "prerenderServiceUrl",
-    "https://prerender.yakihonne.com"
-  )
-  // require("prerender-node").set("prerenderToken", "6pWKlK16TlpJIRtzeTjo")
+  // require("prerender-node").set(
+  //   "prerenderServiceUrl",
+  //   "https://prerender.yakihonne.com"
+  // )
+  require("prerender-node").set("prerenderToken", "6pWKlK16TlpJIRtzeTjo")
 );
 app.use(express.static("build"));
 

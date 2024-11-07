@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { compactContent, straightUp } from "../../Helpers/Helpers";
 import { eventKinds } from "../../Content/Extra";
 import LoadingLogo from "../LoadingLogo";
+import { customHistory } from "../../Helpers/History";
 
 const types = {
   mention: "mentioned you in a",
@@ -637,7 +638,7 @@ const Notification = ({ event, filterByType = false }) => {
 
   const handleOnClick = (e) => {
     e.stopPropagation();
-    if (type.url) navigate(type.url);
+    if (type.url) customHistory.push(type.url);
   };
 
   if (!type || event.pubkey === userKeys.pub) return;

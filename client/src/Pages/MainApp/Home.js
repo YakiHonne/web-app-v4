@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState, lazy, useReducer } from "react";
+import React, { useEffect, useRef, useState, useReducer } from "react";
 import { useSelector } from "react-redux";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
-import LoadingDots from "../../Components/LoadingDots";
 import {
   getParsedNote,
   getParsedRepEvent,
@@ -11,53 +10,36 @@ import {
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import YakiIntro from "../../Components/YakiIntro";
-import Footer from "../../Components/Footer";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
+
 import KindSix from "../../Components/Main/KindSix";
-import { saveUsers } from "../../Helpers/DB";
+import { getFollowings, saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
-import TrendingUsers from "../../Components/Main/TrendingUsers";
-import RecentTags from "../../Components/Main/RecentTags";
 import { getSubData } from "../../Helpers/Controlers";
 import Slider from "../../Components/Slider";
 import SmallButtonDropDown from "../../Components/Main/SmallButtonDropDown";
 import HomeCarouselContentSuggestions from "../../Components/Main/HomeCarouselContentSuggestions";
 import { getHighlights, getTrending } from "../../Helpers/WSInstance";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
-import PostAsNote from "../../Components/Main/PostAsNote";
 import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
 import InterestSuggestions from "../../Content/InterestSuggestions";
 import WriteNote from "../../Components/Main/WriteNote";
-const KindOne = lazy(() => import("../../Components/Main/KindOne"));
-
+import {
+  getCustomSettings,
+  getDefaultSettings,
+  getKeys,
+} from "../../Helpers/Helpers";
+import LoadingLogo from "../../Components/LoadingLogo";
+import KindOne from "../../Components/Main/KindOne";
 const SUGGESTED_TAGS_VALUE = "_sggtedtags_";
-const homeOptions = [
-  {
-    value: "universal",
-    display_name: "Universal",
-  },
-  {
-    value: "smart-widget",
-    display_name: "Notes with Widgets",
-  },
-  {
-    value: "trending",
-    display_name: "Trending notes",
-  },
-  {
-    value: "followings",
-    display_name: "Followings",
-  },
-];
 
-const smallButtonDropDownOptions = [
-  "highlights",
-  "trending",
-  "paid",
-  "followings",
-  "widgets",
-];
+const getContentList = () => {
+  let list = getCustomSettings();
+  list = list.contentList
+    .filter((item) => !item.isHidden)
+    .map((item) => item.tab);
+  if (list.length > 0) return list;
+  else getDefaultSettings().contentList.map((item) => item.tab);
+};
 
 const notesReducer = (notes, action) => {
   switch (action.type) {
@@ -71,17 +53,6 @@ const notesReducer = (notes, action) => {
         .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
       nextState[action.type] = sortedNotes;
       return nextState;
-
-      // let nextState = { ...notes };
-      // let existed = nextState[action.type].find(
-      //   (note) => note.id === action.note.id
-      // );
-      // if (existed) return nextState;
-      // else
-      //   nextState[action.type] = [...nextState[action.type], action.note].sort(
-      //     (note_1, note_2) => note_2.created_at - note_1.created_at
-      //   );
-      // return nextState;
     }
     case "trending": {
       let nextState = { ...notes };
@@ -89,17 +60,6 @@ const notesReducer = (notes, action) => {
 
       nextState[action.type] = tempArr;
       return nextState;
-
-      // let nextState = { ...notes };
-      // let existed = nextState[action.type].find(
-      //   (note) => note.id === action.note.id
-      // );
-      // if (existed) return nextState;
-      // else
-      //   nextState[action.type] = [...nextState[action.type], action.note].sort(
-      //     (note_1, note_2) => note_2.created_at - note_1.created_at
-      //   );
-      // return nextState;
     }
     case "widgets": {
       let nextState = { ...notes };
@@ -111,30 +71,8 @@ const notesReducer = (notes, action) => {
         .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
       nextState[action.type] = sortedNotes;
       return nextState;
-
-      // let nextState = { ...notes };
-      // let existed = nextState[action.type].find(
-      //   (note) => note.id === action.note.id
-      // );
-      // if (existed) return nextState;
-      // else
-      //   nextState[action.type] = [...nextState[action.type], action.note].sort(
-      //     (note_1, note_2) => note_2.created_at - note_1.created_at
-      //   );
-      // return nextState;
     }
     case "paid": {
-      // let nextState = { ...notes };
-      // let existed = nextState[action.type].find(
-      //   (note) => note.id === action.note.id
-      // );
-      // if (existed) return nextState;
-      // else
-      //   nextState[action.type] = [...nextState[action.type], action.note].sort(
-      //     (note_1, note_2) => note_2.created_at - note_1.created_at
-      //   );
-      // return nextState;
-
       let nextState = { ...notes };
       let tempArr = [...nextState[action.type], ...action.note];
       let sortedNotes = tempArr
@@ -145,7 +83,7 @@ const notesReducer = (notes, action) => {
       nextState[action.type] = sortedNotes;
       return nextState;
     }
-    case "followings": {
+    case "recent": {
       let nextState = { ...notes };
       let tempArr = [...nextState[action.type], ...action.note];
       let sortedNotes = tempArr
@@ -155,17 +93,17 @@ const notesReducer = (notes, action) => {
         .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
       nextState[action.type] = sortedNotes;
       return nextState;
-
-      // let nextState = { ...notes };
-      // let existed = nextState[action.type].find(
-      //   (note) => note.id === action.note.id
-      // );
-      // if (existed) return nextState;
-      // else
-      //   nextState[action.type] = [...nextState[action.type], action.note].sort(
-      //     (note_1, note_2) => note_2.created_at - note_1.created_at
-      //   );
-      // return nextState;
+    }
+    case "recent-with-replies": {
+      let nextState = { ...notes };
+      let tempArr = [...nextState[action.type], ...action.note];
+      let sortedNotes = tempArr
+        .filter((note, index, tempArr) => {
+          if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
+        })
+        .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
+      nextState[action.type] = sortedNotes;
+      return nextState;
     }
     case "tags": {
       let nextState = { ...notes };
@@ -179,9 +117,9 @@ const notesReducer = (notes, action) => {
       return nextState;
     }
 
-    case "empty-followings": {
+    case "empty-recent": {
       let nextState = { ...notes };
-      nextState["followings"] = [];
+      nextState["recent"] = [];
       return nextState;
     }
     case "remove-events": {
@@ -196,17 +134,23 @@ const notesReducer = (notes, action) => {
 const notesInitialState = {
   highlights: [],
   widgets: [],
-  followings: [],
+  recent: [],
+  "recent-with-replies": [],
   paid: [],
   trending: [],
   tags: [],
 };
 
 export default function Home() {
+  const [smallButtonDropDownOptions, setSmallButtonDropDownOptions] = useState(
+    getContentList()
+  );
   const userKeys = useSelector((state) => state.userKeys);
   const userInterestList = useSelector((state) => state.userInterestList);
   const [showWriteNote, setShowWriteNote] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("highlights");
+  const [selectedCategory, setSelectedCategory] = useState(
+    smallButtonDropDownOptions[0]
+  );
   const [contentSuggestions, setContentSuggestions] = useState([]);
   const extrasRef = useRef(null);
 
@@ -230,6 +174,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    let checkHiddenSuggestions = localStorage.getItem("hsuggest");
     const fetchContentSuggestions = async () => {
       let tags = InterestSuggestions.sort(() => 0.5 - Math.random()).slice(
         0,
@@ -251,16 +196,29 @@ export default function Home() {
         saveUsers(content.pubkeys);
       }
     };
-    fetchContentSuggestions();
+    if (!checkHiddenSuggestions) fetchContentSuggestions();
   }, []);
 
   useEffect(() => {
-    userInterestList.length > 0 && setSelectedCategory("highlights");
+    userInterestList.length > 0 &&
+      setSelectedCategory(smallButtonDropDownOptions[0]);
   }, [userInterestList]);
+
+  useEffect(() => {
+    if (userKeys) {
+      setSmallButtonDropDownOptions(getContentList());
+    } else {
+      setSmallButtonDropDownOptions([
+        "highlights",
+        "trending",
+        "paid",
+        "widgets",
+      ]);
+    }
+  }, [userKeys]);
 
   return (
     <>
-      {/* {showWriteNote && <PostAsNote exit={() => setShowWriteNote(false)} />} */}
       <div style={{ overflow: "auto" }}>
         <Helmet>
           <title>Yakihonne | Home</title>
@@ -323,10 +281,11 @@ export default function Home() {
                               options={smallButtonDropDownOptions}
                               selectedCategory={selectedCategory}
                               setSelectedCategory={setSelectedCategory}
+                              showSettings={userKeys}
                             />
                           }
                           items={[
-                            userInterestList.length === 0 && (
+                            userInterestList.length === 0 && userKeys && (
                               <div
                                 className={
                                   "btn sticker-gray-black p-caps fx-centered"
@@ -396,7 +355,6 @@ export default function Home() {
                           <UserProfilePicNOSTR
                             size={40}
                             mainAccountUser={true}
-                            allowClick={false}
                             ring={false}
                           />
                           <div className="sc-s-18 box-pad-h-s box-pad-v-s fit-container">
@@ -407,9 +365,20 @@ export default function Home() {
                           </div>
                         </div>
                       )}
-                      {userKeys && showWriteNote && <WriteNote content={""} exit={() => setShowWriteNote(false)}/>}
+
+                      {userKeys && showWriteNote && (
+                        <WriteNote
+                          content={""}
+                          exit={() => setShowWriteNote(false)}
+                        />
+                      )}
                       {selectedCategory !== SUGGESTED_TAGS_VALUE && (
-                        <HomeFeed from={selectedCategory} />
+                        <HomeFeed
+                          from={selectedCategory}
+                          smallButtonDropDownOptions={
+                            smallButtonDropDownOptions
+                          }
+                        />
                       )}
                       {selectedCategory === SUGGESTED_TAGS_VALUE && (
                         <InterestSuggestionsCards
@@ -448,13 +417,13 @@ export default function Home() {
   );
 }
 
-const HomeFeed = ({ from }) => {
-  const userFollowings = useSelector((state) => state.userFollowings);
+const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
+  // const smallButtonDropDownOptions = getContentList();
+  const [userFollowings, setUserFollowings] = useState([]);
   const [notes, dispatchNotes] = useReducer(notesReducer, notesInitialState);
   const [isLoading, setIsLoading] = useState(true);
   const [notesContentFrom, setNotesContentFrom] = useState(from);
   const [notesLastEventTime, setNotesLastEventTime] = useState(undefined);
-  const [notesSub, setNotesSub] = useState(false);
   const trendingLastScore = useRef(null);
 
   useEffect(() => {
@@ -464,7 +433,6 @@ const HomeFeed = ({ from }) => {
         if (!el) return;
         el.scrollTop = 0;
       };
-      if (notesSub) notesSub.stop();
       straightUp();
       dispatchNotes({ type: "remove-events" });
       setNotesLastEventTime(undefined);
@@ -473,15 +441,28 @@ const HomeFeed = ({ from }) => {
     }
   }, [from]);
 
-  const getNotesFilter = () => {
+  const getNotesFilter = async () => {
     let filter;
-    if (notesContentFrom === "followings") {
-      let authors =
-        userFollowings.length > 0
-          ? Array.from(userFollowings)
-          : [process.env.REACT_APP_YAKI_PUBKEY];
+    let tempUserFollowings = Array.from(userFollowings);
+    if (["recent", "recent-with-replies"].includes(notesContentFrom)) {
+      if (tempUserFollowings.length === 0) {
+        let userKeys = getKeys();
+        if (userKeys) {
+          let followings = await getFollowings(userKeys.pub);
+          tempUserFollowings =
+            followings.followings.length > 0
+              ? Array.from(followings.followings)
+              : [process.env.REACT_APP_YAKI_PUBKEY];
+          setUserFollowings(tempUserFollowings);
+        } else {
+          tempUserFollowings = [process.env.REACT_APP_YAKI_PUBKEY];
+          setUserFollowings(tempUserFollowings);
+        }
+      }
+
+      let authors = tempUserFollowings;
       filter = [
-        { authors, kinds: [1, 6], limit: 20, until: notesLastEventTime },
+        { authors, kinds: [1, 6], limit: 10, until: notesLastEventTime },
       ];
       return {
         filter,
@@ -492,7 +473,7 @@ const HomeFeed = ({ from }) => {
         {
           kinds: [1],
           "#l": ["smart-widget"],
-          limit: 20,
+          limit: 10,
           until: notesLastEventTime,
         },
       ];
@@ -505,7 +486,7 @@ const HomeFeed = ({ from }) => {
         {
           kinds: [1],
           "#l": ["FLASH NEWS"],
-          limit: 20,
+          limit: 10,
           until: notesLastEventTime,
         },
       ];
@@ -518,7 +499,7 @@ const HomeFeed = ({ from }) => {
         {
           kinds: [1],
           "#t": [notesContentFrom],
-          limit: 20,
+          limit: 10,
           until: notesLastEventTime,
         },
       ];
@@ -613,49 +594,55 @@ const HomeFeed = ({ from }) => {
     }
     if (!(Array.isArray(userFollowings) && notesContentFrom !== "trending"))
       return;
-    setIsLoading(true);
-    let eventsPubkeys = [];
-    let events = [];
-    let { filter } = getNotesFilter();
-    let subscription = ndkInstance.subscribe(filter, {
-      groupable: false,
-      skipValidation: true,
-      skipVerification: true,
-      cacheUsage: "CACHE_FIRST",
-      subId: "home-feed",
-    });
+    const fetchData = async () => {
+      setIsLoading(true);
+      let eventsPubkeys = [];
+      let events = [];
+      let { filter } = await getNotesFilter();
 
-    subscription.on("event", async (event) => {
-      eventsPubkeys.push(event.pubkey);
-      let event_ = await getParsedNote(event);
-      if (event_ && !event_.isComment) {
-        if (event.kind === 6) {
-          eventsPubkeys.push(event_.relatedEvent.pubkey);
+      let subscription = ndkInstance.subscribe(filter, {
+        groupable: false,
+        skipValidation: true,
+        skipVerification: true,
+        cacheUsage: "CACHE_FIRST",
+        subId: "home-feed",
+      });
+
+      subscription.on("event", async (event) => {
+        eventsPubkeys.push(event.pubkey);
+        let event_ = await getParsedNote(event);
+        if (event_) {
+          if (notesContentFrom !== "recent-with-replies") {
+            if (!event_.isComment) {
+              if (event.kind === 6) {
+                eventsPubkeys.push(event_.relatedEvent.pubkey);
+              }
+              events.push(event_);
+            }
+          } else {
+            if (event.kind === 6) {
+              eventsPubkeys.push(event_.relatedEvent.pubkey);
+            }
+            events.push(event_);
+          }
         }
-        events.push(event_);
-      }
-    });
+      });
 
-    subscription.on("close", () => {
-      if (smallButtonDropDownOptions.includes(notesContentFrom))
-        dispatchNotes({ type: notesContentFrom, note: events });
-      else dispatchNotes({ type: "tags", note: events });
-      saveUsers(eventsPubkeys);
-      setIsLoading(false);
-    });
+      subscription.on("close", () => {
+        if (smallButtonDropDownOptions.includes(notesContentFrom))
+          dispatchNotes({ type: notesContentFrom, note: events });
+        else dispatchNotes({ type: "tags", note: events });
+        saveUsers(eventsPubkeys);
+        setIsLoading(false);
+      });
 
-    let timer = setTimeout(() => subscription.stop(), 1000);
-
-    return () => {
-      if (subscription) subscription.stop();
-      clearTimeout(timer);
+      let timer = setTimeout(() => {
+        subscription.stop();
+        clearTimeout(timer);
+      }, 1000);
     };
+    fetchData();
   }, [notesLastEventTime, notesContentFrom]);
-
-  useEffect(() => {
-    dispatchNotes({ type: "empty-followings" });
-    setNotesLastEventTime(undefined);
-  }, [userFollowings]);
 
   return (
     <div className="fx-centered  fx-wrap fit-container" style={{ gap: 0 }}>
@@ -671,10 +658,11 @@ const HomeFeed = ({ from }) => {
       {isLoading && (
         <div
           className="fit-container box-pad-v fx-centered fx-col"
-          style={{ height: "30vh" }}
+          style={{ height: "60vh" }}
         >
-          <p className="gray-c">Loading</p>
-          <LoadingDots />
+          {/* <p className="gray-c">Loading</p>
+          <LoadingDots /> */}
+          <LoadingLogo size={64} />
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import {
   getBech32,
   getEmptyuserMetadata,
   getHex,
+  getParsedNote,
   getParsedRepEvent,
 } from "../../Helpers/Encryptions";
 import { nip19 } from "nostr-tools";
@@ -74,11 +75,10 @@ export default function Nip19Parsing({ addr, minimal = false }) {
     }
 
     const sub = ndkInstance.subscribe(filter, {
-      closeOnEose: true,
       // cacheUsage: "ONLY_RELAY",
       cacheUsage: "CACHE_FIRST",
-      groupableDelay: 500,
-      subId: "nip19-parsing"
+      groupable: false,
+      subId: "nip19-parsing",
     });
 
     sub.on("event", async (event) => {
@@ -95,7 +95,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         });
       }
       if (event.kind === 1) {
-        let parsedEvent = await onEvent(event);
+        let parsedEvent = await getParsedNote(event);
         setEvent(parsedEvent);
         setIsLoading(false);
       }
@@ -126,47 +126,21 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           title,
         });
       }
-    });
-    sub.on("close", () => {
       setIsLoading(false);
-    });
-    let timeout = setTimeout(() => {
       sub.stop();
-      clearTimeout(timeout);
-    }, 4000);
+    });
+    // sub.on("close", () => {
+    //   setIsLoading(false);
+    // });
+    // let timeout = setTimeout(() => {
+    //   sub.stop();
+    //   clearTimeout(timeout);
+    // }, 4000);
     return () => {
       sub.stop();
     };
   }, []);
 
-  const onEvent = async (event) => {
-    try {
-      let isComment = event.tags.find((tag) => tag[0] === "e");
-      let isQuote = event.tags.find((tag) => tag[0] === "q");
-      // if (isComment && event.kind === 1) return false;
-      let nEvent = nip19.neventEncode({
-        id: event.id,
-        author: event.pubkey,
-      });
-      // let stringifiedEvent = JSON.stringify(event);
-      if (event.kind === 1) {
-        let note_tree = await getNoteTree(event.content);
-        return {
-          ...event,
-          note_tree,
-          // stringifiedEvent,
-          isQuote:
-            isQuote && !event.content.includes("nostr:nevent")
-              ? isQuote[1]
-              : "",
-          nEvent,
-        };
-      }
-    } catch (err) {
-      console.log(err);
-      return false;
-    }
-  };
   if (
     event?.kind === 1 ||
     ((addr.startsWith("nevent") || addr.startsWith("note")) && addr.length > 20)

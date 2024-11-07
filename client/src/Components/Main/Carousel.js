@@ -19,7 +19,12 @@ export default function Carousel({ imgs }) {
       )}
       <div
         className="fx-centered fx-start-h fx-wrap fit-container sc-s-18"
-        style={{ overflow: "hidden", marginTop: ".5rem", gap: '4px', border: "none" }}
+        style={{
+          overflow: "hidden",
+          marginTop: ".5rem",
+          gap: "4px",
+          border: "none",
+        }}
       >
         {imgs.map((item, index) => {
           return (
@@ -50,17 +55,15 @@ const CarouselItems = ({ imgs, selectedImage, back }) => {
   const [currentImg, setCurrentImg] = useState(selectedImage);
 
   return (
-    <div className="fixed-container fx-centered box-pad-h-s fx-col" onClick={back}>
-      {/* <div style={{ width: "min(100%, 1000px)" }}> */}
-      {/* <div className="fit-container fx-centered">
-          <button className="btn btn-normal btn-small" onClick={back}>
-            exit
-          </button>
-        </div> */}
-        <div className="close">
-          <div></div>
-        </div>
-      <div className="fit-container fx-scattered">
+    <div
+      className="fixed-container fx-centered box-pad-h-s fx-col"
+      cl
+      onClick={back}
+    >
+      <div className="close">
+        <div></div>
+      </div>
+      <div className="fit-container fx-centered">
         <div
           className="pointer round-icon"
           style={{ position: "relative", zIndex: 100 }}
@@ -71,7 +74,7 @@ const CarouselItems = ({ imgs, selectedImage, back }) => {
         >
           <div className="arrow" style={{ transform: "rotate(90deg)" }}></div>
         </div>
-        <div className=" fit-height" style={{ width: "90vw" }}>
+        <div className="fit-height carousel-width">
           <div
             className="fit-container fit-height"
             style={{ overflow: "hidden" }}

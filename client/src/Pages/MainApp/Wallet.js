@@ -79,7 +79,7 @@ export default function Wallet() {
               "#p": [userKeys.pub],
             },
           ],
-          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+          { closeOnEose: true, cacheUsage: "CACHE_FIRST", groupable: false }
         );
 
         sub.on("event", async (event) => {
@@ -469,30 +469,38 @@ export default function Wallet() {
                         )}
                         <div className="fx-centered fit-container">
                           <button
+                          style={{height: "70px", gap: 0}}
                             className={
                               selectedWallet
-                                ? "btn btn-gray  fx"
-                                : "btn btn-disabled fx"
+                                ? "btn btn-gray fx fx-centered fx-col"
+                                : "btn btn-disabled fx fx-centered fx-col"
                             }
                             onClick={() =>
                               selectedWallet ? setOps("receive") : null
                             }
                             disabled={selectedWallet ? false : true}
                           >
-                            Receive &#8601;
+                               <span className="p-big">&#8595;</span>
+                               <span>Receive</span>
+                            {/* Receive &#8595; */}
                           </button>
                           <button
+                          style={{height: "70px", gap: 0}}
                             className={
                               selectedWallet
-                                ? "btn btn-orange  fx"
-                                : "btn btn-disabled fx"
+                                ? "btn btn-orange  fx fx-centered fx-col"
+                                : "btn btn-disabled fx fx-centered fx-col"
                             }
                             onClick={() =>
                               selectedWallet ? setOps("send") : null
                             }
                             disabled={selectedWallet ? false : true}
                           >
-                            Send &#8599;
+                            <span className="p-big">&#8593;</span>
+                            <span>Send</span>
+                         
+                            
+                            {/* Send &#8593; */}
                           </button>
                         </div>
                       </div>
@@ -528,7 +536,7 @@ export default function Wallet() {
                             selectedWallet?.kind === 1 && (
                               <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
                                 <p className="gray-c">
-                                  Received payments from Nostr
+                                  Recent transactions
                                 </p>
                                 {transactions.map((transaction, index) => {
                                   let author =
@@ -568,11 +576,12 @@ export default function Wallet() {
                                                 scale: ".65",
                                                 backgroundColor:
                                                   "var(--pale-gray)",
-                                                right: "-5px",
+                                                right: "-8px",
                                                 bottom: "-10px",
                                               }}
                                             >
-                                              <p className="green-c">&#8601;</p>
+                                              <p className="green-c">&#8595;</p>
+                                              {/* <p className="green-c">&#8595;</p> */}
                                             </div>
                                           </div>
                                           <div>
@@ -695,7 +704,7 @@ export default function Wallet() {
                                                   data-tooltip="Outgoing"
                                                 >
                                                   <p className="red-c">
-                                                    &#8599;
+                                                    &#8593;
                                                   </p>
                                                 </div>
                                               )}
@@ -706,7 +715,7 @@ export default function Wallet() {
                                                   data-tooltip="Incoming"
                                                 >
                                                   <p className="green-c">
-                                                    &#8601;
+                                                    &#8595;
                                                   </p>
                                                 </div>
                                               )}
@@ -744,7 +753,7 @@ export default function Wallet() {
                                                     }}
                                                   >
                                                     <p className="green-c">
-                                                      &#8601;
+                                                      &#8595;
                                                     </p>
                                                   </div>
                                                 </div>
@@ -892,7 +901,7 @@ export default function Wallet() {
                                                 data-tooltip="Outgoing"
                                               >
                                                 <p className="green-c">
-                                                  &#8599;
+                                                  &#8593;
                                                 </p>
                                               </div>
                                             )}
@@ -902,7 +911,7 @@ export default function Wallet() {
                                                 className="round-icon round-icon-tooltip"
                                                 data-tooltip="Incoming"
                                               >
-                                                <p className="red-c">&#8601;</p>
+                                                <p className="red-c">&#8595;</p>
                                               </div>
                                             )}
                                             <div>
@@ -946,7 +955,7 @@ export default function Wallet() {
                                                     data-tooltip="Outgoing"
                                                   >
                                                     <p className="red-c">
-                                                      &#8599;
+                                                      &#8593;
                                                     </p>
                                                   </div>
                                                 )}
@@ -957,7 +966,7 @@ export default function Wallet() {
                                                     data-tooltip="Incoming"
                                                   >
                                                     <p className="green-c">
-                                                      &#8601;
+                                                      &#8595;
                                                     </p>
                                                   </div>
                                                 )}
@@ -996,7 +1005,7 @@ export default function Wallet() {
                                                       }}
                                                     >
                                                       <p className="green-c">
-                                                        &#8601;
+                                                        &#8595;
                                                       </p>
                                                     </div>
                                                   </div>

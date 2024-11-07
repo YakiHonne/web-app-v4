@@ -34,6 +34,7 @@ import PostNoteWithWidget from "../../Components/Main/PostNoteWithWidget";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { customHistory } from "../../Helpers/History";
 
 const getTypeMetada = (type, isDarkMode) => {
   let text_color = isDarkMode === "0" ? "#ffffff" : "#1C1B1F";
@@ -187,6 +188,7 @@ const imageAspectRatio = [
 
 export default function NostrSmartWidget() {
   let { state } = useLocation();
+  console.log(state)
   const userKeys = useSelector((state) => state.userKeys);
   const isDarkMode = useSelector((state) => state.isDarkMode);
   const [buildOptions, setBuildOptions] = useState(state ? false : true);
@@ -1057,7 +1059,7 @@ const SmartWidgetBuilder = ({
         <PostNoteWithWidget
           widget={widgetToPostInNote}
           onlyNext={false}
-          exit={() => navigateTo("/smart-widgets")}
+          exit={() => customHistory.push("/smart-widgets")}
         />
       )}
       <div className="fit-container fx-centered fx-start-h fx-start-v">
@@ -1340,7 +1342,7 @@ const SmartWidgetBuilder = ({
                       )
                     }
                   >
-                    <div className="switch-arrows"></div>
+                    <div className="undo"></div>
                   </div>
                 )}
               </div>
@@ -2181,7 +2183,7 @@ const FinilizePublishing = ({
   return (
     <div className="fixed-container box-pad-h fx-centered">
       <div
-        className="sc-s-18 box-pad-h box-pad-v fx-centered fx-col"
+        className="sc-s-18 box-pad-h box-pad-v fx-centered fx-col bg-sp"
         style={{ width: "min(100%, 400px)" }}
       >
         <h4>Finilize your widget</h4>
@@ -2521,7 +2523,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                   )
                 }
               >
-                <div className="switch-arrows"></div>
+                <div className="undo"></div>
               </div>
             )}
           </div>
@@ -2846,7 +2848,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                     handleMetadata("content_text_color", "#ffffff")
                   }
                 >
-                  <div className="switch-arrows"></div>
+                  <div className="undo"></div>
                 </div>
               )}
             </div>
@@ -2894,7 +2896,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                     )
                   }
                 >
-                  <div className="switch-arrows"></div>
+                  <div className="undo"></div>
                 </div>
               )}
             </div>
@@ -2942,7 +2944,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                     )
                   }
                 >
-                  <div className="switch-arrows"></div>
+                  <div className="undo"></div>
                 </div>
               )}
             </div>
@@ -2987,7 +2989,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                     handleMetadata("options_foreground_color", "#ee7700")
                   }
                 >
-                  <div className="switch-arrows"></div>
+                  <div className="undo"></div>
                 </div>
               )}
             </div>

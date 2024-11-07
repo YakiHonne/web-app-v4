@@ -1,0 +1,34 @@
+import React from "react";
+import { getLinkFromAddr } from "../../Helpers/Helpers";
+import { customHistory } from "../../Helpers/History";
+
+export default function LinkRepEventPreview({ event, allowClick = true }) {
+  let url = getLinkFromAddr(event.naddr);
+  return (
+    <div
+      className={`fit-container sc-s-18 fx-centered fx-start-h fx-stretch ${allowClick ? "pointer" : ""}`}
+      onClick={() => (allowClick ? customHistory.push(url) : false)}
+    >
+      <div
+        className="bg-img cover-bg "
+        style={{
+          backgroundImage: `url(${event.image || event.imagePP})`,
+          minWidth: "100px",
+          minHeight: "100%",
+        }}
+      ></div>
+      <div
+        className="fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-m"
+        style={{ gap: "0" }}
+      >
+        <p className="gray-c p-medium">https://yakihonne.com</p>
+        <p className="p-two-lines">{event.title || "Untitled"}</p>
+        <p className="gray-c p-one-line">
+          {event.description || (
+            <span className="p-italic">No description</span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}

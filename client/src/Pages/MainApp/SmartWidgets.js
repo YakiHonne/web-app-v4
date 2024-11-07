@@ -55,28 +55,28 @@ export default function SmartWidgets() {
               {
                 ...parsedContent,
                 metadata,
-                ...event,
+                // ...event,
                 author: getEmptyuserMetadata(event.pubkey),
               },
               ...prev,
             ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
           });
         }
-        if (contentSource === "self") {
-          setMyWidgets((prev) => {
-            let element = prev.find((widget) => widget.id === event.id);
-            if (element) return prev;
-            return [
-              {
-                ...parsedContent,
-                metadata,
-                ...event,
-                author: getEmptyuserMetadata(event.pubkey),
-              },
-              ...prev,
-            ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
-          });
-        }
+        // if (contentSource === "self") {
+        //   setMyWidgets((prev) => {
+        //     let element = prev.find((widget) => widget.id === event.id);
+        //     if (element) return prev;
+        //     return [
+        //       {
+        //         ...parsedContent,
+        //         metadata,
+        //         ...event,
+        //         author: getEmptyuserMetadata(event.pubkey),
+        //       },
+        //       ...prev,
+        //     ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
+        //   });
+        // }
       } catch (err) {
         console.log(err);
         setIsLoading(false);

@@ -25,7 +25,11 @@ import ToPublishDraftsNOSTR from "../../Components/Main/ToPublishDraftsNOSTR";
 import katex from "katex";
 import "katex/dist/katex.css";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import { getComponent } from "../../Helpers/Helpers";
+import {
+  getArticleDraft,
+  getComponent,
+  updateArticleDraft,
+} from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
 import { useDispatch, useSelector } from "react-redux";
@@ -57,13 +61,10 @@ export default function WritingArticle() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const isDarkMode = useSelector((state) => state.isDarkMode);
+  const [draftData, setDraftData] = useState({});
 
-  const [content, setContent] = useState(
-    post_content || localStorage.getItem("yai-last-article-content") || ""
-  );
-  const [title, setTitle] = useState(
-    post_title || localStorage.getItem("yai-last-article-title") || ""
-  );
+  const [content, setContent] = useState(post_content);
+  const [title, setTitle] = useState(post_title);
   const [showPublishingScreen, setShowPublishingScreen] = useState(false);
   const [showPublishingDraftScreen, setShowPublishingDraftScreen] =
     useState(false);
@@ -82,6 +83,15 @@ export default function WritingArticle() {
   }, [state, navigate, userKeys]);
 
   useEffect(() => {
+    if (userKeys && !post_id) {
+      let draft = getArticleDraft();
+      setDraftData(draft);
+      setTitle(draft.title);
+      setContent(draft.content);
+    }
+  }, [userKeys]);
+
+  useEffect(() => {
     if (!title && !content) return;
     setIsSaving(true);
     let timeout = setTimeout(() => {
@@ -97,8 +107,12 @@ export default function WritingArticle() {
     let element = e.target;
     element.style.height = "auto";
     element.style.height = `${element.scrollHeight}px`;
-    localStorage.setItem("yai-last-article-title", value);
-    localStorage.setItem("yai-last-article-time", Math.floor(Date.now()/1000));
+    updateArticleDraft({ title: value, content });
+    // localStorage.setItem("yai-last-article-title", value);
+    // localStorage.setItem(
+    //   "yai-last-article-time",
+    //   Math.floor(Date.now() / 1000)
+    // );
     setTitle(value);
     if (!value || value === "\n") {
       setTitle("");
@@ -123,6 +137,7 @@ export default function WritingArticle() {
       };
     });
   };
+
   const uploadToS3 = async (img) => {
     if (img) {
       try {
@@ -171,8 +186,12 @@ export default function WritingArticle() {
   };
 
   const handleSetContent = (data) => {
-    localStorage.setItem("yai-last-article-content", data);
-    localStorage.setItem("yai-last-article-time", Math.floor(Date.now()/1000));
+    updateArticleDraft({ title, content: data });
+    // localStorage.setItem("yai-last-article-content", data);
+    // localStorage.setItem(
+    //   "yai-last-article-time",
+    //   Math.floor(Date.now() / 1000)
+    // );
     setContent(data);
   };
 

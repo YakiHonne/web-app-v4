@@ -290,7 +290,7 @@ const UserCard = ({ user, url, exit }) => {
 
   return (
     <Link
-      to={`/${url}`}
+      to={`/users/${url}`}
       className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
       onClick={(e) => {
         exit();

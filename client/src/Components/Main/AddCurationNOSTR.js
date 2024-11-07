@@ -178,7 +178,7 @@ export default function AddCurationNOSTR({
         />
       )} */}
       <section
-        className="fx-centered fx-col sc-s"
+        className="fx-centered fx-col sc-s bg-sp"
         style={{ width: "600px", rowGap: 0 }}
       >
         {/* <div className="fit-container fx-scattered box-pad-h box-pad-v">

@@ -25,6 +25,7 @@ import {
 } from "../../Helpers/Controlers";
 import Publishing from "../Publishing";
 import SearchSidebar from "./SearchSidebar";
+import { customHistory } from "../../Helpers/History";
 
 export default function SidebarNOSTR() {
   const navigateTo = useNavigate();
@@ -142,7 +143,7 @@ export default function SidebarNOSTR() {
             <div className="fx-centered fx-start-h fit-container">
               <div
                 className="yakihonne-logo-128"
-                onClick={() => navigateTo("/")}
+                onClick={() => customHistory.push("/")}
               ></div>
             </div>
             <div className="mb-show" style={{ height: "200px" }}></div>
@@ -153,7 +154,7 @@ export default function SidebarNOSTR() {
             >
               <div
                 onClick={() => {
-                  navigateTo("/");
+                  customHistory.push("/");
                 }}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                   isPage("/") ? "active-link" : "inactive-link"
@@ -165,7 +166,7 @@ export default function SidebarNOSTR() {
               
               <div
                 onClick={() => {
-                  navigateTo("/discover");
+                  customHistory.push("/discover");
                 }}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                   isPage("/discover") ? "active-link" : "inactive-link"
@@ -180,7 +181,7 @@ export default function SidebarNOSTR() {
               </div>
               <div
                 onClick={() => {
-                  navigateTo("/smart-widgets");
+                  customHistory.push("/smart-widgets");
                 }}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                   isPage("/smart-widgets") ? "active-link" : "inactive-link"
@@ -196,7 +197,7 @@ export default function SidebarNOSTR() {
                 <div className="link-label">Smart widgets</div>
               </div>
               <div
-                onClick={() => navigateTo("/verify-notes")}
+                onClick={() => customHistory.push("/verify-notes")}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                   isPage("/verify-notes") ? "active-link" : "inactive-link"
                 }`}
@@ -211,7 +212,7 @@ export default function SidebarNOSTR() {
               {!(showMedia || showMyContent || showWritingOptions) && (
                 <>
                   <div
-                    onClick={() => navigateTo("/messages")}
+                    onClick={() => customHistory.push("/messages")}
                     className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
                       isPage("/messages") ? "active-link" : "inactive-link"
                     }`}
@@ -251,7 +252,7 @@ export default function SidebarNOSTR() {
                       isPage("/dashboard") ? "active-link" : "inactive-link"
                     }`}
                     onClick={() => {
-                      navigateTo("/dashboard");
+                      customHistory.push("/dashboard");
                     }}
                   >
                     <div className="fx-centered">
@@ -322,7 +323,7 @@ export default function SidebarNOSTR() {
                         style={{ rowGap: "0" }}
                       >
                         <div
-                          onClick={() => navigateTo("/my-notes")}
+                          onClick={() => customHistory.push("/my-notes")}
                           className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                             isPage("/my-notes")
                               ? "active-link"
@@ -338,7 +339,7 @@ export default function SidebarNOSTR() {
                           <div>Notes</div>
                         </div>
                         <div
-                          onClick={() => navigateTo("/my-articles")}
+                          onClick={() => customHistory.push("/my-articles")}
                           className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                             isPage("/my-articles")
                               ? "active-link"
@@ -356,7 +357,7 @@ export default function SidebarNOSTR() {
                           <div>Articles</div>
                         </div>
                         <div
-                          onClick={() => navigateTo("/my-flash-news")}
+                          onClick={() => customHistory.push("/my-flash-news")}
                           className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                             isPage("/my-flash-news")
                               ? "active-link"
@@ -374,7 +375,7 @@ export default function SidebarNOSTR() {
                           <div>Flash news</div>
                         </div>
                         <div
-                          onClick={() => navigateTo("/my-videos")}
+                          onClick={() => customHistory.push("/my-videos")}
                           className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                             isPage("/my-videos")
                               ? "active-link"
@@ -390,7 +391,7 @@ export default function SidebarNOSTR() {
                           <div>Videos</div>
                         </div>
                         <div
-                          onClick={() => navigateTo("/my-curations")}
+                          onClick={() => customHistory.push("/my-curations")}
                           className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                             isPage("/my-curations")
                               ? "active-link"
@@ -408,7 +409,7 @@ export default function SidebarNOSTR() {
                           <div>Curations</div>
                         </div>
                         <div
-                          onClick={() => navigateTo("/bookmarks")}
+                          onClick={() => customHistory.push("/bookmarks")}
                           className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                             isPage("/bookmarks")
                               ? "active-link"
@@ -490,7 +491,7 @@ export default function SidebarNOSTR() {
                   >
                     <div className="mb-hide" style={{ pointerEvents: "none" }}>
                       <UserProfilePicNOSTR
-                        size={50}
+                        size={40}
                         mainAccountUser={true}
                         allowClick={false}
                         ring={false}
@@ -601,7 +602,7 @@ export default function SidebarNOSTR() {
                       {/* <div
                         className="fit-container fx-centered fx-start-h  box-pad-h-m box-pad-v-m nostr-navbar-link"
                         onClick={() =>
-                          navigateTo(
+                          customHistory.push(
                             `/users/${nip19.nprofileEncode({
                               pubkey: userKeys.pub,
                               relays: relaysOnPlatform,
@@ -615,7 +616,7 @@ export default function SidebarNOSTR() {
                       </div> */}
                       {/* <div
                         className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
-                        onClick={() => navigateTo(`/yaki-points`)}
+                        onClick={() => customHistory.push(`/yaki-points`)}
                         style={{ padding: ".75rem 1rem" }}
                       >
                         <div className="cup"></div>
@@ -624,7 +625,7 @@ export default function SidebarNOSTR() {
 
                       <div
                         className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
-                        onClick={() => navigateTo(`/settings`)}
+                        onClick={() => customHistory.push(`/settings`)}
                         style={{ padding: ".75rem 1rem" }}
                       >
                         <div className="setting"></div>
@@ -784,7 +785,7 @@ export default function SidebarNOSTR() {
           {!userKeys && (
             <button
               className="btn btn-normal btn-full fx-centered"
-              // onClick={() => navigateTo("/login")}
+              // onClick={() => customHistory.push("/login")}
               onClick={() => redirectToLogin()}
             >
               <div className="link-label">Login</div>

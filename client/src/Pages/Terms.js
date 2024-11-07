@@ -183,7 +183,7 @@ export default function Terms() {
           <p>
             For questions or concerns about this EULA, please contact Yakihonne
             at
-            <span className="orange-c"> contact@yakihonne.com</span>
+            <span className="orange-c">dev@yakihonne.com</span>
           </p>
         </div>
         <div className="fit-container box-pad-v" style={{filter: "brightness(0) invert()"}}>

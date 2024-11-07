@@ -11,6 +11,7 @@ import {
 } from "../../Helpers/DB";
 import { useDispatch, useSelector } from "react-redux";
 import NumberShrink from "../NumberShrink";
+import { customHistory } from "../../Helpers/History";
 
 export default function NotificationCenter({
   icon = false,
@@ -131,7 +132,7 @@ export default function NotificationCenter({
     let localStorageKey = `new-notification-${userKeys.pub}`;
     localStorage.setItem(localStorageKey, 0);
     if (dismiss) dismiss();
-    navigate("/notifications");
+    customHistory.push("/notifications");
   };
   return (
     <>

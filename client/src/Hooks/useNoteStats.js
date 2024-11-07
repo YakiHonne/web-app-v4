@@ -87,7 +87,7 @@ const useNoteStats = (noteID, notePubkey) => {
             let check_kind1 = {
               isQuote: event.tags.find((tag) => tag[0] === "q"),
               isComment: event.tags.find(
-                (tag) => tag.length > 3 && ["root", "reply"].includes(tag[3])
+                (tag) => tag.length > 3 && tag[1] === noteID && ["root", "reply"].includes(tag[3])
               ),
             };
             if (check_kind1.isQuote) {

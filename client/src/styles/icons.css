@@ -352,7 +352,13 @@
 .discover-bold-24,
 .info,
 .info-24,
-.yaki-logomark {
+.yaki-logomark,
+.custom,
+.custom-24,
+.undo,
+.undo-24,
+.wallet-confirm,
+.wallet-confirm-24 {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -694,7 +700,13 @@
     .discover-24,
     .discover-bold,
     .discover-bold-24,
-    .yaki-logomark {
+    .yaki-logomark,
+    .custom,
+    .custom-24,
+    .undo,
+    .undo-24,
+    .wallet-confirm,
+    .wallet-confirm-24 {
         /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
@@ -895,7 +907,10 @@
 .bolt-bold,
 .discover,
 .discover-bold,
-.info {
+.info,
+.custom,
+.undo,
+.wallet-confirm {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1081,7 +1096,10 @@
 .bolt-bold-24,
 .discover-24,
 .discover-bold-24,
-.info-24 {
+.info-24,
+.custom-24,
+.undo-24,
+.wallet-confirm-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1098,12 +1116,27 @@
 }
 
 
+.wallet-confirm,
+.wallet-confirm-24 {
+    background-image: url('../media/icons/wallet-confirm.svg');
+}
+.undo,
+.undo-24 {
+    background-image: url('../media/icons/undo.svg');
+}
+
+.custom,
+.custom-24 {
+    background-image: url('../media/icons/custom.svg');
+}
+
 .yaki-logomark,
 .yaki-logomark-24 {
     background-image: url('../media/icons/yaki-logomark.svg');
     min-width: 28px;
     min-height: 28px;
 }
+
 .info,
 .info-24 {
     background-image: url('../media/icons/info.svg');
@@ -2048,4 +2081,21 @@
 .article .user,
 .article .user-24 {
     background-image: none;
+}
+
+.drag-el {
+    position: relative;
+}
+
+.drag-el:before {
+    content: '.';
+    position: absolute;
+    right: 50%;
+    top: 50%;
+    transform: translate(-50%, -100%);
+    font-size: 20px;
+    line-height: 20px;
+    color: var(--gray);
+    cursor: grabbing;
+    text-shadow: 0 5px var(--gray), 0 10px var(--gray), 5px 0 var(--gray), 5px 5px var(--gray), 5px 10px var(--gray);
 }

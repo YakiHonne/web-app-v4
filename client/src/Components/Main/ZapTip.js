@@ -37,7 +37,7 @@ export default function ZapTip({
   smallIcon = false,
   custom = false,
   setReceivedEvent,
-  isZapped = false
+  isZapped = false,
 }) {
   const [callback, setCallback] = useState(false);
   const [showCashier, setCashier] = useState(false);
@@ -192,7 +192,15 @@ export default function ZapTip({
       )}
       {onlyIcon && (
         <div
-          className={smallIcon ? isZapped ? "bolt-bold" : "bolt" : isZapped ? "bolt-bold-24" : "bolt-24"}
+          className={
+            smallIcon
+              ? isZapped
+                ? "bolt-bold"
+                : "bolt"
+              : isZapped
+              ? "bolt-bold-24"
+              : "bolt-24"
+          }
           onClick={() => setCashier(true)}
         ></div>
       )}
@@ -274,7 +282,7 @@ const Cashier = ({
       }
       let lnbcInvoice = lnbcAmount ? recipientLNURL : "";
       let eventCreatedAt = Math.floor(Date.now() / 1000);
-      let eventToPublish = null
+      let eventToPublish = null;
       if (!lnbcAmount) {
         let sats = amount * 1000;
         let tags = [
@@ -285,7 +293,12 @@ const Cashier = ({
         ];
         if (aTag) tags.push(["a", aTag]);
         if (eTag) tags.push(["e", eTag]);
-        const event = await getZapEventRequest(userKeys, message, tags, eventCreatedAt);
+        const event = await getZapEventRequest(
+          userKeys,
+          message,
+          tags,
+          eventCreatedAt
+        );
         if (!event) {
           return;
         }
@@ -332,27 +345,24 @@ const Cashier = ({
       await sendPayment(lnbcInvoice);
 
       if (eventToPublish) {
-        console.log("first")
         let sub = ndkInstance.subscribe(
           [
             {
               kinds: [9735],
               "#p": [recipientPubkey],
-              since: eventCreatedAt - 500,
+              since: eventCreatedAt - 1,
             },
           ],
-          { groupable: false, cacheUsage: "CACHE_FIRST" }
+          { groupable: false, cacheUsage: "ONLY_RELAY" }
         );
 
         sub.on("event", (event) => {
-         
           setReceivedEvent(event.rawEvent());
           setConfirmation("confirmed");
           updateYakiChest();
-          sub.stop()
+          sub.stop();
         });
       } else {
-        console.log("second")
         setConfirmation("confirmed");
         updateYakiChest();
       }
@@ -487,7 +497,7 @@ const Cashier = ({
         onClick={(e) => {
           e.stopPropagation();
         }}
-        className="sc-s box-pad-h box-pad-v"
+        className="sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{
           width: "min(100%, 500px)",
           position: "relative",

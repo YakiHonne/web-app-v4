@@ -7,6 +7,7 @@ import LoadingDots from "../LoadingDots";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserBalance } from "../../Store/Slides/UserData";
+import { customHistory } from "../../Helpers/History";
 
 export default function UserBalance() {
   const navigateTo = useNavigate();
@@ -143,11 +144,11 @@ export default function UserBalance() {
     );
   return (
     <div
-      className="fit-container fx-scattered box-pad-h-m userBalance-container mb-hide"
+      className="fit-container fx-scattered box-pad-h-m userBalance-container mb-hide pointer"
       style={{ borderLeft: "2px solid var(--orange-main)", margin: ".75rem" }}
       onClick={(e) => {
         e.stopPropagation();
-        navigateTo("/wallet");
+        customHistory.push("/wallet");
       }}
     >
       <div

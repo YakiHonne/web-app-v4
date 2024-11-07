@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import OptionsDropdown from "./OptionsDropdown";
 import DynamicIndicator from "../DynamicIndicator";
+import { customHistory } from "../../Helpers/History";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -68,7 +69,7 @@ export default function RepEventPreviewCard({
           }
           onClick={(e) => {
             e.stopPropagation();
-            navigate(url);
+            customHistory.push(url);
           }}
           style={{
             position: "relative",
@@ -231,9 +232,9 @@ export default function RepEventPreviewCard({
                   <p className="p-two-lines p-big p-bold">{item.title}</p>
                 </div>
                 <div className="box-pad-v-s ">
-                  <p className="p-three-lines p-medium gray-c fit-container">
-                    {item.summary || (
-                      <span className="p-italic">No description</span>
+                  <p className="p-three-lines gray-c fit-container">
+                    {item.description || (
+                      <span className="p-italic p-medium ">No description</span>
                     )}
                   </p>
                 </div>

@@ -240,7 +240,7 @@ export default function SmartWidgetChecker() {
               "#d": [data.identifier],
             },
           ],
-          { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+          {  cacheUsage: "CACHE_FIRST" , groupable: false}
         );
 
         sub.on("event", async (event) => {
@@ -292,6 +292,7 @@ export default function SmartWidgetChecker() {
                   };
                 }) || []
               );
+              sub.stop()
               setIsLoading(false);
             }
           } catch (err) {

@@ -1103,7 +1103,8 @@ main {
 }
 
 .w-md-editor {
-    font-family: 'DM sans', sans-serif !important;
+    /* font-family: 'DM sans', sans-serif !important;
+    font-weight: 300 !important; */
     box-shadow: none !important;
     border-radius: var(--border-r-18) !important;
     border: 1px solid var(--dim-gray) !important;
@@ -1115,8 +1116,9 @@ main {
     font-family: 'DM sans', sans-serif !important;
 } */
 .w-md-editor-text *, .wmde-markdown-color pre code {
-    font-family: 'DM sans', sans-serif !important;
+    /* font-family: 'DM sans', sans-serif !important;
     font-size: var(--16) !important;
+    font-weight: 300 !important; */
 
 }
 
@@ -1268,7 +1270,6 @@ main {
 .menu-toggle-active {
     transform: rotate(-90deg) scale(1.1);
 }
-
 
 .menu-login {
     display: none;
@@ -1569,7 +1570,7 @@ main {
     align-items: center;
     flex-direction: column;
 
-    background-color: #ffffffaa;
+    background-color: var(--white-transparent);
     backdrop-filter: blur(10px);
     --webkit-backdrop-filter: blur(10px);
 }
@@ -1915,7 +1916,7 @@ main {
 .sidebar-user-settings-button:hover {
     background: var(--c1-side);
     padding: .5rem;
-    border-radius: var(--48);
+    border-radius: var(--border-r-18);
 }
 
 .masonary {
@@ -2066,4 +2067,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .bg-sp {
     background-color: var(--white) !important;
     box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.072);
+}
+
+.reply-tail {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 44px;
+    width: 20px;
+    border-left: 1px solid var(--dim-gray);
+    border-bottom: 1px solid var(--dim-gray);
+    border-bottom-left-radius: var(--border-r-18);
+}
+
+.carousel-width {
+    width: 60vw;
 }

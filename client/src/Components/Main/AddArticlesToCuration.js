@@ -94,7 +94,7 @@ export default function AddArticlesToCuration({
     let thumbnail = "";
     let title = "";
     let d = "";
-    let added_date = new Date(event.created_at * 1000)
+    let added_date = new Date(event.created_at * 1000);
     for (let tag of event.tags) {
       if (tag[0] === "image" || tag[0] === "thumb") thumbnail = tag[1];
       if (tag[0] === "title") title = tag[1];
@@ -143,7 +143,7 @@ export default function AddArticlesToCuration({
       let thumbnail = "";
       let title = "";
       let d = "";
-      let added_date = new Date(event.created_at * 1000)
+      let added_date = new Date(event.created_at * 1000);
       for (let tag of event.tags) {
         if (tag[0] === "image" || tag[0] === "thumb") thumbnail = tag[1];
         if (tag[0] === "title") title = tag[1];
@@ -303,7 +303,7 @@ export default function AddArticlesToCuration({
         let thumbnail = "";
         let title = "";
         let d = "";
-        let added_date = new Date(post.created_at * 1000)
+        let added_date = new Date(post.created_at * 1000);
         for (let tag of post.tags) {
           if (tag[0] === "image" || tag[0] === "thumb") thumbnail = tag[1];
           if (tag[0] === "title") title = tag[1];
@@ -518,7 +518,9 @@ export default function AddArticlesToCuration({
                 </div>
               </div>
               <div className="fx-centered fit-container box-pad-v-m">
-              <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
+                <button className="btn btn-gst-red" onClick={exit}>
+                  Cancel
+                </button>
                 <button
                   className="btn btn-normal fx-centered"
                   onClick={() => setInitScreen(true)}
@@ -813,7 +815,9 @@ export default function AddArticlesToCuration({
                 )}
               </div>
               <div className="fx-centered box-pad-v-m">
-                <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
+                <button className="btn btn-gst-red" onClick={exit}>
+                  Cancel
+                </button>
                 {!isLoading && (
                   // <div className="fx-centered fit-container">
                   <button

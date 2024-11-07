@@ -17,10 +17,10 @@ const content = [
     new: false,
   },
   {
-    url: "/yakihonne-flash-news",
+    url: "/yakihonne-paid-notes",
     thumbnail:
       "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-flash-news.png",
-    tag: "Flash news",
+    tag: "Paid note",
     new: false,
   },
   {

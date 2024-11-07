@@ -20,30 +20,25 @@ import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import LoginWithAPI from "../../Components/Main/LoginWithAPI";
 import AddWallet from "../../Components/Main/AddWallet";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import { getWallets, updateWallets } from "../../Helpers/Helpers";
+import {
+  getCustomSettings,
+  getWallets,
+  updateCustomSettings,
+  updateWallets,
+} from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { getUser, userLogout } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import DtoLToggleButton from "../../Components/DtoLToggleButton";
 import ZapTip from "../../Components/Main/ZapTip";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { nip19 } from "nostr-tools";
-
-const checkForSavedCommentOptions = () => {
-  try {
-    let options = localStorage.getItem("comment-with-suffix");
-    if (options) {
-      let res = JSON.parse(options);
-      return res.keep_suffix;
-    }
-    return -1;
-  } catch {
-    return -1;
-  }
-};
+import ProgressCirc from "../../Components/ProgressCirc";
 
 export default function Settings() {
+  const {state} = useLocation()
   const dispatch = useDispatch();
   const userMetadata = useSelector((state) => state.userMetadata);
   const userKeys = useSelector((state) => state.userKeys);
@@ -58,30 +53,33 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(false);
   const [showRelaysInfo, setShowRelaysInfo] = useState(false);
   const [allRelays, setAllRelays] = useState([]);
-  const [timestamp, setTimestamp] = useState(false);
-  const [userDisplayName, setUserDisplayName] = useState(false);
-  const [userName, setUserName] = useState(false);
-  const [userAbout, setUserAbout] = useState(false);
-  const [userWebsite, setUserWebsite] = useState(false);
-  const [userNIP05, setUserNIP05] = useState(false);
-  const [isOnEdit, setIsOnEdit] = useState(false);
   const [showProfilePicChanger, setShowProfilePicChanger] = useState(false);
   const [showRelaysUpdater, setShowRelaysUpdater] = useState(false);
   const [showCoverUploader, setCoverUploader] = useState(false);
-  const [showTopicsPicker, setShowTopicsPicker] = useState(false);
   const [showMutedList, setShowMutedList] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("");
+  const [selectedTab, setSelectedTab] = useState(state ? state.tab : "");
   const [tempUserRelays, setTempUserRelays] = useState([]);
   const [relaysStatus, setRelaysStatus] = useState([]);
-  const [lud06, setLud06] = useState("");
-  const [lud16, setLud16] = useState("");
-  const [isSave, setIsSave] = useState(checkForSavedCommentOptions());
+  const [homeContentSuggestion, setHomeContentSuggestion] = useState(
+    localStorage.getItem("hsuggest")
+  );
+  const [userHoverPreview, setUserHoverPreview] = useState(
+    getCustomSettings().userHoverPreview
+  );
+  const [contentList, setContentList] = useState(
+    getCustomSettings().contentList
+  );
+
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [wallets, setWallets] = useState(getWallets());
   const [showAddWallet, setShowAddWallet] = useState(false);
   const [showDeletionPopup, setShowDeletionPopup] = useState(false);
-  const extrasRef = useRef();
-
+  const connectedRelays = useMemo(() => {
+    return {
+      connected: relaysStatus.filter((relay) => relay.connected).length,
+      total: relaysStatus.length,
+    };
+  }, [relaysStatus]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -108,12 +106,6 @@ export default function Settings() {
   }, [userRelays]);
 
   useEffect(() => {
-    setLud06(userMetadata.lud06);
-    setLud16(userMetadata.lud16);
-    setUserNIP05(userMetadata.nip05);
-  }, [userMetadata]);
-
-  useEffect(() => {
     const CheckRelays = async () => {
       try {
         tempUserRelays.map(async (relay, index) => {
@@ -130,12 +122,12 @@ export default function Settings() {
     if (tempUserRelays) CheckRelays();
   }, [tempUserRelays]);
 
-  const copyKey = (keyType, key) => {
+  const copyKey = (prefix, key) => {
     navigator.clipboard.writeText(key);
     dispatch(
       setToast({
         type: 1,
-        desc: `${keyType} key was copied! 👏`,
+        desc: `${prefix} was copied! 👏`,
       })
     );
   };
@@ -214,7 +206,6 @@ export default function Settings() {
       try {
         setIsLoading(true);
         var content = getUserContent(file);
-        var uploadedImage = "";
         if (upload) {
           let fd = new FormData();
           fd.append("file", cover);
@@ -222,7 +213,6 @@ export default function Settings() {
           let data = await axiosInstance.post("/api/v1/file-upload", fd, {
             headers: { "Content-Type": "multipart/formdata" },
           });
-          uploadedImage = data.data.image_path;
           content = getUserContent(data.data.image_path);
           deleteFromS3(userMetadata.banner);
         }
@@ -333,10 +323,78 @@ export default function Settings() {
     setShowAddWallet(false);
   };
 
+  const handleHomeContentSuggestion = () => {
+    if (homeContentSuggestion) {
+      localStorage.removeItem("hsuggest");
+      setHomeContentSuggestion(false);
+    }
+    if (!homeContentSuggestion) {
+      let dateNow = `${Date.now()}`;
+      localStorage.setItem("hsuggest", dateNow);
+      setHomeContentSuggestion(dateNow);
+    }
+  };
+  const handleUserHoverPreview = () => {
+    if (userHoverPreview) {
+      setUserHoverPreview(false);
+      updateCustomSettings({
+        pubkey: userKeys.pub,
+        userHoverPreview: false,
+        contentList,
+      });
+    }
+    if (!userHoverPreview) {
+      setUserHoverPreview(true);
+      updateCustomSettings({
+        pubkey: userKeys.pub,
+        userHoverPreview: true,
+        contentList,
+      });
+    }
+  };
+
+  const handleDragEnd = (res) => {
+    if (!res.destination) return;
+    let tempArr = structuredClone(contentList);
+    let [reorderedArr] = tempArr.splice(res.source.index, 1);
+    tempArr.splice(res.destination.index, 0, reorderedArr);
+    setContentList(tempArr);
+    updateCustomSettings({
+      pubkey: userKeys.pub,
+      userHoverPreview,
+      contentList: tempArr,
+    });
+  };
+
+  const handleHideContentList = (index, status) => {
+    let tempArr = structuredClone(contentList);
+    tempArr[index].isHidden = status;
+    if (!tempArr.find((item) => !item.isHidden)) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "At least one item should be present.",
+        })
+      );
+      return;
+    }
+    setContentList(tempArr);
+    updateCustomSettings({
+      pubkey: userKeys.pub,
+      userHoverPreview,
+      contentList: tempArr,
+    });
+  };
+
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
-      {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} refresh={handleAddWallet}/>}
+      {showAddWallet && (
+        <AddWallet
+          exit={() => setShowAddWallet(false)}
+          refresh={handleAddWallet}
+        />
+      )}
       {showRelaysInfo && (
         <RelaysInfo
           url={showRelaysInfo}
@@ -363,7 +421,6 @@ export default function Settings() {
             setSelectedTab("");
           }}
           exitAndRefresh={() => {
-            setTimestamp(new Date().getTime());
             setShowRelaysUpdater(false);
             selectedTab("");
           }}
@@ -466,7 +523,7 @@ export default function Settings() {
                                 onClick={() =>
                                   userKeys.sec
                                     ? copyKey(
-                                        "Private",
+                                        "Private key",
                                         getBech32("nsec", userKeys.sec)
                                       )
                                     : null
@@ -495,7 +552,7 @@ export default function Settings() {
                                 style={{ borderStyle: "dashed" }}
                                 onClick={() =>
                                   copyKey(
-                                    "Public",
+                                    "Public key",
                                     getBech32("npub", userKeys.pub)
                                   )
                                 }
@@ -528,7 +585,15 @@ export default function Settings() {
                               <div className="server-24"></div>
                               <p>Relays settings</p>
                             </div>
-                            <div className="arrow"></div>
+                            <div className="fx-centered">
+                              <p className="green-c">
+                                {connectedRelays.connected}{" "}
+                                <span className="gray-c">
+                                  / {connectedRelays.total} connected
+                                </span>
+                              </p>
+                              <div className="arrow"></div>
+                            </div>
                           </div>
 
                           {selectedTab === "relays" && (
@@ -604,7 +669,7 @@ export default function Settings() {
                                                 }
                                                 className="round-icon-small"
                                               >
-                                                <div className="switch-arrows"></div>
+                                                <div className="undo"></div>
                                               </div>
                                             )}
                                           </div>
@@ -689,6 +754,172 @@ export default function Settings() {
                           <div
                             className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
                             onClick={() =>
+                              selectedTab === "customization"
+                                ? setSelectedTab("")
+                                : setSelectedTab("customization")
+                            }
+                          >
+                            <div className="fx-centered fx-start-h">
+                              <div className="custom-24"></div>
+                              <p>Customization</p>
+                            </div>
+                            <div className="arrow"></div>
+                          </div>
+                          <hr />
+                          {selectedTab === "customization" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <div className="fit-container">
+                                <p className="gray-c">General</p>
+                              </div>
+                              <div className="fx-scattered fit-container">
+                                <p>On hover profile preview</p>
+                                <div
+                                  className={`toggle ${
+                                    !userHoverPreview ? "toggle-dim-gray" : ""
+                                  } ${
+                                    userHoverPreview
+                                      ? "toggle-c1"
+                                      : "toggle-dim-gray"
+                                  }`}
+                                  onClick={handleUserHoverPreview}
+                                ></div>
+                              </div>
+                              <hr />
+                              <div className="fit-container">
+                                <p className="gray-c">
+                                  Home feed customization
+                                </p>
+                              </div>
+                              <div className="fx-scattered fit-container">
+                                <p>Show suggestions box</p>
+                                <div
+                                  className={`toggle ${
+                                    homeContentSuggestion
+                                      ? "toggle-dim-gray"
+                                      : ""
+                                  } ${
+                                    !homeContentSuggestion
+                                      ? "toggle-c1"
+                                      : "toggle-dim-gray"
+                                  }`}
+                                  onClick={handleHomeContentSuggestion}
+                                ></div>
+                              </div>
+                              <hr />
+
+                              <div
+                                className="fx-scattered fit-container fx-col fx-start-v"
+                                style={{ gap: 0 }}
+                              >
+                                <p>Feed options</p>
+                                <div className="fit-container fx-centered fx-col">
+                                  <DragDropContext onDragEnd={handleDragEnd}>
+                                    <Droppable droppableId="set-carrousel">
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          style={{
+                                            borderRadius: "var(--border-r-18)",
+                                            transition: ".2s ease-in-out",
+                                            height: "100%",
+                                            ...provided.droppableProps.style,
+                                          }}
+                                          className="box-pad-v-m fit-container fx-centered fx-start-h fx-start-v fx-col"
+                                        >
+                                          {contentList.map((item, index) => {
+                                            return (
+                                              <Draggable
+                                                key={index}
+                                                draggableId={`${index}`}
+                                                index={index}
+                                              >
+                                                {(provided, snapshot) => (
+                                                  <div
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    ref={provided.innerRef}
+                                                    style={{
+                                                      borderRadius:
+                                                        "var(--border-r-18)",
+                                                      boxShadow:
+                                                        snapshot.isDragging
+                                                          ? "14px 12px 105px -41px rgba(0, 0, 0, 0.55)"
+                                                          : "",
+                                                      ...provided.draggableProps
+                                                        .style,
+                                                      overflow: "visible",
+                                                    }}
+                                                    className="fx-scattered fit-container sc-s-18 box-pad-h-s box-pad-v-s"
+                                                  >
+                                                    <p className="p-maj">
+                                                      {item.tab.replaceAll(
+                                                        "-",
+                                                        " "
+                                                      )}
+                                                    </p>
+                                                    <div className="fx-centered">
+                                                      <div
+                                                        className={`toggle ${
+                                                          item.isHidden
+                                                            ? "toggle-dim-gray"
+                                                            : ""
+                                                        } ${
+                                                          !item.isHidden
+                                                            ? "toggle-c1"
+                                                            : "toggle-dim-gray"
+                                                        }`}
+                                                        onClick={() =>
+                                                          handleHideContentList(
+                                                            index,
+                                                            !item.isHidden
+                                                          )
+                                                        }
+                                                      ></div>
+                                                      <div
+                                                        className="drag-el"
+                                                        style={{
+                                                          minWidth: "16px",
+                                                          aspectRatio: "1/1",
+                                                        }}
+                                                      ></div>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </Draggable>
+                                            );
+                                          })}
+                                          {provided.placeholder}
+                                        </div>
+                                      )}
+                                    </Droppable>
+                                  </DragDropContext>
+
+                                  {/* {contentList.map((item, index) => {
+                                    return(
+                                      <div key={index} className="fx-scattered fit-container sc-s-18 box-pad-h-s box-pad-v-s">
+                                        <p className="p-caps">{item.tab}</p>
+                                        <div className="fx-centered">
+                                          {!item.isHidden && <div className="eye-closed"></div>}
+                                          {item.isHidden && <div className="eye-opened"></div>}
+                                        </div>
+                                      </div>
+                                    )
+                                  })} */}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
+                          }}
+                        >
+                          <div
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
                               selectedTab === "moderation"
                                 ? setSelectedTab("")
                                 : setSelectedTab("moderation")
@@ -702,17 +933,6 @@ export default function Settings() {
                           </div>
                           {selectedTab === "moderation" && (
                             <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              {/* <div className="fx-scattered fit-container">
-                                <p>Topics customization</p>
-                                <div
-                                  className="btn-text-gray"
-                                  style={{ marginRight: ".75rem" }}
-                                  onClick={() => setShowTopicsPicker(true)}
-                                >
-                                  Edit
-                                </div>
-                              </div> */}
-                              {/* <hr style={{ margin: ".5rem" }} /> */}
                               <div className="fx-scattered fit-container">
                                 <p>Muted list</p>
                                 <div
@@ -723,24 +943,9 @@ export default function Settings() {
                                   Edit
                                 </div>
                               </div>
-                              {/* <hr style={{ margin: ".5rem" }} />
-                              <div className="fx-scattered fit-container">
-                                <p>Crossposting comments suffix</p>
-                                <div
-                                  className={`toggle ${
-                                    isSave === -1 ? "toggle-dim-gray" : ""
-                                  } ${
-                                    isSave !== -1 && isSave
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={saveOption}
-                                ></div>
-                              </div> */}
                             </div>
                           )}
                         </div>
-
                         <div
                           className="fit-container fx-scattered fx-col pointer"
                           style={{
@@ -803,19 +1008,37 @@ export default function Settings() {
                                         {wallet.kind === 3 && (
                                           <div className="nwc-logo-24"></div>
                                         )}
-                                        <p>{wallet.entitle}</p>
-                                        {wallet.active && (
-                                          <div
-                                            style={{
-                                              minWidth: "8px",
-                                              aspectRatio: "1/1",
-                                              backgroundColor:
-                                                "var(--green-main)",
-                                              borderRadius:
-                                                "var(--border-r-50)",
-                                            }}
-                                          ></div>
-                                        )}
+                                        <div className="fx-centered fx-col fx-start-h fx-start-v">
+                                          <div className="fx-centered">
+                                            <p>{wallet.entitle}</p>
+                                            {wallet.active && (
+                                              <div
+                                                style={{
+                                                  minWidth: "8px",
+                                                  aspectRatio: "1/1",
+                                                  backgroundColor:
+                                                    "var(--green-main)",
+                                                  borderRadius:
+                                                    "var(--border-r-50)",
+                                                }}
+                                              ></div>
+                                            )}
+                                          </div>
+                                          {wallet.kind === 3 && (
+                                            <div
+                                              className="sticker sticker-gray-black fx-centered"
+                                              onClick={() =>
+                                                copyKey(
+                                                  "NWC secret",
+                                                  wallet.data
+                                                )
+                                              }
+                                            >
+                                              Copy NWC secret{" "}
+                                              <div className="copy"></div>
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                       <div className="fx-centered"></div>
                                     </div>
@@ -954,7 +1177,7 @@ export default function Settings() {
                                   "https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png",
                               }}
                             />
-                            <a href="mailto:contact@yakihonne.com">
+                            <a href="mailto:info@yakihonne.com">
                               <div
                                 className="round-icon round-icon-tooltip"
                                 data-tooltip="Send us your feedback"
@@ -974,98 +1197,6 @@ export default function Settings() {
                     <PagePlaceholder page={"nostr-not-connected"} />
                   )}
                 </div>
-                {/* {userMetadata && (
-                  <div
-                    className="box-pad-h-s fx-centered fx-col fx-start-v extras-homepage"
-                    style={{
-                      position: "sticky",
-                      top:
-                        extrasRef.current?.getBoundingClientRect().height >=
-                        window.innerHeight
-                          ? `calc(95vh - ${
-                              extrasRef.current?.getBoundingClientRect()
-                                .height || 0
-                            }px)`
-                          : 0,
-                      zIndex: "100",
-                      flex: 1,
-                    }}
-                    ref={extrasRef}
-                  >
-                    <div className="sticky fit-container">
-                      <SearchbarNOSTR />
-                    </div>
-                    <div
-                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered box-marg-s"
-                      style={{
-                        backgroundColor: "var(--c1-side)",
-                        rowGap: "24px",
-                        border: "none",
-                        overflow: "visible",
-                      }}
-                    >
-                      {relaysStatus.length > 0 && (
-                        <div className=" fx-centered fx-col fx-start-v fit-container">
-                          <h4>My relays</h4>
-                          <div className="fx-centered fx-centered fx-wrap">
-                            {relaysStatus.map((relay, index) => {
-                              return (
-                                <div
-                                  key={index}
-                                  className="fit-container fx-scattered"
-                                >
-                                  <p>{relay.url}</p>
-                                  {relay?.connected && (
-                                    <div
-                                      style={{
-                                        minWidth: "8px",
-                                        aspectRatio: "1/1",
-                                        backgroundColor: "var(--green-main)",
-                                        borderRadius: "var(--border-r-50)",
-                                      }}
-                                      className="round-icon-tooltip pointer"
-                                      data-tooltip="connected"
-                                    ></div>
-                                  )}
-                                  {!relay?.connected && (
-                                    <div
-                                      style={{
-                                        minWidth: "8px",
-                                        aspectRatio: "1/1",
-                                        backgroundColor: "var(--red-main)",
-                                        borderRadius: "var(--border-r-50)",
-                                      }}
-                                      className="round-icon-tooltip pointer"
-                                      data-tooltip="not connected"
-                                    ></div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      {relaysStatus.length === 0 && (
-                        <div
-                          className="fx-centered fx-col"
-                          style={{ height: "200px" }}
-                        >
-                          <h4>No relays</h4>
-                          <p className="gray-c p-centered">
-                            Add your favorite relays to your list
-                          </p>
-                          <button
-                            className="btn btn-normal btn-small"
-                            onClick={() => setSelectedTab("relays")}
-                          >
-                            Add relays
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <Footer />
-                  </div>
-                )} */}
               </div>
             </main>
           </div>
