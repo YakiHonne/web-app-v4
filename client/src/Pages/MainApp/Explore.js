@@ -1,30 +1,21 @@
-import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
+import React, { useEffect, useRef, useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
 import { Helmet } from "react-helmet";
 import { SelectTabs } from "../../Components/Main/SelectTabs";
 import Slider from "../../Components/Slider";
 import { useSelector } from "react-redux";
-import { ndkInstance } from "../../Helpers/NDKInstance";
 import {
   getParsedRepEvent,
   removeEventsDuplicants,
-  sortEvents,
 } from "../../Helpers/Encryptions";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
-import VideosPreviewCards from "../../Components/Main/VideosPreviewCards";
 import { saveUsers } from "../../Helpers/DB";
 import LoadingDots from "../../Components/LoadingDots";
-import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
-import TrendingUsers from "../../Components/Main/TrendingUsers";
-import RecentTags from "../../Components/Main/RecentTags";
-import Footer from "../../Components/Footer";
 import { getSubData } from "../../Helpers/Controlers";
 import SmallButtonDropDown from "../../Components/Main/SmallButtonDropDown";
 
 const tabs = ["All", "Articles", "Curations", "Videos"];
-const smallButtonDropDownOptions = ["discover", "followings"];
 
 const MixEvents = (articles, curations, videos) => {
   const interleavedArray = [];
@@ -46,10 +37,14 @@ const MixEvents = (articles, curations, videos) => {
 };
 
 export default function Explore() {
-  const sideContentRef = useRef(null);
   const userInterestList = useSelector((state) => state.userInterestList);
+  const userKeys = useSelector((state) => state.userKeys);
   const [selectedTab, setSelectedTab] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState("discover");
+  const [selectedCategory, setSelectedCategory] = useState("explore");
+  const [smallButtonDropDownOptions, setSmallButtonDropDownOptions] = useState([
+    "explore",
+    "followings",
+  ]);
   const [isLoading, setIsLoading] = useState(true);
   const extrasRef = useRef(null);
 
@@ -71,6 +66,13 @@ export default function Explore() {
       resizeObserver.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (userKeys && smallButtonDropDownOptions.length > 1)
+      setSmallButtonDropDownOptions(["explore", "followings"]);
+    else 
+    setSmallButtonDropDownOptions(["explore"]);
+  }, [userKeys]);
 
   return (
     <div>
@@ -320,7 +322,7 @@ const ExploreFeed = ({
   }, [selectedCategory, selectedTab]);
 
   const getFilter = () => {
-    let tag = !["discover", "followings"].includes(selectedCategory)
+    let tag = !["explore", "followings"].includes(selectedCategory)
       ? [selectedCategory]
       : undefined;
     let authors =
@@ -363,7 +365,7 @@ const ExploreFeed = ({
   };
 
   return (
-    <div className="fit-container fx-centered fx-col ">
+    <div className="fit-container fx-centered fx-col " style={{ gap: 0 }}>
       {content.map((item) => {
         // if (
         //   item.title &&

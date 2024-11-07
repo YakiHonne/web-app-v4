@@ -51,7 +51,7 @@ export default function IMGElement({ src }) {
           // aspectRatio: "16/9",
           objectFit: "fit",
           
-          maxHeight: "1000px"
+          maxHeight: "600px"
         }}
         // width={"100%"}
         src={src}

@@ -45,7 +45,7 @@ export default function YakiFN() {
         />
         <meta
           property="og:url"
-          content={`https://yakihonne.com/yakihonne-flash-news`}
+          content={`https://yakihonne.com/yakihonne-paid-notes`}
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
@@ -85,25 +85,12 @@ export default function YakiFN() {
           </Link>
 
           <div className="fx-centered">
+            
             <Link
-              to={"/flash-news"}
+              to={"/verify-notes"}
               target={"_blank"}
               className="round-icon-tooltip"
-              data-tooltip="Flash news"
-            >
-              <button
-                className="btn btn-normal fx-centered"
-                style={{ padding: "1rem", height: "32px" }}
-              >
-                <div className="news" style={{ filter: "invert()" }}></div>
-                {/* <span className="p-medium">Check flash news</span> */}
-              </button>
-            </Link>
-            <Link
-              to={"/uncensored-notes"}
-              target={"_blank"}
-              className="round-icon-tooltip"
-              data-tooltip="Uncensored notes"
+              data-tooltip="Verify notes"
             >
               <button
                 className="btn btn-normal fx-centered"

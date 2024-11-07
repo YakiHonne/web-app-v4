@@ -664,6 +664,7 @@ const getVideoContent = (video) => {
       kind: video.kind,
       identifier: d,
     }),
+    aTag: `${video.kind}:${video.pubkey}:${d}`,
   };
 };
 
@@ -860,6 +861,149 @@ const getWallets = () => {
   }
 };
 
+const getNoteDraft = (eventKey) => {
+  let nostkeys = getKeys();
+  let drafts = localStorage.getItem("note-drafts");
+  if (!(drafts && nostkeys)) return "";
+  try {
+    drafts = JSON.parse(drafts);
+    let draft = drafts.find((draft) => draft?.pubkey === nostkeys.pub);
+    return draft[eventKey] || "";
+  } catch (err) {
+    return "";
+  }
+};
+
+const updateNoteDraft = (eventKey, data, pubkey_) => {
+  let userKeys = getKeys();
+  let drafts = localStorage.getItem("note-drafts");
+  if (!userKeys && !pubkey_) return;
+  try {
+    drafts = drafts ? JSON.parse(drafts) : [];
+    let pubkey = userKeys?.pub || pubkey_;
+    let drafts_index = drafts.findIndex((_) => _?.pubkey === pubkey);
+    if (drafts_index !== -1) {
+      drafts[drafts_index][eventKey] = data;
+    }
+    if (drafts_index === -1) {
+      drafts.push({ pubkey, [eventKey]: data });
+    }
+    localStorage.setItem("note-drafts", JSON.stringify(drafts));
+  } catch (err) {
+    console.log(err);
+    localStorage.removeItem("note-drafts");
+  }
+};
+
+const getArticleDraft = () => {
+  let nostkeys = getKeys();
+  let drafts = localStorage.getItem("art-drafts");
+  if (!(drafts && nostkeys)) return getDefaultArtDraft("");
+  try {
+    drafts = JSON.parse(drafts);
+    let draft = drafts.find((draft) => draft?.pubkey === nostkeys.pub);
+    return draft || getDefaultArtDraft(nostkeys.pub);
+  } catch (err) {
+    return getDefaultArtDraft("");
+  }
+};
+
+const updateArticleDraft = (data, pubkey_) => {
+  let userKeys = getKeys();
+  let drafts = localStorage.getItem("art-drafts");
+  if (!userKeys && !pubkey_) return;
+  try {
+    drafts = drafts ? JSON.parse(drafts) : [];
+    let pubkey = userKeys?.pub || pubkey_;
+    let draftData = {
+      pubkey,
+      title: data.title,
+      content: data.content,
+      created_at: Math.floor(Date.now() / 1000),
+    };
+    let drafts_index = drafts.findIndex((_) => _?.pubkey === pubkey);
+    if (drafts_index !== -1) {
+      drafts[drafts_index] = draftData;
+    }
+    if (drafts_index === -1) {
+      drafts.push(draftData);
+    }
+    localStorage.setItem("art-drafts", JSON.stringify(drafts));
+  } catch (err) {
+    console.log(err);
+    localStorage.removeItem("art-drafts");
+  }
+};
+
+const updateCustomSettings = (settings, pubkey_) => {
+  let userKeys = getKeys();
+  let customHomeSettings = localStorage.getItem("chsettings");
+  if (!userKeys && !pubkey_) return;
+
+  try {
+    customHomeSettings = customHomeSettings
+      ? JSON.parse(customHomeSettings)
+      : [];
+    let pubkey = userKeys?.pub || pubkey_;
+    let customHomeSettings_index = customHomeSettings.findIndex(
+      (_) => _?.pubkey === pubkey
+    );
+    if (customHomeSettings_index !== -1) {
+      customHomeSettings[customHomeSettings_index] = settings;
+    }
+    if (customHomeSettings_index === -1) {
+      customHomeSettings.push(settings);
+    }
+    localStorage.setItem("chsettings", JSON.stringify(customHomeSettings));
+  } catch (err) {
+    console.log(err);
+    localStorage.removeItem("chsettings");
+  }
+};
+
+const getCustomSettings = () => {
+  let nostkeys = getKeys();
+  let customHomeSettings = localStorage.getItem("chsettings");
+  if (!nostkeys) return getDefaultSettings("");
+  if (!customHomeSettings) return getDefaultSettings(nostkeys.pub);
+  try {
+    customHomeSettings = JSON.parse(customHomeSettings);
+    let customHomeSettings_ = customHomeSettings.find(
+      (settings) => settings?.pubkey === nostkeys.pub
+    );
+    return customHomeSettings_
+      ? customHomeSettings_
+      : getDefaultSettings(nostkeys.pub);
+  } catch (err) {
+    return getDefaultSettings("");
+  }
+};
+
+const getDefaultSettings = (pubkey) => {
+  return {
+    pubkey,
+    userHoverPreview: true,
+    contentList: [
+      { tab: "highlights", isHidden: false },
+      { tab: "trending", isHidden: false },
+      { tab: "paid", isHidden: false },
+      { tab: "recent", isHidden: false },
+      { tab: "recent-with-replies", isHidden: false },
+      { tab: "widgets", isHidden: false },
+    ],
+  };
+};
+
+const getDefaultArtDraft = (pubkey) => {
+  return {
+    pubkey,
+    content: "",
+    title: "",
+    created_at: Math.floor(Date.now() / 1000),
+    default: true,
+  };
+};
+
 // const getWallets = () => {
 //   let wallets = localStorage.getItem("yaki-wallets");
 //   if (!wallets) return [];
@@ -920,16 +1064,23 @@ const getConnectedAccounts = () => {
 const toggleColorScheme = (theme) => {
   const stylesheets = document.styleSheets;
   for (const sheet of stylesheets) {
-    const rules = sheet.cssRules || sheet.rules;
-    for (const rule of rules) {
-      if (rule.media && rule.media.mediaText.includes("prefers-color-scheme")) {
-        const newMediaText = !theme
-          ? "(prefers-color-scheme: dark)"
-          : "(prefers-color-scheme: light)";
+    try {
+      const rules = sheet?.cssRules || sheet?.rules;
+      if (rules) {
+        for (const rule of rules) {
+          if (
+            rule.media &&
+            rule.media.mediaText.includes("prefers-color-scheme")
+          ) {
+            const newMediaText = !theme
+              ? "(prefers-color-scheme: dark)"
+              : "(prefers-color-scheme: light)";
 
-        rule.media.mediaText = newMediaText;
+            rule.media.mediaText = newMediaText;
+          }
+        }
       }
-    }
+    } catch (err) {}
   }
 };
 
@@ -1016,7 +1167,11 @@ const extractNip19 = (note) => {
     let decoded = decodeNip19(word);
     if (decoded) {
       tags.push(decoded.tag);
+      if (decoded.id.includes("30031")) tags.push(["l", "smart-widget"]);
       processedNote.push(decoded.scheme);
+    } else if (word.startsWith("#")) {
+      tags.push(["t", word.replace("#", "")]);
+      processedNote.push(word);
     } else processedNote.push(word);
   }
   return { tags: removeObjDuplicants(tags), content: processedNote.join(" ") };
@@ -1024,7 +1179,12 @@ const extractNip19 = (note) => {
 
 const decodeNip19 = (word) => {
   try {
-    let word_ = word.replace("@", "").replace("nostr:", "");
+    let word_ = word
+      .replace("@", "")
+      .replace("nostr:", "")
+      .replace(",", "")
+      .replace(".", "")
+      .replace(";", "");
 
     if (word_.startsWith("npub")) {
       let decoded = nip19.decode(word_);
@@ -1136,4 +1296,11 @@ export {
   compactContent,
   redirectToLogin,
   isHex,
+  getCustomSettings,
+  getDefaultSettings,
+  updateCustomSettings,
+  getArticleDraft,
+  updateArticleDraft,
+  getNoteDraft,
+  updateNoteDraft,
 };

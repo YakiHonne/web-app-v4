@@ -5,6 +5,7 @@ import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
 import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import QuoteNote from "../Main/QuoteNote";
+import { extractNip19 } from "../../Helpers/Helpers";
 
 export default function Quote({ isQuoted, event, actions }) {
   const dispatch = useDispatch();
@@ -23,7 +24,7 @@ export default function Quote({ isQuoted, event, actions }) {
       subscription.on("event", (event_) => {
         let stats = getEventStatAfterEOSE(event_, "quotes", actions, undefined);
 
-        saveEventStats(event.id, stats);
+        saveEventStats(event.aTag || event.id, stats);
         subscription.stop();
         setEventID(false);
       });
@@ -39,12 +40,15 @@ export default function Quote({ isQuoted, event, actions }) {
       }
 
       setIsLoading(true);
-      let content = data;
+      let content = extractNip19(data);
       let tags = [
-        ["q", event.id],
+        ["q", event.aTag || event.id],
         ["p", event.pubkey],
       ];
-      let eventInitEx = await InitEvent(1, content, tags);
+      let eventInitEx = await InitEvent(1, content.content, [
+        ...tags,
+        ...content.tags.filter((tag) => tag[1] !== (event.aTag || event.id)),
+      ]);
       if (!eventInitEx) {
         setIsLoading(false);
         return;

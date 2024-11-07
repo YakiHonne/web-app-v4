@@ -65,7 +65,10 @@ export default function Login() {
       style={{ height: "100vh", gap: 0 }}
     >
       <LeftSection />
-      <div className="fx-centered fx-col box-pad-h" style={{ width: "min(100%,500px)" }}>
+      <div
+        className="fx-centered fx-col box-pad-h"
+        style={{ width: "min(100%,500px)" }}
+      >
         <div className="box-marg-s">
           {isLogin && <h3 className="slide-up">Login to Yakihonne</h3>}
           {!isLogin && <h3 className="slide-down">Sign up</h3>}
@@ -73,7 +76,7 @@ export default function Login() {
         {isLogin && <LoginScreen switchScreen={() => setIsLogin(!isLogin)} />}
 
         {!isLogin && <SignupScreen switchScreen={() => setIsLogin(!isLogin)} />}
-          
+
         {/* {isLogin && (
           <>
             <div
@@ -881,9 +884,9 @@ const SignupScreen = ({ switchScreen }) => {
                 </div>
                 <p className="gray-c">
                   You can find your account secret key{" "}
-                  {NWAddr && "and wallet connection secret "}in the app
-                  settings. Keep these secure for safe access to your account
-                  and wallet.
+                  {NWAddr && "and wallet connection secret key"} in your
+                  settings. These keys are essential for secure access to your
+                  account and wallet –please keep them safe and private.
                 </p>
               </div>
             </div>
@@ -964,18 +967,18 @@ const InitiProfile = () => {
 
 const MobileAd = () => {
   return (
-    <div
-      className="login-screen-heros fit-container fx-centered  box-pad-v fit-height"
-   
-    >
+    <div className="login-screen-heros fit-container fx-centered  box-pad-v fit-height">
       <div
         className="carousel-card-desc box-pad-h box-pad-v fit-container sc-s fx-even fx-stretch"
         // style={{ maxHeight: "100vh" }}
         style={{
-          padding: "2rem 1rem"
+          padding: "2rem 1rem",
         }}
       >
-        <div className="fx-centered fx-col box-pad-v" style={{ rowGap: "5px", width: '40%' }}>
+        <div
+          className="fx-centered fx-col box-pad-v"
+          style={{ rowGap: "5px", width: "40%" }}
+        >
           <p style={{ color: "white" }}>Stay signed-in</p>
           <p className="gray-c p-medium p-centered">
             Download the YakiHonne app for Android or iOS
@@ -990,14 +993,18 @@ const MobileAd = () => {
               style={{ aspectRatio: "1/1" }}
             />
           </div>
-          <Link className="fit-container box-pad-v-m" to="/yakihonne-mobile-app-links" target="_blank">
+          <Link
+            className="fit-container box-pad-v-m"
+            to="/yakihonne-mobile-app-links"
+            target="_blank"
+          >
             <img className="fit-container" src={s8e} />
           </Link>
         </div>
-        <div className="fx-centered " style={{ width: "40%"}}>
+        <div className="fx-centered " style={{ width: "40%" }}>
           <img
             className="fit-container"
-            style={{objectFit: "contain"}}
+            style={{ objectFit: "contain" }}
             src={ymaHero}
             // style={{ objectFit: "contain" }}
           />
@@ -1202,7 +1209,7 @@ const WalletIllustration = ({ isCreated, isLoading }) => {
         }}
       >
         <div
-          className="wallet-add"
+          className={isCreated ? "wallet-confirm" : "wallet-add"}
           style={{ width: "60px", height: "60px" }}
         ></div>
       </div>

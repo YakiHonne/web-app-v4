@@ -29,7 +29,7 @@ function timeAgo(date) {
   if (diffInSeconds < 60) {
     return "now";
   } else if (diffInMinutes < 60) {
-    return `${diffInMinutes}min ago`;
+    return `${diffInMinutes} min ago`;
   } else if (diffInHours < 24) {
     return `${diffInHours}h ago`;
   } else if (diffInDays < 7) {

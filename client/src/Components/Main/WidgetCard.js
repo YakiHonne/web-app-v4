@@ -62,7 +62,10 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
         //   }}
         //   exit={() => setPostNoteWithWidget(false)}
         // />
-        <PostAsNote content={`https://yakihonne.com/smart-widget-checker?naddr=${widget.naddr}`}  exit={() => setPostNoteWithWidget(false)}/>
+        <PostAsNote
+          content={`https://yakihonne.com/smart-widget-checker?naddr=${widget.naddr}`}
+          exit={() => setPostNoteWithWidget(false)}
+        />
       )}
 
       <div
@@ -97,6 +100,7 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
                     identifier: widget.d,
                     kind: widget.kind,
                   })}`}
+                  
                 >
                   <p>Check validity</p>
                 </Link>,

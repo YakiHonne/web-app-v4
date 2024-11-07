@@ -49,10 +49,11 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { saveFetchedUsers, saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
-import { getUser } from "../../Helpers/Controlers";
+import { getSubData, getUser } from "../../Helpers/Controlers";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import { getUserFollowers, getUserStats } from "../../Helpers/WSInstance";
+import { customHistory } from "../../Helpers/History";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -134,7 +135,7 @@ const eventsInitialState = {
 const decodeURL = (url) => {
   try {
     let pubkey = nip19.decode(url);
-    if (pubkey) return pubkey.data.pubkey;
+    if (pubkey) return pubkey.data.pubkey || pubkey.data;
     return false;
   } catch (err) {
     return false;
@@ -145,7 +146,6 @@ export default function User() {
   const { user_id } = useParams();
   const [id, setID] = useState(false);
   const [user, setUser] = useState({});
-  const extrasRef = useRef(null);
 
   return (
     <>
@@ -277,7 +277,7 @@ const UserMetadata = () => {
         getMetadata();
       } catch (err) {
         console.log(err);
-        navigateTo("/");
+        customHistory.push("/");
       }
     };
     if (id) {
@@ -312,7 +312,7 @@ const UserMetadata = () => {
           return;
         }
         let pubkey = nip19.decode(user_id);
-        setID(pubkey.data.pubkey);
+        setID(pubkey.data.pubkey || pubkey.data);
       } catch (err) {
         console.log(err);
       }
@@ -325,7 +325,6 @@ const UserMetadata = () => {
       setFollowings([]);
 
       let cachedUser = getUser(id);
-
       if (cachedUser) {
         setUser(cachedUser);
         setIsLoaded(true);
@@ -335,8 +334,9 @@ const UserMetadata = () => {
         let userProfile = stats.find((_) => _.kind === 0);
         let userStats_ = stats.find((_) => _.kind === 10000105);
         userStats_ = userStats_ ? JSON.parse(userStats_.content) : false;
-
-        setUser(getuserMetadata(userProfile));
+        let parsedProfile = getuserMetadata(userProfile);
+        setUser(parsedProfile);
+        saveFetchedUsers([parsedProfile]);
         if (userStats_)
           setUserStats({
             followings: userStats_.follows_count,
@@ -490,7 +490,7 @@ const UserMetadata = () => {
                       className="fx-centered pointer"
                       onClick={() => setShowQR(true)}
                     >
-                      <p className="p-caps orange-c">
+                      <p className="orange-c">
                         {shortenKey(getBech32("npub", user.pubkey), 4)}
                       </p>
                       <div>
@@ -502,7 +502,7 @@ const UserMetadata = () => {
                     {user.pubkey === userKeys.pub && (
                       <button
                         className="btn btn-gray"
-                        onClick={() => navigateTo("/settings/profile")}
+                        onClick={() => customHistory.push("/settings/profile")}
                       >
                         Edit profile
                       </button>
@@ -526,6 +526,7 @@ const UserMetadata = () => {
                             name: user?.name,
                             picture: user?.picture,
                           }}
+                          setReceivedEvent={() => null}
                         />
                         <div
                           className="round-icon round-icon-tooltip"
@@ -690,6 +691,7 @@ const UserMetadata = () => {
 const UserFeed = ({ user }) => {
   const { user_id } = useParams();
   const [pubkey, setPubkey] = useState(decodeURL(user_id));
+
   const [events, dispatchEvents] = useReducer(
     eventsReducer,
     eventsInitialState
@@ -708,7 +710,7 @@ const UserFeed = ({ user }) => {
           return;
         }
         let pubkey = nip19.decode(user_id);
-        setPubkey(pubkey.data.pubkey);
+        setPubkey(pubkey.data.pubkey || pubkey.data);
       } catch (err) {
         console.log(err);
       }
@@ -781,7 +783,6 @@ const UserFeed = ({ user }) => {
     let filter = getNotesFilter();
 
     let subscription = ndkInstance.subscribe(filter, {
-      closeOnEose: true,
       skipValidation: true,
       groupable: false,
       skipVerification: true,
@@ -791,7 +792,7 @@ const UserFeed = ({ user }) => {
     subscription.on("event", async (event) => {
       if ([1, 6].includes(event.kind)) {
         let event_ = await getParsedNote(event);
-        if (event_ && !event_.isFlashNews) {
+        if (event_) {
           if (event.kind === 6) {
             eventsPubkeys.push(event_.relatedEvent.pubkey);
           }
@@ -910,14 +911,14 @@ const UserFeed = ({ user }) => {
                 {events[contentFrom].map((note) => {
                   if (note.kind === 6)
                     return <KindSix event={note} key={note.id} />;
-                  if (note.kind === 1 && note.isComment)
-                    return (
-                      <KindOneComments
-                        event={note}
-                        key={note.id}
-                        author={user}
-                      />
-                    );
+                  // if (note.kind === 1 && note.isComment)
+                  //   return (
+                  //     <KindOneComments
+                  //       event={note}
+                  //       key={note.id}
+                  //       author={user}
+                  //     />
+                  //   );
                   return <KindOne event={note} key={note.id} border={true} />;
                 })}
               </div>
@@ -1232,360 +1233,6 @@ const RatingImpact = ({ ratingImpact }) => {
   );
 };
 
-const FlashNewsCard = ({ self, newsContent }) => {
-  const dispatch = useDispatch();
-  const userKeys = useSelector((state) => state.userKeys);
-  const isPublishing = useSelector((state) => state.isPublishing);
-  const userRelays = useSelector((state) => state.userRelays);
-  const navigateTo = useNavigate();
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [usersList, setUsersList] = useState(false);
-  const [content, setContent] = useState("");
-  const isMisLeading = newsContent.sealed_note
-    ? JSON.parse(newsContent.sealed_note.content).tags.find(
-        (tag) => tag[0] === "type" && tag[1] === "-"
-      )
-    : false;
-  const [upvoteReaction, setUpvoteReaction] = useState([]);
-  const [downvoteReaction, setDownvoteReaction] = useState([]);
-  const isVoted = useMemo(() => {
-    return userKeys
-      ? upvoteReaction
-          .concat(downvoteReaction)
-          .find((item) => item.pubkey === userKeys.pub)
-      : false;
-  }, [upvoteReaction, downvoteReaction, userKeys]);
-
-  useEffect(() => {
-    const sub = ndkInstance.subscribe(
-      [
-        {
-          kinds: [7],
-          "#e": [newsContent.id],
-        },
-      ],
-      { cacheUsage: "CACHE_FIRST" }
-    );
-
-    sub.on("event", (event) => {
-      if (event.content === "+")
-        setUpvoteReaction((upvoteArticle) => [...upvoteArticle, event]);
-      if (event.content === "-")
-        setDownvoteReaction((downvoteArticle) => [...downvoteArticle, event]);
-    });
-  }, []);
-
-  useEffect(() => {
-    const parsedContent = async () => {
-      let res = await getNoteTree(newsContent.content);
-      setContent(res);
-    };
-    parsedContent();
-  }, []);
-
-  const upvoteArticle = async (e) => {
-    e.stopPropagation();
-    if (isLoading) return;
-    if (isPublishing) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        })
-      );
-      return;
-    }
-    try {
-      if (!userKeys) {
-        // setToLogin(true);
-        return false;
-      }
-      if (isVoted) {
-        setIsLoading(true);
-        dispatch(
-          setToPublish({
-            userKeys: userKeys,
-            kind: 5,
-            content: "This vote will be deleted!",
-            tags: [["e", isVoted.id]],
-            allRelays: userRelays,
-          })
-        );
-
-        setIsLoading(false);
-
-        if (isVoted.content === "+") {
-          let tempArray = Array.from(upvoteReaction);
-          let index = tempArray.findIndex((item) => item.id === isVoted.id);
-          tempArray.splice(index, 1);
-          setUpvoteReaction(tempArray);
-          return false;
-        }
-        let tempArray = Array.from(downvoteReaction);
-        let index = tempArray.findIndex((item) => item.id === isVoted.id);
-        tempArray.splice(index, 1);
-        setDownvoteReaction(tempArray);
-      }
-
-      setIsLoading(true);
-      dispatch(
-        setToPublish({
-          userKeys: userKeys,
-          kind: 7,
-          content: "+",
-          tags: [["e", newsContent.id]],
-          allRelays: userRelays,
-        })
-      );
-
-      setIsLoading(false);
-    } catch (err) {
-      console.log(err);
-      setIsLoading(false);
-    }
-  };
-  const downvoteArticle = async (e) => {
-    e.stopPropagation();
-    if (isLoading) return;
-    if (isPublishing) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        })
-      );
-      return;
-    }
-    try {
-      if (!userKeys) {
-        // setToLogin(true);
-        return false;
-      }
-      if (isVoted) {
-        setIsLoading(true);
-        dispatch(
-          setToPublish({
-            userKeys: userKeys,
-            kind: 5,
-            content: "This vote will be deleted!",
-            tags: [["e", isVoted.id]],
-            allRelays: userRelays,
-          })
-        );
-        setIsLoading(false);
-        if (isVoted.content === "-") {
-          let tempArray = Array.from(downvoteReaction);
-          let index = tempArray.findIndex((item) => item.id === isVoted.id);
-          tempArray.splice(index, 1);
-          setDownvoteReaction(tempArray);
-          return false;
-        }
-        let tempArray = Array.from(upvoteReaction);
-        let index = tempArray.findIndex((item) => item.id === isVoted.id);
-        tempArray.splice(index, 1);
-        setUpvoteReaction(tempArray);
-      }
-      setIsLoading(true);
-      dispatch(
-        setToPublish({
-          userKeys: userKeys,
-          kind: 7,
-          content: "-",
-          tags: [["e", newsContent.id]],
-          allRelays: userRelays,
-        })
-      );
-
-      setIsLoading(false);
-    } catch (err) {
-      console.log(err);
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <>
-      {usersList && (
-        <ShowUsersList
-          exit={() => setUsersList(false)}
-          title={usersList.title}
-          list={usersList.list}
-          extras={usersList.extras}
-        />
-      )}
-
-      <div
-        className="fx-centered fx-col fx-start-v note-card fit-container"
-        onClick={(e) => {
-          e.stopPropagation();
-          navigateTo(`/flash-news/${newsContent.nEvent}`);
-        }}
-      >
-        {!self && (
-          <div className="fx-centered fit-container fx-start-h">
-            <UserProfilePicNOSTR
-              img={newsContent.author[0].picture}
-              size={20}
-              user_id={newsContent.author[0].pubkey}
-              ring={false}
-            />
-            <p className="p-medium gray-c">
-              by <span className="c1-c">{newsContent.author[0].name}</span>
-            </p>
-            <span className="gray-c">&#x2022;</span>
-            <p className="p-medium gray-c">
-              <Date_
-                toConvert={new Date(newsContent.created_at * 1000)}
-                time={true}
-              />
-            </p>
-          </div>
-        )}
-        {(newsContent.is_important || newsContent.keywords.length > 0) && (
-          <div
-            className="fx-centered fx-start-h fx-wrap"
-            style={{ rowGap: 0, columnGap: "4px" }}
-          >
-            {newsContent.is_important && (
-              <div className="sticker sticker-small sticker-c1-pale">
-                <svg
-                  viewBox="0 0 13 12"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="hot"
-                >
-                  <path d="M10.0632 3.02755C8.69826 3.43868 8.44835 4.60408 8.5364 5.34427C7.56265 4.13548 7.60264 2.74493 7.60264 0.741577C4.47967 1.98517 5.20595 5.57072 5.11255 6.65955C4.32705 5.98056 4.17862 4.35822 4.17862 4.35822C3.3494 4.80884 2.93359 6.01229 2.93359 6.98846C2.93359 9.34905 4.7453 11.2626 6.98011 11.2626C9.21492 11.2626 11.0266 9.34905 11.0266 6.98846C11.0266 5.58561 10.0514 4.93848 10.0632 3.02755Z"></path>
-                </svg>
-                Important
-              </div>
-            )}
-            {newsContent.keywords.map((keyword) => {
-              return (
-                <div
-                  key={keyword}
-                  className="sticker sticker-small sticker-gray-black"
-                >
-                  {keyword}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {/* <div
-          className="fx-centered fx-start-h fx-wrap"
-          style={{ rowGap: 0, columnGap: "4px" }}
-        > */}
-        <div className="fit-container">{content}</div>
-        <div className="fit-container fx-scattered box-pad-v-s">
-          <div className="fx-centered">
-            {/* <div className="bolt-24"></div>
-          <div className="comment-24"></div> */}
-            <div
-              className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
-              style={{ columnGap: "8px" }}
-            >
-              <div
-                className={
-                  isVoted?.content === "+"
-                    ? "arrow-up-bold icon-tooltip"
-                    : "arrow-up icon-tooltip"
-                }
-                style={{ opacity: isVoted?.content === "-" ? ".2" : 1 }}
-                data-tooltip="Upvote"
-                onClick={upvoteArticle}
-              ></div>
-              <div
-                className="icon-tooltip"
-                data-tooltip="Upvoters"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  upvoteReaction.length > 0 &&
-                    setUsersList({
-                      title: "Upvoters",
-                      list: upvoteReaction.map((item) => item.pubkey),
-                      extras: [],
-                    });
-                }}
-              >
-                <NumberShrink value={upvoteReaction.length} />
-              </div>
-            </div>
-            <div
-              className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
-              style={{ columnGap: "8px" }}
-            >
-              <div
-                className="icon-tooltip"
-                data-tooltip="Downvote"
-                onClick={downvoteArticle}
-              >
-                <div
-                  className={
-                    isVoted?.content === "-" ? "arrow-up-bold" : "arrow-up"
-                  }
-                  style={{
-                    transform: "rotate(180deg)",
-                    opacity: isVoted?.content === "+" ? ".2" : 1,
-                  }}
-                ></div>
-              </div>
-              <div
-                className="icon-tooltip"
-                data-tooltip="Downvoters"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downvoteReaction.length > 0 &&
-                    setUsersList({
-                      title: "Downvoters",
-                      list: downvoteReaction.map((item) => item.pubkey),
-                      extras: [],
-                    });
-                }}
-              >
-                <NumberShrink value={downvoteReaction.length} />
-              </div>
-            </div>
-          </div>
-          <div className="fx-centered">
-            {newsContent.source && (
-              <a
-                target={"_blank"}
-                href={newsContent.source}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div
-                  className="round-icon round-icon-tooltip"
-                  data-tooltip="source"
-                >
-                  <div className="globe-24"></div>
-                </div>
-              </a>
-            )}
-            <div
-              className="round-icon round-icon-tooltip"
-              data-tooltip="Bookmark flash news"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <BookmarkEvent pubkey={newsContent.id} itemType="e" kind="1" />
-            </div>
-          </div>
-        </div>
-        {newsContent.sealed_note && isMisLeading && (
-          <UN
-            data={JSON.parse(newsContent.sealed_note.content)}
-            state="sealed"
-            setTimestamp={() => null}
-            flashNewsAuthor={newsContent.author.pubkey}
-            sealedCauses={newsContent.sealed_note.tags
-              .filter((tag) => tag[0] === "cause")
-              .map((cause) => cause[1])}
-          />
-        )}
-      </div>
-    </>
-  );
-};
-
 const KindOneComments = ({ event }) => {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
@@ -1607,11 +1254,12 @@ const KindOneComments = ({ event }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let event_ = await ndkInstance.fetchEvent(
+        let event_ = await getSubData(
           [{ kinds: [1], ids: [event.isComment] }],
-          { groupable: false, cacheUsage: "ONLY_RELAY" }
-          // { cacheUsage: "CACHE_FIRST" }
+          500
         );
+
+        event_ = event_.data.length > 0 ? event_.data[0] : false;
         if (event_) setRelatedEvent(await getParsedNote(event_));
         setIsRelatedEventLoaded(true);
       } catch (err) {
@@ -1620,18 +1268,6 @@ const KindOneComments = ({ event }) => {
     };
     if (!relatedEvent) {
       fetchData();
-      // let sub = ndkInstance.subscribe(
-      //   [{ kinds: [1], ids: [event.isComment] }]
-      //   // { cacheUsage: "CACHE_FIRST" }
-      // );
-      // console.log(event.isComment);
-      // sub.on("event", async (event_) => {
-      //   console.log(event_);
-      //   setRelatedEvent(await getParsedNote(event_));
-      // });
-      // sub.on("close", () => {
-      //   setIsRelatedEventLoaded(true);
-      // });
     }
   }, []);
 
@@ -1645,78 +1281,152 @@ const KindOneComments = ({ event }) => {
         borderBottom: "1px solid var(--very-dim-gray)",
       }}
     >
-      <div
-        className="fx-centered  box-pad-h-s box-pad-v-s fx-start-h sc-s-18 round-icon-tooltip pointer box-pad-h-m"
-        style={{ overflow: "visible", marginLeft: ".5rem", marginTop: ".5rem" }}
-        data-tooltip={`commented on ${new Date(
-          event.created_at * 1000
-        ).toLocaleDateString()}`}
-      >
-        <UserProfilePicNOSTR
-          size={20}
-          mainAccountUser={false}
-          ring={false}
-          user_id={user?.pubkey}
-          img={user?.picture}
-        />
-        <div>
-          <p className="p-medium">
-            {user?.display_name || user?.name}{" "}
-            <span className="orange-c">Commented on this</span>
-          </p>
-        </div>
-      </div>
       {relatedEvent && (
         <div className="fit-container">
           <KindOne event={relatedEvent} />
         </div>
       )}
-      {!isRelatedEventLoaded && !relatedEvent && (
-        <div
-          style={{
-            backgroundColor: "var(--c1-side)",
-            width: "95%",
-            margin: ".5rem auto",
-          }}
-          className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
-        >
-          <p className="p-medium gray-c">Loading note</p>
-          <LoadingDots />
-        </div>
-      )}
-
-      {isRelatedEventLoaded && !relatedEvent && (
-        <div
-          style={{
-            backgroundColor: "var(--c1-side)",
-            width: "95%",
-            margin: ".5rem auto",
-          }}
-          className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
-        >
-          <p className="p-medium orange-c p-italic">
-            The note does not seem to be found
-          </p>
-        </div>
-      )}
-      <div className="fit-container fx-centered fx-end-h box-marg-s box-pad-h-m">
-        <div
-          className="fx-centered fx-start-v fx-start-h box-pad-h-m box-pad-v-m sc-s-18"
-          style={{ backgroundColor: "var(--c1-side)", width: "95%" }}
-        >
-          <UserProfilePicNOSTR
-            size={20}
-            mainAccountUser={false}
-            ring={false}
-            user_id={user?.pubkey}
-            img={user?.picture}
-          />
-          <div className="fit-container p-medium">{event.note_tree}</div>
-        </div>
-      </div>
     </div>
   );
 };
+// const KindOneComments = ({ event }) => {
+//   const nostrAuthors = useSelector((state) => state.nostrAuthors);
+//   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
+//   const [relatedEvent, setRelatedEvent] = useState(false);
+//   const [isRelatedEventLoaded, setIsRelatedEventLoaded] = useState(false);
+
+//   useEffect(() => {
+//     const fetchAuthor = async () => {
+//       try {
+//         let auth = await getUser(event.pubkey);
+//         setUser(auth);
+//       } catch (err) {
+//         console.log(err);
+//       }
+//     };
+//     fetchAuthor();
+//   }, [nostrAuthors]);
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         console.log(event.isComment)
+//         let event_ = await getSubData(
+//           [{ kinds: [1], ids: [event.isComment] }],
+//           500
+//           // { cacheUsage: "CACHE_FIRST" }
+//         );
+//         // let event_ = await ndkInstance.fetchEvent(
+//         //   [{ kinds: [1], ids: [event.isComment] }],
+//         //   { groupable: false, cacheUsage: "CACHE_FIRST" }
+//         //   // { cacheUsage: "CACHE_FIRST" }
+//         // );
+//         event_ = event_.data.length > 0 ? event_.data[0] : false;
+//         if (event_) setRelatedEvent(await getParsedNote(event_));
+//         setIsRelatedEventLoaded(true);
+//       } catch (err) {
+//         setIsRelatedEventLoaded(true);
+//       }
+//     };
+//     if (!relatedEvent) {
+//       fetchData();
+//       // let sub = ndkInstance.subscribe(
+//       //   [{ kinds: [1], ids: [event.isComment] }]
+//       //   // { cacheUsage: "CACHE_FIRST" }
+//       // );
+//       // console.log(event.isComment);
+//       // sub.on("event", async (event_) => {
+//       //   console.log(event_);
+//       //   setRelatedEvent(await getParsedNote(event_));
+//       // });
+//       // sub.on("close", () => {
+//       //   setIsRelatedEventLoaded(true);
+//       // });
+//     }
+//   }, []);
+
+//   return (
+//     <div
+//       className="fx-centered fx-col fx-start-v fit-container"
+//       style={{
+//         // backgroundColor: "var(--c1-side)",
+//         gap: 0,
+//         overflow: "visible",
+//         borderBottom: "1px solid var(--very-dim-gray)",
+//       }}
+//     >
+//       <div
+//         className="fx-centered  box-pad-h-s box-pad-v-s fx-start-h sc-s-18 round-icon-tooltip pointer box-pad-h-m"
+//         style={{ overflow: "visible", marginLeft: ".5rem", marginTop: ".5rem" }}
+//         data-tooltip={`commented on ${new Date(
+//           event.created_at * 1000
+//         ).toLocaleDateString()}`}
+//       >
+//         <UserProfilePicNOSTR
+//           size={20}
+//           mainAccountUser={false}
+//           ring={false}
+//           user_id={user?.pubkey}
+//           img={user?.picture}
+//         />
+//         <div>
+//           <p className="p-medium">
+//             {user?.display_name || user?.name}{" "}
+//             <span className="orange-c">Commented on this</span>
+//           </p>
+//         </div>
+//       </div>
+//       {relatedEvent && (
+//         <div className="fit-container">
+//           <KindOne event={relatedEvent} />
+//         </div>
+//       )}
+//       {!isRelatedEventLoaded && !relatedEvent && (
+//         <div
+//           style={{
+//             backgroundColor: "var(--c1-side)",
+//             width: "95%",
+//             margin: ".5rem auto",
+//           }}
+//           className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
+//         >
+//           <p className="p-medium gray-c">Loading note</p>
+//           <LoadingDots />
+//         </div>
+//       )}
+
+//       {isRelatedEventLoaded && !relatedEvent && (
+//         <div
+//           style={{
+//             backgroundColor: "var(--c1-side)",
+//             width: "95%",
+//             margin: ".5rem auto",
+//           }}
+//           className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
+//         >
+//           <p className="p-medium orange-c p-italic">
+//             The note does not seem to be found
+//           </p>
+//         </div>
+//       )}
+//       <div className="fit-container fx-centered fx-end-h box-marg-s box-pad-h-m">
+//         <div
+//           className="fx-centered fx-start-v fx-start-h box-pad-h-m box-pad-v-m sc-s-18"
+//           style={{ backgroundColor: "var(--c1-side)", width: "95%" }}
+//         >
+//           <UserProfilePicNOSTR
+//             size={20}
+//             mainAccountUser={false}
+//             ring={false}
+//             user_id={user?.pubkey}
+//             img={user?.picture}
+//           />
+//           <div className="fit-container p-medium">{event.note_tree}</div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 const QRSharing = ({ user, exit }) => {
   const dispatch = useDispatch();
@@ -1783,7 +1493,10 @@ const QRSharing = ({ user, exit }) => {
             style={{ backgroundColor: "white" }}
           >
             {selectedTab === "pk" && (
-              <QRCode size={200} value={getBech32("npub", user?.pubkey)} />
+              <QRCode
+                size={200}
+                value={`nostr:${getBech32("npub", user?.pubkey)}`}
+              />
             )}
             {selectedTab === "ln" && <QRCode size={200} value={user?.lud16} />}
           </div>
@@ -1793,11 +1506,11 @@ const QRSharing = ({ user, exit }) => {
             className={"fx-scattered if pointer fit-container dashed-onH"}
             style={{ borderStyle: "dashed" }}
             onClick={() =>
-              copyKey("The pubkey", getBech32("npub", user?.pubkey))
+              copyKey("The pubkey", `nostr:${getBech32("npub", user?.pubkey)}`)
             }
           >
             <div className="key-icon-24"></div>
-            <p>{shortenKey(getBech32("npub", user?.pubkey))}</p>
+            <p>{shortenKey(`nostr:${getBech32("npub", user?.pubkey)}`)}</p>
             <div className="copy-24"></div>
           </div>
           {user?.lud16 && (
@@ -1818,17 +1531,7 @@ const QRSharing = ({ user, exit }) => {
 };
 
 const UserImpact = ({ user, exit, userImpact }) => {
-  const dispatch = useDispatch();
   const [selectedTab, setSelectedTab] = useState("write");
-  const copyKey = (keyType, key) => {
-    navigator.clipboard.writeText(key);
-    dispatch(
-      setToast({
-        type: 1,
-        desc: `${keyType} was copied! 👏`,
-      })
-    );
-  };
 
   return (
     <div

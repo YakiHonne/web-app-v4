@@ -6,6 +6,7 @@ import LoadingDots from "../../Components/LoadingDots";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
+import { customHistory } from "../../Helpers/History";
 
 export default function WalletNWC() {
   const dispatch = useDispatch();
@@ -49,11 +50,11 @@ export default function WalletNWC() {
           });
           oldVersion.push(nwcNode);
           updateWallets(oldVersion);
-          navigateTo("/wallet");
+          customHistory.push("/wallet");
           return;
         } catch (err) {
           updateWallets([nwcNode]);
-          navigateTo("/wallet");
+          customHistory.push("/wallet");
           return;
         }
       }
@@ -61,7 +62,7 @@ export default function WalletNWC() {
 
       nwc.close();
       setIsLoading(false);
-      navigateTo("/wallet");
+      customHistory.push("/wallet");
     } catch (err) {
       console.log(err);
       setIsLoading(false);

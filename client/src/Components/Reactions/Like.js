@@ -5,7 +5,7 @@ import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
 import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 
-export default function Like({ isLiked, event, actions }) {
+export default function Like({ isLiked, event, actions, tagKind = "e" }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function Like({ isLiked, event, actions }) {
       subscription.on("event", (event_) => {
         let stats = getEventStatAfterEOSE(event_, "likes", actions, undefined);
 
-        saveEventStats(event.id, stats);
+        saveEventStats(event.aTag || event.id, stats);
         subscription.stop();
         setEventID(false);
       });
@@ -43,13 +43,16 @@ export default function Like({ isLiked, event, actions }) {
         let eventInitEx = await InitEvent(5, content, tags);
         if (!eventInitEx) {
           setIsLoading(false);
-          return
+          return;
         }
         dispatch(
           setToPublish({
             eventInitEx,
             allRelays: [],
-            toRemoveFromCache: { kind: "likes", eventId: event.id },
+            toRemoveFromCache: {
+              kind: "likes",
+              eventId: event.aTag || event.id,
+            },
           })
         );
         setEventID(false);
@@ -60,7 +63,7 @@ export default function Like({ isLiked, event, actions }) {
       setIsLoading(true);
       let content = "+";
       let tags = [
-        ["e", event.id],
+        [tagKind, event.aTag || event.id],
         ["p", event.pubkey],
       ];
       let eventInitEx = await InitEvent(7, content, tags);

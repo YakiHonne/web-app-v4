@@ -21,7 +21,7 @@ export default function Footer() {
           <p className="p-medium gray-c">Smart widgets</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
-        <Link to={"/yakihonne-flash-news"} target="_blank">
+        <Link to={"/yakihonne-paid-notes"} target="_blank">
           <p className="p-medium gray-c">About paid notes</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>

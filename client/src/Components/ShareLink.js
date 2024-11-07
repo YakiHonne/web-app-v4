@@ -116,17 +116,12 @@ export default function ShareLink({
           title: title,
           text: description,
         };
-        await navigator
-          .share(shareDetails)
-          .then(() =>
-          console.log("shared")
-          );
+        await navigator.share(shareDetails).then(() => console.log("shared"));
       } catch (error) {
         console.log(`Oops! I couldn't share to the world because: ${error}`);
       }
     } else {
       setShowSharing(true);
-  
     }
   };
 
@@ -141,7 +136,7 @@ export default function ShareLink({
           }}
         >
           <div
-            className="box-pad-v box-pad-h fx-centered fx-col"
+            className="box-pad-v box-pad-h fx-centered fx-col sc-s"
             onClick={(e) => e.stopPropagation()}
           >
             <h3>Share on</h3>
@@ -736,12 +731,9 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                     {data.likes}
                   </p>
                   <div
-                    className="like"
+                    className="heart"
                     style={{ filter: "brightness(0)" }}
                   ></div>
-                  <p className="p-medium" style={{ color: "black" }}>
-                    {data.dislikes}
-                  </p>
                   <div
                     className="like"
                     style={{ filter: "brightness(0)", rotate: "-180deg" }}

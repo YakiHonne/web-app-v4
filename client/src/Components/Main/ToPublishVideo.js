@@ -8,6 +8,7 @@ import NProfilePreviewer from "./NProfilePreviewer";
 import UploadFile from "../UploadFile";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { customHistory } from "../../Helpers/History";
 
 const getSuggestions = (custom) => {
   if (!custom) return [];
@@ -623,7 +624,7 @@ export default function ToPublishVideo({ tags, title, edit = false, exit }) {
           <div className="box-pad-v-s fx-centered">
             <button
               className="btn btn-normal"
-              onClick={() => navigateTo("/my-articles")}
+              onClick={() => customHistory.push("/my-articles")}
             >
               Done!
             </button>

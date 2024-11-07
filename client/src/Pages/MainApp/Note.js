@@ -44,6 +44,10 @@ import Zap from "../../Components/Reactions/Zap";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import Comments from "../../Components/Reactions/Comments";
 import { Link } from "react-router-dom";
+import CommentsSection from "../../Components/Main/CommentsSection";
+import { customHistory } from "../../Helpers/History";
+import { NDKUser } from "@nostr-dev-kit/ndk";
+import HistorySection from "../../Components/Main/HistorySection";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 const checkForSavedCommentOptions = () => {
@@ -59,94 +63,164 @@ const checkForSavedCommentOptions = () => {
   }
 };
 
-const filterComments = (all, id, isRoot) => {
-  if (isRoot) return filterRootComments(all);
-  return filterRepliesComments(all, id);
-};
+// const filterComments = (all, id, isRoot) => {
+//   if (isRoot) return filterRootComments(all);
+//   return filterRepliesComments(all, id);
+// };
 
-const filterRootComments = async (all) => {
-  let temp = [];
+// const filterRootComments = async (all) => {
+//   let temp = [];
 
-  for (let comment of all) {
-    if (!comment.tags.find((item) => item[0] === "e" && item[3] === "reply")) {
-      let [note_tree, count] = await Promise.all([
-        getParsedNote(comment),
-        // getNoteTree(comment.content.split(" — This is a comment on:")[0]),
-        countReplies(comment.id, all),
-      ]);
-      temp.push({
-        // ...comment,
-        ...note_tree,
-        count,
-      });
-    }
-  }
-  return temp;
-};
+//   for (let comment of all) {
+//     if (!comment.tags.find((item) => item[0] === "e" && item[3] === "reply")) {
+//       let [note_tree, count] = await Promise.all([
+//         getParsedNote(comment),
+//         // getNoteTree(comment.content.split(" — This is a comment on:")[0]),
+//         countReplies(comment.id, all),
+//       ]);
+//       temp.push({
+//         // ...comment,
+//         ...note_tree,
+//         count,
+//       });
+//     }
+//   }
+//   return temp;
+// };
 
-const filterRepliesComments = async (all, id) => {
-  let temp = [];
-  for (let comment of all) {
-    if (
-      comment.tags.find(
-        (item) =>
-          item[0] === "e" &&
-          item[1] === id &&
-          ["reply", "root"].includes(item[3])
-      )
-    ) {
-      let [note_tree, count] = await Promise.all([
-        getParsedNote(comment),
-        // getNoteTree(comment.content.split(" — This is a comment on:")[0]),
-        countReplies(comment.id, all),
-      ]);
-      temp.push({
-        // ...comment,
-        ...note_tree,
-        count,
-      });
-    }
-  }
-  return temp;
-};
+// const countReplies = async (id, all) => {
+//   let count = [];
 
-const countReplies = async (id, all) => {
-  let count = [];
+//   for (let comment of all) {
+//     let ev = comment.tags.find(
+//       (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
+//     );
+//     if (ev) {
+//       let cr = await countReplies(comment.id, all);
+//       count.push(comment, ...cr);
+//     }
+//   }
+//   let res = await Promise.all(
+//     count
+//       .sort((a, b) => b.created_at - a.created_at)
+//       .map(async (com) => {
+//         let note_tree = await getNoteTree(
+//           com.content.split(" — This is a comment on:")[0]
+//         );
+//         return {
+//           ...com,
+//           note_tree,
+//         };
+//       })
+//   );
+//   return res;
+// };
 
-  for (let comment of all) {
-    let ev = comment.tags.find(
-      (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
-    );
-    if (ev) {
-      let cr = await countReplies(comment.id, all);
-      count.push(comment, ...cr);
-    }
-  }
-  let res = await Promise.all(
-    count
-      .sort((a, b) => b.created_at - a.created_at)
-      .map(async (com) => {
-        let note_tree = await getNoteTree(
-          com.content.split(" — This is a comment on:")[0]
-        );
-        return {
-          ...com,
-          note_tree,
-        };
-      })
-  );
-  return res;
-};
+// const filterRepliesComments = async (all, id) => {
+//   let temp = [];
+//   for (let comment of all) {
+//     if (
+//       comment.tags.find(
+//         (item) =>
+//           item[0] === "e" &&
+//           item[1] === id &&
+//           ["reply", "root"].includes(item[3])
+//       )
+//     ) {
+//       let [note_tree, count] = await Promise.all([
+//         getParsedNote(comment),
+//         // getNoteTree(comment.content.split(" — This is a comment on:")[0]),
+//         countReplies(comment.id, all),
+//       ]);
+//       temp.push({
+//         // ...comment,
+//         ...note_tree,
+//         count,
+//       });
+//     }
+//   }
+//   return temp;
+// };
+// const filterRepliesComments = async (all, id) => {
+//   let temp = [];
+//   for (let comment of all) {
+//     if (
+//       comment.tags.find(
+//         (item) =>
+//           item[0] === "e" &&
+//           item[1] === id &&
+//           ["reply", "root"].includes(item[3])
+//       )
+//     ) {
+//       let [note_tree, replies] = await Promise.all([
+//         getParsedNote(comment),
+//         countReplies(comment.id, all),
+//       ]);
+//       temp.push({
+//         ...note_tree,
+//         replies,
+//       });
+//     }
+//   }
+//   return temp;
+// };
 
-const getOnReply = (comments, comment_id) => {
-  let tempCom = comments.find((item) => item.id === comment_id);
-  return tempCom;
-};
+// const filterRootComments = async (all) => {
+//   let temp = [];
+
+//   for (let comment of all) {
+//     // Check if this is a root comment
+//     if (!comment.tags.find((item) => item[0] === "e" && item[3] === "reply")) {
+//       let [note_tree, replies] = await Promise.all([
+//         getParsedNote(comment),
+//         countReplies(comment.id, all),
+//       ]);
+//       temp.push({
+//         ...note_tree,
+//         replies,
+//       });
+//     }
+//   }
+//   return temp;
+// };
+
+// const countReplies = async (id, all) => {
+//   let replies = [];
+
+//   for (let comment of all) {
+//     // Check if this comment is a reply to the given id
+//     let ev = comment.tags.find(
+//       (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
+//     );
+//     if (ev) {
+//       // Recursive call to count replies of this reply
+//       let nestedReplies = await countReplies(comment.id, all);
+//       let note_tree = await getNoteTree(
+//         comment.content.split(" — This is a comment on:")[0]
+//       );
+
+//       replies.push({
+//         ...comment,
+//         note_tree,
+//         replies: nestedReplies, // Include nested replies here
+//       });
+//     }
+//   }
+
+//   // Sort replies by created_at in descending order
+//   replies.sort((a, b) => b.created_at - a.created_at);
+
+//   return replies;
+// };
+
+// const getOnReply = (comments, comment_id) => {
+//   let tempCom = comments.find((item) => item.id === comment_id);
+//   return tempCom;
+// };
 
 export default function Note() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const userMetadata = useSelector((state) => state.userMetadata);
   const isPublishing = useSelector((state) => state.isPublishing);
   const userMutedList = useSelector((state) => state.userMutedList);
   const userRelays = useSelector((state) => state.userRelays);
@@ -156,8 +230,9 @@ export default function Note() {
 
   const [note, setNote] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const [usersList, setUsersList] = useState(false);
-  const [quotes, setQuotes] = useState([]);
+  const [isNip05Verified, setIsNip05Verified] = useState(false);
   const [zappers, setZappers] = useState([]);
   const [showQuoteBox, setShowQuoteBox] = useState(false);
   const { postActions } = useNoteStats(note?.id, note?.pubkey);
@@ -206,7 +281,29 @@ export default function Note() {
   }, [userMutedList, author]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (author) {
+          let ndkUser = new NDKUser({ pubkey: author.pubkey });
+          ndkUser.ndk = ndkInstance;
+          let checknip05 = author.nip05
+            ? await ndkUser.validateNip05(author.nip05)
+            : false;
+
+          if (checknip05) setIsNip05Verified(true);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [author]);
+
+  useEffect(() => {
     setIsLoading(true);
+    if (note) setNote(false);
+    if (isNip05Verified) setIsNip05Verified(false);
+    setShowHistory(false)
     let isEvent = false;
     const id = nip19.decode(nevent)?.data.id || nip19.decode(nevent)?.data;
 
@@ -224,10 +321,19 @@ export default function Note() {
         event.tags.length === 0
           ? false
           : event.tags.find((tag) => tag.length > 3 && tag[3] === "root");
+      let isReply =
+        event.tags.length === 0
+          ? false
+          : event.tags.find((tag) => tag.length > 3 && tag[3] === "reply");
 
       let tempNote = await getParsedNote(event);
       if (tempNote) {
-        setNote({ ...tempNote, isRoot: !isNotRoot ? true : false });
+        setNote({
+          ...tempNote,
+          isRoot: !isNotRoot ? true : false,
+          rootData: isNotRoot,
+          isReply: isReply ? true : false,
+        });
         setIsLoading(false);
         subscription.stop();
       } else {
@@ -346,13 +452,61 @@ export default function Note() {
               <ArrowUp />
 
               <div
-                className="fx-centered fit-container  fx-start-v"
+                className="fx-centered fit-container fx-col fx-start-h"
                 style={{ gap: 0 }}
               >
                 {note && (
                   <div className="main-middle">
                     <div
-                      className="fit-container fx-centered fx-col fx-start-v box-pad-v"
+                      className="fx-centered fit-container fx-start-h box-pad-v-m sticky"
+                      onClick={() => customHistory.back()}
+                    >
+                      <div className="box-pad-h-m">
+                        <button
+                          className="btn btn-normal btn-gray"
+                          style={{ padding: "0 1rem" }}
+                        >
+                          <div
+                            className="arrow"
+                            style={{ rotate: "90deg" }}
+                          ></div>
+                        </button>
+                      </div>
+                    </div>
+                    {note && !note.isRoot && (
+                      <>
+                       <div
+                          className="fit-container box-pad-h box-pad-v-m box-marg-s fx-centered pointer sticky"
+                          style={{
+                            borderTop: "1px solid var(--very-dim-gray)",
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                          }}
+                          onClick={() => setShowHistory(!showHistory)}
+                        >
+                          <div className="fx-centered">
+                            <p>
+                              {showHistory ? "Hide" : "Show"} thread history
+                            </p>
+                            <div
+                              className="arrow-12"
+                              style={{
+                                rotate: !showHistory ? "0deg" : "180deg",
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                        <HistorySection
+                          id={note.rootData[1]}
+                          tagKind={note.rootData[0]}
+                          isRoot={!note.isReply}
+                          targetedEventID={note.id}
+                          showHistory={showHistory}
+                        />
+                       
+                      </>
+                    )}
+                    <div
+                      className="fit-container fx-centered fx-col fx-start-v"
                       style={{ paddingBottom: "3rem", gap: 0 }}
                     >
                       <div className="fx-centered fit-container fx-start-h box-pad-h-m box-marg-s">
@@ -364,7 +518,12 @@ export default function Note() {
                           ring={false}
                         />
                         <div className="box-pad-h-m fx-centered fx-col fx-start-v">
-                          <h4>By {author.name}</h4>
+                          <div className="fx-centered">
+                            <h4>{author.name}</h4>
+                            {isNip05Verified && (
+                              <div className="checkmark-c1-24"></div>
+                            )}
+                          </div>
                           <p className="gray-c">
                             <Date_
                               toConvert={new Date(note.created_at * 1000)}
@@ -425,12 +584,12 @@ export default function Note() {
                               className={`icon-tooltip ${
                                 isLiked ? "orange-c" : ""
                               }`}
-                              data-tooltip="Reactions from"
+                              data-tooltip="Reactions "
                               onClick={(e) => {
                                 e.stopPropagation();
                                 postActions.likes.likes.length > 0 &&
                                   setUsersList({
-                                    title: "Reactions from",
+                                    title: "Reactions ",
                                     list: postActions.likes.likes.map(
                                       (item) => item.pubkey
                                     ),
@@ -450,19 +609,6 @@ export default function Note() {
                             }`}
                             style={{ columnGap: "8px" }}
                           >
-                            {/* <div
-                              className={"icon-tooltip"}
-                              data-tooltip="Repost note"
-                              onClick={repostNote}
-                            >
-                              <div
-                                className={
-                                  isReposted
-                                    ? "switch-arrows-bold-24"
-                                    : "switch-arrows-24"
-                                }
-                              ></div>
-                            </div> */}
                             <Repost
                               isReposted={isReposted}
                               event={note}
@@ -472,12 +618,12 @@ export default function Note() {
                               className={`icon-tooltip ${
                                 isReposted ? "orange-c" : ""
                               }`}
-                              data-tooltip="Reposts from"
+                              data-tooltip="Reposts "
                               onClick={(e) => {
                                 e.stopPropagation();
                                 postActions.reposts.reposts.length > 0 &&
                                   setUsersList({
-                                    title: "Reposts from",
+                                    title: "Reposts ",
                                     list: postActions.reposts.reposts.map(
                                       (item) => item.pubkey
                                     ),
@@ -488,7 +634,6 @@ export default function Note() {
                               <NumberShrink
                                 value={postActions.reposts.reposts.length}
                               />
-                              {/* <NumberShrink value={reposts.length} /> */}
                             </div>
                           </div>
                           <div
@@ -497,17 +642,6 @@ export default function Note() {
                             }`}
                             style={{ columnGap: "8px" }}
                           >
-                            {/* <div
-                              className={"icon-tooltip"}
-                              data-tooltip="Quote note"
-                              onClick={() => setShowQuoteBox(!showQuoteBox)}
-                            >
-                              <div
-                                className={
-                                  isQuoted ? "quote-bold-24" : "quote-24"
-                                }
-                              ></div>
-                            </div> */}
                             <Quote
                               isQuoted={isQuoted}
                               event={note}
@@ -533,7 +667,6 @@ export default function Note() {
                               <NumberShrink
                                 value={postActions.quotes.quotes.length}
                               />
-                              {/* <NumberShrink value={quotes.length} /> */}
                             </div>
                           </div>
                           <div
@@ -544,21 +677,6 @@ export default function Note() {
                               className="icon-tooltip"
                               data-tooltip="Tip note"
                             >
-                              {/* <ZapTip
-                                recipientLNURL={checkForLUDS(
-                                  author.lud06,
-                                  author.lud16
-                                )}
-                                recipientPubkey={note.pubkey}
-                                senderPubkey={userMetadata.pubkey}
-                                recipientInfo={{
-                                  name: author.name,
-                                  picture: author.picture,
-                                }}
-                                eTag={note.id}
-                                forContent={note.content.substring(0, 40)}
-                                onlyIcon={true}
-                              /> */}
                               <Zap
                                 user={author}
                                 event={note}
@@ -568,7 +686,7 @@ export default function Note() {
                             </div>
                             <div
                               data-tooltip="See zappers"
-                              className={`icon-tooltip ${
+                              className={`pointer icon-tooltip ${
                                 isZapped ? "orange-c" : ""
                               }`}
                               onClick={() =>
@@ -578,101 +696,14 @@ export default function Note() {
                                   list: postActions.zaps.zaps.map(
                                     (item) => item.pubkey
                                   ),
-                                  extras: zappers,
+                                  extras: postActions.zaps.zaps,
                                 })
                               }
                             >
                               <NumberShrink value={postActions.zaps.total} />
-                              {/* <NumberShrink value={zapsCount} /> */}
                             </div>
                           </div>
                         </div>
-                        {/* <div style={{ position: "relative" }} ref={optionsRef}>
-                          <div
-                            className="round-icon-small round-icon-tooltip"
-                            style={{ border: "none" }}
-                            data-tooltip="Options"
-                            onClick={() => {
-                              setShowOptions(!showOptions);
-                            }}
-                          >
-                            <div
-                              className="fx-centered fx-col"
-                              style={{ rowGap: 0 }}
-                            >
-                              <p
-                                className="gray-c fx-centered"
-                                style={{ height: "6px" }}
-                              >
-                                &#x2022;
-                              </p>
-                              <p
-                                className="gray-c fx-centered"
-                                style={{ height: "6px" }}
-                              >
-                                &#x2022;
-                              </p>
-                              <p
-                                className="gray-c fx-centered"
-                                style={{ height: "6px" }}
-                              >
-                                &#x2022;
-                              </p>
-                            </div>
-                          </div>
-                          {showOptions && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                right: 0,
-                                top: "110%",
-                                backgroundColor: "var(--dim-gray)",
-                                border: "none",
-                                // transform: "translateY(100%)",
-                                minWidth: "200px",
-                                width: "max-content",
-                                zIndex: 1000,
-                                rowGap: "12px",
-                              }}
-                              className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                            >
-                              <div onClick={copyID} className="pointer">
-                                <p>Copy note ID</p>
-                              </div>
-                              {userKeys && userKeys.pub !== note.pubkey && (
-                                <>
-                                  <BookmarkEvent
-                                    label="Bookmark note"
-                                    pubkey={note.id}
-                                    kind={"1"}
-                                    itemType="e"
-                                  />
-                                </>
-                              )}
-                              <div className="fit-container fx-centered fx-start-h pointer">
-                                <ShareLink
-                                  label="Share note"
-                                  path={`/notes/${note.nEvent}`}
-                                  title={author.display_name || author.name}
-                                  description={note.content}
-                                  kind={1}
-                                  shareImgData={{
-                                    post: note,
-                                    author,
-                                    label: "Note",
-                                  }}
-                                />
-                              </div>
-                              <div onClick={muteUnmute} className="pointer">
-                                {isMuted ? (
-                                  <p className="red-c">Unmute user</p>
-                                ) : (
-                                  <p className="red-c">Mute user</p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div> */}
                         <OptionsDropdown
                           options={[
                             <div onClick={copyID} className="pointer">
@@ -715,20 +746,19 @@ export default function Note() {
 
                       <CommentsSection
                         id={note.id}
-                        notePubkey={note.pubkey}
+                        eventPubkey={note.pubkey}
                         nEvent={nevent}
                         postActions={postActions}
                         author={author}
                         isRoot={note.isRoot}
-                        // setNetCommentsCount={setNetCommentsCount}
                       />
                     </div>
                   </div>
                 )}
                 {isLoading && (
                   <div
-                    style={{ flex: 1.8, height: "100vh" }}
-                    className="box-pad-h-m fit-height fx-centered"
+                    style={{ height: "100vh" }}
+                    className="fit-container box-pad-h-m fx-centered"
                   >
                     <LoadingDots />
                   </div>
@@ -750,22 +780,6 @@ export default function Note() {
                     </Link>
                   </div>
                 )}
-                {/* <div
-                  className=" fx-centered fx-col fx-start-v extras-homepage"
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    // backgroundColor: "var(--white)",
-                    zIndex: "100",
-                    flex: 1,
-                  }}
-                >
-                  <div className="sticky fit-container">
-                    <SearchbarNOSTR />
-                  </div>
-                  <ImportantFlashNews />
-                  <Footer />
-                </div> */}
               </div>
             </main>
           </div>
@@ -774,324 +788,3 @@ export default function Note() {
     </>
   );
 }
-
-const CommentsSection = ({
-  id,
-  nEvent,
-  notePubkey,
-  postActions,
-  author,
-  isRoot,
-}) => {
-  const dispatch = useDispatch();
-  const userKeys = useSelector((state) => state.userKeys);
-
-  const [comments, setComments] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showReplies, setShowReplies] = useState(false);
-  const [selectedComment, setSelectedComment] = useState(false);
-  const [selectedCommentIndex, setSelectedCommentIndex] = useState(false);
-  const [showWriteNote, setShowWriteNote] = useState(false);
-  const [netComments, setNetComments] = useState([]);
-
-  useEffect(() => {
-    if (selectedComment) {
-      let sC = netComments.find((item) => item.id === selectedComment.id);
-      setSelectedComment(sC);
-    }
-    // setNetCommentsCount(
-    //   netComments.map((cm) => cm.count).flat().length + netComments.length
-    // );
-  }, [netComments]);
-
-  useEffect(() => {
-    let parsedCom = async () => {
-      let res = await filterComments(comments, id, isRoot);
-
-      setNetComments(res);
-      if (res.length !== 0) setIsLoading(false);
-    };
-    parsedCom();
-  }, [comments]);
-
-  const refreshRepleis = (index) => {
-    let tempArray_1 = Array.from(comments);
-    let tempArray_2 = Array.from(netComments[selectedCommentIndex].count);
-    let idToDelete = tempArray_2[index].id;
-    let indexToDelete = tempArray_1.findIndex((item) => item.id === idToDelete);
-    tempArray_1.splice(indexToDelete, 1);
-    setComments(tempArray_1);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      const events = await getSubData(
-        [
-          {
-            kinds: [1],
-            "#e": [id],
-          },
-        ],
-        500
-      );
-
-      let tempEvents = events.data
-        .map((event) => {
-          let is_un = event.tags.find((tag) => tag[0] === "l");
-          let is_quote = event.tags.find((tag) => tag[0] === "q");
-          if (!((is_un && is_un[1] === "UNCENSORED NOTE") || is_quote)) {
-            return event;
-          }
-        })
-        .filter((_) => _);
-
-      if (tempEvents.length === 0) setIsLoading(false);
-      setComments(tempEvents);
-      saveUsers(events.pubkeys);
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (isLoading) return;
-    const sub = ndkInstance.subscribe(
-      [
-        {
-          kinds: [1],
-          "#e": [id],
-          since: Math.floor(Date.now() / 1000),
-        },
-      ],
-      { cacheUsage: "CACHE_FIRST", groupable: false }
-    );
-
-    sub.on("event", (event) => {
-      let is_un = event.tags.find((tag) => tag[0] === "l");
-      let is_quote = event.tags.find((tag) => tag[0] === "q");
-      if (!((is_un && is_un[1] === "UNCENSORED NOTE") || is_quote)) {
-        setComments((prev) => {
-          let newCom = [...prev, event.rawEvent()];
-          return newCom.sort(
-            (item_1, item_2) => item_2.created_at - item_1.created_at
-          );
-        });
-        saveUsers([event.pubkey]);
-      }
-    });
-    return () => {
-      if (sub) sub.stop();
-    };
-  }, [isLoading]);
-
-  const refreshComments = (index) => {
-    let tempArray = Array.from(comments);
-    tempArray.splice(index, 1);
-    setComments(tempArray);
-  };
-
-  return (
-    <div className="fit-container fx-centered fx-col box-marg-s">
-      {userKeys && (
-        <>
-          <hr />
-          {!showWriteNote && (
-            <div
-              className="fit-container fx-centered fx-start-h  box-pad-h-m box-pad-v-m pointer"
-              style={{
-                overflow: "visible",
-                // border: "1px solid var(--very-dim-gray)",
-              }}
-              onClick={() => setShowWriteNote(true)}
-            >
-              <UserProfilePicNOSTR
-                size={40}
-                mainAccountUser={true}
-                allowClick={false}
-                ring={false}
-              />
-              <div className="sc-s-18 box-pad-h-m box-pad-v-s fit-container">
-                <p className="gray-c">
-                  Comment on {author.display_name || author.name}'s note
-                </p>
-              </div>
-            </div>
-          )}
-          {showWriteNote && (
-            <div className="box-pad-v-m fit-container">
-              <Comments
-                exit={() => setShowWriteNote(false)}
-                replyId={id}
-                replyPubkey={notePubkey}
-                actions={postActions}
-              />
-            </div>
-          )}
-        </>
-      )}
-      <hr />
-      <div
-        className="fit-container fx-centered fx-col fx-start-h fx-start-v"
-        style={{ gap: 0 }}
-      >
-        {netComments.length == 0 && !isLoading && (
-          <div
-            className="fit-container fx-centered fx-col"
-            style={{ height: "20vh" }}
-          >
-            <h4>No comments</h4>
-            <p className="p-centered gray-c">Nobody commented on this note</p>
-            <div className="comment-24"></div>
-          </div>
-        )}
-        {isLoading && (
-          <div
-            style={{ height: "40vh" }}
-            className="fit-container box-pad-h-m fit-height fx-centered"
-          >
-            <LoadingDots />
-          </div>
-        )}
-        {netComments.map((comment, index) => {
-          return (
-            <Comment
-              comment={comment}
-              key={comment.id}
-              refresh={refreshComments}
-              refreshRepleis={refreshRepleis}
-              index={index}
-              onClick={() => {
-                setShowReplies(true);
-                setSelectedComment(comment);
-                setSelectedCommentIndex(index);
-              }}
-              nEvent={nEvent}
-              noteID={id}
-              notePubkey={author.pubkey}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const Comment = ({ comment, action = true, noteID, notePubkey }) => {
-  return (
-    <>
-      <NotesComment
-        event={comment}
-        rootNoteID={noteID}
-        rootNotePubkey={notePubkey}
-      />
-      {action && (
-        <div className="fit-container fx-centered fx-end-h">
-          <CommentsReplies
-            all={comment.count}
-            noteID={noteID}
-            notePubkey={notePubkey}
-          />
-        </div>
-      )}
-    </>
-  );
-};
-
-const CommentsReplies = ({ all, noteID, notePubkey }) => {
-  return (
-    <>
-      <div
-        className="fx-col fit-container fx-centered"
-        style={{
-          width: "calc(100% - 64px)",
-          gap: 0,
-        }}
-      >
-        {all.map((comment, index) => {
-          return (
-            <Reply
-              comment={{ ...comment, count: [] }}
-              index={index}
-              all={all || []}
-              noteID={noteID}
-              notePubkey={notePubkey}
-            />
-          );
-        })}
-      </div>
-    </>
-  );
-};
-
-const Reply = ({ comment, all, noteID, notePubkey }) => {
-  const [seeReply, setSeeReply] = useState(false);
-
-  const repliedOn = useMemo(() => {
-    let replyTo_ = comment.tags.find(
-      (item) => item[0] === "e" && item.length === 4 && item[3] === "reply"
-    );
-    return getOnReply(all, replyTo_ ? replyTo_[1] : "");
-  }, [all]);
-
-  return (
-    <>
-      <div
-        className={`fit-container   fx-centered fx-col fx-shrink  ${
-          repliedOn ? "box-pad-h-s box-pad-v-s" : ""
-        }`}
-        style={{
-          // backgroundColor: repliedOn ? "var(--c1-side)" : "",
-          border: "none",
-          overflow: "visible",
-          gap: 0,
-        }}
-      >
-        {repliedOn && (
-          <div
-            className="fx-start-h fx-centerd fit-container"
-            style={{ marginLeft: "2rem" }}
-          >
-            <div
-              className="sticker sticker-gray-black fx-centered pointer"
-              // className="fx-centered fit-container fx-start-h pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSeeReply(!seeReply);
-              }}
-            >
-              {/* <p className="c1-c p-medium"> */}
-              This is a reply to : {repliedOn.content.substring(0, 10)}... (See
-              more)
-              {/* </p> */}
-              <div
-                className="arrow"
-                style={{ transform: seeReply ? "rotate(180deg)" : "" }}
-              ></div>
-            </div>
-            <div
-              className="fit-container box-pad-v-s"
-              style={{ display: seeReply ? "flex" : "none" }}
-            >
-              <NotesComment
-                event={repliedOn}
-                noReactions={true}
-                rootNotePubkey={notePubkey}
-              />
-            </div>
-            <hr />
-          </div>
-        )}
-        <div
-          className="fx-centered fx-start-h fit-container"
-          style={{ columnGap: "16px" }}
-        >
-          <NotesComment
-            event={comment}
-            rootNoteID={noteID}
-            rootNotePubkey={notePubkey}
-          />
-        </div>
-      </div>
-    </>
-  );
-};

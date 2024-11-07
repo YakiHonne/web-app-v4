@@ -144,7 +144,7 @@ export default function AddVideo ({ exit }){
         )}
         <div className="fixed-container fx-centered box-pad-h">
           <div
-            className="sc-s-18"
+            className="sc-s-18 bg-sp"
             style={{ position: "relative", width: "min(100%, 600px)" }}
           >
             {!videoURL && !type && (

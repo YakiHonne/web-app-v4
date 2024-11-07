@@ -8,7 +8,6 @@
   .main-page-nostr-container {
     flex: 4;
   }
-
 }
 
 @media only screen and (max-width: 1400px) {
@@ -256,6 +255,7 @@
 }
 
 @media only screen and (max-width: 800px) {
+  
   html {
     font-size: 12px;
   }
@@ -299,7 +299,9 @@
   .desk-hide {
     display: flex;
   }
-
+  .carousel-width {
+    width: 90vw;
+  }
 
   .mb-hide-800 {
     display: none;

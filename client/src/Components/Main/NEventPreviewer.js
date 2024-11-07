@@ -19,7 +19,7 @@ export default function NEventPreviewer({ id, pubkey, extraRelays = [] }) {
         { kinds: [1], ids: [id] },
         { kinds: [0], authors: [pubkey] },
       ],
-      { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+      {  cacheUsage: "CACHE_FIRST", groupable: false }
     );
 
     sub.on("event", async (event) => {
@@ -41,10 +41,10 @@ export default function NEventPreviewer({ id, pubkey, extraRelays = [] }) {
         setNote(content);
       }
     });
-    let timeout = setTimeout(() => {
-      sub.stop();
-      clearTimeout(timeout);
-    }, 4000);
+    // let timeout = setTimeout(() => {
+    //   sub.stop();
+    //   clearTimeout(timeout);
+    // }, 4000);
     return () => {
       sub.stop();
     };

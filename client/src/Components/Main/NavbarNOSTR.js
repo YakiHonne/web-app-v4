@@ -53,7 +53,7 @@ export default function NavbarNOSTR({ margin = true }) {
   if (
     [
       "/yakihonne-mobile-app",
-      "/yakihonne-flash-news",
+      "/yakihonne-paid-notes",
       "/yakihonne-smart-widgets",
       "/privacy",
       "/terms",

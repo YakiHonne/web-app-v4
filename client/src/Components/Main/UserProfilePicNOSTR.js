@@ -16,6 +16,8 @@ import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { getMutualFollows } from "../../Helpers/WSInstance";
+import { customHistory } from "../../Helpers/History";
+import { getCustomSettings } from "../../Helpers/Helpers";
 
 // const getMutualFollows = (userFollowers, userFollowing) => {
 //   let users = [];
@@ -75,7 +77,7 @@ export default function UserProfilePicNOSTR({
           relays: relaysOnPlatform,
         });
 
-        navigateTo(`/users/${url}`);
+        customHistory.push(`/users/${url}`);
       }
       return null;
     } catch {
@@ -90,6 +92,8 @@ export default function UserProfilePicNOSTR({
   };
 
   const onMouseHover = async () => {
+    let isHoverAllowed = getCustomSettings().userHoverPreview
+    if(!isHoverAllowed) return
     setShowMetada(true);
     if (!userKeys) return false;
     if (!subStart) {
@@ -136,7 +140,7 @@ export default function UserProfilePicNOSTR({
               minWidth: `${size}px`,
               minHeight: `${size}px`,
               backgroundImage: `url(${userMetadata.picture})`,
-              borderRadius: "var(--border-r-50)",
+              borderRadius: "var(--border-r-14)",
               backgroundColor: "var(--dim-gray)",
               borderColor: "black",
             }}

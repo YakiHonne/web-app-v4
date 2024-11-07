@@ -9,6 +9,7 @@ import Date_ from "../Date_";
 import axios from "axios";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveFetchedUsers } from "../../Helpers/DB";
+import { customHistory } from "../../Helpers/History";
 
 export default function SearchbarNOSTR() {
   const navigateTo = useNavigate();
@@ -84,11 +85,11 @@ export default function SearchbarNOSTR() {
       try {
         let naddrData = nip19.decode(value);
         if (naddrData.data.kind === 30023) {
-          navigateTo(`/article/${value}`);
+          customHistory.push(`/article/${value}`);
           return;
         }
         if (naddrData.data.kind === 30001) {
-          navigateTo(`/curations/${value}`);
+          customHistory.push(`/curations/${value}`);
           return;
         }
         setKeyword(e.target.value);
@@ -99,7 +100,7 @@ export default function SearchbarNOSTR() {
       }
     }
     if (value.startsWith("nprofile") && value.length > 8) {
-      navigateTo(`/users/${value}`);
+      customHistory.push(`/users/${value}`);
       return;
     }
     if (value.startsWith("npub") && value.length > 5) {
@@ -109,7 +110,7 @@ export default function SearchbarNOSTR() {
           pubkey: hex,
           relays: relaysOnPlatform,
         });
-        navigateTo(`/users/${url}`);
+        customHistory.push(`/users/${url}`);
         return;
       } catch {
         setKeyword(e.target.value);
@@ -178,7 +179,7 @@ export default function SearchbarNOSTR() {
                       key={user.pubkey}
                       className="fx-centered fx-start-h box-pad-v-s box-pad-h-s fit-container pointer search-bar-post"
                       onClick={() => {
-                        navigateTo(
+                        customHistory.push(
                           `/users/${nip19.nprofileEncode({
                             pubkey: user.pubkey,
                             relays: relaysOnPlatform,
@@ -219,7 +220,7 @@ export default function SearchbarNOSTR() {
                       key={post.id}
                       className="fx-centered fx-start-h box-pad-v-s box-pad-h-s fit-container pointer search-bar-post"
                       onClick={() => {
-                        navigateTo(`/article/${post.naddr}`);
+                        customHistory.push(`/article/${post.naddr}`);
                       }}
                     >
                       <div

@@ -13,8 +13,7 @@ const useRepEventStats = (aTag, aTagPubkey, supported = true) => {
   const [isLoading, setIsLoading] = useState(true);
   const postActions =
     useLiveQuery(
-      async () =>
-        aTag ? await getEventStats(aTag) : getEmptyEventStats(""),
+      async () => (aTag ? await getEventStats(aTag) : getEmptyEventStats("")),
       [aTag]
     ) || getEmptyEventStats("");
 
@@ -70,7 +69,11 @@ const useRepEventStats = (aTag, aTagPubkey, supported = true) => {
             if (!kind9735Since || kind9735Since < event.created_at) {
               kind9735Since = event.created_at;
             }
-            kind9735.push({ id: zapper.id, pubkey: event.pubkey });
+            kind9735.push({
+              id: zapper.id,
+              pubkey: zapper.pubkey,
+              amount: sats,
+            });
             kind9735_ = kind9735_ + sats;
           }
           if (event.kind === 7) {
@@ -87,7 +90,10 @@ const useRepEventStats = (aTag, aTagPubkey, supported = true) => {
             let check_kind1 = {
               isQuote: event.tags.find((tag) => tag[0] === "q"),
               isComment: event.tags.find(
-                (tag) => tag.length > 3 && ["root", "reply"].includes(tag[3])
+                (tag) =>
+                  tag.length > 3 &&
+                  tag[1] === aTag &&
+                  ["root", "reply"].includes(tag[3])
               ),
             };
             if (check_kind1.isQuote) {

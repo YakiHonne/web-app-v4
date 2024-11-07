@@ -17,6 +17,7 @@ import {
   logoutAllAccounts,
   userLogout,
 } from "../../Helpers/Controlers";
+import { customHistory } from "../../Helpers/History";
 
 export default function MenuMobile({ toggleLogin, exit }) {
   const userMetadata = useSelector((state) => state.userMetadata);
@@ -125,7 +126,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
       <div className="fx-scattered fx-col" style={{ rowGap: "8px" }}>
         <div
           onClick={() => {
-            navigateTo("/");
+            customHistory.push("/");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
@@ -137,7 +138,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
-            navigateTo("/discover");
+            customHistory.push("/discover");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
@@ -150,7 +151,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
 
         <div
           onClick={() => {
-            navigateTo("/smart-widgets");
+            customHistory.push("/smart-widgets");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
@@ -163,7 +164,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
 
         <div
           onClick={() => {
-            navigateTo("/verify-notes");
+            customHistory.push("/verify-notes");
             dismiss();
           }}
           className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
@@ -175,7 +176,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
-            navigateTo("/messages");
+            customHistory.push("/messages");
             dismiss();
           }}
           className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
@@ -210,7 +211,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 isPage("/dashboard") ? "active-link" : "inactive-link"
               }`}
               onClick={() => {
-                navigateTo("/dashboard");
+                customHistory.push("/dashboard");
                 dismiss();
               }}
             >
@@ -239,7 +240,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               <div
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
                 onClick={() => {
-                  navigateTo(
+                  customHistory.push(
                     `/users/${nip19.nprofileEncode({
                       pubkey: userKeys.pub,
                       relays: relaysOnPlatform,
@@ -253,7 +254,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               </div>
               <div
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
-                onClick={() => navigateTo(`/yaki-points`)}
+                onClick={() => customHistory.push(`/yaki-points`)}
               >
                 <div className="cup-24"></div>
                 <p className="p-big">Yaki points</p>
@@ -261,7 +262,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               <div
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
                 onClick={() => {
-                  navigateTo(`/settings`);
+                  customHistory.push(`/settings`);
                   dismiss();
                 }}
               >

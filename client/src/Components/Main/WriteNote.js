@@ -11,15 +11,26 @@ import { nip19 } from "nostr-tools";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
-import { extractNip19 } from "../../Helpers/Helpers";
+import {
+  extractNip19,
+  getNoteDraft,
+  updateNoteDraft,
+} from "../../Helpers/Helpers";
 import { InitEvent } from "../../Helpers/Controlers";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import { encryptEventData, shortenKey } from "../../Helpers/Encryptions";
 import axios from "axios";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import QRCode from "react-qr-code";
+import LinkRepEventPreview from "./LinkRepEventPreview";
 
-export default function WriteNote({ widget, exit, border = true, content }) {
+export default function WriteNote({
+  widget,
+  exit,
+  border = true,
+  content,
+  linkedEvent,
+}) {
   const navigateTo = useNavigate();
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
@@ -38,12 +49,20 @@ export default function WriteNote({ widget, exit, border = true, content }) {
   const [invoice, setInvoice] = useState(false);
   const [imgsSet, setImgsSet] = useState([]);
   const [widgetsSet, setWidgetsSet] = useState([]);
+  const [showWarningBox, setShowWarningBox] = useState(false);
   const [mentionSet, setMentionSet] = useState([]);
   const textareaRef = useRef(null);
+  const ref = useRef();
 
   useEffect(() => {
     adjustHeight();
   }, [note]);
+
+  useEffect(() => {
+    if (userKeys && !content && !linkedEvent) {
+      setNote(getNoteDraft("root"));
+    }
+  }, [userKeys]);
 
   useEffect(() => {
     if (widget) {
@@ -94,6 +113,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
       setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
     }
     setNote(value);
+    if (!content && !linkedEvent) updateNoteDraft("root", value);
   };
 
   const handleSelectingTags = (data) => {
@@ -121,7 +141,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
     try {
       if (isLoading) return;
       if (!userKeys) return;
-      if (!note) {
+      if (!note && !linkedEvent) {
         dispatch(
           setToast({
             type: 2,
@@ -147,10 +167,9 @@ export default function WriteNote({ widget, exit, border = true, content }) {
         ],
       ];
 
-      if (widgetsSet.length > 0) {
-        tags.push(["l", "smart-widget"]);
-      }
-      let processedContent = extractNip19(note);
+      let processedContent = extractNip19(
+        linkedEvent ? `${note} nostr:${linkedEvent.naddr}` : note
+      );
 
       if (isPaid) {
         publishAsPaid(processedContent.content, [
@@ -163,23 +182,6 @@ export default function WriteNote({ widget, exit, border = true, content }) {
           ...processedContent.tags,
         ]);
       }
-
-      // let eventInitEx = await InitEvent(1, processedContent.content, [
-      //   ...tags,
-      //   ...processedContent.tags,
-      // ]);
-
-      // if (!eventInitEx) {
-      //   return;
-      // }
-      // dispatch(
-      //   setToPublish({
-      //     eventInitEx,
-      //     allRelays: userRelays,
-      //   })
-      // );
-      // navigateTo("/dashboard", { state: { tabNumber: 1, filter: "notes" } });
-      // exit();
     } catch (err) {
       console.log(err);
       dispatch(
@@ -216,7 +218,6 @@ export default function WriteNote({ widget, exit, border = true, content }) {
 
       let tags = structuredClone(tags_);
       let created_at = Math.floor(Date.now() / 1000);
-      // if (flag) tags.push(["important", `${created_at}`]);
 
       tags.push(["l", "FLASH NEWS"]);
       tags.push(["yaki_flash_news", encryptEventData(`${created_at}`)]);
@@ -227,11 +228,6 @@ export default function WriteNote({ widget, exit, border = true, content }) {
         setIsLoading(false);
         return;
       }
-
-      // let extras = flag ? pricing?.flag_pricing || 21 : 0;
-      // let sats = ((pricing.fn_pricing || 800) + extras) * 1000;
-
-      // let extras = flag ? 1 : 0;
       let sats = 800 * 1000;
 
       let zapTags = [
@@ -268,7 +264,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
       }
 
       setInvoice(res.data.pr);
-      // setConfirmation("in_progress");
+
       const { webln } = window;
       if (webln) {
         try {
@@ -292,7 +288,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
         { groupable: false, cacheUsage: "ONLY_RELAY" }
       );
 
-      sub.on("event", (event) => {
+      sub.on("event", () => {
         setInvoice("");
         dispatch(
           setToPublish({
@@ -300,7 +296,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
             allRelays: [],
           })
         );
-        sub.stop()
+        sub.stop();
         navigateTo("/dashboard", { state: { tabNumber: 1, filter: "notes" } });
         exit();
         setIsLoading(false);
@@ -371,8 +367,77 @@ export default function WriteNote({ widget, exit, border = true, content }) {
     );
   };
 
+  useEffect(() => {
+    const handleOffClick = (e) => {
+      e.stopPropagation();
+      if (ref.current && !ref.current.contains(e.target) && !invoice) {
+        if (!note) {
+          exit();
+        } else {
+          setShowWarningBox(true);
+        }
+      }
+    };
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [ref, invoice, note]);
+
+  const handleDiscard = (isSave) => {
+    if (isSave) {
+      exit();
+    } else {
+      updateNoteDraft("root", "");
+      exit();
+    }
+  };
+
   return (
     <>
+      {showWarningBox && (
+        <div className="fixed-container fx-centered box-pad-h">
+          <div
+            className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
+            style={{ width: "min(100%, 450px)" }}
+          >
+            <div className="fx-centered fx-col">
+              <h4>{linkedEvent ? "Heads up!" : "Save draft?"}</h4>
+              <p className="gray-c p-centered box-pad-v-m">
+                You're about to quit your editing, do you wish to{" "}
+                {linkedEvent ? "continue?" : "save it as a draft?"}
+              </p>
+              <div className="fit-container fx-centered">
+                <div className="fx-centered">
+                  <button
+                    className="btn btn-gst-red"
+                    onClick={() => handleDiscard(false)}
+                  >
+                    Discard
+                  </button>
+                  {!linkedEvent && (
+                    <button
+                      className="btn btn-gst"
+                      onClick={() => handleDiscard(true)}
+                    >
+                      Save & quit
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <button
+                    className="btn btn-normal"
+                    onClick={() => setShowWarningBox(false)}
+                  >
+                    Continue editing
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSmartWidgets && (
         <BrowseSmartWidgets
           exit={() => setShowSmartWidgets(false)}
@@ -408,7 +473,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
           </div>
           <div
             className="round-icon-tooltip"
-            data-tooltip="By closing this, you will lose publishing to this flash news"
+            data-tooltip="By closing this, you will lose publishing to this paid note"
           >
             <div
               style={{ position: "static" }}
@@ -426,6 +491,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
           overflow: "visible",
           border: border ? "1px solid var(--very-dim-gray)" : "none",
         }}
+        ref={ref}
       >
         <UserProfilePicNOSTR
           size={34}
@@ -489,6 +555,12 @@ export default function WriteNote({ widget, exit, border = true, content }) {
               })}
             </div>
           )} */}
+          {linkedEvent && (
+            <div className="fit-container box-marg-s">
+              {" "}
+              <LinkRepEventPreview event={linkedEvent} />
+            </div>
+          )}
           {imgsSet.length > 0 && (
             <div
               className="box-pad-v-m fit-container"
@@ -554,7 +626,7 @@ export default function WriteNote({ widget, exit, border = true, content }) {
                 <button
                   className="btn btn-gst btn-small"
                   disabled={isLoading}
-                  onClick={exit}
+                  onClick={() => (note ? setShowWarningBox(true) : exit())}
                 >
                   {isLoading ? <LoadingDots /> : "Cancel"}
                 </button>
@@ -578,7 +650,9 @@ export default function WriteNote({ widget, exit, border = true, content }) {
           <div className="fx-scattered fit-container box-pad-h-s box-pad-v-s sc-s-18">
             <div className="box-pad-h-s">
               <p>Paid note</p>
-              <p className="p-medium gray-c">A highlighted note for more exposure</p>
+              <p className="p-medium gray-c">
+                A highlighted note for more exposure
+              </p>
             </div>
             <div
               className={`toggle ${isPaid === -1 ? "toggle-dim-gray" : ""} ${

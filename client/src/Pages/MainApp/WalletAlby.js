@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLocation, useParams } from "react-router-dom";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
+import { customHistory } from "../../Helpers/History";
 
 export default function WalletAlby() {
   const location = useLocation();
@@ -61,19 +62,19 @@ export default function WalletAlby() {
             });
             oldVersion.push(alby);
             updateWallets(oldVersion);
-            navigateTo("/wallet");
+            customHistory.push("/wallet");
             return;
           } catch (err) {
             updateWallets([alby]);
-            navigateTo("/wallet");
+            customHistory.push("/wallet");
             return;
           }
         }
         updateWallets([alby]);
-        navigateTo("/wallet");
+        customHistory.push("/wallet");
       } catch (err) {
         console.log(err);
-        navigateTo("/wallet");
+        customHistory.push("/wallet");
       }
     };
     getMeData();

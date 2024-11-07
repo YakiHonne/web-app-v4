@@ -424,7 +424,13 @@ const InitEvent = async (kind, content, tags, created_at) => {
   }
 };
 
-const getEventStatAfterEOSE = (reaction, kind, oldStats, extra) => {
+const getEventStatAfterEOSE = (
+  reaction,
+  kind,
+  oldStats,
+  extra,
+  zapsCreatedAt
+) => {
   let stats = { ...oldStats };
   if (reaction.kind === 9734) {
     stats[kind][kind] = removeObjDuplicants(stats[kind][kind], [
@@ -435,7 +441,9 @@ const getEventStatAfterEOSE = (reaction, kind, oldStats, extra) => {
     stats[kind][kind] = removeObjDuplicants(stats[kind][kind], [
       { id: reaction.id, pubkey: reaction.pubkey },
     ]);
-  stats[kind].since = reaction.created_at + 1;
+  stats[kind].since = zapsCreatedAt
+    ? zapsCreatedAt + 1
+    : reaction.created_at + 1;
   return stats;
 };
 

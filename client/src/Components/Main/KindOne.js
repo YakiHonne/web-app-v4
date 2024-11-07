@@ -1,31 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  checkForLUDS,
-  decodeBolt11,
-  getBolt11,
-  getEmptyEventStats,
-  getEmptyuserMetadata,
-  getParsedNote,
-  getZapper,
-  removeObjDuplicants,
-} from "../../Helpers/Encryptions";
+import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
-import { useNavigate } from "react-router-dom";
-import LoadingDots from "../LoadingDots";
-import QuoteNote from "./QuoteNote";
 import BookmarkEvent from "./BookmarkEvent";
 import ShareLink from "../ShareLink";
-import ZapTip from "./ZapTip";
 import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
-import { getUser } from "../../Helpers/Controlers";
+import { getSubData, getUser } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { NDKUser } from "@nostr-dev-kit/ndk";
-import { useLiveQuery } from "dexie-react-hooks";
-import { getEventStats, saveEventStats } from "../../Helpers/DB";
 import OptionsDropdown from "./OptionsDropdown";
 import useNoteStats from "../../Hooks/useNoteStats";
 import Like from "../Reactions/Like";
@@ -33,6 +18,8 @@ import Repost from "../Reactions/Repost";
 import Quote from "../Reactions/Quote";
 import Zap from "../Reactions/Zap";
 import Comments from "../Reactions/Comments";
+import { customHistory } from "../../Helpers/History";
+import { saveUsers } from "../../Helpers/DB";
 
 export default function KindOne({ event, reactions = true, border = false }) {
   const dispatch = useDispatch();
@@ -41,7 +28,7 @@ export default function KindOne({ event, reactions = true, border = false }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const isPublishing = useSelector((state) => state.isPublishing);
   const userMutedList = useSelector((state) => state.userMutedList);
-  const navigate = useNavigate();
+
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   const [isNip05Verified, setIsNip05Verified] = useState(false);
   const [toggleComment, setToggleComment] = useState(false);
@@ -121,13 +108,13 @@ export default function KindOne({ event, reactions = true, border = false }) {
       return;
     }
     if (isSelected) return null;
-    navigate(`/notes/${event.nEvent}`);
+    customHistory.push(`/notes/${event.nEvent}`);
   };
 
   const redirect = (e) => {
     e.stopPropagation();
     if (window.location.pathname.includes("/notes/"))
-      navigate(`/notes/${event.nEvent}`);
+      customHistory.push(`/notes/${event.nEvent}`);
     else window.location = `/notes/${event.nEvent}`;
   };
 
@@ -188,9 +175,6 @@ export default function KindOne({ event, reactions = true, border = false }) {
         borderBottom: border ? "1px solid var(--very-dim-gray)" : "",
       }}
     >
-      {/* {showQuoteBox && (
-        <QuoteNote note={event} exit={() => setShowQuoteBox(false)} />
-      )} */}
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -207,11 +191,8 @@ export default function KindOne({ event, reactions = true, border = false }) {
         }}
         onClick={reactions ? null : redirect}
       >
-        <div
-          className="fit-container fx-scattered box-marg-s"
-          onClick={onClick}
-        >
-          <div className="fx-centered fx-start-h ">
+        <div className="fit-container fx-centered fx-start-h fx-start-v">
+          <div>
             <UserProfilePicNOSTR
               size={40}
               mainAccountUser={false}
@@ -220,9 +201,20 @@ export default function KindOne({ event, reactions = true, border = false }) {
               img={user.picture}
               metadata={user}
             />
-            <div>
-              <div className="fx-centered">
-                <p className="p-bold">{user.display_name || user.name}</p>
+          </div>
+          <div
+            className={"fit-container fx-centered fx-col"}
+            style={{ gap: "6px" }}
+            onClick={onClick}
+          >
+            <div className="fx-scattered fit-container">
+              <div className="fx-centered" style={{ gap: "3px" }}>
+                <div className="fx-centered" style={{ gap: "3px" }}>
+                  <p className="p-bold p-one-line">
+                    {user.display_name || user.name}
+                  </p>
+                  {isNip05Verified && <div className="checkmark-c1"></div>}
+                </div>
                 <p className="gray-c p-medium">&#8226;</p>
                 <p className="gray-c p-medium">
                   <Date_
@@ -231,34 +223,24 @@ export default function KindOne({ event, reactions = true, border = false }) {
                   />
                 </p>
               </div>
-              <p
-                className={`p-medium ${
-                  isNip05Verified ? "orange-c round-icon-tooltip" : "gray-c"
-                }`}
-                data-tooltip="Verified nip05"
-              >
-                @{user.name || user.display_name}
-              </p>
+              {event.isFlashNews && (
+                <div className="sticker sticker-gray-black">Paid</div>
+              )}
             </div>
-          </div>
-          {event.isFlashNews && (
-            <div className="sticker sticker-gray-black">Paid</div>
-          )}
-        </div>
-        <div
-          className="fx-centered fx-col fit-container"
-          style={{ paddingLeft: "32px" }}
-        >
-          <div className="fit-container" onClick={onClick}>
-            {event.note_tree}
+            {event.isComment && <RelatedEvent event={event.isComment} />}
+            <div className="fx-centered fx-col fit-container">
+              <div className="fit-container" onClick={onClick}>
+                {event.note_tree}
+              </div>
+            </div>
           </div>
         </div>
         {reactions && (
           <div
             className="fx-scattered fit-container"
-            style={{ paddingTop: "1rem", paddingLeft: "32px" }}
+            style={{ paddingTop: "1rem", paddingLeft: "48px" }}
           >
-            <div className="fx-centered" style={{ columnGap: "32px" }}>
+            <div className="fx-centered" style={{ columnGap: "1rem" }}>
               <div className="fx-centered">
                 <div className="icon-tooltip" data-tooltip="Leave a comment">
                   <div
@@ -272,26 +254,18 @@ export default function KindOne({ event, reactions = true, border = false }) {
                   onClick={redirect}
                 >
                   <p>{postActions.replies.replies.length}</p>
-                  {/* <p>{comments.length}</p> */}
                 </div>
               </div>
               <div className="fx-centered">
-                {/* <div
-                  className={"icon-tooltip"}
-                  data-tooltip="React"
-                  onClick={reactToNote}
-                >
-                  <div className={isLiked ? "heart-bold-24" : "heart-24"}></div>
-                </div> */}
                 <Like isLiked={isLiked} event={event} actions={postActions} />
                 <div
                   className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
-                  data-tooltip="Reactions from"
+                  data-tooltip="Reactions "
                   onClick={(e) => {
                     e.stopPropagation();
                     postActions.likes.likes.length > 0 &&
                       setUsersList({
-                        title: "Reactions from",
+                        title: "Reactions ",
                         list: postActions.likes.likes.map(
                           (item) => item.pubkey
                         ),
@@ -300,24 +274,12 @@ export default function KindOne({ event, reactions = true, border = false }) {
                   }}
                 >
                   <NumberShrink value={postActions.likes.likes.length} />
-                  {/* <NumberShrink value={reactions_.length} /> */}
                 </div>
               </div>
               <div
                 className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
                 style={{ columnGap: "8px" }}
               >
-                {/* <div
-                  className={"icon-tooltip"}
-                  data-tooltip="Repost note"
-                  onClick={repostNote}
-                >
-                  <div
-                    className={
-                      isReposted ? "switch-arrows-bold-24" : "switch-arrows-24"
-                    }
-                  ></div>
-                </div> */}
                 <Repost
                   isReposted={isReposted}
                   event={event}
@@ -325,12 +287,12 @@ export default function KindOne({ event, reactions = true, border = false }) {
                 />
                 <div
                   className={`icon-tooltip ${isReposted ? "orange-c" : ""}`}
-                  data-tooltip="Reposts from"
+                  data-tooltip="Reposts "
                   onClick={(e) => {
                     e.stopPropagation();
                     postActions.reposts.reposts.length > 0 &&
                       setUsersList({
-                        title: "Reposts from",
+                        title: "Reposts ",
                         list: postActions.reposts.reposts.map(
                           (item) => item.pubkey
                         ),
@@ -339,18 +301,9 @@ export default function KindOne({ event, reactions = true, border = false }) {
                   }}
                 >
                   <NumberShrink value={postActions.reposts.reposts.length} />
-                  {/* <NumberShrink value={reposts.length} /> */}
                 </div>
               </div>
               <div className="fx-centered">
-                {/* <div className="icon-tooltip" data-tooltip="Quote note">
-                  <div
-                    className={
-                      isQuoted ? "quote-bold-24 pointer" : "quote-24 pointer"
-                    }
-                    onClick={() => setShowQuoteBox(!showQuoteBox)}
-                  ></div>
-                </div> */}
                 <Quote
                   isQuoted={isQuoted}
                   event={event}
@@ -372,7 +325,6 @@ export default function KindOne({ event, reactions = true, border = false }) {
                   }}
                 >
                   <NumberShrink value={postActions.quotes.quotes.length} />
-                  {/* <NumberShrink value={quotes.length} /> */}
                 </div>
               </div>
               <div className="fx-centered">
@@ -383,18 +335,6 @@ export default function KindOne({ event, reactions = true, border = false }) {
                     actions={postActions}
                     isZapped={isZapped}
                   />
-                  {/* <ZapTip
-                    recipientLNURL={checkForLUDS(user.lud06, user.lud16)}
-                    recipientPubkey={event.pubkey}
-                    senderPubkey={userMetadata.pubkey}
-                    recipientInfo={{
-                      name: user.name,
-                      picture: user.picture,
-                    }}
-                    eTag={event.id}
-                    forContent={event.content.substring(0, 40)}
-                    onlyIcon={true}
-                  /> */}
                 </div>
                 <div
                   className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
@@ -405,12 +345,11 @@ export default function KindOne({ event, reactions = true, border = false }) {
                       setUsersList({
                         title: "Zappers",
                         list: postActions.zaps.zaps.map((item) => item.pubkey),
-                        extras: [],
+                        extras: postActions.zaps.zaps,
                       });
                   }}
                 >
                   <NumberShrink value={postActions.zaps.total} />
-                  {/* <NumberShrink value={zapsCount} /> */}
                 </div>
               </div>
             </div>
@@ -466,45 +405,6 @@ export default function KindOne({ event, reactions = true, border = false }) {
         )}
       </div>
       {toggleComment && (
-        // <div
-        //   className="fit-container fx-centered fx-start-v slide-up"
-        //   style={{ paddingTop: ".5rem" }}
-        // >
-        //   <UserProfilePicNOSTR
-        //     size={48}
-        //     mainAccountUser={true}
-        //     allowClick={false}
-        //     ring={false}
-        //   />
-        //   <div className="fit-container fx-centered fx-wrap">
-        //     <div className="fit-container">
-        //       <textarea
-        //         // type="text"
-        //         className="txt-area ifs-full if "
-        //         placeholder="Comment on this note"
-        //         value={comment}
-        //         onChange={(e) => setComment(e.target.value)}
-        //         disabled={isLoading}
-        //       />
-        //     </div>
-        //     <div className="fx-centered fit-container fx-end-h">
-        //       <button
-        //         className="btn btn-gst-red btn-small"
-        //         onClick={() => setToggleComment(!toggleComment)}
-        //         disabled={isLoading}
-        //       >
-        //         {isLoading ? <LoadingDots /> : "Cancel"}
-        //       </button>
-        //       <button
-        //         className="btn btn-normal btn-small"
-        //         onClick={commentNote}
-        //         disabled={isLoading}
-        //       >
-        //         {isLoading ? <LoadingDots /> : "Post"}
-        //       </button>
-        //     </div>
-        //   </div>
-        // </div>
         <Comments
           exit={() => setToggleComment(false)}
           replyId={event.id}
@@ -516,6 +416,66 @@ export default function KindOne({ event, reactions = true, border = false }) {
   );
 }
 
-// export default function KindOne({ event, reactions = true }) {
-//   return null
-// }
+const RelatedEvent = ({ event }) => {
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const [user, setUser] = useState(false);
+  const [relatedEvent, setRelatedEvent] = useState(false);
+  const [isRelatedEventLoaded, setIsRelatedEventLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchAuthor = async () => {
+      try {
+        let auth = await getUser(relatedEvent);
+        if (auth) setUser(auth);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchAuthor();
+  }, [nostrAuthors, relatedEvent]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsRelatedEventLoaded(false);
+        let event_ = await getSubData([{ kinds: [1], ids: [event] }], 1000);
+        if (event_.data.length > 0) {
+          saveUsers([event_.data[0].pubkey]);
+          setRelatedEvent(event_.data[0].pubkey);
+          setUser(getEmptyuserMetadata(event_.data[0].pubkey));
+        }
+        setIsRelatedEventLoaded(true);
+      } catch (err) {
+        setIsRelatedEventLoaded(true);
+      }
+    };
+    if (event) {
+      let checkEventKind = event.split(":");
+      if (checkEventKind.length > 2) {
+        saveUsers([checkEventKind[1]]);
+        setRelatedEvent(checkEventKind[1]);
+        setUser(getEmptyuserMetadata(checkEventKind[1]));
+        return;
+      }
+      fetchData();
+    }
+  }, [event]);
+  const handleOnClick = (e) => {
+    e.stopPropagation();
+    if (!user) return;
+    customHistory.push(`/users/${getBech32("npub", user.pubkey)}`);
+  };
+  return (
+    <div
+      className="fit-container fx-centered fx-start-h"
+      onClick={handleOnClick}
+    >
+      <p className="gray-c">
+        Replying to{" "}
+        <span className="c1-c">
+          @{user?.display_name || user?.name || "User"}
+        </span>
+      </p>
+    </div>
+  );
+};

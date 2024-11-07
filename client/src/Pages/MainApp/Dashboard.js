@@ -13,7 +13,12 @@ import axios from "axios";
 import { getSubData } from "../../Helpers/Controlers";
 import { getParsedRepEvent, sortEvents } from "../../Helpers/Encryptions";
 import useNoteStats from "../../Hooks/useNoteStats";
-import { compactContent, straightUp } from "../../Helpers/Helpers";
+import {
+  compactContent,
+  getArticleDraft,
+  getLinkFromAddr,
+  straightUp,
+} from "../../Helpers/Helpers";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import ShareLink from "../../Components/ShareLink";
 import { nip19 } from "nostr-tools";
@@ -34,6 +39,7 @@ import InterestSuggestions from "../../Content/InterestSuggestions";
 import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import AddArticlesToCuration from "../../Components/Main/AddArticlesToCuration";
+import { customHistory } from "../../Helpers/History";
 
 const tabs = ["Home", "Content", "Bookmarks", "Interests"];
 const bookmarkFilterOptions = [
@@ -159,15 +165,13 @@ const eventsInitialState = {
   widgets: [],
 };
 const getLocalDraft = () => {
-  let title = localStorage.getItem("yai-last-article-title");
-  let content = localStorage.getItem("yai-last-article-content");
-  let time = localStorage.getItem("yai-last-article-time");
-  if (!(title && content)) return;
+  const draft = getArticleDraft();
+  if (draft.default) return;
   return {
-    created_at: time ? parseInt(time) : Math.floor(Date.now() / 1000),
+    created_at: draft.created_at ||  Math.floor(Date.now() / 1000),
     kind: 30024,
-    title: title || "Untitled",
-    content: content || "Untitled",
+    title: draft.title || "Untitled",
+    content: draft.content || "Untitled",
     local: true,
   };
 };
@@ -250,7 +254,11 @@ export default function Dashboard() {
   return (
     <>
       {postToNote !== false && (
-        <PostAsNote exit={() => setPostToNote(false)} content={postToNote} />
+        <PostAsNote
+          exit={() => setPostToNote(false)}
+          content={typeof postToNote === "string" ? postToNote : ""}
+          linkedEvent={typeof postToNote !== "string" ? postToNote : ""}
+        />
       )}
       <div>
         <Helmet>
@@ -465,11 +473,11 @@ const Content = ({ filter, setPostToNote, init }) => {
 
   const handleAddContent = () => {
     if (["articles", "drafts"].includes(contentFrom)) {
-      navigate("/write-article");
+      customHistory.push("/write-article");
       return;
     }
     if (["widgets"].includes(contentFrom)) {
-      navigate("/smart-widget-builder");
+      customHistory.push("/smart-widget-builder");
       return;
     }
     if (["notes"].includes(contentFrom)) {
@@ -861,7 +869,6 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
                   mainAccountUser={true}
                   ring={false}
                   size={110}
-                  allowClick={false}
                 />
               </div>
               <div className="fx-centered fx-col">
@@ -1088,8 +1095,6 @@ const ContentCard = ({
 };
 
 const DraftCard = ({ event, setDeleteEvent }) => {
-  const navigate = useNavigate();
-
   return (
     <div
       className="fit-container fx-scattered sc-s-18 box-pad-h-m box-pad-v-m pointer"
@@ -1101,7 +1106,7 @@ const DraftCard = ({ event, setDeleteEvent }) => {
       }}
       onClick={(e) => {
         e.stopPropagation();
-        event.local && navigate("/write-article");
+        event.local && customHistory.push("/write-article");
       }}
     >
       <div className="fx-centered fx-start-v">
@@ -1122,27 +1127,41 @@ const DraftCard = ({ event, setDeleteEvent }) => {
         <div className="fx-centered" style={{ minWidth: "max-content" }}>
           <OptionsDropdown
             options={[
-              <div
+              <Link
                 className="pointer"
-                onClick={() =>
-                  navigate("/write-article", {
-                    state: {
-                      post_pubkey: event.pubkey,
-                      post_id: event.id,
-                      post_kind: event.kind,
-                      post_title: event.title,
-                      post_desc: event.summary,
-                      post_thumbnail: event.image,
-                      post_tags: event.items,
-                      post_d: event.d,
-                      post_content: event.content,
-                      post_published_at: event.published_at,
-                    },
-                  })
-                }
+                to={"/write-article"}
+                state={{
+                  post_pubkey: event.pubkey,
+                  post_id: event.id,
+                  post_kind: event.kind,
+                  post_title: event.title,
+                  post_desc: event.summary,
+                  post_thumbnail: event.image,
+                  post_tags: event.items,
+                  post_d: event.d,
+                  post_content: event.content,
+                  post_published_at: event.published_at,
+                }}
+
+                // onClick={() =>
+                //   navigate("/write-article", {
+                //     state: {
+                //       post_pubkey: event.pubkey,
+                //       post_id: event.id,
+                //       post_kind: event.kind,
+                //       post_title: event.title,
+                //       post_desc: event.summary,
+                //       post_thumbnail: event.image,
+                //       post_tags: event.items,
+                //       post_d: event.d,
+                //       post_content: event.content,
+                //       post_published_at: event.published_at,
+                //     },
+                //   })
+                // }
               >
                 <p>Edit draft</p>
-              </div>,
+              </Link>,
               setDeleteEvent && (
                 <div
                   className="fit-container"
@@ -1186,7 +1205,8 @@ const RepCard = ({
           onClick={(e) => {
             e.stopPropagation();
             setPostToNote(
-              `https://yakihonne.com/smart-widget-checker?naddr=${event.naddr}`
+              // `https://yakihonne.com/smart-widget-checker?naddr=${event.naddr}`
+              event
             );
           }}
         >
@@ -1251,7 +1271,8 @@ const RepCard = ({
         className="fit-container"
         onClick={(e) => {
           e.stopPropagation();
-          setPostToNote(event.naddr);
+          setPostToNote(event);
+          // setPostToNote(event.naddr);
         }}
       >
         <p>Post {eventKinds[event.kind]} in a note</p>
@@ -1334,7 +1355,8 @@ const RepCard = ({
       }}
       onClick={(e) => {
         e.stopPropagation();
-        navigate(`/${event.naddr}`);
+        customHistory.push(getLinkFromAddr(event.naddr));
+        // customHistory.push(`/${event.naddr}`);
       }}
     >
       <div className="fx-centered fx-start-v">
@@ -1432,7 +1454,7 @@ const NoteCard = ({ event }) => {
       }}
       onClick={(e) => {
         e.stopPropagation();
-        navigate(`/notes/${nip19.noteEncode(event.id)}`);
+        customHistory.push(`/notes/${nip19.noteEncode(event.id)}`);
       }}
     >
       <div className="fx-centered fx-start-v">
@@ -2310,7 +2332,7 @@ const ManageInterest = ({ exit }) => {
                     onClick={() => handleItemInList(true, index)}
                     className="round-icon-small"
                   >
-                    <div className="switch-arrows"></div>
+                    <div className="undo"></div>
                   </div>
                 )}
               </div>

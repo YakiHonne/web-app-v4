@@ -1,12 +1,18 @@
 import React, { Fragment, useEffect, useRef, useState } from "react";
 
-export default function OptionsDropdown({ options, border = false }) {
+export default function OptionsDropdown({
+  options,
+  border = false,
+  displayAbove = false,
+  vertical = true,
+  tooltip=true
+}) {
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef(null);
 
   useEffect(() => {
     const handleOffClick = (e) => {
-      e.stopPropagation()
+      e.stopPropagation();
       if (optionsRef.current && !optionsRef.current.contains(e.target))
         setShowOptions(false);
     };
@@ -19,15 +25,17 @@ export default function OptionsDropdown({ options, border = false }) {
   return (
     <div style={{ position: "relative" }} ref={optionsRef}>
       <div
-        className={`${border ? "round-icon": "round-icon-small"} round-icon-tooltip`}
+        className={`${
+          border ? "round-icon" : "round-icon-small"
+        } ${tooltip ? "round-icon-tooltip" : ""}`}
         style={{ border: border ? "" : "none" }}
         data-tooltip="Options"
         onClick={(e) => {
-          e.stopPropagation()
+          e.stopPropagation();
           setShowOptions(!showOptions);
         }}
       >
-        <div className="fx-centered fx-col" style={{ rowGap: 0 }}>
+        <div className={`fx-centered ${vertical ? "fx-col" : ""}`} style={{ gap: 0 }}>
           <p className="gray-c fx-centered" style={{ height: "6px" }}>
             &#x2022;
           </p>
@@ -43,8 +51,8 @@ export default function OptionsDropdown({ options, border = false }) {
         <div
           style={{
             position: "absolute",
-            right: '5px',
-            top: "110%",
+            right: "5px",
+            [displayAbove ? "bottom" : "tope"]: "110%",
             backgroundColor: "var(--dim-gray)",
             border: "none",
             minWidth: "150px",

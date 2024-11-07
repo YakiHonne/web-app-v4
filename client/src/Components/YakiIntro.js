@@ -17,10 +17,10 @@ const content = [
     new: false,
   },
   {
-    url: "/yakihonne-flash-news",
+    url: "/yakihonne-paid-notes",
     thumbnail:
       "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-flash-news.png",
-    tag: "Flash news",
+    tag: "Paid note",
     new: false,
   },
   {
@@ -133,16 +133,13 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- An entirely enhanced app core for faster, more reliable, and solid interaction with the Nostr network.
-- A redesigned UI/UX offering greater content visibility and a more user-friendly experience, featuring a new color palette, modern typeface, and sleek content cards.
-- A refreshed onboarding page to make logging in or creating new accounts quicker and more welcoming.
-- The new Discover page is now the hub for all media content, including articles, videos, and curated posts, offering easy access to what people are sharing and posting recently.
-- A redesigned Notifications page keeps you updated on the activities of those you follow and what others are saying about your published content.
-- A welcoming Dashboard, where you can manage all your published content in one place, quickly and easily.
-- Users without a wallet can now create one directly within Yakihonne to start sending and receiving zaps with their favorite people.
-- The Search feature is now faster, allowing you to paste any Nostr scheme or search for users or content directly from your sidebar.
-- Your published events are now saved in your browser for later management if they fail to publish when relays don't connect on the first try.
-- The Uncensored Notes page has been renamed to Verify Notes, keeping all the features you love, just as before.
+- A fresh design overhaul for the article, video, and curation pages, enabling seamless browsing and enhanced interaction with content.
+- Connected threads! A refined notes thread makes following entire discussions more intuitive.
+- Users can now personalize their home feed by selecting their top interests.
+- The suggestions box on the home page can now be hidden.
+- The on-hover user preview can now be disabled for quicker access to profiles.
+- General improvements.
+- Bug fixes and optimizations.
 `}</p>
           </div>
           {content.map((card, index) => {
@@ -201,3 +198,14 @@ const Banner = ({ exit }) => {
     </div>
   );
 };
+
+// - An entirely enhanced app core for faster, more reliable, and solid interaction with the Nostr network.
+// - A redesigned UI/UX offering greater content visibility and a more user-friendly experience, featuring a new color palette, modern typeface, and sleek content cards.
+// - A refreshed onboarding page to make logging in or creating new accounts quicker and more welcoming.
+// - The new Discover page is now the hub for all media content, including articles, videos, and curated posts, offering easy access to what people are sharing and posting recently.
+// - A redesigned Notifications page keeps you updated on the activities of those you follow and what others are saying about your published content.
+// - A welcoming Dashboard, where you can manage all your published content in one place, quickly and easily.
+// - Users without a wallet can now create one directly within Yakihonne to start sending and receiving zaps with their favorite people.
+// - The Search feature is now faster, allowing you to paste any Nostr scheme or search for users or content directly from your sidebar.
+// - Your published events are now saved in your browser for later management if they fail to publish when relays don't connect on the first try.
+// - The Uncensored Notes page has been renamed to Verify Notes, keeping all the features you love, just as before.

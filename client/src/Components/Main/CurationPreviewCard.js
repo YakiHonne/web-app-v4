@@ -29,6 +29,7 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { getUser } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { redirectToLogin } from "../../Helpers/Helpers";
+import { customHistory } from "../../Helpers/History";
 
 const filterRootComments = (all) => {
   let temp = [];
@@ -200,7 +201,7 @@ export default function CurationPreviewCard({ curationEv }) {
           })
         );
         setTimeout(() => {
-          navigateTo("/curations");
+          customHistory.push("/curations");
         }, 2000);
         return;
       }
@@ -599,7 +600,7 @@ export default function CurationPreviewCard({ curationEv }) {
               minHeight: "200px",
               backgroundImage: `url(${curationDet.image})`,
             }}
-            onClick={() => navigateTo(`/curations/${curationEv.naddr}`)}
+            onClick={() => customHistory.push(`/curations/${curationEv.naddr}`)}
           ></div>
           <div
             style={{ flex: "1 1 700px", width: "min(100%,700px)" }}
@@ -621,7 +622,7 @@ export default function CurationPreviewCard({ curationEv }) {
             </div>
             <h3
               className="pointer"
-              onClick={() => navigateTo(`/curations/${curationEv.naddr}`)}
+              onClick={() => customHistory.push(`/curations/${curationEv.naddr}`)}
             >
               {curationDet.title}
             </h3>
@@ -722,7 +723,7 @@ export default function CurationPreviewCard({ curationEv }) {
                               }}
                               key={`${item.id}-${index}`}
                               onClick={() =>
-                                navigateTo(`/article/${item.naddr}`)
+                                customHistory.push(`/article/${item.naddr}`)
                               }
                             >
                               {/* <div
