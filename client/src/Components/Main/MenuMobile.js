@@ -227,7 +227,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           </div>
         )}
 
-        <WriteNew exit={dismiss} />
+        {userKeys && <WriteNew exit={dismiss} />}
       </div>
       {userMetadata && (
         <>
@@ -384,6 +384,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               onClick={(e) => {
                 // e.stopPropagation();
                 redirectToLogin();
+                dismiss()
               }}
             >
               <div className="plus-sign"></div>

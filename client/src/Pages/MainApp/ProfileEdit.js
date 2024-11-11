@@ -20,6 +20,7 @@ import axios from "axios";
 import { FilePicker } from "../../Components/FilePicker";
 import { FileUpload } from "../../Helpers/Helpers";
 import LoadingScreen from "../../Components/LoadingScreen";
+import Backbar from "../../Components/Main/Backbar";
 
 export default function ProfileEdit() {
   const dispatch = useDispatch();
@@ -91,7 +92,7 @@ export default function ProfileEdit() {
       userWebsite !== false ? userWebsite : content.website || "";
     content.nip05 = userNip05 !== false ? userNip05 : content.nip05;
     content.lud06 = userLud06 !== false ? userLud06 : content.lud06;
-    content.lud16 = userLud16 !== false ? userLud16 : content.lud16;
+    content.lud16 = userLud06 !== false ? encodeLud06(userLud06) : content.lud16;
 
     setIsLoading(true);
     dispatch(
@@ -272,6 +273,7 @@ export default function ProfileEdit() {
                 pointerEvents: isLoading || isImageUploading ? "none" : "auto",
               }}
             >
+ 
               <div
                 className="fx-centered fit-container  fx-start-v"
                 style={{ gap: 0 }}
@@ -279,7 +281,8 @@ export default function ProfileEdit() {
                 <div className="main-middle">
                   {userMetadata && (userKeys.sec || userKeys.ext) && (
                     <>
-                      <div className="fit-container fx-centered fx-col">
+                      <div className="fit-container fx-centered fx-col" style={{gap: 0}}>
+                      <Backbar />
                         <div
                           className="fit-container fx-centered fx-end-v"
                           style={{
@@ -600,7 +603,7 @@ export default function ProfileEdit() {
                                       placeholder="Cover"
                                       value={userBanner}
                                       onChange={(e) =>
-                                        setUserPicture(e.target.value)
+                                        setUserBanner(e.target.value)
                                       }
                                     />
                                   </div>

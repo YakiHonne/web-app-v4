@@ -154,7 +154,7 @@ export default function Comments({
         <div className="fixed-container fx-centered box-pad-h">
           <div
             className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
-            style={{ width: "min(100%, 450px)" }}
+            style={{ width: "min(100%, 500px)" }}
           >
             <div className="fx-centered fx-col">
               <h4>Save draft?</h4>

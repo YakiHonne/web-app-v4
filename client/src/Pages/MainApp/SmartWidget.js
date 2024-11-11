@@ -185,13 +185,16 @@ const imageAspectRatio = [
     value: "1:1",
   },
 ];
-
+const isLocalDraft = () => {
+  return localStorage.getItem("sw-current-workspace") ? true : false;
+};
 export default function NostrSmartWidget() {
   let { state } = useLocation();
-  console.log(state)
   const userKeys = useSelector((state) => state.userKeys);
   const isDarkMode = useSelector((state) => state.isDarkMode);
-  const [buildOptions, setBuildOptions] = useState(state ? false : true);
+  const [buildOptions, setBuildOptions] = useState(
+    state || isLocalDraft() ? false : true
+  );
   const [buildOption, setBuildOption] = useState("normal");
   const [template, setTemplate] = useState(
     state ? getTemplate(state.metadata.metadata.components) : []
@@ -644,6 +647,12 @@ const SmartWidgetBuilder = ({
     };
   }, [optionsRef]);
 
+  useEffect(() => {
+    if (template.length === 0) {
+      loadLastDesign();
+    }
+  }, [template]);
+
   const loadLastDesign = () => {
     if (lastDesgin) {
       try {
@@ -1016,7 +1025,6 @@ const SmartWidgetBuilder = ({
       deleteDraft();
     });
   };
-
   const deleteDraft = () => {
     let tempArray = getDrafts();
     let index = tempArray.findIndex((widget_) => widget_.id === widgetID);
@@ -1025,7 +1033,6 @@ const SmartWidgetBuilder = ({
       localStorage.setItem("sw-workspaces", JSON.stringify(tempArray));
     }
   };
-
   const handleSelectedTemplate = (sample) => {
     setMainContainerBackgroundColor(sample.background_color);
     setMainContainerBorderColor(sample.border_color);

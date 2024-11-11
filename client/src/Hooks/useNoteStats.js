@@ -70,7 +70,11 @@ const useNoteStats = (noteID, notePubkey) => {
             if (!kind9735Since || kind9735Since < event.created_at) {
               kind9735Since = event.created_at;
             }
-            kind9735.push({ id: zapper.id, pubkey: zapper.pubkey, amount: sats });
+            kind9735.push({
+              id: zapper.id,
+              pubkey: zapper.pubkey,
+              amount: sats,
+            });
             kind9735_ = kind9735_ + sats;
           }
           if (event.kind === 7) {
@@ -87,10 +91,13 @@ const useNoteStats = (noteID, notePubkey) => {
             let check_kind1 = {
               isQuote: event.tags.find((tag) => tag[0] === "q"),
               isComment: event.tags.find(
-                (tag) => tag.length > 3 && tag[1] === noteID && ["root", "reply"].includes(tag[3])
+                (tag) =>
+                  tag.length > 3 &&
+                  tag[1] === noteID &&
+                  ["root", "reply"].includes(tag[3])
               ),
             };
-            if (check_kind1.isQuote) {
+            if (check_kind1.isQuote && !check_kind1.isComment) {
               if (!kind1_Since || kind1_Since < event.created_at)
                 kind1_Since = event.created_at;
               kind1_.push({ id: event.id, pubkey: event.pubkey });

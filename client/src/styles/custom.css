@@ -2083,3 +2083,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .carousel-width {
     width: 60vw;
 }
+
+.mobile-container {
+    height: 100vh;
+}
+
+
+@supports (height: 100dvh) {
+    .mobile-container {
+        height: 100dvh;
+
+    }
+}
+
+.sticky-to-fixed {
+    position: sticky;
+    top: 0;
+    background-color: var(--white);
+    z-index: 100;
+    padding: 1rem 0;
+}

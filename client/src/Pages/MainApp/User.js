@@ -54,6 +54,7 @@ import { NDKUser } from "@nostr-dev-kit/ndk";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import { getUserFollowers, getUserStats } from "../../Helpers/WSInstance";
 import { customHistory } from "../../Helpers/History";
+import LoadingLogo from "../../Components/LoadingLogo";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -190,7 +191,7 @@ export default function User() {
                   }}
                   className="main-middle"
                 >
-                  <UserMetadata />
+                  <UserMetadata refreshUser={setUser} />
                   <div
                     className="it-container fx-centered fx-col"
                     style={{ position: "relative" }}
@@ -231,7 +232,7 @@ export default function User() {
   );
 }
 
-const UserMetadata = () => {
+const UserMetadata = ({ refreshUser }) => {
   const navigateTo = useNavigate();
   const { user_id } = useParams();
   const dispatch = useDispatch();
@@ -318,6 +319,7 @@ const UserMetadata = () => {
       }
     };
     getID();
+    setShowPeople(false)
   }, [user_id]);
 
   const getMetadata = async () => {
@@ -327,6 +329,7 @@ const UserMetadata = () => {
       let cachedUser = getUser(id);
       if (cachedUser) {
         setUser(cachedUser);
+        refreshUser(cachedUser);
         setIsLoaded(true);
       }
       let stats = await getUserStats(id);
@@ -336,6 +339,7 @@ const UserMetadata = () => {
         userStats_ = userStats_ ? JSON.parse(userStats_.content) : false;
         let parsedProfile = getuserMetadata(userProfile);
         setUser(parsedProfile);
+        refreshUser(parsedProfile);
         saveFetchedUsers([parsedProfile]);
         if (userStats_)
           setUserStats({
@@ -352,6 +356,7 @@ const UserMetadata = () => {
         if (profile) {
           let parsedProfile = getParsedAuthor(JSON.parse(profile.profileEvent));
           setUser(parsedProfile);
+          refreshUser(parsedProfile);
           saveFetchedUsers([parsedProfile]);
           setIsLoaded(true);
         }
@@ -600,7 +605,7 @@ const UserMetadata = () => {
             )}
             {!isLoaded && (
               <div className="box-pad-h box-pad-v fit-container fx-centered">
-                <LoadingDots />
+                <LoadingLogo />
               </div>
             )}
           </div>
@@ -634,6 +639,7 @@ const UserMetadata = () => {
                       : `https://${user?.website}`
                   }
                   target="_blank"
+                  style={{textDecoration: user?.website ? "underline" : ""}}
                 >
                   {user?.website || "N/A"}
                 </a>
@@ -881,25 +887,6 @@ const UserFeed = ({ user }) => {
           Videos
         </div>
       </div>
-
-      {/* <div
-        className="fit-container sticky fx-centered box-pad-h fx-col"
-        style={{
-          top:"-1px",
-          padding: "1rem",
-          borderBottom: "1px solid var(--very-dim-gray)",
-          borderTop: "1px solid var(--very-dim-gray)",
-        }}
-      >
-        <div className="fit-container fx-scattered">
-          <h3>Feed</h3>
-          <Select
-            options={feedOptions}
-            value={contentFrom}
-            setSelectedValue={(data) => setContentFrom(data)}
-          />
-        </div>
-      </div> */}
       {contentFrom === "notes" && (
         <div className="fit-container fx-centered fx-col">
           {events[contentFrom].length > 0 && (
@@ -911,14 +898,6 @@ const UserFeed = ({ user }) => {
                 {events[contentFrom].map((note) => {
                   if (note.kind === 6)
                     return <KindSix event={note} key={note.id} />;
-                  // if (note.kind === 1 && note.isComment)
-                  //   return (
-                  //     <KindOneComments
-                  //       event={note}
-                  //       key={note.id}
-                  //       author={user}
-                  //     />
-                  //   );
                   return <KindOne event={note} key={note.id} border={true} />;
                 })}
               </div>
@@ -1048,10 +1027,9 @@ const UserFeed = ({ user }) => {
       {isLoading && (
         <div
           className="fit-container box-pad-v fx-centered fx-col"
-          style={{ height: "30vh" }}
+          style={{ height: "40vh" }}
         >
-          <p className="gray-c">Loading</p>
-          <LoadingDots />
+          <LoadingLogo />
         </div>
       )}
     </div>
@@ -1079,6 +1057,10 @@ const UserFollowers = ({ id, followersCount }) => {
     };
     if (showPeople) fetchData();
   }, [showPeople]);
+
+  useEffect(() => {
+    setShowPeople(false)
+  }, [id])
 
   return (
     <>
@@ -1615,8 +1597,8 @@ const UserPP = ({ src, size, user_id }) => {
         <Avatar
           size={size}
           name={user_id}
-          variant="beam"
-          colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
+          variant="marble"
+              colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
         />
       </div>
     );

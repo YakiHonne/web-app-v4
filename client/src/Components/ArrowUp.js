@@ -26,7 +26,7 @@ export default function ArrowUp() {
       style={{
         position: "fixed",
         right: "32px",
-        bottom: "32px",
+        bottom: "52px",
         minWidth: "40px",
         aspectRatio: "1/1",
         borderRadius: "var(--border-r-50)",

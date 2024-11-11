@@ -343,9 +343,10 @@ export default function NotificationCenterMain() {
           );
           tempAuth.push(description.pubkey);
           tempEvents = removeEventsDuplicants(
-            [description, ...tempEvents].sort(
-              (ev1, ev2) => ev2.created_at - ev1.created_at
-            )
+            [
+              { ...description, created_at: event.created_at },
+              ...tempEvents,
+            ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
           );
         } else if (event.kind === 6) {
           try {
@@ -391,23 +392,29 @@ export default function NotificationCenterMain() {
               event.tags.find((tag) => tag[0] === "description")[1]
             );
             tempAuth.push(description.pubkey);
-            if (description.created_at > tempEvents[0].created_at)
+            if (event.created_at > tempEvents[0].created_at)
               setNewNotifications((prev) =>
-                removeEventsDuplicants([description, ...prev])
+                removeEventsDuplicants([
+                  { ...description, created_at: event.created_at },
+                  ...prev,
+                ])
               );
             else {
               setNotifications((prev) =>
-                [...prev, description].sort(
-                  (ev1, ev2) => ev2.created_at - ev1.created_at
-                )
+                [
+                  ...prev,
+                  { ...description, created_at: event.created_at },
+                ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
               );
             }
             tempEvents = removeEventsDuplicants(
-              [description, ...tempEvents].sort(
-                (ev1, ev2) => ev2.created_at - ev1.created_at
-              )
+              [
+                { ...description, created_at: event.created_at },
+                ...tempEvents,
+              ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
             );
-            saveNotificationLastEventTS(userKeys.pib, tempEvents[0].created_at);
+
+            saveNotificationLastEventTS(userKeys.pub, tempEvents[0].created_at);
           } else {
             let pubkeys = event.tags
               .filter((tag) => tag[0] === "p")

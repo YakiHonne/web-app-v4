@@ -38,6 +38,8 @@ import Like from "../../Components/Reactions/Like";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import RepEventCommentsSection from "../../Components/Main/RepEventCommentsSection";
 import { customHistory } from "../../Helpers/History";
+import Backbar from "../../Components/Main/Backbar";
+import DynamicIndicator from "../../Components/DynamicIndicator";
 
 export default function Curation() {
   const dispatch = useDispatch();
@@ -53,6 +55,7 @@ export default function Curation() {
   const [curationAuthor, setCurationAuthor] = useState({});
   const [usersList, setUsersList] = useState(false);
   const [showCommentsSection, setShowCommentsSections] = useState(false);
+  const [morePosts, setMorePosts] = useState([]);
 
   const { postActions } = useRepEventStats(curation?.aTag, curation?.pubkey);
 
@@ -107,8 +110,10 @@ export default function Curation() {
               })
             );
           } else {
-            console.log(_curation)
-            let authPubkeys = removeDuplicants(getAuthPubkeys(_curation?.tags || []));
+            console.log(_curation);
+            let authPubkeys = removeDuplicants(
+              getAuthPubkeys(_curation?.tags || [])
+            );
             saveUsers(authPubkeys);
             let dRefs = getDRef(_curation?.tags || []);
             if (dRefs.length === 0) setIsArtsLoaded(true);
@@ -167,6 +172,39 @@ export default function Curation() {
     };
     initAuth();
   }, [nostrAuthors]);
+
+  useEffect(() => {
+    try {
+      let count = 0;
+      let moreCurationsAuthorsPubkeys = [];
+      let sub = ndkInstance.subscribe(
+        [
+          {
+            kinds: [30004, 30005],
+            limit: 5,
+          },
+        ],
+        { cacheUsage: "CACHE_FIRST", groupable: false }
+      );
+      sub.on("event", (event) => {
+        count += 1;
+        if (count < 7) {
+          moreCurationsAuthorsPubkeys.push(event.pubkey);
+          setMorePosts((prev) => {
+            if (!prev.find((prev_) => prev_.id === event.id))
+              return [...prev, getParsedRepEvent(event)];
+            else return prev;
+          });
+        }
+      });
+      sub.on("eose", () => {
+        saveUsers(moreCurationsAuthorsPubkeys);
+      });
+    } catch (err) {
+      console.log(err);
+      setIsLoaded(true);
+    }
+  }, []);
 
   const checkURL = async () => {
     try {
@@ -273,9 +311,11 @@ export default function Curation() {
                   )}
                   {!showCommentsSection && (
                     <>
+                      <Backbar />
                       <div
                         className="fx-scattered fit-container box-pad-v"
                         style={{
+                          paddingTop: 0,
                           borderBottom: "1px solid var(--very-dim-gray)",
                         }}
                       >
@@ -403,7 +443,7 @@ export default function Curation() {
                           {articlesOnCuration.length > 0 && (
                             <div
                               className="fx-centered fit-container fx-start-h fx-wrap"
-                              style={{ columnGap: "32px", rowGap: "32px" }}
+                              style={{ gap: 0 }}
                             >
                               {articlesOnCuration.map((item, index) => {
                                 return (
@@ -425,13 +465,60 @@ export default function Curation() {
                           )}
                         </div>
                       </div>
+                      {morePosts.length > 0 && (
+                        <div
+                          className="fit-container box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                          style={{
+                            rowGap: "24px",
+                            border: "none",
+                          }}
+                        >
+                          <h4>You might also like</h4>
+                          <div className="fit-container fx-centered fx-wrap">
+                            {morePosts.map((curation_) => {
+                              if (
+                                curation_.id !== curation.id &&
+                                curation_.items.length > 0
+                              )
+                                return (
+                                  <Link
+                                    key={curation_.id}
+                                    className="fit-container fx-centered fx-start-h"
+                                    to={`/curations/${curation_.naddr}`}
+                                    target="_blank"
+                                  >
+                                    <div
+                                      style={{
+                                        minWidth: "48px",
+                                        aspectRatio: "1/1",
+                                        borderRadius: "var(--border-r-6)",
+                                        backgroundImage: `url(${curation_.image})`,
+                                        backgroundColor: "black",
+                                        position: "relative",
+                                      }}
+                                      className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
+                                    ></div>
+                                    <div>
+                                      <p className=" p-two-lines">
+                                        {curation_.title || "Untitled"}
+                                      </p>
+                                      <p className="p-small gray-c">
+                                        <DynamicIndicator item={curation_} />
+                                      </p>
+                                    </div>
+                                  </Link>
+                                );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
               </div>
               {!showCommentsSection && (
                 <div
-                  className="fit-container sticky fx-centered"
+                  className="fit-container sticky-to-fixed fx-centered"
                   style={{
                     bottom: 0,
                     borderTop: "1px solid var(--very-dim-gray)",

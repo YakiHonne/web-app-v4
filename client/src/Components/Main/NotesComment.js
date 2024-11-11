@@ -1,22 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { nip19 } from "nostr-tools";
-import {
-  checkForLUDS,
-  decodeBolt11,
-  getBech32,
-  getBolt11,
-  getEmptyuserMetadata,
-  getZapper,
-} from "../../Helpers/Encryptions";
+import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
-import { getNoteTree } from "../../Helpers/Helpers";
 import Date_ from "../../Components/Date_";
-import LoadingDots from "../LoadingDots";
 import QuoteNote from "./QuoteNote";
 import BookmarkEvent from "./BookmarkEvent";
 import ShareLink from "../ShareLink";
-import ZapTip from "./ZapTip";
 import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
@@ -29,7 +19,6 @@ import Repost from "../Reactions/Repost";
 import Quote from "../Reactions/Quote";
 import Zap from "../Reactions/Zap";
 import OptionsDropdown from "./OptionsDropdown";
-import { useNavigate } from "react-router-dom";
 import { customHistory } from "../../Helpers/History";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 
@@ -40,11 +29,9 @@ export default function NotesComment({
   hasReplies = false,
   isReply = false,
   isReplyBorder = false,
-  isHistory = false
+  isHistory = false,
 }) {
-  
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
@@ -217,6 +204,7 @@ export default function NotesComment({
       {isReply && (
         <div
           className="reply-tail"
+          // style={{ left: isReplyBorder ? ".5rem" : 0 }}
           style={{ left: isReplyBorder ? "-.0625rem" : 0 }}
         ></div>
       )}
@@ -232,7 +220,9 @@ export default function NotesComment({
         />
       )}
       <div
-        className={`box-pad-h-m ${isHistory ? "" :"box-pad-v-m"} fit-container`}
+        className={`box-pad-h-m ${
+          isHistory ? "" : "box-pad-v-m"
+        } fit-container`}
         style={{
           transition: ".2s ease-in-out",
           overflow: "visible",
@@ -242,7 +232,7 @@ export default function NotesComment({
         <div className="fit-container fx-scattered">
           <div className="fx-centered fx-start-h ">
             <UserProfilePicNOSTR
-              size={isHistory ?40 :30 }
+              size={isHistory ? 40 : 30}
               mainAccountUser={false}
               ring={false}
               user_id={user.pubkey}
@@ -251,7 +241,9 @@ export default function NotesComment({
             />
             <div>
               <div className="fx-centered">
-                <p className={isHistory ?"" :"p-medium"}>{user.display_name || user.name}</p>
+                <p className={isHistory ? "" : "p-medium"}>
+                  {user.display_name || user.name}
+                </p>
                 {isNip05Verified && <div className="checkmark-c1"></div>}
               </div>
               <p className="p-medium gray-c">
@@ -271,10 +263,11 @@ export default function NotesComment({
         <div
           className="fx-centered fx-col fit-container"
           style={{
-            marginLeft: ".39rem",
+            marginLeft: "1rem",
+            // marginLeft: ".39rem",
             paddingLeft: "1.5rem",
             paddingTop: "1rem",
-            paddingBottom: isHistory ? "1rem" : "unset" ,
+            paddingBottom: isHistory ? "1rem" : "unset",
             borderLeft: hasReplies ? "1px solid var(--dim-gray)" : "",
           }}
         >
@@ -283,10 +276,7 @@ export default function NotesComment({
           </div>
 
           {!noReactions && (
-            <div
-              className="fx-scattered fit-container"
-              // style={{ paddingTop: "1rem", paddingLeft: "32px" }}
-            >
+            <div className="fx-scattered fit-container">
               <div className="fx-centered" style={{ columnGap: "16px" }}>
                 <div className="fx-centered">
                   <div className="icon-tooltip" data-tooltip="Leave a comment">
@@ -295,10 +285,8 @@ export default function NotesComment({
                       onClick={() => setToggleComment(!toggleComment)}
                     ></div>
                   </div>
-                  <div >
-                    <p >
-                      {postActions.replies.replies.length}
-                    </p>
+                  <div>
+                    <p>{postActions.replies.replies.length}</p>
                   </div>
                 </div>
                 <div className="fx-centered">
@@ -333,9 +321,7 @@ export default function NotesComment({
                     actions={postActions}
                   />
                   <div
-                    className={`icon-tooltip ${
-                      isReposted ? "orange-c" : ""
-                    } `}
+                    className={`icon-tooltip ${isReposted ? "orange-c" : ""} `}
                     data-tooltip="Reposts "
                     onClick={(e) => {
                       e.stopPropagation();

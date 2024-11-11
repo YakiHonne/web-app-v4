@@ -255,7 +255,7 @@
 }
 
 @media only screen and (max-width: 800px) {
-  
+
   html {
     font-size: 12px;
   }
@@ -299,6 +299,7 @@
   .desk-hide {
     display: flex;
   }
+
   .carousel-width {
     width: 90vw;
   }
@@ -314,6 +315,25 @@
 
   .main-container {
     padding: 0;
+  }
+
+  .mobile-container {
+    height: calc(100vh - 4.7rem)
+  }
+
+  @supports (height: 100dvh) {
+    .mobile-container {
+      height: calc(100dvh - 4.7rem)
+    }
+  }
+
+  .sticky-to-fixed {
+    position: fixed;
+    top: unset;
+    left: 0;
+    padding: 1rem;
+    background-color: var(--white);
+    position: fixed;
   }
 
   /* 

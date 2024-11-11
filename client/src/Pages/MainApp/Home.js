@@ -209,11 +209,12 @@ export default function Home() {
       setSmallButtonDropDownOptions(getContentList());
     } else {
       setSmallButtonDropDownOptions([
-        "highlights",
         "trending",
+        "highlights",
         "paid",
         "widgets",
       ]);
+      setSelectedCategory("trending");
     }
   }, [userKeys]);
 
@@ -435,8 +436,9 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       };
       straightUp();
       dispatchNotes({ type: "remove-events" });
-      setNotesLastEventTime(undefined);
       setNotesContentFrom(from);
+      setNotesLastEventTime(undefined);
+
       trendingLastScore.current = undefined;
     }
   }, [from]);
@@ -451,8 +453,8 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
           let followings = await getFollowings(userKeys.pub);
           tempUserFollowings =
             followings.followings.length > 0
-              ? Array.from(followings.followings)
-              : [process.env.REACT_APP_YAKI_PUBKEY];
+              ? [userKeys.pub, ...Array.from(followings.followings)]
+              : [userKeys.pub, process.env.REACT_APP_YAKI_PUBKEY];
           setUserFollowings(tempUserFollowings);
         } else {
           tempUserFollowings = [process.env.REACT_APP_YAKI_PUBKEY];
@@ -553,26 +555,23 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
   useEffect(() => {
     const handleScroll = () => {
       let container = document.querySelector(".main-page-nostr-container");
-
-      if (!container) return;
+      if (!container && isLoading) return;
       if (
         container.scrollHeight - container.scrollTop - 400 >
         document.documentElement.offsetHeight
       ) {
         return;
       }
-      let notesContentFrom_ = smallButtonDropDownOptions.includes(
-        notesContentFrom
-      )
-        ? notesContentFrom
+      let notesContentFrom_ = smallButtonDropDownOptions.includes(from)
+        ? from
         : "tags";
 
-      if (notesContentFrom !== "trending")
+      if (notesContentFrom !== "trending") {
         setNotesLastEventTime(
           notes[notesContentFrom_][notes[notesContentFrom_].length - 1]
             ?.created_at || undefined
         );
-      else setNotesLastEventTime(trendingLastScore.current);
+      } else setNotesLastEventTime(trendingLastScore.current);
     };
     document
       .querySelector(".main-page-nostr-container")
@@ -581,7 +580,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       document
         .querySelector(".main-page-nostr-container")
         ?.removeEventListener("scroll", handleScroll);
-  }, [isLoading]);
+  }, [isLoading, from]);
 
   useEffect(() => {
     if (notesContentFrom === "trending") {

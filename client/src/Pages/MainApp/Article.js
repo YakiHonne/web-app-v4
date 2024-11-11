@@ -42,6 +42,7 @@ import Zap from "../../Components/Reactions/Zap";
 import Quote from "../../Components/Reactions/Quote";
 import RepEventCommentsSection from "../../Components/Main/RepEventCommentsSection";
 import { customHistory } from "../../Helpers/History";
+import Backbar from "../../Components/Main/Backbar";
 
 export default function Article() {
   const navigateTo = useNavigate();
@@ -265,10 +266,10 @@ export default function Article() {
       <div className="fit-container fx-centered">
         <div className="main-container">
           <SidebarNOSTR />
-          <main className="main-page-nostr-container">
+          <main className="main-page-nostr-container ">
             <ArrowUp />
             <div
-              className="fit-container fx-centered fx-start-v box-pad-h"
+              className="fit-container fx-centered fx-start-v box-pad-h-m"
               style={{ minHeight: "100vh" }}
             >
               <div
@@ -291,6 +292,7 @@ export default function Article() {
                     dir="auto"
                     style={{ gap: 0 }}
                   >
+                    <Backbar />
                     {showPreview && (
                       <>
                         <div
@@ -336,9 +338,11 @@ export default function Article() {
                       <div
                         className="fx-scattered fit-container box-pad-v"
                         style={{
+                          paddingTop: 0,
                           borderBottom: "1px solid var(--very-dim-gray)",
                         }}
                       >
+                        
                         <div className="fx-centered">
                           <UserProfilePicNOSTR
                             size={48}
@@ -601,7 +605,7 @@ export default function Article() {
             </div>
             {!showCommentsSection && (
               <div
-                className="fit-container sticky fx-centered"
+                className="fit-container fx-centered sticky-to-fixed"
                 style={{
                   bottom: 0,
                   borderTop: "1px solid var(--very-dim-gray)",

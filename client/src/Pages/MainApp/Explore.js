@@ -14,6 +14,7 @@ import { saveUsers } from "../../Helpers/DB";
 import LoadingDots from "../../Components/LoadingDots";
 import { getSubData } from "../../Helpers/Controlers";
 import SmallButtonDropDown from "../../Components/Main/SmallButtonDropDown";
+import LoadingLogo from "../../Components/LoadingLogo";
 
 const tabs = ["All", "Articles", "Curations", "Videos"];
 
@@ -43,7 +44,7 @@ export default function Explore() {
   const [selectedCategory, setSelectedCategory] = useState("explore");
   const [smallButtonDropDownOptions, setSmallButtonDropDownOptions] = useState([
     "explore",
-    "followings",
+    "following",
   ]);
   const [isLoading, setIsLoading] = useState(true);
   const extrasRef = useRef(null);
@@ -69,9 +70,8 @@ export default function Explore() {
 
   useEffect(() => {
     if (userKeys && smallButtonDropDownOptions.length > 1)
-      setSmallButtonDropDownOptions(["explore", "followings"]);
-    else 
-    setSmallButtonDropDownOptions(["explore"]);
+      setSmallButtonDropDownOptions(["explore", "following"]);
+    else setSmallButtonDropDownOptions(["explore"]);
   }, [userKeys]);
 
   return (
@@ -106,9 +106,8 @@ export default function Explore() {
               style={{ gap: 0 }}
             >
               <div
-                className={`fit-container fx-centered fx-start-v fx-wrap  fit-container`}
+                className={`fit-container fx-centered fx-start-v fx-wrap  fit-container mobile-container`}
                 style={{
-                  height: "100vh",
                   position: "relative",
                 }}
               >
@@ -176,6 +175,7 @@ export default function Explore() {
                     bottom: 0,
                     left: 0,
                     pointerEvents: isLoading ? "none" : "auto",
+                    zIndex: 101,
                   }}
                   className="fit-container fx-centered box-pad-v"
                 >
@@ -217,6 +217,7 @@ const ExploreFeed = ({
   isLoading,
   setIsLoading,
 }) => {
+  const userKeys = useSelector((state) => state.userKeys);
   const userFollowings = useSelector((state) => state.userFollowings);
   const [content, setContent] = useState([]);
   // const [isLoading, setIsLoading] = useState(false);
@@ -322,11 +323,13 @@ const ExploreFeed = ({
   }, [selectedCategory, selectedTab]);
 
   const getFilter = () => {
-    let tag = !["explore", "followings"].includes(selectedCategory)
+    let tag = !["explore", "following"].includes(selectedCategory)
       ? [selectedCategory]
       : undefined;
     let authors =
-      selectedCategory === "followings" ? userFollowings : undefined;
+      selectedCategory === "following"
+        ? [userKeys, ...userFollowings]
+        : undefined;
     return {
       artsFilter: [0, 1].includes(selectedTab)
         ? [
@@ -393,8 +396,7 @@ const ExploreFeed = ({
           className="fit-container box-pad-v fx-centered fx-col"
           style={{ height: "30vh" }}
         >
-          <p className="gray-c">Loading</p>
-          <LoadingDots />
+          <LoadingLogo />
         </div>
       )}
     </div>

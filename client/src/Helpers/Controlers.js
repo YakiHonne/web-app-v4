@@ -92,7 +92,7 @@ const addConnectedAccounts = (account, userKeys) => {
   try {
     let accounts = getConnectedAccounts() || [];
     let isAccount = accounts.findIndex(
-      (account_) => account_.pubkey === account.pubkey
+      (account_) => account_.pubkey === userKeys.pub
     );
     if (isAccount === -1) {
       accounts.push({ ...account, userKeys });
@@ -194,13 +194,15 @@ const yakiChestDisconnect = async () => {
 };
 
 const logoutAllAccounts = async () => {
-  localStorage.removeItem("_userMetadata");
-  localStorage.removeItem("_nostruserkeys");
-  localStorage.removeItem("comment-with-prefix");
-  localStorage.removeItem("connect_yc");
-  localStorage.removeItem("yaki-wallets");
-  localStorage.removeItem("yaki-accounts");
-  localStorage.removeItem("new-notification");
+  // localStorage.removeItem("_userMetadata");
+  // localStorage.removeItem("_nostruserkeys");
+  // localStorage.removeItem("comment-with-prefix");
+  // localStorage.removeItem("connect_yc");
+  // localStorage.removeItem("yaki-wallets");
+  // localStorage.removeItem("yaki-accounts");
+  // localStorage.removeItem("new-notification");
+  // localStorage.removeItem("new-notification");
+  localStorage.clear();
   store.dispatch(setUserBalance("N/A"));
   store.dispatch(setUserKeys(false));
   store.dispatch(setUserMetadata(false));
@@ -229,7 +231,6 @@ const userLogout = async (pubkey) => {
   if (accountIndex !== -1) {
     accounts.splice(accountIndex, 1);
     localStorage.setItem("yaki-accounts", JSON.stringify(accounts));
-    localStorage.setItem("new-notification", 0);
     if (accounts.length > 0) handleSwitchAccount(accounts[0]);
   }
 };
@@ -368,7 +369,17 @@ const getSubData = async (filter, timeout = 1000) => {
   return new Promise((resolve, reject) => {
     let events = [];
     let pubkeys = [];
-    let sub = ndkInstance.subscribe(filter, {
+
+    let filter_ = filter.map((_) => {
+      let temp = { ..._ };
+      if (!_["#t"]) {
+        delete temp["#t"];
+        return temp;
+      }
+      return temp;
+    });
+
+    let sub = ndkInstance.subscribe(filter_, {
       cacheUsage: "CACHE_FIRST",
       groupable: false,
       skipVerification: true,

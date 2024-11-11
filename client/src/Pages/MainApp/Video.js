@@ -33,6 +33,7 @@ import Quote from "../../Components/Reactions/Quote";
 import Zap from "../../Components/Reactions/Zap";
 import RepEventCommentsSection from "../../Components/Main/RepEventCommentsSection";
 import { setToPublish } from "../../Store/Slides/Publishers";
+import Backbar from "../../Components/Main/Backbar";
 
 export default function Video() {
   const dispatch = useDispatch();
@@ -251,7 +252,7 @@ export default function Video() {
                 className="fit-container fx-centered fx-start-v"
                 style={{ minHeight: "100vh" }}
               >
-                <div className="main-middle">
+                <div className="main-middle box-pad-h-m">
                   {showCommentsSection && (
                     <RepEventCommentsSection
                       id={video.aTag}
@@ -265,19 +266,8 @@ export default function Video() {
                   )}
                   {!showCommentsSection && (
                     <>
-                      <div
-                        className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m"
-                        onClick={() => customHistory.back()}
-                      >
-                        <div className="round-icon-small">
-                          <div
-                            className="arrow"
-                            style={{ rotate: "90deg" }}
-                          ></div>
-                        </div>
-                        <div>Back</div>
-                      </div>
-                      <div className="box-pad-h-m">
+                      <Backbar />
+                      <div>
                         {getVideoFromURL(video.url)}
                         <div
                           className="fx-centered fx-col fx-start-h fx-start-v"
@@ -400,17 +390,21 @@ export default function Video() {
                                           borderRadius: "var(--border-r-6)",
                                           backgroundImage: `url(${video_.image})`,
                                           backgroundColor: "black",
+                                          position: "relative"
                                         }}
                                         className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
                                       >
                                         <div
-                                          className="sticker sticker-small"
+                                          className="fx-centered"
                                           style={{
-                                            backgroundColor: "black",
-                                            color: "white",
+                                            position: "absolute",
+                                            left: 0,
+                                            top: 0,
+                                            width: "100%",
+                                            height: "100%",
                                           }}
                                         >
-                                          {video_.duration}
+                                          <div className="play-vid-58"></div>
                                         </div>
                                       </div>
                                       <div>
@@ -441,7 +435,7 @@ export default function Video() {
               </div>
               {!showCommentsSection && (
                 <div
-                  className="fit-container sticky fx-centered"
+                  className="fit-container sticky-to-fixed fx-centered"
                   style={{
                     bottom: 0,
                     borderTop: "1px solid var(--very-dim-gray)",

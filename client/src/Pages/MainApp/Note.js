@@ -263,6 +263,7 @@ export default function Note() {
   const author = useMemo(() => {
     if (note) {
       let auth = getUser(note.pubkey);
+      console.log(auth)
       return auth || getEmptyuserMetadata(note.pubkey);
     }
     return "";
@@ -303,7 +304,7 @@ export default function Note() {
     setIsLoading(true);
     if (note) setNote(false);
     if (isNip05Verified) setIsNip05Verified(false);
-    setShowHistory(false)
+    setShowHistory(false);
     let isEvent = false;
     const id = nip19.decode(nevent)?.data.id || nip19.decode(nevent)?.data;
 
@@ -328,6 +329,7 @@ export default function Note() {
 
       let tempNote = await getParsedNote(event);
       if (tempNote) {
+        saveUsers([event.pubkey])
         setNote({
           ...tempNote,
           isRoot: !isNotRoot ? true : false,
@@ -475,7 +477,7 @@ export default function Note() {
                     </div>
                     {note && !note.isRoot && (
                       <>
-                       <div
+                        <div
                           className="fit-container box-pad-h box-pad-v-m box-marg-s fx-centered pointer sticky"
                           style={{
                             borderTop: "1px solid var(--very-dim-gray)",
@@ -502,7 +504,6 @@ export default function Note() {
                           targetedEventID={note.id}
                           showHistory={showHistory}
                         />
-                       
                       </>
                     )}
                     <div
@@ -519,7 +520,7 @@ export default function Note() {
                         />
                         <div className="box-pad-h-m fx-centered fx-col fx-start-v">
                           <div className="fx-centered">
-                            <h4>{author.name}</h4>
+                            <h4>{author.display_name || author.name}</h4>
                             {isNip05Verified && (
                               <div className="checkmark-c1-24"></div>
                             )}

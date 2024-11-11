@@ -3,10 +3,15 @@ import {
   aggregateUsers,
   getNostrClients,
   getRelayList,
+  getSubData,
   getUserRelaysFromNOSTR,
 } from "./Controlers";
 import axios from "axios";
-import { getEmptyEventStats, getEmptyuserMetadata } from "./Encryptions";
+import {
+  getEmptyEventStats,
+  getEmptyuserMetadata,
+  sortEvents,
+} from "./Encryptions";
 import { store } from "../Store/Store";
 import { getRelayListForUser } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "./NDKInstance";
@@ -350,10 +355,34 @@ export const saveUsers = async (pubkeys) => {
   try {
     let BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
     const users_pubkeys = [...new Set(pubkeys)];
-    let data = await axios.post(BASE_URL + "/api/v1/users", {
-      users_pubkeys,
-    });
-    let res = data.data;
+    const data = await getSubData(
+      [{ kinds: [0], authors: users_pubkeys }],
+      400
+    );
+    let users = data.data;
+    if (users.length === 0) return;
+
+    let res = sortEvents(users);
+    res = res
+      .filter((item, index, res) => {
+        if (res.findIndex((_) => _.pubkey === item.pubkey) === index)
+          return item;
+      })
+      .map((user) => {
+        try {
+          let _ = JSON.parse(user.content);
+          if (_) return { ..._, pubkey: user.pubkey };
+          else return false;
+        } catch (err) {
+          return false;
+        }
+      })
+      .filter((_) => _);
+
+    // let data = await axios.post(BASE_URL + "/api/v1/users", {
+    //   users_pubkeys,
+    // });
+    // let res = data.data;
 
     await Dexie.ignoreTransaction(async () => {
       await db.transaction("rw", db.users, async () => {

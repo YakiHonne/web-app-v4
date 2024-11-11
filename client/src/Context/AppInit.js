@@ -215,9 +215,9 @@ export default function AppInit() {
       toggleColorScheme(true);
     }
     saveNostrClients();
-    getFlashNews();
-    getTrendingProfiles();
-    getRecentTags();
+    // getFlashNews();
+    // getTrendingProfiles();
+    // getRecentTags();
     let keys = getKeys();
     if (keys) {
       dispatch(setUserMetadata(getMetadataFromCachedAccounts(keys.pub)));
@@ -278,6 +278,7 @@ export default function AppInit() {
       let lastMutedTimestamp = MUTEDLIST?.last_timestamp || undefined;
       let lastUserMetadataTimestamp =
         getMetadataFromCachedAccounts(userKeys.pub).created_at || undefined;
+        console.log(lastUserMetadataTimestamp)
       // let lastBookmarksTimestamp =
       //   BOOKMARKS.length > 0
       //     ? BOOKMARKS.sort(
@@ -454,10 +455,14 @@ export default function AppInit() {
           if (eose) saveBookmarks(tempBookmarks, userKeys.pub);
         }
         if (event.kind === 0) {
+          console.log(lastUserMetadataTimestamp,
+            event.created_at)
           if (
-            event.created_at > lastUserMetadataTimestamp ||
-            !lastUserMetadataTimestamp
-          ) {
+            (lastUserMetadataTimestamp &&
+              event.created_at > lastUserMetadataTimestamp) ||
+              !lastUserMetadataTimestamp
+            ) {
+            console.log(event)
             lastUserMetadataTimestamp = event.created_at;
             let parsedEvent = getParsedAuthor(event);
             dispatch(setUserMetadata(parsedEvent));

@@ -139,6 +139,7 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
         e.stopPropagation();
         exit();
       }}
+      id="sw-browser"
     >
       <div
         className="fit-height overlay-container fx-centered fx-start-v fx-start-h fx-col"

@@ -8,8 +8,11 @@ import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
 import NotificationCenterMain from "../../Components/Main/NotificationCenterMain";
+import { useSelector } from "react-redux";
+import PagePlaceholder from "../../Components/PagePlaceholder";
 
 export default function Notification() {
+  const userKeys = useSelector(state => state.userKeys)
   return (
     <div style={{ overflow: "auto" }}>
       <Helmet>
@@ -64,7 +67,8 @@ export default function Notification() {
                       <h3>Notification</h3>
                     </div>
                   </div> */}
-                  <NotificationCenterMain />
+                  {userKeys && <NotificationCenterMain />}
+                  {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
                 </div>
                 {/* <div
                   className=" fx-centered fx-col fx-start-v extras-homepage"

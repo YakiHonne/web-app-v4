@@ -358,7 +358,9 @@
 .undo,
 .undo-24,
 .wallet-confirm,
-.wallet-confirm-24 {
+.wallet-confirm-24,
+.logout-red,
+.logout-red-24 {
     /* margin: .5rem; */
     background-position: center center;
     background-repeat: no-repeat;
@@ -703,8 +705,6 @@
     .yaki-logomark,
     .custom,
     .custom-24,
-    .undo,
-    .undo-24,
     .wallet-confirm,
     .wallet-confirm-24 {
         /* margin: .5rem; */
@@ -910,7 +910,8 @@
 .info,
 .custom,
 .undo,
-.wallet-confirm {
+.wallet-confirm,
+.logout-red {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1099,7 +1100,8 @@
 .info-24,
 .custom-24,
 .undo-24,
-.wallet-confirm-24 {
+.wallet-confirm-24,
+.logout-red-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1116,6 +1118,10 @@
 }
 
 
+.logout-red,
+.logout-red-24 {
+    background-image: url('../media/icons/logout-red.svg');
+}
 .wallet-confirm,
 .wallet-confirm-24 {
     background-image: url('../media/icons/wallet-confirm.svg');

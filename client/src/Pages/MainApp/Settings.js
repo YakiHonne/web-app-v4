@@ -38,7 +38,7 @@ import { nip19 } from "nostr-tools";
 import ProgressCirc from "../../Components/ProgressCirc";
 
 export default function Settings() {
-  const {state} = useLocation()
+  const { state } = useLocation();
   const dispatch = useDispatch();
   const userMetadata = useSelector((state) => state.userMetadata);
   const userKeys = useSelector((state) => state.userKeys);
@@ -76,6 +76,10 @@ export default function Settings() {
   const [showDeletionPopup, setShowDeletionPopup] = useState(false);
   const connectedRelays = useMemo(() => {
     return {
+      relaysStatus: relaysStatus.reduce((acc, relay) => {
+        acc[relay.url] = relay.connected;
+        return acc;
+      }, {}),
       connected: relaysStatus.filter((relay) => relay.connected).length,
       total: relaysStatus.length,
     };
@@ -641,9 +645,27 @@ export default function Settings() {
                                               setShowRelaysInfo(relay.url)
                                             }
                                           >
+                                            <div
+                                              style={{
+                                                minWidth: "6px",
+                                                aspectRatio: "1/1",
+                                                borderRadius: "50%",
+                                                backgroundColor: connectedRelays
+                                                  ?.relaysStatus[relay.url]
+                                                  ? "var(--green-main)"
+                                                  : "var(--red-main)",
+                                              }}
+                                            ></div>
                                             <RelayImage url={relay.url} />
                                             <p>{relay.url}</p>
-                                            <div className="info-tt"></div>
+                                            <div
+                                              className="info-tt"
+                                              style={{
+                                                filter:
+                                                  "brightness(0) invert()",
+                                                opacity: 0.5,
+                                              }}
+                                            ></div>
                                           </div>
                                           <div>
                                             {!relay.toDelete && (
@@ -656,7 +678,7 @@ export default function Settings() {
                                                 }
                                                 className="round-icon-small"
                                               >
-                                                <div className="trash"></div>
+                                                <div className="logout-red"></div>
                                               </div>
                                             )}
                                             {relay.toDelete && (
@@ -674,44 +696,55 @@ export default function Settings() {
                                             )}
                                           </div>
                                         </div>
-                                        <div className="fit-container fx-centered fx-start-h box-pad-h-m box-marg-s">
-                                          <button
-                                            className={`btn btn-small ${
-                                              status === "read"
-                                                ? "btn-normal"
-                                                : "btn-gray"
-                                            }`}
-                                            onClick={() =>
-                                              changeRelayStatus("read", index)
-                                            }
-                                          >
-                                            Read only
-                                          </button>
-                                          <button
-                                            className={`btn btn-small ${
-                                              status === "write"
-                                                ? "btn-normal"
-                                                : "btn-gray"
-                                            }`}
-                                            onClick={() =>
-                                              changeRelayStatus("write", index)
-                                            }
-                                          >
-                                            Write only
-                                          </button>
-                                          <button
-                                            className={`btn btn-small ${
-                                              status === ""
-                                                ? "btn-normal"
-                                                : "btn-gray"
-                                            }`}
-                                            onClick={() =>
-                                              changeRelayStatus("", index)
-                                            }
-                                          >
-                                            Read-Write
-                                          </button>
-                                        </div>
+                                        {!relay.toDelete && (
+                                          <div className="fit-container fx-centered fx-start-h box-pad-h-m box-marg-s">
+                                            <button
+                                              style={{
+                                                opacity:
+                                                  status === "read" ? 1 : 0.4,
+                                              }}
+                                              className={
+                                                "btn btn-small btn-gray"
+                                              }
+                                              onClick={() =>
+                                                changeRelayStatus("read", index)
+                                              }
+                                            >
+                                              Read only
+                                            </button>
+                                            <button
+                                              style={{
+                                                opacity:
+                                                  status === "write" ? 1 : 0.4,
+                                              }}
+                                              className={
+                                                "btn btn-small btn-gray"
+                                              }
+                                              onClick={() =>
+                                                changeRelayStatus(
+                                                  "write",
+                                                  index
+                                                )
+                                              }
+                                            >
+                                              Write only
+                                            </button>
+                                            <button
+                                              style={{
+                                                opacity:
+                                                  status === "" ? 1 : 0.4,
+                                              }}
+                                              className={
+                                                "btn btn-small btn-gray"
+                                              }
+                                              onClick={() =>
+                                                changeRelayStatus("", index)
+                                              }
+                                            >
+                                              Read-Write
+                                            </button>
+                                          </div>
+                                        )}
                                       </div>
                                     );
                                   })}
@@ -741,6 +774,185 @@ export default function Settings() {
                                 </button>
                               </div>
                             </>
+                          )}
+                        </div>
+
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
+                          }}
+                        >
+                          <div
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "moderation"
+                                ? setSelectedTab("")
+                                : setSelectedTab("moderation")
+                            }
+                          >
+                            <div className="fx-centered fx-start-h">
+                              <div className="content-s-24"></div>
+                              <p>Content moderation</p>
+                            </div>
+                            <div className="arrow"></div>
+                          </div>
+                          {selectedTab === "moderation" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <div className="fx-scattered fit-container">
+                                <p>Muted list</p>
+                                <div
+                                  className="btn-text-gray"
+                                  style={{ marginRight: ".75rem" }}
+                                  onClick={() => setShowMutedList(true)}
+                                >
+                                  Edit
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            overflow: "visible",
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                          }}
+                        >
+                          <div
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "wallets"
+                                ? setSelectedTab("")
+                                : setSelectedTab("wallets")
+                            }
+                          >
+                            <div className="fx-centered fx-start-h">
+                              <div className="wallet-24"></div>
+                              <p>Wallets</p>
+                            </div>
+                            <div className="arrow"></div>
+                          </div>
+                          <hr />
+
+                          {selectedTab === "wallets" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <div className="fit-container fx-scattered">
+                                <div>
+                                  <p className="gray-c">Add wallet</p>
+                                </div>
+                                <div className="fx-centered">
+                                  <div
+                                    className="round-icon-small round-icon-tooltip"
+                                    data-tooltip="Add wallet"
+                                    onClick={() => setShowAddWallet(true)}
+                                  >
+                                    <div
+                                      style={{ rotate: "-45deg" }}
+                                      className="p-medium"
+                                    >
+                                      &#10005;
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              {wallets.map((wallet) => {
+                                return (
+                                  <div
+                                    className="sc-s-18 box-pad-h-m box-pad-v-m fx-scattered fit-container"
+                                    key={wallet.id}
+                                    style={{ overflow: "visible" }}
+                                  >
+                                    <div className="fx-centered">
+                                      <div className="fx-centered">
+                                        {wallet.kind === 1 && (
+                                          <div className="webln-logo-24"></div>
+                                        )}
+                                        {wallet.kind === 2 && (
+                                          <div className="alby-logo-24"></div>
+                                        )}
+                                        {wallet.kind === 3 && (
+                                          <div className="nwc-logo-24"></div>
+                                        )}
+                                        <div className="fx-centered fx-col fx-start-h fx-start-v">
+                                          <div className="fx-centered">
+                                            <p>{wallet.entitle}</p>
+                                            {wallet.active && (
+                                              <div
+                                                style={{
+                                                  minWidth: "8px",
+                                                  aspectRatio: "1/1",
+                                                  backgroundColor:
+                                                    "var(--green-main)",
+                                                  borderRadius:
+                                                    "var(--border-r-50)",
+                                                }}
+                                              ></div>
+                                            )}
+                                          </div>
+                                          <div className="fx-centered">
+                                            {wallet.kind === 3 && (
+                                              <div
+                                                className="sticker sticker-gray-black fx-centered"
+                                                onClick={() =>
+                                                  copyKey(
+                                                    "NWC secret",
+                                                    wallet.data
+                                                  )
+                                                }
+                                              >
+                                                Copy NWC
+                                                <div className="copy"></div>
+                                              </div>
+                                            )}
+                                            {wallet.kind !== 1 && (
+                                              <div
+                                                className="sticker sticker-gray-black fx-centered"
+                                                onClick={() =>
+                                                  copyKey(
+                                                    "Lightning address",
+                                                    wallet.entitle
+                                                  )
+                                                }
+                                              >
+                                                Copy address
+                                                <div className="copy"></div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="fx-centered"></div>
+                                    </div>
+                                    <div className="fx-centered">
+                                      {!wallet.active && (
+                                        <div
+                                          className="round-icon-small round-icon-tooltip"
+                                          data-tooltip="Switch wallet"
+                                          onClick={() =>
+                                            handleSelectWallet(wallet.id)
+                                          }
+                                        >
+                                          <div className="switch-arrows"></div>
+                                        </div>
+                                      )}
+                                      {wallet.kind !== 1 && (
+                                        <div
+                                          className="round-icon-small round-icon-tooltip"
+                                          data-tooltip="Remove wallet"
+                                          onClick={() =>
+                                            setShowDeletionPopup(wallet)
+                                          }
+                                        >
+                                          <p className="red-c">&minus;</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
 
@@ -907,168 +1119,6 @@ export default function Settings() {
                                   })} */}
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
-                          }}
-                        >
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "moderation"
-                                ? setSelectedTab("")
-                                : setSelectedTab("moderation")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="content-s-24"></div>
-                              <p>Content moderation</p>
-                            </div>
-                            <div className="arrow"></div>
-                          </div>
-                          {selectedTab === "moderation" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <div className="fx-scattered fit-container">
-                                <p>Muted list</p>
-                                <div
-                                  className="btn-text-gray"
-                                  style={{ marginRight: ".75rem" }}
-                                  onClick={() => setShowMutedList(true)}
-                                >
-                                  Edit
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            overflow: "visible",
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                          }}
-                        >
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "wallets"
-                                ? setSelectedTab("")
-                                : setSelectedTab("wallets")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="wallet-24"></div>
-                              <p>Wallets</p>
-                            </div>
-                            <div className="arrow"></div>
-                          </div>
-                          <hr />
-
-                          {selectedTab === "wallets" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <div className="fit-container fx-scattered">
-                                <div>
-                                  <p className="gray-c">Add wallet</p>
-                                </div>
-                                <div className="fx-centered">
-                                  <div
-                                    className="round-icon-small round-icon-tooltip"
-                                    data-tooltip="Add wallet"
-                                    onClick={() => setShowAddWallet(true)}
-                                  >
-                                    <div
-                                      style={{ rotate: "-45deg" }}
-                                      className="p-medium"
-                                    >
-                                      &#10005;
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              {wallets.map((wallet) => {
-                                return (
-                                  <div
-                                    className="sc-s-18 box-pad-h-m box-pad-v-m fx-scattered fit-container"
-                                    key={wallet.id}
-                                    style={{ overflow: "visible" }}
-                                  >
-                                    <div className="fx-centered">
-                                      <div className="fx-centered">
-                                        {wallet.kind === 1 && (
-                                          <div className="webln-logo-24"></div>
-                                        )}
-                                        {wallet.kind === 2 && (
-                                          <div className="alby-logo-24"></div>
-                                        )}
-                                        {wallet.kind === 3 && (
-                                          <div className="nwc-logo-24"></div>
-                                        )}
-                                        <div className="fx-centered fx-col fx-start-h fx-start-v">
-                                          <div className="fx-centered">
-                                            <p>{wallet.entitle}</p>
-                                            {wallet.active && (
-                                              <div
-                                                style={{
-                                                  minWidth: "8px",
-                                                  aspectRatio: "1/1",
-                                                  backgroundColor:
-                                                    "var(--green-main)",
-                                                  borderRadius:
-                                                    "var(--border-r-50)",
-                                                }}
-                                              ></div>
-                                            )}
-                                          </div>
-                                          {wallet.kind === 3 && (
-                                            <div
-                                              className="sticker sticker-gray-black fx-centered"
-                                              onClick={() =>
-                                                copyKey(
-                                                  "NWC secret",
-                                                  wallet.data
-                                                )
-                                              }
-                                            >
-                                              Copy NWC secret{" "}
-                                              <div className="copy"></div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div className="fx-centered"></div>
-                                    </div>
-                                    <div className="fx-centered">
-                                      {!wallet.active && (
-                                        <div
-                                          className="round-icon-small round-icon-tooltip"
-                                          data-tooltip="Switch wallet"
-                                          onClick={() =>
-                                            handleSelectWallet(wallet.id)
-                                          }
-                                        >
-                                          <div className="switch-arrows"></div>
-                                        </div>
-                                      )}
-                                      {wallet.kind !== 1 && (
-                                        <div
-                                          className="round-icon-small round-icon-tooltip"
-                                          data-tooltip="Remove wallet"
-                                          onClick={() =>
-                                            setShowDeletionPopup(wallet)
-                                          }
-                                        >
-                                          <p className="red-c">&minus;</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
                             </div>
                           )}
                         </div>
@@ -1514,6 +1564,7 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
       <input
         placeholder="Search or add relay"
         className="if ifs-full"
+        style={{ height: "var(--40)" }}
         value={searchedRelay}
         onChange={handleOnChange}
       />

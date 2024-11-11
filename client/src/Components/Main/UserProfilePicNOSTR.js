@@ -92,8 +92,8 @@ export default function UserProfilePicNOSTR({
   };
 
   const onMouseHover = async () => {
-    let isHoverAllowed = getCustomSettings().userHoverPreview
-    if(!isHoverAllowed) return
+    let isHoverAllowed = getCustomSettings().userHoverPreview;
+    if (!isHoverAllowed) return;
     setShowMetada(true);
     if (!userKeys) return false;
     if (!subStart) {
@@ -156,7 +156,7 @@ export default function UserProfilePicNOSTR({
             <Avatar
               size={size}
               name={userMetadata.name}
-              variant="beam"
+              variant="marble"
               colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
             />
           </div>
@@ -315,8 +315,10 @@ export default function UserProfilePicNOSTR({
               <p className="p-medium ">{userFollowers.length} Followers</p>
             </div> */}
 
-            {!isLoading && <DisplayMutualFollows users={mutualFollows} />}
-            {isLoading && (
+            {!isLoading && userKeys && (
+              <DisplayMutualFollows users={mutualFollows} />
+            )}
+            {isLoading && userKeys && (
               <p className="orange-c p-italic p-medium">Loading mutuals...</p>
             )}
           </div>
