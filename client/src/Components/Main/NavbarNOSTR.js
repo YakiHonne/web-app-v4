@@ -57,6 +57,7 @@ export default function NavbarNOSTR({ margin = true }) {
       "/yakihonne-smart-widgets",
       "/privacy",
       "/terms",
+      "/login",
       "/points-system",
     ].includes(window.location.pathname)
   )
@@ -86,7 +87,7 @@ export default function NavbarNOSTR({ margin = true }) {
           <div
             className="yakihonne-logo"
             style={{
-              filter: "brightness(0) invert()",
+              // filter: "brightness(0) invert()",
               width: "100px",
               height: "50px",
             }}

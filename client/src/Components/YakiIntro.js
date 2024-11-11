@@ -54,7 +54,7 @@ export default function YakiIntro() {
         style={{
           position: "fixed",
           right: "38px",
-          bottom: up ? "74px" : "16px",
+          bottom: up ? "94px" : "16px",
           transition: ".2s ease-in-out",
           zIndex: "1000000",
         }}
@@ -136,8 +136,12 @@ const Banner = ({ exit }) => {
 - A fresh design overhaul for the article, video, and curation pages, enabling seamless browsing and enhanced interaction with content.
 - Connected threads! A refined notes thread makes following entire discussions more intuitive.
 - Users can now personalize their home feed by selecting their top interests.
+- Replies can now be previewed directly from the note card, without needing to open the full note.
+- Wallets can now be linked to your account directly from the wallet page.
+- Drafts for notes and replies are now saved, allowing easy edits later.
 - The suggestions box on the home page can now be hidden.
 - The on-hover user preview can now be disabled for quicker access to profiles.
+- Articles, videos and curations can now be quoted and shared as notes.
 - General improvements.
 - Bug fixes and optimizations.
 `}</p>

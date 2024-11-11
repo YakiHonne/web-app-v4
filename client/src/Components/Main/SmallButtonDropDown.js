@@ -30,6 +30,7 @@ export default function SmallButtonDropDown({
             ? ""
             : "transparent",
           color: options.includes(selectedCategory) ? "" : "var(--gray)",
+          minWidth: "max-content"
         }}
         onClick={
           () =>

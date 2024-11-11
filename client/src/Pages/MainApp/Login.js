@@ -8,45 +8,42 @@ import {
   getBech32,
   getEmptyuserMetadata,
   getHex,
-  shortenKey,
 } from "../../Helpers/Encryptions";
-// import loginbg from "../../media/images/login-bg.png";
-import loginbg from "../../media/images/loginhero.png";
-import loading from "../../media/JSONs/loading.json";
-// import loginbg from "../../media/images/login-bg.svg";
 import profilePlaceholder from "../../media/images/profile-avatar.png";
 import s8e from "../../media/images/s8-e-yma.png";
 import { generateSecretKey, getPublicKey } from "nostr-tools";
 import * as secp from "@noble/secp256k1";
-import { FileUpload, getWallets, updateWallets } from "../../Helpers/Helpers";
+import {
+  FileUpload,
+  getWallets,
+  sleepTimer,
+  updateWallets,
+} from "../../Helpers/Helpers";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
 import { useNavigate } from "react-router-dom";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
-import { nanoid } from "nanoid";
 import InterestSuggestions from "../../Content/InterestSuggestions";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveUsers } from "../../Helpers/DB";
 import axios from "axios";
-import {
-  NDKEvent,
-  NDKNip46Signer,
-  NDKPrivateKeySigner,
-} from "@nostr-dev-kit/ndk";
+import { NDKEvent, NDKPrivateKeySigner } from "@nostr-dev-kit/ndk";
 import relaysOnPlatform from "../../Content/Relays";
-import Lottie from "lottie-react";
 import { FilePicker } from "../../Components/FilePicker";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
 import { Link } from "react-router-dom";
 
-let sk = bytesTohex(generateSecretKey());
-let pk = getPublicKey(sk);
-let userKeys = { pub: pk, sec: sk };
+// let sk = bytesTohex(generateSecretKey());
+// let pk = getPublicKey(sk);
+// let userKeys = { pub: pk, sec: sk };
 let stepsNumber = 4;
 let isNewAccount = getWallets().length > 0 ? true : false;
 export default function Login() {
+  let sk = bytesTohex(generateSecretKey());
+  let pk = getPublicKey(sk);
+  let userKeys = { pub: pk, sec: sk };
   const [isLogin, setIsLogin] = useState(true);
   useEffect(() => {
     let pubkeys = [
@@ -73,64 +70,22 @@ export default function Login() {
           {isLogin && <h3 className="slide-up">Login to Yakihonne</h3>}
           {!isLogin && <h3 className="slide-down">Sign up</h3>}
         </div>
-        {isLogin && <LoginScreen switchScreen={() => setIsLogin(!isLogin)} />}
+        {isLogin && (
+          <LoginScreen
+            switchScreen={() => setIsLogin(!isLogin)}
+            userKeys={userKeys}
+          />
+        )}
 
-        {!isLogin && <SignupScreen switchScreen={() => setIsLogin(!isLogin)} />}
-
-        {/* {isLogin && (
-          <>
-            <div
-              className="fit-container carousel-card-desc box-pad-h-s box-pad-v-s fx-centered sc-s-18"
-              style={{ background: "transparent", width: "180px" }}
-            >
-              <img
-                className="sc-s-18 fit-container"
-                src={ymaQR}
-                style={{ aspectRatio: "1/1" }}
-              />
-            </div>
-            <p
-              className="gray-c p-medium p-centered"
-              style={{ width: "150px" }}
-            >
-              Download the YakiHonne app for Android or iOS
-            </p>
-          </>
-        )} */}
+        {!isLogin && (
+          <SignupScreen
+            switchScreen={() => setIsLogin(!isLogin)}
+            userKeys={userKeys}
+          />
+        )}
       </div>
     </div>
   );
-  // return (
-  //   <div
-  //     className="fit-container fx-centered fx-start-v"
-  //     style={{ height: "100vh", gap: 0 }}
-  //   >
-  //     <LeftSection />
-  //     <div
-  //       className="fx-centered box-pad-h"
-  //       style={{ width: "min(100%, 600px)", height: "85%" }}
-  //     >
-  //       <div
-  //         className="fx-centered fx-col "
-  //         style={{ width: "min(100%, 550px)" }}
-  //       >
-  //         {/* <div
-  //           className="yakihonne-logo-128"
-  //           style={{ height: "80px", width: "150px" }}
-  //         ></div> */}
-  //         <div className="box-marg-s">
-  //           {isLogin && <h3 className="slide-up">Login to Yakihonne</h3>}
-  //           {!isLogin && <h3 className="slide-down">Sign up</h3>}
-  //         </div>
-  //         {isLogin && <LoginScreen switchScreen={() => setIsLogin(!isLogin)} />}
-
-  //         {!isLogin && (
-  //           <SignupScreen switchScreen={() => setIsLogin(!isLogin)} />
-  //         )}
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
 }
 
 const LeftSection = () => {
@@ -139,37 +94,12 @@ const LeftSection = () => {
       style={{ height: "70vh", width: "700px" }}
       className="box-pad-h box-pad-v fx-centered mb-hide-800 "
     >
-      {/* <div
-        className="fit-height fx-centered fx-end-h fx-col fit-container bg-img contained-bg box-pad-h box-pad-v"
-        style={{
-          backgroundImage: `url(${loginbg})`,
-          backgroundColor: "transparent",
-        }}
-      ></div> */}
       <MobileAd />
     </div>
-    // <div
-    //   style={{ flex: "1 1 600px" }}
-    //   className="box-pad-h box-pad-v fit-height mb-hide-800 "
-    // >
-    //   <div
-    //     className="fit-height fx-centered fx-end-h fx-col fit-container sc-s bg-img cover-bg box-pad-h box-pad-v"
-    //     style={{
-    //       backgroundImage: `url(${loginbg})`,
-    //       backgroundColor: "transparent",
-    //     }}
-    //   >
-    //     <div
-    //       className="yakihonne-logo-128"
-    //       style={{ height: "80px", width: "150px" }}
-    //     ></div>
-    //     <MobileAd />
-    //   </div>
-    // </div>
   );
 };
 
-const LoginScreen = ({ switchScreen }) => {
+const LoginScreen = ({ switchScreen, userKeys }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -339,7 +269,6 @@ const LoginScreen = ({ switchScreen }) => {
           </div>
           <div className=" fx-centered" onClick={switchScreen}>
             <p className="gray-c">
-              New to nostr?{" "}
               <span className="orange-c pointer p-bold">Create an account</span>{" "}
             </p>
           </div>
@@ -349,9 +278,8 @@ const LoginScreen = ({ switchScreen }) => {
   );
 };
 
-const SignupScreen = ({ switchScreen }) => {
+const SignupScreen = ({ switchScreen, userKeys }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate("/");
   const [name, setName] = useState("");
   const [about, setAbout] = useState("");
   const [pictureFile, setPictureFile] = useState("");
@@ -482,17 +410,16 @@ const SignupScreen = ({ switchScreen }) => {
 
       dispatch(setUserKeys(userKeys));
 
-      let signer = new NDKPrivateKeySigner(sk);
+      let signer = new NDKPrivateKeySigner(userKeys.sec);
       ndkInstance.signer = signer;
 
       await Promise.all([
+        warmup(),
         metadataEvent(picture_, banner_),
         interestsEvents(),
         relaysEvent(),
       ]);
-      // await metadataEvent(picture_, banner_);
-      // await interestsEvents();
-      // await relaysEvent();
+
       if (NWAddr) {
         let nwcNode = {
           id: Date.now(),
@@ -501,7 +428,7 @@ const SignupScreen = ({ switchScreen }) => {
           active: true,
           data: NWCURL,
         };
-        updateWallets([nwcNode], pk);
+        updateWallets([nwcNode], userKeys.pub);
       }
       customHistory.back();
     } catch (err) {
@@ -510,64 +437,102 @@ const SignupScreen = ({ switchScreen }) => {
     }
   };
 
+  const warmup = () => {
+    const tempEvent = new NDKEvent(ndkInstance);
+    tempEvent.kind = 0;
+    tempEvent.content = "";
+    tempEvent.publish();
+    return;
+  };
   const metadataEvent = async (profilePicture, bannerPicture) => {
-    const ndkEvent = new NDKEvent(ndkInstance);
-    let metadata = getEmptyuserMetadata(pk);
+    try {
+      const ndkEvent = new NDKEvent(ndkInstance);
+      let metadata = {};
 
-    metadata.display_name = name;
-    metadata.name = name;
-    metadata.about = about;
-    metadata.picture = profilePicture;
-    metadata.banner = bannerPicture;
-    if (NWAddr) metadata.lud16 = NWAddr;
+      metadata.display_name = name;
+      metadata.name = name;
+      metadata.about = about;
+      metadata.picture = profilePicture || "";
+      metadata.banner = bannerPicture || "";
+      if (NWAddr) metadata.lud16 = NWAddr;
+      ndkEvent.kind = 0;
+      ndkEvent.content = JSON.stringify(metadata);
 
-    ndkEvent.kind = 0;
-    ndkEvent.content = JSON.stringify(metadata);
-    ndkEvent.tags = [];
+      let published = await ndkEvent.publish(undefined, 2000);
 
-    await ndkEvent.publish();
+      return ndkEvent;
+    } catch (err) {
+      console.log(err);
+      return;
+    }
   };
 
   const interestsEvents = async () => {
     if (selectedInterests.length === 0) return;
-    await tagsEvent();
-    await followingsEvent();
+    let published = await Promise.all([
+      await tagsEvent(),
+      await followingsEvent(),
+    ]);
+    return;
   };
 
   const tagsEvent = async () => {
-    let interestsTags = selectedInterests.map((interest) => [
-      "t",
-      interest.tag,
-    ]);
-    const ndkInterestEvent = new NDKEvent(ndkInstance);
-    ndkInterestEvent.kind = 10015;
-    ndkInterestEvent.content = "";
-    ndkInterestEvent.tags = interestsTags;
-    await ndkInterestEvent.publish();
+    try {
+      let interestsTags = selectedInterests.map((interest) => [
+        "t",
+        interest.tag?.toLowerCase(),
+      ]);
+      const ndkInterestEvent = new NDKEvent(ndkInstance);
+      ndkInterestEvent.kind = 10015;
+      ndkInterestEvent.content = "";
+      ndkInterestEvent.tags = interestsTags;
+
+      let published = await ndkInterestEvent.publish(undefined, 2000);
+      return published;
+    } catch (err) {
+      console.log(err);
+      return;
+    }
   };
 
   const followingsEvent = async () => {
-    let followingsTags = [
-      ...new Set(selectedInterests.map((interest) => interest.pubkeys).flat()),
-    ].map((pubkey) => ["p", pubkey]);
+    try {
+      let followingsTags = [
+        ...new Set(
+          selectedInterests.map((interest) => interest.pubkeys).flat()
+        ),
+      ].map((pubkey) => ["p", pubkey]);
 
-    const ndkFollowingsEvent = new NDKEvent(ndkInstance);
+      const ndkFollowingsEvent = new NDKEvent(ndkInstance);
+      ndkFollowingsEvent.kind = 3;
+      ndkFollowingsEvent.content = "";
+      ndkFollowingsEvent.tags = followingsTags;
 
-    ndkFollowingsEvent.kind = 3;
-    ndkFollowingsEvent.content = "";
-    ndkFollowingsEvent.tags = followingsTags;
-    await ndkFollowingsEvent.publish();
+      let published = await ndkFollowingsEvent.publish(undefined, 2000);
+
+      return published;
+    } catch (err) {
+      console.log(err);
+      return;
+    }
   };
 
   const relaysEvent = async () => {
-    let relaysTags = relaysOnPlatform.map((relay) => ["r", relay]);
+    try {
+      let relaysTags = relaysOnPlatform.map((relay) => ["r", relay]);
 
-    const ndkRelaysEvent = new NDKEvent(ndkInstance);
+      const ndkRelaysEvent = new NDKEvent(ndkInstance);
+      ndkRelaysEvent.kind = 10002;
+      ndkRelaysEvent.content = "";
+      ndkRelaysEvent.tags = relaysTags;
 
-    ndkRelaysEvent.kind = 10002;
-    ndkRelaysEvent.content = "";
-    ndkRelaysEvent.tags = relaysTags;
-    await ndkRelaysEvent.publish();
+      let published = await ndkRelaysEvent.publish(undefined, 2000);
+
+      return;
+    } catch (err) {
+      console.log(err);
+      return;
+    }
   };
 
   return (
@@ -714,7 +679,7 @@ const SignupScreen = ({ switchScreen }) => {
                   (_) => _.tag === interest.main_tag
                 );
                 return (
-                  <Fragment>
+                  <Fragment key={index}>
                     <div
                       className={`fit-container box-pad-h box-pad-v-s fx-scattered pointer ${
                         selectedInterest === index ? "sc-s-18" : ""
@@ -956,7 +921,7 @@ const InitiProfile = () => {
       className="fit-container fx-centered fx-col"
       style={{ height: "500px" }}
     >
-      <LoadingLogo size={300} />
+      <LoadingLogo size={200} />
       {/* <div style={{ width: "300px" }}>
         <Lottie animationData={loading} loop={true} />
       </div> */}

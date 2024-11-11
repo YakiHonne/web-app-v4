@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useReducer, useState } from "react";
 import { Helmet } from "react-helmet";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { SelectTabs } from "../../Components/Main/SelectTabs";
-import WriteNew from "../../Components/Main/WriteNew";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import { useDispatch, useSelector } from "react-redux";
 import Date_ from "../../Components/Date_";
@@ -17,6 +16,8 @@ import {
   compactContent,
   getArticleDraft,
   getLinkFromAddr,
+  getNoteDraft,
+  sleepTimer,
   straightUp,
 } from "../../Helpers/Helpers";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
@@ -115,7 +116,6 @@ const eventsReducer = (notes, action) => {
         .filter((note, index, tempArr) => {
           if (tempArr.findIndex((_) => _.d === note.d) === index) return note;
         });
-      console.log(sortedNotes);
       nextState[action.type] = sortedNotes;
       return nextState;
     }
@@ -164,16 +164,48 @@ const eventsInitialState = {
   videos: [],
   widgets: [],
 };
-const getLocalDraft = () => {
-  const draft = getArticleDraft();
-  if (draft.default) return;
-  return {
-    created_at: draft.created_at ||  Math.floor(Date.now() / 1000),
-    kind: 30024,
-    title: draft.title || "Untitled",
-    content: draft.content || "Untitled",
-    local: true,
-  };
+const getLocalDrafts = () => {
+  try {
+    const artDraft = getArticleDraft();
+    const noteDraft = getNoteDraft("root");
+    let smartWidgetDraft = localStorage.getItem("sw-current-workspace");
+    try {
+      smartWidgetDraft = smartWidgetDraft
+        ? JSON.parse(smartWidgetDraft)
+        : false;
+    } catch (err) {
+      smartWidgetDraft = false;
+    }
+
+    let localDraft = {
+      noteDraft: noteDraft
+        ? { kind: 11, content: noteDraft, created_at: false }
+        : false,
+      smartWidgetDraft: smartWidgetDraft
+        ? {
+            kind: 300311,
+            content: smartWidgetDraft,
+            created_at: smartWidgetDraft.last_updated,
+          }
+        : false,
+      artDraft: artDraft.default
+        ? false
+        : {
+            created_at: artDraft.created_at || Math.floor(Date.now() / 1000),
+            kind: 30024,
+            title: artDraft.title || "Untitled",
+            content: artDraft.content || "Untitled",
+            local: true,
+          },
+    };
+    return localDraft.artDraft ||
+      localDraft.smartWidgetDraft ||
+      localDraft.noteDraft
+      ? localDraft
+      : false;
+  } catch (err) {
+    return false;
+  }
 };
 const getInterestList = (list) => {
   let tempList = [];
@@ -207,9 +239,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
+     
         let [userProfile, sats, popularNotes, userContent] = await Promise.all([
           getUserStats(userKeys.pub),
-          axios.get(`https://api.nostr.band/v0/stats/profile/${userKeys.pub}`),
+          Promise.race([axios.get(`https://api.nostr.band/v0/stats/profile/${userKeys.pub}`), sleepTimer()]),
           getPopularNotes(userKeys.pub),
           getSubData([
             {
@@ -223,6 +256,7 @@ export default function Dashboard() {
         userProfile = JSON.parse(
           userProfile.find((event) => event.kind === 10000105).content
         );
+       
         let zaps_sent = sats
           ? sats.data.stats[userKeys.pub].zaps_sent
           : { count: 0, msats: 0 };
@@ -232,7 +266,8 @@ export default function Dashboard() {
         let latestPublished = userContent.data
           .filter((event) => event.kind !== 30024)
           .map((event) => getParsedRepEvent(event));
-        let localDraft = getLocalDraft();
+       
+        let localDraft = getLocalDrafts();
         setUserPreview({
           userProfile: {
             ...userProfile,
@@ -317,6 +352,7 @@ export default function Dashboard() {
                     {selectedTab === 1 && (
                       <Content
                         filter={contentFilter}
+                        localDraft={userPreview.localDraft}
                         init={state?.init || false}
                         setPostToNote={setPostToNote}
                       />
@@ -349,8 +385,7 @@ export default function Dashboard() {
   );
 }
 
-const Content = ({ filter, setPostToNote, init }) => {
-  const navigate = useNavigate();
+const Content = ({ filter, setPostToNote, localDraft, init }) => {
   const userKeys = useSelector((state) => state.userKeys);
   const [contentFrom, setContentFrom] = useState(filter);
   const [isLoading, setIsLoading] = useState(true);
@@ -397,7 +432,7 @@ const Content = ({ filter, setPostToNote, init }) => {
     let subscription = ndkInstance.subscribe([{ ...filter, since }]);
     subscription.on("event", (event) => {
       let tempEvent = { ...event.rawEvent() };
-      if (event.kind !== 1) {
+      if ([1, 6].includes(event.kind)) {
         tempEvent = getParsedRepEvent(event.rawEvent());
       }
       dispatchEvents({ type: contentFrom, events: [tempEvent] });
@@ -448,7 +483,7 @@ const Content = ({ filter, setPostToNote, init }) => {
     if (contentFrom === "curations") filter.kinds = [30004, 30005];
     if (contentFrom === "videos") filter.kinds = [34235];
     if (contentFrom === "widgets") filter.kinds = [30031];
-    if (contentFrom === "notes") filter.kinds = [1];
+    if (contentFrom === "notes") filter.kinds = [1, 6];
     return filter;
   };
 
@@ -622,6 +657,48 @@ const Content = ({ filter, setPostToNote, init }) => {
           </div>
         </div>
         <div className="fit-container fx-centered fx-col fx-start-v box-pad-h">
+          {contentFrom === "drafts" && localDraft?.artDraft && (
+            <div className="fit-container fx-centered fx-start-v fx-col">
+              <div className="fit-container fx-centered fx-col fx-start-v">
+                {localDraft?.artDraft && (
+                  <>
+                    <p className="c1-c">Ongoing</p>
+                    <ContentCard event={localDraft?.artDraft} />
+                  </>
+                )}
+              </div>
+              {events[contentFrom].length > 0 && <p>Saved</p>}
+            </div>
+          )}
+          {contentFrom === "notes" && localDraft?.noteDraft && (
+            <div className="fit-container fx-centered fx-start-v fx-col">
+              <div className="fit-container fx-centered fx-col fx-start-v">
+                {localDraft?.noteDraft && (
+                  <>
+                    <p className="c1-c">Ongoing</p>
+                    <ContentCard
+                      event={localDraft?.noteDraft}
+                      setPostToNote={setPostToNote}
+                    />
+                  </>
+                )}
+              </div>
+              {events[contentFrom].length > 0 && <p>Saved</p>}
+            </div>
+          )}
+          {contentFrom === "widgets" && localDraft?.smartWidgetDraft && (
+            <div className="fit-container fx-centered fx-start-v fx-col">
+              <div className="fit-container fx-centered fx-col fx-start-v">
+                {localDraft?.smartWidgetDraft && (
+                  <>
+                    <p className="c1-c">Ongoing</p>
+                    <ContentCard event={localDraft?.smartWidgetDraft} />
+                  </>
+                )}
+              </div>
+              {events[contentFrom].length > 0 && <p>Saved</p>}
+            </div>
+          )}
           {events[contentFrom].map((event) => {
             return (
               <ContentCard
@@ -862,7 +939,7 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
               <div
                 style={{
                   border: "6px solid var(--c1-side)",
-                  borderRadius: "var(--border-r-50)",
+                  borderRadius: "22px",
                 }}
               >
                 <UserProfilePicNOSTR
@@ -887,10 +964,13 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
               </Link>
             </div>
           </div>
-          <div className="fx-centered fx-col fx" style={{ flex: "1 1 400px" }}>
-            <div className="fit-container fx-centered ">
+          <div
+            className="fx-centered fx-col fx fx-stretch"
+            style={{ flex: "1 1 400px" }}
+          >
+            <div className="fit-container fx-centered fx">
               <div
-                className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v"
+                className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
                 style={{ backgroundColor: "transparent", gap: "16px" }}
               >
                 <div
@@ -899,11 +979,11 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
                 ></div>
                 <div className="fx-centered">
                   <h4>{data.userProfile?.follows_count || 0}</h4>
-                  <p className="gray-c">Followings</p>
+                  <p className="gray-c">Following</p>
                 </div>
               </div>
               <div
-                className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v"
+                className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
                 style={{ backgroundColor: "transparent", gap: "16px" }}
               >
                 <div
@@ -916,9 +996,9 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
                 </div>
               </div>
             </div>
-            <div className="fit-container fx-centered">
+            <div className="fit-container fx-centered fx">
               <div
-                className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v"
+                className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
                 style={{ backgroundColor: "transparent", gap: "16px" }}
               >
                 <div
@@ -931,7 +1011,7 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
                 </div>
               </div>
               <div
-                className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v"
+                className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
                 style={{ backgroundColor: "transparent", gap: "16px" }}
               >
                 <div
@@ -948,7 +1028,7 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
         </div>
         <div className="fit-container fx-centered fx-wrap">
           <div
-            className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v"
+            className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
             style={{
               backgroundColor: "transparent",
               gap: "16px",
@@ -972,7 +1052,7 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
             </div>
           </div>
           <div
-            className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v"
+            className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
             style={{
               backgroundColor: "transparent",
               gap: "16px",
@@ -1026,7 +1106,18 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
             {data.localDraft && (
               <>
                 <p className="c1-c">Ongoing</p>
-                <ContentCard event={data.localDraft} />
+                {data.localDraft.noteDraft && (
+                  <ContentCard
+                    event={data.localDraft.noteDraft}
+                    setPostToNote={setPostToNote}
+                  />
+                )}
+                {data.localDraft.artDraft && (
+                  <ContentCard event={data.localDraft.artDraft} />
+                )}
+                {data.localDraft.smartWidgetDraft && (
+                  <ContentCard event={data.localDraft.smartWidgetDraft} />
+                )}
               </>
             )}
             {data.drafts.length > 0 && (
@@ -1076,7 +1167,10 @@ const ContentCard = ({
 }) => {
   return (
     <>
-      {event.kind === 1 && <NoteCard event={event} />}
+      {[1, 6].includes(event.kind) && <NoteCard event={event} />}
+      {[11, 300311].includes(event.kind) && (
+        <DraftCardOthers event={event} setPostToNote={setPostToNote} />
+      )}
       {event.kind === 30024 && (
         <DraftCard event={event} setDeleteEvent={setDeleteEvent} />
       )}
@@ -1115,9 +1209,17 @@ const DraftCard = ({ event, setDeleteEvent }) => {
         </div>
 
         <div className="fx-centered fx-col fx-start-h fx-start-v">
-          <p className="gray-c p-medium">
-            Last updated <Date_ toConvert={new Date(event.created_at * 1000)} />
-          </p>
+          <div className="fx-centered">
+            <p className="gray-c p-medium">
+              Last updated{" "}
+              <Date_ toConvert={new Date(event.created_at * 1000)} />
+            </p>
+            {event.local && (
+              <div className="sticker sticker-normal sticker-gray-black">
+                article
+              </div>
+            )}
+          </div>
           <p className="p-two-lines">
             {event.title || <span className="p-italic gray-c">Untitled</span>}
           </p>
@@ -1142,23 +1244,6 @@ const DraftCard = ({ event, setDeleteEvent }) => {
                   post_content: event.content,
                   post_published_at: event.published_at,
                 }}
-
-                // onClick={() =>
-                //   navigate("/write-article", {
-                //     state: {
-                //       post_pubkey: event.pubkey,
-                //       post_id: event.id,
-                //       post_kind: event.kind,
-                //       post_title: event.title,
-                //       post_desc: event.summary,
-                //       post_thumbnail: event.image,
-                //       post_tags: event.items,
-                //       post_d: event.d,
-                //       post_content: event.content,
-                //       post_published_at: event.published_at,
-                //     },
-                //   })
-                // }
               >
                 <p>Edit draft</p>
               </Link>,
@@ -1174,6 +1259,62 @@ const DraftCard = ({ event, setDeleteEvent }) => {
           />
         </div>
       )}
+    </div>
+  );
+};
+const DraftCardOthers = ({ event, setPostToNote }) => {
+  const handleRedirect = (e) => {
+    e.stopPropagation();
+    if (event.kind === 11) {
+      setPostToNote("");
+      return;
+    }
+    if (event.kind === 300311) {
+      customHistory.push("/smart-widget-builder");
+    }
+  };
+  return (
+    <div
+      className="fit-container fx-scattered sc-s-18 box-pad-h-m box-pad-v-m pointer"
+      style={{
+        backgroundColor: "transparent",
+        gap: "32px",
+        overflow: "visible",
+        borderColor: "var(--c1)",
+      }}
+      onClick={handleRedirect}
+    >
+      <div className="fx-centered fx-start-v">
+        <div className="round-icon">
+          {event.kind === 11 && <div className="note-24"></div>}
+          {event.kind === 300311 && <div className="smart-widget-24"></div>}
+        </div>
+
+        <div className="fx-centered fx-col fx-start-h fx-start-v">
+          <div className="fx-centered">
+            <p className="gray-c p-medium">
+              Last updated{" "}
+              {event.created_at ? (
+                <Date_ toConvert={new Date(event.created_at * 1000)} />
+              ) : (
+                "recent"
+              )}
+            </p>
+            <div className="sticker sticker-normal sticker-gray-black">
+              {eventKinds[event.kind]}
+            </div>
+          </div>
+          <p className="p-two-lines">
+            {event.kind === 11 && <>{compactContent(event.content)}</>}
+            {event.kind === 300311 && (
+              <>
+                <span className="c1-c">{event.content.components.length}</span>{" "}
+                components in this smart widget
+              </>
+            )}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
@@ -1428,15 +1569,16 @@ const NoteCard = ({ event }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userMetadata = useSelector((state) => state.userMetadata);
-  const { postActions } = useNoteStats(event.id, event.pubkey);
-  const isFlashNews = event.tags.find(
+  const isRepost = event.kind === 6 ? JSON.parse(event.content) : event;
+  const { postActions } = useNoteStats(isRepost.id, isRepost.pubkey);
+  const isFlashNews = isRepost.tags.find(
     (tag) => tag[0] === "l" && tag[1] === "FLASH NEWS"
   )
     ? true
     : false;
   const copyID = (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(nip19.noteEncode(event.id));
+    navigator.clipboard.writeText(nip19.noteEncode(isRepost.id));
     dispatch(
       setToast({
         type: 1,
@@ -1454,7 +1596,7 @@ const NoteCard = ({ event }) => {
       }}
       onClick={(e) => {
         e.stopPropagation();
-        customHistory.push(`/notes/${nip19.noteEncode(event.id)}`);
+        customHistory.push(`/notes/${nip19.noteEncode(isRepost.id)}`);
       }}
     >
       <div className="fx-centered fx-start-v">
@@ -1462,10 +1604,13 @@ const NoteCard = ({ event }) => {
           <div className="note-24"></div>
         </div>
         <div className="fx-centered fx-col fx-start-h fx-start-v">
-          <p className="gray-c p-medium">
-            Published on <Date_ toConvert={new Date(event.created_at * 1000)} />
-          </p>
-          <p className="p-two-lines">{compactContent(event.content)}</p>
+          <div className="fx-centered">
+            <p className="gray-c p-medium">
+              Published on{" "}
+              <Date_ toConvert={new Date(isRepost.created_at * 1000)} />
+            </p>
+          </div>
+          <p className="p-two-lines">{compactContent(isRepost.content)}</p>
           <div className="fx-centered">
             <div className="fx-centered">
               <div className="heart"></div>
@@ -1479,7 +1624,16 @@ const NoteCard = ({ event }) => {
               <div className="bolt"></div>
               <p className="gray-c">{postActions.zaps.total}</p>
             </div>
-            {isFlashNews && <div className="sticker sticker-c1">Paid</div>}
+            {isFlashNews && (
+              <div className="sticker sticker-normal sticker-gray-black">
+                Paid
+              </div>
+            )}
+            {event.kind === 6 && (
+              <div className="sticker sticker-normal sticker-gray-black fx-centered">
+                Reposted <div className="switch-arrows"></div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1492,12 +1646,12 @@ const NoteCard = ({ event }) => {
             <div className="fit-container fx-centered fx-start-h pointer">
               <ShareLink
                 label="Share note"
-                path={`/notes/${nip19.noteEncode(event.id)}`}
+                path={`/notes/${nip19.noteEncode(isRepost.id)}`}
                 title={userMetadata.display_name || userMetadata.name}
-                description={event.content}
+                description={isRepost.content}
                 kind={1}
                 shareImgData={{
-                  post: event,
+                  post: isRepost,
                   author: userMetadata,
                   label: "Note",
                 }}
@@ -1584,12 +1738,7 @@ const BookmarkCard = ({ event, showDetails, deleteEvent, editEvent }) => {
   );
 };
 
-const BookmarkContent = ({
-  bookmark,
-  exit,
-  setToEditBookmark,
-  setToDeleteBoormark,
-}) => {
+const BookmarkContent = ({ bookmark, exit }) => {
   const [content, setContent] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [postKind, setPostKind] = useState(0);
@@ -1691,146 +1840,7 @@ const BookmarkContent = ({
           <div className="fx-centered fx-col" style={{ marginTop: "1rem" }}>
             <div className="box-marg-s fit-container fx-scattered">
               <h4 className="gray-c fx-start-h">List</h4>
-              {/* <div style={{ position: "relative", zIndex: "100" }}>
-                <div
-                  style={{ position: "relative" }}
-                  className="round-icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowFilter(!showFilter);
-                  }}
-                >
-                  <div className="filter"></div>
-                </div>
-                {showFilter && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      bottom: "-5px",
-                      backgroundColor: "var(--dim-gray)",
-                      border: "none",
-                      transform: "translateY(100%)",
-                      maxWidth: "550px",
-                      rowGap: "12px",
-                    }}
-                    className="box-pad-h box-pad-v-m sc-s-18 fx-centered fx-col fx-start-v"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <h5>Filter</h5>
-                    <label
-                      htmlFor="radio-all"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-all"
-                        checked={postKind === 0}
-                        onChange={() => setPostKind(0)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>All content</span>
-                    </label>
-                    <label
-                      htmlFor="radio-published"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-published"
-                        checked={postKind === 30023}
-                        onChange={() => setPostKind(30023)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>Articles</span>
-                    </label>
-                    <label
-                      htmlFor="radio-ac"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-ac"
-                        checked={postKind === 30004}
-                        onChange={() => setPostKind(30004)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>
-                        Articles curations
-                      </span>
-                    </label>
-                    <label
-                      htmlFor="radio-vc"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-vc"
-                        checked={postKind === 30005}
-                        onChange={() => setPostKind(30005)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>
-                        Videos curations
-                      </span>
-                    </label>
-                    <label
-                      htmlFor="radio-bf"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-bf"
-                        checked={postKind === 111}
-                        onChange={() => setPostKind(111)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>Notes</span>
-                    </label>
-                    <label
-                      htmlFor="radio-fn"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-fn"
-                        checked={postKind === 1}
-                        onChange={() => setPostKind(1)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>Flash news</span>
-                    </label>
-                    <label
-                      htmlFor="radio-vd"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-vd"
-                        checked={postKind === 34235}
-                        onChange={() => setPostKind(34235)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>Videos</span>
-                    </label>
-                    <label
-                      htmlFor="radio-bf"
-                      className="fit-container fx-centered fx-start-h"
-                    >
-                      <input
-                        type="radio"
-                        name="filter"
-                        id="radio-bf"
-                        checked={postKind === 11}
-                        onChange={() => setPostKind(11)}
-                      />{" "}
-                      <span style={{ width: "max-content" }}>Buzz feed</span>
-                    </label>
-                  </div>
-                )}
-              </div> */}
+
               <Select
                 options={bookmarkFilterOptions}
                 setSelectedValue={setPostKind}
@@ -2266,11 +2276,12 @@ const ManageInterest = ({ exit }) => {
           }}
           className="if fit-container fx-scattered"
         >
+          <div className="search-24"></div>
           <input
             value={newInterest}
             onChange={(e) => setNewInterest(e.target.value)}
             type="text"
-            placeholder="Type your interest..."
+            placeholder="Add your interest"
             className="if ifs-full if-no-border"
             style={{ padding: 0 }}
           />

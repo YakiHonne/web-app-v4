@@ -162,7 +162,7 @@ const encodeLud06 = (url) => {
     let newConvertedAddress = bech32.encode("lnurl", words, 2000);
     return newConvertedAddress;
   } catch {
-    return false;
+    return "";
   }
 };
 

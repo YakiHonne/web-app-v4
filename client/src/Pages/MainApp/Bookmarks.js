@@ -255,7 +255,6 @@ const BookmarkContent = ({
     });
 
     sub.on("event", (event) => {
-      console.log(event);
       if ([30004, 30005, 30023, 34235].includes(event.kind)) {
         let identifier = event.tags.find((tag) => tag[0] === "d")[1];
         setContent((prev) => {

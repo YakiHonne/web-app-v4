@@ -86,7 +86,6 @@ export default [
       "npub1jlrs53pkdfjnts29kveljul2sm0actt6n8dxrrzqcersttvcuv3qdjynqn",
       "npub1qqqqqqyz0la2jjl752yv8h7wgs3v098mh9nztd4nr6gynaef6uqqt0n47m",
       "npub18ams6ewn5aj2n3wt2qawzglx9mr4nzksxhvrdc4gzrecw7n5tvjqctp424",
-      "npub18ams6ewn5aj2n3wt2qawzglx9mr4nzksxhvrdc4gzrecw7n5tvjqctp424",
     ],
     sub_tags: [
       "Technology",
@@ -156,7 +155,6 @@ export default [
       "npub1uw6lgv5qyexx68fwgdmwt3w7v3dwv679sray2ncpkug70ad7a8gqut3tay",
       "npub1wmr34t36fy03m8hvgl96zl3znndyzyaqhwmwdtshwmtkg03fetaqhjg240",
       "npub1mt8x8vqvgtnwq97sphgep2fjswrqqtl4j7uyr667lyw7fuwwsjgs5mm7cz",
-      "npub1mt8x8vqvgtnwq97sphgep2fjswrqqtl4j7uyr667lyw7fuwwsjgs5mm7cz",
       "npub1jk9h2jsa8hjmtm9qlcca942473gnyhuynz5rmgve0dlu6hpeazxqc3lqz7",
       "npub18ams6ewn5aj2n3wt2qawzglx9mr4nzksxhvrdc4gzrecw7n5tvjqctp424",
       "npub1vyrx2prp0mne8pczrcvv38ahn5wahsl8hlceeu3f3aqyvmu8zh5s7kfy55",
@@ -180,7 +178,6 @@ export default [
       "npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6",
       "npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft",
       "npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft",
-      "npub1v0lxxxxutpvrelsksy8cdhgfux9l6a42hsj2qzquu2zk7vc9qnkszrqj49",
       "npub1v0lxxxxutpvrelsksy8cdhgfux9l6a42hsj2qzquu2zk7vc9qnkszrqj49",
       "npub1qqqqqqyz0la2jjl752yv8h7wgs3v098mh9nztd4nr6gynaef6uqqt0n47m",
       "npub1sg6plzptd64u62a878hep2kev88swjh3tw00gjsfl8f237lmu63q0uf63m",

@@ -41,7 +41,7 @@ export default function KindSix({ event }) {
           img={user.picture}
         />
         <div>
-          <p className="p-medium">{user.display_name || user.name}</p>
+          <p className="p-bold">{user.display_name || user.name}</p>
         </div>
         <div className="switch-arrows"></div>
       </div>

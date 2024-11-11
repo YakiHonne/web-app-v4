@@ -93,14 +93,14 @@ export default function HistorySection({
       }
       const events = await getSubData(filter, 500);
       let tempEvents = events.data
-        .map((event) => {
-          let is_un = event.tags.find((tag) => tag[0] === "l");
-          let is_quote = event.tags.find((tag) => tag[0] === "q");
-          if (!((is_un && is_un[1] === "UNCENSORED NOTE") || is_quote)) {
-            return event;
-          }
-        })
-        .filter((_) => _);
+        // .map((event) => {
+        //   let is_un = event.tags.find((tag) => tag[0] === "l");
+        //   let is_quote = event.tags.find((tag) => tag[0] === "q");
+        //   if (!((is_un && is_un[1] === "UNCENSORED NOTE") || is_quote)) {
+        //     return event;
+        //   }
+        // })
+        // .filter((_) => _);
 
       if (tempEvents.length === 0) setIsLoading(false);
       setComments(tempEvents);

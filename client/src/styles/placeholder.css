@@ -145,7 +145,7 @@
     .yakihonne-logo {
         width: 256px;
         height: 100px;
-        filter: invert();
+        filter: brightness(0) invert();
     }
 
     .yakihonne-logo-128 {
@@ -166,7 +166,7 @@
     background-repeat: no-repeat;
     background-size: contain;
     border-radius: 0;
-    background-image: url(../media/images/chest.webp);
+    background-image: url(../media/images/chest.png);
     width: 350px;
     aspect-ratio: 16/9;
 }

@@ -20,6 +20,7 @@ import Zap from "../Reactions/Zap";
 import Comments from "../Reactions/Comments";
 import { customHistory } from "../../Helpers/History";
 import { saveUsers } from "../../Helpers/DB";
+import CommentsSection from "./CommentsSection";
 
 export default function KindOne({ event, reactions = true, border = false }) {
   const dispatch = useDispatch();
@@ -33,6 +34,7 @@ export default function KindOne({ event, reactions = true, border = false }) {
   const [isNip05Verified, setIsNip05Verified] = useState(false);
   const [toggleComment, setToggleComment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [usersList, setUsersList] = useState(false);
   const { postActions } = useNoteStats(event?.id, event?.pubkey);
 
@@ -164,255 +166,273 @@ export default function KindOne({ event, reactions = true, border = false }) {
   };
 
   return (
-    <div
-      className={`fit-container box-pad-h-m box-pad-v-m ${
-        !reactions ? "sc-s-18" : ""
-      }`}
-      style={{
-        backgroundColor: !toggleComment ? "" : "var(--c1-side)",
-        transition: ".2s ease-in-out",
-        overflow: "visible",
-        borderBottom: border ? "1px solid var(--very-dim-gray)" : "",
-      }}
-    >
-      {usersList && (
-        <ShowUsersList
-          exit={() => setUsersList(false)}
-          title={usersList.title}
-          list={usersList.list}
-          extras={usersList.extras}
+    <>
+      {showComments && (
+        <FastAccessCS
+          id={event.id}
+          eventPubkey={event.pubkey}
+          author={user}
+          exit={() => setShowComments(false)}
+          isRoot={event.isComment ? false : true}
         />
       )}
       <div
-        className=" fit-container pointer"
+        className={`fit-container box-pad-h-m box-pad-v-m ${
+          !reactions ? "sc-s-18" : ""
+        }`}
         style={{
+          backgroundColor: !toggleComment ? "" : "var(--c1-side)",
           transition: ".2s ease-in-out",
           overflow: "visible",
+          borderBottom: border ? "1px solid var(--very-dim-gray)" : "",
         }}
-        onClick={reactions ? null : redirect}
       >
-        <div className="fit-container fx-centered fx-start-h fx-start-v">
-          <div>
-            <UserProfilePicNOSTR
-              size={40}
-              mainAccountUser={false}
-              ring={false}
-              user_id={user.pubkey}
-              img={user.picture}
-              metadata={user}
-            />
-          </div>
-          <div
-            className={"fit-container fx-centered fx-col"}
-            style={{ gap: "6px" }}
-            onClick={onClick}
-          >
-            <div className="fx-scattered fit-container">
-              <div className="fx-centered" style={{ gap: "3px" }}>
+        {usersList && (
+          <ShowUsersList
+            exit={() => setUsersList(false)}
+            title={usersList.title}
+            list={usersList.list}
+            extras={usersList.extras}
+          />
+        )}
+        <div
+          className=" fit-container pointer"
+          style={{
+            transition: ".2s ease-in-out",
+            overflow: "visible",
+          }}
+          onClick={reactions ? null : redirect}
+        >
+          <div className="fit-container fx-centered fx-start-h fx-start-v">
+            <div>
+              <UserProfilePicNOSTR
+                size={40}
+                mainAccountUser={false}
+                ring={false}
+                user_id={user.pubkey}
+                img={user.picture}
+                metadata={user}
+              />
+            </div>
+            <div
+              className={"fit-container fx-centered fx-col"}
+              style={{ gap: "6px" }}
+              onClick={onClick}
+            >
+              <div className="fx-scattered fit-container">
                 <div className="fx-centered" style={{ gap: "3px" }}>
-                  <p className="p-bold p-one-line">
-                    {user.display_name || user.name}
+                  <div className="fx-centered" style={{ gap: "3px" }}>
+                    <p className="p-bold p-one-line">
+                      {user.display_name || user.name}
+                    </p>
+                    {isNip05Verified && <div className="checkmark-c1"></div>}
+                  </div>
+                  <p className="gray-c p-medium">&#8226;</p>
+                  <p className="gray-c p-medium">
+                    <Date_
+                      toConvert={new Date(event.created_at * 1000)}
+                      time={true}
+                    />
                   </p>
-                  {isNip05Verified && <div className="checkmark-c1"></div>}
                 </div>
-                <p className="gray-c p-medium">&#8226;</p>
-                <p className="gray-c p-medium">
-                  <Date_
-                    toConvert={new Date(event.created_at * 1000)}
-                    time={true}
-                  />
-                </p>
+                {event.isFlashNews && (
+                  <div className="sticker sticker-gray-black">Paid</div>
+                )}
               </div>
-              {event.isFlashNews && (
-                <div className="sticker sticker-gray-black">Paid</div>
-              )}
-            </div>
-            {event.isComment && <RelatedEvent event={event.isComment} />}
-            <div className="fx-centered fx-col fit-container">
-              <div className="fit-container" onClick={onClick}>
-                {event.note_tree}
+              {event.isComment && <RelatedEvent event={event.isComment} />}
+              <div className="fx-centered fx-col fit-container">
+                <div className="fit-container" onClick={onClick}>
+                  {event.note_tree}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {reactions && (
-          <div
-            className="fx-scattered fit-container"
-            style={{ paddingTop: "1rem", paddingLeft: "48px" }}
-          >
-            <div className="fx-centered" style={{ columnGap: "1rem" }}>
-              <div className="fx-centered">
-                <div className="icon-tooltip" data-tooltip="Leave a comment">
+          {reactions && (
+            <div
+              className="fx-scattered fit-container"
+              style={{ paddingTop: "1rem", paddingLeft: "48px" }}
+            >
+              <div className="fx-centered" style={{ columnGap: "1rem" }}>
+                <div className="fx-centered">
+                  <div className="icon-tooltip" data-tooltip="Leave a comment">
+                    <div
+                      className="comment-24"
+                      onClick={() => setToggleComment(!toggleComment)}
+                    ></div>
+                  </div>
                   <div
-                    className="comment-24"
-                    onClick={() => setToggleComment(!toggleComment)}
-                  ></div>
+                    className="icon-tooltip"
+                    data-tooltip="See comments"
+                    onClick={() =>
+                      postActions.replies.replies.length > 0
+                        ? setShowComments(true)
+                        : null
+                    }
+                    // onClick={redirect}
+                  >
+                    <p>{postActions.replies.replies.length}</p>
+                  </div>
+                </div>
+                <div className="fx-centered">
+                  <Like isLiked={isLiked} event={event} actions={postActions} />
+                  <div
+                    className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
+                    data-tooltip="Reactions "
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      postActions.likes.likes.length > 0 &&
+                        setUsersList({
+                          title: "Reactions ",
+                          list: postActions.likes.likes.map(
+                            (item) => item.pubkey
+                          ),
+                          extras: [],
+                        });
+                    }}
+                  >
+                    <NumberShrink value={postActions.likes.likes.length} />
+                  </div>
                 </div>
                 <div
-                  className="icon-tooltip"
-                  data-tooltip="See comments"
-                  onClick={redirect}
+                  className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
+                  style={{ columnGap: "8px" }}
                 >
-                  <p>{postActions.replies.replies.length}</p>
-                </div>
-              </div>
-              <div className="fx-centered">
-                <Like isLiked={isLiked} event={event} actions={postActions} />
-                <div
-                  className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
-                  data-tooltip="Reactions "
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    postActions.likes.likes.length > 0 &&
-                      setUsersList({
-                        title: "Reactions ",
-                        list: postActions.likes.likes.map(
-                          (item) => item.pubkey
-                        ),
-                        extras: [],
-                      });
-                  }}
-                >
-                  <NumberShrink value={postActions.likes.likes.length} />
-                </div>
-              </div>
-              <div
-                className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
-                style={{ columnGap: "8px" }}
-              >
-                <Repost
-                  isReposted={isReposted}
-                  event={event}
-                  actions={postActions}
-                />
-                <div
-                  className={`icon-tooltip ${isReposted ? "orange-c" : ""}`}
-                  data-tooltip="Reposts "
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    postActions.reposts.reposts.length > 0 &&
-                      setUsersList({
-                        title: "Reposts ",
-                        list: postActions.reposts.reposts.map(
-                          (item) => item.pubkey
-                        ),
-                        extras: [],
-                      });
-                  }}
-                >
-                  <NumberShrink value={postActions.reposts.reposts.length} />
-                </div>
-              </div>
-              <div className="fx-centered">
-                <Quote
-                  isQuoted={isQuoted}
-                  event={event}
-                  actions={postActions}
-                />
-                <div
-                  className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
-                  data-tooltip="Quoters"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    postActions.quotes.quotes.length > 0 &&
-                      setUsersList({
-                        title: "Quoters",
-                        list: postActions.quotes.quotes.map(
-                          (item) => item.pubkey
-                        ),
-                        extras: [],
-                      });
-                  }}
-                >
-                  <NumberShrink value={postActions.quotes.quotes.length} />
-                </div>
-              </div>
-              <div className="fx-centered">
-                <div className="icon-tooltip" data-tooltip="Tip note">
-                  <Zap
-                    user={user}
+                  <Repost
+                    isReposted={isReposted}
                     event={event}
                     actions={postActions}
-                    isZapped={isZapped}
                   />
+                  <div
+                    className={`icon-tooltip ${isReposted ? "orange-c" : ""}`}
+                    data-tooltip="Reposts "
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      postActions.reposts.reposts.length > 0 &&
+                        setUsersList({
+                          title: "Reposts ",
+                          list: postActions.reposts.reposts.map(
+                            (item) => item.pubkey
+                          ),
+                          extras: [],
+                        });
+                    }}
+                  >
+                    <NumberShrink value={postActions.reposts.reposts.length} />
+                  </div>
                 </div>
-                <div
-                  className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
-                  data-tooltip="Zappers"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    postActions.zaps.total > 0 &&
-                      setUsersList({
-                        title: "Zappers",
-                        list: postActions.zaps.zaps.map((item) => item.pubkey),
-                        extras: postActions.zaps.zaps,
-                      });
-                  }}
-                >
-                  <NumberShrink value={postActions.zaps.total} />
+                <div className="fx-centered">
+                  <Quote
+                    isQuoted={isQuoted}
+                    event={event}
+                    actions={postActions}
+                  />
+                  <div
+                    className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
+                    data-tooltip="Quoters"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      postActions.quotes.quotes.length > 0 &&
+                        setUsersList({
+                          title: "Quoters",
+                          list: postActions.quotes.quotes.map(
+                            (item) => item.pubkey
+                          ),
+                          extras: [],
+                        });
+                    }}
+                  >
+                    <NumberShrink value={postActions.quotes.quotes.length} />
+                  </div>
+                </div>
+                <div className="fx-centered">
+                  <div className="icon-tooltip" data-tooltip="Tip note">
+                    <Zap
+                      user={user}
+                      event={event}
+                      actions={postActions}
+                      isZapped={isZapped}
+                    />
+                  </div>
+                  <div
+                    className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                    data-tooltip="Zappers"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      postActions.zaps.total > 0 &&
+                        setUsersList({
+                          title: "Zappers",
+                          list: postActions.zaps.zaps.map(
+                            (item) => item.pubkey
+                          ),
+                          extras: postActions.zaps.zaps,
+                        });
+                    }}
+                  >
+                    <NumberShrink value={postActions.zaps.total} />
+                  </div>
                 </div>
               </div>
-            </div>
-            <OptionsDropdown
-              options={[
-                <div onClick={copyID} className="pointer">
-                  <p>Copy note ID</p>
-                </div>,
-                userKeys && userKeys.pub !== event.pubkey && (
-                  <>
-                    <BookmarkEvent
-                      label="Bookmark note"
-                      pubkey={event.id}
-                      kind={"1"}
-                      itemType="e"
+              <OptionsDropdown
+                options={[
+                  <div onClick={copyID} className="pointer">
+                    <p>Copy note ID</p>
+                  </div>,
+                  userKeys && userKeys.pub !== event.pubkey && (
+                    <>
+                      <BookmarkEvent
+                        label="Bookmark note"
+                        pubkey={event.id}
+                        kind={"1"}
+                        itemType="e"
+                      />
+                    </>
+                  ),
+                  <div className="fit-container fx-centered fx-start-h pointer">
+                    <ShareLink
+                      label="Share note"
+                      path={`/notes/${event.nEvent}`}
+                      title={user.display_name || user.name}
+                      description={event.content}
+                      kind={1}
+                      shareImgData={{
+                        post: event,
+                        author: user,
+                        label: "Note",
+                      }}
                     />
-                  </>
-                ),
-                <div className="fit-container fx-centered fx-start-h pointer">
-                  <ShareLink
-                    label="Share note"
-                    path={`/notes/${event.nEvent}`}
-                    title={user.display_name || user.name}
-                    description={event.content}
-                    kind={1}
-                    shareImgData={{
-                      post: event,
-                      author: user,
-                      label: "Note",
-                    }}
-                  />
-                </div>,
-                event.pubkey !== userKeys.pub && (
-                  <div
-                    onClick={muteUnmute}
-                    className="fit-container fx-scattered pointer"
-                  >
-                    {isMuted ? (
-                      <p className="red-c">Unmute user</p>
-                    ) : (
-                      <p className="red-c">Mute user</p>
-                    )}
-                    {isMuted ? (
-                      <div className="unmute-24"></div>
-                    ) : (
-                      <div className="mute-24"></div>
-                    )}
-                  </div>
-                ),
-              ]}
-            />
-          </div>
+                  </div>,
+                  event.pubkey !== userKeys.pub && (
+                    <div
+                      onClick={muteUnmute}
+                      className="fit-container fx-scattered pointer"
+                    >
+                      {isMuted ? (
+                        <p className="red-c">Unmute user</p>
+                      ) : (
+                        <p className="red-c">Mute user</p>
+                      )}
+                      {isMuted ? (
+                        <div className="unmute-24"></div>
+                      ) : (
+                        <div className="mute-24"></div>
+                      )}
+                    </div>
+                  ),
+                ]}
+              />
+            </div>
+          )}
+        </div>
+        {toggleComment && (
+          <Comments
+            exit={() => setToggleComment(false)}
+            replyId={event.id}
+            replyPubkey={event.pubkey}
+            actions={postActions}
+          />
         )}
       </div>
-      {toggleComment && (
-        <Comments
-          exit={() => setToggleComment(false)}
-          replyId={event.id}
-          replyPubkey={event.pubkey}
-          actions={postActions}
-        />
-      )}
-    </div>
+    </>
   );
 }
 
@@ -473,9 +493,59 @@ const RelatedEvent = ({ event }) => {
       <p className="gray-c">
         Replying to{" "}
         <span className="c1-c">
-          @{user?.display_name || user?.name || "User"}
+          @{user?.display_name || user?.name || "USER"}
         </span>
       </p>
+    </div>
+  );
+};
+
+const FastAccessCS = ({ id, eventPubkey, author, exit, isRoot = true }) => {
+  return (
+    <div
+      className="fixed-container fx-centered fx-start-v"
+      onClick={(e) => {
+        e.stopPropagation();
+        exit();
+      }}
+    >
+      <div
+        className="fx-centered fx-col fx-start-v fx-start-h sc-s-18 bg-sp"
+        style={{
+          overflow: "scroll",
+          scrollBehavior: "smooth",
+          height: "100vh",
+          width: "min(100%, 550px)",
+          position: "relative",
+          borderRadius: 0,
+          gap: 0,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+       <div
+            className="fit-container fx-centered sticky"
+            style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
+          >
+            <div className="fx-scattered fit-container box-pad-h">
+              <h4 className="p-caps">Thread</h4>
+              <div
+                className="close"
+                style={{ position: "static" }}
+                onClick={exit}
+              >
+                <div></div>
+              </div>
+            </div>
+          </div>
+        <CommentsSection
+          id={id}
+          eventPubkey={eventPubkey}
+          author={author}
+          isRoot={isRoot}
+        />
+      </div>
     </div>
   );
 };

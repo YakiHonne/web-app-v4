@@ -4,7 +4,7 @@ import loading from "../media/JSONs/loading.json";
 import loadingB from "../media/JSONs/loading-b.json";
 import { useSelector } from "react-redux";
 
-export default function LoadingLogo({ size }) {
+export default function LoadingLogo({ size = 64 }) {
   const isDarkMode = useSelector((state) => state.isDarkMode);
 
   return (

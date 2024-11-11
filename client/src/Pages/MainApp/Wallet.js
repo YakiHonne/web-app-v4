@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { webln } from "@getalby/sdk";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
@@ -13,6 +13,7 @@ import {
   decodeUrlOrAddress,
   encodeLud06,
   getBech32,
+  getBolt11,
   getEmptyuserMetadata,
   getHex,
   getZapper,
@@ -30,15 +31,17 @@ import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserBalance } from "../../Store/Slides/UserData";
-import { setToast } from "../../Store/Slides/Publishers";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
+import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 
 export default function Wallet() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userBalance = useSelector((state) => state.userBalance);
+  const userMetadata = useSelector((state) => state.userMetadata);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
   const [transactions, setTransactions] = useState([]);
@@ -55,6 +58,28 @@ export default function Wallet() {
   const [timestamp, setTimestamp] = useState(Date.now());
   const [showDeletionPopup, setShowDeletionPopup] = useState(false);
   const walletListRef = useRef(null);
+
+  const checkIsLinked = (addr) => {
+    if (userMetadata) {
+      if (!(userMetadata.lud16 && userMetadata.lud06)) return false;
+      if (userMetadata.lud16 && userMetadata.lud16 === addr) return true;
+      if (userMetadata.lud06) {
+        let decoded = decodeUrlOrAddress(userMetadata.lud06);
+        if (decoded && decoded === addr) return true;
+      }
+      return false;
+    }
+  };
+  const profileHasWallet = useMemo(() => {
+    let hasWallet = userMetadata.lud06 || userMetadata.lud16;
+    let isWalletLinked = wallets.find((wallet) => checkIsLinked(wallet.entitle))
+      ? true
+      : false;
+    return {
+      hasWallet,
+      isWalletLinked,
+    };
+  }, [userMetadata, wallets]);
 
   useEffect(() => {
     let timeout = null;
@@ -291,7 +316,31 @@ export default function Wallet() {
     let selectedWallet_ = tempWallets.find((wallet) => wallet.active);
     setWallets(tempWallets);
     setSelectedWallet(selectedWallet_);
-    setShowAddWallet(false)
+    setShowAddWallet(false);
+  };
+  const copyKey = (prefix, key) => {
+    navigator.clipboard.writeText(key);
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `${prefix} was copied! 👏`,
+      })
+    );
+  };
+
+  const linkWallet = async (walletAddr) => {
+    let content = { ...userMetadata };
+    content.lud16 = walletAddr;
+    content.lud06 = encodeLud06(walletAddr);
+    dispatch(
+      setToPublish({
+        userKeys: userKeys,
+        kind: 0,
+        content: JSON.stringify(content),
+        tags: [],
+        allRelays: [],
+      })
+    );
   };
 
   return (
@@ -333,7 +382,10 @@ export default function Wallet() {
                     <PagePlaceholder page={"nostr-wallet"} />
                   )}
                   {(userKeys.ext || userKeys.sec) && wallets.length === 0 && (
-                    <PagePlaceholder page={"nostr-add-wallet"} onClick={handleAddWallet}/>
+                    <PagePlaceholder
+                      page={"nostr-add-wallet"}
+                      onClick={handleAddWallet}
+                    />
                   )}
                   {(userKeys.ext || userKeys.sec) && wallets.length > 0 && (
                     <div>
@@ -385,6 +437,7 @@ export default function Wallet() {
                                   Connected wallets
                                 </p>
                                 {wallets.map((wallet) => {
+                                  let isLinked = checkIsLinked(wallet.entitle);
                                   return (
                                     <div
                                       key={wallet.id}
@@ -418,8 +471,66 @@ export default function Wallet() {
                                         >
                                           {wallet.entitle}
                                         </p>
+                                        {isLinked && (
+                                          <div
+                                            className="round-icon-tooltip"
+                                            data-tooltip="Currently linked with your profile for zaps receiving"
+                                          >
+                                            <div className="sticker sticker-small sticker-green-pale">
+                                              linked
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                       {wallet.kind !== 1 && (
+                                        <OptionsDropdown
+                                          options={[
+                                            !isLinked && (
+                                              <div
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  linkWallet(wallet.entitle);
+                                                }}
+                                              >
+                                                Link wallet
+                                              </div>
+                                            ),
+                                            <div
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                copyKey(
+                                                  "Lightning address",
+                                                  selectedWallet.entitle
+                                                );
+                                              }}
+                                            >
+                                              Copy lightning address
+                                            </div>,
+                                            <div
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                copyKey(
+                                                  "NWC secret",
+                                                  selectedWallet.data
+                                                );
+                                              }}
+                                            >
+                                              Copy NWC secret
+                                            </div>,
+                                            <div
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowDeletionPopup(wallet);
+                                              }}
+                                            >
+                                              <span className="red-c">
+                                                Remove wallet
+                                              </span>
+                                            </div>,
+                                          ]}
+                                        />
+                                      )}
+                                      {/* {wallet.kind !== 1 && (
                                         <div
                                           className="round-icon-small round-icon-tooltip"
                                           data-tooltip="Remove wallet"
@@ -432,7 +543,7 @@ export default function Wallet() {
                                             &minus;
                                           </p>
                                         </div>
-                                      )}
+                                      )} */}
                                     </div>
                                   );
                                 })}
@@ -457,8 +568,44 @@ export default function Wallet() {
                               <p className="gray-c">Sats</p>
                             </div>
                             <SatsToUSD sats={userBalance} />
+                            {selectedWallet.kind !== 1 && (
+                              <div
+                                className="btn btn-gray btn-small fx-centered"
+                                // className="sticker sticker-gray-black fx-centered box-marg-s pointer"
+                                onClick={() =>
+                                  copyKey(
+                                    "Lightning address",
+                                    selectedWallet.entitle
+                                  )
+                                }
+                              >
+                                {selectedWallet.entitle}
+                                <div className="copy"></div>
+                              </div>
+                            )}
                           </div>
                         )}
+                        {!isLoading &&
+                          !(
+                            profileHasWallet.hasWallet &&
+                            profileHasWallet.isWalletLinked
+                          ) && (
+                            <div className="box-pad-h box-pad-v fit-container sc-s-18 fx-centered fx-centered fx-col gray-c p-centered">
+                              {!profileHasWallet.hasWallet && (
+                                <>You have no wallet linked to your profile</>
+                              )}
+                              {profileHasWallet.hasWallet &&
+                                !profileHasWallet.isWalletLinked && (
+                                  <>
+                                    None of the connected wallets are linked to
+                                    your profile
+                                  </>
+                                )}
+                              {
+                                " consider linking one of yours in the menu above"
+                              }
+                            </div>
+                          )}
                         {isLoading && (
                           <div
                             className="fx-centered fx-col box-pad-v"
@@ -469,7 +616,7 @@ export default function Wallet() {
                         )}
                         <div className="fx-centered fit-container">
                           <button
-                          style={{height: "70px", gap: 0}}
+                            style={{ height: "70px", gap: 0 }}
                             className={
                               selectedWallet
                                 ? "btn btn-gray fx fx-centered fx-col"
@@ -480,12 +627,12 @@ export default function Wallet() {
                             }
                             disabled={selectedWallet ? false : true}
                           >
-                               <span className="p-big">&#8595;</span>
-                               <span>Receive</span>
+                            <span className="p-big">&#8595;</span>
+                            <span>Receive</span>
                             {/* Receive &#8595; */}
                           </button>
                           <button
-                          style={{height: "70px", gap: 0}}
+                            style={{ height: "70px", gap: 0 }}
                             className={
                               selectedWallet
                                 ? "btn btn-orange  fx fx-centered fx-col"
@@ -498,8 +645,7 @@ export default function Wallet() {
                           >
                             <span className="p-big">&#8593;</span>
                             <span>Send</span>
-                         
-                            
+
                             {/* Send &#8593; */}
                           </button>
                         </div>
@@ -535,9 +681,7 @@ export default function Wallet() {
                           {transactions.length > 0 &&
                             selectedWallet?.kind === 1 && (
                               <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
-                                <p className="gray-c">
-                                  Recent transactions
-                                </p>
+                                <p className="gray-c">Recent transactions</p>
                                 {transactions.map((transaction, index) => {
                                   let author =
                                     nostrAuthors.find(

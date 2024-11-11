@@ -126,6 +126,9 @@ export default function CommentsSection({
       let tempEvents = events.data
         .map((event) => {
           let is_un = event.tags.find((tag) => tag[0] === "l");
+          let is_comment = event.tags.find(
+            (tag) => tag.length > 3 && ["root", "reply"].includes(tag[3])
+          );
           let is_quote = event.tags.find((tag) => tag[0] === "q");
           let is_mention = event.tags.filter(
             (tag) => tag.length > 3 && tag[3] === "mention" && tag[1] === id
@@ -133,9 +136,8 @@ export default function CommentsSection({
           if (
             !(
               (is_un && is_un[1] === "UNCENSORED NOTE") ||
-              // is_quote
-              is_quote ||
-              is_mention.length > 0
+              (is_quote && !is_comment) ||
+              (is_mention.length > 0 && !is_comment)
             )
           ) {
             return event;
@@ -208,7 +210,7 @@ export default function CommentsSection({
             </div>
           )}
           {showWriteNote && (
-            <div className="box-pad-v-m fit-container">
+            <div className="box-pad-v-m box-pad-h-m fit-container">
               <Comments
                 exit={() => setShowWriteNote(false)}
                 replyId={id}
@@ -224,9 +226,7 @@ export default function CommentsSection({
       {!userKeys && (
         <>
           <hr />
-          <div
-            className="fit-container fx-centered box-pad-v fx-col slide-up"
-          >
+          <div className="fit-container fx-centered box-pad-v fx-col slide-up">
             <h4>Do you have thoughts?</h4>
             <p className="gray-c">Login to leave a comment</p>
             <Link to={"/login"}>
@@ -260,7 +260,10 @@ export default function CommentsSection({
           </div>
         )}
         {netComments.length > 0 && (
-          <div className="fit-container fx-centered fx-start-h box-pad-v-m">
+          <div
+            className="fit-container fx-centered fx-start-h box-pad-h-m"
+            style={{ paddingTop: "1rem" }}
+          >
             <h4>Replies</h4>
           </div>
         )}
@@ -303,7 +306,8 @@ const Comment = ({
           <div
             className="fx-col fit-container fx-centered"
             style={{
-              width: `calc(100% - 1.875rem)`,
+              width: `calc(100% - 2.5rem)`,
+              // width: `calc(100% - 1.875rem)`,
               gap: 0,
             }}
           >

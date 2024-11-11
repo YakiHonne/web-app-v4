@@ -984,11 +984,11 @@ const getDefaultSettings = (pubkey) => {
     pubkey,
     userHoverPreview: true,
     contentList: [
-      { tab: "highlights", isHidden: false },
-      { tab: "trending", isHidden: false },
-      { tab: "paid", isHidden: false },
       { tab: "recent", isHidden: false },
       { tab: "recent-with-replies", isHidden: false },
+      { tab: "trending", isHidden: false },
+      { tab: "highlights", isHidden: false },
+      { tab: "paid", isHidden: false },
       { tab: "widgets", isHidden: false },
     ],
   };
@@ -1269,6 +1269,14 @@ const isHex = (str) => {
   return hexRegex.test(str) && str.length % 2 === 0;
 };
 
+const sleepTimer = async (duration = 2000) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(false);
+    }, duration);
+  });
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -1303,4 +1311,5 @@ export {
   updateArticleDraft,
   getNoteDraft,
   updateNoteDraft,
+  sleepTimer
 };

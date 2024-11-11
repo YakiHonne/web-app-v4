@@ -70,6 +70,10 @@ export default function WriteNote({
     }
   }, []);
 
+  useEffect(() => {
+    if (!content && !linkedEvent) updateNoteDraft("root", note);
+  }, [note]);
+
   const adjustHeight = () => {
     if (textareaRef.current) {
       if (note.charAt(note.length - 1) === "#") setShowTagsSuggestions(true);
@@ -113,7 +117,7 @@ export default function WriteNote({
       setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
     }
     setNote(value);
-    if (!content && !linkedEvent) updateNoteDraft("root", value);
+    // if (!content && !linkedEvent) updateNoteDraft("root", value);
   };
 
   const handleSelectingTags = (data) => {
@@ -370,7 +374,13 @@ export default function WriteNote({
   useEffect(() => {
     const handleOffClick = (e) => {
       e.stopPropagation();
-      if (ref.current && !ref.current.contains(e.target) && !invoice) {
+      let swbrowser = document.getElementById("sw-browser");
+      if (
+        ref.current &&
+        !ref.current.contains(e.target) &&
+        !swbrowser?.contains(e.target) &&
+        !invoice
+      ) {
         if (!note) {
           exit();
         } else {
@@ -399,7 +409,7 @@ export default function WriteNote({
         <div className="fixed-container fx-centered box-pad-h">
           <div
             className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
-            style={{ width: "min(100%, 450px)" }}
+            style={{ width: "min(100%, 500px)" }}
           >
             <div className="fx-centered fx-col">
               <h4>{linkedEvent ? "Heads up!" : "Save draft?"}</h4>

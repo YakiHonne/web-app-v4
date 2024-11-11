@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { useLiveQuery } from "dexie-react-hooks";
+
 import {
   getFollowings,
   getNotificationLastEventTS,
@@ -97,27 +97,30 @@ export default function NotificationCenter({
       );
 
       sub.on("event", (event) => {
-        let checkForLabel = event.tags.find((tag) => tag[0] === "l");
-        let isUncensored = checkForLabel
-          ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
-              checkForLabel[1]
-            )
-          : false;
-
-        if (!isUncensored && event.pubkey !== userKeys.pub) {
-          events = events + 1;
-          localStorage.setItem(localStorageKey, events);
-          setNotifications((prev) => prev + 1);
-          if (created_at < event.created_at) {
-            created_at = event.created_at;
-            saveNotificationLastEventTS(userKeys.pub, event.created_at);
+        try {
+          let checkForLabel = event.tags.find((tag) => tag[0] === "l");
+          let isUncensored = checkForLabel
+            ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
+                checkForLabel[1]
+              )
+            : false;
+          if (!isUncensored && event.pubkey !== userKeys.pub) {
+            events = events + 1;
+            localStorage.setItem(localStorageKey, events);
+            setNotifications((prev) => prev + 1);
+            if (created_at < event.created_at) {
+              created_at = event.created_at;
+              saveNotificationLastEventTS(userKeys.pub, event.created_at);
+            }
+            dispatch(
+              setToast({
+                type: 1,
+                desc: "New Notification!",
+              })
+            );
           }
-          dispatch(
-            setToast({
-              type: 1,
-              desc: "New Notification!",
-            })
-          );
+        } catch (err) {
+          console.log(err);
         }
       });
     };
@@ -128,12 +131,14 @@ export default function NotificationCenter({
       setNotifications(0);
     }
   }, [userKeys]);
+
   const handleOnClick = () => {
     let localStorageKey = `new-notification-${userKeys.pub}`;
     localStorage.setItem(localStorageKey, 0);
     if (dismiss) dismiss();
     customHistory.push("/notifications");
   };
+
   return (
     <>
       <div

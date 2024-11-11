@@ -72,6 +72,7 @@ body {
     font-optical-sizing: none;
     line-height: 150%;
     overflow-x: hidden;
+    text-shadow: rgba(0,0,0,.3) 0 0 1px;
 }
 
 
@@ -348,7 +349,13 @@ hr:last-child {
 .sticker-c1-pale {
     background: var(--c1-side);
     color: var(--c1);
-    border: 1px solid var(--c1-transparent);
+    border: 1px solid var(--c1);
+}
+
+.sticker-green-pale {
+    background: var(--green-side);
+    color: var(--green-main);
+    border: 1px solid var(--green-main);
 }
 
 .sticker-gray {

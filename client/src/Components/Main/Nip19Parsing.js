@@ -49,6 +49,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       }
       if (addr.startsWith("npub")) {
         let data = nip19.decode(addr);
+
         let pubkey = "";
         if (typeof data.data === "string") pubkey = data.data;
         else if (data.data.pubkey) pubkey = data.data.pubkey;
@@ -88,9 +89,12 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           kind: event.kind,
           picture: content.picture || "",
           name:
-            content.name || getBech32("npub", event.pubkey).substring(0, 10),
+            content.name ||
+            content.display_name ||
+            getBech32("npub", event.pubkey).substring(0, 10),
           display_name:
             content.display_name ||
+            content.name ||
             getBech32("npub", event.pubkey).substring(0, 10),
         });
       }
@@ -129,15 +133,15 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       setIsLoading(false);
       sub.stop();
     });
-    // sub.on("close", () => {
-    //   setIsLoading(false);
-    // });
-    // let timeout = setTimeout(() => {
-    //   sub.stop();
-    //   clearTimeout(timeout);
-    // }, 4000);
+
+    let timer = setTimeout(() => {
+      setIsLoading(false);
+      clearTimeout(timer);
+    }, 4000);
+
     return () => {
       sub.stop();
+      clearTimeout(timer);
     };
   }, []);
 
@@ -150,13 +154,16 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         {!minimal && (
           <>
             {event && (
-              <div className="fit-container">
+              <div className="fit-container" style={{ paddingTop: ".5rem" }}>
                 <KindOne event={event} reactions={false} />
               </div>
             )}
             {isLoading && !event && (
               <div
-                style={{ backgroundColor: "var(--c1-side)" }}
+                style={{
+                  backgroundColor: "var(--c1-side)",
+                  marginTop: ".5rem",
+                }}
                 className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
               >
                 <p className="p-medium gray-c">Loading note</p>
@@ -165,12 +172,13 @@ export default function Nip19Parsing({ addr, minimal = false }) {
             )}
             {!isLoading && !event && (
               <div
-                style={{ backgroundColor: "var(--c1-side)" }}
+                style={{
+                  backgroundColor: "var(--c1-side)",
+                  marginTop: ".5rem",
+                }}
                 className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
               >
-                <p className="p-medium orange-c p-italic">
-                  The note does not seem to be found
-                </p>
+                <p className="p-medium gray-c">Note not available</p>
               </div>
             )}
           </>
