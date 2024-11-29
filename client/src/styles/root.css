@@ -106,7 +106,7 @@
 @media (prefers-color-scheme: dark) {
     .gradient-bg-right {
         background:
-            linear-gradient(-90deg, rgba(23, 23, 24, 1) 0%, rgba(23, 23, 24, 0)100%) !important
+            linear-gradient(-90deg, rgba(23, 23, 24, 1) 0%, rgba(23, 23, 24, 0)100%) !important;
     }
 
     .gradient-bg-left {

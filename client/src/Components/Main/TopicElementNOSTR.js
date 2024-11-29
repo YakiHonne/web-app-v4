@@ -113,7 +113,7 @@ const AuthorPreview = ({ author }) => {
         mainAccountUser={false}
         allowClick={true}
         user_id={author.author_pubkey}
-        ring={false}
+        
       />
       <p style={{ color: "white" }}>{author.author_name}</p>
     </div>

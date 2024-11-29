@@ -4,6 +4,7 @@ export default function Slider({
   items = [],
   slideBy = 10,
   noGap = false,
+  gap = 6,
   smallButtonDropDown = false,
 }) {
   const [scrollPX, setScrollPX] = useState(0);
@@ -81,11 +82,11 @@ export default function Slider({
         ref={noScrollBarContainerMain}
       >
         <div
-          className="fx-centered fx-start-h no-scrollbar"
+          className="fx-centered fx-start-h no-scrollbar fx-stretch"
           style={{
             transform: `translateX(-${scrollPX}px)`,
             transition: ".3s ease-in-out",
-            columnGap: noGap ? 0 : "6px",
+            columnGap: noGap ? 0 : `${gap}px`,
             paddingLeft: showArrows ? "1.5rem" : 0,
             paddingRight: showArrows ? "1.5rem" : 0,
           }}

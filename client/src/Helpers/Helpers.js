@@ -16,6 +16,8 @@ import { store } from "../Store/Store";
 import { setToast } from "../Store/Slides/Publishers";
 import { uploadToS3 } from "./NostrPublisher";
 import { customHistory } from "./History";
+import { Link } from "react-router-dom";
+import MediaUploaderServer from "../Content/MediaUploaderServer";
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
@@ -253,17 +255,39 @@ const getNoteTree = async (note, minimal = false) => {
         <Nip19Parsing addr={nip19add} key={key} minimal={minimal} />
       );
     } else if (el.startsWith("#")) {
-      finalTree.push(
-        <a
-          style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
-          href={`/tags/${el.replace("#", "")}`}
-          className="btn-text-gray"
-          key={key}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {el}
-        </a>
-      );
+      // finalTree.push(
+      //   <Link
+      //     style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+      //     to={`/search?keyword=${el.replace("#", "")}`}
+      //     state={{ tab: "notes" }}
+      //     className="btn-text-gray"
+      //     key={key}
+      //     onClick={(e) => e.stopPropagation()}
+      //   >
+      //     {el}
+      //   </Link>
+      // );
+      const match = el.match(/(#+)(\w+)/);
+
+      if (match) {
+        const hashes = match[1];
+        const text = match[2];
+
+        finalTree.push(
+          <React.Fragment key={key}>
+            {hashes.slice(1)}
+            <Link
+              style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+              to={`/search?keyword=${text}`}
+              state={{ tab: "notes" }}
+              className="btn-text-gray"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {`${hashes.slice(-1)}${text}`}
+            </Link>
+          </React.Fragment>
+        );
+      }
     } else {
       finalTree.push(
         <span
@@ -281,8 +305,13 @@ const getNoteTree = async (note, minimal = false) => {
   return mergeConsecutivePElements(finalTree);
 };
 
-const getLinkFromAddr = (addr) => {
+const getLinkFromAddr = (addr_) => {
   try {
+    let addr = addr_
+      .replaceAll(",", "")
+      .replaceAll(":", "")
+      .replaceAll(";", "")
+      .replaceAll(".", "");
     if (addr.startsWith("naddr")) {
       let data = nip19.decode(addr);
 
@@ -315,7 +344,7 @@ const getLinkFromAddr = (addr) => {
     return addr;
   } catch (err) {
     // console.log(err);
-    return addr;
+    return addr_;
   }
 };
 
@@ -848,6 +877,71 @@ const validateWidgetValues = (value, kind, type) => {
   return false;
 };
 
+const getMediaUploader = () => {
+  let nostkeys = getKeys();
+  let servers = localStorage.getItem("media-uploader");
+  let tempServers = MediaUploaderServer.map((s) => {
+    return {
+      display_name: s[0],
+      value: s[1],
+    };
+  });
+  if (!(servers && nostkeys)) return tempServers;
+  try {
+    servers = JSON.parse(servers);
+    let servers_ = servers.find((server) => server?.pubkey === nostkeys.pub);
+    servers_ = servers_ ? servers_.servers : [];
+    return [
+      ...tempServers,
+      ...servers_.map((s) => {
+        return {
+          display_name: s[0],
+          value: s[1],
+        };
+      }),
+    ];
+  } catch (err) {
+    return tempServers;
+  }
+};
+const getSelectedServer = () => {
+  let nostkeys = getKeys();
+  let servers = localStorage.getItem("media-uploader");
+
+  if (!(servers && nostkeys)) return MediaUploaderServer[0][1];
+  try {
+    servers = JSON.parse(servers);
+    let servers_ = servers.find((server) => server?.pubkey === nostkeys.pub);
+    let selected = servers_ ? servers_.selected : MediaUploaderServer[0][1];
+
+    return selected;
+  } catch (err) {
+    return MediaUploaderServer[0][1];
+  }
+};
+
+const updateMediaUploader = (data, selected) => {
+  let userKeys = getKeys();
+  let servers = localStorage.getItem("media-uploader");
+  if (!userKeys) return;
+  try {
+    servers = servers ? JSON.parse(servers) : [];
+    let pubkey = userKeys?.pub;
+    let servers_index = servers.findIndex((_) => _?.pubkey === pubkey);
+    if (servers_index !== -1) {
+      if (data) servers[servers_index].servers.push(data);
+      servers[servers_index].selected = selected;
+    }
+    if (servers_index === -1) {
+      servers.push({ pubkey, servers: data ? [data] : [], selected });
+    }
+    localStorage.setItem("media-uploader", JSON.stringify(servers));
+  } catch (err) {
+    console.log(err);
+    localStorage.removeItem("media-uploader");
+  }
+};
+
 const getWallets = () => {
   let nostkeys = getKeys();
   let wallets = localStorage.getItem("yaki-wallets");
@@ -1090,8 +1184,13 @@ const getCAEATooltip = (published_at, created_at) => {
   }`;
 };
 
-const FileUpload = async (file, method = "nostr.build", userKeys) => {
-  if (method === "yakihonne") {
+const FileUpload = async (file, m = "nostr.build", userKeys) => {
+  let servers = getMediaUploader();
+  let selected = getSelectedServer();
+  const nip96Endpoints = servers.find((_) => _.value === selected);
+  let endpoint = nip96Endpoints ? selected : MediaUploaderServer[0][1];
+  console.log(endpoint);
+  if (endpoint === "yakihonne") {
     let imageURL = await uploadToS3(file, userKeys.pub);
     if (imageURL) return imageURL;
     if (!imageURL) {
@@ -1105,48 +1204,18 @@ const FileUpload = async (file, method = "nostr.build", userKeys) => {
 
     return false;
   }
-  if (method === "nostr.build") {
-    let event = {
-      kind: 27235,
-      content: "",
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [
-        ["u", "https://nostr.build/api/v2/nip96/upload"],
-        ["method", "POST"],
-      ],
-    };
-    if (userKeys.ext) {
-      try {
-        event = await window.nostr.signEvent(event);
-      } catch (err) {
-        store.dispatch(
-          setToast({
-            type: 2,
-            desc: "Error uploading file",
-          })
-        );
-        console.log(err);
-        return false;
-      }
-    } else {
-      event = finalizeEvent(event, userKeys.sec);
-    }
-    let encodeB64 = encodeBase64URL(JSON.stringify(event));
-    let fd = new FormData();
-    fd.append("file", file);
+  let event = {
+    kind: 27235,
+    content: "",
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ["u", endpoint],
+      ["method", "POST"],
+    ],
+  };
+  if (userKeys.ext) {
     try {
-      let imageURL = await axios.post(
-        "https://nostr.build/api/v2/nip96/upload",
-        fd,
-        {
-          headers: {
-            "Content-Type": "multipart/formdata",
-            Authorization: `Nostr ${encodeB64}`,
-          },
-        }
-      );
-
-      return imageURL.data.nip94_event.tags.find((tag) => tag[0] === "url")[1];
+      event = await window.nostr.signEvent(event);
     } catch (err) {
       store.dispatch(
         setToast({
@@ -1154,13 +1223,37 @@ const FileUpload = async (file, method = "nostr.build", userKeys) => {
           desc: "Error uploading file",
         })
       );
+      console.log(err);
       return false;
     }
+  } else {
+    event = finalizeEvent(event, userKeys.sec);
+  }
+  let encodeB64 = encodeBase64URL(JSON.stringify(event));
+  let fd = new FormData();
+  fd.append("file", file);
+  try {
+    let imageURL = await axios.post(endpoint, fd, {
+      headers: {
+        "Content-Type": "multipart/formdata",
+        Authorization: `Nostr ${encodeB64}`,
+      },
+    });
+
+    return imageURL.data.nip94_event.tags.find((tag) => tag[0] === "url")[1];
+  } catch (err) {
+    store.dispatch(
+      setToast({
+        type: 2,
+        desc: "Error uploading file",
+      })
+    );
+    return false;
   }
 };
 
 const extractNip19 = (note) => {
-  let note_ = note.split(" ");
+  let note_ = note.split(/\s/g);
   let tags = [];
   let processedNote = [];
   for (let word of note_) {
@@ -1170,7 +1263,7 @@ const extractNip19 = (note) => {
       if (decoded.id.includes("30031")) tags.push(["l", "smart-widget"]);
       processedNote.push(decoded.scheme);
     } else if (word.startsWith("#")) {
-      tags.push(["t", word.replace("#", "")]);
+      tags.push(["t", word.replaceAll("#", "")]);
       processedNote.push(word);
     } else processedNote.push(word);
   }
@@ -1180,16 +1273,16 @@ const extractNip19 = (note) => {
 const decodeNip19 = (word) => {
   try {
     let word_ = word
-      .replace("@", "")
-      .replace("nostr:", "")
-      .replace(",", "")
-      .replace(".", "")
-      .replace(";", "");
+      .replaceAll("@", "")
+      .replaceAll("nostr:", "")
+      .replaceAll(",", "")
+      .replaceAll(".", "")
+      .replaceAll(";", "");
 
     if (word_.startsWith("npub")) {
       let decoded = nip19.decode(word_);
       return {
-        tag: ["p", decoded.data, "mention"],
+        tag: ["p", decoded.data, "", "mention"],
         id: decoded.data,
         scheme: `nostr:${word_}`,
       };
@@ -1197,7 +1290,7 @@ const decodeNip19 = (word) => {
     if (word_.startsWith("nprofile")) {
       let decoded = nip19.decode(word_);
       return {
-        tag: ["p", decoded.data.pubkey, "mention"],
+        tag: ["p", decoded.data.pubkey, "", "mention"],
         id: decoded.data.pubkey,
         scheme: `nostr:${word_}`,
       };
@@ -1205,7 +1298,7 @@ const decodeNip19 = (word) => {
     if (word_.startsWith("nevent")) {
       let decoded = nip19.decode(word_);
       return {
-        tag: ["e", decoded.data.id, "mention"],
+        tag: ["e", decoded.data.id, "", "mention"],
         id: decoded.data.id,
         scheme: `nostr:${word_}`,
       };
@@ -1213,7 +1306,7 @@ const decodeNip19 = (word) => {
     if (word_.startsWith("note")) {
       let decoded = nip19.decode(word_);
       return {
-        tag: ["e", decoded.data, "mention"],
+        tag: ["e", decoded.data, "", "mention"],
         id: decoded.data,
         scheme: `nostr:${word_}`,
       };
@@ -1224,6 +1317,7 @@ const decodeNip19 = (word) => {
         tag: [
           "a",
           `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier}`,
+          "",
           "mention",
         ],
         id: `${decoded.data.kind}:${decoded.data.pubkey}:${decoded.data.identifier}`,
@@ -1231,6 +1325,7 @@ const decodeNip19 = (word) => {
       };
     }
   } catch (err) {
+    console.log(err);
     return false;
   }
 };
@@ -1277,6 +1372,17 @@ const sleepTimer = async (duration = 2000) => {
   });
 };
 
+const copyText = (value, message, event) => {
+  event?.stopPropagation();
+  navigator.clipboard.writeText(value);
+  store.dispatch(
+    setToast({
+      type: 1,
+      desc: `${message} was copied! 👏`,
+    })
+  );
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -1311,5 +1417,9 @@ export {
   updateArticleDraft,
   getNoteDraft,
   updateNoteDraft,
-  sleepTimer
+  sleepTimer,
+  getMediaUploader,
+  updateMediaUploader,
+  getSelectedServer,
+  copyText,
 };

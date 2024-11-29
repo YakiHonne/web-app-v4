@@ -269,7 +269,7 @@ export default function UNEvent() {
                         img={flashNews.author.picture}
                         size={38}
                         user_id={flashNews.author.pubkey}
-                        ring={false}
+                        
                       />
                     </div>
                     <div
@@ -330,7 +330,7 @@ export default function UNEvent() {
                                 >
                                   <UserProfilePicNOSTR
                                     mainAccountUser={true}
-                                    ring={false}
+                                    
                                     size={38}
                                   />
                                   <div>

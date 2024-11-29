@@ -25,12 +25,8 @@ import axios from "axios";
 import NumberShrink from "../../Components/NumberShrink";
 import CheckNIP05 from "../../Components/CheckNIP05";
 import ArrowUp from "../../Components/ArrowUp";
-import UN from "../../Components/Main/UN";
-import ShowUsersList from "../../Components/Main/ShowUsersList";
-import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import {
   getAuthPubkeyFromNip05,
-  getNoteTree,
   straightUp,
 } from "../../Helpers/Helpers";
 import Footer from "../../Components/Footer";
@@ -39,22 +35,20 @@ import ShareLink from "../../Components/ShareLink";
 import InitiConvo from "../../Components/Main/InitConvo";
 import KindOne from "../../Components/Main/KindOne";
 import KindSix from "../../Components/Main/KindSix";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import TrendingUsers from "../../Components/Main/TrendingUsers";
-import QRCode from "react-qr-code";
 import Avatar from "boring-avatars";
 import { useDispatch, useSelector } from "react-redux";
 import { setFollowersCountSL } from "../../Store/Slides/Extras";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { saveFetchedUsers, saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
 import { getSubData, getUser } from "../../Helpers/Controlers";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import { getUserFollowers, getUserStats } from "../../Helpers/WSInstance";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
+import QRSharing from "./QRSharing";
+import WidgetCard from "../../Components/Main/WidgetCard";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -104,6 +98,17 @@ const eventsReducer = (notes, action) => {
       nextState[action.type] = sortedNotes;
       return nextState;
     }
+    case "smart-widget": {
+      let nextState = { ...notes };
+      let tempArr = [...nextState[action.type], ...action.note];
+      let sortedNotes = tempArr
+        .filter((note, index, tempArr) => {
+          if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
+        })
+        .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
+      nextState[action.type] = sortedNotes;
+      return nextState;
+    }
 
     case "flashnews": {
       let nextState = { ...notes };
@@ -131,6 +136,7 @@ const eventsInitialState = {
   flashnews: [],
   curations: [],
   videos: [],
+  "smart-widget": [],
 };
 
 const decodeURL = (url) => {
@@ -233,7 +239,6 @@ export default function User() {
 }
 
 const UserMetadata = ({ refreshUser }) => {
-  const navigateTo = useNavigate();
   const { user_id } = useParams();
   const dispatch = useDispatch();
   const userRelays = useSelector((state) => state.userRelays);
@@ -245,9 +250,9 @@ const UserMetadata = ({ refreshUser }) => {
   const [showPeople, setShowPeople] = useState(false);
   const [showWritingImpact, setShowWritingImpact] = useState(false);
   const [showRatingImpact, setShowRatingImpact] = useState(false);
-  const [satsSent, setSatsSent] = useState(0);
   const [timestamp, setTimestamp] = useState(new Date().getTime());
   const [id, setID] = useState(false);
+  const [isNip05Verified, setIsNip05Verified] = useState(false);
   const [following, setFollowings] = useState([]);
   const [userStats, setUserStats] = useState({ followings: 0, followers: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
@@ -312,14 +317,15 @@ const UserMetadata = ({ refreshUser }) => {
           setID(pubkey);
           return;
         }
-        let pubkey = nip19.decode(user_id);
+        let id = user_id.replaceAll(",", "").replaceAll(":", "")
+        let pubkey = nip19.decode(id);
         setID(pubkey.data.pubkey || pubkey.data);
       } catch (err) {
         console.log(err);
       }
     };
     getID();
-    setShowPeople(false)
+    setShowPeople(false);
   }, [user_id]);
 
   const getMetadata = async () => {
@@ -369,6 +375,24 @@ const UserMetadata = ({ refreshUser }) => {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (user) {
+          let ndkUser = new NDKUser({ pubkey: user.pubkey });
+          ndkUser.ndk = ndkInstance;
+          let checknip05 = user.nip05
+            ? await ndkUser.validateNip05(user.nip05)
+            : false;
+          if (checknip05) setIsNip05Verified(true);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [user]);
 
   const muteUnmute = async () => {
     try {
@@ -483,27 +507,19 @@ const UserMetadata = ({ refreshUser }) => {
                 style={{ columnGap: "16px" }}
               >
                 <UserPP size={128} src={user?.picture} user_id={user?.pubkey} />
-                <div className="fit-container fx-scattered">
-                  <div
-                    className="fx-centered fx-col fx-start-v box-pad-v-m"
-                    style={{ gap: "6px" }}
-                  >
-                    <h4 className="p-caps">
-                      {user?.display_name || user?.name}
-                    </h4>
-                    <div
-                      className="fx-centered pointer"
-                      onClick={() => setShowQR(true)}
-                    >
-                      <p className="orange-c">
-                        {shortenKey(getBech32("npub", user.pubkey), 4)}
-                      </p>
-                      <div>
-                        <div className="qrcode"></div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="fit-container fx-scattered fx-end-h box-marg-s">
                   <div className="fx-centered">
+                  <div>
+                    {user.pubkey !== userKeys.pub && (
+                      <Follow
+                        toFollowKey={user?.pubkey}
+                        toFollowName={user?.name}
+                        setTimestamp={setTimestamp}
+                        bulkList={[]}
+                        icon={false}
+                      />
+                    )}
+                  </div>
                     {user.pubkey === userKeys.pub && (
                       <button
                         className="btn btn-gray"
@@ -514,12 +530,6 @@ const UserMetadata = ({ refreshUser }) => {
                     )}
                     {user.pubkey !== userKeys.pub && (
                       <div className="fx-centered">
-                        <Follow
-                          toFollowKey={user?.pubkey}
-                          toFollowName={user?.name}
-                          setTimestamp={setTimestamp}
-                          bulkList={[]}
-                        />
                         <ZapTip
                           recipientLNURL={checkForLUDS(
                             user?.lud06,
@@ -605,7 +615,7 @@ const UserMetadata = ({ refreshUser }) => {
             )}
             {!isLoaded && (
               <div className="box-pad-h box-pad-v fit-container fx-centered">
-                <LoadingLogo />
+                <LoadingDots />
               </div>
             )}
           </div>
@@ -615,34 +625,43 @@ const UserMetadata = ({ refreshUser }) => {
             className="fx-centered fx-col fx-start-v"
             style={{ width: "min(100%, 800px)" }}
           >
-            <div className="fx-centered">
-              <div className="nip05-24"></div>{" "}
-              {user?.nip05 && (
-                <CheckNIP05
-                  address={user?.nip05}
-                  pubkey={user?.pubkey}
-                  smallSize={false}
-                />
-              )}
-              {!user?.nip05 && <p>N/A</p>}
-            </div>
-
-            <div className="fx-centered fx-start-h">
-              <div className="link-24"></div>
-
-              {!user?.website && <p>N/A</p>}
-              {user?.website && (
-                <a
-                  href={
-                    user?.website.toLowerCase().includes("http")
-                      ? user?.website
-                      : `https://${user?.website}`
-                  }
-                  target="_blank"
-                  style={{textDecoration: user?.website ? "underline" : ""}}
+            {isLoaded && (
+              <div className="fx-centered" style={{ gap: "6px" }}>
+                <h3 className="p-caps">{user?.display_name || user?.name}</h3>
+                {isNip05Verified && <div className="checkmark-c1-24"></div>}
+                <div
+                  className="fx-centered pointer"
+                  onClick={() => setShowQR(true)}
                 >
-                  {user?.website || "N/A"}
-                </a>
+                  <div>
+                    <div className="qrcode"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="fx-centered">
+              <div className="fx-centered">
+                <div className="nip05-24"></div>{" "}
+                {user?.nip05 && <p>{user?.nip05}</p>}
+                {!user?.nip05 && <p>N/A</p>}
+              </div>
+
+              {user?.website && (
+                <div className="fx-centered fx-start-h">
+                  <div className="link-24"></div>
+
+                  <a
+                    href={
+                      user?.website.toLowerCase().includes("http")
+                        ? user?.website
+                        : `https://${user?.website}`
+                    }
+                    target="_blank"
+                    style={{ textDecoration: user?.website ? "underline" : "" }}
+                  >
+                    {user?.website || "N/A"}
+                  </a>
+                </div>
               )}
             </div>
             <div
@@ -651,12 +670,7 @@ const UserMetadata = ({ refreshUser }) => {
             >
               <div className="box-pad-v-s fx-centered fx-start-v fx-col">
                 {user?.about && (
-                  <p
-                    className="p-centered  p-left"
-                    // style={{ maxWidth: "400px" }}
-                  >
-                    {user?.about}
-                  </p>
+                  <p className="p-centered  p-left">{user?.about}</p>
                 )}
                 <div className="fx-centered">
                   <div className="fx-centered" style={{ columnGap: "10px" }}>
@@ -734,6 +748,7 @@ const UserFeed = ({ user }) => {
       articles: [30023],
       videos: [34235],
       curations: [30004],
+      "smart-widget": [30031],
     };
     if (contentFrom === "flashnews")
       return [
@@ -808,6 +823,15 @@ const UserFeed = ({ user }) => {
       if ([30023, 30004].includes(event.kind)) {
         let event_ = getParsedRepEvent(event);
         events_.push(event_);
+      }
+      if ([30031].includes(event.kind)) {
+        let event_ = getParsedRepEvent(event);
+        try {
+          let metadata = JSON.parse(event.content);
+          events_.push({ ...event_, metadata });
+        } catch (err) {
+          console.log(err);
+        }
       }
       if ([34235].includes(event.kind)) {
         let event_ = getParsedRepEvent(event);
@@ -886,6 +910,14 @@ const UserFeed = ({ user }) => {
         >
           Videos
         </div>
+        <div
+          className={`list-item-b fx-centered fx-shrink ${
+            contentFrom === "smart-widget" ? "selected-list-item-b" : ""
+          }`}
+          onClick={() => switchContentType("smart-widget")}
+        >
+          Smart widgets
+        </div>
       </div>
       {contentFrom === "notes" && (
         <div className="fit-container fx-centered fx-col">
@@ -949,7 +981,6 @@ const UserFeed = ({ user }) => {
           )}
         </div>
       )}
-
       {contentFrom === "articles" && (
         <div className="fit-container fx-centered fx-col">
           {events[contentFrom].length === 0 && !isLoading && (
@@ -996,7 +1027,7 @@ const UserFeed = ({ user }) => {
               className="fx-centered fx-col box-pad-v"
               style={{ height: "30vh" }}
             >
-              <h4>Oops! Nothing to read here!</h4>
+              <h4>Oops! Nothing to watch here!</h4>
               <p className="gray-c">
                 {user?.name} hasn't posted any videos yet
               </p>
@@ -1016,6 +1047,45 @@ const UserFeed = ({ user }) => {
                   return (
                     <div key={video.id} className="fx-centered fit-container">
                       <RepEventPreviewCard item={video} />
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      {contentFrom === "smart-widget" && (
+        <div className="fit-container fx-centered fx-col">
+          {events[contentFrom].length === 0 && !isLoading && (
+            <div
+              className="fx-centered fx-col box-pad-v"
+              style={{ height: "30vh" }}
+            >
+              <h4>Oops! Nothing to show here!</h4>
+              <p className="gray-c">
+                {user?.name} hasn't posted any smart widget yet
+              </p>
+              <div
+                className="play-24"
+                style={{ width: "48px", height: "48px" }}
+              ></div>
+            </div>
+          )}
+          {events[contentFrom].length > 0 && (
+            <>
+              <div
+                style={{ width: "min(100%,800px)" }}
+                className="fx-around fx-wrap box-pad-v-s"
+              >
+                {events[contentFrom].map((widget) => {
+                  return (
+                    <div key={widget.id} className="fx-centered fit-container">
+                      <WidgetCard
+                        widget={widget}
+                        key={widget.id}
+                        deleteWidget={() => null}
+                      />
                     </div>
                   );
                 })}
@@ -1059,8 +1129,8 @@ const UserFollowers = ({ id, followersCount }) => {
   }, [showPeople]);
 
   useEffect(() => {
-    setShowPeople(false)
-  }, [id])
+    setShowPeople(false);
+  }, [id]);
 
   return (
     <>
@@ -1347,7 +1417,7 @@ const KindOneComments = ({ event }) => {
 //         <UserProfilePicNOSTR
 //           size={20}
 //           mainAccountUser={false}
-//           ring={false}
+//
 //           user_id={user?.pubkey}
 //           img={user?.picture}
 //         />
@@ -1399,7 +1469,7 @@ const KindOneComments = ({ event }) => {
 //           <UserProfilePicNOSTR
 //             size={20}
 //             mainAccountUser={false}
-//             ring={false}
+//
 //             user_id={user?.pubkey}
 //             img={user?.picture}
 //           />
@@ -1410,107 +1480,122 @@ const KindOneComments = ({ event }) => {
 //   );
 // };
 
-const QRSharing = ({ user, exit }) => {
-  const dispatch = useDispatch();
-  const [selectedTab, setSelectedTab] = useState("pk");
-  const copyKey = (keyType, key) => {
-    navigator.clipboard.writeText(key);
-    dispatch(
-      setToast({
-        type: 1,
-        desc: `${keyType} was copied! 👏`,
-      })
-    );
-  };
+// const QRSharing = ({ user, exit }) => {
+//   const dispatch = useDispatch();
+//   const [selectedTab, setSelectedTab] = useState("pk");
+//   const copyKey = (keyType, key) => {
+//     navigator.clipboard.writeText(key);
+//     dispatch(
+//       setToast({
+//         type: 1,
+//         desc: `${keyType} was copied! 👏`,
+//       })
+//     );
+//   };
 
-  return (
-    <div className="fixed-container box-pad-h fx-centered" onClick={exit}>
-      <div
-        className="sc-s box-pad-h box-pad-v"
-        style={{
-          width: "min(100%,400px)",
-          position: "relative",
-          // background:
-          //   "linear-gradient(180deg, rgba(156,39,176,1) 0%, rgba(41,121,255,1) 100%)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
-        <div className="fx-centered fx-col">
-          <UserProfilePicNOSTR
-            user_id={user?.pubkey}
-            mainAccountUser={false}
-            size={100}
-            ring={false}
-            img={user?.picture}
-          />
-          <h4 className="p-centered">{user?.display_name || user?.name}</h4>
-          <p className="gray-c">@{user?.name || user?.display_name}</p>
-        </div>
-        <div className="fx-centered box-pad-v-m">
-          <div
-            className={`list-item ${
-              selectedTab === "pk" ? "selected-list-item" : ""
-            }`}
-            onClick={() => setSelectedTab("pk")}
-          >
-            Pubkey
-          </div>
-          {user?.lud16 && (
-            <div
-              className={`list-item ${
-                selectedTab === "ln" ? "selected-list-item" : ""
-              }`}
-              onClick={() => setSelectedTab("ln")}
-            >
-              Lightning address
-            </div>
-          )}
-        </div>
-        <div className="fx-centered fit-container box-marg-s">
-          <div
-            className="box-pad-v-m box-pad-h-m sc-s-18"
-            style={{ backgroundColor: "white" }}
-          >
-            {selectedTab === "pk" && (
-              <QRCode
-                size={200}
-                value={`nostr:${getBech32("npub", user?.pubkey)}`}
-              />
-            )}
-            {selectedTab === "ln" && <QRCode size={200} value={user?.lud16} />}
-          </div>
-        </div>
-        <div className="fit-container fx-col fx-centered">
-          <div
-            className={"fx-scattered if pointer fit-container dashed-onH"}
-            style={{ borderStyle: "dashed" }}
-            onClick={() =>
-              copyKey("The pubkey", `nostr:${getBech32("npub", user?.pubkey)}`)
-            }
-          >
-            <div className="key-icon-24"></div>
-            <p>{shortenKey(`nostr:${getBech32("npub", user?.pubkey)}`)}</p>
-            <div className="copy-24"></div>
-          </div>
-          {user?.lud16 && (
-            <div
-              className={"fx-scattered if pointer fit-container dashed-onH"}
-              style={{ borderStyle: "dashed" }}
-              onClick={() => copyKey("The lightning address", user?.lud16)}
-            >
-              <div className="bolt-24"></div>
-              <p>{user?.lud16}</p>
-              <div className="copy-24"></div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="fixed-container box-pad-h fx-centered" onClick={exit}>
+//       <div
+//         className="sc-s box-pad-h box-pad-v"
+//         style={{
+//           width: "min(100%,400px)",
+//           position: "relative",
+//           // background:
+//           //   "linear-gradient(180deg, rgba(156,39,176,1) 0%, rgba(41,121,255,1) 100%)",
+//         }}
+//         onClick={(e) => e.stopPropagation()}
+//       >
+//         <div className="close" onClick={exit}>
+//           <div></div>
+//         </div>
+//         <div className="fx-centered fx-col">
+//           <UserProfilePicNOSTR
+//             user_id={user?.pubkey}
+//             mainAccountUser={false}
+//             size={100}
+//             img={user?.picture}
+//           />
+//           <h4 className="p-centered">{user?.display_name || user?.name}</h4>
+//         </div>
+//         <div className="fx-centered box-pad-v-m">
+//           <div
+//             className={`list-item ${
+//               selectedTab === "pk" ? "selected-list-item" : ""
+//             }`}
+//             onClick={() => setSelectedTab("pk")}
+//           >
+//             Pubkey
+//           </div>
+//           {user?.lud16 && (
+//             <div
+//               className={`list-item ${
+//                 selectedTab === "ln" ? "selected-list-item" : ""
+//               }`}
+//               onClick={() => setSelectedTab("ln")}
+//             >
+//               Lightning address
+//             </div>
+//           )}
+//         </div>
+//         <div className="fx-centered fit-container box-marg-s">
+//           <div
+//             className="box-pad-v-m box-pad-h-m sc-s-18"
+//             style={{ backgroundColor: "white" }}
+//           >
+//             {selectedTab === "pk" && (
+//               <QRCode
+//                 size={200}
+//                 value={`nostr:${getBech32("npub", user?.pubkey)}`}
+//               />
+//             )}
+//             {selectedTab === "ln" && <QRCode size={200} value={user?.lud16} />}
+//           </div>
+//         </div>
+//         <div className="fit-container fx-col fx-centered">
+//           <div
+//             className={"fx-scattered if pointer fit-container dashed-onH"}
+//             style={{ borderStyle: "dashed" }}
+//             onClick={() =>
+//               copyKey(
+//                 "Your profile",
+//                 `https://yakihonne.com/users/${getBech32("npub", user.pubkey)}`
+//               )
+//             }
+//           >
+//             <div className="link-24"></div>
+//             <p className="p-one-line">{`https://yakihonne.com/users/${getBech32(
+//               "npub",
+//               user.pubkey
+//             )}`}</p>
+//             <div className="copy-24"></div>
+//           </div>
+//           <div
+//             className={"fx-scattered if pointer fit-container dashed-onH"}
+//             style={{ borderStyle: "dashed" }}
+//             onClick={() =>
+//               copyKey("The pubkey", `nostr:${getBech32("npub", user?.pubkey)}`)
+//             }
+//           >
+//             <div className="key-icon-24"></div>
+//             <p>{shortenKey(`nostr:${getBech32("npub", user?.pubkey)}`)}</p>
+//             <div className="copy-24"></div>
+//           </div>
+//           {user?.lud16 && (
+//             <div
+//               className={"fx-scattered if pointer fit-container dashed-onH"}
+//               style={{ borderStyle: "dashed" }}
+//               onClick={() => copyKey("The lightning address", user?.lud16)}
+//             >
+//               <div className="bolt-24"></div>
+//               <p className="p-one-line">{user?.lud16}</p>
+//               <div className="copy-24"></div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 const UserImpact = ({ user, exit, userImpact }) => {
   const [selectedTab, setSelectedTab] = useState("write");
@@ -1526,9 +1611,8 @@ const UserImpact = ({ user, exit, userImpact }) => {
         style={{
           width: "min(100%,500px)",
           position: "relative",
-
-          // background:
-          //   "linear-gradient(180deg, rgba(156,39,176,1) 0%, rgba(41,121,255,1) 100%)",
+          maxHeight: "calc(100vh - 12rem)",
+          overflow: "scroll",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1540,7 +1624,6 @@ const UserImpact = ({ user, exit, userImpact }) => {
             user_id={user?.pubkey}
             mainAccountUser={false}
             size={100}
-            ring={false}
             img={user?.picture}
           />
           <h4 className="p-centered">{user?.display_name || user?.name}</h4>
@@ -1591,6 +1674,8 @@ const UserPP = ({ src, size, user_id }) => {
           overflow: "hidden",
           minWidth: `${size}px`,
           minHeight: `${size}px`,
+          maxWidth: `${size}px`,
+          maxHeight: `${size}px`,
         }}
         className="settings-profile-pic"
       >
@@ -1598,7 +1683,8 @@ const UserPP = ({ src, size, user_id }) => {
           size={size}
           name={user_id}
           variant="marble"
-              colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
+          square
+          colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
         />
       </div>
     );

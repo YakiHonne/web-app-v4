@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getNoteTree } from "../../Helpers/Helpers";
 import NotesComment from "./NotesComment";
 import { getParsedNote } from "../../Helpers/Encryptions";
@@ -11,6 +11,7 @@ import Comments from "../Reactions/Comments";
 import LoadingDots from "../LoadingDots";
 import LoadingLogo from "../LoadingLogo";
 import { Link } from "react-router-dom";
+import { customHistory } from "../../Helpers/History";
 
 const filterComments = (all, id, isRoot) => {
   if (isRoot) return filterRootComments(all);
@@ -84,6 +85,15 @@ const countReplies = async (id, all) => {
   return replies;
 };
 
+const repliesCount = (comment) => {
+  let count = 0;
+  if (comment.replies.length === 0) return 0;
+  count += comment.replies.length;
+  for (let reply of comment.replies) count += repliesCount(reply);
+
+  return count;
+};
+
 export default function CommentsSection({
   id,
   eventPubkey,
@@ -93,6 +103,7 @@ export default function CommentsSection({
   tagKind = "e",
   kind = "note",
   leaveComment = false,
+  rootData,
 }) {
   const userKeys = useSelector((state) => state.userKeys);
   const [comments, setComments] = useState([]);
@@ -105,7 +116,7 @@ export default function CommentsSection({
       let res = await filterComments(comments, id, isRoot);
 
       setNetComments(res);
-      if (res.length !== 0) setIsLoading(false);
+      if (res.length !== 0 || comments.length > 0) setIsLoading(false);
     };
     parsedCom();
   }, [comments]);
@@ -117,12 +128,11 @@ export default function CommentsSection({
         [
           {
             kinds: [1],
-            [`#${tagKind}`]: [id],
+            [`#${tagKind}`]: [rootData ? rootData[1] : id],
           },
         ],
         500
       );
-
       let tempEvents = events.data
         .map((event) => {
           let is_un = event.tags.find((tag) => tag[0] === "l");
@@ -133,6 +143,7 @@ export default function CommentsSection({
           let is_mention = event.tags.filter(
             (tag) => tag.length > 3 && tag[3] === "mention" && tag[1] === id
           );
+    
           if (
             !(
               (is_un && is_un[1] === "UNCENSORED NOTE") ||
@@ -154,15 +165,16 @@ export default function CommentsSection({
 
   useEffect(() => {
     if (isLoading) return;
+
     const sub = ndkInstance.subscribe(
       [
         {
           kinds: [1],
-          [`#${tagKind}`]: [id],
+          [`#${tagKind}`]: [rootData ? rootData[1] : id],
           since: Math.floor(Date.now() / 1000),
         },
       ],
-      { cacheUsage: "CACHE_FIRST", groupable: false }
+      { cacheUsage: "ONLY_RELAY", groupable: false }
     );
 
     sub.on("event", (event) => {
@@ -197,11 +209,7 @@ export default function CommentsSection({
               }}
               onClick={() => setShowWriteNote(true)}
             >
-              <UserProfilePicNOSTR
-                size={40}
-                mainAccountUser={true}
-                ring={false}
-              />
+              <UserProfilePicNOSTR size={40} mainAccountUser={true} />
               <div className="sc-s-18 box-pad-h-m box-pad-v-s fit-container">
                 <p className="gray-c">
                   Comment on {author.display_name || author.name}'s {kind}
@@ -288,7 +296,12 @@ const Comment = ({
   eventPubkey,
   isReply = false,
   isReplyBorder = false,
+  index = 0,
 }) => {
+  let allRepliesCount = useMemo(() => {
+    let count = comment.replies.length > 0 ? repliesCount(comment) : 0;
+    return count == 0 || count >= 10 ? count : `0${count}`;
+  }, []);
   return (
     <div
       className="fit-container"
@@ -301,7 +314,7 @@ const Comment = ({
         isReply={isReply}
         isReplyBorder={isReplyBorder}
       />
-      {comment.replies.length > 0 && (
+      {comment.replies.length > 0 && index < 4 && (
         <div className="fit-container fx-centered fx-end-h">
           <div
             className="fx-col fit-container fx-centered"
@@ -311,17 +324,52 @@ const Comment = ({
               gap: 0,
             }}
           >
-            {comment.replies.map((comment_, index) => {
+            {comment.replies.map((comment_, index_) => {
               return (
                 <Comment
+                  index={index + 1}
                   comment={comment_}
                   key={comment_.id}
                   eventPubkey={eventPubkey}
                   isReply={true}
-                  isReplyBorder={index < comment.replies.length - 1}
+                  isReplyBorder={index_ < comment.replies.length - 1}
                 />
               );
             })}
+          </div>
+        </div>
+      )}
+      {comment.replies.length > 0 && index >= 4 && (
+        <div className="fit-container fx-centered fx-end-h">
+          <div
+            className=" fx-centered fx-start-h box-pad-h pointer"
+            style={{
+              minWidth: `calc(100% - 2.5rem)`,
+              position: "relative",
+              paddingTop: "2rem",
+            }}
+            onClick={() => customHistory.push(`/notes/${comment.nEvent}`)}
+          >
+            <div
+              className="reply-tail"
+              // style={{ left: isReplyBorder ? ".5rem" : 0 }}
+              style={{ left: isReplyBorder ? "-.0625rem" : 0 }}
+            ></div>
+            {/* <div
+              className="round-icon-small"
+              style={{ minWidth: "1.5rem", minHeight: "1.5rem" }}
+            > */}
+            <div
+              className="fx-centered box-pad-h-s box-pad-v-s sc-s-18 option"
+              style={{ padding: ".25rem .5rem" }}
+            >
+              <div className="plus-sign"></div>
+              {/* </div> */}
+              <p className="gray-c p-medium">
+                {allRepliesCount} more{" "}
+                {allRepliesCount === 1 ? "reply" : "replies"}
+              </p>
+            </div>
           </div>
         </div>
       )}

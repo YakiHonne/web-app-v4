@@ -241,7 +241,6 @@ export default function UserLevels() {
                                   size={100}
                                   mainAccountUser={true}
                                   allowClick={false}
-                                  ring={true}
                                 />
                               </div>
 
@@ -647,7 +646,7 @@ export default function UserLevels() {
                           className="fit-container fx-centered"
                           style={{ height: "80vh" }}
                         >
-                          <LoadingLogo size={100}/>
+                          <LoadingLogo size={100} />
                         </div>
                       )}
                     </>

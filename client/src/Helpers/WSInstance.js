@@ -1,3 +1,5 @@
+import { getParsedAuthor } from "./Encryptions";
+
 export const PCACHE_KINDS = {
   EVENT_STATS: 10000100,
   NET_STATS: 10000101,
@@ -36,13 +38,13 @@ export const PCACHE_KINDS = {
 };
 
 const pendingRequests = new Map();
-let socket = null
+let socket = null;
 const connectWebSocket = (url) => {
   return new Promise((resolve, reject) => {
     const socket_ = new WebSocket(url);
 
     socket_.onopen = () => {
-      console.log("WebSocket is connected")
+      console.log("WebSocket is connected");
       resolve(socket_);
     };
 
@@ -210,6 +212,70 @@ export const getHighlights = async (limit = 30, until = undefined) => {
     return [];
   }
 };
+
+export const getTrendingUsers24h = async () => {
+  try {
+    const requestId = `scored_users_24h`;
+    const data = await requestData(
+      JSON.stringify([
+        "REQ",
+        requestId,
+        {
+          cache: ["scored_users_24h", {}],
+        },
+      ]),
+      requestId
+    );
+
+    return data
+      .filter((event) => event.kind === 0)
+      .map((user) => getParsedAuthor(user));
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
+export const getTrendingNotes1h = async () => {
+  try {
+    const requestId = `scored_1h`;
+    const data = await requestData(
+      JSON.stringify([
+        "REQ",
+        requestId,
+        {
+          cache: ["scored", { selector: "trending_1h"}],
+        },
+      ]),
+      requestId
+    );
+    return data.filter((event) => event.kind === 1);
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
+export const getNotesByTag = async (tag) => {
+  try {
+    const requestId = `notes_by_tag`;
+    const data = await requestData(
+      JSON.stringify([
+        "REQ",
+        requestId,
+        {
+          cache: ["search", { query: tag, limit: 10 }],
+        },
+      ]),
+      requestId
+    );
+    return data.filter((event) => event.kind === 1);
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
 export const getTrending = async (limit = 30, until = undefined) => {
   try {
     const requestId = `explore`;

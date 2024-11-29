@@ -2,7 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { nip19 } from "nostr-tools";
-import { checkForLUDS } from "../../Helpers/Encryptions";
+import {
+  checkForLUDS,
+  getEmptyuserMetadata,
+  getParsedRepEvent,
+} from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
@@ -14,6 +18,7 @@ import Date_ from "../../Components/Date_";
 import ZapTip from "../../Components/Main/ZapTip";
 import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import {
+  copyText,
   getAuthPubkeyFromNip05,
   getVideoContent,
   getVideoFromURL,
@@ -138,7 +143,7 @@ export default function Video() {
           moreVideosAuthorsPubkeys.push(event.pubkey);
           setMorePosts((prev) => {
             if (!prev.find((prev_) => prev_.id === event.id))
-              return [...prev, getVideoContent(event)];
+              return [...prev, getParsedRepEvent(event)];
             else return prev;
           });
         }
@@ -282,18 +287,18 @@ export default function Video() {
                               size={24}
                               user_id={author.pubkey}
                               allowClick={true}
-                              ring={false}
                             />
                             <p>{author.name}</p>
                           </div>
                           <div className="fx-centered">
                             <Follow
                               size="small"
+                              icon={false}
                               toFollowKey={author.pubkey}
                               toFollowName={""}
                               bulkList={[]}
                             />
-                            {video && (
+                            {/* {video && (
                               <div className="round-icon-small">
                                 <ZapTip
                                   recipientLNURL={checkForLUDS(
@@ -312,7 +317,7 @@ export default function Video() {
                                   smallIcon={true}
                                 />
                               </div>
-                            )}
+                            )} */}
                           </div>
                         </div>
                         <div
@@ -356,7 +361,11 @@ export default function Video() {
                                 <Link
                                   key={index}
                                   className="sticker sticker-small sticker-gray-gray pointer"
-                                  to={`/tags/${tag?.replace("#", "%23")}`}
+                                  to={`/search?keyword=${tag?.replace(
+                                    "#",
+                                    "%23"
+                                  )}`}
+                                  state={{ tab: "videos" }}
                                 >
                                   {tag}
                                 </Link>
@@ -390,7 +399,7 @@ export default function Video() {
                                           borderRadius: "var(--border-r-6)",
                                           backgroundImage: `url(${video_.image})`,
                                           backgroundColor: "black",
-                                          position: "relative"
+                                          position: "relative",
                                         }}
                                         className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
                                       >
@@ -420,7 +429,9 @@ export default function Video() {
                                         <p className="p-medium p-two-lines">
                                           {video_.title}
                                         </p>
-                                        <AuthorPreviewExtra author={author} />
+                                        <AuthorPreviewExtra
+                                          authorPubkey={video_.pubkey}
+                                        />
                                       </div>
                                     </Link>
                                   );
@@ -545,6 +556,12 @@ export default function Video() {
                     </div>
                     <OptionsDropdown
                       options={[
+                        <div
+                          onClick={(e) => copyText(video.naddr, "Naddr", e)}
+                          className="pointer"
+                        >
+                          <p>Copy naddr</p>
+                        </div>,
                         userKeys && userKeys.pub !== video.pubkey && (
                           <>
                             <div
@@ -594,19 +611,38 @@ export default function Video() {
   );
 }
 
-const AuthorPreviewExtra = ({ author }) => {
+const AuthorPreviewExtra = ({ authorPubkey }) => {
+  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const [authorData, setAuthorData] = useState(
+    getEmptyuserMetadata(authorPubkey)
+  );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let auth = getUser(authorPubkey);
+
+        if (auth) {
+          setAuthorData(auth);
+        }
+        return;
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [nostrAuthors]);
+
   return (
     <div className="fx-centered fx-start-h">
       <UserProfilePicNOSTR
         size={16}
-        ring={false}
-        img={author.picture}
+        img={authorData.picture}
         mainAccountUser={false}
-        user_id={author.pubkey}
+        user_id={authorData.pubkey}
       />
 
       <p className="p-one-line p-medium">
-        {author.display_name || author.name}
+        {authorData.display_name || authorData.name}
       </p>
     </div>
   );

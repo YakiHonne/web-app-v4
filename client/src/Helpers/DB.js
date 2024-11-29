@@ -10,6 +10,7 @@ import axios from "axios";
 import {
   getEmptyEventStats,
   getEmptyuserMetadata,
+  getParsedAuthor,
   sortEvents,
 } from "./Encryptions";
 import { store } from "../Store/Store";
@@ -370,8 +371,8 @@ export const saveUsers = async (pubkeys) => {
       })
       .map((user) => {
         try {
-          let _ = JSON.parse(user.content);
-          if (_) return { ..._, pubkey: user.pubkey };
+          let _ = getParsedAuthor(user);
+          if (_) return _;
           else return false;
         } catch (err) {
           return false;

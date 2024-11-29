@@ -2597,7 +2597,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                   pubkey={metadata.metadata?.pubkey || ""}
                   margin={false}
                   close={true}
-                  showSharing={false}
+                  showSha
                   onClose={() => handleMetadata("pubkey", "")}
                   setMetataData={handleUserMetadata}
                 />

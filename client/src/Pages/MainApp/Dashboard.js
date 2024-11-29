@@ -41,6 +41,7 @@ import InterestSuggestionsCards from "../../Components/SuggestionsCards/Interest
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import AddArticlesToCuration from "../../Components/Main/AddArticlesToCuration";
 import { customHistory } from "../../Helpers/History";
+import LoadingLogo from "../../Components/LoadingLogo";
 
 const tabs = ["Home", "Content", "Bookmarks", "Interests"];
 const bookmarkFilterOptions = [
@@ -223,6 +224,7 @@ const getInterestList = (list) => {
   }
   return tempList;
 };
+
 export default function Dashboard() {
   const { state } = useLocation();
   const userKeys = useSelector((state) => state.userKeys);
@@ -239,10 +241,14 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
-     
         let [userProfile, sats, popularNotes, userContent] = await Promise.all([
           getUserStats(userKeys.pub),
-          Promise.race([axios.get(`https://api.nostr.band/v0/stats/profile/${userKeys.pub}`), sleepTimer()]),
+          Promise.race([
+            axios.get(
+              `https://api.nostr.band/v0/stats/profile/${userKeys.pub}`
+            ),
+            sleepTimer(),
+          ]),
           getPopularNotes(userKeys.pub),
           getSubData([
             {
@@ -256,7 +262,7 @@ export default function Dashboard() {
         userProfile = JSON.parse(
           userProfile.find((event) => event.kind === 10000105).content
         );
-       
+
         let zaps_sent = sats
           ? sats.data.stats[userKeys.pub].zaps_sent
           : { count: 0, msats: 0 };
@@ -266,7 +272,7 @@ export default function Dashboard() {
         let latestPublished = userContent.data
           .filter((event) => event.kind !== 30024)
           .map((event) => getParsedRepEvent(event));
-       
+
         let localDraft = getLocalDrafts();
         setUserPreview({
           userProfile: {
@@ -336,8 +342,7 @@ export default function Dashboard() {
                         style={{ height: "100vh" }}
                       >
                         <div className="fx-centered">
-                          <p className="gray-c">Loading</p>
-                          <LoadingDots />
+                          <LoadingLogo />
                         </div>
                       </div>
                     )}
@@ -728,8 +733,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
               style={{ height: "40vh" }}
             >
               <div className="fx-centered">
-                <p className="gray-c">Loading</p>
-                <LoadingDots />
+                <LoadingLogo />
               </div>
             </div>
           )}
@@ -942,11 +946,7 @@ const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
                   borderRadius: "22px",
                 }}
               >
-                <UserProfilePicNOSTR
-                  mainAccountUser={true}
-                  ring={false}
-                  size={110}
-                />
+                <UserProfilePicNOSTR mainAccountUser={true} size={110} />
               </div>
               <div className="fx-centered fx-col">
                 <h4>{userMetadata.display_name || userMetadata.name}</h4>
@@ -1200,7 +1200,18 @@ const DraftCard = ({ event, setDeleteEvent }) => {
       }}
       onClick={(e) => {
         e.stopPropagation();
-        event.local && customHistory.push("/write-article");
+        event.local ? customHistory.push("/write-article") : customHistory.push("/write-article", {
+          post_pubkey: event.pubkey,
+          post_id: event.id,
+          post_kind: event.kind,
+          post_title: event.title,
+          post_desc: event.summary,
+          post_thumbnail: event.image,
+          post_tags: event.items,
+          post_d: event.d,
+          post_content: event.content,
+          post_published_at: event.published_at,
+        })
       }}
     >
       <div className="fx-centered fx-start-v">
@@ -1225,7 +1236,7 @@ const DraftCard = ({ event, setDeleteEvent }) => {
           </p>
         </div>
       </div>
-      {!event.local && (
+      {/* {!event.local && ( */}
         <div className="fx-centered" style={{ minWidth: "max-content" }}>
           <OptionsDropdown
             options={[
@@ -1258,7 +1269,7 @@ const DraftCard = ({ event, setDeleteEvent }) => {
             ]}
           />
         </div>
-      )}
+      {/* )} */}
     </div>
   );
 };
@@ -1315,6 +1326,13 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
           </p>
         </div>
       </div>
+      <OptionsDropdown
+        options={[
+          <div className="pointer" onClick={handleRedirect}>
+            <p>Edit draft</p>
+          </div>,
+        ]}
+      />
     </div>
   );
 };
@@ -1432,7 +1450,8 @@ const RepCard = ({
           <p>Add items</p>
         </div>
       ),
-      setDeleteEvent && event.kind !== 34235 && (
+      ([30023, 30024].includes(event.kind) ||
+        (setEditItem && event.kind !== 34235)) && (
         <div
           className="fit-container"
           onClick={() => {
@@ -2168,8 +2187,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
         )}
         {isLoading && (
           <div className="fx-centered fit-container" style={{ height: "30vh" }}>
-            <p>Loading</p>
-            <LoadingDots />
+            <LoadingLogo />
           </div>
         )}
       </div>

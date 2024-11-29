@@ -234,7 +234,7 @@ export default function NotesComment({
             <UserProfilePicNOSTR
               size={isHistory ? 40 : 30}
               mainAccountUser={false}
-              ring={false}
+              
               user_id={user.pubkey}
               img={user.picture}
               metadata={user}
@@ -374,7 +374,9 @@ export default function NotesComment({
                     />
                   </div>
                   <div
-                    className={`pointer icon-tooltip `}
+                    className={`pointer icon-tooltip ${
+                      isZapped ? "orange-c" : ""
+                    }`}
                     data-tooltip="Zappers"
                     onClick={(e) => {
                       e.stopPropagation();

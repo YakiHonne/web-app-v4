@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { finalizeEvent } from "nostr-tools";
 import { extractNip19 } from "../../Helpers/Helpers";
+import UploadFile from "../UploadFile";
 
 const getSuggestions = (custom) => {
   if (!custom) return [];
@@ -35,10 +36,9 @@ export default function ToPublishNOSTR({
 }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const userRelays = useSelector((state) => state.userRelays);
 
   const navigateTo = useNavigate();
-  const [selectedCategories, setSelectedCategories] = useState(tags || []);
+  const [selectedCategories, setSelectedCategories] = useState(tags.length > 0 ?  tags : extractNip19(postContent).tags.filter(_ => _[0] === "t" && _[1]).map(_ => _[1]));
   const [thumbnail, setThumbnail] = useState("");
   const [thumbnailPrev, setThumbnailPrev] = useState(postThumbnail || "");
   const [thumbnailUrl, setThumbnailUrl] = useState(postThumbnail || "");
@@ -46,12 +46,9 @@ export default function ToPublishNOSTR({
   const [tempTag, setTempTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [contentSensitive, setContentSensitive] = useState(false);
-  const [screen, setScreen] = useState(1);
-  const [finalStepContent, setFinalStepContent] = useState(0);
   const [zapSplit, setZapSplit] = useState([["zap", userKeys.pub, "", "100"]]);
   const [zapSplitEnabled, setZapSplitEnabled] = useState(false);
   const [relaysToPublish, setRelaysToPublish] = useState([...relaysOnPlatform]);
-  const [publishingState, setIsPublishingState] = useState([]);
   const [deleteDraft, setDeleteDraft] = useState(
     postKind === 30024 ? true : false
   );
@@ -89,7 +86,8 @@ export default function ToPublishNOSTR({
       setIsLoading(true);
       if (postThumbnail && thumbnail) deleteFromS3(postThumbnail);
       let created_at = Math.floor(Date.now() / 1000);
-      let cover = thumbnail ? await uploadToS3(thumbnail) : thumbnailUrl || "";
+      // let cover = thumbnail ? await uploadToS3(thumbnail) : thumbnailUrl || "";
+      let cover =thumbnailUrl;
 
       let tags = [
         [
@@ -120,7 +118,7 @@ export default function ToPublishNOSTR({
         created_at,
         kind: kind,
         content: processedContent.content,
-        tags: [...tags, ...processedContent.tags],
+        tags: [...tags, ...processedContent.tags.filter(_ => _[0] !== "t")],
       };
       if (userKeys.ext) {
         try {
@@ -256,11 +254,11 @@ export default function ToPublishNOSTR({
     return false;
   };
 
-  const handleThumbnailValue = (e) => {
-    let value = e.target.value;
-    setThumbnailUrl(value);
-    setThumbnailPrev(value);
-    setThumbnail("");
+  const handleThumbnailValue = (data) => {
+    // let value = e.target.value;
+    setThumbnailUrl(data);
+    // setThumbnailPrev(value);
+    // setThumbnail("");
   };
 
   const handleAddZapSplit = (pubkey, action) => {
@@ -297,7 +295,7 @@ export default function ToPublishNOSTR({
     <section className="fixed-container fx-centered box-pad-h">
       <div
         style={{
-          width: "min(100%, 500px)",
+          width: "min(100%, 700px)",
           height: "100vh",
           overflow: "scroll",
           borderRadius: 0,
@@ -321,7 +319,6 @@ export default function ToPublishNOSTR({
 
           <div className="box-pad-v-m fx-centered fx-col fx-start-h fit-container">
             <h4 className="p-centered">Publish your article</h4>
-            <p className="gray-c p-medium">let's finish the job</p>
           </div>
           {warning && (
             <div className="sc-s-18 box-pad-v-s box-pad-h-s">
@@ -339,12 +336,12 @@ export default function ToPublishNOSTR({
               style={{
                 position: "relative",
                 height: "200px",
-                backgroundImage: `url(${thumbnailPrev})`,
+                backgroundImage: `url(${thumbnailUrl})`,
                 backgroundColor: "var(--dim-gray)",
-                // borderStyle: thumbnailPrev ? "none" : "dotted",
+                // borderStyle: thumbnailUrl ? "none" : "dotted",
               }}
             >
-              {thumbnailPrev && (
+              {thumbnailUrl && (
                 <div
                   style={{
                     width: "32px",
@@ -363,7 +360,7 @@ export default function ToPublishNOSTR({
                 </div>
               )}
 
-              {!thumbnailPrev && (
+              {!thumbnailUrl && (
                 <>
                   {/* <div className="image-24"></div> */}
                   <p className="gray-c p-medium">(thumbnail preview)</p>
@@ -378,7 +375,7 @@ export default function ToPublishNOSTR({
                 value={thumbnailUrl}
                 onChange={handleThumbnailValue}
               />
-              <label
+              {/* <label
                 htmlFor="image-up"
                 className="fit-container fx-centered fx-col box-pad-h sc-s pointer bg-img cover-bg"
                 style={{
@@ -406,7 +403,8 @@ export default function ToPublishNOSTR({
                   className="pointer"
                   accept="image/jpg,image/png,image/gif"
                 />
-              </label>
+              </label> */}
+              <UploadFile round={true} setImageURL={handleThumbnailValue} />
             </div>
             <textarea
               className="txt-area fit-container"
@@ -414,20 +412,7 @@ export default function ToPublishNOSTR({
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
             ></textarea>
-            <label
-              className="fx-centered fx-start-h fit-container if"
-              htmlFor={"content-sensitive-checkbox"}
-            >
-              <input
-                type="checkbox"
-                id={"content-sensitive-checkbox"}
-                checked={contentSensitive}
-                onChange={() => setContentSensitive(!contentSensitive)}
-              />
-              <p className={contentSensitive ? "" : "gray-c"}>
-                This is a sensitive content
-              </p>
-            </label>
+
             <div style={{ position: "relative" }} className="fit-container">
               {topicSuggestions.length > 0 && (
                 <div
@@ -550,7 +535,20 @@ export default function ToPublishNOSTR({
                   <div className="arrow" style={{ filter: "invert()" }}></div>
                 </button> */}
           </div>
-
+          <label
+            className="fx-centered fx-start-h fit-container if"
+            htmlFor={"content-sensitive-checkbox"}
+          >
+            <input
+              type="checkbox"
+              id={"content-sensitive-checkbox"}
+              checked={contentSensitive}
+              onChange={() => setContentSensitive(!contentSensitive)}
+            />
+            <p className={contentSensitive ? "" : "gray-c"}>
+              This is a sensitive content
+            </p>
+          </label>
           <label
             htmlFor="zap-split"
             className="if ifs-full fx-centered fx-start-h"
@@ -575,10 +573,13 @@ export default function ToPublishNOSTR({
             <>
               <UserSearchBar
                 onClick={(pubkey) => handleAddZapSplit(pubkey, "add")}
+                full={true}
               />
+
               <div
                 className="fit-container fx-wrap fx-centered"
                 // style={{ maxHeight: "30vh", overflow: "scroll" }}
+                style={{gap: "8px"}}
               >
                 {zapSplit.map((item, index) => {
                   const percentage = calculatePercentage(item[3]) || 0;

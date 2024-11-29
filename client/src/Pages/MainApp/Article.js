@@ -15,6 +15,7 @@ import {
   getParsedAuthor,
 } from "../../Helpers/Encryptions";
 import {
+  copyText,
   getAuthPubkeyFromNip05,
   getComponent,
   shuffleArray,
@@ -308,7 +309,6 @@ export default function Article() {
                               img={author.picture}
                               mainAccountUser={false}
                               user_id={author.pubkey}
-                              ring={false}
                               allowClick={true}
                             />
                             <div className="fx-centered fx-start-h">
@@ -342,14 +342,12 @@ export default function Article() {
                           borderBottom: "1px solid var(--very-dim-gray)",
                         }}
                       >
-                        
                         <div className="fx-centered">
                           <UserProfilePicNOSTR
                             size={48}
                             img={author.picture}
                             mainAccountUser={false}
                             user_id={author.pubkey}
-                            ring={false}
                             allowClick={true}
                           />
                           <div className="fx-centered fx-col fx-start-v">
@@ -364,28 +362,51 @@ export default function Article() {
                           </div>
                         </div>
 
-                        <div className="fx-centered">
-                          <Follow
-                            toFollowKey={author.pubkey}
-                            toFollowName={author.name}
-                            bulk={false}
-                            bulkList={[]}
-                          />
-                          <ZapTip
-                            recipientLNURL={checkForLUDS(
-                              author.lud06,
-                              author.lud16
-                            )}
-                            recipientPubkey={author.pubkey}
-                            senderPubkey={userKeys.pub}
-                            recipientInfo={{
-                              name: author.name,
-                              img: author.picture,
+                        {userKeys.pub !== post.pubkey && (
+                          <div className="fx-centered">
+                            <Follow
+                              toFollowKey={author.pubkey}
+                              toFollowName={author.name}
+                              bulk={false}
+                              bulkList={[]}
+                            />
+                            <ZapTip
+                              recipientLNURL={checkForLUDS(
+                                author.lud06,
+                                author.lud16
+                              )}
+                              recipientPubkey={author.pubkey}
+                              senderPubkey={userKeys.pub}
+                              recipientInfo={{
+                                name: author.name,
+                                img: author.picture,
+                              }}
+                              aTag={`30023:${naddrData.pubkey}:${naddrData.identifier}`}
+                              forContent={post.title}
+                            />
+                          </div>
+                        )}
+                        {userKeys.pub === post.pubkey && (
+                          <Link
+                            to={"/write-article"}
+                            state={{
+                              post_pubkey: post.pubkey,
+                              post_id: post.id,
+                              post_kind: post.kind,
+                              post_title: post.title,
+                              post_desc: post.summary,
+                              post_thumbnail: post.image,
+                              post_tags: post.items,
+                              post_d: post.d,
+                              post_content: post.content,
+                              post_published_at: post.published_at,
                             }}
-                            aTag={`30023:${naddrData.pubkey}:${naddrData.identifier}`}
-                            forContent={post.title}
-                          />
-                        </div>
+                          >
+                            <button className="btn btn-gray">
+                              Edit article
+                            </button>
+                          </Link>
+                        )}
                       </div>
                     )}
                     <div
@@ -438,8 +459,12 @@ export default function Article() {
                                   color: "white",
                                 }}
                                 className="sticker sticker-c1 sticker-small"
-                                to={`/tags/${tag.replace("#", "%23")}`}
-                                target={"_blank"}
+                                to={`/search?keyword=${tag.replace(
+                                  "#",
+                                  "%23"
+                                )}`}
+                                state={{ tab: "articles" }}
+                                // target={"_blank"}
                               >
                                 {tag}
                               </Link>
@@ -711,6 +736,12 @@ export default function Article() {
                   </div>
                   <OptionsDropdown
                     options={[
+                      <div
+                        onClick={(e) => copyText(post.naddr, "Naddr", e)}
+                        className="pointer"
+                      >
+                        <p>Copy naddr</p>
+                      </div>,
                       <div onClick={() => setShowArticleToCuration(true)}>
                         Add to curation
                       </div>,
@@ -1375,7 +1406,7 @@ const ReaderIndicator = () => {
 //                               img={author.picture}
 //                               mainAccountUser={false}
 //                               user_id={author.pubkey}
-//                               ring={false}
+//
 //                               allowClick={true}
 //                             />
 //                             <div className="fx-centered fx-col fx-start-v">

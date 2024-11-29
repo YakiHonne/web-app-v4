@@ -6,8 +6,9 @@ import bannedList from "../Content/BannedList";
 const ndkInstance = new NDK({
   explicitRelayUrls: relaysOnPlatform,
   enableOutboxModel: true,
-  // mutedIds: bannedList,
+  mutedIds: new Map([bannedList.map((p) => [p, "p"])]),
 });
+
 await ndkInstance.connect();
 
 ndkInstance.cacheAdapter = new NDKCacheAdapterDexie({ dbName: "ndk-store" });

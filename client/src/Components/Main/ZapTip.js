@@ -36,7 +36,7 @@ export default function ZapTip({
   onlyIcon = false,
   smallIcon = false,
   custom = false,
-  setReceivedEvent,
+  setReceivedEvent = () => null,
   isZapped = false,
 }) {
   const [callback, setCallback] = useState(false);
@@ -239,6 +239,7 @@ const Cashier = ({
     lnbcAmount ? parseInt(lnbcAmount.value) / 1000 : 1
   );
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [invoice, setInvoice] = useState("");
   const [wallets, setWallets] = useState(getWallets());
   // const [confirmation, setConfirmation] = useState("confirmed");
@@ -246,6 +247,7 @@ const Cashier = ({
     wallets.find((wallet) => wallet.active)
   );
   const [confirmation, setConfirmation] = useState("initiated");
+  const [onlyInvoice, setOnlyInvoice] = useState(false);
   const [showWalletsList, setShowWalletList] = useState(false);
   const walletListRef = useRef(null);
 
@@ -269,7 +271,7 @@ const Cashier = ({
     { amount: 5000, entitle: "5k" },
   ];
 
-  const onConfirmation = async () => {
+  const onConfirmation = async (generateOnlyInvoice) => {
     try {
       if (!userKeys || !amount) {
         dispatch(
@@ -280,6 +282,7 @@ const Cashier = ({
         );
         return;
       }
+      setIsLoading(true);
       let lnbcInvoice = lnbcAmount ? recipientLNURL : "";
       let eventCreatedAt = Math.floor(Date.now() / 1000);
       let eventToPublish = null;
@@ -300,6 +303,7 @@ const Cashier = ({
           eventCreatedAt
         );
         if (!event) {
+          setIsLoading(false);
           return;
         }
         eventToPublish = event;
@@ -320,6 +324,7 @@ const Cashier = ({
             }amount=${sats}&nostr=${event}&lnurl=${tempRecipientLNURL}`
           );
           if (res.data.status === "ERROR") {
+            setIsLoading(false);
             dispatch(
               setToast({
                 type: 2,
@@ -330,6 +335,7 @@ const Cashier = ({
           }
           lnbcInvoice = res.data.pr;
         } catch (err) {
+          setIsLoading(false);
           dispatch(
             setToast({
               type: 2,
@@ -341,6 +347,12 @@ const Cashier = ({
       }
       setInvoice(lnbcInvoice);
       setConfirmation("in_progress");
+
+      if (generateOnlyInvoice) {
+        setIsLoading(false);
+        setOnlyInvoice(true);
+        return;
+      }
 
       await sendPayment(lnbcInvoice);
 
@@ -360,11 +372,13 @@ const Cashier = ({
           setReceivedEvent(event.rawEvent());
           setConfirmation("confirmed");
           updateYakiChest();
+          setIsLoading(false);
           sub.stop();
         });
       } else {
         setConfirmation("confirmed");
         updateYakiChest();
+        setIsLoading(false);
       }
     } catch (err) {
       console.log(err);
@@ -387,6 +401,7 @@ const Cashier = ({
       let res = await window.webln.sendPayment(addr_);
       return;
     } catch (err) {
+      setIsLoading(false);
       if (err.includes("User rejected")) return;
       dispatch(
         setToast({
@@ -405,7 +420,7 @@ const Cashier = ({
       return;
     } catch (err) {
       console.log(err);
-
+      setIsLoading(false);
       dispatch(
         setToast({
           type: 2,
@@ -427,6 +442,7 @@ const Cashier = ({
       );
       return;
     } catch (err) {
+      setIsLoading(false);
       console.log(err);
     }
   };
@@ -515,11 +531,7 @@ const Cashier = ({
         </div>
         <div className="fx-centered box-marg-s">
           <div className="fx-centered fx-col">
-            <UserProfilePicNOSTR
-              size={54}
-              mainAccountUser={true}
-              ring={false}
-            />
+            <UserProfilePicNOSTR size={54} mainAccountUser={true} />
             <p className="gray-c p-medium">{userMetadata.name}</p>
           </div>
           {recipientPubkey && (
@@ -544,7 +556,6 @@ const Cashier = ({
                   size={54}
                   img={recipientInfo.img || recipientInfo.picture}
                   mainAccountUser={false}
-                  ring={false}
                 />
                 <p className="gray-c p-medium">{recipientInfo.name}</p>
               </div>
@@ -663,10 +674,7 @@ const Cashier = ({
                         }}
                         onClick={() => setAmount(item.amount)}
                       >
-                        {index === 1 && <span>🥳</span>}
-                        {index === 2 && <span>🤩</span>}
-                        {index === 3 && <span>🤯</span>}
-                        {index === 0 && <span>😀</span>} {item.entitle}
+                        {item.entitle}
                       </button>
                     );
                   })}
@@ -680,12 +688,36 @@ const Cashier = ({
                 />
               </>
             )}
-            <button
-              className="btn btn-normal btn-full"
-              onClick={onConfirmation}
-            >
-              {lnbcAmount ? `Pay ${amount} sats` : "Start confirmation"}
-            </button>
+            <div className="fx-centered fit-container">
+              <button
+                className="btn btn-gst btn-full"
+                onClick={() => {
+                  onConfirmation(true);
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? <LoadingDots /> : "Get invoice"}
+              </button>
+              <button
+                className="btn btn-normal btn-full fx-centered"
+                onClick={() => onConfirmation(false)}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <LoadingDots />
+                ) : (
+                  <>
+                    {lnbcAmount ? (
+                      `Pay ${amount} sats`
+                    ) : (
+                      <>
+                        <div className="bolt"></div> Zap
+                      </>
+                    )}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
         {confirmation === "in_progress" && (
@@ -696,17 +728,31 @@ const Cashier = ({
               value={invoice}
             />
             <div
-              className="fx-scattered if pointer dashed-onH fit-container box-marg-s"
+              className="fx-scattered if pointer dashed-onH fit-container"
               style={{ borderStyle: "dashed" }}
               onClick={() => copyKey(invoice)}
             >
               <p>{shortenKey(invoice)}</p>
               <div className="copy-24"></div>
             </div>
-            <div className="fit-container fx-centered">
-              <p className="gray-c p-medium">Waiting for response</p>
-              <LoadingDots />
-            </div>
+            {!onlyInvoice && (
+              <div className="fit-container fx-centered box-pad-v-s">
+                <p className="gray-c p-medium">Waiting for response</p>
+                <LoadingDots />
+              </div>
+            )}
+            {onlyInvoice && (
+              <div className="fit-container fx-centered">
+                <button
+                  className="btn btn-normal btn-full"
+                  onClick={() => {
+                    exit();
+                  }}
+                >
+                  I'm done!
+                </button>
+              </div>
+            )}
           </div>
         )}
         {confirmation === "confirmed" && (

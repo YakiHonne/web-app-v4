@@ -77,7 +77,7 @@ const AuthorPreview = ({ author, kind }) => {
           img={author.picture}
           size={32}
           user_id={author.pubkey}
-          ring={false}
+          
           metadata={author}
         />
         <div>
@@ -103,7 +103,7 @@ const AuthorPreview = ({ author, kind }) => {
         img={authorData.picture}
         size={32}
         user_id={author.pubkey}
-        ring={false}
+        
         metadata={authorData}
       />
       <div>

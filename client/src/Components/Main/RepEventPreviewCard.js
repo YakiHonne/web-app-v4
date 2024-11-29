@@ -6,11 +6,13 @@ import BookmarkEvent from "./BookmarkEvent";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import ShareLink from "../ShareLink";
 import MediaPreview from "./MediaPreview";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import OptionsDropdown from "./OptionsDropdown";
 import DynamicIndicator from "../DynamicIndicator";
 import { customHistory } from "../../Helpers/History";
+import { setToast } from "../../Store/Slides/Publishers";
+import { copyText } from "../../Helpers/Helpers";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -29,7 +31,7 @@ export default function RepEventPreviewCard({
   border = true,
   minimal = false,
 }) {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userFollowings = useSelector((state) => state.userFollowings);
   const [authorData, setAuthorData] = useState(
@@ -99,36 +101,6 @@ export default function RepEventPreviewCard({
                 <div className="fx-centered box-pad-h-m">
                   <AuthorPreviewMinimal author={authorData} item={item} />
                 </div>
-                {/* <OptionsDropdown
-                  options={[
-                    <BookmarkEvent
-                      label="Bookmark"
-                      pubkey={item.pubkey}
-                      kind={item.kind}
-                      d={item.d}
-                      image={item.thumbnail}
-                    />,
-                    <div className="fit-container fx-centered fx-start-h pointer">
-                      <ShareLink
-                        label="Share"
-                        path={url}
-                        title={item.title}
-                        description={item.title}
-                        kind={30023}
-                        shareImgData={{
-                          post: { ...item, image: item.thumbnail },
-                          author: {
-                            pubkey: authorData.pubkey,
-                            picture: authorData.picture,
-                            display_name:
-                              authorData.display_name || authorData.name,
-                          },
-                          label: "Article",
-                        }}
-                      />
-                    </div>,
-                  ]}
-                /> */}
               </div>
               <p className="p-two-lines box-pad-h-m">{item.title}</p>
             </div>
@@ -193,6 +165,9 @@ export default function RepEventPreviewCard({
               </div>
               <OptionsDropdown
                 options={[
+                  <div onClick={(e) => copyText(item.naddr, "Naddr", e)} className="pointer">
+                    <p>Copy naddr</p>
+                  </div>,
                   <BookmarkEvent
                     label="Bookmark"
                     pubkey={item.pubkey}
@@ -300,7 +275,6 @@ const AuthorPreview = ({ author, item }) => {
       <UserProfilePicNOSTR
         size={40}
         mainAccountUser={false}
-        ring={false}
         user_id={author.pubkey}
         img={author.picture}
         // metadata={author}
@@ -318,7 +292,6 @@ const AuthorPreviewMinimal = ({ author, item }) => {
       <UserProfilePicNOSTR
         size={16}
         mainAccountUser={false}
-        ring={false}
         user_id={author.pubkey}
         img={author.picture}
         // metadata={author}

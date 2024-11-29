@@ -405,7 +405,7 @@ const CurationPreviewCard = ({ curation }) => {
           <div className="fx-centered">
             <UserProfilePicNOSTR
               size={20}
-              ring={false}
+              
               img={authorData.author_img}
               mainAccountUser={false}
               user_id={authorData.author_pubkey}

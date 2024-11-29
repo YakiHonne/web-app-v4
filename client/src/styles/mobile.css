@@ -108,6 +108,18 @@
     display: none;
   }
 
+
+  .notification-dot {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+
+  }
+
+  .desk-hide-1200 {
+    display: flex;
+  }
+
   .posts-cards {
     width: 600px;
   }

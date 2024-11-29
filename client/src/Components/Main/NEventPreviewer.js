@@ -56,7 +56,7 @@ export default function NEventPreviewer({ id, pubkey, extraRelays = [] }) {
       <div className="fit-container fx-scattered">
         <div className="fx-centered" style={{ columnGap: "12px" }}>
           <UserProfilePicNOSTR
-            ring={false}
+            
             img={author?.picture}
             size={40}
             user_id={pubkey}

@@ -384,7 +384,7 @@ export default function Videos() {
                                   <UserProfilePicNOSTR
                                     size={30}
                                     mainAccountUser={false}
-                                    ring={false}
+                                    
                                     user_id={note.pubkey}
                                     img={note.author_parsed.picture}
                                   />
@@ -443,7 +443,7 @@ const AuthorPreview = ({ pubkey }) => {
     <div className="fx-centered">
       <UserProfilePicNOSTR
         size={16}
-        ring={false}
+        
         img={author.picture}
         mainAccountUser={false}
         user_id={author.pubkey}

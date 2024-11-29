@@ -191,7 +191,7 @@ export default function SearchbarNOSTR() {
                         img={user.picture || ""}
                         size={36}
                         user_id={user.pubkey}
-                        ring={false}
+                        
                       />
                       <div className="fx-centered fx-start-h">
                         <div

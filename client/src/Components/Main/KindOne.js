@@ -21,8 +21,9 @@ import Comments from "../Reactions/Comments";
 import { customHistory } from "../../Helpers/History";
 import { saveUsers } from "../../Helpers/DB";
 import CommentsSection from "./CommentsSection";
+import { compactContent } from "../../Helpers/Helpers";
 
-export default function KindOne({ event, reactions = true, border = false }) {
+export default function KindOne({ event, reactions = true, border = false, minmal = false }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
@@ -177,7 +178,7 @@ export default function KindOne({ event, reactions = true, border = false }) {
         />
       )}
       <div
-        className={`fit-container box-pad-h-m box-pad-v-m ${
+        className={`fit-container box-pad-h-m box-pad-v-m fx-centered fx-col ${
           !reactions ? "sc-s-18" : ""
         }`}
         style={{
@@ -185,6 +186,7 @@ export default function KindOne({ event, reactions = true, border = false }) {
           transition: ".2s ease-in-out",
           overflow: "visible",
           borderBottom: border ? "1px solid var(--very-dim-gray)" : "",
+          
         }}
       >
         {usersList && (
@@ -208,7 +210,6 @@ export default function KindOne({ event, reactions = true, border = false }) {
               <UserProfilePicNOSTR
                 size={40}
                 mainAccountUser={false}
-                ring={false}
                 user_id={user.pubkey}
                 img={user.picture}
                 metadata={user}
@@ -236,13 +237,13 @@ export default function KindOne({ event, reactions = true, border = false }) {
                   </p>
                 </div>
                 {event.isFlashNews && (
-                  <div className="sticker sticker-gray-black">Paid</div>
+                  <div className="sticker sticker-c1">Paid</div>
                 )}
               </div>
               {event.isComment && <RelatedEvent event={event.isComment} />}
               <div className="fx-centered fx-col fit-container">
                 <div className="fit-container" onClick={onClick}>
-                  {event.note_tree}
+                  {!minmal ? event.note_tree : <p className="p-four-lines">{compactContent(event.content)}</p>}
                 </div>
               </div>
             </div>
@@ -524,21 +525,21 @@ const FastAccessCS = ({ id, eventPubkey, author, exit, isRoot = true }) => {
           e.stopPropagation();
         }}
       >
-       <div
-            className="fit-container fx-centered sticky"
-            style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
-          >
-            <div className="fx-scattered fit-container box-pad-h">
-              <h4 className="p-caps">Thread</h4>
-              <div
-                className="close"
-                style={{ position: "static" }}
-                onClick={exit}
-              >
-                <div></div>
-              </div>
+        <div
+          className="fit-container fx-centered sticky"
+          style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
+        >
+          <div className="fx-scattered fit-container box-pad-h">
+            <h4 className="p-caps">Thread</h4>
+            <div
+              className="close"
+              style={{ position: "static" }}
+              onClick={exit}
+            >
+              <div></div>
             </div>
           </div>
+        </div>
         <CommentsSection
           id={id}
           eventPubkey={eventPubkey}

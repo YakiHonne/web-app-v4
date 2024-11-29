@@ -574,7 +574,6 @@ const AuthorPreview = ({ author }) => {
       <div className="fx-centered" style={{ opacity: ".5" }}>
         <UserProfilePicNOSTR
           size={24}
-          ring={false}
           img={author.author_img}
           mainAccountUser={false}
           user_id={author.author_pubkey}
@@ -593,7 +592,6 @@ const AuthorPreview = ({ author }) => {
     <>
       <UserProfilePicNOSTR
         size={24}
-        ring={false}
         img={authorData.author_img}
         mainAccountUser={false}
         user_id={authorData.author_pubkey}

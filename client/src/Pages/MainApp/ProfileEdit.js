@@ -428,7 +428,7 @@ export default function ProfileEdit() {
                             <UserProfilePicNOSTR
                               img={userMetadata.picture}
                               size={148}
-                              ring={false}
+                              
                             />
                             <div
                               style={{

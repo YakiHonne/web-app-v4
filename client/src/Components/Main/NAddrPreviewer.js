@@ -69,7 +69,7 @@ export default function NAddrPreviewer({ pubkey, d, kind, relays = [] }) {
               img={event.picture || ""}
               size={48}
               mainAccountUser={false}
-              ring={false}
+              
               user_id={event.display_name || event.name || ""}
               allowClick={false}
             />

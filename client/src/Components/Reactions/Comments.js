@@ -12,6 +12,12 @@ import {
 import { setToPublish } from "../../Store/Slides/Publishers";
 import LoadingDots from "../LoadingDots";
 import { Link } from "react-router-dom";
+import UploadFile from "../UploadFile";
+import MentionSuggestions from "../Main/MentionSuggestions";
+import Gifs from "../Gifs";
+import Slider from "../Slider";
+import Emojis from "../Emojis";
+import NotePreview from "../Main/NotePreview";
 
 export default function Comments({
   noteTags = false,
@@ -28,6 +34,11 @@ export default function Comments({
   const [showWarningBox, setShowWarningBox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [eventID, setEventID] = useState(false);
+  const [imgsSet, setImgsSet] = useState([]);
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [showGIFs, setShowGIFs] = useState(false);
+  const [mention, setMention] = useState("");
+  const textareaRef = useRef(null);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -51,9 +62,11 @@ export default function Comments({
           actions,
           undefined
         );
+        updateNoteDraft(replyId, "");
         saveEventStats(replyId, stats);
-        subscription.stop();
         setEventID(false);
+        subscription.stop();
+        exit();
       });
     };
     if (eventID) updateDb();
@@ -99,17 +112,63 @@ export default function Comments({
 
       setIsLoading(false);
       setEventID(eventInitEx.id);
-      exit();
+      // exit();
     } catch (err) {
       console.log(err);
       setIsLoading(false);
     }
   };
 
-  const handleWriteComment = (e) => {
-    let value = e.target.value;
-    setComment(value);
-    updateNoteDraft(replyId, value);
+  // const handleWriteComment = (e) => {
+  //   let value = e.target.value;
+  //   setComment(value);
+  //   updateNoteDraft(replyId, value);
+  // };
+
+  useEffect(() => {
+    updateNoteDraft(replyId, comment);
+    adjustHeight();
+  }, [comment]);
+
+  const adjustHeight = () => {
+    if (textareaRef.current) {
+      if (comment.charAt(comment.length - 1) === "@")
+        setShowMentionSuggestions(true);
+      else {
+        let splitedNoteByMention = comment.split("@");
+
+        if (
+          (splitedNoteByMention[splitedNoteByMention.length - 1].includes(
+            " "
+          ) &&
+            comment.charAt(comment.length - 1) !== "@") ||
+          !comment
+        ) {
+          setShowMentionSuggestions(false);
+        }
+      }
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+      textareaRef.current.focus();
+    }
+  };
+
+  const handleTextAreaMentions = (keyword) => {
+    if (textareaRef.current) textareaRef.current.focus();
+    if (comment) setComment(comment + ` ${keyword}`);
+    else setComment(keyword);
+  };
+
+  const handleSelectingMention = (data) => {
+    let splitedNoteByMention = comment.split("@");
+    splitedNoteByMention[splitedNoteByMention.length - 1] = data;
+
+    setComment(splitedNoteByMention.join("@").replace("@npub", "npub"));
+
+    setShowMentionSuggestions(false);
+    setMention("");
+    if (textareaRef.current) textareaRef.current.focus();
   };
 
   useEffect(() => {
@@ -119,7 +178,7 @@ export default function Comments({
         if (!comment) {
           exit();
         } else {
-          setShowWarningBox(true)
+          setShowWarningBox(true);
         }
       }
     };
@@ -130,13 +189,38 @@ export default function Comments({
   }, [ref, showWarningBox, comment]);
 
   const handleDiscard = (isSave) => {
-    if(isSave) {
-      exit()
+    if (isSave) {
+      exit();
     } else {
       updateNoteDraft(replyId, "");
-      exit()
+      exit();
     }
-  }
+  };
+
+  const removeImage = (index) => {
+    let tempImgSet = Array.from(imgsSet);
+    setComment(comment.replace(tempImgSet[index], ""));
+    tempImgSet.splice(index, 1);
+    setImgsSet(tempImgSet);
+  };
+
+  const handleAddImage = (data) => {
+    if (comment) setComment(comment + " " + data);
+    if (!comment) setComment(data);
+    setImgsSet((prev) => [...prev, data]);
+  };
+
+  const handleOnChange = (event) => {
+    let value = event.target.value;
+    let splitedNoteByHashtag = value.split("#");
+    let splitedNoteByMention = value.split("@");
+
+    if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
+      setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
+    }
+    setComment(value);
+    // if (!content && !linkedEvent) updateNoteDraft("root", value);
+  };
 
   if (!userKeys)
     return (
@@ -159,61 +243,184 @@ export default function Comments({
             <div className="fx-centered fx-col">
               <h4>Save draft?</h4>
               <p className="gray-c p-centered box-pad-v-m">
-                You're about to quit your editing, do you wish to save it as a draft?
+                You're about to quit your editing, do you wish to save it as a
+                draft?
               </p>
               <div className="fit-container fx-centered">
                 <div className="fx-centered">
-                  <button className="btn btn-gst-red" onClick={() => handleDiscard(false)}>Discard</button>
-                  <button className="btn btn-gst" onClick={() => handleDiscard(true)}>Save & quit</button>
+                  <button
+                    className="btn btn-gst-red"
+                    onClick={() => handleDiscard(false)}
+                  >
+                    Discard
+                  </button>
+                  <button
+                    className="btn btn-gst"
+                    onClick={() => handleDiscard(true)}
+                  >
+                    Save & quit
+                  </button>
                 </div>
                 <div>
-                  <button className="btn btn-normal" onClick={() => setShowWarningBox(false)}>Continue editing</button>
+                  <button
+                    className="btn btn-normal"
+                    onClick={() => setShowWarningBox(false)}
+                  >
+                    Continue editing
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
       <div
-        className="fit-container fx-centered fx-start-v slide-up"
-        style={{ paddingTop: ".5rem" }}
+        className="fit-container fx-centered fx-start-v slide-up sc-s-18 box-pad-h-m box-pad-v-m"
+        // style={{ paddingTop: ".5rem" }}
+        style={{ overflow: "visible", zIndex: "10", position: "relative" }}
         ref={ref}
       >
         <UserProfilePicNOSTR
           size={48}
           mainAccountUser={true}
           allowClick={false}
-          ring={false}
         />
-        <div className="fit-container fx-centered fx-wrap">
-          <div className="fit-container">
-            <textarea
-              // type="text"
-              className="txt-area ifs-full if "
-              placeholder={`Comment on this ${kind}`}
-              value={comment}
-              onChange={handleWriteComment}
-              disabled={isLoading}
-              autoFocus
-            />
+        <div
+          className="fit-container fx-centered fx-wrap"
+          style={{ maxWidth: "calc(100% - 48px)" }}
+        >
+          <div
+            className="fit-container fx-scattered fx-col"
+            style={{ position: "relative" }}
+          >
+            <div
+              className="fit-container"
+              style={{ position: "relative", }}
+            >
+              <textarea
+                type="text"
+                style={{
+                  padding: 0,
+                  // height: "auto",
+                  // minHeight: "200px",
+                  maxHeight: "30vh" ,
+                  // maxHeight: "100%",
+                  borderRadius: 0,
+                }}
+                className="txt-area ifs-full if if-no-border"
+                placeholder={`Comment on this ${kind}`}
+                value={comment}
+                onChange={handleOnChange}
+                disabled={isLoading}
+                autoFocus
+                ref={textareaRef}
+              />
+              {showMentionSuggestions && (
+                <MentionSuggestions
+                  mention={mention}
+                  setSelectedMention={handleSelectingMention}
+                />
+              )}
+            </div>
+            <NotePreview content={comment}viewPort={40} />
           </div>
-          <div className="fx-centered fit-container fx-end-h">
-            <button
-              className="btn btn-gst-red btn-small"
-              onClick={() => comment ? setShowWarningBox(true) : exit()} 
-              // onClick={exit}
-              disabled={isLoading}
+          {/* {imgsSet.length > 0 && (
+            <div
+              className="box-pad-v-m fit-container fx-centered fx-start-h"
+              style={{ maxWidth: "100%" }}
             >
-              {isLoading ? <LoadingDots /> : "Cancel"}
-            </button>
-            <button
-              className="btn btn-normal btn-small"
-              onClick={commentNote}
-              disabled={isLoading}
-            >
-              {isLoading ? <LoadingDots /> : "Post"}
-            </button>
+              <Slider
+                slideBy={200}
+                items={imgsSet.map((img, index) => {
+                  return (
+                    <div
+                      className="bg-img cover-bg sc-s-18"
+                      style={{
+                        backgroundImage: `url(${img})`,
+                        height: "100px",
+                        aspectRatio: "16/9",
+                        position: "relative",
+                      }}
+                      key={index}
+                    >
+                      <div
+                        className="close"
+                        style={{ top: "8px", right: "8px" }}
+                        onClick={() => removeImage(index)}
+                      >
+                        <div></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              />
+            </div>
+          )} */}
+          <div className="fit-container fx-scattered">
+            <div className="fx-centered" style={{ gap: "12px" }}>
+              <div
+                className="p-big pointer"
+                onClick={() => {
+                  handleTextAreaMentions("@");
+                  setShowGIFs(false);
+                }}
+              >
+                @
+              </div>
+              <UploadFile
+                round={false}
+                small={false}
+                setImageURL={handleAddImage}
+                setFileMetadata={() => null}
+                setIsUploadsLoading={() => null}
+              />
+              <Emojis
+                setEmoji={(data) =>
+                  setComment(comment ? `${comment} ${data}` : data)
+                }
+              />
+              <div style={{ position: "relative" }}>
+                <div
+                  className="p-small box-pad-v-s box-pad-h-s pointer fx-centered"
+                  style={{
+                    padding: ".125rem .25rem",
+                    border: "1px solid var(--gray)",
+                    borderRadius: "6px",
+                    backgroundColor: showGIFs ? "var(--black)" : "transparent",
+                    color: showGIFs ? "var(--white)" : "",
+                  }}
+                  onClick={() => {
+                    setShowGIFs(!showGIFs);
+                    setShowMentionSuggestions(false);
+                  }}
+                >
+                  GIFs
+                </div>
+                {showGIFs && (
+                  <Gifs
+                    setGif={handleAddImage}
+                    exit={() => setShowGIFs(false)}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="fx-centered fit-container fx-end-h">
+              <button
+                className="btn btn-gst btn-small"
+                onClick={() => (comment ? setShowWarningBox(true) : exit())}
+                // onClick={exit}
+                disabled={isLoading}
+              >
+                {isLoading ? <LoadingDots /> : "Cancel"}
+              </button>
+              <button
+                className="btn btn-normal btn-small"
+                onClick={commentNote}
+                disabled={isLoading}
+              >
+                {isLoading ? <LoadingDots /> : "Post"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
   userLogout,
 } from "../../Helpers/Controlers";
 import { customHistory } from "../../Helpers/History";
+import YakiMobileappSidebar from "../YakiMobileappSidebar";
 
 export default function MenuMobile({ toggleLogin, exit }) {
   const userMetadata = useSelector((state) => state.userMetadata);
@@ -89,9 +90,12 @@ export default function MenuMobile({ toggleLogin, exit }) {
 
   return (
     <div className={`menu-login ${dismissed ? "dismiss" : "slide-right"}`}>
-      <div className="fit-container fx-centered fx-start-h sticky" onClick={dismiss}>
+      <div
+        className="fit-container fx-centered fx-start-h sticky"
+        onClick={dismiss}
+      >
         <div className="close-button">
-        <div className="arrow" style={{rotate: '-90deg'}}></div>
+          <div className="arrow" style={{ rotate: "-90deg" }}></div>
         </div>
       </div>
 
@@ -115,7 +119,6 @@ export default function MenuMobile({ toggleLogin, exit }) {
             size={32}
             mainAccountUser={true}
             allowClick={true}
-            ring={false}
           />
           <div className="fx-centered fx-start-h fx-start-v">
             <p>{userMetadata.name || minimizeKey(pubkey)}</p>
@@ -226,7 +229,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
             </div>
           </div>
         )}
-
+        <YakiMobileappSidebar />
         {userKeys && <WriteNew exit={dismiss} />}
       </div>
       {userMetadata && (
@@ -320,7 +323,6 @@ export default function MenuMobile({ toggleLogin, exit }) {
                           mainAccountUser={false}
                           img={account.picture}
                           allowClick={false}
-                          ring={false}
                         />
                       </div>
                       <div>
@@ -384,7 +386,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               onClick={(e) => {
                 // e.stopPropagation();
                 redirectToLogin();
-                dismiss()
+                dismiss();
               }}
             >
               <div className="plus-sign"></div>

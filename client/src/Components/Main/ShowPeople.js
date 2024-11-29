@@ -167,7 +167,7 @@ export default function ShowPeople({ exit, list, type = "following" }) {
                     size={48}
                     img={item.picture}
                     user_id={item.pubkey}
-                    ring={false}
+                    
                   />
                   <div className="fx-centered fx-col fx-start-v">
                     <p>{item.display_name}</p>
@@ -180,6 +180,8 @@ export default function ShowPeople({ exit, list, type = "following" }) {
                   bulk={true}
                   bulkList={bulkList}
                   setBulkList={setBulkList}
+                  icon={false}
+                  size={"small"}
                 />
               </div>
             );

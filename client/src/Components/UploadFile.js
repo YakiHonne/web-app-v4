@@ -9,8 +9,8 @@ export default function UploadFile({
   round = false,
   small = false,
   setImageURL,
-  setIsUploadsLoading,
-  setFileMetadata,
+  setIsUploadsLoading = () => null,
+  setFileMetadata = () => null,
 }) {
   const userKeys = useSelector((state) => state.userKeys);
   const dispatch = useDispatch();
@@ -20,6 +20,7 @@ export default function UploadFile({
 
   const Upload = async (e) => {
     let file = e.target.files[0];
+
     if (!file && (!userKeys.sec || !userKeys.ext)) {
       dispatch(
         setToast({
@@ -72,7 +73,7 @@ export default function UploadFile({
           <LoadingDots />
         )
       ) : (
-        <div className={small ? "upload-file" : "upload-file-24"}></div>
+        <div className={small ? "image" : "image-24"}></div>
       )}
     </label>
   );

@@ -360,14 +360,20 @@
 .wallet-confirm,
 .wallet-confirm-24,
 .logout-red,
-.logout-red-24 {
-    /* margin: .5rem; */
+.logout-red-24,
+.check,
+.check-24,
+.google,
+.google-24,
+.apple,
+.apple-24,
+.emoji,
+.emoji-24 {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
     cursor: pointer;
     transition: .2s ease-in-out;
-    /* filter: brightness(0) invert(); */
 }
 
 .ai-loader {
@@ -425,7 +431,7 @@
     .twitter-logo,
     .video,
     .env,
-    /* .warning, */
+
     .info-flag,
     .success,
     .weechat-logo,
@@ -477,7 +483,6 @@
     .logout,
     .logout-24,
     .weechat-logo-24,
-    /* .warning-24, */
     .info-flag-24,
     .flag,
     .flag-24,
@@ -706,8 +711,15 @@
     .custom,
     .custom-24,
     .wallet-confirm,
-    .wallet-confirm-24 {
-        /* margin: .5rem; */
+    .wallet-confirm-24,
+    .check,
+    .check-24,
+    .google,
+    .google-24,
+    .apple,
+    .apple-24,
+    .emoji,
+    .emoji-24 {
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -720,12 +732,10 @@
         filter: none;
         background-blend-mode: screen;
         background-color: var(--white);
-
     }
 
     .telegram-logo,
     .telegram-logo-24 {
-        /* margin: .5rem; */
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -911,7 +921,11 @@
 .custom,
 .undo,
 .wallet-confirm,
-.logout-red {
+.logout-red,
+.check,
+.google,
+.apple,
+.emoji {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1101,7 +1115,11 @@
 .custom-24,
 .undo-24,
 .wallet-confirm-24,
-.logout-red-24 {
+.logout-red-24,
+.check-24,
+.google-24,
+.apple-24,
+.emoji-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1118,14 +1136,36 @@
 }
 
 
+.emoji,
+.emoji-24 {
+    background-image: url('../media/icons/emoji.svg');
+}
+
+.apple,
+.apple-24 {
+    background-image: url('../media/icons/apple.svg');
+}
+
+.google,
+.google-24 {
+    background-image: url('../media/icons/google.svg');
+}
+
+.check,
+.check-24 {
+    background-image: url('../media/icons/check.svg');
+}
+
 .logout-red,
 .logout-red-24 {
     background-image: url('../media/icons/logout-red.svg');
 }
+
 .wallet-confirm,
 .wallet-confirm-24 {
     background-image: url('../media/icons/wallet-confirm.svg');
 }
+
 .undo,
 .undo-24 {
     background-image: url('../media/icons/undo.svg');

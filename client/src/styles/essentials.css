@@ -72,7 +72,7 @@ body {
     font-optical-sizing: none;
     line-height: 150%;
     overflow-x: hidden;
-    text-shadow: rgba(0,0,0,.3) 0 0 1px;
+    text-shadow: rgba(0, 0, 0, .3) 0 0 1px;
 }
 
 
@@ -571,6 +571,12 @@ hr:last-child {
 
 .btn-red {
     background-color: var(--red-main);
+    border: none;
+    color: white;
+}
+
+.btn-green {
+    background-color: var(--green-main);
     border: none;
     color: white;
 }
@@ -1345,7 +1351,7 @@ a:hover {
     background-color: var(--dim-gray);
 }
 
-.notification-dot {
+/* .notification-dot {
     position: relative;
 }
 
@@ -1364,6 +1370,13 @@ a:hover {
     animation-duration: .5s;
     animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     animation-fill-mode: forwards;
+} */
+
+.notification-dot {
+    min-width: 8px;
+    aspect-ratio: 1/1;
+    background-color: var(--red-main);
+    border-radius: var(--border-r-50);
 }
 
 .arrow-cir {

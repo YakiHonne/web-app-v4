@@ -15,9 +15,11 @@ import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { getMutualFollows } from "../../Helpers/WSInstance";
+import { getMutualFollows, getUserStats } from "../../Helpers/WSInstance";
 import { customHistory } from "../../Helpers/History";
 import { getCustomSettings } from "../../Helpers/Helpers";
+import NumberShrink from "../NumberShrink";
+import { NDKUser } from "@nostr-dev-kit/ndk";
 
 // const getMutualFollows = (userFollowers, userFollowing) => {
 //   let users = [];
@@ -39,7 +41,6 @@ export default function UserProfilePicNOSTR({
   user_id,
   size,
   img,
-  ring = true,
   mainAccountUser = false,
   allowClick = true,
   allowPropagation = false,
@@ -47,17 +48,16 @@ export default function UserProfilePicNOSTR({
 }) {
   const userKeys = useSelector((state) => state.userKeys);
   const userMetadata = useSelector((state) => state.userMetadata);
-  const userFollowings = useSelector((state) => state.userFollowings);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
   const [showMetadata, setShowMetada] = useState(false);
   const [fetchedImg, setFetchedImg] = useState(false);
-  const [userFollowers, setUserFollowers] = useState([]);
   const [mutualFollows, setMutualFollows] = useState([]);
   const [subStart, setSubStart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [initConv, setInitConv] = useState(false);
-  const navigateTo = useNavigate();
+  const [followers, setFollowers] = useState(0);
+  const [isNip05Verified, setIsNip05Verified] = useState(false);
 
   useEffect(() => {
     if (user_id && nostrAuthors.length > 0) {
@@ -98,33 +98,24 @@ export default function UserProfilePicNOSTR({
     if (!userKeys) return false;
     if (!subStart) {
       setSubStart(true);
-      let mutuals = await getMutualFollows(userKeys.pub, user_id);
+      let ndkUser = new NDKUser({ pubkey: metadata.pubkey });
+      ndkUser.ndk = ndkInstance;
+      let [mutuals, userStats, isNip05Verified] = await Promise.all([
+        getMutualFollows(userKeys.pub, user_id),
+        getUserStats(user_id),
+        metadata.nip05
+            ? await ndkUser.validateNip05(metadata.nip05)
+            : false
+      ]);
+      let userStats_ = userStats.find((_) => _.kind === 10000105);
+      userStats_ = userStats_ ? JSON.parse(userStats_.content) : 0;
       mutuals = mutuals
         ? mutuals.filter((_) => _.kind === 0).map((_) => getuserMetadata(_))
         : [];
+      setIsNip05Verified(isNip05Verified)
+      setFollowers(userStats_.followers_count);
       setMutualFollows(mutuals);
       setIsLoading(false);
-      // let events = [];
-      // const sub = ndkInstance.subscribe([{ kinds: [3], "#p": [user_id] }], {
-      //   cacheUsage: "CACHE_FIRST",
-      // });
-
-      // sub.on("event", (event) => {
-      //   events.push(event);
-      //   setUserFollowers((prev) => [...prev, event]);
-      // });
-
-      // sub.on("close", () => {
-      //   let authors = getMutualFollows(events, userFollowings);
-      //   saveUsers(authors.map((author) => author.pubkey));
-      //   setMutualFollows(authors);
-      //   setIsLoading(false);
-      //   // sub.stop();
-      // });
-      // let timeout = setTimeout(() => {
-      //   sub.stop();
-      //   clearTimeout(timeout);
-      // }, 5000);
     }
   };
 
@@ -133,9 +124,7 @@ export default function UserProfilePicNOSTR({
       <>
         {userMetadata.picture && (
           <div
-            className={`pointer fx-centered ${
-              ring ? "profile-pic-ring" : ""
-            } bg-img cover-bg`}
+            className={`pointer fx-centered bg-img cover-bg`}
             style={{
               minWidth: `${size}px`,
               minHeight: `${size}px`,
@@ -149,13 +138,19 @@ export default function UserProfilePicNOSTR({
         )}
         {!userMetadata.picture && (
           <div
-            style={{ minWidth: `${size}px`, minHeight: `${size}px` }}
-            className={`pointer fx-centered ${ring ? "profile-pic-ring" : ""}`}
+            style={{
+              minWidth: `${size}px`,
+              minHeight: `${size}px`,
+              borderRadius: "var(--border-r-14)",
+              overflow: "hidden",
+            }}
+            className={`pointer fx-centered`}
             onClick={handleClick}
           >
             <Avatar
               size={size}
               name={userMetadata.name}
+              square
               variant="marble"
               colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
             />
@@ -172,8 +167,6 @@ export default function UserProfilePicNOSTR({
 
       <div
         style={{ position: "relative" }}
-        // ref={containerRef}
-        // onMouseEnter={() => setShowMetada(true)}
         onMouseEnter={onMouseHover}
         onMouseLeave={() => {
           setShowMetada(false);
@@ -181,9 +174,7 @@ export default function UserProfilePicNOSTR({
       >
         {(img || fetchedImg) && (
           <div
-            className={`pointer fx-centered ${
-              ring ? "profile-pic-ring" : ""
-            } bg-img cover-bg`}
+            className={`pointer fx-centered bg-img cover-bg`}
             style={{
               minWidth: `${size}px`,
               minHeight: `${size}px`,
@@ -203,7 +194,7 @@ export default function UserProfilePicNOSTR({
               borderRadius: "var(--border-r-14)",
               overflow: "hidden",
             }}
-            className={`pointer fx-centered ${ring ? "profile-pic-ring" : ""}`}
+            className={`pointer fx-centered`}
             onClick={handleClick}
           >
             <Avatar
@@ -221,11 +212,100 @@ export default function UserProfilePicNOSTR({
               position: "absolute",
               left: 0,
               top: "calc(100% + 2px)",
+              width: "350px",
+              zIndex: 200,
+              overflow: "visible",
+              backgroundColor: "var(--very-dim-gray)",
+            }}
+            className="fx-centered fx-col fx-start-h fx-start-v sc-s-18 box-pad-h-m box-pad-v-m"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="fit-container fx-scattered">
+              <div className="fx-centered">
+                <UserProfilePicNOSTR user_id={user_id} size={64} img={img} />
+                
+              </div>
+            </div>
+            <div className="fx-centered">
+              <h4>{metadata.display_name || metadata.name}</h4>
+              {isNip05Verified && <div className="checkmark-c1-24"></div>}
+            </div>
+            <div
+              className="fx-centered fx-wrap fx-start-h"
+              style={{ rowGap: "3px" }}
+            >
+              <div className="fx-centered fx-start-h">
+                <div className="nip05"></div>
+                <p>{metadata.nip05 || "N/A"}</p>
+              </div>
+              {metadata.website && (
+                <div className="fx-centered fx-start-h">
+                  <div className="link"></div>
+                  <a
+                    href={
+                      metadata.website.toLowerCase().includes("http")
+                        ? metadata.website
+                        : `https://${metadata.website}`
+                    }
+                    target="_blank"
+                  >
+                    {metadata.website || "N/A"}
+                  </a>
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="p-four-lines">{metadata.about || "N/A"}</p>
+            </div>
+
+            <div className="fx-centered fit-container fx-start-h">
+              <p className="fx-centered" style={{ minWidth: "max-content" }}>
+                <NumberShrink value={followers} />
+                <span className="gray-c">Followers</span>
+              </p>
+              {!isLoading && userKeys && (
+                <DisplayMutualFollows users={mutualFollows} />
+              )}
+              {isLoading && userKeys && (
+                <p className="gray-c p-medium">Loading mutuals...</p>
+              )}
+            </div>
+            <div className="fx-centered fit-container">
+              <button
+                className="btn btn-gst btn-full"
+                onClick={handleInitConvo}
+              >
+                Message
+              </button>
+              <Follow
+                toFollowKey={user_id}
+                toFollowName={""}
+                bulkList={[]}
+                icon={false}
+                full={true}
+              />
+              <ZapTip
+                recipientLNURL={checkForLUDS(metadata.lud06, metadata.lud16)}
+                recipientPubkey={metadata.pubkey}
+                senderPubkey={userKeys.pub}
+                recipientInfo={{
+                  name: metadata.name,
+                  picture: metadata.picture,
+                }}
+              />
+            </div>
+          </div>
+        )}
+        {/* {showMetadata && metadata && (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "calc(100% + 2px)",
               width: "300px",
               zIndex: 200,
               overflow: "visible",
               backgroundColor: "var(--very-dim-gray)",
-              // borderRadius: "var(--border-r-6)"
             }}
             className="fx-centered fx-col fx-start-h fx-start-v sc-s-18 box-pad-h-s box-pad-v-s"
             onClick={(e) => e.stopPropagation()}
@@ -236,7 +316,7 @@ export default function UserProfilePicNOSTR({
                   user_id={user_id}
                   size={24}
                   img={img}
-                  ring={false}
+                  
                 />
                 <div>
                   <p className="p-small">
@@ -309,12 +389,6 @@ export default function UserProfilePicNOSTR({
               <div className="nip05"></div>
               <p className="p-medium ">{metadata.nip05 || "N/A"}</p>
             </div>
-
-            {/* <div className="fx-centered fx-start-h">
-              <div className="user"></div>
-              <p className="p-medium ">{userFollowers.length} Followers</p>
-            </div> */}
-
             {!isLoading && userKeys && (
               <DisplayMutualFollows users={mutualFollows} />
             )}
@@ -322,40 +396,21 @@ export default function UserProfilePicNOSTR({
               <p className="orange-c p-italic p-medium">Loading mutuals...</p>
             )}
           </div>
-        )}
+        )} */}
       </div>
     </>
   );
 }
 
 const DisplayMutualFollows = ({ users }) => {
-  const [firstMutuals, setFirstMutuals] = useState(users.slice(0, 3));
-  // const nostrAuthors = useSelector((state) => state.nostrAuthors);
-
-  // useEffect(() => {
-  //   setFirstMutuals(users.slice(0, 3));
-  // }, [users]);
-
-  // useEffect(() => {
-  //   try {
-  //     let tempFirstMutuals = Array.from(firstMutuals);
-  //     tempFirstMutuals = tempFirstMutuals.map((author) => {
-  //       let auth = getUser(author.pubkey);
-  //       if (auth) return auth;
-  //       return author;
-  //     });
-  //     setFirstMutuals(tempFirstMutuals);
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // }, [nostrAuthors]);
+  const firstMutuals = users.slice(0, 3);
 
   if (users.length === 0)
     return (
-      <p className="p-medium gray-c">Not followed by anyone you follow.</p>
+      <div className="sticker sticker-small sticker-gray-black">Not followed by anyone you follow.</div>
     );
   return (
-    <div className="fit-container fx-centered fx-start-h fx-start-v">
+    <div className="fit-container fx-centered fx-start-h">
       <div className="fx-centered">
         {firstMutuals.map((user, index) => {
           return (
@@ -369,8 +424,7 @@ const DisplayMutualFollows = ({ users }) => {
             >
               <UserProfilePicNOSTR
                 user_id={user?.pubkey}
-                size={16}
-                ring={false}
+                size={24}
                 mainAccountUser={false}
                 img={user.picture}
               />
@@ -379,16 +433,13 @@ const DisplayMutualFollows = ({ users }) => {
         })}
       </div>
       {users.length > 3 && (
-        <p
-          className="gray-c p-medium"
-          style={{ transform: "translateX(-35px)" }}
-        >
+        <p className="gray-c" style={{ transform: "translateX(-35px)" }}>
           + {users.length - 3} mutual(s)
         </p>
       )}
       {users.length <= 3 && (
         <p
-          className="gray-c p-medium"
+          className="gray-c"
           style={{ transform: `translateX(-${15 * (users.length - 1)}px)` }}
         >
           mutual(s)
