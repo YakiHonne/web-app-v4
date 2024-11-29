@@ -21,6 +21,8 @@ import {
 } from "../../Helpers/Encryptions";
 import Date_ from "../Date_";
 import DynamicIndicator from "../DynamicIndicator";
+import SearchUserCard from "./SearchUserCard";
+import SearchContentCard from "./SearchContentCard";
 
 export default function SearchNetwork({ exit }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
@@ -88,6 +90,7 @@ export default function SearchNetwork({ exit }) {
         return tempData
           .filter((event, index, tempData) => {
             if (
+              event.nip05 &&
               tempData.findIndex(
                 (event_) => event_.pubkey === event.pubkey && !event.kind
               ) === index &&
@@ -103,11 +106,13 @@ export default function SearchNetwork({ exit }) {
       setIsLoading(false);
     }
   };
+
   const searchForUser = () => {
     const filteredUsers = searchKeyword
       ? nostrAuthors
           .filter((user) => {
             if (
+              user.nip05 &&
               ((typeof user.display_name === "string" &&
                 user.display_name
                   ?.toLowerCase()
@@ -136,10 +141,12 @@ export default function SearchNetwork({ exit }) {
   };
 
   const searchForContent = async () => {
+    let tag = searchKeyword.replaceAll("#", "");
+    let tags = [tag, tag.toLowerCase(), `#${tag}`, `#${tag.toLowerCase()}`];
     let content = await getSubData(
       [
-        { kinds: [1], limit: 10, "#t": [searchKeyword] },
-        { kinds: [30023, 34235], limit: 30, "#t": [searchKeyword] },
+        { kinds: [1], limit: 10, "#t": tags },
+        { kinds: [30023, 34235], limit: 30, "#t": tags },
       ],
       500
     );
@@ -223,15 +230,35 @@ export default function SearchNetwork({ exit }) {
               </div>
             )}
           </div>
+          {searchKeyword && (
+            <div
+              className="fit-container box-pad-h-s box-pad-v-s fx-centered"
+              onClick={() =>
+                customHistory.push(`/search?keyword=${searchKeyword?.replace("#", "%23")}`)
+              }
+            >
+              <div className="fit-container slide-down box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-start-h pointer">
+                <div className="search"></div>{" "}
+                <p className="p-one-line">
+                  Search for <span className="p-bold ">#{searchKeyword.replaceAll("#", "")}</span>
+                </p>
+              </div>
+            </div>
+          )}
           {results.map((item, index) => {
             if (!item.kind) {
               let url = encodePubkey(item.pubkey);
               if (url)
                 return (
-                  <UserCard user={item} key={item.id} url={url} exit={exit} />
+                  <SearchUserCard
+                    user={item}
+                    key={item.id}
+                    url={url}
+                    exit={exit}
+                  />
                 );
             }
-            return <ContentCard key={item.id} event={item} exit={exit} />;
+            return <SearchContentCard key={item.id} event={item} exit={exit} />;
           })}
           {results.length === 0 && !isLoading && (
             <div
@@ -274,173 +301,173 @@ export default function SearchNetwork({ exit }) {
   );
 }
 
-const UserCard = ({ user, url, exit }) => {
-  const [verified, setVerified] = useState(false);
+// const UserCard = ({ user, url, exit }) => {
+//   const [verified, setVerified] = useState(false);
 
-  useEffect(() => {
-    const verifyUser = async () => {
-      if (user.nip05) {
-        let status = await getAuthPubkeyFromNip05(user.nip05);
-        if (status === user.pubkey) setVerified(true);
-        else setVerified(false);
-      } else setVerified(false);
-    };
-    verifyUser();
-  }, [user]);
+//   useEffect(() => {
+//     const verifyUser = async () => {
+//       if (user.nip05) {
+//         let status = await getAuthPubkeyFromNip05(user.nip05);
+//         if (status === user.pubkey) setVerified(true);
+//         else setVerified(false);
+//       } else setVerified(false);
+//     };
+//     verifyUser();
+//   }, [user]);
 
-  return (
-    <Link
-      to={`/users/${url}`}
-      className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
-      onClick={(e) => {
-        exit();
-      }}
-    >
-      <div className="fx-centered">
-        <UserProfilePicNOSTR
-          img={user.picture || ""}
-          size={36}
-          allowClick={false}
-          user_id={user.pubkey}
-          ring={false}
-        />
-        <div className="fx-centered fx-start-h">
-          <div className="fx-centered fx-col fx-start-v " style={{ rowGap: 0 }}>
-            <div className="fx-centered">
-              <p className={`p-one-line ${verified ? "c1-c" : ""}`}>
-                {user.display_name || user.name}
-              </p>
-              {verified && <div className="checkmark-c1"></div>}
-            </div>
-            {/* <p className="p-medium p-one-line">
-              @{user.name || user.display_name}
-            </p> */}
-            <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
-              {user.nip05 || "N/A"}
-            </p>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-};
+//   return (
+//     <Link
+//       to={`/users/${url}`}
+//       className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
+//       onClick={(e) => {
+//         exit();
+//       }}
+//     >
+//       <div className="fx-centered">
+//         <UserProfilePicNOSTR
+//           img={user.picture || ""}
+//           size={36}
+//           allowClick={false}
+//           user_id={user.pubkey}
+//           
+//         />
+//         <div className="fx-centered fx-start-h">
+//           <div className="fx-centered fx-col fx-start-v " style={{ rowGap: 0 }}>
+//             <div className="fx-centered">
+//               <p className={`p-one-line ${verified ? "c1-c" : ""}`}>
+//                 {user.display_name || user.name}
+//               </p>
+//               {verified && <div className="checkmark-c1"></div>}
+//             </div>
+//             {/* <p className="p-medium p-one-line">
+//               @{user.name || user.display_name}
+//             </p> */}
+//             <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
+//               {user.nip05 || "N/A"}
+//             </p>
+//           </div>
+//         </div>
+//       </div>
+//     </Link>
+//   );
+// };
 
-const ContentCard = ({ event, exit }) => {
-  const nostrAuthors = useSelector((state) => state.nostrAuthors);
+// const ContentCard = ({ event, exit }) => {
+//   const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
-  const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
-  useEffect(() => {
-    const fetchAuthor = async () => {
-      let auth = await getUser(event.pubkey);
-      if (auth) setUser(auth);
-    };
-    fetchAuthor();
-  }, [nostrAuthors]);
+//   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
+//   useEffect(() => {
+//     const fetchAuthor = async () => {
+//       let auth = await getUser(event.pubkey);
+//       if (auth) setUser(auth);
+//     };
+//     fetchAuthor();
+//   }, [nostrAuthors]);
 
-  if (event.kind === 1)
-    return (
-      <Link
-        to={`/notes/${nip19.noteEncode(event.id)}`}
-        className="fx-centered fx-start-h box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
-        onClick={(e) => {
-          exit();
-        }}
-      >
-        <UserProfilePicNOSTR
-          img={user.picture || ""}
-          size={48}
-          allowClick={false}
-          user_id={user.pubkey}
-          ring={false}
-        />
-        <div
-          className="fx-centered fx-col fx-start-h fx-start-v"
-          style={{ gap: "4px" }}
-        >
-          <p className="p-medium">
-            By {user.display_name || user.name}{" "}
-            <span className="gray-c ">
-              {" "}
-              <Date_ toConvert={new Date(event.created_at * 1000)} />
-            </span>
-          </p>
-          <p className="p-one-line gray-c">{event.content}</p>
-        </div>
-      </Link>
-    );
-  return (
-    <Link
-      to={`/${event.naddr}`}
-      className="fx-centered fx-start-h box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
-      onClick={(e) => {
-        exit();
-      }}
-    >
-      <div style={{ position: "relative" }}>
-        {!event.image && (
-          <div
-            className="round-icon"
-            style={{ minWidth: "48px", aspectRatio: "1/1" }}
-          >
-            {[30004, 30003].includes(event.kind) && (
-              <div className="curation-24"></div>
-            )}
-            {[30023].includes(event.kind) && <div className="posts-24"></div>}
-            {[34235].includes(event.kind) && <div className="play-24"></div>}
-            {[30031].includes(event.kind) && (
-              <div className="smart-widget-24"></div>
-            )}
-          </div>
-        )}
-        {event.image && (
-          <div
-            className="sc-s-18 bg-img cover-bg"
-            style={{
-              backgroundImage: `url(${event.image})`,
-              minWidth: "48px",
-              aspectRatio: "1/1",
-            }}
-          ></div>
-        )}
-        <div
-          className="round-icon"
-          style={{
-            position: "absolute",
-            right: "-5px",
-            bottom: "-5px",
-            backgroundColor: "var(--white)",
-            border: "none",
-            minWidth: "24px",
-            aspectRatio: "1/1",
-          }}
-        >
-          <UserProfilePicNOSTR
-            img={user.picture || ""}
-            size={20}
-            allowClick={false}
-            user_id={user.pubkey}
-            ring={false}
-          />
-        </div>
-      </div>
-      <div
-        className="fx-centered fx-col fx-start-h fx-start-v"
-        style={{ gap: "4px" }}
-      >
-        <div className="fx-centered">
-          <p className="p-medium">
-            By {user.display_name || user.name}{" "}
-            {/* <span className="gray-c ">
-              {" "}
-              <Date_ toConvert={new Date(event.created_at * 1000)} />
-            </span> */}
-          </p>
-          <DynamicIndicator item={event}/>
-        </div>
-        <p className="p-one-line gray-c">
-          {event.title || <span className="p-italic gray-c">Untitled</span>}
-        </p>
-      </div>
-    </Link>
-  );
-};
+//   if (event.kind === 1)
+//     return (
+//       <Link
+//         to={`/notes/${nip19.noteEncode(event.id)}`}
+//         className="fx-centered fx-start-h box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
+//         onClick={(e) => {
+//           exit();
+//         }}
+//       >
+//         <UserProfilePicNOSTR
+//           img={user.picture || ""}
+//           size={48}
+//           allowClick={false}
+//           user_id={user.pubkey}
+//           
+//         />
+//         <div
+//           className="fx-centered fx-col fx-start-h fx-start-v"
+//           style={{ gap: "4px" }}
+//         >
+//           <p className="p-medium">
+//             By {user.display_name || user.name}{" "}
+//             <span className="gray-c ">
+//               {" "}
+//               <Date_ toConvert={new Date(event.created_at * 1000)} />
+//             </span>
+//           </p>
+//           <p className="p-one-line gray-c">{event.content}</p>
+//         </div>
+//       </Link>
+//     );
+//   return (
+//     <Link
+//       to={`/${event.naddr}`}
+//       className="fx-centered fx-start-h box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
+//       onClick={(e) => {
+//         exit();
+//       }}
+//     >
+//       <div style={{ position: "relative" }}>
+//         {!event.image && (
+//           <div
+//             className="round-icon"
+//             style={{ minWidth: "48px", aspectRatio: "1/1" }}
+//           >
+//             {[30004, 30003].includes(event.kind) && (
+//               <div className="curation-24"></div>
+//             )}
+//             {[30023].includes(event.kind) && <div className="posts-24"></div>}
+//             {[34235].includes(event.kind) && <div className="play-24"></div>}
+//             {[30031].includes(event.kind) && (
+//               <div className="smart-widget-24"></div>
+//             )}
+//           </div>
+//         )}
+//         {event.image && (
+//           <div
+//             className="sc-s-18 bg-img cover-bg"
+//             style={{
+//               backgroundImage: `url(${event.image})`,
+//               minWidth: "48px",
+//               aspectRatio: "1/1",
+//             }}
+//           ></div>
+//         )}
+//         <div
+//           className="round-icon"
+//           style={{
+//             position: "absolute",
+//             right: "-5px",
+//             bottom: "-5px",
+//             backgroundColor: "var(--white)",
+//             border: "none",
+//             minWidth: "24px",
+//             aspectRatio: "1/1",
+//           }}
+//         >
+//           <UserProfilePicNOSTR
+//             img={user.picture || ""}
+//             size={20}
+//             allowClick={false}
+//             user_id={user.pubkey}
+//             
+//           />
+//         </div>
+//       </div>
+//       <div
+//         className="fx-centered fx-col fx-start-h fx-start-v"
+//         style={{ gap: "4px" }}
+//       >
+//         <div className="fx-centered">
+//           <p className="p-medium">
+//             By {user.display_name || user.name}{" "}
+//             {/* <span className="gray-c ">
+//               {" "}
+//               <Date_ toConvert={new Date(event.created_at * 1000)} />
+//             </span> */}
+//           </p>
+//           <DynamicIndicator item={event} />
+//         </div>
+//         <p className="p-one-line gray-c">
+//           {event.title || <span className="p-italic gray-c">Untitled</span>}
+//         </p>
+//       </div>
+//     </Link>
+//   );
+// };

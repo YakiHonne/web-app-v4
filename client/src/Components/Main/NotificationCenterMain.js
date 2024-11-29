@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   getEmptyuserMetadata,
+  getZapper,
   removeEventsDuplicants,
   removeObjDuplicants,
 } from "../../Helpers/Encryptions";
@@ -11,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import {
   getFollowings,
+  getMutedlist,
   saveNotificationLastEventTS,
   saveUsers,
 } from "../../Helpers/DB";
@@ -190,7 +192,10 @@ const checkEventType = (event, pubkey, relatedEvent) => {
     }
 
     if (event.kind === 7) {
-      let ev = event.tags.find((tag) => ["e", "a"].includes(tag[0]));
+      let isE = event.tags.find((tag) => tag[0] === "e");
+      let isA = event.tags.find((tag) => tag[0] === "a");
+      let ev = isA || isE;
+
       let eventKind = ev[0] === "a" ? ev[1].split(":")[0] : 1;
       let eventPubkey = ev[0] === "a" ? ev[1].split(":")[1] : false;
       let eventIdentifier = ev[0] === "a" ? ev[1].split(":")[2] : false;
@@ -239,7 +244,9 @@ const checkEventType = (event, pubkey, relatedEvent) => {
     }
 
     if (event.kind === 9734) {
-      let ev = event.tags.find((tag) => ["e", "a"].includes(tag[0]));
+      let isE = event.tags.find((tag) => tag[0] === "e");
+      let isA = event.tags.find((tag) => tag[0] === "a");
+      let ev = isA || isE;
       let url = false;
       let eventKind = 0;
       if (ev) {
@@ -250,9 +257,12 @@ const checkEventType = (event, pubkey, relatedEvent) => {
           ? getRepEventsLink(eventPubkey, eventKind, eventIdentifier)
           : `/notes/${nip19.noteEncode(ev[1])}`;
       }
-      let amount = event.tags.find((tag) => tag[0] === "amount");
+
+      let amount =
+        event.amount || event.tags.find((tag) => tag[0] === "amount");
+      // let amount = event.tags.find((tag) => tag[0] === "amount");
       let message = compactContent(event.content);
-      amount = amount ? Math.ceil(amount[1] / 1000) : 0;
+      // amount = amount ? Math.ceil(amount[1] / 1000) : 0;
 
       return {
         type: "zaps",
@@ -283,8 +293,12 @@ export default function NotificationCenterMain() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      let userFollowings = await getFollowings(userKeys.pub);
+      let [userFollowings, userMutedList] = await Promise.all([
+        getFollowings(userKeys.pub),
+        getMutedlist(userKeys.pub),
+      ]);
       userFollowings = userFollowings ? userFollowings.followings : [];
+      userMutedList = userMutedList ? userMutedList.mutedlist : [];
       let tempAuth = [];
       let tempEvents = [];
 
@@ -337,21 +351,49 @@ export default function NotificationCenterMain() {
       );
 
       sub.on("event", (event) => {
-        if (event.kind === 9735) {
-          let description = JSON.parse(
-            event.tags.find((tag) => tag[0] === "description")[1]
-          );
-          tempAuth.push(description.pubkey);
-          tempEvents = removeEventsDuplicants(
-            [
-              { ...description, created_at: event.created_at },
-              ...tempEvents,
-            ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
-          );
-        } else if (event.kind === 6) {
-          try {
-            let isEventValid = JSON.parse(event.content);
-            if (isEventValid) {
+        if (!userMutedList.includes(event.pubkey)) {
+          if (event.kind === 9735) {
+            let description = JSON.parse(
+              event.tags.find((tag) => tag[0] === "description")[1]
+            );
+
+            tempAuth.push(description.pubkey);
+            tempEvents = removeEventsDuplicants(
+              [
+                {
+                  ...description,
+                  created_at: event.created_at,
+                  amount: getZapper(event).amount,
+                },
+                ...tempEvents,
+              ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
+            );
+          } else if (event.kind === 6) {
+            try {
+              let isEventValid = JSON.parse(event.content);
+              if (isEventValid) {
+                let pubkeys = event.tags
+                  .filter((tag) => tag[0] === "p")
+                  .map((tag) => tag[1]);
+                tempAuth.push([...pubkeys, event.pubkey]);
+                tempEvents = removeEventsDuplicants(
+                  [event.rawEvent(), ...tempEvents].sort(
+                    (ev1, ev2) => ev2.created_at - ev1.created_at
+                  )
+                );
+              }
+            } catch (err) {
+              console.log("event kind:6 ditched");
+            }
+          } else {
+            let checkForLabel = event.tags.find((tag) => tag[0] === "l");
+            let isUncensored = checkForLabel
+              ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
+                  checkForLabel[1]
+                )
+              : false;
+
+            if (!isUncensored) {
               let pubkeys = event.tags
                 .filter((tag) => tag[0] === "p")
                 .map((tag) => tag[1]);
@@ -362,82 +404,74 @@ export default function NotificationCenterMain() {
                 )
               );
             }
-          } catch (err) {
-            console.log("event kind:6 ditched");
           }
-        } else {
-          let checkForLabel = event.tags.find((tag) => tag[0] === "l");
-          let isUncensored = checkForLabel
-            ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
-                checkForLabel[1]
-              )
-            : false;
-
-          if (!isUncensored) {
-            let pubkeys = event.tags
-              .filter((tag) => tag[0] === "p")
-              .map((tag) => tag[1]);
-            tempAuth.push([...pubkeys, event.pubkey]);
-            tempEvents = removeEventsDuplicants(
-              [event.rawEvent(), ...tempEvents].sort(
-                (ev1, ev2) => ev2.created_at - ev1.created_at
-              )
-            );
-          }
-        }
-
-        if (eose) {
-          if (event.kind === 9735) {
-            let description = JSON.parse(
-              event.tags.find((tag) => tag[0] === "description")[1]
-            );
-            tempAuth.push(description.pubkey);
-            if (event.created_at > tempEvents[0].created_at)
-              setNewNotifications((prev) =>
-                removeEventsDuplicants([
-                  { ...description, created_at: event.created_at },
-                  ...prev,
-                ])
+          if (eose) {
+            if (event.kind === 9735) {
+              let description = JSON.parse(
+                event.tags.find((tag) => tag[0] === "description")[1]
               );
-            else {
-              setNotifications((prev) =>
+              tempAuth.push(description.pubkey);
+              if (event.created_at > tempEvents[0].created_at)
+                setNewNotifications((prev) =>
+                  removeEventsDuplicants([
+                    {
+                      ...description,
+                      created_at: event.created_at,
+                      amount: getZapper(event).amount,
+                    },
+                    ...prev,
+                  ])
+                );
+              else {
+                setNotifications((prev) =>
+                  [
+                    ...prev,
+                    {
+                      ...description,
+                      created_at: event.created_at,
+                      amount: getZapper(event).amount,
+                    },
+                  ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
+                );
+              }
+              tempEvents = removeEventsDuplicants(
                 [
-                  ...prev,
                   { ...description, created_at: event.created_at },
+                  ...tempEvents,
                 ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
               );
-            }
-            tempEvents = removeEventsDuplicants(
-              [
-                { ...description, created_at: event.created_at },
-                ...tempEvents,
-              ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
-            );
 
-            saveNotificationLastEventTS(userKeys.pub, tempEvents[0].created_at);
-          } else {
-            let pubkeys = event.tags
-              .filter((tag) => tag[0] === "p")
-              .map((tag) => tag[1]);
-            tempAuth.push([...pubkeys, event.pubkey]);
-
-            if (event.created_at > tempEvents[1].created_at)
-              setNewNotifications((prev) =>
-                removeEventsDuplicants([event.rawEvent(), ...prev])
+              saveNotificationLastEventTS(
+                userKeys.pub,
+                tempEvents[0].created_at
               );
-            else {
-              setNotifications((prev) =>
-                [...prev, event.rawEvent()].sort(
+            } else {
+              let pubkeys = event.tags
+                .filter((tag) => tag[0] === "p")
+                .map((tag) => tag[1]);
+              tempAuth.push([...pubkeys, event.pubkey]);
+
+              if (event.created_at > tempEvents[1].created_at)
+                setNewNotifications((prev) =>
+                  removeEventsDuplicants([event.rawEvent(), ...prev])
+                );
+              else {
+                setNotifications((prev) =>
+                  [...prev, event.rawEvent()].sort(
+                    (ev1, ev2) => ev2.created_at - ev1.created_at
+                  )
+                );
+              }
+              tempEvents = removeEventsDuplicants(
+                [event.rawEvent(), ...tempEvents].sort(
                   (ev1, ev2) => ev2.created_at - ev1.created_at
                 )
               );
+              saveNotificationLastEventTS(
+                userKeys.pub,
+                tempEvents[0].created_at
+              );
             }
-            tempEvents = removeEventsDuplicants(
-              [event.rawEvent(), ...tempEvents].sort(
-                (ev1, ev2) => ev2.created_at - ev1.created_at
-              )
-            );
-            saveNotificationLastEventTS(userKeys.pub, tempEvents[0].created_at);
           }
         }
       });
@@ -616,7 +650,6 @@ const Notification = ({ event, filterByType = false }) => {
   const userKeys = useSelector((state) => state.userKeys);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const navigate = useNavigate();
-
   const user = useMemo(() => {
     return getUser(event.pubkey) || getEmptyuserMetadata(event.pubkey);
   }, [nostrAuthors]);
@@ -663,7 +696,6 @@ const Notification = ({ event, filterByType = false }) => {
           <UserProfilePicNOSTR
             size={48}
             mainAccountUser={false}
-            ring={false}
             user_id={user.pubkey}
             img={user.picture}
           />
@@ -1256,7 +1288,7 @@ const Notification = ({ event, filterByType = false }) => {
 //                 <UserProfilePicNOSTR
 //                   size={30}
 //                   mainAccountUser={false}
-//                   ring={false}
+//
 //                   user_id={user.pubkey}
 //                   img={user.picture}
 //                 />
@@ -1265,7 +1297,7 @@ const Notification = ({ event, filterByType = false }) => {
 //                 <UserProfilePicNOSTR
 //                   size={30}
 //                   mainAccountUser={false}
-//                   ring={false}
+//
 //                   user_id={"Unanymous"}
 //                   allowClick={false}
 //                   img={""}
@@ -1335,7 +1367,7 @@ const Notification = ({ event, filterByType = false }) => {
 //                     <UserProfilePicNOSTR
 //                       size={24}
 //                       mainAccountUser={false}
-//                       ring={false}
+//
 //                       user_id={relatedEvent.author.pubkey}
 //                       img={relatedEvent.author.picture}
 //                     />
@@ -1488,7 +1520,7 @@ const Notification = ({ event, filterByType = false }) => {
 //                       <UserProfilePicNOSTR
 //                         size={24}
 //                         mainAccountUser={false}
-//                         ring={false}
+//
 //                         user_id={event.pubkey}
 //                         img={user.picture}
 //                       />
@@ -1530,7 +1562,7 @@ const Notification = ({ event, filterByType = false }) => {
 //                     <UserProfilePicNOSTR
 //                       size={24}
 //                       mainAccountUser={false}
-//                       ring={false}
+//
 //                       user_id={"Unanymous"}
 //                       allowClick={false}
 //                       img={""}
@@ -1558,7 +1590,7 @@ const Notification = ({ event, filterByType = false }) => {
 //                     <UserProfilePicNOSTR
 //                       size={24}
 //                       mainAccountUser={false}
-//                       ring={false}
+//
 //                       user_id={event.pubkey}
 //                       img={relatedEvent.author.picture}
 //                     />

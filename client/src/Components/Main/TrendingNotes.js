@@ -44,7 +44,7 @@ const AuthorPreview = ({ author, pubkey }) => {
         size={16}
         mainAccountUser={false}
         user_id={pubkey}
-        ring={false}
+        
         metadata={author}
       />
       <p className="p-medium gray-c">{author?.display_name || author?.name}</p>

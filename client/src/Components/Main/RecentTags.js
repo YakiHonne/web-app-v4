@@ -24,7 +24,8 @@ export default function RecentTags() {
               <Link
                 key={index}
                 className="sticker sticker-small sticker-c1 pointer"
-                to={`/tags/${tag?.replace("#", "%23")}`}
+                to={`/search?keyword=${tag?.replace("#", "%23")}`}
+                state={{tab: "articles"}}
               >
                 {tag}
               </Link>

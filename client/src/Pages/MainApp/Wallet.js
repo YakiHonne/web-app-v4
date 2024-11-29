@@ -202,12 +202,12 @@ export default function Wallet() {
   };
   const getBalanceAlbyAPI = async (code) => {
     try {
-      const data = await axios.get("https://api.getalby.com/userBalance", {
+      const data = await axios.get("https://api.getalby.com/balance", {
         headers: {
           Authorization: `Bearer ${code}`,
         },
       });
-      return data.data.userBalance;
+      return data.data.balance;
     } catch (err) {
       console.log(err);
       return 0;
@@ -710,7 +710,7 @@ export default function Wallet() {
                                               user_id={author.pubkey}
                                               size={48}
                                               img={author.picture}
-                                              ring={false}
+                                              
                                             />
                                             <div
                                               className="round-icon-small round-icon-tooltip"
@@ -877,7 +877,7 @@ export default function Wallet() {
                                                     mainAccountUser={false}
                                                     size={48}
                                                     user_id={isZap.pubkey}
-                                                    ring={false}
+                                                    
                                                     img={
                                                       author
                                                         ? author.picture
@@ -1129,7 +1129,7 @@ export default function Wallet() {
                                                       mainAccountUser={false}
                                                       size={48}
                                                       user_id={isZap.pubkey}
-                                                      ring={false}
+                                                      
                                                       img={
                                                         author
                                                           ? author.picture
@@ -1579,7 +1579,7 @@ const SendPayment = ({
               pubkey={pubkey}
               margin={false}
               close={true}
-              showSharing={false}
+              showSha
               onClose={() => setPubkey("")}
               setMetataData={handleUserMetadata}
             />

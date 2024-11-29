@@ -26,6 +26,7 @@ import {
 import Publishing from "../Publishing";
 import SearchSidebar from "./SearchSidebar";
 import { customHistory } from "../../Helpers/History";
+import YakiMobileappSidebar from "../YakiMobileappSidebar";
 
 export default function SidebarNOSTR() {
   const navigateTo = useNavigate();
@@ -163,7 +164,7 @@ export default function SidebarNOSTR() {
                 <div className={isPage("/") ? "home-bold-24" : "home-24"}></div>
                 <div className="link-label">Home</div>
               </div>
-              
+
               <div
                 onClick={() => {
                   customHistory.push("/discover");
@@ -212,6 +213,7 @@ export default function SidebarNOSTR() {
               {!(showMedia || showMyContent || showWritingOptions) && (
                 <>
                   <div
+                    style={{ position: "relative" }}
                     onClick={() => customHistory.push("/messages")}
                     className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
                       isPage("/messages") ? "active-link" : "inactive-link"
@@ -225,16 +227,7 @@ export default function SidebarNOSTR() {
                       ></div>
                       <div className="link-label">Messages</div>
                     </div>
-                    {isNewMsg && (
-                      <div
-                        style={{
-                          minWidth: "8px",
-                          aspectRatio: "1/1",
-                          backgroundColor: "var(--red-main)",
-                          borderRadius: "var(--border-r-50)",
-                        }}
-                      ></div>
-                    )}
+                    {isNewMsg && <div className="notification-dot"></div>}
                   </div>
                   <NotificationCenter />
                 </>
@@ -268,7 +261,7 @@ export default function SidebarNOSTR() {
                   </div>
                 </div>
               )}
-              
+              <YakiMobileappSidebar />
               {!userKeys &&
                 !(showMedia || showMyContent || showWritingOptions) && (
                   <div>
@@ -311,7 +304,7 @@ export default function SidebarNOSTR() {
               >
                 <div
                   className="fit-container sidebar-user-settings-button"
-                  style={{ overflow: "visible" }}
+                  style={{ overflow: "visible", rowGap: "10px" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsActive(true);
@@ -332,7 +325,6 @@ export default function SidebarNOSTR() {
                         size={40}
                         mainAccountUser={true}
                         allowClick={false}
-                        ring={false}
                       />
                     </div>
                     <div className="mb-show" style={{ pointerEvents: "none" }}>
@@ -340,7 +332,6 @@ export default function SidebarNOSTR() {
                         size={40}
                         mainAccountUser={true}
                         allowClick={false}
-                        ring={false}
                       />
                     </div>
                     <div className="mb-hide">
@@ -527,7 +518,6 @@ export default function SidebarNOSTR() {
                                     mainAccountUser={false}
                                     img={account.picture}
                                     allowClick={false}
-                                    ring={false}
                                   />
                                 </div>
                                 <div>
@@ -652,14 +642,13 @@ const AccountSwitching = ({ exit }) => {
       <div className="fx-centered fx-col">
         <div className="fx-centered popout">
           <div
-            className="purple-pulse"
+            // className="purple-pulse"
             style={{ borderRadius: "var(--border-r-50)" }}
           >
             <UserProfilePicNOSTR
               size={200}
               mainAccountUser={true}
               allowClick={false}
-              ring={false}
             />
           </div>
         </div>

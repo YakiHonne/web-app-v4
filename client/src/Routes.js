@@ -38,15 +38,16 @@ import ProfileEdit from "./Pages/MainApp/ProfileEdit";
 import Notification from "./Pages/MainApp/Notification";
 import Explore from "./Pages/MainApp/Explore";
 import Dashboard from "./Pages/MainApp/Dashboard";
+import Search from "./Pages/MainApp/Search";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
   { path: "/:nevent", element: <FourOFour /> },
+  { path: "/search", element: <Search /> },
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/dashboard", element: <Dashboard /> },
   { path: "/discover", element: <Explore /> },
-  { path: "/bookmarks", element: <Bookmarks /> },
   { path: "/notifications", element: <Notification /> },
   { path: "/curations/:id", element: <Curation /> },
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },

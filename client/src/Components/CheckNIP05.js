@@ -4,6 +4,7 @@ export default function CheckNIP05({
   address = "",
   pubkey = "",
   smallSize = true,
+  
 }) {
   let addressParts = address.split("@");
   let [isChecked, setIsChecked] = useState(false);
@@ -15,7 +16,9 @@ export default function CheckNIP05({
           `https://${addressParts[1]}/.well-known/nostr.json?name=${addressParts[0]}`
         );
         let { data } = res;
-        if (data.names[addressParts[0]] == pubkey) setIsChecked(true);
+        if (data.names[addressParts[0]] == pubkey) {
+          setIsChecked(true);
+        }
       } catch (err) {}
     };
     fetchData();
@@ -28,7 +31,7 @@ export default function CheckNIP05({
         <div className={`gray-c ${smallSize ? "p-medium" : ""}`}>{address}</div>
       )}
       {isChecked && (
-        <div className={`orange-c  ${smallSize ? "p-medium" : ""}`}>
+        <div className={`${smallSize ? "p-medium" : ""}`}>
           {address}
         </div>
       )}

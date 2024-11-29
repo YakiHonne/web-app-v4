@@ -59,10 +59,10 @@ export default function NavbarNOSTR({ margin = true }) {
       "/terms",
       "/login",
       "/points-system",
+      "/write-article",
     ].includes(window.location.pathname)
   )
     return;
-
   return (
     <>
       {showMobileMenu && (
@@ -107,7 +107,7 @@ export default function NavbarNOSTR({ margin = true }) {
             {userKeys ? (
               <UserProfilePicNOSTR
                 allowClick={false}
-                ring={false}
+                
                 mainAccountUser={true}
                 allowPropagation={true}
                 size={38}

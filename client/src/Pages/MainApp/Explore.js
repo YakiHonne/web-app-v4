@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import ArrowUp from "../../Components/ArrowUp";
 import { Helmet } from "react-helmet";
@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import {
   getParsedRepEvent,
   removeEventsDuplicants,
+  sortEvents,
 } from "../../Helpers/Encryptions";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import { saveUsers } from "../../Helpers/DB";
@@ -15,6 +16,12 @@ import LoadingDots from "../../Components/LoadingDots";
 import { getSubData } from "../../Helpers/Controlers";
 import SmallButtonDropDown from "../../Components/Main/SmallButtonDropDown";
 import LoadingLogo from "../../Components/LoadingLogo";
+import UserToFollowSuggestionsCards from "../../Components/SuggestionsCards/UserToFollowSuggestionsCards";
+import { getNotesByTag, getTrendingNotes1h } from "../../Helpers/WSInstance";
+import ContentSuggestionsCards from "../../Components/SuggestionsCards/ContentSuggestionCards";
+import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
+import DonationBoxSuggestionCards from "../../Components/SuggestionsCards/DonationBoxSuggestionCards";
+import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/ProfileShareSuggestionCards";
 
 const tabs = ["All", "Articles", "Curations", "Videos"];
 
@@ -51,7 +58,6 @@ export default function Explore() {
 
   useEffect(() => {
     if (!extrasRef.current) return;
-
     const handleResize = () => {
       const extrasHeight = extrasRef.current?.getBoundingClientRect().height;
       const windowHeight = window.innerHeight;
@@ -118,13 +124,6 @@ export default function Explore() {
                     borderBottom: "1px solid var(--very-dim-gray)",
                   }}
                 >
-                  {/* <div
-                  className="sticky fit-container " 
-                  style={{
-                    padding: "1rem",
-                    pointerEvents: isLoading ? "none" : "auto",
-                  }}
-                > */}
                   <Slider
                     smallButtonDropDown={
                       <SmallButtonDropDown
@@ -158,9 +157,14 @@ export default function Explore() {
                     noGap={true}
                   />
                 </div>
+
                 <div
-                  className="fit-height  main-middle feed-container"
-                  style={{ overflow: "scroll", marginBottom: "4rem" }}
+                  className=" main-middle feed-container"
+                  style={{
+                    overflow: "scroll",
+                    marginBottom: "4rem",
+                    height: "calc(100dvh - 4.375rem)",
+                  }}
                 >
                   <ExploreFeed
                     selectedTab={selectedTab}
@@ -218,20 +222,30 @@ const ExploreFeed = ({
   setIsLoading,
 }) => {
   const userKeys = useSelector((state) => state.userKeys);
+  const userInterestList = useSelector((state) => state.userInterestList);
   const userFollowings = useSelector((state) => state.userFollowings);
   const [content, setContent] = useState([]);
-  // const [isLoading, setIsLoading] = useState(false);
   const [timestamp, setTimestamp] = useState(false);
   const [lastEventsTimestamps, setLastEventsTimestamps] = useState({
     articles: undefined,
     curations: undefined,
     videos: undefined,
   });
+  const [notesSuggestions, setNotesSuggestions] = useState([]);
   const [isEndOfQuerying, setIsEndOfQuerying] = useState(false);
 
   useEffect(() => {
     const initSub = async () => {
       setIsLoading(true);
+      let dateCheckerArts = lastEventsTimestamps.articles
+        ? lastEventsTimestamps.articles - 86400
+        : Math.floor(Date.now() / 1000) - 86400;
+      let dateCheckerCurations = lastEventsTimestamps.curations
+        ? lastEventsTimestamps.curations - 86400
+        : Math.floor(Date.now() / 1000) - 86400;
+      let dateCheckerVideos = lastEventsTimestamps.videos
+        ? lastEventsTimestamps.videos - 86400
+        : Math.floor(Date.now() / 1000) - 86400;
       const { artsFilter, curationsFilter, videosFilter } = getFilter();
       let [articles, curations, videos] = await Promise.all([
         getSubData(artsFilter),
@@ -239,32 +253,46 @@ const ExploreFeed = ({
         getSubData(videosFilter),
       ]);
 
+      let articles_ = sortEvents(articles.data).filter(
+        (_) => _.created_at > dateCheckerArts
+      );
+      let curations_ = sortEvents(curations.data).filter(
+        (_) => _.created_at > dateCheckerCurations
+      );
+      let videos_ = sortEvents(videos.data).filter(
+        (_) => _.created_at > dateCheckerVideos
+      );
+
+      articles_ = articles_.length === 0 ? articles.data : articles_
+      curations_ = curations_.length === 0 ? curations.data : curations_
+      videos_ = videos_.length === 0 ? videos.data : videos_
+
       setLastEventsTimestamps({
         articles:
-          articles.data.length > 0
-            ? articles.data[articles.data.length - 1].created_at - 1
+          articles_.length > 0
+            ? articles_[articles_.length - 1].created_at - 1
             : undefined,
         curations:
-          curations.data.length > 0
-            ? curations.data[curations.data.length - 1].created_at - 1
+          curations_.length > 0
+            ? curations_[curations_.length - 1].created_at - 1
             : undefined,
         videos:
-          videos.data.length > 0
-            ? videos.data[videos.data.length - 1].created_at - 1
+          videos_.length > 0
+            ? videos_[videos_.length - 1].created_at - 1
             : undefined,
       });
 
       if (
-        articles.data.length === 0 &&
-        curations.data.length === 0 &&
-        videos.data.length === 0
+        articles_.length === 0 &&
+        curations_.length === 0 &&
+        videos_.length === 0
       )
         setIsEndOfQuerying(true);
       setContent((prev) =>
         removeEventsDuplicants([
           ...prev,
-          ...MixEvents(articles.data, curations.data, videos.data).map(
-            (event) => getParsedRepEvent(event)
+          ...MixEvents(articles_, curations_, videos_).map((event) =>
+            getParsedRepEvent(event)
           ),
         ]).filter((event) => {
           if (
@@ -322,13 +350,42 @@ const ExploreFeed = ({
     setIsEndOfQuerying(false);
   }, [selectedCategory, selectedTab]);
 
+  useEffect(() => {
+    let checkHiddenSuggestions = localStorage.getItem("hsuggest2");
+    const fetchContentSuggestions = async () => {
+      if (["explore", "following"].includes(selectedCategory)) {
+        let data = await getTrendingNotes1h();
+        setNotesSuggestions(data.slice(0, 10));
+        saveUsers(data.splice(0, 10).map((event) => event.pubkey));
+      }
+      if (!["explore", "following"].includes(selectedCategory)) {
+        let data = await getNotesByTag(selectedCategory);
+        setNotesSuggestions(data);
+        saveUsers(data.map((event) => event.pubkey));
+      }
+    };
+    if (!checkHiddenSuggestions) fetchContentSuggestions();
+  }, [selectedCategory]);
+
+  // useEffect(() => {
+  //   if (selectedCategory === "following") {
+  //     setContent([]);
+  //     setLastEventsTimestamps({
+  //       articles: undefined,
+  //       curations: undefined,
+  //       videos: undefined,
+  //     });
+  //     setTimestamp(Date.now());
+  //   }
+  // }, [userFollowings]);
+
   const getFilter = () => {
     let tag = !["explore", "following"].includes(selectedCategory)
       ? [selectedCategory]
       : undefined;
     let authors =
       selectedCategory === "following"
-        ? [userKeys, ...userFollowings]
+        ? [userKeys.pub, ...userFollowings]
         : undefined;
     return {
       artsFilter: [0, 1].includes(selectedTab)
@@ -367,17 +424,43 @@ const ExploreFeed = ({
     };
   };
 
+  const getContentCard = (index) => {
+    if (index === 15)
+      return (
+        <ContentSuggestionsCards
+          tag={
+            !["explore", "following"].includes(selectedCategory)
+              ? selectedCategory
+              : false
+          }
+          content={notesSuggestions}
+          kind="notes"
+        />
+      );
+    if (index === 30) return <UserToFollowSuggestionsCards />;
+    if (index === 45)
+      return (
+        <InterestSuggestionsCards
+          limit={5}
+          list={userInterestList}
+          update={true}
+          expand={true}
+        />
+      );
+    if (index === 60) return <DonationBoxSuggestionCards />;
+    if (index === 75) return <ProfileShareSuggestionCards />;
+  };
+
   return (
     <div className="fit-container fx-centered fx-col " style={{ gap: 0 }}>
-      {content.map((item) => {
-        // if (
-        //   item.title &&
-        //   !([30004, 30005].includes(item.kind) && item.items.length === 0)
-        // )
+      {content.map((item, index) => {
         return (
-          <div key={item.id} className="fit-container fx-centered">
-            <RepEventPreviewCard item={item} />
-          </div>
+          <Fragment key={item.id}>
+            <div className="fit-container fx-centered">
+              <RepEventPreviewCard item={item} />
+            </div>
+            {getContentCard(index)}
+          </Fragment>
         );
       })}
       {content.length === 0 && !isLoading && (

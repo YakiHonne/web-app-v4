@@ -90,7 +90,7 @@ export default function ToPublishDraftsNOSTR({
         >
           <div className="fx-centered fx-col">
             <h4 className="p-centered">Save your draft</h4>
-            <p className="gray-c box-pad-v-s">Do you wish to publish your draft?</p>
+            <p className="gray-c box-pad-v-s">Do you wish to save your draft?</p>
           </div>
           {warning && (
             <div className="sc-s-18 box-pad-v-s box-pad-h-s box-marg-s">

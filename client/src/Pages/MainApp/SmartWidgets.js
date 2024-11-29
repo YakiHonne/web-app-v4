@@ -415,7 +415,7 @@ const AuthorPreview = ({ author, size = "big" }) => {
       <UserProfilePicNOSTR
         size={size === "big" ? 40 : 30}
         mainAccountUser={false}
-        ring={false}
+        
         user_id={author.pubkey}
         img={author.picture}
         metadata={author}

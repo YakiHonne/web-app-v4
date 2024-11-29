@@ -47,7 +47,10 @@ export default function ShowUsersList({ exit, list, title, extras }) {
         );
         sub.on("event", (event) => {
           setPeople((data) => {
-            let newF = [...data, getParsedAuthor(event)];
+            let newF = [
+              ...data,
+              { ...getParsedAuthor(event), created_at: event.created_at },
+            ].sort((ev1, ev2) => ev2.created_at - ev1.created_at);
             let netF = newF.filter((item, index, newF) => {
               if (
                 newF.findIndex((_item) => item.pubkey === _item.pubkey) ===
@@ -91,15 +94,13 @@ export default function ShowUsersList({ exit, list, title, extras }) {
         .map((item) => item.pubkey);
 
       let tempTags = Array.from(
-        userFollowings?.filter((item) => !toUnfollowList.includes(item)) || []
+        userFollowings?.filter((item) => !toUnfollowList.includes(item)).map(_ => ["p", _]) || []
       );
       for (let item of bulkList) {
         if (item.to_follow)
           tempTags.push([
             "p",
             item.pubkey,
-            relaysOnPlatform[0],
-            item.name || "yakihonne-user",
           ]);
       }
 
@@ -192,7 +193,6 @@ export default function ShowUsersList({ exit, list, title, extras }) {
                         size={48}
                         img={item.picture}
                         user_id={item.pubkey}
-                        ring={false}
                       />
                       <div className="fx-centered fx-col fx-start-v">
                         <ShortenKey id={item.pubkeyhashed} />
@@ -210,13 +210,16 @@ export default function ShowUsersList({ exit, list, title, extras }) {
                       bulk={true}
                       bulkList={bulkList}
                       setBulkList={setBulkList}
+                      icon={false}
+                      size={"small"}
                     />
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
+          {bulkList.length > 0 &&  <div className="box-pad-v"></div>}
+        </div> 
       </div>
       {bulkList.length > 0 && (
         <div

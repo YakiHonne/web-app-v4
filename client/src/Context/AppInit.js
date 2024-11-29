@@ -69,6 +69,7 @@ import {
   NDKPrivateKeySigner,
   NDKRelayAuthPolicies,
 } from "@nostr-dev-kit/ndk";
+import { getTrendingUsers24h } from "../Helpers/WSInstance";
 
 export default function AppInit() {
   const dispatch = useDispatch();
@@ -166,11 +167,14 @@ export default function AppInit() {
     ) {
       previousMutedList.current = mutedlist;
       dispatch(setUserMutedList(mutedlist.mutedlist));
-      // if (mutedlist.mutedlist)
-      //   ndkInstance.mutedIds = [
-      //     ...ndkInstance.mutedIds,
-      //     ...mutedlist.mutedlist,
-      //   ];
+      if (mutedlist.mutedlist) {
+        for(let p of mutedlist.mutedlist) 
+        ndkInstance.mutedIds.set([p], ["p"]) 
+        // ndkInstance.mutedIds = new Map([
+        //   mutedlist.mutedlist.map((p) => [p, "p"]),
+        // ]);
+        
+      }
     }
     if (
       JSON.stringify(previousBookmarks.current) !== JSON.stringify(bookmarks)
@@ -216,7 +220,7 @@ export default function AppInit() {
     }
     saveNostrClients();
     // getFlashNews();
-    // getTrendingProfiles();
+    getTrendingProfiles();
     // getRecentTags();
     let keys = getKeys();
     if (keys) {
@@ -257,14 +261,14 @@ export default function AppInit() {
   useEffect(() => {
     let subscription = null;
     const fetchData = async () => {
-      let [INBOX, RELAYS, FOLLOWINGS, MUTEDLIST, BOOKMARKS, INTERESTSLIST] =
+      let [INBOX, RELAYS, FOLLOWINGS, MUTEDLIST, INTERESTSLIST] =
         await Promise.all([
           getChatrooms(userKeys.pub),
           getRelays(userKeys.pub),
           getFollowings(userKeys.pub),
           getMutedlist(userKeys.pub),
-          [],
-          // getBookmarks(userKeys.pub),
+
+          getInterestsList(userKeys.pub),
         ]);
       let lastMessageTimestamp =
         INBOX.length > 0
@@ -278,7 +282,6 @@ export default function AppInit() {
       let lastMutedTimestamp = MUTEDLIST?.last_timestamp || undefined;
       let lastUserMetadataTimestamp =
         getMetadataFromCachedAccounts(userKeys.pub).created_at || undefined;
-        console.log(lastUserMetadataTimestamp)
       // let lastBookmarksTimestamp =
       //   BOOKMARKS.length > 0
       //     ? BOOKMARKS.sort(
@@ -455,14 +458,11 @@ export default function AppInit() {
           if (eose) saveBookmarks(tempBookmarks, userKeys.pub);
         }
         if (event.kind === 0) {
-          console.log(lastUserMetadataTimestamp,
-            event.created_at)
           if (
             (lastUserMetadataTimestamp &&
               event.created_at > lastUserMetadataTimestamp) ||
-              !lastUserMetadataTimestamp
-            ) {
-            console.log(event)
+            !lastUserMetadataTimestamp
+          ) {
             lastUserMetadataTimestamp = event.created_at;
             let parsedEvent = getParsedAuthor(event);
             dispatch(setUserMetadata(parsedEvent));
@@ -537,18 +537,20 @@ export default function AppInit() {
 
   const getTrendingProfiles = async () => {
     try {
-      let nostrBandProfiles = await axios.get(
-        "https://api.nostr.band/v0/trending/profiles"
-      );
-      let profiles = nostrBandProfiles.data.profiles
-        ? nostrBandProfiles.data.profiles
-            .filter((profile) => profile.profile)
-            .map((profile) => {
-              return getParsedAuthor(profile.profile);
-            })
-        : [];
-      saveFetchedUsers(profiles);
-      dispatch(setTrendingUsers(profiles.slice(0, 6)));
+      // let nostrBandProfiles = await axios.get(
+      //   "https://api.nostr.band/v0/trending/profiles"
+      // );
+      // let profiles = nostrBandProfiles.data.profiles
+      //   ? nostrBandProfiles.data.profiles
+      //       .filter((profile) => profile.profile)
+      //       .map((profile) => {
+      //         return getParsedAuthor(profile.profile);
+      //       })
+      //   : [];
+      // saveFetchedUsers(profiles);
+      // dispatch(setTrendingUsers(profiles.slice(0, 6)));
+      let users = await getTrendingUsers24h();
+      dispatch(setTrendingUsers(users));
     } catch (err) {
       console.log(err);
     }

@@ -211,7 +211,7 @@ export default function FlashNewsCard({
               img={author.picture}
               size={20}
               user_id={author.pubkey}
-              ring={false}
+              
             />
             <p className="p-medium gray-c">
               by <span className="c1-c">{author.name}</span>

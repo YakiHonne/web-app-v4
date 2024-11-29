@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import PublishRelaysPicker from "./PublishRelaysPicker";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import UploadFile from "../UploadFile";
 
 export default function AddCurationNOSTR({
   curation,
@@ -26,14 +27,18 @@ export default function AddCurationNOSTR({
 
   const [showRelaysPicker, setShowRelaysPicker] = useState(false);
 
-  const handleFileUplaod = (e) => {
-    let file = e.target.files[0];
-    if (file) {
-      setThumbnail(file);
-      setThumbnailPrev(URL.createObjectURL(file));
-      setThumbnailUrl("");
-    }
+  const handleFileUplaod = (url) => {
+    // setThumbnailPrev(URL.createObjectURL(file));
+    setThumbnailUrl(url);
   };
+  // const handleFileUplaod = (e) => {
+  //   let file = e.target.files[0];
+  //   if (file) {
+  //     setThumbnail(file);
+  //     setThumbnailPrev(URL.createObjectURL(file));
+  //     setThumbnailUrl("");
+  //   }
+  // };
   const handleDataUpload = async (selectedRelays) => {
     try {
       setIsLoading(true);
@@ -49,10 +54,11 @@ export default function AddCurationNOSTR({
       //   return;
       // }
 
-      if (curation?.thumbnail && thumbnail) deleteFromS3(curation?.thumbnail);
-      let cover = thumbnail
-        ? await uploadToS3(thumbnail, userKeys.pub)
-        : thumbnailUrl;
+      // if (curation?.thumbnail && thumbnail) deleteFromS3(curation?.thumbnail);
+      let cover = thumbnailUrl;
+      // let cover = thumbnail
+      //   ? await uploadToS3(thumbnail, userKeys.pub)
+      //   : thumbnailUrl;
       let tempTags = getTags(title, excerpt, cover);
       dispatch(
         setToPublish({
@@ -201,18 +207,18 @@ export default function AddCurationNOSTR({
 
               height: "200px",
               borderRadius: "0",
-              backgroundImage: `url(${thumbnailPrev})`,
+              backgroundImage: `url(${thumbnailUrl})`,
               backgroundColor: "var(--dim-gray)",
               // border: thumbnailPrev ? "none" : "1px dashed var(--pale-gray)",
             }}
           >
-            {!thumbnailPrev && (
+            {!thumbnailUrl && (
               <div className="fx-col fx-centered">
                 {/* <div className="image-24"></div> */}
                 <p className="p-medium gray-c">(thumbnail preview)</p>
               </div>
             )}{" "}
-            {thumbnailPrev && (
+            {thumbnailUrl && (
               <div
                 style={{
                   width: "32px",
@@ -254,7 +260,7 @@ export default function AddCurationNOSTR({
                 value={thumbnailUrl}
                 onChange={handleThumbnailValue}
               />
-              <label
+              {/* <label
                 htmlFor="image-up"
                 className="fit-container fx-centered fx-col box-pad-h sc-s pointer bg-img cover-bg"
                 style={{
@@ -282,7 +288,8 @@ export default function AddCurationNOSTR({
                   className="pointer"
                   accept="image/jpg,image/png,image/gif"
                 />
-              </label>
+              </label> */}
+              <UploadFile round={true} setImageURL={handleFileUplaod} />
             </div>
             <input
               type="text"
@@ -326,7 +333,9 @@ export default function AddCurationNOSTR({
         <hr />
         {!curation && (
           <div className="box-pad-v-m fx-centered">
-            <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
+            <button className="btn btn-gst-red" onClick={exit}>
+              Cancel
+            </button>
             <button className="btn btn-normal" onClick={confirmPublishing}>
               {isLoading ? <LoadingDots /> : <>Publish</>}
             </button>
@@ -334,7 +343,9 @@ export default function AddCurationNOSTR({
         )}
         {curation && (
           <div className="box-pad-v-m fx-centered">
-            <button className="btn btn-gst-red" onClick={exit}>Cancel</button>
+            <button className="btn btn-gst-red" onClick={exit}>
+              Cancel
+            </button>
             <button
               className="btn btn-normal"
               onClick={() => handleDataUpload(relaysToPublish)}

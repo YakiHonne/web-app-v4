@@ -11,7 +11,7 @@ import {
   minimizeKey,
   removeDuplicants,
 } from "../../Helpers/Encryptions";
-import { getAuthPubkeyFromNip05, redirectToLogin } from "../../Helpers/Helpers";
+import { copyText, getAuthPubkeyFromNip05, redirectToLogin } from "../../Helpers/Helpers";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import Date_ from "../../Components/Date_";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
@@ -325,7 +325,6 @@ export default function Curation() {
                             img={curationAuthor.picture}
                             mainAccountUser={false}
                             user_id={curationAuthor.pubkey}
-                            ring={false}
                             allowClick={true}
                           />
                           <div className="fx-centered fx-col fx-start-v">
@@ -628,6 +627,12 @@ export default function Curation() {
                     </div>
                     <OptionsDropdown
                       options={[
+                        <div
+                          onClick={(e) => copyText(curation.naddr, "Naddr", e)}
+                          className="pointer"
+                        >
+                          <p>Copy naddr</p>
+                        </div>,
                         <BookmarkEvent
                           label={"Bookmark curation"}
                           pubkey={curation.author_pubkey}
@@ -1546,7 +1551,7 @@ export default function Curation() {
 //                                         img={item.author_img}
 //                                         mainAccountUser={false}
 //                                         user_id={item.author_pubkey}
-//                                         ring={false}
+//
 //                                       />
 //                                       <p className="gray-c p-medium">
 //                                         By{" "}
@@ -1648,7 +1653,7 @@ export default function Curation() {
 //         mainAccountUser={false}
 //         allowClick={true}
 //         user_id={author.pubkey}
-//         ring={false}
+//
 //       />
 //       <p>
 //         Posted by <span className="c1-c">{author.name}</span>

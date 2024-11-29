@@ -146,7 +146,7 @@ export default function HomeFNMobile() {
                         <UserProfilePicNOSTR
                           img={fn.author.picture}
                           size={16}
-                          ring={false}
+                          
                           mainAccountUser={false}
                           user_id={fn.author.pubkey}
                         />

@@ -142,10 +142,11 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
       id="sw-browser"
     >
       <div
-        className="fit-height overlay-container fx-centered fx-start-v fx-start-h fx-col"
+        className="fit-height overlay-container fx-centered fx-start-v fx-start-h fx-col sc-s-18"
         style={{
           width: "min(100%,700px)",
           overflow: "scroll",
+          borderRadius: "0",
           border: "1px solid var(--pale-gray)",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -156,7 +157,7 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
         >
           <div
             className="fit-container sticky fx-centered fx-col"
-            style={{ rowGap: "16px" }}
+            style={{ rowGap: "16px", backgroundColor: "var(--c1-side)" }}
           >
             <div className="fit-container fx-centered ">
               <div
@@ -300,7 +301,7 @@ const AuthorPreview = ({ author }) => {
       <UserProfilePicNOSTR
         size={40}
         mainAccountUser={false}
-        ring={false}
+        
         user_id={author.pubkey}
         img={author.picture}
         metadata={author}

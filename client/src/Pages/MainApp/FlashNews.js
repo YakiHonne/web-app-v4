@@ -1176,7 +1176,7 @@ const AddNews = ({ exit }) => {
               <UserProfilePicNOSTR
                 mainAccountUser={true}
                 size={48}
-                ring={false}
+                
               />
               <div className="fx-centered fx-col fx-start-v box-pad-h-s">
                 <h4>Create News</h4>

@@ -137,7 +137,7 @@ export default function HomeFN({ flashnews }) {
                       <UserProfilePicNOSTR
                         img={fn.author.picture}
                         size={16}
-                        ring={false}
+                        
                         mainAccountUser={false}
                         user_id={fn.author.pubkey}
                       />
@@ -213,7 +213,7 @@ export default function HomeFN({ flashnews }) {
   //                   <UserProfilePicNOSTR
   //                     img={fn.author.picture}
   //                     size={32}
-  //                     ring={false}
+  //                     
   //                     mainAccountUser={false}
   //                     user_id={fn.author.pubkey}
   //                   />

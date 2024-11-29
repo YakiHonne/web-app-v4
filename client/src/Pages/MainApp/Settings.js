@@ -4,26 +4,22 @@ import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
-import {
-  decodeUrlOrAddress,
-  encodeLud06,
-  getBech32,
-  getEmptyuserMetadata,
-} from "../../Helpers/Encryptions";
+import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import ToChangeProfilePic from "../../Components/Main/ToChangeProfilePic";
 import { shortenKey } from "../../Helpers/Encryptions";
 import ToUpdateRelay from "../../Components/Main/ToUpdateRelay";
 import axios from "axios";
 import { Helmet } from "react-helmet";
-import Footer from "../../Components/Footer";
 import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import LoginWithAPI from "../../Components/Main/LoginWithAPI";
 import AddWallet from "../../Components/Main/AddWallet";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import {
   getCustomSettings,
+  getMediaUploader,
+  getSelectedServer,
   getWallets,
   updateCustomSettings,
+  updateMediaUploader,
   updateWallets,
 } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,7 +31,7 @@ import DtoLToggleButton from "../../Components/DtoLToggleButton";
 import ZapTip from "../../Components/Main/ZapTip";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { nip19 } from "nostr-tools";
-import ProgressCirc from "../../Components/ProgressCirc";
+import Select from "../../Components/Main/Select";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -47,21 +43,35 @@ export default function Settings() {
   const isPublishing = useSelector((state) => state.isPublishing);
   const isYakiChestLoaded = useSelector((state) => state.isYakiChestLoaded);
   const yakiChestStats = useSelector((state) => state.yakiChestStats);
-
   const relaysContainer = useRef(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [showRelaysInfo, setShowRelaysInfo] = useState(false);
   const [allRelays, setAllRelays] = useState([]);
-  const [showProfilePicChanger, setShowProfilePicChanger] = useState(false);
   const [showRelaysUpdater, setShowRelaysUpdater] = useState(false);
-  const [showCoverUploader, setCoverUploader] = useState(false);
+
   const [showMutedList, setShowMutedList] = useState(false);
   const [selectedTab, setSelectedTab] = useState(state ? state.tab : "");
   const [tempUserRelays, setTempUserRelays] = useState([]);
   const [relaysStatus, setRelaysStatus] = useState([]);
+  const [mediaUploader, setMediaUploader] = useState(getMediaUploader());
+  const [selectedMediaServer, setSelectedMediaServer] = useState(
+    getSelectedServer() || mediaUploader[0].value
+  );
+
+  const [customServer, setCustomServer] = useState(false);
+
   const [homeContentSuggestion, setHomeContentSuggestion] = useState(
     localStorage.getItem("hsuggest")
+  );
+  const [userToFollowSuggestion, setUserToFollowSuggestion] = useState(
+    localStorage.getItem("hsuggest1")
+  );
+  const [contentSuggestion, setContentSuggestion] = useState(
+    localStorage.getItem("hsuggest2")
+  );
+  const [interestSuggestion, setInterestSuggestion] = useState(
+    localStorage.getItem("hsuggest3")
   );
   const [userHoverPreview, setUserHoverPreview] = useState(
     getCustomSettings().userHoverPreview
@@ -97,6 +107,8 @@ export default function Settings() {
   useEffect(() => {
     if (userKeys) {
       handleAddWallet();
+      setMediaUploader(getMediaUploader());
+      setSelectedMediaServer(getSelectedServer());
     } else setWallets([]);
   }, [userKeys]);
 
@@ -195,74 +207,6 @@ export default function Settings() {
     return tempArray;
   };
 
-  const uploadCover = async (upload = false, file) => {
-    if (isPublishing) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        })
-      );
-      return;
-    }
-    let cover = file;
-    if (cover) {
-      try {
-        setIsLoading(true);
-        var content = getUserContent(file);
-        if (upload) {
-          let fd = new FormData();
-          fd.append("file", cover);
-          fd.append("pubkey", userKeys.pub);
-          let data = await axiosInstance.post("/api/v1/file-upload", fd, {
-            headers: { "Content-Type": "multipart/formdata" },
-          });
-          content = getUserContent(data.data.image_path);
-          deleteFromS3(userMetadata.banner);
-        }
-
-        dispatch(
-          setToPublish({
-            userKeys: userKeys,
-            kind: 0,
-            content,
-            tags: [],
-            allRelays: userRelays,
-          })
-        );
-
-        setIsLoading(false);
-      } catch (err) {
-        setIsLoading(false);
-        console.log(err);
-        dispatch(
-          setToast({
-            type: 2,
-            desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
-          })
-        );
-      }
-    }
-  };
-
-  const getUserContent = (banner) => {
-    let content = {
-      ...userMetadata,
-    };
-    content.banner = banner;
-    return JSON.stringify(content);
-  };
-
-  const deleteFromS3 = async (img) => {
-    if (img.includes("yakihonne.s3")) {
-      let data = await axiosInstance.delete("/api/v1/file-upload", {
-        params: { image_path: img },
-      });
-      return true;
-    }
-    return false;
-  };
-
   const handleDelete = () => {
     try {
       let tempWallets = wallets.filter(
@@ -338,6 +282,39 @@ export default function Settings() {
       setHomeContentSuggestion(dateNow);
     }
   };
+  const handleUserToFollowSuggestion = () => {
+    if (userToFollowSuggestion) {
+      localStorage.removeItem("hsuggest1");
+      setUserToFollowSuggestion(false);
+    }
+    if (!userToFollowSuggestion) {
+      let dateNow = `${Date.now()}`;
+      localStorage.setItem("hsuggest1", dateNow);
+      setUserToFollowSuggestion(dateNow);
+    }
+  };
+  const handleContentSuggestion = () => {
+    if (contentSuggestion) {
+      localStorage.removeItem("hsuggest2");
+      setContentSuggestion(false);
+    }
+    if (!contentSuggestion) {
+      let dateNow = `${Date.now()}`;
+      localStorage.setItem("hsuggest2", dateNow);
+      setContentSuggestion(dateNow);
+    }
+  };
+  const handleInterestSuggestion = () => {
+    if (interestSuggestion) {
+      localStorage.removeItem("hsuggest3");
+      setInterestSuggestion(false);
+    }
+    if (!interestSuggestion) {
+      let dateNow = `${Date.now()}`;
+      localStorage.setItem("hsuggest3", dateNow);
+      setInterestSuggestion(dateNow);
+    }
+  };
   const handleUserHoverPreview = () => {
     if (userHoverPreview) {
       setUserHoverPreview(false);
@@ -356,7 +333,6 @@ export default function Settings() {
       });
     }
   };
-
   const handleDragEnd = (res) => {
     if (!res.destination) return;
     let tempArr = structuredClone(contentList);
@@ -390,6 +366,49 @@ export default function Settings() {
     });
   };
 
+  const addNewServer = async () => {
+    if (!customServer) return;
+    setIsLoading(true);
+    try {
+      const test = await axios.post(customServer);
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "This url does not seem to be found, please recheck.",
+        })
+      );
+      setIsLoading(false);
+    } catch (err) {
+      if (err.response.status === 404) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "This url does not seem to be found, please recheck.",
+          })
+        );
+        setIsLoading(false);
+        return;
+      }
+      let domain = customServer.split("/")[2];
+
+      setSelectedMediaServer(customServer);
+      let checkExistance = mediaUploader.find((_) => _.display_name === domain);
+      if (!checkExistance) {
+        updateMediaUploader([domain, customServer], customServer);
+        setMediaUploader(getMediaUploader());
+      } else {
+        updateMediaUploader(undefined, customServer);
+      }
+      setCustomServer(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handleSwitchMediaServer = (server) => {
+    setSelectedMediaServer(server);
+    updateMediaUploader(undefined, server);
+  };
+
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
@@ -411,13 +430,7 @@ export default function Settings() {
           handleDelete={handleDelete}
         />
       )}
-      {showCoverUploader && (
-        <CoverUploader
-          exit={() => setCoverUploader(false)}
-          oldThumbnail={userMetadata.banner}
-          uploadCover={uploadCover}
-        />
-      )}
+
       {showRelaysUpdater && (
         <ToUpdateRelay
           exit={() => {
@@ -430,14 +443,7 @@ export default function Settings() {
           }}
         />
       )}
-      {showProfilePicChanger && (
-        <ToChangeProfilePic
-          cancel={() => setShowProfilePicChanger(false)}
-          exit={() => {
-            setShowProfilePicChanger(false);
-          }}
-        />
-      )}
+
       {showMutedList && <MutedList exit={() => setShowMutedList(false)} />}
       <div>
         <Helmet>
@@ -446,14 +452,7 @@ export default function Settings() {
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
           <div className="main-container">
             <SidebarNOSTR />
-            <main
-              className={`main-page-nostr-container ${
-                isLoading ? "flash" : ""
-              }`}
-              style={{
-                pointerEvents: isLoading ? "none" : "auto",
-              }}
-            >
+            <main className={`main-page-nostr-container `}>
               <div className="fx-centered fit-container  fx-start-v ">
                 <div className="main-middle">
                   {userMetadata && (userKeys.sec || userKeys.ext) && (
@@ -466,11 +465,7 @@ export default function Settings() {
                           borderTop: "1px solid var(--very-dim-gray)",
                         }}
                       >
-                        <UserProfilePicNOSTR
-                          mainAccountUser={true}
-                          size={64}
-                          ring={false}
-                        />
+                        <UserProfilePicNOSTR mainAccountUser={true} size={64} />
                         <div className="fx-centered">
                           <Link
                             to={`/users/${nip19.nprofileEncode({
@@ -766,11 +761,10 @@ export default function Settings() {
                                   onClick={saveRelays}
                                   disabled={
                                     JSON.stringify(userAllRelays) ===
-                                      JSON.stringify(tempUserRelays) ||
-                                    isLoading
+                                    JSON.stringify(tempUserRelays)
                                   }
                                 >
-                                  {isLoading ? <LoadingDots /> : "Save"}
+                                  Save
                                 </button>
                               </div>
                             </>
@@ -800,6 +794,60 @@ export default function Settings() {
                           </div>
                           {selectedTab === "moderation" && (
                             <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <div className="fx-scattered fit-container">
+                                <p>Media uploader</p>
+                                {customServer === false && (
+                                  <div className="fx-centered">
+                                    <Select
+                                      options={mediaUploader}
+                                      value={selectedMediaServer}
+                                      setSelectedValue={handleSwitchMediaServer}
+                                    />
+                                    <div
+                                      className="round-icon-small round-icon-tooltip"
+                                      data-tooltip="Add server"
+                                      onClick={() => setCustomServer("")}
+                                    >
+                                      <div className="plus-sign"></div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              {customServer !== false && (
+                                <div
+                                  className="fx-centered fit-container slide-down box-pad-v-s"
+                                  style={{
+                                    borderBottom:
+                                      "1px solid var(--very-dim-gray)",
+                                  }}
+                                >
+                                  <input
+                                    type="text"
+                                    placeholder="Server path"
+                                    className="if ifs-full"
+                                    style={{ height: "40px" }}
+                                    value={customServer}
+                                    onChange={(e) =>
+                                      setCustomServer(e.target.value)
+                                    }
+                                  />
+                                  <button
+                                    className="btn btn-normal"
+                                    style={{ minWidth: "max-content" }}
+                                    onClick={addNewServer}
+                                    disabled={isLoading}
+                                  >
+                                    {isLoading ? <LoadingDots /> : "Add server"}
+                                  </button>
+                                  <button
+                                    className="btn btn-red"
+                                    onClick={() => setCustomServer(false)}
+                                    disabled={isLoading}
+                                  >
+                                    {isLoading ? <LoadingDots /> : "Cancel"}
+                                  </button>
+                                </div>
+                              )}
                               <div className="fx-scattered fit-container">
                                 <p>Muted list</p>
                                 <div
@@ -1015,6 +1063,50 @@ export default function Settings() {
                                       : "toggle-dim-gray"
                                   }`}
                                   onClick={handleHomeContentSuggestion}
+                                ></div>
+                              </div>
+                              <hr />
+                              <div className="fx-scattered fit-container">
+                                <p>Show suggested people to follow</p>
+                                <div
+                                  className={`toggle ${
+                                    userToFollowSuggestion
+                                      ? "toggle-dim-gray"
+                                      : ""
+                                  } ${
+                                    !userToFollowSuggestion
+                                      ? "toggle-c1"
+                                      : "toggle-dim-gray"
+                                  }`}
+                                  onClick={handleUserToFollowSuggestion}
+                                ></div>
+                              </div>
+                              <hr />
+                              <div className="fx-scattered fit-container">
+                                <p>Show articles/notes suggestions</p>
+                                <div
+                                  className={`toggle ${
+                                    contentSuggestion ? "toggle-dim-gray" : ""
+                                  } ${
+                                    !contentSuggestion
+                                      ? "toggle-c1"
+                                      : "toggle-dim-gray"
+                                  }`}
+                                  onClick={handleContentSuggestion}
+                                ></div>
+                              </div>
+                              <hr />
+                              <div className="fx-scattered fit-container">
+                                <p>Show suggested interests</p>
+                                <div
+                                  className={`toggle ${
+                                    interestSuggestion ? "toggle-dim-gray" : ""
+                                  } ${
+                                    !interestSuggestion
+                                      ? "toggle-c1"
+                                      : "toggle-dim-gray"
+                                  }`}
+                                  onClick={handleInterestSuggestion}
                                 ></div>
                               </div>
                               <hr />
@@ -1683,7 +1775,6 @@ const RelaysInfo = ({ url, exit }) => {
                       img={relayInfo.owner.picture}
                       size={24}
                       mainAccountUser={false}
-                      ring={false}
                       user_id={relayInfo.pubkey}
                     />
                   )}

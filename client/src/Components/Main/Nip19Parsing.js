@@ -19,12 +19,19 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 export default function Nip19Parsing({ addr, minimal = false }) {
   const [event, setEvent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isParsed, setIsParsed] = useState(false);
   const [url, setUrl] = useState("/");
   useEffect(() => {
     let filter = [];
     try {
-      if (addr.startsWith("naddr")) {
-        let data = nip19.decode(addr);
+      let addr_ = addr
+        .replaceAll(",", "")
+        .replaceAll(":", "")
+        .replaceAll(";", "")
+        .replaceAll(".", "");
+
+      if (addr_.startsWith("naddr")) {
+        let data = nip19.decode(addr_);
 
         filter.push({
           kinds: [data.data.kind],
@@ -32,23 +39,23 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           authors: [data.data.pubkey],
         });
         let url_ = "";
-        if (data.data.kind === 30023) url_ = `/article/${addr}`;
+        if (data.data.kind === 30023) url_ = `/article/${addr_}`;
         if ([30004, 30005].includes(data.data.kind))
-          url_ = `/curations/${addr}`;
-        if (data.data.kind === 34235) url_`/videos/${addr}`;
+          url_ = `/curations/${addr_}`;
+        if (data.data.kind === 34235) url_`/videos/${addr_}`;
         setUrl(url_);
       }
-      if (addr.startsWith("nprofile")) {
-        let data = nip19.decode(addr);
+      if (addr_.startsWith("nprofile")) {
+        let data = nip19.decode(addr_);
         filter.push({
           kinds: [0],
           authors: [data.data.pubkey],
         });
-        let url_ = `/users/${addr}`;
+        let url_ = `/users/${addr_}`;
         setUrl(url_);
       }
-      if (addr.startsWith("npub")) {
-        let data = nip19.decode(addr);
+      if (addr_.startsWith("npub")) {
+        let data = nip19.decode(addr_);
 
         let pubkey = "";
         if (typeof data.data === "string") pubkey = data.data;
@@ -57,13 +64,13 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           kinds: [0],
           authors: [pubkey],
         });
-        let hex = getHex(addr.replace(",", "").replace(".", ""));
+        let hex = getHex(addr_.replace(",", "").replace(".", ""));
         let url_ = `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
         setUrl(url_);
       }
 
-      if (addr.startsWith("nevent") || addr.startsWith("note")) {
-        let data = nip19.decode(addr);
+      if (addr_.startsWith("nevent") || addr_.startsWith("note")) {
+        let data = nip19.decode(addr_);
         filter.push({
           kinds: [1],
           ids: [data.data.id || data.data],
@@ -74,7 +81,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       setIsLoading(false);
       return;
     }
-
+    setIsParsed(true);
     const sub = ndkInstance.subscribe(filter, {
       // cacheUsage: "ONLY_RELAY",
       cacheUsage: "CACHE_FIRST",
@@ -199,15 +206,20 @@ export default function Nip19Parsing({ addr, minimal = false }) {
 
   if (!event)
     return (
-      <Link
-        to={`/${addr}`}
-        className="btn-text-gray"
-        target={"_blank"}
-        onClick={(e) => e.stopPropagation()}
-        style={{ color: "var(--orange-main)" }}
-      >
-        @{addr.substring(0, 10)}
-      </Link>
+      <>
+        {isParsed && (
+          <Link
+            to={`/${addr}`}
+            className="btn-text-gray"
+            target={"_blank"}
+            onClick={(e) => e.stopPropagation()}
+            style={{ color: "var(--orange-main)" }}
+          >
+            @{addr.substring(0, 10)}
+          </Link>
+        )}
+        {!isParsed && <p>{addr}</p>}
+      </>
     );
   if (event.kind === 0)
     return (

@@ -1004,7 +1004,7 @@ const ProfilePreview = ({ pubkeys }) => {
         <UserProfilePicNOSTR
           user_id={pubkeys[0]}
           mainAccountUser={false}
-          ring={false}
+          
           img={images[0] || ""}
           size={10}
         />
@@ -1013,7 +1013,7 @@ const ProfilePreview = ({ pubkeys }) => {
         <UserProfilePicNOSTR
           user_id={pubkeys[1]}
           mainAccountUser={false}
-          ring={false}
+          
           img={images[1] || ""}
           size={8}
         />
@@ -1022,7 +1022,7 @@ const ProfilePreview = ({ pubkeys }) => {
         <UserProfilePicNOSTR
           user_id={pubkeys[2]}
           mainAccountUser={false}
-          ring={false}
+          
           img={images[2] || ""}
           size={12}
         />
@@ -1128,7 +1128,7 @@ const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
                 <UserProfilePicNOSTR
                   user_id={pubkey}
                   mainAccountUser={false}
-                  ring={false}
+                  
                   img={author.picture}
                   size={48}
                 />

@@ -1,12 +1,16 @@
 import React from "react";
 import { getLinkFromAddr } from "../../Helpers/Helpers";
 import { customHistory } from "../../Helpers/History";
+import KindOne from "./KindOne";
 
 export default function LinkRepEventPreview({ event, allowClick = true }) {
-  let url = getLinkFromAddr(event.naddr);
+  let url = getLinkFromAddr(event.naddr || event.nEvent);
+  if (event.kind === 1) return <KindOne event={event} reactions={false} minmal={true}/>;
   return (
     <div
-      className={`fit-container sc-s-18 fx-centered fx-start-h fx-stretch ${allowClick ? "pointer" : ""}`}
+      className={`fit-container sc-s-18 fx-centered fx-start-h fx-stretch ${
+        allowClick ? "pointer" : ""
+      }`}
       onClick={() => (allowClick ? customHistory.push(url) : false)}
     >
       <div

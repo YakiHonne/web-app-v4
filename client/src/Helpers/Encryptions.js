@@ -341,12 +341,18 @@ const getBolt11 = (event) => {
 };
 const getZapper = (event) => {
   if (!event) return "";
-  let sats = decodeBolt11(getBolt11(event));
-  for (let tag of event.tags) {
-    if (tag[0] === "description")
-      return { ...JSON.parse(tag[1]), amount: sats, message: event.content };
+  try {
+    let sats = decodeBolt11(getBolt11(event));
+    for (let tag of event.tags) {
+      if (tag[0] === "description") {
+        return { ...JSON.parse(tag[1]), amount: sats, message: event.content };
+      }
+    }
+    return "";
+  } catch (err) {
+    console.log(err);
+    return "";
   }
-  return "";
 };
 
 const checkForLUDS = (lud06, lud16) => {
@@ -511,7 +517,7 @@ const unwrapGiftWrap = async (event, secret) => {
       : await window.nostr.nip44.decrypt(pubkey, content);
     return JSON.parse(decryptedEvent14);
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     return false;
   }
 };

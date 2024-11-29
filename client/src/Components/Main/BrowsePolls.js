@@ -244,7 +244,7 @@ const AuthorPreview = ({ pubkey }) => {
       <UserProfilePicNOSTR
         size={40}
         mainAccountUser={false}
-        ring={false}
+        
         user_id={author.pubkey}
         img={author.picture}
         metadata={author}

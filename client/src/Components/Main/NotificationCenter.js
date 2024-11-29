@@ -6,6 +6,7 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 
 import {
   getFollowings,
+  getMutedlist,
   getNotificationLastEventTS,
   saveNotificationLastEventTS,
 } from "../../Helpers/DB";
@@ -36,8 +37,12 @@ export default function NotificationCenter({
           ? parseInt(localStorage.getItem(localStorageKey))
           : 0
       );
-      let userFollowings = await getFollowings(userKeys.pub);
+      let [userFollowings, userMutedList] = await Promise.all([
+        getFollowings(userKeys.pub),
+        getMutedlist(userKeys.pub),
+      ]);
       userFollowings = userFollowings ? userFollowings.followings : [];
+      userMutedList = userMutedList ? userMutedList.mutedlist : [];
       const lastEventCreatedAt = await getNotificationLastEventTS(userKeys.pub);
       let created_at = lastEventCreatedAt + 1 || 0;
 
@@ -98,26 +103,28 @@ export default function NotificationCenter({
 
       sub.on("event", (event) => {
         try {
-          let checkForLabel = event.tags.find((tag) => tag[0] === "l");
-          let isUncensored = checkForLabel
-            ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
-                checkForLabel[1]
-              )
-            : false;
-          if (!isUncensored && event.pubkey !== userKeys.pub) {
-            events = events + 1;
-            localStorage.setItem(localStorageKey, events);
-            setNotifications((prev) => prev + 1);
-            if (created_at < event.created_at) {
-              created_at = event.created_at;
-              saveNotificationLastEventTS(userKeys.pub, event.created_at);
+          if (!userMutedList.includes(event.pubkey)) {
+            let checkForLabel = event.tags.find((tag) => tag[0] === "l");
+            let isUncensored = checkForLabel
+              ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
+                  checkForLabel[1]
+                )
+              : false;
+            if (!isUncensored && event.pubkey !== userKeys.pub) {
+              events = events + 1;
+              localStorage.setItem(localStorageKey, events);
+              setNotifications((prev) => prev + 1);
+              if (created_at < event.created_at) {
+                created_at = event.created_at;
+                saveNotificationLastEventTS(userKeys.pub, event.created_at);
+              }
+              dispatch(
+                setToast({
+                  type: 1,
+                  desc: "New Notification!",
+                })
+              );
             }
-            dispatch(
-              setToast({
-                type: 1,
-                desc: "New Notification!",
-              })
-            );
           }
         } catch (err) {
           console.log(err);
@@ -147,6 +154,7 @@ export default function NotificationCenter({
             ? "round-icon"
             : "pointer fit-container fx-scattered  box-pad-h-s box-pad-v-s inactive-link"
         }
+        style={{ position: "relative" }}
         onClick={handleOnClick}
       >
         <div className="fx-centered">
@@ -158,9 +166,12 @@ export default function NotificationCenter({
           )}
         </div>
         {notifications !== 0 && (
-          <div className="sticker sticker-small sticker-red">
+          <div className="sticker sticker-small sticker-red link-label">
             <NumberShrink value={notifications} />
           </div>
+        )}
+        {notifications !== 0 && (
+          <div className="notification-dot desk-hide-1200"></div>
         )}
       </div>
     </>

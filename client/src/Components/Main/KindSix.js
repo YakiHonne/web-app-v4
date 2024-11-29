@@ -36,7 +36,7 @@ export default function KindSix({ event }) {
         <UserProfilePicNOSTR
           size={20}
           mainAccountUser={false}
-          ring={false}
+          
           user_id={user.pubkey}
           img={user.picture}
         />

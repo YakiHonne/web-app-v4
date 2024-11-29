@@ -420,7 +420,7 @@ export default function FlashNewsEvent() {
                         size={64}
                         mainAccountUser={false}
                         user_id={author.pubkey}
-                        ring={false}
+                        
                       />
                       <div className="box-pad-h-m fx-centered fx-col fx-start-v">
                         <h4>By {author.name}</h4>
@@ -828,7 +828,7 @@ const CommentsSection = ({ id, nEvent, setNetCommentsCount, notePubkey }) => {
         {userKeys && (
           <div className="fit-container fx-end-v fx-centered">
             <UserProfilePicNOSTR
-              ring={false}
+              
               mainAccountUser={true}
               size={54}
             />
@@ -1469,7 +1469,7 @@ const AuthorPreview = ({ author }) => {
       <div className="fx-centered" style={{ opacity: ".5" }}>
         <UserProfilePicNOSTR
           size={24}
-          ring={false}
+          
           img={author.author_img}
           mainAccountUser={false}
           user_id={author.author_pubkey}
@@ -1488,7 +1488,7 @@ const AuthorPreview = ({ author }) => {
     <>
       <UserProfilePicNOSTR
         size={24}
-        ring={false}
+        
         img={authorData.author_img}
         mainAccountUser={false}
         user_id={authorData.author_pubkey}

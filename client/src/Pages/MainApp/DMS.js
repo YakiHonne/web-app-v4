@@ -9,8 +9,7 @@ import {
   generateSecretKey,
   finalizeEvent,
 } from "nostr-tools";
-import { bytesTohex, filterRelays } from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
+import { bytesTohex, getBech32 } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import Date_ from "../../Components/Date_";
@@ -21,20 +20,17 @@ import EmojisList from "../../Components/EmojisList";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/Main/InitConvo";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import { updateYakiChestStats } from "../../Helpers/Controlers";
+import { getUser, updateYakiChestStats } from "../../Helpers/Controlers";
 import { useDispatch, useSelector } from "react-redux";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
-import { setUserChatrooms } from "../../Store/Slides/UserData";
 import { checkCurrentConvo } from "../../Helpers/DB";
 
 export default function DMS() {
-  const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userChatrooms = useSelector((state) => state.userChatrooms);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const initDMS = useSelector((state) => state.initDMS);
-  const userMutedList = useSelector((state) => state.userMutedList);
   const userFollowings = useSelector((state) => state.userFollowings);
 
   const [selectedConvo, setSelectedConvo] = useState(false);
@@ -58,9 +54,7 @@ export default function DMS() {
     let known = 0;
     let unknown = 0;
     let tempChatrooms = userChatrooms.map((chatroom) => {
-      let contact = nostrAuthors.find(
-        (contact) => contact.pubkey === chatroom.pubkey
-      );
+      let contact = getUser(chatroom.pubkey);
 
       let isFollowing = userFollowings?.includes(chatroom.pubkey)
         ? "following"
@@ -86,12 +80,11 @@ export default function DMS() {
       return {
         ...chatroom,
         picture: "",
-        display_name: chatroom.pubkey.substring(0, 10),
-        name: chatroom.pubkey.substring(0, 10),
+        display_name: getBech32("npub", chatroom.pubkey).substring(0, 10),
+        name: getBech32("npub", chatroom.pubkey).substring(0, 10),
         type: isFollowing || isUnknown || isKnown,
       };
     });
-    // .filter((chatroom) => !userMutedList.includes(chatroom.pubkey));
 
     setMsgsCount({ followings, known, unknown });
     setSortedInbox(tempChatrooms);
@@ -162,11 +155,14 @@ export default function DMS() {
       return;
     }
 
-    let tempConvo = sortedInbox.filter(
-      (convo) =>
-        convo.display_name.toLowerCase().includes(value.toLowerCase()) ||
-        convo.name.toLowerCase().includes(value.toLowerCase())
-    );
+    let tempConvo = sortedInbox.filter((convo) => {
+      if (
+        convo.display_name?.toLowerCase().includes(value.toLowerCase()) ||
+        convo.name?.toLowerCase().includes(value.toLowerCase())
+      )
+        return convo;
+    });
+
     setKeyword(value);
     setSearchedConvo(tempConvo);
   };
@@ -198,15 +194,6 @@ export default function DMS() {
       checked: true,
     };
     checkCurrentConvo(tempEvent, userKeys.pub);
-    // let tempSortedInbox = Array.from(sortedInbox);
-    // let tempUnsortedInbox = Array.from(userChatrooms);
-    // let findIndex = tempSortedInbox.findIndex(
-    //   (item) => item.pubkey === event.pubkey
-    // );
-    // tempSortedInbox[findIndex].checked = true;
-    // tempUnsortedInbox[findIndex].checked = true;
-    // setSortedInbox(tempSortedInbox);
-    // dispatch(setUserChatrooms(tempUnsortedInbox));
   };
 
   if (!userKeys)
@@ -503,7 +490,6 @@ export default function DMS() {
                                   size={40}
                                   user_id={convo.pubkey}
                                   mainAccountUser={false}
-                                  ring={false}
                                   allowClick={false}
                                 />
                               </div>
@@ -566,7 +552,6 @@ export default function DMS() {
                                 size={40}
                                 user_id={convo.pubkey}
                                 mainAccountUser={false}
-                                ring={false}
                                 allowClick={false}
                               />
                             </div>
@@ -659,23 +644,20 @@ export default function DMS() {
 const ConversationBox = ({ convo, back }) => {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const userMetadata = useSelector((state) => state.userMetadata);
   const userRelays = useSelector((state) => state.userRelays);
-  const isPublishing = useSelector((state) => state.isPublishing);
 
   const convoContainerRef = useRef(null);
   const inputFieldRef = useRef(null);
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(
-    // userKeys.sec || window?.nostr?.nip44 ? false : true
-    true
+    userKeys.sec || window?.nostr?.nip44 ? false : true
   );
   const [replayOn, setReplayOn] = useState("");
   const [showProgress, setShowProgress] = useState(false);
   const [showEmojisList, setShowEmojisList] = useState(false);
   const [peerName, setPeerName] = useState(
-    convo.display_name.substring(0, 10) ||
-      convo.name.substring(0, 10) ||
+    convo.display_name?.substring(0, 10) ||
+      convo.name?.substring(0, 10) ||
       convo.pubkey.substring(0, 10)
   );
   useEffect(() => {
@@ -874,18 +856,17 @@ const ConversationBox = ({ convo, back }) => {
             size={40}
             user_id={convo.pubkey}
             mainAccountUser={false}
-            ring={false}
           />
           <div>
             <p>
-              {convo.display_name.substring(0, 10) ||
-                convo.name.substring(0, 10) ||
+              {convo.display_name?.substring(0, 10) ||
+                convo.name?.substring(0, 10) ||
                 convo.pubkey.substring(0, 10)}
             </p>
             <p className="p-medium gray-c">
               @
-              {convo.name.substring(0, 10) ||
-                convo.display_name.substring(0, 10)}
+              {convo.name?.substring(0, 10) ||
+                convo.display_name?.substring(0, 10)}
             </p>
           </div>
         </div>
@@ -1088,8 +1069,8 @@ const ConversationBox = ({ convo, back }) => {
                 "yourself"
               ) : (
                 <>
-                  {convo.display_name.substring(0, 10) ||
-                    convo.name.substring(0, 10) ||
+                  {convo.display_name?.substring(0, 10) ||
+                    convo.name?.substring(0, 10) ||
                     convo.pubkey.substring(0, 10)}
                 </>
               )}

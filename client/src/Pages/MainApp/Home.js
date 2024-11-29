@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useReducer } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useReducer,
+  Fragment,
+} from "react";
 import { useSelector } from "react-redux";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import {
@@ -27,9 +33,16 @@ import {
   getCustomSettings,
   getDefaultSettings,
   getKeys,
+  straightUp,
 } from "../../Helpers/Helpers";
 import LoadingLogo from "../../Components/LoadingLogo";
 import KindOne from "../../Components/Main/KindOne";
+import UserToFollowSuggestionsCards from "../../Components/SuggestionsCards/UserToFollowSuggestionsCards";
+import ContentSuggestionsCards from "../../Components/SuggestionsCards/ContentSuggestionCards";
+import DonationBoxSuggestionCards from "../../Components/SuggestionsCards/DonationBoxSuggestionCards";
+import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/ProfileShareSuggestionCards";
+import { decode } from "light-bolt11-decoder";
+import PostAsNote from "../../Components/Main/PostAsNote";
 const SUGGESTED_TAGS_VALUE = "_sggtedtags_";
 
 const getContentList = () => {
@@ -356,7 +369,6 @@ export default function Home() {
                           <UserProfilePicNOSTR
                             size={40}
                             mainAccountUser={true}
-                            ring={false}
                           />
                           <div className="sc-s-18 box-pad-h-s box-pad-v-s fit-container">
                             <p className="gray-c p-big">
@@ -368,10 +380,16 @@ export default function Home() {
                       )}
 
                       {userKeys && showWriteNote && (
-                        <WriteNote
+                        <PostAsNote
                           content={""}
                           exit={() => setShowWriteNote(false)}
                         />
+                        // <WriteNote
+                        //   content={""}
+                        //   border={false}
+                        //   borderBottom={true}
+                        //   exit={() => setShowWriteNote(false)}
+                        // />
                       )}
                       {selectedCategory !== SUGGESTED_TAGS_VALUE && (
                         <HomeFeed
@@ -420,20 +438,20 @@ export default function Home() {
 
 const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
   // const smallButtonDropDownOptions = getContentList();
+  const userMutedList = useSelector((state) => state.userMutedList);
+  const userInterestList = useSelector((state) => state.userInterestList);
+  const userKeys = useSelector((state) => state.userKeys);
   const [userFollowings, setUserFollowings] = useState([]);
   const [notes, dispatchNotes] = useReducer(notesReducer, notesInitialState);
   const [isLoading, setIsLoading] = useState(true);
   const [notesContentFrom, setNotesContentFrom] = useState(from);
   const [notesLastEventTime, setNotesLastEventTime] = useState(undefined);
+  const [rerenderTimestamp, setRerenderTimestamp] = useState(undefined);
+  const [articlesSuggestions, setArticlesSuggestions] = useState([]);
   const trendingLastScore = useRef(null);
 
   useEffect(() => {
     if (from !== notesContentFrom) {
-      const straightUp = () => {
-        let el = document.querySelector(".main-page-nostr-container");
-        if (!el) return;
-        el.scrollTop = 0;
-      };
       straightUp();
       dispatchNotes({ type: "remove-events" });
       setNotesContentFrom(from);
@@ -442,6 +460,14 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       trendingLastScore.current = undefined;
     }
   }, [from]);
+
+  useEffect(() => {
+    straightUp();
+    dispatchNotes({ type: "remove-events" });
+    setNotesLastEventTime(undefined);
+    setUserFollowings([]);
+    if (notesLastEventTime === undefined) setRerenderTimestamp(Date.now());
+  }, [userKeys]);
 
   const getNotesFilter = async () => {
     let filter;
@@ -593,12 +619,16 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
     }
     if (!(Array.isArray(userFollowings) && notesContentFrom !== "trending"))
       return;
+
     const fetchData = async () => {
       setIsLoading(true);
       let eventsPubkeys = [];
       let events = [];
+      let fallBackEvents = [];
       let { filter } = await getNotesFilter();
-
+      let dateChecker = notesLastEventTime
+        ? notesLastEventTime - 86400
+        : Math.floor(Date.now() / 1000) - 86400;
       let subscription = ndkInstance.subscribe(filter, {
         groupable: false,
         skipValidation: true,
@@ -610,7 +640,8 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       subscription.on("event", async (event) => {
         eventsPubkeys.push(event.pubkey);
         let event_ = await getParsedNote(event);
-        if (event_) {
+        if (event_) fallBackEvents.push(event_);
+        if (event_ && event.created_at > dateChecker) {
           if (notesContentFrom !== "recent-with-replies") {
             if (!event_.isComment) {
               if (event.kind === 6) {
@@ -628,9 +659,13 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       });
 
       subscription.on("close", () => {
+        let tempEvents =
+          events.length > 0 ? Array.from(events) : Array.from(fallBackEvents);
+        // events = [];
+        // fallBackEvents = [];
         if (smallButtonDropDownOptions.includes(notesContentFrom))
-          dispatchNotes({ type: notesContentFrom, note: events });
-        else dispatchNotes({ type: "tags", note: events });
+          dispatchNotes({ type: notesContentFrom, note: tempEvents });
+        else dispatchNotes({ type: "tags", note: tempEvents });
         saveUsers(eventsPubkeys);
         setIsLoading(false);
       });
@@ -640,16 +675,90 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         clearTimeout(timer);
       }, 1000);
     };
+
     fetchData();
-  }, [notesLastEventTime, notesContentFrom]);
+  }, [notesLastEventTime, notesContentFrom, rerenderTimestamp]);
+
+  useEffect(() => {
+    let checkHiddenSuggestions = localStorage.getItem("hsuggest2");
+    const fetchContentSuggestions = async () => {
+      let tags = InterestSuggestions.sort(() => 0.5 - Math.random()).slice(
+        0,
+        3
+      );
+      tags = tags.map((_) => [_.main_tag, ..._.sub_tags]).flat();
+
+      let content = await getSubData(
+        [
+          {
+            kinds: [30023],
+            limit: 10,
+            "#t": !smallButtonDropDownOptions.includes(from) ? [from] : tags,
+          },
+        ],
+        200
+      );
+      if (content.data.length > 0) {
+        let data = content.data
+          .map((event) => getParsedRepEvent(event))
+          .filter((event) => {
+            if (event.title && event.image) return event;
+          });
+        if (data.length >= 3) {
+          setArticlesSuggestions(data.slice(0, 5));
+          saveUsers(content.pubkeys);
+        }
+      }
+    };
+    if (!checkHiddenSuggestions) fetchContentSuggestions();
+  }, [from]);
+
+  const getContentCard = (index) => {
+    if (index === 10)
+      return (
+        <ContentSuggestionsCards
+          tag={!smallButtonDropDownOptions.includes(from) ? from : false}
+          content={articlesSuggestions}
+          kind="articles"
+        />
+      );
+    if (index === 20) return <UserToFollowSuggestionsCards />;
+    if (index === 30)
+      return (
+        <InterestSuggestionsCards
+          limit={5}
+          list={userInterestList}
+          update={true}
+          expand={true}
+        />
+      );
+    if (index === 40) return <DonationBoxSuggestionCards />;
+    if (index === 50) return <ProfileShareSuggestionCards />;
+  };
 
   return (
     <div className="fx-centered  fx-wrap fit-container" style={{ gap: 0 }}>
       {notes[smallButtonDropDownOptions.includes(from) ? from : "tags"].map(
-        (note) => {
-          if (note.kind === 6)
-            return <KindSix event={note} key={note.id} border={true} />;
-          return <KindOne event={note} key={note.id} border={true} />;
+        (note, index) => {
+          if (!userMutedList.includes(note.pubkey)) {
+            if (
+              note.kind === 6 &&
+              !userMutedList.includes(note.relatedEvent.pubkey)
+            )
+              return (
+                <Fragment key={note.id}>
+                  <KindSix event={note} />
+                  {getContentCard(index)}
+                </Fragment>
+              );
+            if (note.kind !== 6)
+              return (
+                <Fragment key={note.id}>
+                  <KindOne event={note} border={true} />
+                  {getContentCard(index)}
+                </Fragment>
+              );
+          }
         }
       )}
 
@@ -659,8 +768,6 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
           className="fit-container box-pad-v fx-centered fx-col"
           style={{ height: "60vh" }}
         >
-          {/* <p className="gray-c">Loading</p>
-          <LoadingDots /> */}
           <LoadingLogo size={64} />
         </div>
       )}

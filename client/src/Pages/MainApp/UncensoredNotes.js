@@ -239,31 +239,40 @@ export default function UncensoredNotes() {
                     top: "0",
                     gap: 0,
                     zIndex: "100",
-                    borderBottom: "1px solid var(--very-dim-gray)"
+                    borderBottom: "1px solid var(--very-dim-gray)",
                   }}
                 >
                   <div className="fx-centered" style={{ columnGap: "16px" }}>
                     <div
                       onClick={() => handleContentType("new")}
-                      className={`list-item ${
-                        contentType == "new" ? "selected-list-item" : ""
-                      }`}
+                      className={"btn sticker-gray-black p-caps fx-centered"}
+                      style={{
+                        backgroundColor:
+                          contentType === "new" ? "" : "transparent",
+                        color: contentType === "new" ? "" : "var(--gray)",
+                      }}
                     >
                       New
                     </div>
                     <div
                       onClick={() => handleContentType("nmh")}
-                      className={`list-item ${
-                        contentType == "nmh" ? "selected-list-item" : ""
-                      }`}
+                      className={"btn sticker-gray-black p-caps fx-centered"}
+                      style={{
+                        backgroundColor:
+                          contentType === "nmh" ? "" : "transparent",
+                        color: contentType === "nmh" ? "" : "var(--gray)",
+                      }}
                     >
                       Needs your help
                     </div>
                     <div
                       onClick={() => handleContentType("sealed")}
-                      className={`list-item ${
-                        contentType == "sealed" ? "selected-list-item" : ""
-                      }`}
+                      className={"btn sticker-gray-black p-caps fx-centered"}
+                      style={{
+                        backgroundColor:
+                          contentType === "sealed" ? "" : "transparent",
+                        color: contentType === "sealed" ? "" : "var(--gray)",
+                      }}
                     >
                       Rated helpful
                     </div>
@@ -502,7 +511,6 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
           img={data.author.picture}
           size={38}
           user_id={data.author.pubkey}
-          ring={false}
           metadata={data.author}
         />
       </div>

@@ -63,6 +63,7 @@ export default function ShareLink({
   const dispatch = useDispatch();
   const [showSharing, setShowSharing] = useState(false);
   const [showCopyURL, setShowCopyURL] = useState(false);
+  const [showShareSocial, setShowShareSocial] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [nostrURL, setNostURL] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -124,23 +125,30 @@ export default function ShareLink({
       setShowSharing(true);
     }
   };
-
+  if (!shareImgData && isMobile) {
+    handleSharingInMobile();
+    return;
+  }
   return (
     <>
       {showSharing && (
         <div
-          className="fixed-container fx-centered"
+          className="fixed-container fx-centered box-pad-h"
           onClick={(e) => {
             e.stopPropagation();
             setShowSharing(false);
           }}
         >
           <div
-            className="box-pad-v box-pad-h fx-centered fx-col sc-s"
+            className="box-pad-v-m box-pad-h-m fx-centered fx-col sc-s-18"
             onClick={(e) => e.stopPropagation()}
+            style={{ position: "relative", width: "400px", gap: 0 }}
           >
-            <h3>Share on</h3>
-            {shareImgData && !showCopyURL && (
+            <div className="close" onClick={() => setShowSharing(false)}>
+              <div></div>
+            </div>
+            <h4 className="box-marg-s">Share on</h4>
+            {shareImgData && !showCopyURL && !showShareSocial && (
               <ShareImg
                 data={shareImgData}
                 kind={kind}
@@ -149,99 +157,45 @@ export default function ShareLink({
                 setIsLoading={setIsLoading}
               />
             )}
-            <div className="fx-centered" style={{ columnGap: "30px" }}>
-              {!showCopyURL && (
-                <>
-                  {shareImgData && (
-                    <div
-                      className={isLoading ? "flash" : "icon-tooltip"}
-                      data-tooltip="Download image"
-                      onClick={() => (isLoading ? null : convert())}
-                    >
-                      <div className="download-file-24"></div>
-                    </div>
-                  )}
+            {!(showCopyURL || showShareSocial) && (
+              <div
+                className="fit-container fx-centered fx-col"
+                style={{ columnGap: "30px" }}
+              >
+                <div className="fx-centered fit-container">
                   {!isMobile && (
-                    <>
-                      <a
-                        className="twitter-share-button icon-tooltip"
-                        href={`https://twitter.com/intent/tweet?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
-                        target="_blank"
-                        data-tooltip="Share on X"
-                      >
-                        <div className="twitter-logo-24"></div>
-                      </a>
-                      <div
-                        className="fb-share-button"
-                        data-href={`${`${
-                          window.location.protocol
-                        }//${"yakihonne.com"}${path}`}`}
-                        data-layout=""
-                        data-size=""
-                      >
-                        <a
-                          target="_blank"
-                          href={`https://www.facebook.com/sharer/sharer.php?u=${`${
-                            window.location.protocol
-                          }//${"yakihonne.com"}${path}`}%2F&amp;src=sdkpreparse`}
-                          className="fb-xfbml-parse-ignore icon-tooltip"
-                          data-tooltip="Share on Facebook"
-                        >
-                          <div className="fb-icon-24"></div>
-                        </a>
-                      </div>
-                      <a
-                        href={`whatsapp://send?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
-                        data-action="share/whatsapp/share"
-                        target="_blank"
-                        className="twitter-share-button icon-tooltip"
-                        data-tooltip="Share on Whatsapp"
-                      >
-                        <div className="whatsapp-icon-24"></div>
-                      </a>
-                      <a
-                        href={`https://www.linkedin.com/shareArticle?mini=true&url=${`${
-                          window.location.protocol
-                        }//${"yakihonne.com"}${path}`}&title=${title}&summary=${description}&source=${"https://yakihonne.com"}`}
-                        data-action="share/whatsapp/share"
-                        target="_blank"
-                        className="twitter-share-button icon-tooltip"
-                        data-tooltip="Share on LinkedIn"
-                      >
-                        <div className="in-icon-24"></div>
-                      </a>
-                      <div
-                        className="icon-tooltip"
-                        data-tooltip="Copy link"
-                        onClick={() => setShowCopyURL(true)}
-                      >
-                        <div className="link-24 "></div>
-                      </div>
-                    </>
-                  )}
-                  {isMobile && (
-                    <div
-                      className="icon-tooltip"
-                      data-tooltip="Copy link"
-                      onClick={handleSharingInMobile}
+                    <button
+                      className="btn btn-normal btn-full fx-centered"
+                      onClick={() => setShowShareSocial(true)}
                     >
-                      <div className="link-24 "></div>
-                    </div>
+                      Share on social
+                    </button>
                   )}
-                  <div
-                    className="icon-tooltip"
-                    data-tooltip="Copy n*"
-                    onClick={() => copyLink(nostrURL.split("nostr:")[1], "n*")}
+                  <button
+                    className="btn btn-normal btn-full fx-centered"
+                    onClick={() =>
+                      isMobile ? handleSharingInMobile() : setShowCopyURL(true)
+                    }
                   >
-                    <div className="copy-24"></div>
-                  </div>
-                </>
-              )}
-            </div>
+                    Copy link
+                  </button>
+                </div>
+                {shareImgData && (
+                  <button
+                    className={`btn btn-gray btn-full ${
+                      isLoading ? "flash" : "icon-tooltip"
+                    } fx-centered`}
+                    onClick={() => (isLoading ? null : convert())}
+                  >
+                    <div className="download-file"></div> Download image
+                  </button>
+                )}
+              </div>
+            )}
             {showCopyURL && (
               <div
-                className="fit-container fx-centered fx-col fx-start-v sc-s-18 box-pad-h-m box-pad-v-m slide-up"
-                style={{ marginTop: "1rem", maxWidth: "400px" }}
+                className="fit-container fx-centered fx-col fx-start-v  slide-up"
+                style={{ maxWidth: "400px" }}
               >
                 <p className="c1-c p-left fit-container">Human-readable URL</p>
                 <div
@@ -265,23 +219,78 @@ export default function ShareLink({
                   <p className="p-one-line">{nostrURL}</p>
                   <div className="copy-24"></div>
                 </div>
+                <button
+                  className="btn btn-normal btn-full fx-centered"
+                  onClick={() => setShowCopyURL(false)}
+                >
+                  <div className="arrow" style={{ rotate: "90deg" }}></div>
+                  Back
+                </button>
               </div>
             )}
-            {showCopyURL && (
+            {showShareSocial && (
               <div
-                className="close"
-                style={{ position: "static" }}
-                onClick={() => setShowCopyURL(false)}
+                className="fit-container fx-centered fx-col fx-start-v  slide-up"
+                style={{  maxWidth: "400px" }}
               >
-                <div></div>
+                <a
+                  className="twitter-share-button btn-gray btn btn-full fx-centered"
+                  href={`https://twitter.com/intent/tweet?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
+                  target="_blank"
+                >
+                  <div className="twitter-logo-24"></div> X (former Twitter)
+                </a>
+                <button className="btn btn-gray btn-full fx-centered">
+                  <div
+                    className="fb-share-button "
+                    data-href={`${`${
+                      window.location.protocol
+                    }//${"yakihonne.com"}${path}`}`}
+                    data-layout=""
+                    data-size=""
+                  >
+                    <a
+                      target="_blank"
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${`${
+                        window.location.protocol
+                      }//${"yakihonne.com"}${path}`}%2F&amp;src=sdkpreparse`}
+                      className="fb-xfbml-parse-ignore fx-centered"
+                    >
+                      <div className="fb-icon-24"></div> Facebook
+                    </a>
+                  </div>
+                </button>
+                <a
+                  href={`whatsapp://send?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
+                  data-action="share/whatsapp/share"
+                  target="_blank"
+                  className="twitter-share-button fit-container"
+                >
+                  <button className="btn btn-gray btn-full fx-centered">
+                    <div className="whatsapp-icon-24"></div> WhatsApp
+                  </button>
+                </a>
+                <a
+                  href={`https://www.linkedin.com/shareArticle?mini=true&url=${`${
+                    window.location.protocol
+                  }//${"yakihonne.com"}${path}`}&title=${title}&summary=${description}&source=${"https://yakihonne.com"}`}
+                  data-action="share/whatsapp/share"
+                  target="_blank"
+                  className="twitter-share-button fit-container"
+                >
+                  <button className="btn btn-gray btn-full fx-centered">
+                    <div className="in-icon-24"></div> LinkedIn
+                  </button>
+                </a>
+                <button
+                  className="btn btn-normal btn-full fx-centered"
+                  onClick={() => setShowShareSocial(false)}
+                >
+                  <div className="arrow" style={{ rotate: "90deg" }}></div>
+                  Back
+                </button>
               </div>
             )}
-            <button
-              className="btn-text btn"
-              onClick={() => setShowSharing(false)}
-            >
-              Cancel
-            </button>
           </div>
         </div>
       )}
@@ -296,6 +305,250 @@ export default function ShareLink({
     </>
   );
 }
+// export default function ShareLink({
+//   label = false,
+//   path = "",
+//   title = "",
+//   description = "",
+//   shareImgData = false,
+//   kind = false,
+// }) {
+//   const dispatch = useDispatch();
+//   const [showSharing, setShowSharing] = useState(false);
+//   const [showCopyURL, setShowCopyURL] = useState(false);
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [nostrURL, setNostURL] = useState("");
+//   const [isMobile, setIsMobile] = useState(false);
+//   const [_, convert, ref] = useToPng({
+//     selector: "#to-print",
+//     quality: 0.8,
+//     onSuccess: (data) => {
+//       const link = document.createElement("a");
+//       link.download = "shared-from-YAKIHONNE.jpeg";
+//       link.href = data;
+//       link.click();
+//     },
+//   });
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       let url = await getNostrLink(path);
+//       setNostURL(url);
+//     };
+//     fetchData();
+//   }, []);
+
+//   const copyLink = (toCopy, type = "URL") => {
+//     navigator.clipboard.writeText(toCopy);
+//     dispatch(
+//       setToast({
+//         type: 1,
+//         desc: `${type} was copied! 👏`,
+//       })
+//     );
+//   };
+//   const handleSharing = async (e) => {
+//     e.stopPropagation();
+//     let isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
+//     if (navigator.share && isTouchScreen) {
+//       setIsMobile(true);
+//       setShowSharing(true);
+//     } else {
+//       setShowSharing(true);
+//       console.log(
+//         "Web share is currently not supported on this browser. Please provide a callback"
+//       );
+//     }
+//   };
+
+//   const handleSharingInMobile = async () => {
+//     if (navigator.share) {
+//       try {
+//         let shareDetails = {
+//           url: `${window.location.protocol}//${window.location.hostname}${path}`,
+//           title: title,
+//           text: description,
+//         };
+//         await navigator.share(shareDetails).then(() => console.log("shared"));
+//       } catch (error) {
+//         console.log(`Oops! I couldn't share to the world because: ${error}`);
+//       }
+//     } else {
+//       setShowSharing(true);
+//     }
+//   };
+
+//   return (
+//     <>
+//       {showSharing && (
+//         <div
+//           className="fixed-container fx-centered"
+//           onClick={(e) => {
+//             e.stopPropagation();
+//             setShowSharing(false);
+//           }}
+//         >
+//           <div
+//             className="box-pad-v box-pad-h fx-centered fx-col sc-s"
+//             onClick={(e) => e.stopPropagation()}
+//           >
+//             <h3>Share on</h3>
+//             {shareImgData && !showCopyURL && (
+//               <ShareImg
+//                 data={shareImgData}
+//                 kind={kind}
+//                 path={`${window.location.protocol}//${window.location.hostname}${path}`}
+//                 isLoading={isLoading}
+//                 setIsLoading={setIsLoading}
+//               />
+//             )}
+//             <div className="fx-centered" style={{ columnGap: "30px" }}>
+//               {!showCopyURL && (
+//                 <>
+//                   {shareImgData && (
+//                     <div
+//                       className={isLoading ? "flash" : "icon-tooltip"}
+//                       data-tooltip="Download image"
+//                       onClick={() => (isLoading ? null : convert())}
+//                     >
+//                       <div className="download-file-24"></div>
+//                     </div>
+//                   )}
+//                   {!isMobile && (
+//                     <>
+//                       <a
+//                         className="twitter-share-button icon-tooltip"
+//                         href={`https://twitter.com/intent/tweet?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
+//                         target="_blank"
+//                         data-tooltip="Share on X"
+//                       >
+//                         <div className="twitter-logo-24"></div>
+//                       </a>
+//                       <div
+//                         className="fb-share-button"
+//                         data-href={`${`${
+//                           window.location.protocol
+//                         }//${"yakihonne.com"}${path}`}`}
+//                         data-layout=""
+//                         data-size=""
+//                       >
+//                         <a
+//                           target="_blank"
+//                           href={`https://www.facebook.com/sharer/sharer.php?u=${`${
+//                             window.location.protocol
+//                           }//${"yakihonne.com"}${path}`}%2F&amp;src=sdkpreparse`}
+//                           className="fb-xfbml-parse-ignore icon-tooltip"
+//                           data-tooltip="Share on Facebook"
+//                         >
+//                           <div className="fb-icon-24"></div>
+//                         </a>
+//                       </div>
+//                       <a
+//                         href={`whatsapp://send?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
+//                         data-action="share/whatsapp/share"
+//                         target="_blank"
+//                         className="twitter-share-button icon-tooltip"
+//                         data-tooltip="Share on Whatsapp"
+//                       >
+//                         <div className="whatsapp-icon-24"></div>
+//                       </a>
+//                       <a
+//                         href={`https://www.linkedin.com/shareArticle?mini=true&url=${`${
+//                           window.location.protocol
+//                         }//${"yakihonne.com"}${path}`}&title=${title}&summary=${description}&source=${"https://yakihonne.com"}`}
+//                         data-action="share/whatsapp/share"
+//                         target="_blank"
+//                         className="twitter-share-button icon-tooltip"
+//                         data-tooltip="Share on LinkedIn"
+//                       >
+//                         <div className="in-icon-24"></div>
+//                       </a>
+//                       <div
+//                         className="icon-tooltip"
+//                         data-tooltip="Copy link"
+//                         onClick={() => setShowCopyURL(true)}
+//                       >
+//                         <div className="link-24 "></div>
+//                       </div>
+//                     </>
+//                   )}
+//                   {isMobile && (
+//                     <div
+//                       className="icon-tooltip"
+//                       data-tooltip="Copy link"
+//                       onClick={handleSharingInMobile}
+//                     >
+//                       <div className="link-24 "></div>
+//                     </div>
+//                   )}
+//                   <div
+//                     className="icon-tooltip"
+//                     data-tooltip="Copy n*"
+//                     onClick={() => copyLink(nostrURL.split("nostr:")[1], "n*")}
+//                   >
+//                     <div className="copy-24"></div>
+//                   </div>
+//                 </>
+//               )}
+//             </div>
+//             {showCopyURL && (
+//               <div
+//                 className="fit-container fx-centered fx-col fx-start-v sc-s-18 box-pad-h-m box-pad-v-m slide-up"
+//                 style={{ marginTop: "1rem", maxWidth: "400px" }}
+//               >
+//                 <p className="c1-c p-left fit-container">Human-readable URL</p>
+//                 <div
+//                   className={`fx-scattered if pointer fit-container dashed-onH`}
+//                   style={{ borderStyle: "dashed" }}
+//                   onClick={() =>
+//                     copyLink(
+//                       `${window.location.protocol}//${window.location.hostname}${path}`
+//                     )
+//                   }
+//                 >
+//                   <p className="p-one-line">{`${window.location.protocol}//${window.location.hostname}${path}`}</p>
+//                   <div className="copy-24"></div>
+//                 </div>
+//                 <p className="c1-c p-left fit-container">Nostr URL</p>
+//                 <div
+//                   className="fx-scattered if pointer dashed-onH fit-container"
+//                   style={{ borderStyle: "dashed" }}
+//                   onClick={() => copyLink(nostrURL)}
+//                 >
+//                   <p className="p-one-line">{nostrURL}</p>
+//                   <div className="copy-24"></div>
+//                 </div>
+//               </div>
+//             )}
+//             {showCopyURL && (
+//               <div
+//                 className="close"
+//                 style={{ position: "static" }}
+//                 onClick={() => setShowCopyURL(false)}
+//               >
+//                 <div></div>
+//               </div>
+//             )}
+//             <button
+//               className="btn-text btn"
+//               onClick={() => setShowSharing(false)}
+//             >
+//               Cancel
+//             </button>
+//           </div>
+//         </div>
+//       )}
+//       <div
+//         className={label ? "fx-scattered fit-container" : "icon-tooltip"}
+//         data-tooltip="Share"
+//         onClick={handleSharing}
+//       >
+//         {label && <p>{label}</p>}
+//         <div className="share-v2-24"></div>
+//       </div>
+//     </>
+//   );
+// }
 
 const ShareImg = ({ data, kind, path, setIsLoading }) => {
   const followersCountSL = useSelector((state) => state.followersCountSL);
@@ -334,7 +587,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
   if (kind === 1)
     return (
       <div
-        className="box-pad-h box-pad-v fx-centered fx-col"
+        className="box-pad-h box-pad-v fx-centered fx-col "
         id="to-print"
         style={{ width: "380px", maxHeight: "600px", minHeight: "400px" }}
       >
@@ -432,9 +685,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
               <UserProfilePicNOSTR
                 mainAccountUser={false}
                 size={24}
-                ring={true}
                 img={ppBase64}
-                // img={`${data.author.picture}?test=123`}
                 allowClick={false}
               />
               <div>
@@ -585,7 +836,6 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
               <UserProfilePicNOSTR
                 mainAccountUser={false}
                 size={98}
-                ring={true}
                 img={ppBase64}
                 // img={`${data.author.picture}?test=123`}
                 allowClick={false}
@@ -801,9 +1051,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 <UserProfilePicNOSTR
                   mainAccountUser={false}
                   size={24}
-                  ring={true}
                   img={ppBase64}
-                  // img={`${data.author.picture}?test=123`}
                   allowClick={false}
                 />
                 <div>

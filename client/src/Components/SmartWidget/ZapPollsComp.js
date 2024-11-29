@@ -806,7 +806,7 @@ const Cashier = ({
             <UserProfilePicNOSTR
               size={54}
               mainAccountUser={true}
-              ring={false}
+              
             />
             <p className="gray-c p-medium">{userMetadata.name}</p>
           </div>
@@ -830,7 +830,7 @@ const Cashier = ({
               size={54}
               img={recipientInfo.img || recipientInfo.picture}
               mainAccountUser={false}
-              ring={false}
+              
             />
             <p className="gray-c p-medium">{recipientInfo.name}</p>
           </div>

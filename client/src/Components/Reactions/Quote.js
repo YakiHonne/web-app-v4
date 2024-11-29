@@ -6,6 +6,7 @@ import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import QuoteNote from "../Main/QuoteNote";
 import { extractNip19 } from "../../Helpers/Helpers";
+import WriteNote from "../Main/WriteNote";
 
 export default function Quote({ isQuoted, event, actions }) {
   const dispatch = useDispatch();
@@ -72,12 +73,22 @@ export default function Quote({ isQuoted, event, actions }) {
   return (
     <>
       {showQuoteBox && (
-        <QuoteNote
-          isLoading={isLoading}
-          note={event}
-          exit={() => setShowQuoteBox(false)}
-          reactToNote={reactToNote}
-        />
+        // <QuoteNote
+        //   isLoading={isLoading}
+        //   note={event}
+        //   exit={() => setShowQuoteBox(false)}
+        //   reactToNote={reactToNote}
+        // />
+        <div className="fixed-container fx-centered box-pad-h">
+          <div style={{ width: "min(100%, 600px)" }}>
+            <WriteNote
+              exit={() => setShowQuoteBox(false)}
+              linkedEvent={event}
+              isQuote={true}
+              content={""}
+            />
+          </div>
+        </div>
       )}
       <div
         className={"icon-tooltip"}

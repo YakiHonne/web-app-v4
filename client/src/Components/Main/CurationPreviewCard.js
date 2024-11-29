@@ -739,7 +739,7 @@ export default function CurationPreviewCard({ curationEv }) {
                                     img={item.author_img}
                                     mainAccountUser={false}
                                     user_id={item.author_pubkey}
-                                    ring={false}
+                                    
                                   />
                                   <p className="gray-c p-medium">
                                     By{" "}
@@ -767,7 +767,7 @@ export default function CurationPreviewCard({ curationEv }) {
                                     img={item.author_img}
                                     mainAccountUser={false}
                                     user_id={item.author_pubkey}
-                                    ring={false}
+                                    
                                   />
                                   <p className="gray-c p-medium">
                                     By{" "}
@@ -967,7 +967,7 @@ const AuthorPreview_1 = ({ author }) => {
         mainAccountUser={false}
         allowClick={true}
         user_id={author.pubkey}
-        ring={false}
+        
       />
       <p>
         Posted by <span className="c1-c">{author.name}</span>

@@ -1,4 +1,4 @@
-import React, {  useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SimplePool,
   nip04,
@@ -19,19 +19,17 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 
 export default function InitiConvo({ exit, receiver = false }) {
-  const dispatch = useDispatch()
-  const userKeys = useSelector(state => state.userKeys)
-  const userRelays = useSelector(state => state.userRelays)
-  const isPublishing = useSelector(state => state.isPublishing)
-  const toPublish = useSelector(state => state.toPublish)
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userRelays = useSelector((state) => state.userRelays);
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
   const [message, setMessage] = useState("");
-  const [legacy, setLegacy] = useState(true);
+  const [legacy, setLegacy] = useState(userKeys.sec || window?.nostr?.nip44 ? false : true);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isPublishing && toPublish) exit();
-  }, [isPublishing]);
+  // useEffect(() => {
+  //   if (!isPublishing && toPublish) exit();
+  // }, [isPublishing]);
 
   const handleSendMessage = async () => {
     if (
@@ -42,16 +40,21 @@ export default function InitiConvo({ exit, receiver = false }) {
     )
       return;
 
-    let relaysToPublish = userRelays
+    let relaysToPublish = userRelays;
 
     if (legacy) {
       setIsLoading(true);
       let encryptedMessage = "";
       if (userKeys.ext) {
-        encryptedMessage = await window.nostr.nip04.encrypt(
-          selectedPerson,
-          message
-        );
+        try {
+          encryptedMessage = await window.nostr.nip04.encrypt(
+            selectedPerson,
+            message
+          );
+        } catch (err) {
+          setIsLoading(false);
+          return;
+        }
       } else {
         encryptedMessage = await nip04.encrypt(
           userKeys.sec,
@@ -80,10 +83,14 @@ export default function InitiConvo({ exit, receiver = false }) {
       } else {
         tempEvent = finalizeEvent(tempEvent, userKeys.sec);
       }
-      dispatch(setToPublish({
-        eventInitEx: tempEvent,
-        allRelays: relaysToPublish,
-      }));
+      dispatch(
+        setToPublish({
+          eventInitEx: tempEvent,
+          allRelays: relaysToPublish,
+        })
+      );
+      setIsLoading(false);
+      exit();
     }
     if (!legacy) {
       let { sender_event, receiver_event } = await getGiftWrap();
@@ -101,6 +108,8 @@ export default function InitiConvo({ exit, receiver = false }) {
             ? "dms-10"
             : "dms-5";
         updateYakiChest(action_key);
+        setIsLoading(false);
+        exit();
       } else {
         setIsLoading(false);
       }
@@ -115,7 +124,7 @@ export default function InitiConvo({ exit, receiver = false }) {
       let { user_stats, is_updated } = data.data;
 
       if (is_updated) {
-        dispatch( setUpdatedActionFromYakiChest(is_updated));
+        dispatch(setUpdatedActionFromYakiChest(is_updated));
         updateYakiChestStats(user_stats);
       }
       exit();
@@ -208,25 +217,31 @@ export default function InitiConvo({ exit, receiver = false }) {
       ]);
 
       if (res1.status === "rejected") {
-        dispatch(setToast({
-          type: 2,
-          desc: "Error sending the message.",
-        }));
+        dispatch(
+          setToast({
+            type: 2,
+            desc: "Error sending the message.",
+          })
+        );
         return false;
       }
 
-      dispatch(setToast({
-        type: 1,
-        desc: "Message sent!",
-      }));
+      dispatch(
+        setToast({
+          type: 1,
+          desc: "Message sent!",
+        })
+      );
 
       return true;
     } catch (err) {
       console.log(err);
-      dispatch(setToast({
-        type: 2,
-        desc: "Error sending the message.",
-      }));
+      dispatch(
+        setToast({
+          type: 2,
+          desc: "Error sending the message.",
+        })
+      );
       return false;
     }
   };
@@ -256,7 +271,7 @@ export default function InitiConvo({ exit, receiver = false }) {
               pubkey={selectedPerson}
               margin={false}
               close={receiver ? false : true}
-              showSharing={false}
+              showSha
               onClose={() => setSelectedPerson("")}
             />
           )}

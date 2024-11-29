@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ymaQR from "../media/images/yma-qr.png";
+import { setToast } from "../Store/Slides/Publishers";
+import { useDispatch } from "react-redux";
+import DonationBoxSuggestionCards from "./SuggestionsCards/DonationBoxSuggestionCards";
 
 const content = [
   {
@@ -34,6 +38,7 @@ const content = [
 
 export default function YakiIntro() {
   const [swipe, setSwipe] = useState(false);
+  const [showMobileAd, setShowMobileAd] = useState(false);
   const [up, setUp] = useState(false);
 
   useEffect(() => {
@@ -50,16 +55,21 @@ export default function YakiIntro() {
   return (
     <>
       {swipe && <Banner exit={() => setSwipe(false)} />}
+      {/* {showMobileAd &&  <MobileAppQR exit={() => setShowMobileAd(false)}/>} */}
       <div
         style={{
           position: "fixed",
           right: "38px",
           bottom: up ? "94px" : "16px",
+          // top: "16px",
           transition: ".2s ease-in-out",
           zIndex: "1000000",
         }}
         className="fx-centered fx-end-h"
       >
+        {/* <button className="btn btn-gray btn-small">Mobile app</button> */}
+        {/* onClick={() => setShowMobileAd(true)} */}
+        {/* <button className="btn btn-gst" style={{backgroundColor: "var(--orange-side)", boxShadow: "0 4px 25px  var(--orange-side)"}}>Mobile app</button> */}
         {!swipe && (
           <div className="slide-right" onClick={() => setSwipe(!swipe)}>
             {/* <div className="bunny-icon"></div> */}
@@ -70,6 +80,53 @@ export default function YakiIntro() {
     </>
   );
 }
+
+const MobileAppQR = ({ exit }) => {
+  const dispatch = useDispatch();
+  const copyKey = (keyType, key) => {
+    navigator.clipboard.writeText(key);
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `${keyType} was copied! 👏`,
+      })
+    );
+  };
+  return (
+    <div className="fixed-container fx-centered box-pad-h">
+      <div
+        style={{ width: "min(100%, 350px)", position: "relative" }}
+        className="fx-centered fx-col box-pad-h box-pad-v sc-s-18 bg-sp"
+      >
+        <div className="close" onClick={exit}>
+          <div></div>
+        </div>
+        <h4>Get the mobile app</h4>
+        <p className="gray-c p-centered" style={{ maxWidth: "250px" }}>
+          Download the YakiHonne app for Android or iOS
+        </p>
+        <div className="fit-container ">
+          <img
+            className="sc-s-18 fit-container"
+            src={ymaQR}
+            style={{ aspectRatio: "1/1" }}
+          />
+        </div>
+        <div
+          className={"fx-scattered if pointer fit-container dashed-onH"}
+          style={{ borderStyle: "dashed" }}
+          onClick={() =>
+            copyKey("Link", `https://yakihonne.com/yakihonne-mobile-app-links`)
+          }
+        >
+          <div className="link-24"></div>
+          <p className="p-one-line">{`https://yakihonne.com/yakihonne-mobile-app-links`}</p>
+          <div className="copy-24"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Banner = ({ exit }) => {
   return (
@@ -106,7 +163,7 @@ const Banner = ({ exit }) => {
           backgroundColor: "transparent",
           border: "none",
         }}
-        className="sc-s-18 bg-img cover-bg fx-centered fx-start-v slide-right carouselX"
+        className="sc-s-18 bg-img cover-bg fx-centered fx-start-v "
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -133,15 +190,10 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- A fresh design overhaul for the article, video, and curation pages, enabling seamless browsing and enhanced interaction with content.
-- Connected threads! A refined notes thread makes following entire discussions more intuitive.
-- Users can now personalize their home feed by selecting their top interests.
-- Replies can now be previewed directly from the note card, without needing to open the full note.
-- Wallets can now be linked to your account directly from the wallet page.
-- Drafts for notes and replies are now saved, allowing easy edits later.
-- The suggestions box on the home page can now be hidden.
-- The on-hover user preview can now be disabled for quicker access to profiles.
-- Articles, videos and curations can now be quoted and shared as notes.
+- An upgraded note editor with new tools like GIFs and emojis, plus real-time previews.
+- Support for additional media uploaders, including options to add custom servers.
+- Expanded search capabilities, allowing users to find more content on the search page.
+- New browsing suggestions for notes, media, users, and more.
 - General improvements.
 - Bug fixes and optimizations.
 `}</p>
@@ -196,7 +248,8 @@ const Banner = ({ exit }) => {
               </Link>
             );
           })}
-          <div className="box-pad-v"></div>
+          <DonationBoxSuggestionCards padding={false} />
+          {/* <div className="box-pad-v"></div> */}
         </div>
       </div>
     </div>
