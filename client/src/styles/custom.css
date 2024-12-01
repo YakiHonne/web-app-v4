@@ -1122,8 +1122,9 @@ main {
     font-weight: 300 !important; */
     font-family: Source Code Pro, Consolas, monaco, monospace;
     font-size: 1.025rem !important;
-    letter-spacing: .025em !important;
-    line-height: 140% !important;
+    letter-spacing: .025rem !important;
+    line-height: 1.5em !important;
+    /* line-height: 140% !important; */
 }
 
 .w-md-editor-toolbar {

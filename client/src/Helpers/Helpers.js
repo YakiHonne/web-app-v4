@@ -387,21 +387,37 @@ const getComponent = (children) => {
                 .replace(".", "")
                 .replace(",", "");
 
-              res.push(<Nip19Parsing addr={nip19add} key={key} />);
+              res.push(
+                <>
+                  <Nip19Parsing addr={nip19add} key={key} />{" "}
+                </>
+              );
             }
           } catch (err) {
             res.push(
-              <p dir="auto" key={key}>
-                {child_.split("nostr:")[1]}
-              </p>
+              <span
+                dir="auto"
+                key={key}
+                style={{
+                  wordBreak: "break-word",
+                }}
+              >
+                {child_.split("nostr:")[1]}{" "}
+              </span>
             );
           }
         }
         if (!child_.startsWith("nostr:")) {
           res.push(
-            <p dir="auto" key={key}>
-              {child_}
-            </p>
+            <span
+              dir="auto"
+              key={key}
+              style={{
+                wordBreak: "break-word",
+              }}
+            >
+              {child_}{" "}
+            </span>
           );
         }
       }
@@ -422,19 +438,24 @@ const getComponent = (children) => {
         );
       } else
         res.push(
-          <p dir="auto" key={key}>
-            {children[i]}
-          </p>
+          <span
+            dir="auto"
+            key={key}
+            style={{
+              wordBreak: "break-word",
+            }}
+          >
+            {children[i]}{" "}
+          </span>
         );
     }
   }
   return (
-    <div
-      className="fx-centered fx-start-h fx-wrap fit-container"
-      style={{ columnGap: "3px", rowGap: "8px" }}
-    >
-      {mergeConsecutivePElements(res)}
-    </div>
+    // <div
+    //   className="fx-centered fx-start-h fx-wrap fit-container"
+    //   style={{ columnGap: "3px", rowGap: "8px" }}
+    // >
+    <div className="fit-container">{mergeConsecutivePElements(res)}</div>
   );
 };
 
