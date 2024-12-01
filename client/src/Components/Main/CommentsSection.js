@@ -45,7 +45,13 @@ const filterRootComments = async (all) => {
   let temp = [];
 
   for (let comment of all) {
-    if (!comment.tags.find((item) => item[0] === "e" && item[3] === "reply")) {
+    let isRoot = comment.tags.find(
+      (item) => item[0] === "e" && item[3] === "root"
+    );
+    let isReply = comment.tags.find(
+      (item) => item[0] === "e" && item[3] === "reply"
+    );
+    if (!isReply || isRoot[1] === isReply[1]) {
       let [note_tree, replies] = await Promise.all([
         getParsedNote(comment),
         countReplies(comment.id, all),
@@ -56,6 +62,7 @@ const filterRootComments = async (all) => {
       });
     }
   }
+  console.log(all);
   return temp;
 };
 
@@ -114,7 +121,7 @@ export default function CommentsSection({
   useEffect(() => {
     let parsedCom = async () => {
       let res = await filterComments(comments, id, isRoot);
-
+      console.log(res);
       setNetComments(res);
       if (res.length !== 0 || comments.length > 0) setIsLoading(false);
     };
@@ -133,6 +140,7 @@ export default function CommentsSection({
         ],
         500
       );
+
       let tempEvents = events.data
         .map((event) => {
           let is_un = event.tags.find((tag) => tag[0] === "l");
@@ -143,7 +151,7 @@ export default function CommentsSection({
           let is_mention = event.tags.filter(
             (tag) => tag.length > 3 && tag[3] === "mention" && tag[1] === id
           );
-    
+
           if (
             !(
               (is_un && is_un[1] === "UNCENSORED NOTE") ||
@@ -157,6 +165,7 @@ export default function CommentsSection({
         .filter((_) => _);
 
       if (tempEvents.length === 0) setIsLoading(false);
+
       setComments(tempEvents);
       saveUsers(events.pubkeys);
     };
