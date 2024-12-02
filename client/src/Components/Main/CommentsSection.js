@@ -62,7 +62,6 @@ const filterRootComments = async (all) => {
       });
     }
   }
-  console.log(all);
   return temp;
 };
 
@@ -121,7 +120,6 @@ export default function CommentsSection({
   useEffect(() => {
     let parsedCom = async () => {
       let res = await filterComments(comments, id, isRoot);
-      console.log(res);
       setNetComments(res);
       if (res.length !== 0 || comments.length > 0) setIsLoading(false);
     };
