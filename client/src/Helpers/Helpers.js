@@ -122,8 +122,10 @@ const isImageUrlSync = (url) => {
 const getNoteTree = async (note, minimal = false) => {
   if (!note) return "";
   let tree = note
-    .trim()
-    .split(/(\s|\n)+/)
+    .split(/(\n)/) // Split by newlines, capturing them as separate elements
+    .flatMap(
+      (segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)) // Keep newlines as-is, split other segments by spaces
+    )
     .filter(Boolean);
   let finalTree = [];
 
