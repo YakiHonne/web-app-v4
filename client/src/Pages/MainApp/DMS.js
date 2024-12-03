@@ -25,6 +25,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { checkCurrentConvo } from "../../Helpers/DB";
+import Emojis from "../../Components/Emojis";
+import Gifs from "../../Components/Gifs";
 
 export default function DMS() {
   const userKeys = useSelector((state) => state.userKeys);
@@ -655,6 +657,7 @@ const ConversationBox = ({ convo, back }) => {
   const [replayOn, setReplayOn] = useState("");
   const [showProgress, setShowProgress] = useState(false);
   const [showEmojisList, setShowEmojisList] = useState(false);
+  const [showGifs, setShowGifs] = useState(false);
   const [peerName, setPeerName] = useState(
     convo.display_name?.substring(0, 10) ||
       convo.name?.substring(0, 10) ||
@@ -839,7 +842,7 @@ const ConversationBox = ({ convo, back }) => {
       className="fit-container fx-scattered fx-col"
       style={{ height: "100%", rowGap: 0 }}
       onClick={() => {
-        if (inputFieldRef.current) inputFieldRef.current.focus();
+        // if (inputFieldRef.current) inputFieldRef.current.focus();
         setShowEmojisList(false);
       }}
     >
@@ -973,7 +976,6 @@ const ConversationBox = ({ convo, back }) => {
                     </div>
                   </div>
                 )}
-
                 <div
                   className="sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-start-h fx-start-v fx-col"
                   style={{
@@ -987,7 +989,7 @@ const ConversationBox = ({ convo, back }) => {
                     overflow: "visible",
                   }}
                 >
-                  {convo.content || <LoadingDots />}
+                  {<div>{convo.content}</div> || <LoadingDots />}
                   <div
                     className="fx-centered fx-start-h round-icon-tooltip pointer"
                     data-tooltip={
@@ -1096,44 +1098,60 @@ const ConversationBox = ({ convo, back }) => {
             handleSendMessage();
           }}
         >
-          <input
-            type="text"
-            className="if ifs-full"
-            placeholder="Type a message.."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            ref={inputFieldRef}
-            disabled={showProgress}
-          />
-          <div>
-            {showEmojisList && (
+          <div className="sc-s-18 fx-centered fit-container box-pad-h-m" style={{overflow: "visible", backgroundColor: "transparent"}}>
+            <input
+              type="text"
+              className="if ifs-full if-no-border"
+              placeholder="Type a message.."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              ref={inputFieldRef}
+              disabled={showProgress}
+              autoFocus
+              style={{padding: 0}}
+            />
+            <div className="fx-centered ">
+              <Emojis
+                position="right"
+                setEmoji={(data) =>
+                  setMessage(message ? `${message} ${data} ` : `${data} `)
+                }
+              />
               <div style={{ position: "relative" }}>
-                <EmojisList
-                  onClick={(e, data) => {
-                    e.stopPropagation();
-                    setMessage(message ? `${message} ${data}` : data);
-                    setShowEmojisList(false);
-                    inputFieldRef.current.focus();
+                <div
+                  className="p-small box-pad-v-s box-pad-h-s pointer fx-centered"
+                  style={{
+                    padding: ".125rem .25rem",
+                    border: "1px solid var(--gray)",
+                    borderRadius: "6px",
+                    backgroundColor: showGifs ? "var(--black)" : "transparent",
+                    color: showGifs ? "var(--white)" : "",
                   }}
-                />
+                  onClick={() => {
+                    setShowGifs(!showGifs);
+                  }}
+                >
+                  GIFs
+                </div>
+                {showGifs && (
+                  <Gifs
+                    setGif={(data) => {
+                      setMessage(message ? `${message} ${data}` : data);
+                      setShowGifs(false);
+                    }}
+                    exit={() => setShowGifs(false)}
+                    position="right"
+                  />
+                )}
               </div>
-            )}
-            <div
-              className="round-icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowEmojisList(true);
-              }}
-            >
-              <p className="p-big">&#9786;</p>
+              <UploadFile
+                round={false}
+                setImageURL={(data) => setMessage(`${message} ${data}`)}
+                setIsUploadsLoading={() => null}
+                setFileMetadata={() => null}
+              />
             </div>
           </div>
-          <UploadFile
-            round={true}
-            setImageURL={(data) => setMessage(`${message} ${data}`)}
-            setIsUploadsLoading={() => null}
-            setFileMetadata={() => null}
-          />
           <button className="round-icon">
             <p style={{ rotate: "-45deg" }}>&#x27A4;</p>
           </button>

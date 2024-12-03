@@ -142,7 +142,17 @@ export default function SearchNetwork({ exit }) {
 
   const searchForContent = async () => {
     let tag = searchKeyword.replaceAll("#", "");
-    let tags = [tag, tag.toLowerCase(), `#${tag}`, `#${tag.toLowerCase()}`];
+    let tags = [
+      tag,
+      `${String(tag).charAt(0).toUpperCase() + String(tag).slice(1)}`,
+      tag.toUpperCase(),
+      tag.toLowerCase(),
+      `#${tag}`,
+      `#${tag.toUpperCase()}`,
+      `#${tag.toLowerCase()}`,
+      `#${String(tag).charAt(0).toUpperCase() + String(tag).slice(1)}`,
+    ];
+    
     let content = await getSubData(
       [
         { kinds: [1], limit: 10, "#t": tags },
@@ -234,13 +244,18 @@ export default function SearchNetwork({ exit }) {
             <div
               className="fit-container box-pad-h-s box-pad-v-s fx-centered"
               onClick={() =>
-                customHistory.push(`/search?keyword=${searchKeyword?.replace("#", "%23")}`)
+                customHistory.push(
+                  `/search?keyword=${searchKeyword?.replace("#", "%23")}`
+                )
               }
             >
               <div className="fit-container slide-down box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-start-h pointer">
                 <div className="search"></div>{" "}
                 <p className="p-one-line">
-                  Search for <span className="p-bold ">#{searchKeyword.replaceAll("#", "")}</span>
+                  Search for{" "}
+                  <span className="p-bold ">
+                    #{searchKeyword.replaceAll("#", "")}
+                  </span>
                 </p>
               </div>
             </div>
@@ -329,7 +344,7 @@ export default function SearchNetwork({ exit }) {
 //           size={36}
 //           allowClick={false}
 //           user_id={user.pubkey}
-//           
+//
 //         />
 //         <div className="fx-centered fx-start-h">
 //           <div className="fx-centered fx-col fx-start-v " style={{ rowGap: 0 }}>
@@ -378,7 +393,7 @@ export default function SearchNetwork({ exit }) {
 //           size={48}
 //           allowClick={false}
 //           user_id={user.pubkey}
-//           
+//
 //         />
 //         <div
 //           className="fx-centered fx-col fx-start-h fx-start-v"
@@ -446,7 +461,7 @@ export default function SearchNetwork({ exit }) {
 //             size={20}
 //             allowClick={false}
 //             user_id={user.pubkey}
-//             
+//
 //           />
 //         </div>
 //       </div>

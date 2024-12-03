@@ -92,8 +92,10 @@ export default function ProfileEdit() {
       userWebsite !== false ? userWebsite : content.website || "";
     content.nip05 = userNip05 !== false ? userNip05 : content.nip05;
     content.lud06 = userLud06 !== false ? userLud06 : content.lud06;
-    content.lud16 = userLud06 !== false ? encodeLud06(userLud06) : content.lud16;
-
+    content.lud16 = userLud16 !== false ? userLud16 : content.lud16;
+    // content.lud06 = userLud06 !== false ? userLud06 : content.lud06;
+    // content.lud16 = userLud06 !== false ? encodeLud06(userLud06) : content.lud16;
+    
     setIsLoading(true);
     dispatch(
       setToPublish({
@@ -583,7 +585,7 @@ export default function ProfileEdit() {
                                     <input
                                       className="if ifs-full if-no-border"
                                       style={{ height: "36px" }}
-                                      placeholder="website"
+                                      placeholder="Profile picture"
                                       value={userPicture}
                                       onChange={(e) =>
                                         setUserPicture(e.target.value)

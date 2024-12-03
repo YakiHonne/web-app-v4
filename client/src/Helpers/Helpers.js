@@ -9,7 +9,7 @@ import IMGElement from "../Components/Main/IMGElement";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
-import React from "react";
+import React, { Fragment } from "react";
 import Carousel from "../Components/Main/Carousel";
 import Nip19Parsing from "../Components/Main/Nip19Parsing";
 import { store } from "../Store/Store";
@@ -120,12 +120,11 @@ const isImageUrlSync = (url) => {
 };
 
 const getNoteTree = async (note, minimal = false) => {
+
   if (!note) return "";
   let tree = note
-    .split(/(\n)/) // Split by newlines, capturing them as separate elements
-    .flatMap(
-      (segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)) // Keep newlines as-is, split other segments by spaces
-    )
+    .split(/(\n)/)
+    .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
     .filter(Boolean);
   let finalTree = [];
 
@@ -213,29 +212,34 @@ const getNoteTree = async (note, minimal = false) => {
             );
           } else {
             finalTree.push(
-              <a
-                style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
-                href={el}
-                className="btn-text-gray"
-                key={key}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {el}
-              </a>
+              <Fragment key={key}>
+                <a
+                  style={{
+                    wordBreak: "break-word",
+                    color: "var(--orange-main)",
+                  }}
+                  href={el}
+                  className="btn-text-gray"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {el}
+                </a>{" "}
+              </Fragment>
             );
           }
         }
       } else
         finalTree.push(
-          <a
-            style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
-            href={el}
-            className="btn-text-gray"
-            key={key}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {el}
-          </a>
+          <Fragment key={key}>
+            <a
+              style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+              href={el}
+              className="btn-text-gray"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {el}
+            </a>{" "}
+          </Fragment>
         );
     } else if (
       (el.includes("nostr:") ||
@@ -254,7 +258,9 @@ const getNoteTree = async (note, minimal = false) => {
         .replace(",", "");
 
       finalTree.push(
-        <Nip19Parsing addr={nip19add} key={key} minimal={minimal} />
+        <Fragment key={key}>
+          <Nip19Parsing addr={nip19add} minimal={minimal} />{" "}
+        </Fragment>
       );
     } else if (el.startsWith("#")) {
       // finalTree.push(
@@ -269,7 +275,7 @@ const getNoteTree = async (note, minimal = false) => {
       //     {el}
       //   </Link>
       // );
-      const match = el.match(/(#+)(\w+)/);
+      const match = el.match(/(#+)([\w-+]+)/);
 
       if (match) {
         const hashes = match[1];
@@ -286,7 +292,7 @@ const getNoteTree = async (note, minimal = false) => {
               onClick={(e) => e.stopPropagation()}
             >
               {`${hashes.slice(-1)}${text}`}
-            </Link>
+            </Link>{" "}
           </React.Fragment>
         );
       }
@@ -299,12 +305,41 @@ const getNoteTree = async (note, minimal = false) => {
           }}
           key={key}
         >
-          {el}
+          {el}{" "}
         </span>
       );
     }
   }
+
   return mergeConsecutivePElements(finalTree);
+};
+
+const highlightUrls = (text) => {
+  // Regex to match URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  // Split the text into parts: URLs and non-URLs
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, index) => {
+    // Check if the part is a URL
+    if (urlRegex.test(part)) {
+      return (
+        <Fragment key={index}>
+          <a
+            style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+            href={part}
+            className="btn-text-gray"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>{" "}
+        </Fragment>
+      );
+    }
+    // Render non-URL parts as plain text
+    return <Fragment key={index}>{part}</Fragment>;
+  });
 };
 
 const getLinkFromAddr = (addr_) => {
@@ -1275,11 +1310,37 @@ const FileUpload = async (file, m = "nostr.build", userKeys) => {
   }
 };
 
+// const extractNip19 = (note) => {
+//   let note_ = note.split(/\s/g);
+//   let tags = [];
+//   let processedNote = [];
+//   for (let word of note_) {
+//     let decoded = decodeNip19(word);
+//     if (decoded) {
+//       tags.push(decoded.tag);
+//       if (decoded.id.includes("30031")) tags.push(["l", "smart-widget"]);
+//       processedNote.push(decoded.scheme);
+//     } else if (word.startsWith("#")) {
+//       tags.push(["t", word.replaceAll("#", "")]);
+//       processedNote.push(word);
+//     } else processedNote.push(word);
+//   }
+//   return { tags: removeObjDuplicants(tags), content: processedNote.join(" ") };
+// };
+
 const extractNip19 = (note) => {
-  let note_ = note.split(/\s/g);
+  // Split text while preserving newlines
+  let note_ = note.split(/(\s|\n)/g); // Split by space or newline but keep them
   let tags = [];
   let processedNote = [];
+
   for (let word of note_) {
+    if (word === "\n") {
+      // Preserve newlines
+      processedNote.push(word);
+      continue;
+    }
+
     let decoded = decodeNip19(word);
     if (decoded) {
       tags.push(decoded.tag);
@@ -1288,10 +1349,17 @@ const extractNip19 = (note) => {
     } else if (word.startsWith("#")) {
       tags.push(["t", word.replaceAll("#", "")]);
       processedNote.push(word);
-    } else processedNote.push(word);
+    } else {
+      processedNote.push(word);
+    }
   }
-  return { tags: removeObjDuplicants(tags), content: processedNote.join(" ") };
+
+  return { 
+    tags: removeObjDuplicants(tags), 
+    content: processedNote.join("") // Join without adding spaces (spaces are already in the array)
+  };
 };
+
 
 const decodeNip19 = (word) => {
   try {

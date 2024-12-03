@@ -248,8 +248,8 @@ export default function Wallet() {
 
       dispatch(setUserBalance(userBalance_.balance));
       const transactions_ = await nwc.listTransactions({
-        from: Math.floor(new Date().getTime() / 1000 - ONE_WEEK_IN_SECONDS),
-        until: Math.ceil(new Date().getTime() / 1000),
+        // from: Math.floor(new Date().getTime() / 1000 - ONE_WEEK_IN_SECONDS),
+        // until: Math.ceil(new Date().getTime() / 1000),
         limit: 50,
       });
       let sendersMetadata = transactions_.transactions
@@ -329,9 +329,14 @@ export default function Wallet() {
   };
 
   const linkWallet = async (walletAddr) => {
+    if (!walletAddr.includes("@")) {
+      walletWarning()
+      return;
+    }
     let content = { ...userMetadata };
     content.lud16 = walletAddr;
     content.lud06 = encodeLud06(walletAddr);
+
     dispatch(
       setToPublish({
         userKeys: userKeys,
@@ -342,6 +347,15 @@ export default function Wallet() {
       })
     );
   };
+
+  const walletWarning = () => {
+    dispatch(
+      setToast({
+        type: 3,
+        desc: "We could not retrieve your address from your NWC secret, kindly add it manually in your profile settings.",
+      })
+    );
+  }
 
   return (
     <>
@@ -573,10 +587,11 @@ export default function Wallet() {
                                 className="btn btn-gray btn-small fx-centered"
                                 // className="sticker sticker-gray-black fx-centered box-marg-s pointer"
                                 onClick={() =>
+                                  selectedWallet.entitle.includes("@") ?
                                   copyKey(
                                     "Lightning address",
                                     selectedWallet.entitle
-                                  )
+                                  ) : walletWarning()
                                 }
                               >
                                 {selectedWallet.entitle}
@@ -710,7 +725,6 @@ export default function Wallet() {
                                               user_id={author.pubkey}
                                               size={48}
                                               img={author.picture}
-                                              
                                             />
                                             <div
                                               className="round-icon-small round-icon-tooltip"
@@ -877,7 +891,6 @@ export default function Wallet() {
                                                     mainAccountUser={false}
                                                     size={48}
                                                     user_id={isZap.pubkey}
-                                                    
                                                     img={
                                                       author
                                                         ? author.picture
@@ -1129,7 +1142,6 @@ export default function Wallet() {
                                                       mainAccountUser={false}
                                                       size={48}
                                                       user_id={isZap.pubkey}
-                                                      
                                                       img={
                                                         author
                                                           ? author.picture
