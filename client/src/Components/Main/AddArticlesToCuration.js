@@ -354,10 +354,15 @@ export default function AddArticlesToCuration({
       <section
         className="fixed-container fx-centered fx-col fx-start-h"
         style={{ overflow: "scroll" }}
+        onClick={(e) => {
+          e.stopPropagation();
+          exit();
+        }}
       >
         <div
           className="box-pad-h box-pad-v fx-centered fx-col  art-t-cur-container"
           style={{ width: "min(100%, 800px)", height: "calc(100vh - 10rem)" }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* <div className="fit-container fx-start-h fx-centered">
             <button

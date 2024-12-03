@@ -190,12 +190,11 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- An upgraded note editor with new tools like GIFs and emojis, plus real-time previews.
-- Support for additional media uploaders, including options to add custom servers.
-- Expanded search capabilities, allowing users to find more content on the search page.
-- New browsing suggestions for notes, media, users, and more.
-- General improvements.
-- Bug fixes and optimizations.
+- Resolved issues causing articles to be published malformed.
+- Fixed problems with notes preview functionality.
+- Added support for emojis and GIFs in direct messages.
+- Enabled full compatibility with NWC secrets created outside the Alby wallet.
+- General bug fixes and improvements.
 `}</p>
           </div>
           {content.map((card, index) => {

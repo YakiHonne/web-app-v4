@@ -7,6 +7,7 @@ import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { customHistory } from "../../Helpers/History";
+import { decode } from "light-bolt11-decoder";
 
 export default function WalletNWC() {
   const dispatch = useDispatch();
@@ -20,9 +21,20 @@ export default function WalletNWC() {
       setIsLoading(true);
       const nwc = new webln.NWC({ nostrWalletConnectUrl: url });
       await nwc.enable();
-      const balanceResponse = await nwc.getBalance();
+      // const balanceResponse = await nwc.getBalance();
+
+      let walletPubkey = nwc.client.walletPubkey;
+      let relayUrl = nwc.client.relayUrl;
+      let relayDomain = relayUrl.split("//")[1].split(".");
+      relayDomain =
+        relayDomain[relayDomain.length - 2] +
+        "." +
+        relayDomain[relayDomain.length - 1];
+      let tempAddr = walletPubkey.slice(-10) + "-" + relayDomain;
+
       let addr = new URLSearchParams(url).get("lud16");
-      if (!addr) {
+
+      if (!(addr || tempAddr)) {
         setIsLoading(false);
         dispatch(
           setToast({
@@ -32,10 +44,11 @@ export default function WalletNWC() {
         );
         return;
       }
+
       let nwcNode = {
         id: Date.now(),
         kind: 3,
-        entitle: addr,
+        entitle: addr || tempAddr,
         active: true,
         data: url,
       };

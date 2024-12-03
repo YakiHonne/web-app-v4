@@ -2,12 +2,12 @@ import React from "react";
 import emojis from "../Content/Emojis";
 
 
-export default function EmojisList({ onClick }) {
+export default function EmojisList({ onClick, position = "right" }) {
   return (
     <div
       style={{
         position: "absolute",
-        right: "0px",
+        [position]: "0px",
         top: "-30px",
         width: "275px",
         height: "250px",

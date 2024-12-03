@@ -4,7 +4,7 @@ import { GiphyFetch } from "@giphy/js-fetch-api";
 
 const gf = new GiphyFetch(process.env.REACT_APP_GHIPHY_API_KEY);
 
-export default function Gifs({ setGif , exit}) {
+export default function Gifs({ setGif , exit, position = "left"}) {
   const ref = useRef(null);
   const [search, setSearch] = useState();
   const [width, setWidth] = useState(0);
@@ -38,7 +38,7 @@ export default function Gifs({ setGif , exit}) {
         maxHeight: "300px",
         overflow: "scroll",
         position: "absolute",
-        left: 0,
+        [position]: 0,
         bottom: "calc(100% + 5px)",
         width: "200px",
         zIndex: 102,
@@ -83,7 +83,7 @@ export default function Gifs({ setGif , exit}) {
       </div>
       <Grid
         width={width}
-        columns={1}
+        columns={3}
         fetchGifs={fetchGifs}
         key={search}
         onGifClick={(data, e) => {

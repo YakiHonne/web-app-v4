@@ -652,7 +652,10 @@ export default function WritingArticle() {
           />
         </Helmet>
         <div className="fit-container fx-centered">
-          <div className="main-container" style={{width: !userKeys ? "unset" : "min(100%, 1700px)"}}>
+          <div
+            className="main-container"
+            style={{ width: !userKeys ? "unset" : "min(100%, 1700px)" }}
+          >
             {!userKeys && <SidebarNOSTR />}
             <main
               className="main-page-nostr-container fit-container"
@@ -826,7 +829,25 @@ export default function WritingArticle() {
                                       },
                                     }
                                   ),
-                                  link,
+
+                                  {
+                                    ...link,
+                                    execute: (state, api) => {
+                                      const linkText = "URL here";
+                                      let modifyText = `[](${linkText})`;
+
+                                      if (state.selectedText) {
+                                        modifyText = `[](${state.selectedText})`; // Replace with selected text if any
+                                      }
+                                      api.replaceSelection(modifyText);
+                                      api.setSelectionRange({
+                                        start: 3,
+                                        end: state.selectedText
+                                          ? state.selectedText.length + 3
+                                          : 11,
+                                      });
+                                    },
+                                  },
                                   quote,
                                   code,
                                   codeBlock,
@@ -918,7 +939,6 @@ export default function WritingArticle() {
                                     buttonProps: {
                                       "aria-label": "Insert title",
                                     },
-                                    
                                   }),
                                   commands.group([], {
                                     name: "update",

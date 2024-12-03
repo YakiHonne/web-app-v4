@@ -48,7 +48,7 @@ export default function InterestSuggestionsCards({
       tempArray.splice(index, 1);
       setTempInterestList(tempArray);
     } else {
-      setTempInterestList((prev) => [...prev, item]);
+      setTempInterestList((prev) => [item, ...prev]);
     }
   };
 
@@ -56,7 +56,7 @@ export default function InterestSuggestionsCards({
     try {
       if (!(isChanged && !isLoading)) return;
       setIsLoading(true);
-      let tags = [...new Set([...userInterestList, ...tempInterestList])].map(
+      let tags = [...new Set([...tempInterestList, ...userInterestList])].map(
         (_) => ["t", _.toLowerCase()]
       );
       dispatch(
@@ -80,9 +80,10 @@ export default function InterestSuggestionsCards({
     try {
       // if (!(isChanged && !isLoading)) return;
       setIsLoading(true);
-      let tags = [...new Set([...userInterestList, interest])].map(
-        (_) => ["t", _.toLowerCase()]
-      );
+      let tags = [...new Set([interest, ...userInterestList])].map((_) => [
+        "t",
+        _.toLowerCase(),
+      ]);
       dispatch(
         setToPublish({
           userKeys: userKeys,
@@ -170,7 +171,10 @@ export default function InterestSuggestionsCards({
                     <p className="p-bold p-caps">{item.main_tag}</p>
                   </div>
                   <div className="fit-height fx-scattered fx-col fx-start-v">
-                    <button className="btn btn-gray btn-small btn-full fx-centered" onClick={() => saveSingleInterestList(item.main_tag)}>
+                    <button
+                      className="btn btn-gray btn-small btn-full fx-centered"
+                      onClick={() => saveSingleInterestList(item.main_tag)}
+                    >
                       <div className="plus-sign"></div> Interested
                     </button>
                   </div>

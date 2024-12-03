@@ -28,8 +28,13 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
           let tempData = [...prev, ...data.data];
           return tempData.filter((user, index, tempData) => {
             if (
-              tempData.findIndex((user_) => user_.pubkey === user.pubkey) ===
-              index
+              // tempData.findIndex((user_) => user_.pubkey === user.pubkey) ===
+              // index
+              user.nip05 &&
+              tempData.findIndex(
+                (event_) => event_.pubkey === user.pubkey && !user.kind
+              ) === index &&
+              isHex(user.pubkey)
             )
               return user;
           });
@@ -44,16 +49,34 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
       const filteredUsers = mention
         ? nostrAuthors.filter((user) => {
             if (
-              (typeof user.display_name === "string" &&
+              user.nip05 &&
+              ((typeof user.display_name === "string" &&
                 user.display_name
                   ?.toLowerCase()
                   .includes(mention?.toLowerCase())) ||
-              (typeof user.name === "string" &&
-                user.name?.toLowerCase().includes(mention?.toLowerCase())) ||
-              (typeof user.lud06 === "string" &&
-                user.lud06?.toLowerCase().includes(mention?.toLowerCase())) ||
-              (typeof user.nip05 === "string" &&
-                user.nip05?.toLowerCase().includes(mention?.toLowerCase()))
+                (typeof user.name === "string" &&
+                  user.name
+                    ?.toLowerCase()
+                    .includes(mention?.toLowerCase())) ||
+                (typeof user.lud06 === "string" &&
+                  user.lud06
+                    ?.toLowerCase()
+                    .includes(mention?.toLowerCase())) ||
+                (typeof user.nip05 === "string" &&
+                  user.nip05
+                    ?.toLowerCase()
+                    .includes(mention?.toLowerCase()))) &&
+              isHex(user.pubkey)
+              // (typeof user.display_name === "string" &&
+              //   user.display_name
+              //     ?.toLowerCase()
+              //     .includes(mention?.toLowerCase())) ||
+              // (typeof user.name === "string" &&
+              //   user.name?.toLowerCase().includes(mention?.toLowerCase())) ||
+              // (typeof user.lud06 === "string" &&
+              //   user.lud06?.toLowerCase().includes(mention?.toLowerCase())) ||
+              // (typeof user.nip05 === "string" &&
+              //   user.nip05?.toLowerCase().includes(mention?.toLowerCase()))
             )
               return user;
           })

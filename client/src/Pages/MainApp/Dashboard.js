@@ -42,6 +42,7 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import AddArticlesToCuration from "../../Components/Main/AddArticlesToCuration";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 const tabs = ["Home", "Content", "Bookmarks", "Interests"];
 const bookmarkFilterOptions = [
@@ -1200,18 +1201,20 @@ const DraftCard = ({ event, setDeleteEvent }) => {
       }}
       onClick={(e) => {
         e.stopPropagation();
-        event.local ? customHistory.push("/write-article") : customHistory.push("/write-article", {
-          post_pubkey: event.pubkey,
-          post_id: event.id,
-          post_kind: event.kind,
-          post_title: event.title,
-          post_desc: event.summary,
-          post_thumbnail: event.image,
-          post_tags: event.items,
-          post_d: event.d,
-          post_content: event.content,
-          post_published_at: event.published_at,
-        })
+        event.local
+          ? customHistory.push("/write-article")
+          : customHistory.push("/write-article", {
+              post_pubkey: event.pubkey,
+              post_id: event.id,
+              post_kind: event.kind,
+              post_title: event.title,
+              post_desc: event.summary,
+              post_thumbnail: event.image,
+              post_tags: event.items,
+              post_d: event.d,
+              post_content: event.content,
+              post_published_at: event.published_at,
+            });
       }}
     >
       <div className="fx-centered fx-start-v">
@@ -1237,38 +1240,38 @@ const DraftCard = ({ event, setDeleteEvent }) => {
         </div>
       </div>
       {/* {!event.local && ( */}
-        <div className="fx-centered" style={{ minWidth: "max-content" }}>
-          <OptionsDropdown
-            options={[
-              <Link
-                className="pointer"
-                to={"/write-article"}
-                state={{
-                  post_pubkey: event.pubkey,
-                  post_id: event.id,
-                  post_kind: event.kind,
-                  post_title: event.title,
-                  post_desc: event.summary,
-                  post_thumbnail: event.image,
-                  post_tags: event.items,
-                  post_d: event.d,
-                  post_content: event.content,
-                  post_published_at: event.published_at,
-                }}
+      <div className="fx-centered" style={{ minWidth: "max-content" }}>
+        <OptionsDropdown
+          options={[
+            <Link
+              className="pointer"
+              to={"/write-article"}
+              state={{
+                post_pubkey: event.pubkey,
+                post_id: event.id,
+                post_kind: event.kind,
+                post_title: event.title,
+                post_desc: event.summary,
+                post_thumbnail: event.image,
+                post_tags: event.items,
+                post_d: event.d,
+                post_content: event.content,
+                post_published_at: event.published_at,
+              }}
+            >
+              <p>Edit draft</p>
+            </Link>,
+            setDeleteEvent && (
+              <div
+                className="fit-container"
+                onClick={() => setDeleteEvent(event)}
               >
-                <p>Edit draft</p>
-              </Link>,
-              setDeleteEvent && (
-                <div
-                  className="fit-container"
-                  onClick={() => setDeleteEvent(event)}
-                >
-                  <p className="red-c">Delete</p>
-                </div>
-              ),
-            ]}
-          />
-        </div>
+                <p className="red-c">Delete</p>
+              </div>
+            ),
+          ]}
+        />
+      </div>
       {/* )} */}
     </div>
   );
@@ -2253,7 +2256,8 @@ const ManageInterest = ({ exit }) => {
 
   const addItemToList = (item) => {
     let tempArray = getInterestList([
-      ...new Set([...interests.map((_) => _.item), item.toLowerCase()]),
+      item.toLowerCase(),
+      ...new Set([...interests.map((_) => _.item)]),
     ]);
     setInterest(tempArray);
     if (newInterest) setNewInterest("");
@@ -2270,8 +2274,16 @@ const ManageInterest = ({ exit }) => {
     }
   };
 
+  const handleDragEnd = (res) => {
+    if (!res.destination) return;
+    let tempArr = structuredClone(interests);
+    let [reorderedArr] = tempArr.splice(res.source.index, 1);
+    tempArr.splice(res.destination.index, 0, reorderedArr);
+    setInterest(tempArr);
+  };
+
   return (
-    <div className="fx-centered fit-container fx-col slide-right">
+    <div className="fx-centered fit-container fx-col ">
       <div className="fit-container fx-scattered box-marg-s box-pad-h ">
         <div className="fx-centered fx-start-h pointer" onClick={exit}>
           <div className="round-icon">
@@ -2305,69 +2317,170 @@ const ManageInterest = ({ exit }) => {
           />
           {newInterest && <p className="gray-c slide-down">&#8626;</p>}
         </form>
-        {interests.map((item, index) => {
-          return (
-            <div
-              className="fx-scattered  sc-s-18 box-pad-h-m box-pad-v-m fit-container"
-              style={{
-                overflow: "visible",
-                backgroundColor: item.toDelete
-                  ? "var(--red-side)"
-                  : "transparent",
-                borderBottom: "1px solid var(--very-dim-gray)",
-                gap: 0,
-              }}
-              key={index}
-            >
-              <div className="fx-centered">
-                <div
-                  style={{
-                    minWidth: `38px`,
-                    aspectRatio: "1/1",
-                    position: "relative",
-                  }}
-                  className="sc-s-18 fx-centered"
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      zIndex: 2,
-                      backgroundImage: `url(${item.icon})`,
-                    }}
-                    className="bg-img cover-bg  fit-container fit-height"
-                  ></div>
-                  <p
-                    className={"p-bold p-caps p-big"}
-                    style={{ position: "relative", zIndex: 1 }}
-                  >
-                    {item.item.charAt(0)}
-                  </p>
-                </div>
-                <p className="p-caps">{item.item}</p>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="set-carrousel">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                style={{
+                  borderRadius: "var(--border-r-18)",
+                  transition: ".2s ease-in-out",
+                  height: "100%",
+                  ...provided.droppableProps.style,
+                }}
+                className="box-pad-v-m fit-container fx-centered fx-start-h fx-start-v fx-col"
+              >
+                {interests.map((item, index) => {
+                  return (
+                    <Draggable
+                      key={index}
+                      draggableId={`${index}`}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          ref={provided.innerRef}
+                          style={{
+                            borderRadius: "var(--border-r-18)",
+                            boxShadow: snapshot.isDragging
+                              ? "14px 12px 105px -41px rgba(0, 0, 0, 0.55)"
+                              : "",
+                            ...provided.draggableProps.style,
+                            overflow: "visible",
+                            backgroundColor: item.toDelete
+                              ? "var(--red-side)"
+                              : "transparent",
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
+                          }}
+                          className="fx-scattered  sc-s-18 box-pad-h-m box-pad-v-m fit-container"
+                        >
+                          <div className="fx-centered">
+                            <div
+                              style={{
+                                minWidth: `38px`,
+                                aspectRatio: "1/1",
+                                position: "relative",
+                              }}
+                              className="sc-s-18 fx-centered"
+                            >
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  left: 0,
+                                  top: 0,
+                                  zIndex: 2,
+                                  backgroundImage: `url(${item.icon})`,
+                                }}
+                                className="bg-img cover-bg  fit-container fit-height"
+                              ></div>
+                              <p
+                                className={"p-bold p-caps p-big"}
+                                style={{ position: "relative", zIndex: 1 }}
+                              >
+                                {item.item.charAt(0)}
+                              </p>
+                            </div>
+                            <p className="p-caps">{item.item}</p>
+                          </div>
+                          <div className="fx-centered">
+                            {!item.toDelete && (
+                              <div
+                                onClick={() => handleItemInList(false, index)}
+                                className="round-icon-small"
+                              >
+                                <div className="trash"></div>
+                              </div>
+                            )}
+                            {item.toDelete && (
+                              <div
+                                onClick={() => handleItemInList(true, index)}
+                                className="round-icon-small"
+                              >
+                                <div className="undo"></div>
+                              </div>
+                            )}
+                            <div
+                              className="drag-el"
+                              style={{
+                                minWidth: "16px",
+                                aspectRatio: "1/1",
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                  // return (
+                  //   <div
+                  //     className="fx-scattered  sc-s-18 box-pad-h-m box-pad-v-m fit-container"
+                  //     style={{
+                  //       overflow: "visible",
+                  //       backgroundColor: item.toDelete
+                  //         ? "var(--red-side)"
+                  //         : "transparent",
+                  //       borderBottom: "1px solid var(--very-dim-gray)",
+                  //       gap: 0,
+                  //     }}
+                  //     key={index}
+                  //   >
+                  //     <div className="fx-centered">
+                  //       <div
+                  //         style={{
+                  //           minWidth: `38px`,
+                  //           aspectRatio: "1/1",
+                  //           position: "relative",
+                  //         }}
+                  //         className="sc-s-18 fx-centered"
+                  //       >
+                  //         <div
+                  //           style={{
+                  //             position: "absolute",
+                  //             left: 0,
+                  //             top: 0,
+                  //             zIndex: 2,
+                  //             backgroundImage: `url(${item.icon})`,
+                  //           }}
+                  //           className="bg-img cover-bg  fit-container fit-height"
+                  //         ></div>
+                  //         <p
+                  //           className={"p-bold p-caps p-big"}
+                  //           style={{ position: "relative", zIndex: 1 }}
+                  //         >
+                  //           {item.item.charAt(0)}
+                  //         </p>
+                  //       </div>
+                  //       <p className="p-caps">{item.item}</p>
+                  //     </div>
+                  //     <div>
+                  //       {!item.toDelete && (
+                  //         <div
+                  //           onClick={() => handleItemInList(false, index)}
+                  //           className="round-icon-small"
+                  //         >
+                  //           <div className="trash"></div>
+                  //         </div>
+                  //       )}
+                  //       {item.toDelete && (
+                  //         <div
+                  //           onClick={() => handleItemInList(true, index)}
+                  //           className="round-icon-small"
+                  //         >
+                  //           <div className="undo"></div>
+                  //         </div>
+                  //       )}
+                  //     </div>
+                  //   </div>
+                  // );
+                })}
+                {provided.placeholder}
               </div>
-              <div>
-                {!item.toDelete && (
-                  <div
-                    onClick={() => handleItemInList(false, index)}
-                    className="round-icon-small"
-                  >
-                    <div className="trash"></div>
-                  </div>
-                )}
-                {item.toDelete && (
-                  <div
-                    onClick={() => handleItemInList(true, index)}
-                    className="round-icon-small"
-                  >
-                    <div className="undo"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
 
       {/* <p className="p-big p-bold">Suggestions</p> */}

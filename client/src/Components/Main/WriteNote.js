@@ -239,6 +239,7 @@ export default function WriteNote({
         allRelays: [],
       })
     );
+    updateNoteDraft("root", "");
     navigateTo("/dashboard", { state: { tabNumber: 1, filter: "notes" } });
     exit();
     setIsLoading(false);
@@ -329,6 +330,7 @@ export default function WriteNote({
           })
         );
         sub.stop();
+        updateNoteDraft("root", "");
         navigateTo("/dashboard", { state: { tabNumber: 1, filter: "notes" } });
         exit();
         setIsLoading(false);

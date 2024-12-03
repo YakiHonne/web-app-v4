@@ -184,7 +184,16 @@ export default function Search() {
 
   const searchForContent = async () => {
     let tag = searchKeyword.replaceAll("#", "");
-    let tags = [tag, tag.toLowerCase(), `#${tag}`, `#${tag.toLowerCase()}`];
+    let tags = [
+      tag,
+      `${String(tag).charAt(0).toUpperCase() + String(tag).slice(1)}`,
+      tag.toUpperCase(),
+      tag.toLowerCase(),
+      `#${tag}`,
+      `#${tag.toUpperCase()}`,
+      `#${tag.toLowerCase()}`,
+      `#${String(tag).charAt(0).toUpperCase() + String(tag).slice(1)}`,
+    ];
     let filter = {
       limit: 5,
       "#t": tags,
@@ -234,7 +243,7 @@ export default function Search() {
     try {
       let tags = userInterestList.map((_) => ["t", _]);
       if (!followed) {
-        tags = [...tags, ["t", searchKeyword.toLowerCase()]];
+        tags = [["t", searchKeyword.toLowerCase()], ...tags];
       } else {
         tags = tags.filter((_) => _[1] !== searchKeyword.toLowerCase());
       }

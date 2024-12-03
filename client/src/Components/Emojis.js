@@ -2,7 +2,7 @@ import EmojiPicker from "emoji-picker-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
-export default function Emojis({ setEmoji }) {
+export default function Emojis({ setEmoji, position = "left" }) {
   const isDarkMode = useSelector((state) => state.isDarkMode);
   const [showEmoji, setShowEmoji] = useState(false);
   const optionsRef = useRef(null);
@@ -36,13 +36,13 @@ export default function Emojis({ setEmoji }) {
         &#9786;
       </div> */}
       {showEmoji && (
-        <div style={{ position: "absolute", left: 0, bottom: "calc(100% + 5px)", zIndex: 102 }}>
+        <div style={{ position: "absolute", [position]: 0, bottom: "calc(100% + 5px)", zIndex: 102 }}>
           <EmojiPicker
             theme={isDarkMode ? "dark" : "light"}
             previewConfig={{ showPreview: false }}
             skinTonesDisabled={true}
-            searchDisabled={true}
-            height={250}
+            searchDisabled={false}
+            height={300}
             onEmojiClick={(data) => setEmoji(data.emoji)}
           />
         </div>
