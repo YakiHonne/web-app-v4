@@ -195,7 +195,7 @@ const Banner = ({ exit }) => {
 - Added support for emojis and GIFs in direct messages.
 - Enabled full compatibility with NWC secrets created outside the Alby wallet.
 - General bug fixes and improvements.
-`}</p>
+`}</p> 
           </div>
           {content.map((card, index) => {
             return (
