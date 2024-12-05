@@ -8,7 +8,11 @@ import { useSelector } from "react-redux";
 import { saveFetchedUsers } from "../../Helpers/DB";
 import { isHex } from "../../Helpers/Helpers";
 
-export default function MentionSuggestions({ mention, setSelectedMention }) {
+export default function MentionSuggestions({
+  mention,
+  setSelectedMention,
+  setSelectedMentionMetadata,
+}) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
   const [users, setUsers] = useState(nostrAuthors.slice(0, 100));
@@ -55,13 +59,9 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
                   ?.toLowerCase()
                   .includes(mention?.toLowerCase())) ||
                 (typeof user.name === "string" &&
-                  user.name
-                    ?.toLowerCase()
-                    .includes(mention?.toLowerCase())) ||
+                  user.name?.toLowerCase().includes(mention?.toLowerCase())) ||
                 (typeof user.lud06 === "string" &&
-                  user.lud06
-                    ?.toLowerCase()
-                    .includes(mention?.toLowerCase())) ||
+                  user.lud06?.toLowerCase().includes(mention?.toLowerCase())) ||
                 (typeof user.nip05 === "string" &&
                   user.nip05
                     ?.toLowerCase()
@@ -143,7 +143,9 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
               className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedMention(url);
+                setSelectedMention && setSelectedMention(url);
+                setSelectedMentionMetadata &&
+                  setSelectedMentionMetadata({ ...user, npub: url });
               }}
               style={{
                 borderTop: index !== 0 ? "1px solid var(--pale-gray)" : "",
@@ -154,7 +156,6 @@ export default function MentionSuggestions({ mention, setSelectedMention }) {
                   img={user.picture || ""}
                   size={36}
                   user_id={user.pubkey}
-                  
                 />
                 <div className="fx-centered fx-start-h">
                   <div

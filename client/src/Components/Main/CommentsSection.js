@@ -51,7 +51,12 @@ const filterRootComments = async (all) => {
     let isReply = comment.tags.find(
       (item) => item[0] === "e" && item[3] === "reply"
     );
-    if (!isReply || isRoot[1] === isReply[1]) {
+    if (
+      !isReply ||
+      (Array.isArray(isReply) &&
+        Array.isArray(isRoot) &&
+        isReply[1] === isRoot[1])
+    ) {
       let [note_tree, replies] = await Promise.all([
         getParsedNote(comment),
         countReplies(comment.id, all),
@@ -102,6 +107,7 @@ const repliesCount = (comment) => {
 
 export default function CommentsSection({
   id,
+  noteTags = false,
   eventPubkey,
   postActions,
   author,
@@ -163,7 +169,6 @@ export default function CommentsSection({
         .filter((_) => _);
 
       if (tempEvents.length === 0) setIsLoading(false);
-
       setComments(tempEvents);
       saveUsers(events.pubkeys);
     };
@@ -228,6 +233,7 @@ export default function CommentsSection({
             <div className="box-pad-v-m box-pad-h-m fit-container">
               <Comments
                 exit={() => setShowWriteNote(false)}
+                noteTags={noteTags}
                 replyId={id}
                 replyPubkey={eventPubkey}
                 actions={postActions}

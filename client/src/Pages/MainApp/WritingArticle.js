@@ -835,16 +835,19 @@ export default function WritingArticle() {
                                     execute: (state, api) => {
                                       const linkText = "URL here";
                                       let modifyText = `[](${linkText})`;
-
                                       if (state.selectedText) {
                                         modifyText = `[](${state.selectedText})`; // Replace with selected text if any
                                       }
+                                      let cursorPosition =
+                                        api.textArea.selectionStart + 3;
+
                                       api.replaceSelection(modifyText);
                                       api.setSelectionRange({
-                                        start: 3,
+                                        start: cursorPosition,
                                         end: state.selectedText
-                                          ? state.selectedText.length + 3
-                                          : 11,
+                                          ? state.selectedText.length +
+                                            cursorPosition
+                                          : cursorPosition + 8,
                                       });
                                     },
                                   },

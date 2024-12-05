@@ -330,7 +330,7 @@ export default function Wallet() {
 
   const linkWallet = async (walletAddr) => {
     if (!walletAddr.includes("@")) {
-      walletWarning()
+      walletWarning();
       return;
     }
     let content = { ...userMetadata };
@@ -352,10 +352,10 @@ export default function Wallet() {
     dispatch(
       setToast({
         type: 3,
-        desc: "We could not retrieve your address from your NWC secret, kindly add it manually in your profile settings.",
+        desc: "We could not retrieve your address from your NWC secret, kindly check your lightning address service provider to copy your address or to update your profile accordinaly.",
       })
     );
-  }
+  };
 
   return (
     <>
@@ -587,11 +587,12 @@ export default function Wallet() {
                                 className="btn btn-gray btn-small fx-centered"
                                 // className="sticker sticker-gray-black fx-centered box-marg-s pointer"
                                 onClick={() =>
-                                  selectedWallet.entitle.includes("@") ?
-                                  copyKey(
-                                    "Lightning address",
-                                    selectedWallet.entitle
-                                  ) : walletWarning()
+                                  selectedWallet.entitle.includes("@")
+                                    ? copyKey(
+                                        "Lightning address",
+                                        selectedWallet.entitle
+                                      )
+                                    : walletWarning()
                                 }
                               >
                                 {selectedWallet.entitle}

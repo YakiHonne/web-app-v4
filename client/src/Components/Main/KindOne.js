@@ -23,7 +23,12 @@ import { saveUsers } from "../../Helpers/DB";
 import CommentsSection from "./CommentsSection";
 import { compactContent } from "../../Helpers/Helpers";
 
-export default function KindOne({ event, reactions = true, border = false, minmal = false }) {
+export default function KindOne({
+  event,
+  reactions = true,
+  border = false,
+  minmal = false,
+}) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
@@ -170,6 +175,7 @@ export default function KindOne({ event, reactions = true, border = false, minma
     <>
       {showComments && (
         <FastAccessCS
+          noteTags={event.tags}
           id={event.id}
           eventPubkey={event.pubkey}
           author={user}
@@ -186,7 +192,6 @@ export default function KindOne({ event, reactions = true, border = false, minma
           transition: ".2s ease-in-out",
           overflow: "visible",
           borderBottom: border ? "1px solid var(--very-dim-gray)" : "",
-          
         }}
       >
         {usersList && (
@@ -243,7 +248,13 @@ export default function KindOne({ event, reactions = true, border = false, minma
               {event.isComment && <RelatedEvent event={event.isComment} />}
               <div className="fx-centered fx-col fit-container">
                 <div className="fit-container" onClick={onClick}>
-                  {!minmal ? event.note_tree : <p className="p-four-lines">{compactContent(event.content)}</p>}
+                  {!minmal ? (
+                    event.note_tree
+                  ) : (
+                    <p className="p-four-lines">
+                      {compactContent(event.content)}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -426,6 +437,7 @@ export default function KindOne({ event, reactions = true, border = false, minma
         </div>
         {toggleComment && (
           <Comments
+            noteTags={event.tags}
             exit={() => setToggleComment(false)}
             replyId={event.id}
             replyPubkey={event.pubkey}
@@ -501,7 +513,14 @@ const RelatedEvent = ({ event }) => {
   );
 };
 
-const FastAccessCS = ({ id, eventPubkey, author, exit, isRoot = true }) => {
+const FastAccessCS = ({
+  id,
+  noteTags,
+  eventPubkey,
+  author,
+  exit,
+  isRoot = true,
+}) => {
   return (
     <div
       className="fixed-container fx-centered fx-start-v"
@@ -541,6 +560,7 @@ const FastAccessCS = ({ id, eventPubkey, author, exit, isRoot = true }) => {
           </div>
         </div>
         <CommentsSection
+          noteTags={noteTags}
           id={id}
           eventPubkey={eventPubkey}
           author={author}

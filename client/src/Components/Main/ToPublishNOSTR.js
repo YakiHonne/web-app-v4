@@ -38,7 +38,13 @@ export default function ToPublishNOSTR({
   const userKeys = useSelector((state) => state.userKeys);
 
   const navigateTo = useNavigate();
-  const [selectedCategories, setSelectedCategories] = useState(tags.length > 0 ?  tags : extractNip19(postContent).tags.filter(_ => _[0] === "t" && _[1]).map(_ => _[1]));
+  const [selectedCategories, setSelectedCategories] = useState(
+    tags.length > 0
+      ? tags
+      : extractNip19(postContent)
+          .tags.filter((_) => _[0] === "t" && _[1])
+          .map((_) => _[1])
+  );
   const [thumbnail, setThumbnail] = useState("");
   const [thumbnailPrev, setThumbnailPrev] = useState(postThumbnail || "");
   const [thumbnailUrl, setThumbnailUrl] = useState(postThumbnail || "");
@@ -87,7 +93,7 @@ export default function ToPublishNOSTR({
       if (postThumbnail && thumbnail) deleteFromS3(postThumbnail);
       let created_at = Math.floor(Date.now() / 1000);
       // let cover = thumbnail ? await uploadToS3(thumbnail) : thumbnailUrl || "";
-      let cover =thumbnailUrl;
+      let cover = thumbnailUrl;
 
       let tags = [
         [
@@ -114,11 +120,14 @@ export default function ToPublishNOSTR({
         tags.push(["L", "content-warning"]);
       }
       let processedContent = extractNip19(postContent);
+      const imageRegex =
+        /(?<!\!\[image\]\()https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp|bmp|svg)(?!\))/g;
+
       let tempEvent = {
         created_at,
         kind: kind,
-        content: processedContent.content,
-        tags: [...tags, ...processedContent.tags.filter(_ => _[0] !== "t")],
+        content: processedContent.content.replace(imageRegex, "!(image)[$&]"),
+        tags: [...tags, ...processedContent.tags.filter((_) => _[0] !== "t")],
       };
       if (userKeys.ext) {
         try {
@@ -579,7 +588,7 @@ export default function ToPublishNOSTR({
               <div
                 className="fit-container fx-wrap fx-centered"
                 // style={{ maxHeight: "30vh", overflow: "scroll" }}
-                style={{gap: "8px"}}
+                style={{ gap: "8px" }}
               >
                 {zapSplit.map((item, index) => {
                   const percentage = calculatePercentage(item[3]) || 0;

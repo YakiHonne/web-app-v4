@@ -328,7 +328,7 @@ export default function Note() {
 
       let tempNote = await getParsedNote(event);
       if (tempNote) {
-        saveUsers([event.pubkey])
+        saveUsers([event.pubkey]);
         setNote({
           ...tempNote,
           isRoot: !isNotRoot ? true : false,
@@ -515,7 +515,6 @@ export default function Note() {
                           size={64}
                           mainAccountUser={false}
                           user_id={note.pubkey}
-                          
                         />
                         <div className="box-pad-h-m fx-centered fx-col fx-start-v">
                           <div className="fx-centered">
@@ -743,8 +742,8 @@ export default function Note() {
                           ]}
                         />
                       </div>
-
                       <CommentsSection
+                        noteTags={note.tags}
                         id={note.id}
                         eventPubkey={note.pubkey}
                         nEvent={nevent}

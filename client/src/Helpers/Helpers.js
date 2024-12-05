@@ -120,7 +120,6 @@ const isImageUrlSync = (url) => {
 };
 
 const getNoteTree = async (note, minimal = false) => {
-
   if (!note) return "";
   let tree = note
     .split(/(\n)/)
@@ -252,16 +251,79 @@ const getNoteTree = async (note, minimal = false) => {
     ) {
       const nip19add = el
         .replace("https://yakihonne.com/smart-widget-checker?naddr=", "")
-        .replace("nostr:", "")
-        .replace("@", "")
-        .replace(".", "")
-        .replace(",", "");
+        .replace("nostr:", "");
+      // .replaceAll("@", "")
+      // .replaceAll(".", "")
+      // .replaceAll(",", "")
+      // .replaceAll("?", "")
+      // .replaceAll("!", "");
 
-      finalTree.push(
-        <Fragment key={key}>
-          <Nip19Parsing addr={nip19add} minimal={minimal} />{" "}
-        </Fragment>
-      );
+      // finalTree.push(
+      //   <Fragment key={key}>
+      //     <Nip19Parsing addr={nip19add} minimal={minimal} />{" "}
+      //   </Fragment>
+      // );
+      // Step 1: Extract clean string and keep track of removed characters
+      // let removedChars = [];
+      // let cleanString = "";
+
+      // for (let i = 0; i < nip19add.length; i++) {
+      //   const char = nip19add[i];
+      //   if ("@.;+-/|,?!".includes(char)) {
+      //     removedChars.push({ char, index: i }); // Store removed character and its position
+      //   } else {
+      //     cleanString += char; // Build clean string
+      //   }
+      // }
+
+      // // Step 2: Create the decoded React component
+      // const decodedComponent = (
+      //   <Fragment key={el}>
+      //     <Nip19Parsing addr={cleanString} minimal={true} />
+      //   </Fragment>
+      // );
+
+      // // Step 3: Reinsert removed characters
+      // const finalOutput = [];
+      // let decodedInserted = false;
+      // let currentIndex = 0;
+
+      // for (let i = 0; i <= nip19add.length; i++) {
+      //   // Check if this is the position of a removed character
+      //   const removedChar = removedChars.find(({ index }) => index === i);
+      //   if (removedChar) {
+      //     finalOutput.push(removedChar.char); // Add removed character
+      //   } else if (!decodedInserted && i >= currentIndex) {
+      //     // Insert the decoded React component only once in its place
+      //     finalOutput.push(decodedComponent);
+      //     decodedInserted = true;
+      //     currentIndex = i;
+      //   }
+      // }
+      const parts = nip19add.split(/([@.,?!\s:])/); // Matches delimiters and preserves them in the result
+
+      // Step 2: Process each part
+      const finalOutput = parts.map((part, index) => {
+        if (
+          part.startsWith("npub1") ||
+          part.startsWith("nprofile1") ||
+          part.startsWith("nevent") ||
+          part.startsWith("naddr") ||
+          part.startsWith("note1")
+        ) {
+          // Clean and decode addresses
+          const cleanedPart = part.replace(/[@.,?!]/g, ""); // Remove unwanted characters
+     
+          return (
+            <Fragment key={index}>
+              <Nip19Parsing addr={cleanedPart} minimal={minimal} />
+            </Fragment>
+          );
+        }
+        // Return non-address parts as-is
+        return part;
+      });
+      finalTree.push(<Fragment key={el}>{finalOutput} </Fragment>);
     } else if (el.startsWith("#")) {
       // finalTree.push(
       //   <Link
@@ -716,7 +778,7 @@ const getVideoContent = (video) => {
   let tags = video.tags;
   let keywords = [];
   let published_at = video.created_at;
-  let title = "";
+  let title = video.content || "";
   let url = "";
   let d = "";
   let image = "";
@@ -1173,7 +1235,7 @@ const updateWallets = (wallets_, pubkey_) => {
 
   try {
     wallets = wallets ? JSON.parse(wallets) : [];
-    let pubkey = userKeys?.pub || pubkey_;
+    let pubkey = pubkey_ || userKeys?.pub ;
     let wallets_index = wallets.findIndex(
       (wallet) => wallet?.pubkey === pubkey
     );
@@ -1354,12 +1416,11 @@ const extractNip19 = (note) => {
     }
   }
 
-  return { 
-    tags: removeObjDuplicants(tags), 
-    content: processedNote.join("") // Join without adding spaces (spaces are already in the array)
+  return {
+    tags: removeObjDuplicants(tags),
+    content: processedNote.join(""), // Join without adding spaces (spaces are already in the array)
   };
 };
-
 
 const decodeNip19 = (word) => {
   try {

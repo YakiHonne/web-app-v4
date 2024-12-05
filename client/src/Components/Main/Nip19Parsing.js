@@ -21,6 +21,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isParsed, setIsParsed] = useState(false);
   const [url, setUrl] = useState("/");
+
   useEffect(() => {
     let filter = [];
     try {
@@ -29,7 +30,6 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         .replaceAll(":", "")
         .replaceAll(";", "")
         .replaceAll(".", "");
-
       if (addr_.startsWith("naddr")) {
         let data = nip19.decode(addr_);
 
@@ -56,7 +56,6 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       }
       if (addr_.startsWith("npub")) {
         let data = nip19.decode(addr_);
-
         let pubkey = "";
         if (typeof data.data === "string") pubkey = data.data;
         else if (data.data.pubkey) pubkey = data.data.pubkey;
@@ -88,7 +87,6 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       groupable: false,
       subId: "nip19-parsing",
     });
-
     sub.on("event", async (event) => {
       if (event.kind === 0) {
         let content = JSON.parse(event.content);
@@ -107,6 +105,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       }
       if (event.kind === 1) {
         let parsedEvent = await getParsedNote(event);
+
         setEvent(parsedEvent);
         setIsLoading(false);
       }

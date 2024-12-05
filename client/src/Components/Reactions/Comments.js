@@ -81,6 +81,7 @@ export default function Comments({
       let extracted = extractNip19(comment);
       let content = extracted.content;
       let tags = [];
+
       if (noteTags) {
         tags = [
           ...tags,
@@ -88,7 +89,11 @@ export default function Comments({
             (tag) => tag[0] === "p" || (tag.length > 3 && tag[3] === "root")
           ),
         ];
-        tags.push(["e", replyId, "", "reply"]);
+        let checkIsRoot = tags.find(
+          (tag) => tag.length > 3 && tag[3] === "root"
+        );
+        if (checkIsRoot) tags.push(["e", replyId, "", "reply"]);
+        else tags.push([tagKind, replyId, "", "root"]);
         if (!tags.find((tag) => tag[0] === "p" && tag[1] === replyPubkey))
           tags.push(["p", replyPubkey]);
       }
@@ -132,21 +137,21 @@ export default function Comments({
 
   const adjustHeight = () => {
     if (textareaRef.current) {
-      if (comment.charAt(comment.length - 1) === "@")
-        setShowMentionSuggestions(true);
-      else {
-        let splitedNoteByMention = comment.split("@");
+      // if (comment.charAt(comment.length - 1) === "@")
+      //   setShowMentionSuggestions(true);
+      // else {
+      //   let splitedNoteByMention = comment.split("@");
 
-        if (
-          (splitedNoteByMention[splitedNoteByMention.length - 1].includes(
-            " "
-          ) &&
-            comment.charAt(comment.length - 1) !== "@") ||
-          !comment
-        ) {
-          setShowMentionSuggestions(false);
-        }
-      }
+      //   if (
+      //     (splitedNoteByMention[splitedNoteByMention.length - 1].includes(
+      //       " "
+      //     ) &&
+      //       comment.charAt(comment.length - 1) !== "@") ||
+      //     !comment
+      //   ) {
+      //     setShowMentionSuggestions(false);
+      //   }
+      // }
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
       textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
@@ -154,21 +159,45 @@ export default function Comments({
     }
   };
 
-  const handleTextAreaMentions = (keyword) => {
-    if (textareaRef.current) textareaRef.current.focus();
-    if (comment) setComment(comment + ` ${keyword}`);
-    else setComment(keyword);
-  };
+  // const handleTextAreaMentions = (keyword) => {
+  //   if (textareaRef.current) textareaRef.current.focus();
+  //   if (comment) setComment(comment + ` ${keyword}`);
+  //   else setComment(keyword);
+  // };
 
   const handleSelectingMention = (data) => {
-    let splitedNoteByMention = comment.split("@");
-    splitedNoteByMention[splitedNoteByMention.length - 1] = data;
+    // let splitedNoteByMention = comment.split("@");
+    // splitedNoteByMention[splitedNoteByMention.length - 1] = data;
 
-    setComment(splitedNoteByMention.join("@").replace("@npub", "npub"));
+    // setComment(splitedNoteByMention.join("@").replace("@npub", "npub"));
 
+    // setShowMentionSuggestions(false);
+    // setMention("");
+    // if (textareaRef.current) textareaRef.current.focus();
+    setComment((prev) => prev.replace(`@${mention}`, data));
+    // setMentionSet((prev) => [...prev, data]);
     setShowMentionSuggestions(false);
     setMention("");
     if (textareaRef.current) textareaRef.current.focus();
+  };
+
+  const handleInsertTextInPosition = (keyword) => {
+    let cursorPosition = 0;
+    if (textareaRef.current) {
+      cursorPosition = textareaRef.current.selectionStart;
+    }
+    const updatedText =
+      comment.slice(0, cursorPosition) +
+      ` ${keyword}` +
+      comment.slice(cursorPosition);
+    if (comment) setComment(updatedText);
+    else setComment(keyword);
+    let timeout = setTimeout(() => {
+      textareaRef.current.selectionStart = textareaRef.current.selectionEnd =
+        cursorPosition + keyword.length + 1;
+      textareaRef.current.focus();
+      setTimeout(timeout);
+    }, 0);
   };
 
   useEffect(() => {
@@ -205,21 +234,42 @@ export default function Comments({
   };
 
   const handleAddImage = (data) => {
-    if (comment) setComment(comment + " " + data);
-    if (!comment) setComment(data);
+    // if (comment) setComment(comment + " " + data);
+    // if (!comment) setComment(data);
+    handleInsertTextInPosition(data);
     setImgsSet((prev) => [...prev, data]);
   };
 
   const handleOnChange = (event) => {
-    let value = event.target.value;
-    let splitedNoteByHashtag = value.split("#");
-    let splitedNoteByMention = value.split("@");
+    // let value = event.target.value;
+    // let splitedNoteByHashtag = value.split("#");
+    // let splitedNoteByMention = value.split("@");
 
-    if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
-      setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
-    }
-    setComment(value);
+    // if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
+    //   setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
+    // }
+    // setComment(value);
     // if (!content && !linkedEvent) updateNoteDraft("root", value);
+    let value = event.target.value;
+    let cursorPosition = event.target.selectionStart;
+    // let splitedNoteByHashtag = value.split("#");
+    // let splitedNoteByMention = value.split("@");
+    const textUpToCursor = value.slice(0, cursorPosition);
+
+    // Match word starting with @ before the cursor
+    const match = textUpToCursor.match(/@(\w*)$/);
+
+    // Set the word after @, or empty string if no match
+    setMention(match ? match[1] : "");
+    if (match && !showMentionSuggestions) setShowMentionSuggestions(true);
+    if (!match) setShowMentionSuggestions(false);
+    // if (!splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(" ")) {
+    //   setTag(splitedNoteByHashtag[splitedNoteByHashtag.length - 1]);
+    // }
+    // if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
+    //   setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
+    // }
+    setComment(value);
   };
 
   if (!userKeys)
@@ -293,17 +343,14 @@ export default function Comments({
             className="fit-container fx-scattered fx-col"
             style={{ position: "relative" }}
           >
-            <div
-              className="fit-container"
-              style={{ position: "relative", }}
-            >
+            <div className="fit-container" style={{ position: "relative" }}>
               <textarea
                 type="text"
                 style={{
                   padding: 0,
                   // height: "auto",
                   // minHeight: "200px",
-                  maxHeight: "30vh" ,
+                  maxHeight: "30vh",
                   // maxHeight: "100%",
                   borderRadius: 0,
                 }}
@@ -322,7 +369,7 @@ export default function Comments({
                 />
               )}
             </div>
-            <NotePreview content={comment}viewPort={40} />
+            <NotePreview content={comment} viewPort={40} />
           </div>
           {/* {imgsSet.length > 0 && (
             <div
@@ -361,7 +408,7 @@ export default function Comments({
               <div
                 className="p-big pointer"
                 onClick={() => {
-                  handleTextAreaMentions("@");
+                  handleInsertTextInPosition("@");
                   setShowGIFs(false);
                 }}
               >
@@ -375,8 +422,9 @@ export default function Comments({
                 setIsUploadsLoading={() => null}
               />
               <Emojis
-                setEmoji={(data) =>
-                  setComment(comment ? `${comment} ${data}` : data)
+                setEmoji={
+                  (data) => handleInsertTextInPosition(data)
+                  // setComment(comment ? `${comment} ${data}` : data)
                 }
               />
               <div style={{ position: "relative" }}>

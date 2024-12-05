@@ -293,6 +293,24 @@ export default function Dashboard() {
     if (userKeys) fetchHomeData();
   }, [userKeys]);
 
+  const handleUpdate = async () => {
+    let userContent = await getSubData([
+      {
+        kinds: [30023, 30004, 30005, 34235],
+        limit: 5,
+        authors: [userKeys.pub],
+      },
+      { kinds: [30024], limit: 5, authors: [userKeys.pub] },
+    ]);
+    let latestPublished = userContent.data
+      .filter((event) => event.kind !== 30024)
+      .map((event) => getParsedRepEvent(event));
+
+    setUserPreview((prev) => {
+      return { ...prev, latestPublished: sortEvents(latestPublished) };
+    });
+  };
+
   return (
     <>
       {postToNote !== false && (
@@ -353,6 +371,7 @@ export default function Dashboard() {
                         setPostToNote={setPostToNote}
                         setContentFilter={setContentFilter}
                         setSelectedTab={setSelectedTab}
+                        handleUpdate={handleUpdate}
                       />
                     )}
                     {selectedTab === 1 && (
@@ -438,7 +457,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
     let subscription = ndkInstance.subscribe([{ ...filter, since }]);
     subscription.on("event", (event) => {
       let tempEvent = { ...event.rawEvent() };
-      if ([1, 6].includes(event.kind)) {
+      if (![1, 6].includes(event.kind)) {
         tempEvent = getParsedRepEvent(event.rawEvent());
       }
       dispatchEvents({ type: contentFrom, events: [tempEvent] });
@@ -908,254 +927,322 @@ const Interests = () => {
     </div>
   );
 };
-const HomeTab = ({ data, setPostToNote, setSelectedTab, setContentFilter }) => {
+const HomeTab = ({
+  data,
+  setPostToNote,
+  setSelectedTab,
+  setContentFilter,
+  handleUpdate,
+}) => {
   const userMetadata = useSelector((state) => state.userMetadata);
+  const [deleteEvent, setDeleteEvent] = useState(false);
+  const [addArtsToCur, setAddArtsToCur] = useState(false);
+  const [editEvent, setEditEvent] = useState(false);
+  const [showCurationCreator, setShowCurationCreator] = useState(false);
+
+  const handleEditItem = (event) => {
+    if ([30004, 30005].includes(event.kind)) {
+      setShowCurationCreator(true);
+    }
+    setEditEvent(event);
+  };
+
+  const handleUpdateEvent = () => {
+    let timer = setTimeout(() => {
+      setShowCurationCreator(false);
+      setEditEvent(false);
+      setDeleteEvent(false)
+      handleUpdate();
+      clearTimeout(timer)
+    }, [1000])
+  }
 
   return (
-    <div className="fit-container box-pad-v box-pad-h">
-      <div className="fit-container fx-scattered">
-        <h3>Home</h3>
-        {/* <div style={{ width: "150px" }}>
+    <>
+      {addArtsToCur && (
+        <AddArticlesToCuration
+          curation={addArtsToCur}
+          tags={addArtsToCur.tags}
+          relaysToPublish={[]}
+          curationKind={addArtsToCur.kind}
+          postKind={addArtsToCur.kind === 30004 ? 30023 : 34235}
+          exit={() => {
+            setAddArtsToCur(false);
+          }}
+          exitAndRefresh={() => {
+            setAddArtsToCur(false);
+          }}
+        />
+      )}
+      {deleteEvent && (
+        <ToDeleteGeneral
+          eventId={deleteEvent.id}
+          title={deleteEvent.title}
+          refresh={handleUpdateEvent}
+          cancel={() => setDeleteEvent(false)}
+          aTag={deleteEvent.aTag}
+        />
+      )}
+      {showCurationCreator && (
+        <AddCurationNOSTR
+          exit={handleUpdateEvent}
+          curation={editEvent ? editEvent : null}
+          tags={editEvent.tags}
+          relaysToPublish={[]}
+        />
+      )}
+      <div className="fit-container box-pad-v box-pad-h">
+        <div className="fit-container fx-scattered">
+          <h3>Home</h3>
+          {/* <div style={{ width: "150px" }}>
           <WriteNew exit={() => null} />
         </div> */}
-      </div>
-      <div className="fit-container fx-centered fx-col box-pad-v">
-        <div className="fit-container fx-centered fx-stretch fx-wrap">
-          <div
-            className="sc-s-18 box-pad-v fx"
-            style={{ position: "relative", flex: "1 1 400px" }}
-          >
+        </div>
+        <div className="fit-container fx-centered fx-col box-pad-v">
+          <div className="fit-container fx-centered fx-stretch fx-wrap">
             <div
-              style={{
-                backgroundImage: `url(${userMetadata.banner})`,
-                position: "absolute",
-                left: 0,
-                top: 0,
-                zIndex: 0,
-                height: "40%",
-                width: "100%",
-              }}
-              className="bg-img cover-bg"
-            ></div>
-            <div
-              className="box-pad-h fx fx-centered fx-col fx-start-h"
-              style={{ position: "relative", zIndex: 1 }}
+              className="sc-s-18 box-pad-v fx"
+              style={{ position: "relative", flex: "1 1 400px" }}
             >
               <div
                 style={{
-                  border: "6px solid var(--c1-side)",
-                  borderRadius: "22px",
+                  backgroundImage: `url(${userMetadata.banner})`,
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  zIndex: 0,
+                  height: "40%",
+                  width: "100%",
                 }}
-              >
-                <UserProfilePicNOSTR mainAccountUser={true} size={110} />
-              </div>
-              <div className="fx-centered fx-col">
-                <h4>{userMetadata.display_name || userMetadata.name}</h4>
-                <p className="gray-c">
-                  Joined date{" "}
-                  <Date_
-                    toConvert={new Date(data.userProfile.time_joined * 1000)}
-                  />
-                </p>
-              </div>
-              <Link to={`/yaki-points`}>
-                <button className="btn btn-normal fx-centered">
-                  <div className="cup"></div> Yaki points
-                </button>
-              </Link>
-            </div>
-          </div>
-          <div
-            className="fx-centered fx-col fx fx-stretch"
-            style={{ flex: "1 1 400px" }}
-          >
-            <div className="fit-container fx-centered fx">
+                className="bg-img cover-bg"
+              ></div>
               <div
-                className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
-                style={{ backgroundColor: "transparent", gap: "16px" }}
+                className="box-pad-h fx fx-centered fx-col fx-start-h"
+                style={{ position: "relative", zIndex: 1 }}
               >
                 <div
-                  className="user-followed-24"
-                  style={{ minWidth: "32px", minHeight: "32px" }}
-                ></div>
-                <div className="fx-centered">
-                  <h4>{data.userProfile?.follows_count || 0}</h4>
-                  <p className="gray-c">Following</p>
+                  style={{
+                    border: "6px solid var(--c1-side)",
+                    borderRadius: "22px",
+                  }}
+                >
+                  <UserProfilePicNOSTR mainAccountUser={true} size={110} />
                 </div>
-              </div>
-              <div
-                className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
-                style={{ backgroundColor: "transparent", gap: "16px" }}
-              >
-                <div
-                  className="user-followed-24"
-                  style={{ minWidth: "32px", minHeight: "32px" }}
-                ></div>
-                <div className="fx-centered">
-                  <h4>{data.userProfile?.followers_count || 0}</h4>
-                  <p className="gray-c">Followers</p>
+                <div className="fx-centered fx-col">
+                  <h4>{userMetadata.display_name || userMetadata.name}</h4>
+                  <p className="gray-c">
+                    Joined date{" "}
+                    <Date_
+                      toConvert={new Date(data.userProfile.time_joined * 1000)}
+                    />
+                  </p>
                 </div>
+                <Link to={`/yaki-points`}>
+                  <button className="btn btn-normal fx-centered">
+                    <div className="cup"></div> Yaki points
+                  </button>
+                </Link>
               </div>
             </div>
-            <div className="fit-container fx-centered fx">
-              <div
-                className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
-                style={{ backgroundColor: "transparent", gap: "16px" }}
-              >
-                <div
-                  className="note-24"
-                  style={{ minWidth: "32px", minHeight: "32px" }}
-                ></div>
-                <div className="fx-centered">
-                  <h4>{data.userProfile?.note_count || 0}</h4>
-                  <p className="gray-c">Notes</p>
-                </div>
-              </div>
-              <div
-                className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
-                style={{ backgroundColor: "transparent", gap: "16px" }}
-              >
-                <div
-                  className="comment-icon"
-                  style={{ minWidth: "32px", minHeight: "32px" }}
-                ></div>
-                <div className="fx-centered">
-                  <h4>{data.userProfile?.reply_count || 0}</h4>
-                  <p className="gray-c">Replies</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="fit-container fx-centered fx-wrap">
-          <div
-            className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
-            style={{
-              backgroundColor: "transparent",
-              gap: "16px",
-              flex: "1 1 400px",
-            }}
-          >
             <div
-              className="bolt-24"
-              style={{ minWidth: "32px", minHeight: "32px" }}
-            ></div>
-            <div className="fx-centered">
-              <h4>
-                <NumberShrink value={data.userProfile?.total_zap_count || 0} />
-              </h4>
-              <p className="gray-c">Zaps received</p>
-              <p className="gray-c p-medium">&#8226; </p>
-              <h4>
-                <NumberShrink value={data.userProfile?.total_satszapped || 0} />
-              </h4>
-              <p className="gray-c">Total amount</p>
+              className="fx-centered fx-col fx fx-stretch"
+              style={{ flex: "1 1 400px" }}
+            >
+              <div className="fit-container fx-centered fx">
+                <div
+                  className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                >
+                  <div
+                    className="user-followed-24"
+                    style={{ minWidth: "32px", minHeight: "32px" }}
+                  ></div>
+                  <div className="fx-centered">
+                    <h4>{data.userProfile?.follows_count || 0}</h4>
+                    <p className="gray-c">Following</p>
+                  </div>
+                </div>
+                <div
+                  className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                >
+                  <div
+                    className="user-followed-24"
+                    style={{ minWidth: "32px", minHeight: "32px" }}
+                  ></div>
+                  <div className="fx-centered">
+                    <h4>{data.userProfile?.followers_count || 0}</h4>
+                    <p className="gray-c">Followers</p>
+                  </div>
+                </div>
+              </div>
+              <div className="fit-container fx-centered fx">
+                <div
+                  className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                >
+                  <div
+                    className="note-24"
+                    style={{ minWidth: "32px", minHeight: "32px" }}
+                  ></div>
+                  <div className="fx-centered">
+                    <h4>{data.userProfile?.note_count || 0}</h4>
+                    <p className="gray-c">Notes</p>
+                  </div>
+                </div>
+                <div
+                  className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                >
+                  <div
+                    className="comment-icon"
+                    style={{ minWidth: "32px", minHeight: "32px" }}
+                  ></div>
+                  <div className="fx-centered">
+                    <h4>{data.userProfile?.reply_count || 0}</h4>
+                    <p className="gray-c">Replies</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div
-            className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
-            style={{
-              backgroundColor: "transparent",
-              gap: "16px",
-              flex: "1 1 400px",
-            }}
-          >
+          <div className="fit-container fx-centered fx-wrap">
             <div
-              className="bolt-24"
-              style={{ minWidth: "32px", minHeight: "32px" }}
-            ></div>
-            <div className="fx-centered">
-              <h4>
-                {
+              className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
+              style={{
+                backgroundColor: "transparent",
+                gap: "16px",
+                flex: "1 1 400px",
+              }}
+            >
+              <div
+                className="bolt-24"
+                style={{ minWidth: "32px", minHeight: "32px" }}
+              ></div>
+              <div className="fx-centered">
+                <h4>
                   <NumberShrink
-                    value={data.userProfile?.zaps_sent?.count || 0}
+                    value={data.userProfile?.total_zap_count || 0}
                   />
-                }
-              </h4>
-              <p className="gray-c">Zaps sent</p>
-              <p className="gray-c p-medium">&#8226; </p>
-              <h4>
-                <NumberShrink
-                  value={(data.userProfile?.zaps_sent?.msats || 0) / 1000}
-                />
-              </h4>
-              <p className="gray-c">Total amount</p>
+                </h4>
+                <p className="gray-c">Zaps received</p>
+                <p className="gray-c p-medium">&#8226; </p>
+                <h4>
+                  <NumberShrink
+                    value={data.userProfile?.total_satszapped || 0}
+                  />
+                </h4>
+                <p className="gray-c">Total amount</p>
+              </div>
+            </div>
+            <div
+              className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
+              style={{
+                backgroundColor: "transparent",
+                gap: "16px",
+                flex: "1 1 400px",
+              }}
+            >
+              <div
+                className="bolt-24"
+                style={{ minWidth: "32px", minHeight: "32px" }}
+              ></div>
+              <div className="fx-centered">
+                <h4>
+                  {
+                    <NumberShrink
+                      value={data.userProfile?.zaps_sent?.count || 0}
+                    />
+                  }
+                </h4>
+                <p className="gray-c">Zaps sent</p>
+                <p className="gray-c p-medium">&#8226; </p>
+                <h4>
+                  <NumberShrink
+                    value={(data.userProfile?.zaps_sent?.msats || 0) / 1000}
+                  />
+                </h4>
+                <p className="gray-c">Total amount</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      {data.latestPublished.length > 0 && (
-        <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-          <p className="gray-c p-big">Latest published</p>
-          <div className="fit-container fx-centered fx-col fx-start-v">
-            {data.latestPublished.map((event) => {
-              return (
-                <ContentCard
-                  key={event.id}
-                  event={event}
-                  setPostToNote={setPostToNote}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
-      {(data.localDraft || data.drafts.length > 0) && (
-        <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-          <p className="gray-c p-big">Drafts</p>
-          <div className="fit-container fx-centered fx-col fx-start-v">
-            {data.localDraft && (
-              <>
-                <p className="c1-c">Ongoing</p>
-                {data.localDraft.noteDraft && (
+        {data.latestPublished.length > 0 && (
+          <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
+            <p className="gray-c p-big">Latest published</p>
+            <div className="fit-container fx-centered fx-col fx-start-v">
+              {data.latestPublished.map((event) => {
+                return (
                   <ContentCard
-                    event={data.localDraft.noteDraft}
+                    key={event.id}
+                    event={event}
                     setPostToNote={setPostToNote}
+                    setDeleteEvent={setDeleteEvent}
+                    setEditItem={handleEditItem}
+                    setAddArtsToCur={setAddArtsToCur}
                   />
-                )}
-                {data.localDraft.artDraft && (
-                  <ContentCard event={data.localDraft.artDraft} />
-                )}
-                {data.localDraft.smartWidgetDraft && (
-                  <ContentCard event={data.localDraft.smartWidgetDraft} />
-                )}
-              </>
-            )}
-            {data.drafts.length > 0 && (
-              <>
-                <div className="fit-container fx-scattered">
-                  <p>Saved</p>
-                  {data.drafts.length > 4 && (
-                    <p
-                      className="btn-text-gray pointer"
-                      onClick={() => {
-                        setSelectedTab(1);
-                        setContentFilter("drafts");
-                      }}
-                    >
-                      See all
-                    </p>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {(data.localDraft || data.drafts.length > 0) && (
+          <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
+            <p className="gray-c p-big">Drafts</p>
+            <div className="fit-container fx-centered fx-col fx-start-v">
+              {data.localDraft && (
+                <>
+                  <p className="c1-c">Ongoing</p>
+                  {data.localDraft.noteDraft && (
+                    <ContentCard
+                      event={data.localDraft.noteDraft}
+                      setPostToNote={setPostToNote}
+                    />
                   )}
-                </div>
-                {data.drafts.slice(0, 4).map((event) => {
-                  return <ContentCard key={event.id} event={event} />;
-                })}
-              </>
-            )}
+                  {data.localDraft.artDraft && (
+                    <ContentCard event={data.localDraft.artDraft} />
+                  )}
+                  {data.localDraft.smartWidgetDraft && (
+                    <ContentCard event={data.localDraft.smartWidgetDraft} />
+                  )}
+                </>
+              )}
+              {data.drafts.length > 0 && (
+                <>
+                  <div className="fit-container fx-scattered">
+                    <p>Saved</p>
+                    {data.drafts.length > 4 && (
+                      <p
+                        className="btn-text-gray pointer"
+                        onClick={() => {
+                          setSelectedTab(1);
+                          setContentFilter("drafts");
+                        }}
+                      >
+                        See all
+                      </p>
+                    )}
+                  </div>
+                  {data.drafts.slice(0, 4).map((event) => {
+                    return <ContentCard key={event.id} event={event} />;
+                  })}
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-      {data.popularNotes.length > 0 && (
-        <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-          <p className="gray-c p-big">Popular notes</p>
-          <div className="fit-container fx-centered fx-col">
-            {data.popularNotes.map((event) => {
-              return <ContentCard key={event.id} event={event} />;
-            })}
+        )}
+        {data.popularNotes.length > 0 && (
+          <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
+            <p className="gray-c p-big">Popular notes</p>
+            <div className="fit-container fx-centered fx-col">
+              {data.popularNotes.map((event) => {
+                return <ContentCard key={event.id} event={event} />;
+              })}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 };
 
@@ -1442,7 +1529,7 @@ const RepCard = ({
       <div onClick={copyID} className="pointer">
         <p>Copy naddr</p>
       </div>,
-      setAddArtsToCur && (
+      setAddArtsToCur && [30004, 30005].includes(event.kind) && (
         <div
           className="fit-container"
           onClick={(e) => {
