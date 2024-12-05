@@ -746,7 +746,7 @@ const UserFeed = ({ user }) => {
       notes: [1, 6],
       flashnews: [1],
       articles: [30023],
-      videos: [34235],
+      videos: [34235, 34236],
       curations: [30004],
       "smart-widget": [30031],
     };
@@ -811,6 +811,7 @@ const UserFeed = ({ user }) => {
     });
 
     subscription.on("event", async (event) => {
+
       if ([1, 6].includes(event.kind)) {
         let event_ = await getParsedNote(event);
         if (event_) {
@@ -833,8 +834,9 @@ const UserFeed = ({ user }) => {
           console.log(err);
         }
       }
-      if ([34235].includes(event.kind)) {
+      if ([34235, 34236].includes(event.kind)) {
         let event_ = getParsedRepEvent(event);
+        console.log(event_)
         events_.push(event_);
       }
     });

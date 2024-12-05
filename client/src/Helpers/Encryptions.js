@@ -195,7 +195,7 @@ const getParsedRepEvent = (event) => {
       created_at: event.created_at,
       tags: event.tags,
       author: getEmptyuserMetadata(event.pubkey),
-      title: "",
+      title: [34235, 34236].includes(event.kind) ? event.content : "",
       description: "",
       image: "",
       imagePP: getImagePlaceholder(),

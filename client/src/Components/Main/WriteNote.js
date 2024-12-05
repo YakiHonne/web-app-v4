@@ -50,6 +50,7 @@ export default function WriteNote({
   const isPublishing = useSelector((state) => state.isPublishing);
 
   const [note, setNote] = useState(content);
+  const [rawNote, setRawNote] = useState(content);
   const [tag, setTag] = useState("");
   const [mention, setMention] = useState("");
   const [showHashSuggestions, setShowTagsSuggestions] = useState(false);
@@ -96,29 +97,32 @@ export default function WriteNote({
 
   const adjustHeight = () => {
     if (textareaRef.current) {
-      if (note.charAt(note.length - 1) === "#") setShowTagsSuggestions(true);
-      if (note.charAt(note.length - 1) === "@") setShowMentionSuggestions(true);
+      let cursorPosition = textareaRef.current.selectionStart;
+
+      // if (note.charAt(note.length - 1) === "#") setShowTagsSuggestions(true);
+      if (note.charAt(cursorPosition - 1) === "@")
+        setShowMentionSuggestions(true);
       else {
-        let splitedNoteByHashtag = note.split("#");
+        // let splitedNoteByHashtag = note.split("#");
         let splitedNoteByMention = note.split("@");
-        if (
-          (splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(
-            " "
-          ) &&
-            note.charAt(note.length - 1) !== "#") ||
-          !note
-        ) {
-          setShowTagsSuggestions(false);
-        }
-        if (
-          (splitedNoteByMention[splitedNoteByMention.length - 1].includes(
-            " "
-          ) &&
-            note.charAt(note.length - 1) !== "@") ||
-          !note
-        ) {
-          setShowMentionSuggestions(false);
-        }
+        // if (
+        //   (splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(
+        //     " "
+        //   ) &&
+        //     note.charAt(note.length - 1) !== "#") ||
+        //   !note
+        // ) {
+        //   setShowTagsSuggestions(false);
+        // }
+        // if (
+        //   (splitedNoteByMention[splitedNoteByMention.length - 1].includes(
+        //     " "
+        //   ) &&
+        //     note.charAt(cursorPosition - 1) !== "@") ||
+        //   !note
+        // ) {
+        //   setShowMentionSuggestions(false);
+        // }
       }
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -129,15 +133,24 @@ export default function WriteNote({
 
   const handleChange = (event) => {
     let value = event.target.value;
-    let splitedNoteByHashtag = value.split("#");
-    let splitedNoteByMention = value.split("@");
+    let cursorPosition = event.target.selectionStart;
+    // let splitedNoteByHashtag = value.split("#");
+    // let splitedNoteByMention = value.split("@");
+    const textUpToCursor = value.slice(0, cursorPosition);
 
-    if (!splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(" ")) {
-      setTag(splitedNoteByHashtag[splitedNoteByHashtag.length - 1]);
-    }
-    if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
-      setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
-    }
+    // Match word starting with @ before the cursor
+    const match = textUpToCursor.match(/@(\w*)$/);
+
+    // Set the word after @, or empty string if no match
+    setMention(match ? match[1] : "");
+    if (match && !showMentionSuggestions) setShowMentionSuggestions(true);
+    if (!match) setShowMentionSuggestions(false);
+    // if (!splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(" ")) {
+    //   setTag(splitedNoteByHashtag[splitedNoteByHashtag.length - 1]);
+    // }
+    // if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
+    //   setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
+    // }
     setNote(value);
     // if (!content && !linkedEvent) updateNoteDraft("root", value);
   };
@@ -153,10 +166,12 @@ export default function WriteNote({
     if (textareaRef.current) textareaRef.current.focus();
   };
   const handleSelectingMention = (data) => {
-    let splitedNoteByMention = note.split("@");
-    splitedNoteByMention[splitedNoteByMention.length - 1] = data;
+    // let splitedNoteByMention = note.split("@");
+    // splitedNoteByMention[splitedNoteByMention.length - 1] = data;
 
-    setNote(splitedNoteByMention.join("@").replace("@npub", "npub") + " ");
+    // setNote(splitedNoteByMention.join("@").replace("@npub", "npub") + " ");
+    setNote((prev) => prev.replace(`@${mention}`, `${data} `));
+    // setNote((prev) => prev.replace(`@${mention}`, `@[${data.display_name || data.name}] `));
     // setMentionSet((prev) => [...prev, data]);
     setShowMentionSuggestions(false);
     setMention("");
@@ -348,8 +363,9 @@ export default function WriteNote({
   };
 
   const handleAddImage = (data) => {
-    if (note) setNote(note + " " + data);
-    if (!note) setNote(data);
+    // if (note) setNote(note + " " + data);
+    // if (!note) setNote(data);
+    handleInsertTextInPosition(data)
     setImgsSet((prev) => [...prev, data]);
   };
 
@@ -361,7 +377,9 @@ export default function WriteNote({
           `https://yakihonne.com/smart-widget-checker?naddr=${data.naddr} `
       );
     if (!note)
-      setNote(`https://yakihonne.com/smart-widget-checker?naddr=${data.naddr} `);
+      setNote(
+        `https://yakihonne.com/smart-widget-checker?naddr=${data.naddr} `
+      );
     setWidgetsSet((prev) => [...prev, data]);
     setShowSmartWidgets(false);
   };
@@ -385,10 +403,23 @@ export default function WriteNote({
     setWidgetsSet(tempWidgetSet);
   };
 
-  const handleTextAreaMentions = (keyword) => {
-    if (textareaRef.current) textareaRef.current.focus();
-    if (note) setNote(note + ` ${keyword}`);
+  const handleInsertTextInPosition = (keyword) => {
+    let cursorPosition = 0;
+    if (textareaRef.current) {
+      cursorPosition = textareaRef.current.selectionStart;
+    }
+    const updatedText =
+      note.slice(0, cursorPosition) +
+      ` ${keyword}` +
+      note.slice(cursorPosition);
+    if (note) setNote(updatedText);
     else setNote(keyword);
+    let timeout = setTimeout(() => {
+      textareaRef.current.selectionStart = textareaRef.current.selectionEnd =
+        cursorPosition + keyword.length + 1;
+      textareaRef.current.focus();
+      setTimeout(timeout);
+    }, 0);
   };
 
   const copyKey = (key) => {
@@ -580,6 +611,7 @@ export default function WriteNote({
                 <MentionSuggestions
                   mention={mention}
                   setSelectedMention={handleSelectingMention}
+                  // setSelectedMentionMetadata={handleSelectingMention}
                 />
               )}
             </div>
@@ -594,7 +626,7 @@ export default function WriteNote({
                 <div
                   className="p-big pointer"
                   onClick={() => {
-                    handleTextAreaMentions("@");
+                    handleInsertTextInPosition("@");
                     setShowGIFs(false);
                   }}
                 >
@@ -606,7 +638,10 @@ export default function WriteNote({
                   setIsUploadsLoading={() => null}
                 />
                 <Emojis
-                  setEmoji={(data) => setNote(note ? `${note} ${data} ` : `${data} `)}
+                  setEmoji={(data) =>
+                    handleInsertTextInPosition(data)
+                    // setNote(note ? `${note} ${data} ` : `${data} `)
+                  }
                 />
                 <div style={{ position: "relative" }}>
                   <div
@@ -1092,7 +1127,7 @@ export default function WriteNote({
 //     setWidgetsSet(tempWidgetSet);
 //   };
 
-//   const handleTextAreaMentions = (keyword) => {
+//   const handleInsertTextInPosition = (keyword) => {
 //     if (textareaRef.current) textareaRef.current.focus();
 //     if (note) setNote(note + ` ${keyword}`);
 //     else setNote(keyword);
@@ -1355,7 +1390,7 @@ export default function WriteNote({
 //                 <div
 //                   className="p-big pointer"
 //                   onClick={() => {
-//                     handleTextAreaMentions("@");
+//                     handleInsertTextInPosition("@");
 //                     setShowGIFs(false);
 //                   }}
 //                 >
@@ -1363,7 +1398,7 @@ export default function WriteNote({
 //                 </div>
 //                 {/* <div
 //                 className="round-icon-small"
-//                 onClick={() => handleTextAreaMentions("#")}
+//                 onClick={() => handleInsertTextInPosition("#")}
 //                 >
 //                 <div className="hashtag"></div>
 //                 </div> */}

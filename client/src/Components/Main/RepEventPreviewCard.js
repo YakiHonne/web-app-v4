@@ -22,7 +22,7 @@ const checkFollowing = (list, toFollowKey) => {
 const getURL = (item) => {
   if (item.kind === 30023) return `/article/${item.naddr}`;
   if ([30004, 30005].includes(item.kind)) return `/curations/${item.naddr}`;
-  if (item.kind === 34235) return `/videos/${item.naddr}`;
+  if ([34235, 34236].includes(item.kind)) return `/videos/${item.naddr}`;
 };
 
 export default function RepEventPreviewCard({

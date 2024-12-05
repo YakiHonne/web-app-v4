@@ -88,7 +88,6 @@ export default function Gifs({ setGif , exit, position = "left"}) {
         key={search}
         onGifClick={(data, e) => {
           e.preventDefault();
-          console.log(data);
           setGif(data.images.original.url);
         }}
         hideAttribution={true}
