@@ -76,11 +76,12 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         });
       }
     } catch (err) {
-      // console.log(err);
+      console.log(err);
       setIsLoading(false);
       return;
     }
     setIsParsed(true);
+    
     const sub = ndkInstance.subscribe(filter, {
       // cacheUsage: "ONLY_RELAY",
       cacheUsage: "CACHE_FIRST",

@@ -2050,9 +2050,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .main-middle {
     width: 600px;
+    /* max-width: 600px; */
 }
 
 .extras-homepage {
+  
     padding-left: 1rem;
     border-left: 1px solid var(--very-dim-gray);
     min-height: 100vh;

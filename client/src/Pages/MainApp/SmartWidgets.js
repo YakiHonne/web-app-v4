@@ -242,7 +242,7 @@ export default function SmartWidgets() {
           <main className="main-page-nostr-container">
             <div className="fx-centered fit-container fx-start-h fx-start-v" style={{gap: 0}}>
               <div
-                className="box-pad-h-m  fit-container fx-col fx-centered fx-start-h fx-start-v main-middle"
+                className="box-pad-h-m fx-col fx-centered fx-start-h fx-start-v main-middle"
                 style={{  gap: 0 }}
               >
                 <div
@@ -283,7 +283,7 @@ export default function SmartWidgets() {
                 </div>
                 <div
                   className={`fit-container fx-col fx-centered fx-start-h fx-start-v`}
-                  style={{ width: "min(100%,700px)" }}
+                  // style={{ width: "min(100%,700px)" }}
                 >
                   {contentSource === "community" &&
                     comWidgets.map((widget) => {
@@ -404,7 +404,7 @@ const NoteCard = ({ note }) => {
           <div className="share-icon"></div>
         </Link>
       </div>
-      <div className="fit-container">{note.parsedContent}</div>
+      <div className="fit-container" style={{wordBreak: "break-word"}}>{note.parsedContent}</div>
     </div>
   );
 };
