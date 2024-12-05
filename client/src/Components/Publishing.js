@@ -137,7 +137,8 @@ export default function Publishing() {
           event.relaysToPublish.length;
         if (checkIsFinished) {
           event.isFinished = true;
-          updateYakiChest(event.action_key);
+
+          // updateYakiChest(event.action_key);
         }
         return event;
       }
@@ -341,6 +342,7 @@ export default function Publishing() {
         tempArray[index].isFinished = true;
         return tempArray;
       });
+
       updateYakiChest(action_key);
       clearTimeout(timeout);
     }, PUBLISHING_TIMEOUT);
@@ -569,97 +571,107 @@ export default function Publishing() {
                     <div className="trash"></div>
                   </div>
                 </div>
-                {publishedEvents.map((event, index) => ({ ...event, originalIndex: index })).slice().reverse().map((event, index) => {
-                  let succeeded = event.relaysToPublish.filter(
-                    (relay) => relay.status === 1
-                  ).length;
-                  let failed = event.relaysToPublish.filter(
-                    (relay) => relay.status === 2
-                  );
-                  return (
-                    <div
-                      key={event.id}
-                      className="fit-container sc-s-18 box-pad-h-m box-pad-v-m"
-                    >
+                {publishedEvents
+                  .map((event, index) => ({ ...event, originalIndex: index }))
+                  .slice()
+                  .reverse()
+                  .map((event, index) => {
+                    let succeeded = event.relaysToPublish.filter(
+                      (relay) => relay.status === 1
+                    ).length;
+                    let failed = event.relaysToPublish.filter(
+                      (relay) => relay.status === 2
+                    );
+                    return (
                       <div
-                        className="fit-container fx-scattered pointer"
-                        onClick={() => handleShowEventStats(event.ndkEvent.id)}
+                        key={event.id}
+                        className="fit-container sc-s-18 box-pad-h-m box-pad-v-m"
                       >
+                        <div
+                          className="fit-container fx-scattered pointer"
+                          onClick={() =>
+                            handleShowEventStats(event.ndkEvent.id)
+                          }
+                        >
+                          <div className="fit-container fx-centered fx-start-h">
+                            <p>
+                              <span className="orange-c">
+                                Kind {event.ndkEvent.kind}{" "}
+                              </span>
+                              published on
+                            </p>
+                            <Date_
+                              toConvert={
+                                new Date(event.ndkEvent.created_at * 1000)
+                              }
+                              time={true}
+                            />
+                          </div>
+                          <div
+                            className="fx-centered"
+                            style={{ minWidth: "max-content" }}
+                          >
+                            <p className="btn-text">Details</p>
+                          </div>
+                        </div>
+                        {showEventStats === event.ndkEvent.id && (
+                          <div className="box-pad-v-m fit-container fx-col fx-centered">
+                            {event.relaysToPublish.map((relay, index) => {
+                              return (
+                                <div
+                                  className="fx-scattered if ifs-full"
+                                  key={`${relay.url}-${index}`}
+                                >
+                                  {relay.status === 0 && (
+                                    <p className="gray-c">{relay.url}</p>
+                                  )}
+                                  {relay.status === 2 && (
+                                    <p className="red-c">{relay.url}</p>
+                                  )}
+                                  {relay.status === 1 && <p>{relay.url}</p>}
+                                  {relay.status === 0 && <LoadingDots />}
+                                  {relay.status === 2 && (
+                                    <div
+                                      className="crossmark-tt-24"
+                                      data-tooltip={relay.msg || ""}
+                                    ></div>
+                                  )}
+                                  {relay.status === 1 && (
+                                    <div className="checkmark-tt-24"></div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {event.isFinished &&
+                              failed.length > 0 &&
+                              userMetadata.pubkey === event.ndkEvent.pubkey && (
+                                <button
+                                  className="btn btn-normal"
+                                  onClick={() =>
+                                    retry(
+                                      event.ndkEvent,
+                                      failed,
+                                      event.originalIndex
+                                    )
+                                  }
+                                >
+                                  Retry
+                                </button>
+                              )}
+                          </div>
+                        )}
                         <div className="fit-container fx-centered fx-start-h">
                           <p>
-                            <span className="orange-c">
-                              Kind {event.ndkEvent.kind}{" "}
-                            </span>
-                            published on
+                            {succeeded}
+                            <span className="gray-c"> succeeded</span>
                           </p>
-                          <Date_
-                            toConvert={
-                              new Date(event.ndkEvent.created_at * 1000)
-                            }
-                            time={true}
-                          />
-                        </div>
-                        <div
-                          className="fx-centered"
-                          style={{ minWidth: "max-content" }}
-                        >
-                          <p className="btn-text">Details</p>
+                          {failed.length > 0 && (
+                            <p className="red-c">{failed.length} failed</p>
+                          )}
                         </div>
                       </div>
-                      {showEventStats === event.ndkEvent.id && (
-                        <div className="box-pad-v-m fit-container fx-col fx-centered">
-                          {event.relaysToPublish.map((relay, index) => {
-                            return (
-                              <div
-                                className="fx-scattered if ifs-full"
-                                key={`${relay.url}-${index}`}
-                              >
-                                {relay.status === 0 && (
-                                  <p className="gray-c">{relay.url}</p>
-                                )}
-                                {relay.status === 2 && (
-                                  <p className="red-c">{relay.url}</p>
-                                )}
-                                {relay.status === 1 && <p>{relay.url}</p>}
-                                {relay.status === 0 && <LoadingDots />}
-                                {relay.status === 2 && (
-                                  <div
-                                    className="crossmark-tt-24"
-                                    data-tooltip={relay.msg || ""}
-                                  ></div>
-                                )}
-                                {relay.status === 1 && (
-                                  <div className="checkmark-tt-24"></div>
-                                )}
-                              </div>
-                            );
-                          })}
-                          {event.isFinished &&
-                            failed.length > 0 &&
-                            userMetadata.pubkey === event.ndkEvent.pubkey && (
-                              <button
-                                className="btn btn-normal"
-                                onClick={() =>
-                                  retry(event.ndkEvent, failed, event.originalIndex)
-                                }
-                              >
-                                Retry
-                              </button>
-                            )}
-                        </div>
-                      )}
-                      <div className="fit-container fx-centered fx-start-h">
-                        <p>
-                          {succeeded}
-                          <span className="gray-c"> succeeded</span>
-                        </p>
-                        {failed.length > 0 && (
-                          <p className="red-c">{failed.length} failed</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             )}
             {publishedEvents.length === 0 && (

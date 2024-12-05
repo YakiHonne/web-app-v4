@@ -300,6 +300,7 @@ const getNoteTree = async (note, minimal = false) => {
       //     currentIndex = i;
       //   }
       // }
+      console.log(nip19add)
       const parts = nip19add.split(/([@.,?!\s:])/); // Matches delimiters and preserves them in the result
 
       // Step 2: Process each part
