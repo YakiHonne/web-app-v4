@@ -42,7 +42,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         if (data.data.kind === 30023) url_ = `/article/${addr_}`;
         if ([30004, 30005].includes(data.data.kind))
           url_ = `/curations/${addr_}`;
-        if (data.data.kind === 34235) url_`/videos/${addr_}`;
+        if (data.data.kind === 34235) url_ = `/videos/${addr_}`;
         setUrl(url_);
       }
       if (addr_.startsWith("nprofile")) {

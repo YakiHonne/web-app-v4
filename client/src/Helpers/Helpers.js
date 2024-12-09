@@ -300,7 +300,7 @@ const getNoteTree = async (note, minimal = false) => {
       //     currentIndex = i;
       //   }
       // }
-      console.log(nip19add)
+
       const parts = nip19add.split(/([@.,?!\s:])/); // Matches delimiters and preserves them in the result
 
       // Step 2: Process each part
@@ -314,7 +314,7 @@ const getNoteTree = async (note, minimal = false) => {
         ) {
           // Clean and decode addresses
           const cleanedPart = part.replace(/[@.,?!]/g, ""); // Remove unwanted characters
-     
+
           return (
             <Fragment key={index}>
               <Nip19Parsing addr={cleanedPart} minimal={minimal} />
@@ -462,6 +462,7 @@ const getNIP21FromURL = (url) => {
 
 const getComponent = (children) => {
   if (!children) return <></>;
+  console.log(children)
   let res = [];
   for (let i = 0; i < children.length; i++) {
     if (typeof children[i] === "string") {
@@ -508,17 +509,47 @@ const getComponent = (children) => {
           }
         }
         if (!child_.startsWith("nostr:")) {
+          const lines = child_.split("\n");
           res.push(
-            <span
-              dir="auto"
-              key={key}
-              style={{
-                wordBreak: "break-word",
-              }}
-            >
-              {child_}{" "}
+            <span>
+              {lines.map((line, index) => (
+                <React.Fragment key={index}>
+                  <span
+                    dir="auto"
+                    key={key}
+                    style={{
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {line}{" "}
+                  </span>
+                  {index < lines.length - 1 && <br />}
+                </React.Fragment>
+              ))}
             </span>
           );
+          // res.push(
+          //   <span
+          //     dir="auto"
+          //     key={key}
+          //     style={{
+          //       wordBreak: "break-word",
+          //     }}
+          //   >
+          //     {child_}{" "}
+          //   </span>
+          // );
+          // res.push(
+          //   <span
+          //     dir="auto"
+          //     key={key}
+          //     style={{
+          //       wordBreak: "break-word",
+          //     }}
+          //   >
+          //     {child_}{" "}
+          //   </span>
+          // );
         }
       }
     }
@@ -1236,7 +1267,7 @@ const updateWallets = (wallets_, pubkey_) => {
 
   try {
     wallets = wallets ? JSON.parse(wallets) : [];
-    let pubkey = pubkey_ || userKeys?.pub ;
+    let pubkey = pubkey_ || userKeys?.pub;
     let wallets_index = wallets.findIndex(
       (wallet) => wallet?.pubkey === pubkey
     );

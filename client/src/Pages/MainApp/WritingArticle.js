@@ -419,6 +419,7 @@ import LoadingDots from "../../Components/LoadingDots";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { customHistory } from "../../Helpers/History";
+import { SelectTabs } from "../../Components/Main/SelectTabs";
 
 const getUploadsHistory = () => {
   let history = localStorage.getItem("YakihonneUploadsHistory");
@@ -458,6 +459,7 @@ export default function WritingArticle() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadsHistory, setUploadsHistory] = useState(getUploadsHistory());
   const [showUploadsHistory, setShowUploadsHistory] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(0);
   const [isEdit, setIsEdit] = useState(true);
   const [triggerHTMLWarning, setTriggerHTMLWarning] = useState(false);
 
@@ -705,6 +707,11 @@ export default function WritingArticle() {
                                     </div>
                                   </button>
                                 )}
+                                <SelectTabs
+                                  selectedTab={selectedTab}
+                                  tabs={["LTR", "RTL"]}
+                                  setSelectedTab={setSelectedTab}
+                                />
                               </div>
                               <div className="fx-centered">
                                 {uploadsHistory.length > 0 && (
@@ -785,13 +792,13 @@ export default function WritingArticle() {
                                 />
                               </div>
                             </div>
-
                             <div>
                               <textarea
                                 className="h2-txt fit-container"
                                 onChange={handleChange}
                                 value={title}
                                 placeholder="Give me a catchy title"
+                                dir={selectedTab === 0 ? "ltr" : "rtl"}
                               />
                             </div>
                             <div
@@ -799,6 +806,7 @@ export default function WritingArticle() {
                               style={{ position: "relative" }}
                             >
                               <MDEditor
+                                direction={selectedTab === 0 ? "ltr" : "rtl"}
                                 data-color-mode={
                                   isDarkMode === "0" ? "dark" : "light"
                                 }
@@ -1008,7 +1016,7 @@ export default function WritingArticle() {
                                 previewOptions={{
                                   components: {
                                     p: ({ children }) => {
-                                      return <>{getComponent(children)}</>;
+                                      return <p>{getComponent(children)}</p>;
                                     },
                                     h1: ({ children }) => {
                                       return <h1 dir="auto">{children}</h1>;

@@ -4,6 +4,7 @@ import { BrowserRouter as Router, unstable_HistoryRouter as HistoryRouter, } fro
 import { Provider } from "react-redux";
 import { store } from "./Store/Store";
 import AppInit from "./Context/AppInit";
+// import '../src/Context/I18N'
 import App from "./App";
 import { customHistory } from "./Helpers/History";
 

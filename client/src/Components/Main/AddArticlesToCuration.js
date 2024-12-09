@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import LoadingScreen from "../LoadingScreen";
-import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
 import Date_ from "../Date_";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { Relay, nip19 } from "nostr-tools";
-import PublishRelaysPicker from "./PublishRelaysPicker";
+import { nip19 } from "nostr-tools";
 import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,7 +12,6 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 export default function AddArticlesToCuration({
   curation,
   tags,
-  relaysToPublish = [],
   exit,
   curationKind = 30004,
   postKind = 30023,
@@ -22,72 +19,47 @@ export default function AddArticlesToCuration({
   const { title, image, description } = curation;
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userMetadata);
-  const isPublishing = useSelector((state) => state.userMetadata);
 
   const [posts, setPosts] = useState([]);
   const [NostrPosts, setNostrPosts] = useState([]);
   const [searchedPostsByNaddr, setSearchedPostByNaddr] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeRelay, setActiveRelay] = useState(relaysOnPlatform[0]);
   const [searchedPost, setSearchedPost] = useState("");
   const [searchRes, setSearchRes] = useState([]);
   const [contentFrom, setContentFrom] = useState("relays");
-  const [sub, setSub] = useState(null);
   const [initScreen, setInitScreen] = useState(true);
   const [lastEventTime, setLastEventTime] = useState(undefined);
-
-  const [showRelaysPicker, setShowRelaysPicker] = useState(false);
   const label = postKind === 30023 ? "article" : "video";
 
   useEffect(() => {
     getPostsInNOSTR();
-  }, [activeRelay, contentFrom, lastEventTime]);
+  }, [contentFrom, lastEventTime]);
 
   useEffect(() => {
     getPostsInCuration();
   }, []);
 
   const getPostsInNOSTR = async () => {
-    if (contentFrom === "relays") {
-      const relay = await Relay.connect(activeRelay);
-      let sub = relay.subscribe(
-        [{ kinds: [postKind], limit: 10, until: lastEventTime }],
+    let sub = ndkInstance.subscribe(
+      [
         {
-          onevent(event) {
-            onEvent(event);
-          },
-          oneose() {
-            setIsLoaded(true);
-            setIsLoading(false);
-          },
-        }
-      );
+          kinds: [postKind],
+          authors: [userKeys.pubkey],
+          limit: 10,
+          until: lastEventTime,
+        },
+      ],
+      { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+    );
 
-      setSub(sub);
-    } else {
-      let sub = ndkInstance.subscribe(
-        [
-          {
-            kinds: [postKind],
-            authors: [userKeys.pubkey],
-            limit: 10,
-            until: lastEventTime,
-          },
-        ],
-        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
-      );
-
-      sub.on("event", (event) => {
-        onEvent(event);
-      });
-      sub.on("eose", () => {
-        setIsLoaded(true);
-        setIsLoading(false);
-      });
-
-      setSub(sub);
-    }
+    sub.on("event", (event) => {
+      onEvent(event);
+    });
+    sub.on("eose", () => {
+      setIsLoaded(true);
+      setIsLoading(false);
+    });
   };
   const onEvent = (event) => {
     let author_pubkey = event.pubkey;
@@ -164,15 +136,6 @@ export default function AddArticlesToCuration({
 
   const saveUpdate = async () => {
     setIsLoading(true);
-    // if (isPublishing) {
-    //   dispatch(
-    //     setToast({
-    //       type: 3,
-    //       desc: "An event publishing is in process!",
-    //     })
-    //   );
-    //   return;
-    // }
     let tempTags = [
       [
         "client",
@@ -278,11 +241,6 @@ export default function AddArticlesToCuration({
     setContentFrom(source);
   };
 
-  const confirmPublishing = (relays) => {
-    saveUpdate(relays);
-    setShowRelaysPicker(false);
-  };
-
   const handleSearchByNaddr = async (e) => {
     let input = e.target.value;
     if (!input) return;
@@ -344,13 +302,6 @@ export default function AddArticlesToCuration({
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
-      {/* {showRelaysPicker && (
-        <PublishRelaysPicker
-          confirmPublishing={confirmPublishing}
-          exit={() => setShowRelaysPicker(false)}
-          button={`Add ${label}s`}
-        />
-      )} */}
       <section
         className="fixed-container fx-centered fx-col fx-start-h"
         style={{ overflow: "scroll" }}
@@ -364,16 +315,6 @@ export default function AddArticlesToCuration({
           style={{ width: "min(100%, 800px)", height: "calc(100vh - 10rem)" }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* <div className="fit-container fx-start-h fx-centered">
-            <button
-              className="btn btn-gst-nc fx-centered"
-              style={{ scale: ".8" }}
-              onClick={exit}
-            >
-              <div className="arrow" style={{ rotate: "90deg" }}></div>
-              Back
-            </button>
-          </div> */}
           {!initScreen && (
             <>
               <div
@@ -536,15 +477,7 @@ export default function AddArticlesToCuration({
                   ></div>
                   Pick {label}s
                 </button>
-                <button
-                  className="btn btn-normal"
-                  onClick={() =>
-                    // relaysToPublish.length === 0
-                    //   ? setShowRelaysPicker(true)
-                    //   : saveUpdate(relaysToPublish)
-                    saveUpdate()
-                  }
-                >
+                <button className="btn btn-normal" onClick={() => saveUpdate()}>
                   {isLoading ? <LoadingDots /> : "Update curation"}
                 </button>
               </div>
@@ -824,7 +757,6 @@ export default function AddArticlesToCuration({
                   Cancel
                 </button>
                 {!isLoading && (
-                  // <div className="fx-centered fit-container">
                   <button
                     className="btn btn-gst"
                     onClick={() => {
@@ -836,7 +768,6 @@ export default function AddArticlesToCuration({
                   >
                     Load more data
                   </button>
-                  // </div>
                 )}
                 <button
                   className="btn btn-normal fx-centered"

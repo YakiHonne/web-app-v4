@@ -28,7 +28,7 @@ import { getHighlights, getTrending } from "../../Helpers/WSInstance";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
 import InterestSuggestions from "../../Content/InterestSuggestions";
-import WriteNote from "../../Components/Main/WriteNote";
+
 import {
   getCustomSettings,
   getDefaultSettings,
@@ -41,8 +41,8 @@ import UserToFollowSuggestionsCards from "../../Components/SuggestionsCards/User
 import ContentSuggestionsCards from "../../Components/SuggestionsCards/ContentSuggestionCards";
 import DonationBoxSuggestionCards from "../../Components/SuggestionsCards/DonationBoxSuggestionCards";
 import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/ProfileShareSuggestionCards";
-import { decode } from "light-bolt11-decoder";
 import PostAsNote from "../../Components/Main/PostAsNote";
+import { useTranslation } from "react-i18next";
 const SUGGESTED_TAGS_VALUE = "_sggtedtags_";
 
 const getContentList = () => {
@@ -155,6 +155,7 @@ const notesInitialState = {
 };
 
 export default function Home() {
+  const { t } = useTranslation();
   const [smallButtonDropDownOptions, setSmallButtonDropDownOptions] = useState(
     getContentList()
   );
@@ -362,7 +363,6 @@ export default function Home() {
                           className="fit-container fx-centered fx-start-h  box-pad-h-m box-pad-v-m pointer"
                           style={{
                             overflow: "visible",
-                            // border: "1px solid var(--very-dim-gray)",
                           }}
                           onClick={() => setShowWriteNote(true)}
                         >
