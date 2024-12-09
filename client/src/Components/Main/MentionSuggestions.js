@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { saveFetchedUsers } from "../../Helpers/DB";
 import { isHex } from "../../Helpers/Helpers";
+import { NDKUser } from "@nostr-dev-kit/ndk";
+import SearchUserCard from "./SearchUserCard";
 
 export default function MentionSuggestions({
   mention,
@@ -151,7 +153,7 @@ export default function MentionSuggestions({
                 borderTop: index !== 0 ? "1px solid var(--pale-gray)" : "",
               }}
             >
-              <div className="fx-centered">
+              {/* <div className="fx-centered">
                 <UserProfilePicNOSTR
                   img={user.picture || ""}
                   size={36}
@@ -170,7 +172,8 @@ export default function MentionSuggestions({
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
+              <SearchUserCard user={user}/>
               <Link
                 to={`/${url}`}
                 onClick={(e) => {
@@ -191,3 +194,42 @@ export default function MentionSuggestions({
     </div>
   );
 }
+
+// const UserCard = ({ user }) => {
+//   const [isNip05Verified, setIsNip05Verified] = useState(false);
+
+//   useEffect(() => {
+//     const verifyNip05 = async () => {
+//       let ndkUser = new NDKUser({ pubkey: user.pubkey });
+//       ndkUser.ndk = ndkInstance;
+//       let checknip05 = user.nip05
+//         ? await ndkUser.validateNip05(user.nip05)
+//         : false;
+
+//       if (checknip05) setIsNip05Verified(true);
+//     };
+//     verifyNip05();
+//   }, []);
+//   return(
+//     <div className="fx-centered">
+//     <UserProfilePicNOSTR
+//       img={user.picture || ""}
+//       size={36}
+//       user_id={user.pubkey}
+//     />
+//     <div className="fx-centered fx-start-h">
+//       <div
+//         className="fx-centered fx-col fx-start-v "
+//         style={{ rowGap: 0 }}
+//       >
+//         <p className="p-one-line">
+//           {user.display_name || user.name}
+//         </p>
+//         <p className="orange-c p-medium p-one-line">
+//           @{user.name || user.display_name}
+//         </p>
+//       </div>
+//     </div>
+//   </div>
+//   )
+// };

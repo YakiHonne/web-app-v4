@@ -17,6 +17,38 @@ export default function SearchUserCard({ user, url, exit }) {
     verifyUser();
   }, [user]);
 
+  if (!url)
+    return (
+      <div className="fx-scattered fit-container pointer search-bar-post">
+        <div className="fx-centered">
+          <UserProfilePicNOSTR
+            img={user.picture || ""}
+            size={36}
+            allowClick={false}
+            user_id={user.pubkey}
+          />
+          <div className="fx-centered fx-start-h">
+            <div
+              className="fx-centered fx-col fx-start-v "
+              style={{ rowGap: 0 }}
+            >
+              <div className="fx-centered">
+                <p className={`p-one-line ${verified ? "c1-c" : ""}`}>
+                  {user.display_name || user.name}
+                </p>
+                {verified && <div className="checkmark-c1"></div>}
+              </div>
+              {/* <p className="p-medium p-one-line">
+                @{user.name || user.display_name}
+              </p> */}
+              <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
+                {user.nip05 || "N/A"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   return (
     <Link
       to={`/users/${url}`}
@@ -31,7 +63,6 @@ export default function SearchUserCard({ user, url, exit }) {
           size={36}
           allowClick={false}
           user_id={user.pubkey}
-          
         />
         <div className="fx-centered fx-start-h">
           <div className="fx-centered fx-col fx-start-v " style={{ rowGap: 0 }}>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { SimplePool } from "nostr-tools";
 import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import AddCurationNOSTR from "./AddCurationNOSTR";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
@@ -14,7 +13,6 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
 
   const [curations, setCurations] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showAddCuration, setShowAddCuration] = useState(false);
 
   useEffect(() => {
@@ -26,7 +24,6 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
         );
 
         sub.on("event", (curation) => {
-          setIsLoading(true);
           let parsedCuration = getParsedRepEvent(curation);
           setCurations((prev) => {
             let index = prev.findIndex((item) => item.d === parsedCuration.d);
@@ -41,7 +38,6 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
           setIsLoaded(true);
         });
         sub.on("eose", () => {
-          setIsLoading(false);
           setIsLoaded(true);
         });
       } catch (err) {
