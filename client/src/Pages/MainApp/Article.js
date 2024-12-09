@@ -502,7 +502,7 @@ export default function Article() {
                         }}
                         components={{
                           p: ({ children }) => {
-                            return <>{getComponent(children)}</>;
+                            return <p>{getComponent(children)}</p>;
                           },
                           h1: ({ children }) => {
                             return <h1 dir="auto">{children}</h1>;
