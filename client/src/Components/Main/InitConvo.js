@@ -24,7 +24,11 @@ export default function InitiConvo({ exit, receiver = false }) {
   const userRelays = useSelector((state) => state.userRelays);
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
   const [message, setMessage] = useState("");
-  const [legacy, setLegacy] = useState(userKeys.sec || window?.nostr?.nip44 ? false : true);
+  const [legacy, setLegacy] = useState(
+    userKeys.sec || window?.nostr?.nip44
+      ? localStorage.getItem("legacy-dm")
+      : true
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   // useEffect(() => {
@@ -246,6 +250,16 @@ export default function InitiConvo({ exit, receiver = false }) {
     }
   };
 
+  const handleLegacyDMs = () => {
+    if (legacy) {
+      localStorage.removeItem("legacy-dm");
+      setLegacy(false);
+    } else {
+      localStorage.setItem("legacy-dm", `${Date.now()}`);
+      setLegacy(true);
+    }
+  };
+
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div
@@ -296,24 +310,32 @@ export default function InitiConvo({ exit, receiver = false }) {
               <div
                 className="fx-centered round-icon-tooltip"
                 data-tooltip={
-                  legacy ? "Switch NIP-44 on" : "Switch back to legacy"
+                  legacy ? "Switch Secure DMs" : "Switch back to legacy"
                 }
               >
-                {!legacy && (
-                  <p className="p-medium green-c slide-left">NIP-44 ON</p>
-                )}
-                {legacy && (
-                  <p className="p-medium gray-c slide-right">NIP-04</p>
-                )}
+                {/* {!legacy && ( */}
+                <p className="p-medium slide-left">Secure DMs</p>
+                {/* // )} */}
+                {/* {legacy && (
+                  <p className="p-medium gray-c slide-right">Legacy encryption</p>
+                )} */}
                 <div
                   className={`toggle ${legacy ? "toggle-dim-gray" : ""} ${
                     !legacy ? "toggle-green" : "toggle-dim-gray"
                   }`}
-                  onClick={() => setLegacy(!legacy)}
+                  onClick={handleLegacyDMs}
                 ></div>
               </div>
             )}
           </div>
+          {legacy && <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
+            <div className="info-tt-24"></div>
+            <div>
+              <p className="c1-c p-medium">
+                For more security & privacy, consider enabling Secure DMs.
+              </p>
+            </div>
+          </div>}
         </div>
       </div>
     </div>

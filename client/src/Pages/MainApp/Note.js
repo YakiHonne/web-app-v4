@@ -509,29 +509,39 @@ export default function Note() {
                       className="fit-container fx-centered fx-col fx-start-v"
                       style={{ paddingBottom: "3rem", gap: 0 }}
                     >
-                      <div className="fx-centered fit-container fx-start-h box-pad-h-m box-marg-s">
-                        <UserProfilePicNOSTR
-                          img={author.picture}
-                          size={64}
-                          mainAccountUser={false}
-                          user_id={note.pubkey}
-                        />
-                        <div className="box-pad-h-m fx-centered fx-col fx-start-v">
-                          <div className="fx-centered">
-                            <h4>{author.display_name || author.name}</h4>
-                            {isNip05Verified && (
-                              <div className="checkmark-c1-24"></div>
-                            )}
+                      <div className="fit-container fx-scattered fx-start-v">
+                        <div className="fx-centered fit-container fx-start-h box-pad-h-m box-marg-s">
+                          <UserProfilePicNOSTR
+                            img={author.picture}
+                            size={64}
+                            mainAccountUser={false}
+                            user_id={note.pubkey}
+                          />
+                          <div className="box-pad-h-m fx-centered fx-col fx-start-v">
+                            <div className="fx-centered">
+                              <h4>{author.display_name || author.name}</h4>
+                              {isNip05Verified && (
+                                <div className="checkmark-c1-24"></div>
+                              )}
+                            </div>
+                            <p className="gray-c">
+                              <Date_
+                                toConvert={new Date(note.created_at * 1000)}
+                                time={true}
+                              />
+                            </p>
                           </div>
-                          <p className="gray-c">
-                            <Date_
-                              toConvert={new Date(note.created_at * 1000)}
-                              time={true}
-                            />
-                          </p>
                         </div>
-                      </div>
 
+                        {note.isFlashNews && (
+                          <div
+                            className="sticker sticker-c1"
+                            style={{ minWidth: "max-content" }}
+                          >
+                            Paid
+                          </div>
+                        )}
+                      </div>
                       <div className="fit-container box-pad-h-m">
                         {note.note_tree}
                       </div>
