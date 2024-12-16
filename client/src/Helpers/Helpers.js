@@ -462,7 +462,6 @@ const getNIP21FromURL = (url) => {
 
 const getComponent = (children) => {
   if (!children) return <></>;
-  console.log(children)
   let res = [];
   for (let i = 0; i < children.length; i++) {
     if (typeof children[i] === "string") {
@@ -611,6 +610,26 @@ function mergeConsecutivePElements(arr) {
       tempArray.push(arr[i]);
     }
   }
+  tempArray = tempArray.filter((element, index, arr) => {
+    if (element.type === "br") {
+      const prev = arr
+        .slice(0, index)
+        .reverse()
+        .find((el) => el.type !== "br");
+      const next = arr.slice(index + 1).find((el) => el.type !== "br");
+
+      if (
+        prev?.type !== "string" &&
+        prev.props?.src &&
+        next?.type !== "string" &&
+        next.props?.src
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   for (const element of tempArray) {
     if (["p", "span"].includes(element.type)) {

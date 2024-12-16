@@ -79,6 +79,7 @@ export default function Settings() {
   const [contentList, setContentList] = useState(
     getCustomSettings().contentList
   );
+  const [legacyDM, setLegacyDM] = useState(localStorage.getItem("legacy-dm"));
 
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [wallets, setWallets] = useState(getWallets());
@@ -407,6 +408,16 @@ export default function Settings() {
   const handleSwitchMediaServer = (server) => {
     setSelectedMediaServer(server);
     updateMediaUploader(undefined, server);
+  };
+
+  const handleLegacyDMs = () => {
+    if (legacyDM) {
+      localStorage.removeItem("legacy-dm");
+      setLegacyDM(false);
+    } else {
+      localStorage.setItem("legacy-dm", `${Date.now()}`);
+      setLegacyDM(true);
+    }
   };
 
   return (
@@ -795,6 +806,16 @@ export default function Settings() {
                           {selectedTab === "moderation" && (
                             <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                               <div className="fx-scattered fit-container">
+                                <p>Muted list</p>
+                                <div
+                                  className="btn-text-gray"
+                                  style={{ marginRight: ".75rem" }}
+                                  onClick={() => setShowMutedList(true)}
+                                >
+                                  Edit
+                                </div>
+                              </div>
+                              <div className="fx-scattered fit-container">
                                 <p>Media uploader</p>
                                 {customServer === false && (
                                   <div className="fx-centered">
@@ -849,15 +870,22 @@ export default function Settings() {
                                 </div>
                               )}
                               <div className="fx-scattered fit-container">
-                                <p>Muted list</p>
+                                <p>Secure Direct Messaging</p>
                                 <div
-                                  className="btn-text-gray"
-                                  style={{ marginRight: ".75rem" }}
-                                  onClick={() => setShowMutedList(true)}
-                                >
-                                  Edit
-                                </div>
+                                  className={`toggle ${
+                                    legacyDM ? "toggle-dim-gray" : ""
+                                  } ${
+                                    !legacyDM ? "toggle-c1" : "toggle-dim-gray"
+                                  }`}
+                                  onClick={handleLegacyDMs}
+                                ></div>
                               </div>
+                              <p className="gray-c p-medium">
+                                By enabling this, you will be using the new
+                                specification for the private messaging which is
+                                based on <a href="https://github.com/nostr-protocol/nips/blob/master/44.md" className="c1-c" style={{textDecoration: "underline"}} target="_blank">nip-44</a>, hence that disabling it will
+                                allow you to use the <a href="https://github.com/nostr-protocol/nips/blob/master/04.md" className="c1-c" style={{textDecoration: "underline"}} target="_blank">older version nip-04.</a>
+                              </p>
                             </div>
                           )}
                         </div>

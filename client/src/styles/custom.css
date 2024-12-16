@@ -1120,7 +1120,7 @@ main {
     /* font-family: 'DM sans', sans-serif !important;
     font-size: var(--16) !important;
     font-weight: 300 !important; */
-    font-family: Source Code Pro, Consolas, monaco, monospace;
+    font-family: Source Code Pro, Consolas, monaco, monospace !important;
     font-size: 1.025rem !important;
     letter-spacing: .025rem !important;
     line-height: 1.5em !important;

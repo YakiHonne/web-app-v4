@@ -652,7 +652,9 @@ const ConversationBox = ({ convo, back }) => {
   const inputFieldRef = useRef(null);
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(
-    userKeys.sec || window?.nostr?.nip44 ? false : true
+    userKeys.sec || window?.nostr?.nip44
+      ? localStorage.getItem("legacy-dm")
+      : true
   );
   const [replayOn, setReplayOn] = useState("");
   const [showProgress, setShowProgress] = useState(false);
@@ -836,6 +838,16 @@ const ConversationBox = ({ convo, back }) => {
     return { content: msg.raw_content, self: msg.pubkey === userKeys.pub };
   };
 
+  const handleLegacyDMs = () => {
+    if (legacy) {
+      localStorage.removeItem("legacy-dm");
+      setLegacy(false);
+    } else {
+      localStorage.setItem("legacy-dm", `${Date.now()}`);
+      setLegacy(true);
+    }
+  };
+
   if (!convo) return;
   return (
     <div
@@ -876,21 +888,43 @@ const ConversationBox = ({ convo, back }) => {
         {(userKeys.sec || window?.nostr?.nip44) && (
           <div
             className="fx-centered round-icon-tooltip"
-            data-tooltip={legacy ? "Switch NIP-44 on" : "Switch back to legacy"}
+            data-tooltip={
+              legacy ? "Switch Secure DMs" : "Switch back to legacy"
+            }
           >
-            {!legacy && (
-              <p className="p-medium green-c slide-left">NIP-44 ON</p>
-            )}
-            {legacy && <p className="p-medium gray-c slide-right">NIP-04</p>}
+            {/* {!legacy && ( */}
+            <p className="p-medium slide-left">Secure DMs</p>
+            {/* )} */}
+            {/* {legacy && <p className="p-medium gray-c slide-right">Legacy encryption</p>} */}
             <div
               className={`toggle ${legacy ? "toggle-dim-gray" : ""} ${
                 !legacy ? "toggle-green" : "toggle-dim-gray"
               }`}
-              onClick={() => setLegacy(!legacy)}
+              onClick={handleLegacyDMs}
             ></div>
           </div>
         )}
       </div>
+      {legacy && (
+        <div
+          className="fit-container"
+          style={{ position: "relative", zIndex: 100 }}
+        >
+          <div
+            className="box-pad-h-s fit-container"
+            style={{ position: "absolute", left: 0, top: 0 }}
+          >
+            <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
+              <div className="info-tt-24"></div>
+              <div>
+                <p className="c1-c p-medium">
+                  For more security & privacy, consider enabling Secure DMs.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className="fx-centered fx-start-h fx-col box-pad-h-m box-pad-v-m fit-container"
         style={{ height: "calc(100% - 160px)", overflow: "auto" }}
@@ -1098,7 +1132,10 @@ const ConversationBox = ({ convo, back }) => {
             handleSendMessage();
           }}
         >
-          <div className="sc-s-18 fx-centered fit-container box-pad-h-m" style={{overflow: "visible", backgroundColor: "transparent"}}>
+          <div
+            className="sc-s-18 fx-centered fit-container box-pad-h-m"
+            style={{ overflow: "visible", backgroundColor: "transparent" }}
+          >
             <input
               type="text"
               className="if ifs-full if-no-border"
@@ -1108,7 +1145,7 @@ const ConversationBox = ({ convo, back }) => {
               ref={inputFieldRef}
               disabled={showProgress}
               autoFocus
-              style={{padding: 0}}
+              style={{ padding: 0 }}
             />
             <div className="fx-centered ">
               <Emojis
