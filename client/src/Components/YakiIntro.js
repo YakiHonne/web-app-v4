@@ -190,10 +190,10 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- Resolved issues causing articles to be published malformed.
-- Fixed problems with notes preview functionality.
-- Added support for emojis and GIFs in direct messages.
-- Enabled full compatibility with NWC secrets created outside the Alby wallet.
+- Resolved issues causing the article editor to appear malformed.
+- Added support for both LTR and RTL languages in the article editor.
+- Enhanced the messaging box to support long text writing.
+- Secure DMs (Nip44) can now be enabled globally via the messages and settings pages.
 - General bug fixes and improvements.
 `}</p> 
           </div>

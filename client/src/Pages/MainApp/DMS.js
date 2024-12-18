@@ -16,7 +16,6 @@ import Date_ from "../../Components/Date_";
 import { useRef } from "react";
 import LoadingDots from "../../Components/LoadingDots";
 import PagePlaceholder from "../../Components/PagePlaceholder";
-import EmojisList from "../../Components/EmojisList";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/Main/InitConvo";
 import axiosInstance from "../../Helpers/HTTP_Client";
@@ -27,6 +26,7 @@ import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { checkCurrentConvo } from "../../Helpers/DB";
 import Emojis from "../../Components/Emojis";
 import Gifs from "../../Components/Gifs";
+import { useTranslation } from "react-i18next";
 
 export default function DMS() {
   const userKeys = useSelector((state) => state.userKeys);
@@ -35,6 +35,7 @@ export default function DMS() {
   const initDMS = useSelector((state) => state.initDMS);
   const userFollowings = useSelector((state) => state.userFollowings);
 
+  const { t } = useTranslation();
   const [selectedConvo, setSelectedConvo] = useState(false);
   const [isConvoLoading, setIsConvoLoading] = useState(false);
   const [sortedInbox, setSortedInbox] = useState([]);
@@ -361,7 +362,7 @@ export default function DMS() {
                 className={!mbHide ? "mb-hide-800" : ""}
               >
                 <div className="box-pad-h-m box-pad-v-m fit-container fx-scattered">
-                  <h4>Messages</h4>
+                  <h4>{t("As2zi6P")}</h4>
                   <div className="fx-centered">
                     {!showSearch && (
                       <div onClick={handleShowSearch}>
@@ -384,7 +385,7 @@ export default function DMS() {
                     <input
                       type="text"
                       className="if ifs-full if-no-border"
-                      placeholder="Search for conversation"
+                      placeholder={t("AUdNamU")}
                       value={keyword}
                       onChange={handleSearch}
                       autoFocus
@@ -421,7 +422,7 @@ export default function DMS() {
                           contentType === "following" ? "c1-c" : "gray-c"
                         }
                       >
-                        Contacts ({msgsCount.followings})
+                        {t("AdugC5z", { count: msgsCount.followings })}
                       </span>
                     </div>
                     <div
@@ -439,7 +440,7 @@ export default function DMS() {
                       <span
                         className={contentType === "known" ? "c1-c" : "gray-c"}
                       >
-                        Known ({msgsCount.known})
+                        {t("AkMu1GE", { count: msgsCount.known })}
                       </span>
                     </div>
                     <div
@@ -459,7 +460,7 @@ export default function DMS() {
                           contentType === "unknown" ? "c1-c" : "gray-c"
                         }
                       >
-                        Unknown ({msgsCount.unknown})
+                        {t("ANAOuTj", { count: msgsCount.unknown })}
                       </span>
                     </div>
                   </div>
@@ -503,7 +504,9 @@ export default function DMS() {
                                 </p>
                                 <div className="fx-centered fx-start-h">
                                   {convo.convo[convo.convo.length - 1].peer && (
-                                    <p className="p-medium p-one-line">You:</p>
+                                    <p className="p-medium p-one-line">
+                                      {t("ARrkukw")}
+                                    </p>
                                   )}
                                   <p
                                     className="gray-c p-medium p-one-line"
@@ -565,7 +568,9 @@ export default function DMS() {
                               </p>
                               <div className="fx-centered fx-start-h">
                                 {convo.convo[convo.convo.length - 1].peer && (
-                                  <p className="p-medium p-one-line">You:</p>
+                                  <p className="p-medium p-one-line">
+                                    {t("ARrkukw")}
+                                  </p>
                                 )}
                                 <p
                                   className="gray-c p-medium p-one-line"
@@ -601,10 +606,8 @@ export default function DMS() {
                       style={{ height: "50vh" }}
                       className="box-pad-h fx-centered fx-col"
                     >
-                      <h4>No Messages</h4>
-                      <p className="gray-c p-centered">
-                        No messages were found from your search, try another one
-                      </p>
+                      <h4>{t("A52Tdsw")}</h4>
+                      <p className="gray-c p-centered">{t("As03HYz")}</p>
                     </div>
                   )}
                 </div>
@@ -648,6 +651,7 @@ const ConversationBox = ({ convo, back }) => {
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
 
+  const { t } = useTranslation();
   const convoContainerRef = useRef(null);
   const inputFieldRef = useRef(null);
   const [message, setMessage] = useState("");
@@ -673,6 +677,15 @@ const ConversationBox = ({ convo, back }) => {
 
     setShowProgress(false);
   }, [convo]);
+
+  useEffect(() => {
+    if (inputFieldRef.current) {
+      inputFieldRef.current.style.height = "20px";
+      inputFieldRef.current.style.height = `${inputFieldRef.current.scrollHeight}px`;
+      inputFieldRef.current.scrollTop = inputFieldRef.current.scrollHeight;
+      inputFieldRef.current.focus();
+    }
+  }, [message]);
 
   const handleSendMessage = async () => {
     if (!message || !userKeys || (userKeys && !(userKeys.ext || userKeys.sec)))
@@ -848,13 +861,21 @@ const ConversationBox = ({ convo, back }) => {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (!e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    }
+  };
+
   if (!convo) return;
   return (
     <div
       className="fit-container fx-scattered fx-col"
       style={{ height: "100%", rowGap: 0 }}
       onClick={() => {
-        // if (inputFieldRef.current) inputFieldRef.current.focus();
         setShowEmojisList(false);
       }}
     >
@@ -888,12 +909,10 @@ const ConversationBox = ({ convo, back }) => {
         {(userKeys.sec || window?.nostr?.nip44) && (
           <div
             className="fx-centered round-icon-tooltip"
-            data-tooltip={
-              legacy ? "Switch Secure DMs" : "Switch back to legacy"
-            }
+            data-tooltip={legacy ? t("Al6NH4U") : t("AfN9sMV")}
           >
             {/* {!legacy && ( */}
-            <p className="p-medium slide-left">Secure DMs</p>
+            <p className="p-medium slide-left">{t("ATta6yb")}</p>
             {/* )} */}
             {/* {legacy && <p className="p-medium gray-c slide-right">Legacy encryption</p>} */}
             <div
@@ -917,9 +936,7 @@ const ConversationBox = ({ convo, back }) => {
             <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
               <div className="info-tt-24"></div>
               <div>
-                <p className="c1-c p-medium">
-                  For more security & privacy, consider enabling Secure DMs.
-                </p>
+                <p className="c1-c p-medium">{t("AakbxOk")}</p>
               </div>
             </div>
           </div>
@@ -958,23 +975,21 @@ const ConversationBox = ({ convo, back }) => {
                   }`}
                 >
                   {convo.peer && reply.self && (
-                    <p className="p-italic p-medium orange-c">
-                      You replied to yourself
-                    </p>
+                    <p className="p-italic p-medium orange-c">{t("ARPGCjx")}</p>
                   )}
                   {convo.peer && !reply.self && (
                     <p className="p-italic p-medium orange-c">
-                      You replied to {peerName}
+                      {t("AUvbLfk")} {peerName}
                     </p>
                   )}
                   {!convo.peer && reply.self && (
                     <p className="p-italic p-medium orange-c">
-                      {peerName} replied to you
+                      {peerName} {t("AyI4PnF")}
                     </p>
                   )}
                   {!convo.peer && !reply.self && (
                     <p className="p-italic p-medium orange-c">
-                      {peerName} replied to {peerName}
+                      {peerName} {t("AxbN1sx")} {peerName}
                     </p>
                   )}
                   <div
@@ -1027,9 +1042,7 @@ const ConversationBox = ({ convo, back }) => {
                   <div
                     className="fx-centered fx-start-h round-icon-tooltip pointer"
                     data-tooltip={
-                      convo.kind === 4
-                        ? "Legacy standard"
-                        : "Protected by the new standard"
+                      convo.kind === 4 ? t("ALZCVV2") : t("ATta6yb")
                     }
                   >
                     {convo.kind === 4 && (
@@ -1100,9 +1113,9 @@ const ConversationBox = ({ convo, back }) => {
         >
           <div>
             <p className="gray-c p-medium">
-              Reply to{" "}
+              {t("AoUrRsg")}{" "}
               {replayOn.pubkey === userKeys.pub ? (
-                "yourself"
+                t("Aesj4ga")
               ) : (
                 <>
                   {convo.display_name?.substring(0, 10) ||
@@ -1126,28 +1139,41 @@ const ConversationBox = ({ convo, back }) => {
       )}
       <div className="fit-container box-pad-h-m box-pad-v-m fx-scattered">
         <form
-          className="fit-container fx-scattered"
+          className="fit-container fx-scattered fx-end-v"
           onSubmit={(e) => {
             e.preventDefault();
             handleSendMessage();
           }}
         >
           <div
-            className="sc-s-18 fx-centered fit-container box-pad-h-m"
-            style={{ overflow: "visible", backgroundColor: "transparent" }}
+            className="sc-s-18 fx-centered fx-end-v fit-container"
+            style={{
+              overflow: "visible",
+              backgroundColor: "transparent",
+              gap: 0,
+            }}
           >
-            <input
-              type="text"
+            <textarea
+              // type="text"
               className="if ifs-full if-no-border"
-              placeholder="Type a message.."
+              placeholder={t("A7a54es")}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               ref={inputFieldRef}
               disabled={showProgress}
+              onKeyDown={handleKeyDown}
               autoFocus
-              style={{ padding: 0 }}
+              cols={5}
+              style={{
+                padding: "1rem 0rem 1rem 1rem",
+                height: "20px",
+                // minHeight: "200px",
+                maxHeight: "250px",
+                borderRadius: 0,
+                // fontSize: "1.2rem",
+              }}
             />
-            <div className="fx-centered ">
+            <div className="fx-centered box-pad-h-m box-pad-v-m">
               <Emojis
                 position="right"
                 setEmoji={(data) =>

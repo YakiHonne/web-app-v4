@@ -10,7 +10,12 @@ import LoadingDots from "../../Components/LoadingDots";
 import NumberShrink from "../../Components/NumberShrink";
 import axios from "axios";
 import { getSubData } from "../../Helpers/Controlers";
-import { getParsedRepEvent, sortEvents } from "../../Helpers/Encryptions";
+import {
+  convertDate,
+  getParsedRepEvent,
+  sortEvents,
+  timeAgo,
+} from "../../Helpers/Encryptions";
 import useNoteStats from "../../Hooks/useNoteStats";
 import {
   compactContent,
@@ -43,38 +48,8 @@ import AddArticlesToCuration from "../../Components/Main/AddArticlesToCuration";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { useTranslation } from "react-i18next";
 
-const tabs = ["Home", "Content", "Bookmarks", "Interests"];
-const bookmarkFilterOptions = [
-  {
-    display_name: "All content",
-    value: 0,
-  },
-  {
-    display_name: "Articles",
-    value: 30023,
-  },
-  {
-    display_name: "Articles curations",
-    value: 30004,
-  },
-  {
-    display_name: "Video curations",
-    value: 30005,
-  },
-  {
-    display_name: "Notes",
-    value: 1,
-  },
-  {
-    display_name: "Paid notes",
-    value: 11,
-  },
-  {
-    display_name: "Videos",
-    value: 34235,
-  },
-];
 const eventsReducer = (notes, action) => {
   switch (action.type) {
     case "notes": {
@@ -228,6 +203,7 @@ const getInterestList = (list) => {
 
 export default function Dashboard() {
   const { state } = useLocation();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const [selectedTab, setSelectedTab] = useState(state?.tabNumber || 0);
   const [userPreview, setUserPreview] = useState(false);
@@ -238,6 +214,7 @@ export default function Dashboard() {
   const [postToNote, setPostToNote] = useState(
     state?.filter === "notes" && state?.init ? "" : false
   );
+  const tabs = [t("AJDdA3h"), t("AepwLlB"), t("AqwEL0G"), t("AvcFYqP")];
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -412,6 +389,7 @@ export default function Dashboard() {
 
 const Content = ({ filter, setPostToNote, localDraft, init }) => {
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const [contentFrom, setContentFrom] = useState(filter);
   const [isLoading, setIsLoading] = useState(true);
   const [lastEventTime, setLastEventTime] = useState(undefined);
@@ -428,6 +406,14 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
     eventsReducer,
     eventsInitialState
   );
+  const emptyContent = {
+    articles: t("AH90wGL"),
+    drafts: t("A14HHPP"),
+    curations: t("AAUycZW"),
+    videos: t("AQIAfYS"),
+    widgets: t("AvEJw6B"),
+    notes: t("A6rkFum"),
+  };
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -626,7 +612,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             }`}
             onClick={() => switchContentType("articles")}
           >
-            Articles
+            {t("AesMg52")}
           </div>
           <div
             className={`list-item-b fx-centered fx-shrink ${
@@ -634,7 +620,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             }`}
             onClick={() => switchContentType("notes")}
           >
-            Notes
+            {t("AYIXG83")}
           </div>
           <div
             className={`list-item-b fx-centered fx-shrink ${
@@ -642,7 +628,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             }`}
             onClick={() => switchContentType("curations")}
           >
-            Curations
+            {t("AVysZ1s")}
           </div>
           <div
             className={`list-item-b fx-centered fx-shrink ${
@@ -650,7 +636,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             }`}
             onClick={() => switchContentType("videos")}
           >
-            Videos
+            {t("AStkKfQ")}
           </div>
           <div
             className={`list-item-b fx-centered fx-shrink ${
@@ -658,7 +644,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             }`}
             onClick={() => switchContentType("widgets")}
           >
-            Smart widgets
+            {t("A2mdxcf")}
           </div>
         </div>
         <div className="fit-container fx-scattered  box-pad-v box-pad-h">
@@ -669,8 +655,8 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             {["articles", "drafts"].includes(contentFrom) && (
               <Select
                 options={[
-                  { display_name: "Published", value: "articles" },
-                  { display_name: "Drafts", value: "drafts" },
+                  { display_name: t("A65LO6w"), value: "articles" },
+                  { display_name: t("Ayh5F4w"), value: "drafts" },
                 ]}
                 value={contentFrom}
                 setSelectedValue={switchContentType}
@@ -687,7 +673,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
               <div className="fit-container fx-centered fx-col fx-start-v">
                 {localDraft?.artDraft && (
                   <>
-                    <p className="c1-c">Ongoing</p>
+                    <p className="c1-c">{t("A7noclE")}</p>
                     <ContentCard event={localDraft?.artDraft} />
                   </>
                 )}
@@ -700,7 +686,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
               <div className="fit-container fx-centered fx-col fx-start-v">
                 {localDraft?.noteDraft && (
                   <>
-                    <p className="c1-c">Ongoing</p>
+                    <p className="c1-c">{t("A7noclE")}</p>
                     <ContentCard
                       event={localDraft?.noteDraft}
                       setPostToNote={setPostToNote}
@@ -708,7 +694,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
                   </>
                 )}
               </div>
-              {events[contentFrom].length > 0 && <p>Saved</p>}
+              {events[contentFrom].length > 0 && <p>{t("AQG30hM")}</p>}
             </div>
           )}
           {contentFrom === "widgets" && localDraft?.smartWidgetDraft && (
@@ -716,12 +702,12 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
               <div className="fit-container fx-centered fx-col fx-start-v">
                 {localDraft?.smartWidgetDraft && (
                   <>
-                    <p className="c1-c">Ongoing</p>
+                    <p className="c1-c">{t("A7noclE")}</p>
                     <ContentCard event={localDraft?.smartWidgetDraft} />
                   </>
                 )}
               </div>
-              {events[contentFrom].length > 0 && <p>Saved</p>}
+              {events[contentFrom].length > 0 && <p>{t("AQG30hM")}</p>}
             </div>
           )}
           {events[contentFrom].map((event) => {
@@ -741,10 +727,8 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
               className="fit-container fx-centered fx-col"
               style={{ height: "40vh" }}
             >
-              <h4>No {contentFrom} was found</h4>
-              <p className="gray-c">
-                All your published content will be managed here
-              </p>
+              <h4>{emptyContent[contentFrom]}</h4>
+              <p className="gray-c">{t("AcPmGuk")}</p>
             </div>
           )}
           {isLoading && (
@@ -765,6 +749,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
 const Bookmarks = () => {
   const userKeys = useSelector((state) => state.userKeys);
   const userBookmarks = useSelector((state) => state.userBookmarks);
+  const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
   const [showAddBookmark, setShowAddBookmark] = useState(false);
   const [editBookmark, setEditBookmark] = useState(false);
@@ -800,7 +785,7 @@ const Bookmarks = () => {
         <ToDeleteGeneral
           eventId={deleteBookmark.id}
           title={deleteBookmark.title}
-          kind="bookmark"
+          kind={t("AtlqBGm")}
           refresh={handleBookmarkDeletion}
           cancel={() => setDeleteBookmark(false)}
           aTag={deleteBookmark.aTag}
@@ -808,7 +793,7 @@ const Bookmarks = () => {
       )}
       <div className="fit-container">
         <div className="fit-container fx-scattered  box-pad-v box-pad-h">
-          <h3 className="p-caps">Bookmarks</h3>
+          <h3 className="p-caps">{t("AqwEL0G")}</h3>
           <button
             className="btn btn-normal"
             onClick={() => setShowAddBookmark(true)}
@@ -844,6 +829,7 @@ const Bookmarks = () => {
 };
 const Interests = () => {
   const userInterestList = useSelector((state) => state.userInterestList);
+  const { t } = useTranslation();
   const interests = useMemo(() => {
     return getInterestList(userInterestList);
   }, [userInterestList]);
@@ -852,10 +838,10 @@ const Interests = () => {
   return (
     <div className="fit-container">
       <div className="fit-container fx-scattered  box-pad-v box-pad-h">
-        <h3 className="p-caps">Interests</h3>
+        <h3 className="p-caps">{t("AvcFYqP")}</h3>
         {userInterestList.length > 0 && !isManage && (
           <button className="btn btn-normal" onClick={() => setIsManage(true)}>
-            Manage your interests
+            {t("A8RA6c7")}
           </button>
         )}
       </div>
@@ -865,20 +851,19 @@ const Interests = () => {
             className="sc-s-18 fit-container  fx-centered fx-col"
             style={{ backgroundColor: "transparent", padding: "3rem" }}
           >
-            <h4>Get started now</h4>
+            <h4>{t("AI11KEH")}</h4>
             <p
               className="p-centered gray-c box-pad-v-m"
               style={{ maxWidth: "500px" }}
             >
-              Expand your world by adding what fascinates you. Select your
-              interests and let the journey begin.
+              {t("A70Zdvz")}
             </p>
             <button
               className="btn btn-normal fx-centered"
               onClick={() => setIsManage(true)}
             >
               <div className="plus-sign"></div>
-              Add interests
+              {t("AIUAUcP")}
             </button>
           </div>
         </div>
@@ -935,6 +920,7 @@ const HomeTab = ({
   handleUpdate,
 }) => {
   const userMetadata = useSelector((state) => state.userMetadata);
+  const { t } = useTranslation();
   const [deleteEvent, setDeleteEvent] = useState(false);
   const [addArtsToCur, setAddArtsToCur] = useState(false);
   const [editEvent, setEditEvent] = useState(false);
@@ -951,11 +937,11 @@ const HomeTab = ({
     let timer = setTimeout(() => {
       setShowCurationCreator(false);
       setEditEvent(false);
-      setDeleteEvent(false)
+      setDeleteEvent(false);
       handleUpdate();
-      clearTimeout(timer)
-    }, [1000])
-  }
+      clearTimeout(timer);
+    }, [1000]);
+  };
 
   return (
     <>
@@ -993,7 +979,7 @@ const HomeTab = ({
       )}
       <div className="fit-container box-pad-v box-pad-h">
         <div className="fit-container fx-scattered">
-          <h3>Home</h3>
+          <h3>{t("AJDdA3h")}</h3>
           {/* <div style={{ width: "150px" }}>
           <WriteNew exit={() => null} />
         </div> */}
@@ -1031,15 +1017,19 @@ const HomeTab = ({
                 <div className="fx-centered fx-col">
                   <h4>{userMetadata.display_name || userMetadata.name}</h4>
                   <p className="gray-c">
-                    Joined date{" "}
-                    <Date_
+                    {t("AcqUGhB", {
+                      date: convertDate(
+                        new Date(data.userProfile.time_joined * 1000)
+                      ),
+                    })}{" "}
+                    {/* <Date_
                       toConvert={new Date(data.userProfile.time_joined * 1000)}
-                    />
+                    /> */}
                   </p>
                 </div>
                 <Link to={`/yaki-points`}>
                   <button className="btn btn-normal fx-centered">
-                    <div className="cup"></div> Yaki points
+                    <div className="cup"></div> Yaki {t("A4IGG0z")}
                   </button>
                 </Link>
               </div>
@@ -1059,7 +1049,7 @@ const HomeTab = ({
                   ></div>
                   <div className="fx-centered">
                     <h4>{data.userProfile?.follows_count || 0}</h4>
-                    <p className="gray-c">Following</p>
+                    <p className="gray-c">{t("A9TqNxQ")}</p>
                   </div>
                 </div>
                 <div
@@ -1072,7 +1062,7 @@ const HomeTab = ({
                   ></div>
                   <div className="fx-centered">
                     <h4>{data.userProfile?.followers_count || 0}</h4>
-                    <p className="gray-c">Followers</p>
+                    <p className="gray-c">{t("A6huCnT")}</p>
                   </div>
                 </div>
               </div>
@@ -1087,7 +1077,7 @@ const HomeTab = ({
                   ></div>
                   <div className="fx-centered">
                     <h4>{data.userProfile?.note_count || 0}</h4>
-                    <p className="gray-c">Notes</p>
+                    <p className="gray-c">{t("AYIXG83")}</p>
                   </div>
                 </div>
                 <div
@@ -1100,7 +1090,7 @@ const HomeTab = ({
                   ></div>
                   <div className="fx-centered">
                     <h4>{data.userProfile?.reply_count || 0}</h4>
-                    <p className="gray-c">Replies</p>
+                    <p className="gray-c">{t("AENEcn9")}</p>
                   </div>
                 </div>
               </div>
@@ -1125,14 +1115,14 @@ const HomeTab = ({
                     value={data.userProfile?.total_zap_count || 0}
                   />
                 </h4>
-                <p className="gray-c">Zaps received</p>
+                <p className="gray-c">{t("AFk1EBA")}</p>
                 <p className="gray-c p-medium">&#8226; </p>
                 <h4>
                   <NumberShrink
                     value={data.userProfile?.total_satszapped || 0}
                   />
                 </h4>
-                <p className="gray-c">Total amount</p>
+                <p className="gray-c">{t("AUb1YTL")}</p>
               </div>
             </div>
             <div
@@ -1155,21 +1145,21 @@ const HomeTab = ({
                     />
                   }
                 </h4>
-                <p className="gray-c">Zaps sent</p>
+                <p className="gray-c">{t("AmdnVra")}</p>
                 <p className="gray-c p-medium">&#8226; </p>
                 <h4>
                   <NumberShrink
                     value={(data.userProfile?.zaps_sent?.msats || 0) / 1000}
                   />
                 </h4>
-                <p className="gray-c">Total amount</p>
+                <p className="gray-c">{t("AUb1YTL")}</p>
               </div>
             </div>
           </div>
         </div>
         {data.latestPublished.length > 0 && (
           <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-            <p className="gray-c p-big">Latest published</p>
+            <p className="gray-c p-big">{t("At9t6yz")}</p>
             <div className="fit-container fx-centered fx-col fx-start-v">
               {data.latestPublished.map((event) => {
                 return (
@@ -1188,11 +1178,11 @@ const HomeTab = ({
         )}
         {(data.localDraft || data.drafts.length > 0) && (
           <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-            <p className="gray-c p-big">Drafts</p>
+            <p className="gray-c p-big">{t("Ayh5F4w")}</p>
             <div className="fit-container fx-centered fx-col fx-start-v">
               {data.localDraft && (
                 <>
-                  <p className="c1-c">Ongoing</p>
+                  <p className="c1-c">{t("A7noclE")}</p>
                   {data.localDraft.noteDraft && (
                     <ContentCard
                       event={data.localDraft.noteDraft}
@@ -1210,7 +1200,7 @@ const HomeTab = ({
               {data.drafts.length > 0 && (
                 <>
                   <div className="fit-container fx-scattered">
-                    <p>Saved</p>
+                    <p>{t("AQG30hM")}</p>
                     {data.drafts.length > 4 && (
                       <p
                         className="btn-text-gray pointer"
@@ -1219,7 +1209,7 @@ const HomeTab = ({
                           setContentFilter("drafts");
                         }}
                       >
-                        See all
+                        {t("A4N51J3")}
                       </p>
                     )}
                   </div>
@@ -1233,7 +1223,7 @@ const HomeTab = ({
         )}
         {data.popularNotes.length > 0 && (
           <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-            <p className="gray-c p-big">Popular notes</p>
+            <p className="gray-c p-big">{t("AU2yMBa")}</p>
             <div className="fit-container fx-centered fx-col">
               {data.popularNotes.map((event) => {
                 return <ContentCard key={event.id} event={event} />;
@@ -1277,6 +1267,7 @@ const ContentCard = ({
 };
 
 const DraftCard = ({ event, setDeleteEvent }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="fit-container fx-scattered sc-s-18 box-pad-h-m box-pad-v-m pointer"
@@ -1312,17 +1303,21 @@ const DraftCard = ({ event, setDeleteEvent }) => {
         <div className="fx-centered fx-col fx-start-h fx-start-v">
           <div className="fx-centered">
             <p className="gray-c p-medium">
-              Last updated{" "}
-              <Date_ toConvert={new Date(event.created_at * 1000)} />
+              {t("AcKscQl", {
+                date: timeAgo(new Date(event.created_at * 1000)),
+              })}{" "}
+              {/* <Date_ toConvert={new Date(event.created_at * 1000)} /> */}
             </p>
             {event.local && (
               <div className="sticker sticker-normal sticker-gray-black">
-                article
+                {t("AyYkCrS")}
               </div>
             )}
           </div>
           <p className="p-two-lines">
-            {event.title || <span className="p-italic gray-c">Untitled</span>}
+            {event.title || (
+              <span className="p-italic gray-c">{t("AaWkOl3")}</span>
+            )}
           </p>
         </div>
       </div>
@@ -1346,14 +1341,14 @@ const DraftCard = ({ event, setDeleteEvent }) => {
                 post_published_at: event.published_at,
               }}
             >
-              <p>Edit draft</p>
+              <p>{t("Ai4af1h")}</p>
             </Link>,
             setDeleteEvent && (
               <div
                 className="fit-container"
                 onClick={() => setDeleteEvent(event)}
               >
-                <p className="red-c">Delete</p>
+                <p className="red-c">{t("Almq94P")}</p>
               </div>
             ),
           ]}
@@ -1364,6 +1359,7 @@ const DraftCard = ({ event, setDeleteEvent }) => {
   );
 };
 const DraftCardOthers = ({ event, setPostToNote }) => {
+  const { t } = useTranslation();
   const handleRedirect = (e) => {
     e.stopPropagation();
     if (event.kind === 11) {
@@ -1394,12 +1390,11 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
         <div className="fx-centered fx-col fx-start-h fx-start-v">
           <div className="fx-centered">
             <p className="gray-c p-medium">
-              Last updated{" "}
-              {event.created_at ? (
-                <Date_ toConvert={new Date(event.created_at * 1000)} />
-              ) : (
-                "recent"
-              )}
+              {t("AcKscQl", {
+                date: event.created_at
+                  ? timeAgo(new Date(event.created_at * 1000))
+                  : t("AiAJcg1"),
+              })}
             </p>
             <div className="sticker sticker-normal sticker-gray-black">
               {eventKinds[event.kind]}
@@ -1410,7 +1405,7 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
             {event.kind === 300311 && (
               <>
                 <span className="c1-c">{event.content.components.length}</span>{" "}
-                components in this smart widget
+                {t("A7Mh9O6")}
               </>
             )}
           </p>
@@ -1419,7 +1414,7 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
       <OptionsDropdown
         options={[
           <div className="pointer" onClick={handleRedirect}>
-            <p>Edit draft</p>
+            <p>{t("Ai4af1h")}</p>
           </div>,
         ]}
       />
@@ -1435,14 +1430,14 @@ const RepCard = ({
   setPostToNote,
 }) => {
   const dispatch = useDispatch();
-
+  const { t } = useTranslation();
   const copyID = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(event.naddr);
     dispatch(
       setToast({
         type: 1,
-        desc: `Note ID was copied! 👏`,
+        desc: `${t("ARJICtS")} 👏`,
       })
     );
   };
@@ -1459,10 +1454,10 @@ const RepCard = ({
             );
           }}
         >
-          <p>Post {eventKinds[event.kind]} in note</p>
+          <p>{t("AB8DnjO")}</p>
         </div>,
         <div onClick={copyID} className="pointer">
-          <p>Copy naddr</p>
+          <p>{t("ApPw14o", { item: "naddr" })}</p>
         </div>,
         <Link
           className="fit-container"
@@ -1472,13 +1467,13 @@ const RepCard = ({
             metadata: { ...{ metadata: JSON.parse(event.content), ...event } },
           }}
         >
-          <p>Clone</p>
+          <p>{t("AyWVBDx")}</p>
         </Link>,
         <Link
           className="fit-container"
           to={`/smart-widget-checker?naddr=${event.naddr}`}
         >
-          <p>Check validity</p>
+          <p>{t("AavUrQj")}</p>
         </Link>,
         setDeleteEvent && (
           <Link
@@ -1491,12 +1486,12 @@ const RepCard = ({
               },
             }}
           >
-            <p>Edit</p>
+            <p>{t("AsXohpb")}</p>
           </Link>
         ),
         setDeleteEvent && (
           <div className="fit-container" onClick={() => setDeleteEvent(event)}>
-            <p className="red-c">Delete</p>
+            <p className="red-c">{t("Almq94P")}</p>
           </div>
         ),
         <div className="fit-container fx-centered fx-start-h pointer">
@@ -1509,7 +1504,7 @@ const RepCard = ({
             shareImgData={{
               post: event,
               author: userMetadata,
-              label: "Note",
+              label: t("Az5ftet"),
             }}
           />
         </div>,
@@ -1524,10 +1519,10 @@ const RepCard = ({
           // setPostToNote(event.naddr);
         }}
       >
-        <p>Post {eventKinds[event.kind]} in a note</p>
+        <p>{t("AB8DnjO")}</p>
       </div>,
       <div onClick={copyID} className="pointer">
-        <p>Copy naddr</p>
+        <p>{t("ApPw14o", { item: "naddr" })}</p>
       </div>,
       setAddArtsToCur && [30004, 30005].includes(event.kind) && (
         <div
@@ -1537,7 +1532,7 @@ const RepCard = ({
             setAddArtsToCur(event);
           }}
         >
-          <p>Add items</p>
+          <p>{t("Aby0Ea4")}</p>
         </div>
       ),
       ([30023, 30024].includes(event.kind) ||
@@ -1563,12 +1558,12 @@ const RepCard = ({
               : setEditItem(event);
           }}
         >
-          <p>Edit</p>
+          <p>{t("AsXohpb")}</p>
         </div>
       ),
       setDeleteEvent && (
         <div className="fit-container" onClick={() => setDeleteEvent(event)}>
-          <p className="red-c">Delete</p>
+          <p className="red-c">{t("Almq94P")}</p>
         </div>
       ),
       <div className="fit-container fx-centered fx-start-h pointer">
@@ -1581,7 +1576,7 @@ const RepCard = ({
           shareImgData={{
             post: event,
             author: userMetadata,
-            label: "Note",
+            label: t("Az5ftet"),
           }}
         />
       </div>,
@@ -1635,10 +1630,12 @@ const RepCard = ({
 
         <div className="fx-centered fx-col fx-start-h fx-start-v">
           <p className="gray-c p-medium">
-            Last updated <Date_ toConvert={new Date(event.created_at * 1000)} />
+            {t("AcKscQl", { date: timeAgo(new Date(event.created_at * 1000)) })}{" "}
           </p>
           <p className="p-two-lines">
-            {event.title || <span className="p-italic gray-c">Untitled</span>}
+            {event.title || (
+              <span className="p-italic gray-c">{t("AaWkOl3")}</span>
+            )}
           </p>
           <div className="fx-centered">
             <div className="fx-centered">
@@ -1676,7 +1673,7 @@ const RepCard = ({
 
 const NoteCard = ({ event }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const userMetadata = useSelector((state) => state.userMetadata);
   const isRepost = event.kind === 6 ? JSON.parse(event.content) : event;
   const { postActions } = useNoteStats(isRepost.id, isRepost.pubkey);
@@ -1691,7 +1688,7 @@ const NoteCard = ({ event }) => {
     dispatch(
       setToast({
         type: 1,
-        desc: `Note ID was copied! 👏`,
+        desc: `${t("ARJICtS")} 👏`,
       })
     );
   };
@@ -1715,8 +1712,9 @@ const NoteCard = ({ event }) => {
         <div className="fx-centered fx-col fx-start-h fx-start-v">
           <div className="fx-centered">
             <p className="gray-c p-medium">
-              Published on{" "}
-              <Date_ toConvert={new Date(isRepost.created_at * 1000)} />
+              {t("AHhPGax", {
+                date: timeAgo(new Date(isRepost.created_at * 1000)),
+              })}{" "}
             </p>
           </div>
           <p className="p-two-lines">{compactContent(isRepost.content)}</p>
@@ -1735,12 +1733,12 @@ const NoteCard = ({ event }) => {
             </div>
             {isFlashNews && (
               <div className="sticker sticker-normal sticker-gray-black">
-                Paid
+                {t("AAg9D6c")}
               </div>
             )}
             {event.kind === 6 && (
               <div className="sticker sticker-normal sticker-gray-black fx-centered">
-                Reposted <div className="switch-arrows"></div>
+                {t("AqWa0gF")} <div className="switch-arrows"></div>
               </div>
             )}
           </div>
@@ -1750,7 +1748,7 @@ const NoteCard = ({ event }) => {
         <OptionsDropdown
           options={[
             <div onClick={copyID} className="pointer">
-              <p>Copy note ID</p>
+              <p>{t("AYFAFKs")}</p>
             </div>,
             <div className="fit-container fx-centered fx-start-h pointer">
               <ShareLink
@@ -1762,7 +1760,7 @@ const NoteCard = ({ event }) => {
                 shareImgData={{
                   post: isRepost,
                   author: userMetadata,
-                  label: "Note",
+                  label: t("Az5ftet"),
                 }}
               />
             </div>,
@@ -1774,6 +1772,7 @@ const NoteCard = ({ event }) => {
 };
 
 const BookmarkCard = ({ event, showDetails, deleteEvent, editEvent }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="fit-container fx-scattered sc-s-18 box-pad-h-m box-pad-v-m pointer"
@@ -1806,14 +1805,16 @@ const BookmarkCard = ({ event, showDetails, deleteEvent, editEvent }) => {
 
         <div className="fx-centered fx-col fx-start-h fx-start-v">
           <p className="gray-c p-medium">
-            Last updated <Date_ toConvert={new Date(event.created_at * 1000)} />
+            {t("AcKscQl", { date: timeAgo(new Date(event.created_at * 1000)) })}{" "}
           </p>
           <div className="fx-centered">
             <p className="p-two-lines">
-              {event.title || <span className="p-italic gray-c">Untitled</span>}
+              {event.title || (
+                <span className="p-italic gray-c">{t("AaWkOl3")}</span>
+              )}
             </p>
             <span className="sticker sticker-gray-black sticker-small">
-              {event.items.length} items
+              {t("A04okTg", { count: event.items.length })}
             </span>
           </div>
         </div>
@@ -1829,7 +1830,7 @@ const BookmarkCard = ({ event, showDetails, deleteEvent, editEvent }) => {
                 editEvent(event);
               }}
             >
-              <p>Edit</p>
+              <p>{t("AsXohpb")}</p>
             </div>,
             <div
               className="fit-container"
@@ -1838,7 +1839,7 @@ const BookmarkCard = ({ event, showDetails, deleteEvent, editEvent }) => {
                 deleteEvent(event);
               }}
             >
-              <p className="red-c">Delete</p>
+              <p className="red-c">{t("Almq94P")}</p>
             </div>,
           ]}
         />
@@ -1848,6 +1849,7 @@ const BookmarkCard = ({ event, showDetails, deleteEvent, editEvent }) => {
 };
 
 const BookmarkContent = ({ bookmark, exit }) => {
+  const { t } = useTranslation();
   const [content, setContent] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [postKind, setPostKind] = useState(0);
@@ -1860,7 +1862,36 @@ const BookmarkContent = ({ bookmark, exit }) => {
     let num = content.filter((item) => item.kind === postKind).length;
     return num >= 10 || num === 0 ? num : `0${num}`;
   }, [postKind, content]);
-
+  const bookmarkFilterOptions = [
+    {
+      display_name: "All content",
+      value: 0,
+    },
+    {
+      display_name: t("AesMg52"),
+      value: 30023,
+    },
+    {
+      display_name: "Articles curations",
+      value: 30004,
+    },
+    {
+      display_name: "Video curations",
+      value: 30005,
+    },
+    {
+      display_name: "Notes",
+      value: 1,
+    },
+    {
+      display_name: "Paid notes",
+      value: 11,
+    },
+    {
+      display_name: "Videos",
+      value: 34235,
+    },
+  ];
   useEffect(() => {
     const fetchData = async () => {
       let tags = bookmark.tags.filter((tag) => ["a", "e"].includes(tag[0]));
@@ -1920,7 +1951,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                 style={{ transform: "rotate(90deg)" }}
               ></div>
             </div>
-            <p>Back to Bookmarks</p>
+            <p>{t("A8VdJyb")}</p>
           </div>
         </div>
         <div className="fx-centered fx-start-h  fx-col fx-stretch">
@@ -1961,9 +1992,9 @@ const BookmarkContent = ({ bookmark, exit }) => {
                 className="fx-centered fx-col fit-container"
                 style={{ height: "20vh" }}
               >
-                <h4>No items</h4>
+                <h4>{t("AklxVKp")}</h4>
                 <p className="gray-c p-centered" style={{ maxWidth: "350px" }}>
-                  Change your filter to get more items
+                  {t("APCvbSy")}
                 </p>
               </div>
             )}
@@ -2003,7 +2034,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                           borderRadius: "var(--border-r-18)",
                         }}
                       >
-                        <p className="p-small">curation</p>
+                        <p className="p-small">{t("Ac6UnVb")}</p>
                       </div>
                     )}
                     {[30005].includes(item.kind) && (
@@ -2020,7 +2051,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                           borderRadius: "var(--border-r-18)",
                         }}
                       >
-                        <p className="p-small">curation</p>
+                        <p className="p-small">{t("Ac6UnVb")}</p>
                       </div>
                     )}
                     {[34235].includes(item.kind) && (
@@ -2037,7 +2068,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                           borderRadius: "var(--border-r-18)",
                         }}
                       >
-                        <p className="p-small">video</p>
+                        <p className="p-small">{t("AVdmifm")}</p>
                       </div>
                     )}
                     <div
@@ -2058,8 +2089,9 @@ const BookmarkContent = ({ bookmark, exit }) => {
                       <div>
                         <p className="p-one-line">{content.title}</p>
                         <p className="p-medium gray-c">
-                          Edited on{" "}
-                          <Date_ toConvert={new Date(item.created_at * 1000)} />
+                          {t("AHhPGax", {
+                            date: timeAgo(new Date(item.created_at * 1000)),
+                          })}
                         </p>
                       </div>
                     </div>
@@ -2107,7 +2139,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                         borderRadius: "var(--border-r-18)",
                       }}
                     >
-                      <p className="p-small">Paid notes</p>
+                      <p className="p-small">{t("AV5f3lP")}</p>
                     </div>
                     <div className="fx-centered box-pad-h-m">
                       <div
@@ -2124,8 +2156,9 @@ const BookmarkContent = ({ bookmark, exit }) => {
                           {item.content.substring(0, 100)}
                         </p>
                         <p className="p-medium gray-c">
-                          Edited on{" "}
-                          <Date_ toConvert={new Date(item.created_at * 1000)} />
+                          {t("A1jhS42", {
+                            date: convertDate(new Date(item.created_at * 1000)),
+                          })}
                         </p>
                       </div>
                     </div>
@@ -2165,7 +2198,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                         borderRadius: "var(--border-r-18)",
                       }}
                     >
-                      <p className="p-small">Note</p>
+                      <p className="p-small">{t("Az5ftet")}</p>
                     </div>
                     <div className="fx-centered box-pad-h-m">
                       <div
@@ -2182,8 +2215,9 @@ const BookmarkContent = ({ bookmark, exit }) => {
                           {item.content.substring(0, 100)}
                         </p>
                         <p className="p-medium gray-c">
-                          Edited on{" "}
-                          <Date_ toConvert={new Date(item.created_at * 1000)} />
+                        {t("A1jhS42", {
+                            date: convertDate(new Date(item.created_at * 1000)),
+                          })}
                         </p>
                       </div>
                     </div>
@@ -2216,7 +2250,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                           borderRadius: "var(--border-r-18)",
                         }}
                       >
-                        <p className="p-small">curation</p>
+                        <p className="p-small">{t("Ac6UnVb")}</p>
                       </div>
                     )}
                     <div
@@ -2236,8 +2270,9 @@ const BookmarkContent = ({ bookmark, exit }) => {
                       <div>
                         <p className="p-one-line">{content.title}</p>
                         <p className="p-medium gray-c">
-                          Edited on{" "}
-                          <Date_ toConvert={new Date(item.created_at * 1000)} />
+                        {t("A1jhS42", {
+                            date: convertDate(new Date(item.created_at * 1000)),
+                          })}
                         </p>
                       </div>
                     </div>
@@ -2269,9 +2304,9 @@ const BookmarkContent = ({ bookmark, exit }) => {
             className="fx-centered fx-col fit-container"
             style={{ height: "30vh" }}
           >
-            <h4>No items</h4>
+            <h4>{t("AklxVKp")}</h4>
             <p className="gray-c p-centered" style={{ maxWidth: "350px" }}>
-              You can bookmark articles and curation in one set
+              {t("AwtoZdf")}
             </p>
           </div>
         )}
@@ -2289,6 +2324,7 @@ const ManageInterest = ({ exit }) => {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userInterestList = useSelector((state) => state.userInterestList);
+  const { t } = useTranslation();
   const [interests, setInterest] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newInterest, setNewInterest] = useState("");
@@ -2376,13 +2412,13 @@ const ManageInterest = ({ exit }) => {
           <div className="round-icon">
             <div className="arrow" style={{ transform: "rotate(90deg)" }}></div>
           </div>
-          <p>Back to interests</p>
+          <p>{t("ARsUd9r")}</p>
         </div>
         <button
           className={`btn ${isChanged ? "btn-normal" : "btn-disabled"}`}
           onClick={saveInterestList}
         >
-          {isLoading ? <LoadingDots /> : "Update list"}
+          {isLoading ? <LoadingDots /> : t("A29aBCD")}
         </button>
       </div>
       <div className="fit-container fx-centered fx-col box-pad-h">
@@ -2398,7 +2434,7 @@ const ManageInterest = ({ exit }) => {
             value={newInterest}
             onChange={(e) => setNewInterest(e.target.value)}
             type="text"
-            placeholder="Add your interest"
+            placeholder={t("AFwnnZA")}
             className="if ifs-full if-no-border"
             style={{ padding: 0 }}
           />

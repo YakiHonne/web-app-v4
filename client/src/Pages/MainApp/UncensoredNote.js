@@ -6,11 +6,10 @@ import axios from "axios";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import UN from "../../Components/Main/UN";
 import Date_ from "../../Components/Date_";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { encryptEventData, filterRelays } from "../../Helpers/Encryptions";
+import { Link, useParams } from "react-router-dom";
+import { encryptEventData } from "../../Helpers/Encryptions";
 import { nip19, finalizeEvent } from "nostr-tools";
 import LoadingScreen from "../../Components/LoadingScreen";
-import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../../Components/LoadingDots";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import {
@@ -18,12 +17,12 @@ import {
   getNoteTree,
   redirectToLogin,
 } from "../../Helpers/Helpers";
-import LoginWithNostr from "../../Components/Main/LoginWithNostr";
 import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 const MAX_CHAR = 500;
@@ -34,7 +33,7 @@ export default function UNEvent() {
   const userMetadata = useSelector((state) => state.userMetadata);
   const userRelays = useSelector((state) => state.userRelays);
   const isPublishing = useSelector((state) => state.isPublishing);
-
+  const { t } = useTranslation();
   const { nevent } = useParams();
   const [flashNews, setFlashNews] = useState({});
   const [source, setSource] = useState();
@@ -121,7 +120,7 @@ export default function UNEvent() {
         dispatch(
           setToast({
             type: 3,
-            desc: "You must write something!",
+            desc: t("AKXuNzy"),
           })
         );
         return;
@@ -130,16 +129,7 @@ export default function UNEvent() {
         dispatch(
           setToast({
             type: 3,
-            desc: "Your note has exceeded the maximum character number.",
-          })
-        );
-        return;
-      }
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
+            desc: t("APjSSpQ"),
           })
         );
         return;
@@ -148,7 +138,6 @@ export default function UNEvent() {
       let relaysToPublish = userRelays;
       let tags = [];
       let created_at = Math.floor(Date.now() / 1000);
-
       tags.push([
         "client",
         "Yakihonne",
@@ -198,7 +187,7 @@ export default function UNEvent() {
       dispatch(
         setToast({
           type: 2,
-          desc: "An error occurred while publishing this note",
+          desc: t("AOSllJU"),
         })
       );
     }
@@ -256,7 +245,7 @@ export default function UNEvent() {
                     <div className="round-icon">
                       <div className="arrow" style={{ rotate: "90deg" }}></div>
                     </div>
-                    <h4>Back to news</h4>
+                    <h4>{t("AuWEFcH")}</h4>
                   </div>
                 </Link>
                 <div className="fit-container fx-centered fx-col">
@@ -269,7 +258,6 @@ export default function UNEvent() {
                         img={flashNews.author.picture}
                         size={38}
                         user_id={flashNews.author.pubkey}
-                        
                       />
                     </div>
                     <div
@@ -278,7 +266,9 @@ export default function UNEvent() {
                     >
                       <div className="fit-container fx-scattered">
                         <div className="fx-centered fx-start-h fit-container">
-                          <p className="gray-c">By {flashNews.author.name}</p>
+                          <p className="gray-c">
+                            {t("AsXpL4b", { name: flashNews.author.name })}
+                          </p>
                           <p className="gray-c">&#x2022;</p>
                           <p className="gray-c">
                             <Date_
@@ -330,14 +320,13 @@ export default function UNEvent() {
                                 >
                                   <UserProfilePicNOSTR
                                     mainAccountUser={true}
-                                    
                                     size={38}
                                   />
                                   <div>
                                     <p className="p-medium gray-c">
-                                      See anything you want to improve?
+                                      {t("A8pP6gz")}
                                     </p>
-                                    <p className="p-bold">Write a note</p>
+                                    <p className="p-bold">{t("A80wepI")}</p>
                                   </div>
                                 </div>
                                 <button
@@ -345,7 +334,7 @@ export default function UNEvent() {
                                   onClick={handlePublishing}
                                   disabled={isLoading}
                                 >
-                                  {isLoading ? <LoadingDots /> : "Post"}
+                                  {isLoading ? <LoadingDots /> : t("AT4tygn")}
                                 </button>
                               </div>
                               <hr />
@@ -360,23 +349,25 @@ export default function UNEvent() {
                                         ? "var(--red-main)"
                                         : "",
                                   }}
-                                  placeholder={`What do you think about this ${
-                                    userMetadata.name || ""
-                                  }?`}
+                                  placeholder={t("AlOVbtN", {
+                                    name: userMetadata.name || "",
+                                  })}
                                   value={note}
                                   onChange={handleNoteOnChange}
                                 />
                                 <div className="fit-container">
                                   {MAX_CHAR - currentWordsCount <= 0 && (
                                     <p className="red-c p-medium">
-                                      {MAX_CHAR - currentWordsCount} characters
-                                      left
+                                      {t("Ahy97Wm", {
+                                        count: MAX_CHAR - currentWordsCount,
+                                      })}
                                     </p>
                                   )}
                                   {MAX_CHAR - currentWordsCount > 0 && (
                                     <p className="gray-c p-medium">
-                                      {MAX_CHAR - currentWordsCount} characters
-                                      left
+                                      {t("Ahy97Wm", {
+                                        count: MAX_CHAR - currentWordsCount,
+                                      })}
                                     </p>
                                   )}
                                 </div>
@@ -386,7 +377,7 @@ export default function UNEvent() {
                                 <input
                                   type="text"
                                   className="if ifs-full if-no-border"
-                                  placeholder="Source (Recommended)"
+                                  placeholder={t("AkZiEiU")}
                                   value={source}
                                   onChange={(e) => setSource(e.target.value)}
                                 />
@@ -403,7 +394,7 @@ export default function UNEvent() {
                                   onChange={() => setNoteType(!noteType)}
                                 />
                                 <p className={noteType ? "" : "gray-c"}>
-                                  I find this misleading
+                                  {t("A2vH1G8")}
                                 </p>
                               </label>
                             </div>
@@ -411,19 +402,18 @@ export default function UNEvent() {
                         )}
                       {!userKeys && (
                         <div className="fit-container fx-centered fx-col box-pad-h box-pad-v sc-s-18">
-                          <h4>Spread your voice!</h4>
+                          <h4>{t("Ao5adkz")}</h4>
                           <p
                             className="gray-c p-centered"
                             style={{ maxWidth: "400px" }}
                           >
-                            Login to your account now and be a contributor for a
-                            better community
+                            {t("A7qYBVd")}
                           </p>
                           <button
                             className="btn btn-normal"
                             onClick={() => redirectToLogin()}
                           >
-                            Login
+                            {t("AmOtzoL")}
                           </button>
                         </div>
                       )}
@@ -447,9 +437,7 @@ export default function UNEvent() {
                           }}
                         >
                           <div className="checkmark"></div>
-                          <p className="green-c">
-                            You have already contributed!
-                          </p>
+                          <p className="green-c">{t("Aundnph")}</p>
                         </div>
                       )}
                     </div>
@@ -458,7 +446,7 @@ export default function UNEvent() {
                 {(uncensoredNotes.length > 0 ||
                   flashNews.sealed_not_helpful_notes.length > 0) && (
                   <>
-                    <h4 className="box-marg-s">Notes from the community</h4>
+                    <h4 className="box-marg-s">{t("AtKC9kH")}</h4>
                     <div className="fx-centered fx-col fit-container">
                       {uncensoredNotes.map((note) => {
                         return (
@@ -531,7 +519,7 @@ export default function UNEvent() {
                   ></div>
                   <div className="fx-centered fx-col fx-start-v">
                     <p className="p-medium" style={{ color: "white" }}>
-                      Community wallet
+                      {t("Ay17eyW")}
                     </p>
                     <div className="fx-centered fx-end-v">
                       <h2 className="orange-c">{balance || "N/A"}</h2>
@@ -546,30 +534,23 @@ export default function UNEvent() {
                   >
                     {" "}
                   </div>
-                  <h4>Read about verifying notes</h4>
-                  <p className="gray-c">
-                    We've made an article for you to help you understand our
-                    purpose
-                  </p>
+                  <h4>{t("AtTBm8o")}</h4>
+                  <p className="gray-c">{t("A9YOTCh")}</p>
                   <Link
                     target="_blank"
                     to={
                       "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
                     }
                   >
-                    <button className="btn btn-normal">Read article</button>
+                    <button className="btn btn-normal">{t("Azigg0N")}</button>
                   </Link>
                 </div>
                 <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
-                  <h4>Verifying notes values</h4>
+                  <h4>{t("AlAlx8I")}</h4>
                   <ul>
-                    <li className="gray-c">
-                      Contribute to build understanding
-                    </li>
-                    <li className="gray-c">Act in good faith</li>
-                    <li className="gray-c">
-                      Be helpful, even to those who disagree
-                    </li>
+                    <li className="gray-c">{t("AEkp3uJ")}</li>
+                    <li className="gray-c">{t("ApW8X5d")}</li>
+                    <li className="gray-c">{t("AHc4MVZ")}</li>
                   </ul>
                   <Link
                     target="_blank"
@@ -577,13 +558,12 @@ export default function UNEvent() {
                       "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
                     }
                   >
-                    <button className="btn btn-normal">Read article</button>
+                    <button className="btn btn-normal">{t("Azigg0N")}</button>
                   </Link>
                 </div>
                 <Footer />
               </div>
             </div>
-            {/* <Footer /> */}
           </main>
         </div>
       </div>

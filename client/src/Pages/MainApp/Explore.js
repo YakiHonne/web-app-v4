@@ -12,7 +12,6 @@ import {
 } from "../../Helpers/Encryptions";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import { saveUsers } from "../../Helpers/DB";
-import LoadingDots from "../../Components/LoadingDots";
 import { getSubData } from "../../Helpers/Controlers";
 import SmallButtonDropDown from "../../Components/Main/SmallButtonDropDown";
 import LoadingLogo from "../../Components/LoadingLogo";
@@ -22,8 +21,7 @@ import ContentSuggestionsCards from "../../Components/SuggestionsCards/ContentSu
 import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
 import DonationBoxSuggestionCards from "../../Components/SuggestionsCards/DonationBoxSuggestionCards";
 import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/ProfileShareSuggestionCards";
-
-const tabs = ["All", "Articles", "Curations", "Videos"];
+import { useTranslation } from "react-i18next";
 
 const MixEvents = (articles, curations, videos) => {
   const interleavedArray = [];
@@ -47,6 +45,7 @@ const MixEvents = (articles, curations, videos) => {
 export default function Explore() {
   const userInterestList = useSelector((state) => state.userInterestList);
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("explore");
   const [smallButtonDropDownOptions, setSmallButtonDropDownOptions] = useState([
@@ -55,7 +54,7 @@ export default function Explore() {
   ]);
   const [isLoading, setIsLoading] = useState(true);
   const extrasRef = useRef(null);
-
+  const tabs = [t("AR9ctVs"), t("AesMg52"), t("AVysZ1s"), t("AStkKfQ")];
   useEffect(() => {
     if (!extrasRef.current) return;
     const handleResize = () => {
@@ -224,6 +223,7 @@ const ExploreFeed = ({
   const userKeys = useSelector((state) => state.userKeys);
   const userInterestList = useSelector((state) => state.userInterestList);
   const userFollowings = useSelector((state) => state.userFollowings);
+  const { t } = useTranslation();
   const [content, setContent] = useState([]);
   const [timestamp, setTimestamp] = useState(false);
   const [lastEventsTimestamps, setLastEventsTimestamps] = useState({
@@ -263,9 +263,9 @@ const ExploreFeed = ({
         (_) => _.created_at > dateCheckerVideos
       );
 
-      articles_ = articles_.length === 0 ? articles.data : articles_
-      curations_ = curations_.length === 0 ? curations.data : curations_
-      videos_ = videos_.length === 0 ? videos.data : videos_
+      articles_ = articles_.length === 0 ? articles.data : articles_;
+      curations_ = curations_.length === 0 ? curations.data : curations_;
+      videos_ = videos_.length === 0 ? videos.data : videos_;
 
       setLastEventsTimestamps({
         articles:
@@ -469,8 +469,8 @@ const ExploreFeed = ({
           style={{ height: "30vh" }}
         >
           <div className="search"></div>
-          <h4>No more data</h4>
-          <p className="gray-c">Nothing to show here</p>
+          <h4>{t("AUrhqmn")}</h4>
+          <p className="gray-c">{t("AtL4qoU")}</p>
         </div>
       )}
       <div className="box-pad-v"></div>

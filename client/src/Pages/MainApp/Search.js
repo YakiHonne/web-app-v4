@@ -4,22 +4,20 @@ import ArrowUp from "../../Components/ArrowUp";
 import { Helmet } from "react-helmet";
 import { useDispatch, useSelector } from "react-redux";
 import { nip19 } from "nostr-tools";
-import { compactContent, getLinkFromAddr, isHex } from "../../Helpers/Helpers";
+import { getLinkFromAddr, isHex } from "../../Helpers/Helpers";
 import { getParsedNote, getParsedRepEvent } from "../../Helpers/Encryptions";
 import { getSubData } from "../../Helpers/Controlers";
 import { customHistory } from "../../Helpers/History";
 import { saveFetchedUsers, saveUsers } from "../../Helpers/DB";
 import axios from "axios";
-import LoadingDots from "../../Components/LoadingDots";
 import SearchUserCard from "../../Components/Main/SearchUserCard";
-import SearchContentCard from "../../Components/Main/SearchContentCard";
 import { useLocation } from "react-router-dom";
-import { SelectTabs } from "../../Components/Main/SelectTabs";
 import LoadingLogo from "../../Components/LoadingLogo";
 import Slider from "../../Components/Slider";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import KindOne from "../../Components/Main/KindOne";
 import { setToPublish } from "../../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 
 const getKeyword = (location) => {
   let keyword = new URLSearchParams(location.search).get("keyword");
@@ -30,6 +28,7 @@ export default function Search() {
   const { state } = useLocation();
   const location = useLocation();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const urlKeyword = getKeyword(location);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userKeys = useSelector((state) => state.userKeys);
@@ -44,7 +43,13 @@ export default function Search() {
       (interest) => interest === searchKeyword.toLowerCase()
     );
   }, [searchKeyword, userInterestList]);
-
+  const tabsContent = {
+    people: t("AJ1Zfct"),
+    "all-media": t("A7DfXrs"),
+    articles: t("AesMg52"),
+    notes: t("AYIXG83"),
+    videos: t("AStkKfQ"),
+  };
   const handleOnChange = (e) => {
     let value = e.target.value;
     if (!value) {
@@ -343,28 +348,31 @@ export default function Search() {
                     </div>
                     <Slider
                       items={[
-                        ...["people", "all-media", "articles", "notes", "videos"].map(
-                          (tag, index) => {
-                            return (
-                              <div
-                                className={
-                                  "btn sticker-gray-black p-caps fx-centered"
-                                }
-                                style={{
-                                  backgroundColor:
-                                    selectedTab === tag ? "" : "transparent",
-                                  color:
-                                    selectedTab === tag ? "" : "var(--gray)",
-                                  pointerEvents: isLoading ? "none" : "auto",
-                                }}
-                                key={index}
-                                onClick={() => handleSelectedTab(tag)}
-                              >
-                                {tag.replace("-", " ")}
-                              </div>
-                            );
-                          }
-                        ),
+                        ...[
+                          "people",
+                          "all-media",
+                          "articles",
+                          "notes",
+                          "videos",
+                        ].map((tag, index) => {
+                          return (
+                            <div
+                              className={
+                                "btn sticker-gray-black p-caps fx-centered"
+                              }
+                              style={{
+                                backgroundColor:
+                                  selectedTab === tag ? "" : "transparent",
+                                color: selectedTab === tag ? "" : "var(--gray)",
+                                pointerEvents: isLoading ? "none" : "auto",
+                              }}
+                              key={index}
+                              onClick={() => handleSelectedTab(tag)}
+                            >
+                              {tabsContent[tag]}
+                            </div>
+                          );
+                        }),
                       ]}
                     />
                     <hr />
@@ -380,12 +388,12 @@ export default function Search() {
                           >
                             {!followed && (
                               <>
-                                Interested <div className="plus-sign"></div>
+                                {t("APkD8MP")} <div className="plus-sign"></div>
                               </>
                             )}
                             {followed && (
                               <>
-                                Not interested
+                                {t("AiKpDYn")}
                                 <div
                                   className="check-24"
                                   style={{ filter: "brightness(0) invert()" }}
@@ -431,8 +439,8 @@ export default function Search() {
                       style={{ height: "500px" }}
                     >
                       <div className="search-24"></div>
-                      <h4>Search in nostr</h4>
-                      <p className="gray-c">Find people, notes and content</p>
+                      <h4>{t("AjlW15t")}</h4>
+                      <p className="gray-c">{t("A0RqaoC")}</p>
                     </div>
                   )}
                 </div>

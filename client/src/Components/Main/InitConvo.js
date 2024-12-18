@@ -17,6 +17,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateYakiChestStats } from "../../Helpers/Controlers";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
+import { ndkInstance } from "../../Helpers/NDKInstance";
+import { NDKEvent } from "@nostr-dev-kit/ndk";
 
 export default function InitiConvo({ exit, receiver = false }) {
   const dispatch = useDispatch();
@@ -213,22 +215,19 @@ export default function InitiConvo({ exit, receiver = false }) {
 
   const initPublishing = async (relays, event1, event2) => {
     try {
-      let pool_ev1 = new SimplePool();
-      let pool_ev2 = new SimplePool();
-      let [res1, res2] = await Promise.race([
-        Promise.allSettled(pool_ev1.publish(relaysOnPlatform, event1)),
-        Promise.allSettled(pool_ev2.publish(relaysOnPlatform, event2)),
-      ]);
+      let ev1 = new NDKEvent(ndkInstance, event1);
+      let ev2 = new NDKEvent(ndkInstance, event2);
+      let [res1, res2] = await Promise.race([ev1.publish(), ev2.publish()]);
 
-      if (res1.status === "rejected") {
-        dispatch(
-          setToast({
-            type: 2,
-            desc: "Error sending the message.",
-          })
-        );
-        return false;
-      }
+      // if (res1.status === "rejected") {
+      //   dispatch(
+      //     setToast({
+      //       type: 2,
+      //       desc: "Error sending the message.",
+      //     })
+      //   );
+      //   return false;
+      // }
 
       dispatch(
         setToast({
@@ -328,14 +327,16 @@ export default function InitiConvo({ exit, receiver = false }) {
               </div>
             )}
           </div>
-          {legacy && <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
-            <div className="info-tt-24"></div>
-            <div>
-              <p className="c1-c p-medium">
-                For more security & privacy, consider enabling Secure DMs.
-              </p>
+          {legacy && (
+            <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
+              <div className="info-tt-24"></div>
+              <div>
+                <p className="c1-c p-medium">
+                  For more security & privacy, consider enabling Secure DMs.
+                </p>
+              </div>
             </div>
-          </div>}
+          )}
         </div>
       </div>
     </div>

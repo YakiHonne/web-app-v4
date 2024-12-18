@@ -4,16 +4,19 @@ import { setToast } from "../../Store/Slides/Publishers";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import QRCode from "react-qr-code";
 import { getBech32, shortenKey } from "../../Helpers/Encryptions";
+import { useTranslation } from "react-i18next";
 
 export default function QRSharing({ user, exit }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState("pk");
+
   const copyKey = (keyType, key) => {
     navigator.clipboard.writeText(key);
     dispatch(
       setToast({
         type: 1,
-        desc: `${keyType} was copied! 👏`,
+        desc: `${keyType} 👏`,
       })
     );
   };
@@ -25,8 +28,6 @@ export default function QRSharing({ user, exit }) {
         style={{
           width: "min(100%,400px)",
           position: "relative",
-          // background:
-          //   "linear-gradient(180deg, rgba(156,39,176,1) 0%, rgba(41,121,255,1) 100%)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -44,27 +45,25 @@ export default function QRSharing({ user, exit }) {
         </div>
         <div className="fx-centered box-pad-v-m">
           <div
-              className={"btn sticker-gray-black p-caps fx-centered"}
-              style={{
-                backgroundColor:
-                  selectedTab === "pk" ? "" : "transparent",
-                color: selectedTab === "pk" ? "" : "var(--gray)",
-              }}
+            className={"btn sticker-gray-black p-caps fx-centered"}
+            style={{
+              backgroundColor: selectedTab === "pk" ? "" : "transparent",
+              color: selectedTab === "pk" ? "" : "var(--gray)",
+            }}
             onClick={() => setSelectedTab("pk")}
           >
-            Pubkey
+            {t("AA4MGb0")}
           </div>
           {user?.lud16 && (
             <div
-            className={"btn sticker-gray-black p-caps fx-centered"}
-            style={{
-              backgroundColor:
-                selectedTab === "ln" ? "" : "transparent",
-              color: selectedTab === "ln" ? "" : "var(--gray)",
-            }}
+              className={"btn sticker-gray-black p-caps fx-centered"}
+              style={{
+                backgroundColor: selectedTab === "ln" ? "" : "transparent",
+                color: selectedTab === "ln" ? "" : "var(--gray)",
+              }}
               onClick={() => setSelectedTab("ln")}
             >
-              Lightning address
+              {t("A40BuYB")}
             </div>
           )}
         </div>
@@ -88,7 +87,7 @@ export default function QRSharing({ user, exit }) {
             style={{ borderStyle: "dashed" }}
             onClick={() =>
               copyKey(
-                "Your profile",
+                t("AoTWbxS"),
                 `https://yakihonne.com/users/${getBech32("npub", user.pubkey)}`
               )
             }
@@ -104,7 +103,7 @@ export default function QRSharing({ user, exit }) {
             className={"fx-scattered if pointer fit-container dashed-onH"}
             style={{ borderStyle: "dashed" }}
             onClick={() =>
-              copyKey("The pubkey", `nostr:${getBech32("npub", user?.pubkey)}`)
+              copyKey(t("AzSXXQm"), `nostr:${getBech32("npub", user?.pubkey)}`)
             }
           >
             <div className="key-icon-24"></div>
@@ -115,7 +114,7 @@ export default function QRSharing({ user, exit }) {
             <div
               className={"fx-scattered if pointer fit-container dashed-onH"}
               style={{ borderStyle: "dashed" }}
-              onClick={() => copyKey("The lightning address", user?.lud16)}
+              onClick={() => copyKey(t("ALR84Tq"), user?.lud16)}
             >
               <div className="bolt-24"></div>
               <p className="p-one-line">{user?.lud16}</p>

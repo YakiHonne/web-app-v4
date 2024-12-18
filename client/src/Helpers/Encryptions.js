@@ -207,6 +207,7 @@ const getParsedRepEvent = (event) => {
       seenOn: event.onRelays
         ? [...new Set(event.onRelays.map((relay) => relay.url))]
         : [],
+      dir: detectDirection(event.content),
     };
     for (let tag of event.tags) {
       if (tag[0] === "title") {
@@ -262,6 +263,30 @@ const getParsedRepEvent = (event) => {
     console.log(err);
     return false;
   }
+};
+
+const detectDirection = (text) => {
+  const rtlCharRegExp =
+    /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+  const ltrCharRegExp = /[a-zA-Z]/;
+
+  let rtlCount = 0;
+  let ltrCount = 0;
+
+  for (const char of text) {
+    if (rtlCharRegExp.test(char)) {
+      rtlCount++;
+    } else if (ltrCharRegExp.test(char)) {
+      ltrCount++;
+    }
+  }
+
+  if (rtlCount > ltrCount) {
+    return "RTL";
+  } else if (ltrCount > rtlCount) {
+    return "LTR";
+  }
+  return "LTR"
 };
 
 const getParsedNote = async (event) => {
@@ -384,6 +409,54 @@ const convertDate = (toConvert) => {
   const day = new Date(toConvert).getDate();
 
   return `${month} ${day}, ${year}`;
+};
+
+const timeAgo = (date) => {
+  const now = new Date();
+  const diff = now - date; // Difference in milliseconds
+  const diffInSeconds = Math.floor(diff / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  const diffInMonths = Math.floor(diffInDays / 30);
+  const diffInYears = now.getFullYear() - date.getFullYear();
+
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  if (diffInSeconds < 60) {
+    return "now";
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes} min ago`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  } else if (diffInDays < 7) {
+    return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+  } else if (diffInWeeks < 5) {
+    return `${diffInWeeks} week${diffInWeeks > 1 ? "s" : ""} ago`;
+  } else if (diffInMonths < 11 && diffInYears === 0) {
+    return `${diffInMonths} month${diffInMonths > 1 ? "s" : ""} ago`;
+  } else if (diffInYears === 0) {
+    return `${months[date.getMonth()]} ${date.getDate()}`;
+  } else {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
 };
 
 const removeRelayLastSlash = (relay) => {
@@ -561,4 +634,5 @@ export {
   getuserMetadata,
   getParsedNote,
   sortEvents,
+  timeAgo,
 };

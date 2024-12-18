@@ -10,7 +10,7 @@ import NProfilePreviewer from "./NProfilePreviewer";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { finalizeEvent } from "nostr-tools";
-import { extractNip19 } from "../../Helpers/Helpers";
+import { extractNip19, removeArticleDraft } from "../../Helpers/Helpers";
 import UploadFile from "../UploadFile";
 
 const getSuggestions = (custom) => {
@@ -62,24 +62,6 @@ export default function ToPublishNOSTR({
   const topicSuggestions = useMemo(() => {
     return getSuggestions(tempTag);
   }, [tempTag]);
-
-  const handleImageUpload = (e) => {
-    let file = e.target.files[0];
-    if (file && !file.type.includes("image/")) {
-      dispatch(
-        setToast({
-          type: 2,
-          desc: "Image type is unsupported!",
-        })
-      );
-      return;
-    }
-    if (file) {
-      setThumbnail(file);
-      setThumbnailPrev(URL.createObjectURL(file));
-      setThumbnailUrl("");
-    }
-  };
 
   const initThumbnail = async () => {
     setThumbnail("");
@@ -198,6 +180,7 @@ export default function ToPublishNOSTR({
         }, 5000);
         return;
       }
+      removeArticleDraft();
       navigateTo("/dashboard", { state: { tabNumber: 1 } });
       exit();
       return;
@@ -217,42 +200,7 @@ export default function ToPublishNOSTR({
     tempArray.splice(index, 1);
     setSelectedCategories(tempArray);
   };
-  const handleRelaysToPublish = (relay) => {
-    let index = relaysToPublish.findIndex((item) => item === relay);
-    let tempArray = Array.from(relaysToPublish);
-    if (index === -1) {
-      setRelaysToPublish([...relaysToPublish, relay]);
-      return;
-    }
-    tempArray.splice(index, 1);
-    setRelaysToPublish(tempArray);
-  };
-  const checkIfChecked = (relay) => {
-    let index = relaysToPublish.findIndex((item) => item === relay);
-    if (index === -1) return false;
-    return true;
-  };
-  const uploadToS3 = async (img) => {
-    if (img) {
-      try {
-        let fd = new FormData();
-        fd.append("file", img);
-        fd.append("pubkey", userKeys.pub);
-        let data = await axiosInstance.post("/api/v1/file-upload", fd, {
-          headers: { "Content-Type": "multipart/formdata" },
-        });
-        return data.data.image_path;
-      } catch {
-        dispatch(
-          setToast({
-            type: 2,
-            desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
-          })
-        );
-        return false;
-      }
-    }
-  };
+
   const deleteFromS3 = async (img) => {
     if (img.includes("yakihonne.s3")) {
       let data = await axiosInstance.delete("/api/v1/file-upload", {

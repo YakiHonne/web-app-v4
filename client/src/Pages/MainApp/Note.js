@@ -1,18 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { nip19 } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
-import {
-  checkForLUDS,
-  decodeBolt11,
-  filterRelays,
-  getBolt11,
-  getEmptyEventStats,
-  getEmptyuserMetadata,
-  getParsedNote,
-  getZapper,
-  removeObjDuplicants,
-} from "../../Helpers/Encryptions";
+import { getEmptyuserMetadata, getParsedNote } from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
@@ -20,208 +9,33 @@ import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import NumberShrink from "../../Components/NumberShrink";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
-import ZapTip from "../../Components/Main/ZapTip";
 import LoadingDots from "../../Components/LoadingDots";
 import BookmarkEvent from "../../Components/Main/BookmarkEvent";
-import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
-import LoginWithNostr from "../../Components/Main/LoginWithNostr";
-import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import QuoteNote from "../../Components/Main/QuoteNote";
-import NotesComment from "../../Components/Main/NotesComment";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { getSubData, getUser } from "../../Helpers/Controlers";
-import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
+import { getUser } from "../../Helpers/Controlers";
 import useNoteStats from "../../Hooks/useNoteStats";
 import Like from "../../Components/Reactions/Like";
 import Repost from "../../Components/Reactions/Repost";
 import Quote from "../../Components/Reactions/Quote";
 import Zap from "../../Components/Reactions/Zap";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
-import Comments from "../../Components/Reactions/Comments";
 import { Link } from "react-router-dom";
 import CommentsSection from "../../Components/Main/CommentsSection";
 import { customHistory } from "../../Helpers/History";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import HistorySection from "../../Components/Main/HistorySection";
+import { useTranslation } from "react-i18next";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
-
-const checkForSavedCommentOptions = () => {
-  try {
-    let options = localStorage.getItem("comment-with-suffix");
-    if (options) {
-      let res = JSON.parse(options);
-      return res.keep_suffix;
-    }
-    return -1;
-  } catch {
-    return -1;
-  }
-};
-
-// const filterComments = (all, id, isRoot) => {
-//   if (isRoot) return filterRootComments(all);
-//   return filterRepliesComments(all, id);
-// };
-
-// const filterRootComments = async (all) => {
-//   let temp = [];
-
-//   for (let comment of all) {
-//     if (!comment.tags.find((item) => item[0] === "e" && item[3] === "reply")) {
-//       let [note_tree, count] = await Promise.all([
-//         getParsedNote(comment),
-//         // getNoteTree(comment.content.split(" — This is a comment on:")[0]),
-//         countReplies(comment.id, all),
-//       ]);
-//       temp.push({
-//         // ...comment,
-//         ...note_tree,
-//         count,
-//       });
-//     }
-//   }
-//   return temp;
-// };
-
-// const countReplies = async (id, all) => {
-//   let count = [];
-
-//   for (let comment of all) {
-//     let ev = comment.tags.find(
-//       (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
-//     );
-//     if (ev) {
-//       let cr = await countReplies(comment.id, all);
-//       count.push(comment, ...cr);
-//     }
-//   }
-//   let res = await Promise.all(
-//     count
-//       .sort((a, b) => b.created_at - a.created_at)
-//       .map(async (com) => {
-//         let note_tree = await getNoteTree(
-//           com.content.split(" — This is a comment on:")[0]
-//         );
-//         return {
-//           ...com,
-//           note_tree,
-//         };
-//       })
-//   );
-//   return res;
-// };
-
-// const filterRepliesComments = async (all, id) => {
-//   let temp = [];
-//   for (let comment of all) {
-//     if (
-//       comment.tags.find(
-//         (item) =>
-//           item[0] === "e" &&
-//           item[1] === id &&
-//           ["reply", "root"].includes(item[3])
-//       )
-//     ) {
-//       let [note_tree, count] = await Promise.all([
-//         getParsedNote(comment),
-//         // getNoteTree(comment.content.split(" — This is a comment on:")[0]),
-//         countReplies(comment.id, all),
-//       ]);
-//       temp.push({
-//         // ...comment,
-//         ...note_tree,
-//         count,
-//       });
-//     }
-//   }
-//   return temp;
-// };
-// const filterRepliesComments = async (all, id) => {
-//   let temp = [];
-//   for (let comment of all) {
-//     if (
-//       comment.tags.find(
-//         (item) =>
-//           item[0] === "e" &&
-//           item[1] === id &&
-//           ["reply", "root"].includes(item[3])
-//       )
-//     ) {
-//       let [note_tree, replies] = await Promise.all([
-//         getParsedNote(comment),
-//         countReplies(comment.id, all),
-//       ]);
-//       temp.push({
-//         ...note_tree,
-//         replies,
-//       });
-//     }
-//   }
-//   return temp;
-// };
-
-// const filterRootComments = async (all) => {
-//   let temp = [];
-
-//   for (let comment of all) {
-//     // Check if this is a root comment
-//     if (!comment.tags.find((item) => item[0] === "e" && item[3] === "reply")) {
-//       let [note_tree, replies] = await Promise.all([
-//         getParsedNote(comment),
-//         countReplies(comment.id, all),
-//       ]);
-//       temp.push({
-//         ...note_tree,
-//         replies,
-//       });
-//     }
-//   }
-//   return temp;
-// };
-
-// const countReplies = async (id, all) => {
-//   let replies = [];
-
-//   for (let comment of all) {
-//     // Check if this comment is a reply to the given id
-//     let ev = comment.tags.find(
-//       (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
-//     );
-//     if (ev) {
-//       // Recursive call to count replies of this reply
-//       let nestedReplies = await countReplies(comment.id, all);
-//       let note_tree = await getNoteTree(
-//         comment.content.split(" — This is a comment on:")[0]
-//       );
-
-//       replies.push({
-//         ...comment,
-//         note_tree,
-//         replies: nestedReplies, // Include nested replies here
-//       });
-//     }
-//   }
-
-//   // Sort replies by created_at in descending order
-//   replies.sort((a, b) => b.created_at - a.created_at);
-
-//   return replies;
-// };
-
-// const getOnReply = (comments, comment_id) => {
-//   let tempCom = comments.find((item) => item.id === comment_id);
-//   return tempCom;
-// };
 
 export default function Note() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
-  const isPublishing = useSelector((state) => state.isPublishing);
   const userMutedList = useSelector((state) => state.userMutedList);
   const userRelays = useSelector((state) => state.userRelays);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
@@ -233,7 +47,6 @@ export default function Note() {
   const [showHistory, setShowHistory] = useState(false);
   const [usersList, setUsersList] = useState(false);
   const [isNip05Verified, setIsNip05Verified] = useState(false);
-  const [zappers, setZappers] = useState([]);
   const [showQuoteBox, setShowQuoteBox] = useState(false);
   const { postActions } = useNoteStats(note?.id, note?.pubkey);
 
@@ -358,16 +171,6 @@ export default function Note() {
   const muteUnmute = async () => {
     try {
       if (!Array.isArray(userMutedList)) return;
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
-
       let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
       if (isMuted) {
         tempTags.splice(isMuted.index, 1);
@@ -395,7 +198,7 @@ export default function Note() {
     dispatch(
       setToast({
         type: 1,
-        desc: `Note ID was copied! 👏`,
+        desc: `${t("ARJICtS")} 👏`,
       })
     );
   };
@@ -486,7 +289,8 @@ export default function Note() {
                         >
                           <div className="fx-centered">
                             <p>
-                              {showHistory ? "Hide" : "Show"} thread history
+                              {showHistory && t("ApSnq9V")}
+                              {!showHistory && t("AUScjxu")}
                             </p>
                             <div
                               className="arrow-12"
@@ -538,7 +342,7 @@ export default function Note() {
                             className="sticker sticker-c1"
                             style={{ minWidth: "max-content" }}
                           >
-                            Paid
+                            {t("AAg9D6c")}
                           </div>
                         )}
                       </div>
@@ -593,12 +397,12 @@ export default function Note() {
                               className={`icon-tooltip ${
                                 isLiked ? "orange-c" : ""
                               }`}
-                              data-tooltip="Reactions "
+                              data-tooltip={t("Alz0E9Y")}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 postActions.likes.likes.length > 0 &&
                                   setUsersList({
-                                    title: "Reactions ",
+                                    title: t("Alz0E9Y"),
                                     list: postActions.likes.likes.map(
                                       (item) => item.pubkey
                                     ),
@@ -627,12 +431,12 @@ export default function Note() {
                               className={`icon-tooltip ${
                                 isReposted ? "orange-c" : ""
                               }`}
-                              data-tooltip="Reposts "
+                              data-tooltip={t("Aai65RJ")}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 postActions.reposts.reposts.length > 0 &&
                                   setUsersList({
-                                    title: "Reposts ",
+                                    title: t("Aai65RJ"),
                                     list: postActions.reposts.reposts.map(
                                       (item) => item.pubkey
                                     ),
@@ -660,12 +464,12 @@ export default function Note() {
                               className={`icon-tooltip ${
                                 isQuoted ? "orange-c" : ""
                               }`}
-                              data-tooltip="Quoters"
+                              data-tooltip={t("AWmDftG")}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 postActions.quotes.quotes.length > 0 &&
                                   setUsersList({
-                                    title: "Quoters",
+                                    title: t("AWmDftG"),
                                     list: postActions.quotes.quotes.map(
                                       (item) => item.pubkey
                                     ),
@@ -694,14 +498,14 @@ export default function Note() {
                               />
                             </div>
                             <div
-                              data-tooltip="See zappers"
+                              data-tooltip={t("AO0OqWT")}
                               className={`pointer icon-tooltip ${
                                 isZapped ? "orange-c" : ""
                               }`}
                               onClick={() =>
                                 postActions.zaps.total > 0 &&
                                 setUsersList({
-                                  title: "Zappers",
+                                  title: t("AVDZ5cJ"),
                                   list: postActions.zaps.zaps.map(
                                     (item) => item.pubkey
                                   ),
@@ -716,12 +520,12 @@ export default function Note() {
                         <OptionsDropdown
                           options={[
                             <div onClick={copyID} className="pointer">
-                              <p>Copy note ID</p>
+                              <p>{t("AYFAFKs")}</p>
                             </div>,
                             userKeys && userKeys.pub !== note.pubkey && (
                               <>
                                 <BookmarkEvent
-                                  label="Bookmark note"
+                                  label={t("Ar5VgpT")}
                                   pubkey={note.id}
                                   kind={"1"}
                                   itemType="e"
@@ -730,7 +534,7 @@ export default function Note() {
                             ),
                             <div className="fit-container fx-centered fx-start-h pointer">
                               <ShareLink
-                                label="Share note"
+                                label={t("A1IsKJ0")}
                                 path={`/notes/${note.nEvent}`}
                                 title={author.display_name || author.name}
                                 description={note.content}
@@ -738,15 +542,15 @@ export default function Note() {
                                 shareImgData={{
                                   post: note,
                                   author,
-                                  label: "Note",
+                                  label: t("Az5ftet"),
                                 }}
                               />
                             </div>,
                             <div onClick={muteUnmute} className="pointer">
                               {isMuted ? (
-                                <p className="red-c">Unmute user</p>
+                                <p className="red-c">{t("AKELUbQ")}</p>
                               ) : (
-                                <p className="red-c">Mute user</p>
+                                <p className="red-c">{t("AGMxuQ0")}</p>
                               )}
                             </div>,
                           ]}
@@ -778,14 +582,11 @@ export default function Note() {
                     className="fit-container fx-centered fx-col"
                     style={{ height: "100vh" }}
                   >
-                    <h4>Note was not found</h4>
-                    <p className="gray-c p-centered">
-                      We could not find this note, it might be deleted by its
-                      author
-                    </p>
+                    <h4>{t("AAbA1Xn")}</h4>
+                    <p className="gray-c p-centered">{t("Agge1Vg")}</p>
                     <Link to="/">
                       <button className="btn btn-normal btn-small">
-                        Back to home
+                        {t("AWroZQj")}
                       </button>
                     </Link>
                   </div>

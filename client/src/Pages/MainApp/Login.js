@@ -5,7 +5,6 @@ import { getUser, getUserFromNOSTR } from "../../Helpers/Controlers";
 import { setUserKeys } from "../../Store/Slides/UserData";
 import {
   bytesTohex,
-  getBech32,
   getEmptyuserMetadata,
   getHex,
 } from "../../Helpers/Encryptions";
@@ -13,13 +12,8 @@ import profilePlaceholder from "../../media/images/profile-avatar.png";
 import s8e from "../../media/images/s8-e-yma.png";
 import { generateSecretKey, getPublicKey } from "nostr-tools";
 import * as secp from "@noble/secp256k1";
-import {
-  FileUpload,
-  getWallets,
-  sleepTimer,
-  updateWallets,
-} from "../../Helpers/Helpers";
-import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { FileUpload, getWallets, updateWallets } from "../../Helpers/Helpers";
+import { setToast } from "../../Store/Slides/Publishers";
 import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
 import { useNavigate } from "react-router-dom";
@@ -34,13 +28,12 @@ import { FilePicker } from "../../Components/FilePicker";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-// let sk = bytesTohex(generateSecretKey());
-// let pk = getPublicKey(sk);
-// let userKeys = { pub: pk, sec: sk };
 let stepsNumber = 4;
 let isNewAccount = getWallets().length > 0 ? true : false;
 export default function Login() {
+  const { t } = useTranslation();
   let sk = bytesTohex(generateSecretKey());
   let pk = getPublicKey(sk);
   let userKeys = { pub: pk, sec: sk };
@@ -67,8 +60,8 @@ export default function Login() {
         style={{ width: "min(100%,500px)" }}
       >
         <div className="box-marg-s">
-          {isLogin && <h3 className="slide-up">Login to Yakihonne</h3>}
-          {!isLogin && <h3 className="slide-down">Sign up</h3>}
+          {isLogin && <h3 className="slide-up">{t("AITU9z0")}</h3>}
+          {!isLogin && <h3 className="slide-down">{t("AHAtW4X")}</h3>}
         </div>
         {isLogin && (
           <LoginScreen
@@ -101,7 +94,7 @@ const LeftSection = () => {
 
 const LoginScreen = ({ switchScreen, userKeys }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [key, setKey] = useState("");
   const [checkExt, setCheckExt] = useState(window.nostr ? true : false);
@@ -128,7 +121,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
         dispatch(
           setToast({
             type: 2,
-            desc: "Invalid public key!",
+            desc: t("AiHLMRi"),
           })
         );
       }
@@ -156,7 +149,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
         dispatch(
           setToast({
             type: 2,
-            desc: "Invalid private key!",
+            desc: t("AC5ByUA"),
           })
         );
       }
@@ -180,7 +173,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
     dispatch(
       setToast({
         type: 2,
-        desc: "Invalid private key!",
+        desc: t("AC5ByUA"),
       })
     );
   };
@@ -203,7 +196,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
         },
       ];
       let wallet = updateWallets(extWallet, keys.pub);
-      console.log(wallet)
+      console.log(wallet);
       if (wallet.length > 0) dispatch(setUserKeys(keys));
 
       // }
@@ -217,7 +210,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
       dispatch(
         setToast({
           type: 2,
-          desc: "Invalid public key!",
+          desc: t("AiHLMRi"),
         })
       );
     }
@@ -239,23 +232,23 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
             className="btn btn-normal btn-full"
             onClick={() => onLogin(key)}
           >
-            {isLoading ? <LoadingDots /> : <>Login</>}
+            {isLoading ? <LoadingDots /> : <>{t("AmOtzoL")}</>}
           </button>
           {checkExt && (
             <>
-              <p>Or</p>
+              <p>{t("Ax46s4g")}</p>
               <button
                 className="btn btn-gst btn-full"
                 disabled={!checkExt}
                 onClick={onLoginWithExt}
               >
-                {isLoading ? <LoadingDots /> : <>Login using an extension</>}
+                {isLoading ? <LoadingDots /> : <>{t("AgG7T1H")}</>}
               </button>
             </>
           )}
           {!checkExt && (
             <button className="btn btn-disabled btn-full" disabled={true}>
-              <>Login using an extension</>
+              <>{t("AgG7T1H")}</>
             </button>
           )}
         </div>
@@ -265,12 +258,12 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
               <div className="arrow" style={{ rotate: "90deg" }}></div>{" "}
             </div>
             <p className="gray-c" onClick={() => customHistory.back()}>
-              {isNewAccount ? "Cancel" : "Continue as a guest"}
+              {isNewAccount ? t("AB4BSCe") : t("AVCdQku")}
             </p>
           </div>
           <div className=" fx-centered" onClick={switchScreen}>
             <p className="gray-c">
-              <span className="orange-c pointer p-bold">Create an account</span>{" "}
+              <span className="orange-c pointer p-bold">{t("AHXrr4Y")}</span>{" "}
             </p>
           </div>
         </div>
@@ -281,6 +274,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
 
 const SignupScreen = ({ switchScreen, userKeys }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [about, setAbout] = useState("");
   const [pictureFile, setPictureFile] = useState("");
@@ -300,7 +294,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
         dispatch(
           setToast({
             type: 2,
-            desc: "Your name is what people see! Please don't leave it empty",
+            desc: t("AdrCWCj"),
           })
         );
         return;
@@ -371,7 +365,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
       dispatch(
         setToast({
           type: 3,
-          desc: "Could not create your wallet, retry later in settings",
+          desc: t("AQ12OQz"),
         })
       );
     }
@@ -387,7 +381,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
         dispatch(
           setToast({
             type: 2,
-            desc: "An error occured while uploading your profile picture, use a supported format with no more than 5mb of size",
+            desc: t("AfM6xbs"),
           })
         );
         setStep(4);
@@ -401,7 +395,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
         dispatch(
           setToast({
             type: 2,
-            desc: "An error occured while uploading your cover, use a supported format with no more than 5mb of size",
+            desc: t("AnmPNHc"),
           })
         );
 
@@ -574,7 +568,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                   <FilePicker
                     element={
                       <div className="fx-centered sticker  sticker-gray-gray">
-                        Upload cover
+                        {t("A1HsCqp")}
                         <div className="plus-sign"></div>
                       </div>
                     }
@@ -635,7 +629,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                           className="image-24"
                           style={{ filter: "invert()" }}
                         ></div>
-                        <p className="gray-c">Add picture</p>
+                        <p className="gray-c">{t("AnD39Ci")}</p>
                       </div>
                     </div>
                   </div>
@@ -650,13 +644,13 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
               <input
                 type="text"
                 className="if ifs-full "
-                placeholder="Name yourself.."
+                placeholder={t("At0Sp8H")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
               <textarea
                 className="txt-area if ifs-full "
-                placeholder="Say something about you.."
+                placeholder={t("ARTqPc0")}
                 value={about}
                 onChange={(e) => setAbout(e.target.value)}
               />
@@ -666,10 +660,8 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
         {step === 2 && (
           <>
             <div className="box-pad-h box-pad-v fx-centered fx-start-v fx-col">
-              <h4>Discover What Inspires You</h4>
-              <p className="gray-c">
-                Tailor your experience by selecting your top interests
-              </p>
+              <h4>{t("A3fxtP2")}</h4>
+              <p className="gray-c">{t("AmiGAX0")}</p>
             </div>
             <div
               className="fx-centered fx-end-h fx-wrap box-marg-s"
@@ -709,7 +701,9 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                               )}
                             />
                             <p className="gray-c p-medium">
-                              + {interest.pubkeys.length - 3} more people
+                              {t("AZzyBMI", {
+                                count: interest.pubkeys.length - 3,
+                              })}
                             </p>
                           </div>
                         </div>
@@ -757,16 +751,16 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
             <div className="box-pad-h box-pad-v fx-centered  fx-col">
               {!NWCURL && (
                 <>
-                  <h4>Don't have a wallet?</h4>
+                  <h4>{t("AqBdu7X")}</h4>
                   <p
                     className="p-centered gray-c"
                     style={{ maxWidth: "400px" }}
                   >
-                    Create a wallet to send and receive zaps!
+                    {t("AOxmFz5")}
                   </p>
                 </>
               )}
-              {NWCURL && <h4>You're all set!</h4>}
+              {NWCURL && <h4>{t("AimqDYY")}</h4>}
 
               <WalletIllustration
                 isLoading={isCreatingWalletLoading}
@@ -778,7 +772,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                   onClick={handleCreateWallet}
                   disabled={isCreatingWalletLoading}
                 >
-                  {isCreatingWalletLoading ? <LoadingDots /> : "Create wallet"}
+                  {isCreatingWalletLoading ? <LoadingDots /> : t("AvjCl1G")}
                 </button>
               )}
               {NWCURL && (
@@ -834,7 +828,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
             <div className="fit-container fx-centered fx-col box-pad-v-m">
               <h4>{name}</h4>
               <p
-                className=" gray-c p-centered p-four-lines"
+                className="gray-c p-centered p-four-lines"
                 style={{ maxWidth: "400px" }}
               >
                 {about || "N/A"}
@@ -849,10 +843,8 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                   <div className="key-icon-24"></div>
                 </div>
                 <p className="gray-c">
-                  You can find your account secret key{" "}
-                  {NWAddr && "and wallet connection secret key"} in your
-                  settings. These keys are essential for secure access to your
-                  account and wallet –please keep them safe and private.
+                  {NWAddr && t("AZfj4DI")}
+                  {!NWAddr && t("AxGSiUc")}
                 </p>
               </div>
             </div>
@@ -867,7 +859,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                   className="btn btn-gst slide-right btn-small"
                   onClick={() => handlePrevSteps()}
                 >
-                  Previous
+                  {t("AF7iGeG")}
                 </button>
               )}
               {step === 1 && <div></div>}
@@ -878,7 +870,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                   step !== 4 ? handleNextSteps() : initializeAccount()
                 }
               >
-                {step !== 4 ? "Next" : "Let's get started!"}
+                {step !== 4 ? t("AgGi8rh") : t("AB0SnxL")}
               </button>
             </div>
             <div
@@ -902,13 +894,13 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
             <div className="arrow" style={{ rotate: "90deg" }}></div>{" "}
           </div>
           <p className="gray-c" onClick={() => customHistory.back()}>
-            {isNewAccount ? "Cancel" : "Continue as a guest"}
+            {isNewAccount ? t("AB4BSCe") : t("AVCdQku")}
           </p>
         </div>
         <div className="fx-centered" onClick={switchScreen}>
           <p className="gray-c">
-            Already a user?{" "}
-            <span className="orange-c pointer p-bold">Login</span>{" "}
+            {t("AKJqtlx")}{" "}
+            <span className="orange-c pointer p-bold">{t("AmOtzoL")}</span>{" "}
           </p>
         </div>
       </div>
@@ -932,6 +924,7 @@ const InitiProfile = () => {
 };
 
 const MobileAd = () => {
+  const { t } = useTranslation();
   return (
     <div className="login-screen-heros fit-container fx-centered  box-pad-v fit-height">
       <div
@@ -945,10 +938,8 @@ const MobileAd = () => {
           className="fx-centered fx-col box-pad-v"
           style={{ rowGap: "5px", width: "40%" }}
         >
-          <p style={{ color: "white" }}>Stay signed-in</p>
-          <p className="gray-c p-medium p-centered">
-            Download the YakiHonne app for Android or iOS
-          </p>
+          <p style={{ color: "white" }}>{t("A2MbZUY")}</p>
+          <p className="gray-c p-medium p-centered">{t("AbACpNI")}</p>
           <div
             className="fit-container carousel-card-desc box-pad-h-m box-pad-v-m fx-centered sc-s"
             style={{ background: "#838EAC55" }}
@@ -1005,7 +996,6 @@ const ProfilePreview = ({ pubkeys }) => {
         <UserProfilePicNOSTR
           user_id={pubkeys[0]}
           mainAccountUser={false}
-          
           img={images[0] || ""}
           size={10}
         />
@@ -1014,7 +1004,6 @@ const ProfilePreview = ({ pubkeys }) => {
         <UserProfilePicNOSTR
           user_id={pubkeys[1]}
           mainAccountUser={false}
-          
           img={images[1] || ""}
           size={8}
         />
@@ -1023,7 +1012,6 @@ const ProfilePreview = ({ pubkeys }) => {
         <UserProfilePicNOSTR
           user_id={pubkeys[2]}
           mainAccountUser={false}
-          
           img={images[2] || ""}
           size={12}
         />
@@ -1033,6 +1021,7 @@ const ProfilePreview = ({ pubkeys }) => {
 };
 
 const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
+  const { t } = useTranslation();
   const isInterested = useMemo(() => {
     let tag = InterestSuggestions[index].main_tag;
     let interest = selectedInterests.find((interest) => interest.tag === tag);
@@ -1095,14 +1084,14 @@ const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
       }}
     >
       <div className="fit-container fx-scattered box-marg-s">
-        <p className="gray-c">Suggestions</p>
+        <p className="gray-c">{t("AoO5zem")}</p>
         {isInterested?.pubkeys?.length !==
           InterestSuggestions[index].pubkeys.length && (
           <button
             className="btn btn-gst btn-small"
             onClick={() => followUnfollowAll(true)}
           >
-            Follow all
+            {t("AzkUxnd")}
           </button>
         )}
         {isInterested?.pubkeys?.length ===
@@ -1111,7 +1100,7 @@ const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
             className="btn btn-normal btn-small"
             onClick={() => followUnfollowAll(false)}
           >
-            Unfollow all
+            {t("AyohNeT")}
           </button>
         )}
       </div>
@@ -1129,7 +1118,6 @@ const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
                 <UserProfilePicNOSTR
                   user_id={pubkey}
                   mainAccountUser={false}
-                  
                   img={author.picture}
                   size={48}
                 />
@@ -1145,7 +1133,7 @@ const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
                   className="btn btn-gst btn-small"
                   onClick={() => followUnfollow(pubkey, index_, false)}
                 >
-                  Follow
+                  {t("A9o2pLM")}
                 </button>
               )}
               {checkIsFollowed && (
@@ -1153,7 +1141,7 @@ const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
                   className="btn btn-normal btn-small"
                   onClick={() => followUnfollow(pubkey, index_, true)}
                 >
-                  Unfollow
+                  {t("ASi0a0d")}
                 </button>
               )}
             </div>

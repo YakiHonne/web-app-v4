@@ -6,17 +6,15 @@ import axiosInstance from "../../Helpers/HTTP_Client";
 import ProgressBar from "../../Components/ProgressBar";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import { chartActionKeys } from "../../Content/ActionKeys";
-import Date_ from "../../Components/Date_";
 import ProgressCirc from "../../Components/ProgressCirc";
-import Footer from "../../Components/Footer";
-import { Link } from "react-router-dom";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import { getCurrentLevel, levelCount } from "../../Helpers/Helpers";
 import { HashLink } from "react-router-hash-link";
 import { userLogout } from "../../Helpers/Controlers";
 import { useSelector } from "react-redux";
 import LoadingLogo from "../../Components/LoadingLogo";
+import { useTranslation } from "react-i18next";
+import { timeAgo } from "../../Helpers/Encryptions";
 
 let chart_ = [
   { action: "flashnews_post", all_time_points: 0, last_updated: null },
@@ -57,6 +55,7 @@ const orderChart = (array) => {
 export default function UserLevels() {
   const userKeys = useSelector((state) => state.userKeys);
   const isConnectedToYaki = useSelector((state) => state.isConnectedToYaki);
+  const { t } = useTranslation();
   const [oneTimeRewardStats, setOneTimeRewardStats] = useState([]);
   const [repeatedRewardsStats, setRepeatedRewardsStats] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -67,7 +66,31 @@ export default function UserLevels() {
   const [currentTier, setCurrentTier] = useState("");
   const [showTier, setShowTier] = useState(false);
   const [showPointsDesc, setShowPointsDesc] = useState(false);
-
+  const levels = {
+    new_account: t("AjL3AJ5"),
+    username: t("A7g67SU"),
+    bio: t("AIAFmnp"),
+    profile_picture: t("AWeQ0fR"),
+    cover: t("AFMUPwE"),
+    nip05: t("AOW0Bki"),
+    luds: t("AviCcwU"),
+    relays_setup: t("AWAKD1j"),
+    topics_setup: t("AQQFa7F"),
+    follow_yaki: t("AyIwX8s"),
+    flashnews_post: t("AIbcFuI"),
+    un_write: t("AZYR1td"),
+    un_rate: t("AiUEDe3"),
+    curation_post: t("AP6dp7w"),
+    article_post: t("ATFKth1"),
+    article_draft: t("Aweyw6L"),
+    video_post: t("A5qKCQ4"),
+    bookmark: t("AuOVsg9"),
+    zap: t("AetoahH"),
+    reaction: t("Av0oCQp"),
+    dms: t("AwpwbAl"),
+    user_impact: t("Ag6EZcj"),
+    comment_post: t("AsCfe1h"),
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -221,7 +244,7 @@ export default function UserLevels() {
                       {isLoaded && (
                         <>
                           <div className="box-pad-v fit-container">
-                            <h4>Points system</h4>
+                            <h4>{t("Ae2D51K")}</h4>
                           </div>
                           <div
                             className="fit-container fx-centered fx-col"
@@ -250,7 +273,7 @@ export default function UserLevels() {
                                     <h3>{headerStats.xp}</h3>
                                     <p className="p-big gray-c">xp</p>
                                     <h3>
-                                      lvl{" "}
+                                      {t("AdLQkic", { level: "" })}{" "}
                                       <span className="orange-c">
                                         {headerStats.currentLevel}
                                       </span>
@@ -303,13 +326,17 @@ export default function UserLevels() {
                                   <div className="fit-container fx-scattered">
                                     <div>
                                       <p className="gray-c">
-                                        {headerStats.remainingPointsToNextLevel}{" "}
-                                        remaining
+                                        {t("AehNuZK", {
+                                          points:
+                                            headerStats.remainingPointsToNextLevel,
+                                        })}
                                       </p>
                                     </div>
                                     <div>
                                       <p className="orange-c">
-                                        Level {headerStats.nextLevel}
+                                        {t("AdLQkic", {
+                                          level: headerStats.nextLevel,
+                                        })}
                                       </p>
                                     </div>
                                   </div>
@@ -339,7 +366,7 @@ export default function UserLevels() {
                                         / {headerStats.xp}
                                       </span>{" "}
                                     </h3>
-                                    <p className="gray-c">points</p>
+                                    <p className="gray-c">{t("A4IGG0z")}</p>
                                   </div>
                                 </div>
                                 <div>
@@ -349,7 +376,7 @@ export default function UserLevels() {
                                       setShowPointsDesc(!showPointsDesc)
                                     }
                                   >
-                                    What's this?
+                                    {t("AfRZ5lx")}
                                   </button>
                                 </div>
                               </div>
@@ -361,23 +388,21 @@ export default function UserLevels() {
                                 />
                                 <div className="fit-container fx-scattered">
                                   <p className="gray-c p-medium">
-                                    Consumable points
+                                    {t("AetHYzn")}
                                   </p>
                                   <p className="gray-c p-medium">
-                                    Last used{" "}
-                                    {headerStats.xp ===
-                                    headerStats.consumablePoints ? (
-                                      "N/A"
-                                    ) : (
-                                      <Date_
-                                        toConvert={
-                                          new Date(
-                                            headerStats.consumablePointsLU *
-                                              1000
-                                          )
-                                        }
-                                      />
-                                    )}{" "}
+                                    {t("ABcjNuL", {
+                                      date:
+                                        headerStats.xp ===
+                                        headerStats.consumablePoints
+                                          ? "N/A"
+                                          : timeAgo(
+                                              new Date(
+                                                headerStats.consumablePointsLU *
+                                                  1000
+                                              )
+                                            ),
+                                    })}
                                   </p>
                                 </div>
                               </div>
@@ -465,19 +490,15 @@ export default function UserLevels() {
                                               </p>
                                             </div>
                                             <p className="gray-c p-small">
-                                              Last gained{" "}
-                                              {!item.last_updated ? (
-                                                "N/A"
-                                              ) : (
-                                                <Date_
-                                                  toConvert={
-                                                    new Date(
-                                                      item.last_updated * 1000
-                                                    )
-                                                  }
-                                                  time={true}
-                                                />
-                                              )}
+                                              {t("As6hkOH", {
+                                                date: !item.last_updated
+                                                  ? "N/A"
+                                                  : timeAgo(
+                                                      new Date(
+                                                        item.last_updated * 1000
+                                                      )
+                                                    ),
+                                              })}
                                             </p>
                                           </div>
                                         </div>
@@ -486,14 +507,14 @@ export default function UserLevels() {
                                   })}
                                 </div>
                               </div>
-                              <h4 className="gray-c">Engagement chart</h4>
+                              <h4 className="gray-c">{t("At2CFSI")}</h4>
                             </div>
                             <div
                               className="fit-container fx-centered fx-col box-marg-s"
                               // style={{ rowGap: "24px" }}
                             >
                               <div className="fit-container">
-                                <p className=" gray-c">One time rewards</p>
+                                <p className=" gray-c">{t("A2Tafrd")}</p>
                               </div>
                               {oneTimeRewardStats.map((item) => {
                                 return (
@@ -507,7 +528,7 @@ export default function UserLevels() {
                                   >
                                     <div className="fit-container fx-scattered">
                                       <div>
-                                        <p>{item.display_name}</p>
+                                        <p>{levels[item.action]}</p>
                                       </div>
                                       <div className="fx-centered">
                                         <p className="orange-c">
@@ -537,7 +558,7 @@ export default function UserLevels() {
                                         }
                                       />
                                       <p className="gray-c p-medium">
-                                        Attempts remained{" "}
+                                        {t("ARLmGSB")}{" "}
                                         <span
                                           className={
                                             item.count -
@@ -558,8 +579,9 @@ export default function UserLevels() {
                                 );
                               })}
                               <div className="fit-container">
-                                <p className="gray-c">Repeated rewards</p>
+                                <p className="gray-c">{t("A6gfLc1")}</p>
                               </div>
+
                               {repeatedRewardsStats.map((item) => {
                                 let cooldown = item.user_stat
                                   ? getCooldown(
@@ -579,15 +601,13 @@ export default function UserLevels() {
                                   >
                                     <div className="fit-container fx-scattered box-pad-h-m">
                                       <div>
-                                        <p>{item.display_name}</p>
+                                        <p>{levels[item.action]}</p>
                                         <div className="fx-centered">
                                           <p className="gray-c p-medium">
-                                            Gain{" "}
+                                            {levels[item.action]} {t("AdFp9UM")}{" "}
                                             <span className="orange-c">
-                                              {" "}
-                                              {item.points[0] || 0} xp{" "}
-                                            </span>{" "}
-                                            for {item.display_name}
+                                              {item.points[0] || 0} xp
+                                            </span>
                                           </p>
                                         </div>
                                       </div>
@@ -608,7 +628,9 @@ export default function UserLevels() {
                                           innerComp={
                                             item.cooldown > 0 ? (
                                               <p className="gray-c p-small">
-                                                {cooldown}mn
+                                                {t("ARagjJY", {
+                                                  time: cooldown,
+                                                })}
                                               </p>
                                             ) : (
                                               <div className="infinity"></div>
@@ -616,8 +638,8 @@ export default function UserLevels() {
                                           }
                                           tooltip={
                                             item.cooldown > 0
-                                              ? "Until cooldown"
-                                              : "Unlimited gains"
+                                              ? t("Ap5dxlJ")
+                                              : t("AwQyQTs")
                                           }
                                         />
                                       </div>
@@ -632,7 +654,9 @@ export default function UserLevels() {
                                       <h4 className="orange-c">
                                         {item.user_stat?.all_time_points || 0}
                                       </h4>
-                                      <p className="gray-c p-small">points</p>
+                                      <p className="gray-c p-small">
+                                        {t("A4IGG0z")}
+                                      </p>
                                     </div>
                                   </div>
                                 );
@@ -655,131 +679,6 @@ export default function UserLevels() {
                     <PagePlaceholder page={"nostr-yaki-chest"} />
                   )}
                 </div>
-
-                {/* <div
-                  style={{ width: "min(100%, 400px)" }}
-                  className={`fx-centered  fx-wrap box-pad-h extras-homepage box-pad-v sticky fx-start-h fx-start-v`}
-                >
-                  <SearchbarNOSTR />
-                  <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
-                    <h4>About Yaki chest</h4>
-                    <p className="gray-c">
-                      Accumulate points by being active on the platform and win
-                      precious awards!
-                    </p>
-                    <Link target="_blank" to={"/points-system"}>
-                      <button className="btn btn-normal">Read more</button>
-                    </Link>
-                  </div>
-                  <div className=" box-pad-v-m fit-container fx-centered fx-col fx-start-v box-marg-s">
-                    <h4>Most rewarded actions</h4>
-                    <div
-                      className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
-                      style={{
-                        backgroundColor: "var(--c1-side)",
-                        border: "none",
-                        overflow: "visible",
-                      }}
-                    >
-                      <div>
-                        <p>Posting flash news</p>
-                        <div>
-                          <p className="gray-c p-medium">
-                            Gain <span className="orange-c"> {15} xp</span>{" "}
-                            each.
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <Link
-                          to={"/my-flash-news"}
-                          state={{ addFN: true }}
-                          className="round-icon-small"
-                        >
-                          <p>+</p>
-                        </Link>
-                      </div>
-                    </div>
-                    <div
-                      className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
-                      style={{
-                        backgroundColor: "var(--c1-side)",
-                        border: "none",
-                        overflow: "visible",
-                      }}
-                    >
-                      <div>
-                        <p>Posting articles</p>
-                        <div>
-                          <p className="gray-c p-medium">
-                            Gain <span className="orange-c"> {4} xp</span> each.
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <Link
-                          to={"/write-article"}
-                          className="round-icon-small"
-                        >
-                          <p>+</p>
-                        </Link>
-                      </div>
-                    </div>
-                    <div
-                      className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
-                      style={{
-                        backgroundColor: "var(--c1-side)",
-                        border: "none",
-                        overflow: "visible",
-                      }}
-                    >
-                      <div>
-                        <p>Posting videos</p>
-                        <div>
-                          <p className="gray-c p-medium">
-                            Gain <span className="orange-c"> {3} xp</span> each.
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <Link
-                          to={"/my-videos"}
-                          state={{ addVideo: true }}
-                          className="round-icon-small"
-                        >
-                          <p>+</p>
-                        </Link>
-                      </div>
-                    </div>
-                    <div
-                      className="fit-container fx-scattered sc-s-18 box-pad-v-m box-pad-h-m"
-                      style={{
-                        backgroundColor: "var(--c1-side)",
-                        border: "none",
-                        overflow: "visible",
-                      }}
-                    >
-                      <div>
-                        <p>Posting curations</p>
-                        <div>
-                          <p className="gray-c p-medium">
-                            Gain <span className="orange-c"> {2} xp</span> each.
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <Link
-                          to={"/my-curations"}
-                          state={{ addCuration: true }}
-                          className="round-icon-small"
-                        >
-                          <p>+</p>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                  <Footer />
-                </div> */}
               </div>
             </div>
           </main>
@@ -790,10 +689,11 @@ export default function UserLevels() {
 }
 
 const TierDemo = ({ tier, exit }) => {
+  const { t } = useTranslation();
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div
-        className="box-pad-h box-pad-v sc-s fx-centered fx-col fx-start-h"
+        className="box-pad-h box-pad-v sc-s-18 bg-sp fx-centered fx-col fx-start-h"
         style={{ width: "min(100%, 450px)" }}
       >
         <div className="box-pad-h-s box-pad-v-s">
@@ -814,9 +714,9 @@ const TierDemo = ({ tier, exit }) => {
               </div>
             )}
 
-            {!tier.locked && <p className="green-c">Unlocked</p>}
-            {tier.locked && <p className="gray-c">Locked</p>}
-            <h3>Level {tier.min}</h3>
+            {!tier.locked && <p className="green-c">{t("As4WVRZ")}</p>}
+            {tier.locked && <p className="gray-c">{t("ARAXdTM")}</p>}
+            <h3>{t("AdLQkic", { level: tier.min })}</h3>
             {tier.locked && (
               <div className="box-pad-h box-pad-v-s fit-container fx-centered fx-col">
                 <ProgressBar
@@ -825,7 +725,7 @@ const TierDemo = ({ tier, exit }) => {
                   full={true}
                 />
                 <p className="orange-c p-medium">
-                  {tier.min - tier.currentLevel} levels required
+                  {t("AfDrjvB", { level: tier.min - tier.currentLevel })}
                 </p>
               </div>
             )}
@@ -840,10 +740,12 @@ const TierDemo = ({ tier, exit }) => {
             })}
           </ul>
           <HashLink to={`/points-system#${tier.display_name.toLowerCase()}`}>
-            <button className="btn btn-small btn-text-gray">see more</button>
+            <button className="btn btn-small btn-text-gray">
+              {t("AArGqN7")}
+            </button>
           </HashLink>
           <button className="btn btn-normal btn-full" onClick={exit}>
-            Got it!
+            {t("AGLUuNR")}
           </button>
         </div>
       </div>
@@ -851,31 +753,24 @@ const TierDemo = ({ tier, exit }) => {
   );
 };
 const PointsDesc = ({ exit }) => {
+  const { t } = useTranslation();
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div
-        className="box-pad-h box-pad-v sc-s fx-centered fx-col fx-start-h"
+        className="box-pad-h box-pad-v sc-s-18 bg-sp fx-centered fx-col fx-start-h"
         style={{ width: "min(100%, 450px)" }}
       >
-        <h3 className="p-centered">Yakihonne's Consumable Points</h3>
-        <p className="p-centered">
-          Soon users will be able to use the consumable points in the following
-          set of activites:
-        </p>
+        <h3 className="p-centered">{t("AIdLWAb")}</h3>
+        <p className="p-centered">{t("AIjkhSn")}</p>
         <ol>
-          <li>Submit your content for attestation</li>
-          <li>Redeem points to publish flash news</li>
-          <li>
-            Redeem points for SATs (Random thresholds are selected and you will
-            be notified whenever redemption is availabe)
-          </li>
+          <li>{t("A6fM6gw")}</li>
+          <li>{t("AaZQAOK")}</li>
+          <li>{t("Av0e6zQ")}</li>
         </ol>
-        <p className="green-c p-centered">
-          Start earning and make the most of your Yaki Points 🎉
-        </p>
+        <p className="green-c p-centered">{t("A3moqWy")}</p>
         <div className="fx-centered fx-col fit-container">
           <button className="btn btn-normal btn-full" onClick={exit}>
-            Got it!
+            {t("AGLUuNR")}
           </button>
         </div>
       </div>

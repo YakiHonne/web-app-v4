@@ -420,6 +420,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { customHistory } from "../../Helpers/History";
 import { SelectTabs } from "../../Components/Main/SelectTabs";
+import { useTranslation } from "react-i18next";
 
 const getUploadsHistory = () => {
   let history = localStorage.getItem("YakihonneUploadsHistory");
@@ -445,6 +446,8 @@ export default function WritingArticle() {
   } = state || {};
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const isDarkMode = useSelector((state) => state.isDarkMode);
   const [draftData, setDraftData] = useState({});
@@ -495,11 +498,6 @@ export default function WritingArticle() {
     element.style.height = "auto";
     element.style.height = `${element.scrollHeight}px`;
     updateArticleDraft({ title: value, content });
-    // localStorage.setItem("yai-last-article-title", value);
-    // localStorage.setItem(
-    //   "yai-last-article-time",
-    //   Math.floor(Date.now() / 1000)
-    // );
     setTitle(value);
     if (!value || value === "\n") {
       setTitle("");
@@ -544,7 +542,7 @@ export default function WritingArticle() {
         dispatch(
           setToast({
             type: 2,
-            desc: `The image size exceeded the required limit, the max size allowed is 1Mb.`,
+            desc: t("ANFYp9V"),
           })
         );
         return false;
@@ -574,11 +572,6 @@ export default function WritingArticle() {
 
   const handleSetContent = (data) => {
     updateArticleDraft({ title, content: data });
-    // localStorage.setItem("yai-last-article-content", data);
-    // localStorage.setItem(
-    //   "yai-last-article-time",
-    //   Math.floor(Date.now() / 1000)
-    // );
     setContent(data);
   };
 
@@ -664,10 +657,7 @@ export default function WritingArticle() {
               style={{ overflow: "visible" }}
             >
               <div className="fx-centered fit-container fx-start-h fx-start-v">
-                <div
-                  // style={{ width: "min(100%,1000px)" }}
-                  className="box-pad-h-m fit-container"
-                >
+                <div className="box-pad-h-m fit-container">
                   {userKeys && (
                     <>
                       {(userKeys.sec || userKeys.ext) && (
@@ -690,7 +680,7 @@ export default function WritingArticle() {
                                     className="btn btn-normal fx-centered"
                                     onClick={() => setIsEdit(!isEdit)}
                                   >
-                                    {isEdit ? "Preview" : "Edit"}
+                                    {isEdit ? t("Ao1TlO5") : t("AsXohpb")}
                                   </button>
                                 )}
                                 {isSaving && (
@@ -702,7 +692,7 @@ export default function WritingArticle() {
                                       style={{ filter: "invert()" }}
                                       className="fx-centered"
                                     >
-                                      Saving
+                                      {t("AiUwe3v")}
                                       <LoadingDots />
                                     </div>
                                   </button>
@@ -721,7 +711,7 @@ export default function WritingArticle() {
                                       onClick={() =>
                                         setShowUploadsHistory(true)
                                       }
-                                      data-tooltip="Uploads history"
+                                      data-tooltip={t("AP17LmU")}
                                     >
                                       <div
                                         className="posts"
@@ -734,9 +724,7 @@ export default function WritingArticle() {
                                 <div
                                   className="round-icon-tooltip"
                                   data-tooltip={
-                                    !(title && content)
-                                      ? "The content and title are required"
-                                      : ""
+                                    !(title && content) ? t("AziSA3n") : ""
                                   }
                                 >
                                   <button
@@ -755,15 +743,15 @@ export default function WritingArticle() {
                                     }
                                     style={{ width: "max-content" }}
                                   >
-                                    Save as draft
+                                    {t("ABg9vzA")}
                                   </button>
                                 </div>
                                 <div
                                   className="round-icon-tooltip"
                                   data-tooltip={
                                     !(title && content)
-                                      ? "The content and title are required"
-                                      : "Add thumbnail, summary, tags..etc"
+                                      ? t("AziSA3n")
+                                      : t("ALuUhWG")
                                   }
                                 >
                                   <button
@@ -782,7 +770,7 @@ export default function WritingArticle() {
                                     }
                                     style={{ width: "max-content" }}
                                   >
-                                    Next
+                                    {t("AgGi8rh")}
                                   </button>
                                 </div>
                                 <UserProfilePicNOSTR
@@ -797,7 +785,7 @@ export default function WritingArticle() {
                                 className="h2-txt fit-container"
                                 onChange={handleChange}
                                 value={title}
-                                placeholder="Give me a catchy title"
+                                placeholder={t("Atr3rjD")}
                                 dir={selectedTab === 0 ? "ltr" : "rtl"}
                               />
                             </div>
@@ -1123,13 +1111,14 @@ export default function WritingArticle() {
 
 const UploadHistoryList = ({ exit, list = [] }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   const copyLink = (link) => {
     navigator.clipboard.writeText(link);
     dispatch(
       setToast({
         type: 1,
-        desc: `Link was copied! 👏`,
+        desc: `${t("AfnTOQk")} 👏`,
       })
     );
   };
@@ -1155,8 +1144,8 @@ const UploadHistoryList = ({ exit, list = [] }) => {
           <div></div>
         </div>
         <div className="fit-container fx-centered fx-col box-marg-s">
-          <h4>Uploads history</h4>
-          <p className="c1-c">{list.length} file(s)</p>
+          <h4>{t("AP17LmU")}</h4>
+          <p className="c1-c">{t("A6Mjx8g", { count: list.length })}</p>
         </div>
         {list.map((item) => {
           return (

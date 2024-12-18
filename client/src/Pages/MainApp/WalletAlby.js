@@ -4,10 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useLocation, useParams } from "react-router-dom";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import { customHistory } from "../../Helpers/History";
+import { useTranslation } from "react-i18next";
 
 export default function WalletAlby() {
   const location = useLocation();
-  const navigateTo = useNavigate();
+  const { t } = useTranslation();
   const [code, setCode] = useState(false);
 
   useEffect(() => {
@@ -84,13 +85,12 @@ export default function WalletAlby() {
   if (code === "")
     return (
       <div className="fixed-container fx-centered fx-col">
-        <h4>Link is broken :(</h4>
+        <h4>{t("Ao1YlmX")} :(</h4>
         <p className="gray-c p-centered" style={{ maxWidth: "300px" }}>
-          There is something wrong with the link, we could not process your
-          login
+          {t("AWq8fUG")}
         </p>
         <Link to={"/"}>
-          <button className="btn btn-normal btn-small">Get me back home</button>
+          <button className="btn btn-normal btn-small">{t("AWroZQj")}</button>
         </Link>
       </div>
     );

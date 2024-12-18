@@ -311,17 +311,20 @@ export default function AddArticlesToCuration({
         }}
       >
         <div
-          className="box-pad-h box-pad-v fx-centered fx-col  art-t-cur-container"
-          style={{ width: "min(100%, 800px)", height: "calc(100vh - 10rem)" }}
+          className="fx-centered fx-col sc-s-19 bg-sp  art-t-cur-container"
+          style={{
+            width: "min(100%, 800px)",
+            height: "100vh",
+            borderRadius: "0",
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {!initScreen && (
             <>
               <div
-                className="sc-s "
                 style={{
                   width: "min(100%, 800px)",
-                  height: "90%",
+                  height: "100%",
                   overflow: "hidden",
                   backgroundColor: "var(--white)",
                 }}
@@ -346,7 +349,7 @@ export default function AddArticlesToCuration({
                 <hr />
                 <div
                   style={{
-                    height: "82%",
+                    height: "100%",
                     overflow: "scroll",
                     overflowX: "hidden",
                   }}
@@ -486,7 +489,7 @@ export default function AddArticlesToCuration({
           {initScreen && (
             <>
               <div
-                className="box-pad-h sc-s"
+                className="box-pad-h"
                 style={{
                   width: "min(100%, 800px)",
                   height: "100%",
@@ -621,7 +624,7 @@ export default function AddArticlesToCuration({
                               isLoading ? "flash" : ""
                             }`}
                             style={{
-                              height: "75%",
+                              height: "87%",
                               overflow: "scroll",
                               overflowX: "hidden",
                               marginBottom: "1rem",
