@@ -188,6 +188,29 @@ export default function Article() {
     if (naddrData) fetchData();
   }, [naddrData]);
 
+  function detectDirection(text) {
+    const rtlCharRegExp =
+      /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+    const ltrCharRegExp = /[a-zA-Z]/;
+
+    let rtlCount = 0;
+    let ltrCount = 0;
+
+    for (const char of text) {
+      if (rtlCharRegExp.test(char)) {
+        rtlCount++;
+      } else if (ltrCharRegExp.test(char)) {
+        ltrCount++;
+      }
+    }
+
+    if (rtlCount > ltrCount) {
+      return "RTL";
+    } else if (ltrCount > rtlCount) {
+      return "LTR";
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -289,7 +312,6 @@ export default function Article() {
                 {!showCommentsSection && (
                   <div
                     className="fit-container fx-centered fx-start-h fx-start-v fx-col nostr-article"
-                    dir="auto"
                     style={{ gap: 0 }}
                   >
                     <Backbar />
@@ -312,10 +334,15 @@ export default function Article() {
                             <div className="fx-centered fx-start-h">
                               <div>
                                 <p className="p-caps">
-                                  By{" "}
-                                  {author.display_name ||
+                                  {t("AsXpL4b", {
+                                    name:
+                                      author.display_name ||
+                                      author.name ||
+                                      minimizeKey(post.pubkey),
+                                  })}
+                                  {/* {author.display_name ||
                                     author.name ||
-                                    minimizeKey(post.pubkey)}
+                                    minimizeKey(post.pubkey)} */}
                                 </p>
                               </div>
                               <p className="gray-c p-medium">&#8226;</p>
@@ -350,7 +377,7 @@ export default function Article() {
                           />
                           <div className="fx-centered fx-col fx-start-v">
                             <div>
-                              <p className="gray-c">Post by</p>
+                              <p className="gray-c">{t("AVG3Uga")}</p>
                               <p className="p-big p-caps">
                                 {author.display_name ||
                                   author.name ||
@@ -401,7 +428,7 @@ export default function Article() {
                             }}
                           >
                             <button className="btn btn-gray">
-                              Edit article
+                              {t("Aig65l1")}
                             </button>
                           </Link>
                         )}
@@ -417,7 +444,7 @@ export default function Article() {
                         className="fx-centered fit-container fx-start-h"
                         style={{ minWidth: "max-content" }}
                       >
-                        <p className="gray-c">Posted from</p>
+                        <p className="gray-c">{t("AHhPGax", { date: "" })}</p>
                         <span
                           className="orange-c p-one-line"
                           style={{ maxWidth: "200px" }}
@@ -428,11 +455,15 @@ export default function Article() {
                         <div className="fx-start-h fx-centered">
                           <p
                             className="gray-c pointer round-icon-tooltip"
-                            data-tooltip={`created at ${convertDate(
-                              post.published_at * 1000
-                            )}, edited on ${convertDate(
-                              post.created_at * 1000
-                            )}`}
+                            data-tooltip={t("AOsxQxu", {
+                              cdate: convertDate(post.published_at * 1000),
+                              edate: convertDate(post.created_at * 1000),
+                            })}
+                            // data-tooltip={`${t("AHMARaK")} ${convertDate(
+                            //   post.published_at * 1000
+                            // )}, ${t("A1jhS42")} ${convertDate(
+                            //   post.created_at * 1000
+                            // )}`}
                           >
                             <Date_
                               toConvert={new Date(post.created_at * 1000)}
@@ -441,7 +472,9 @@ export default function Article() {
                         </div>
                       </div>
                       {post.description && (
-                        <div className="fit-container ">{post.description}</div>
+                        <div className="fit-container " dir={post.dir}>
+                          {post.description}
+                        </div>
                       )}
                       {post.items?.length > 0 && (
                         <div
@@ -484,7 +517,7 @@ export default function Article() {
                         ></div>
                       </div>
                     )}
-                    <div className="article fit-container">
+                    <div className="article fit-container" dir={post.dir}>
                       <MarkdownPreview
                         wrapperElement={{
                           "data-color-mode":
@@ -581,9 +614,9 @@ export default function Article() {
                       />
                     </div>
                     {readMore.length > 0 && (
-                      <div className="fx-centered fx-start-h fx-wrap fit-container box-marg-s">
+                      <div className="fx-centered fx-start-h fx-wrap fit-container box-marg-s box-pad-v">
                         <hr />
-                        <p className="p-big">Read more</p>
+                        <p className="p-big">{t("AArGqN7")}</p>
                         {readMore.map((post) => {
                           if (post.image)
                             return (
@@ -637,7 +670,7 @@ export default function Article() {
                 <div className="main-middle fx-even">
                   <div className="fx-centered  pointer">
                     <div
-                      data-tooltip="Leave a comment"
+                      data-tooltip={t("ADHdLfJ")}
                       className={`pointer icon-tooltip ${
                         isZapped ? "orange-c" : ""
                       }`}
@@ -646,7 +679,7 @@ export default function Article() {
                       <div className="comment-24"></div>
                     </div>
                     <div
-                      data-tooltip="See comments"
+                      data-tooltip={t("AMBxvKP")}
                       className={`pointer icon-tooltip `}
                       onClick={() =>
                         setShowCommentsSections({ comment: false })
@@ -666,12 +699,12 @@ export default function Article() {
                       className={`pointer icon-tooltip ${
                         isLiked ? "orange-c" : ""
                       }`}
-                      data-tooltip="Reactions"
+                      data-tooltip={t("Alz0E9Y")}
                       onClick={(e) => {
                         e.stopPropagation();
                         postActions.likes.likes.length > 0 &&
                           setUsersList({
-                            title: "Reactions",
+                            title: t("Alz0E9Y"),
                             list: postActions.likes.likes.map(
                               (item) => item.pubkey
                             ),
@@ -690,12 +723,12 @@ export default function Article() {
                     />
                     <div
                       className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
-                      data-tooltip="Quoters"
+                      data-tooltip={t("AWmDftG")}
                       onClick={(e) => {
                         e.stopPropagation();
                         postActions.quotes.quotes.length > 0 &&
                           setUsersList({
-                            title: "Quoters",
+                            title: t("AWmDftG"),
                             list: postActions.quotes.quotes.map(
                               (item) => item.pubkey
                             ),
@@ -714,14 +747,14 @@ export default function Article() {
                       isZapped={isZapped}
                     />
                     <div
-                      data-tooltip="See zappers"
+                      data-tooltip={t("AO0OqWT")}
                       className={`pointer icon-tooltip ${
                         isZapped ? "orange-c" : ""
                       }`}
                       onClick={() =>
                         postActions.zaps.total > 0 &&
                         setUsersList({
-                          title: "Zappers",
+                          title: t("AVDZ5cJ"),
                           list: postActions.zaps.zaps.map(
                             (item) => item.pubkey
                           ),
@@ -738,18 +771,18 @@ export default function Article() {
                         onClick={(e) => copyText(post.naddr, "Naddr", e)}
                         className="pointer"
                       >
-                        <p>Copy naddr</p>
+                        <p>{t("ApPw14o", { item: "naddr" })}</p>
                       </div>,
                       <div onClick={() => setShowArticleToCuration(true)}>
-                        Add to curation
+                        {t("A89Qqmt")}
                       </div>,
                       <BookmarkEvent
-                        label={"Bookmark article"}
+                        label={t("A4ZQj8F")}
                         pubkey={post.author_pubkey}
                         d={post.d}
                       />,
                       <ShareLink
-                        label={"Share article"}
+                        label={t("A6enIP3")}
                         title={post.title}
                         description={post.description}
                         path={`/${post.naddr}`}

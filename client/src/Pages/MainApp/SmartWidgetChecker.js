@@ -6,17 +6,16 @@ import LoadingDots from "../../Components/LoadingDots";
 import { useLocation } from "react-router-dom";
 import { nip19 } from "nostr-tools";
 import {
-  filterRelays,
   getEmptyuserMetadata,
   getParsedRepEvent,
 } from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
 import Date_ from "../../Components/Date_";
 import { validateWidgetValues } from "../../Helpers/Helpers";
 import WidgetCard from "../../Components/Main/WidgetCard";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 const getNaddrParam = (location) => {
   let naddr = new URLSearchParams(location.search).get("naddr");
@@ -26,7 +25,7 @@ const getNaddrParam = (location) => {
 export default function SmartWidgetChecker() {
   const location = useLocation();
   const dispatch = useDispatch();
-  const userMetadata = useSelector((state) => state.userMetadata);
+  const { t } = useTranslation();
   const naddrParam = getNaddrParam(location);
   const [widget, setWidget] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,15 +37,15 @@ export default function SmartWidgetChecker() {
     if (type === "video") {
       let checkKey = ["url"].includes(key);
       let checkValue = validateWidgetValues(value, key);
-      let message = "Valid";
+      let message = t("A1FzpC8");
       let icon = "checkmark-tt";
 
       if (!checkValue) {
-        message = "Invalid value";
+        message = t("A3VsAhH");
         icon = "info-tt";
       }
       if (!checkKey) {
-        message = "Unknown key";
+        message = t("ApJBuXY");
         icon = "crossmark-tt";
       }
       return {
@@ -62,15 +61,15 @@ export default function SmartWidgetChecker() {
       //       ? true
       //       : false
       //     : true;
-      let message = "Valid";
+      let message = t("A1FzpC8");
       let icon = "checkmark-tt";
 
       if (!checkValue) {
-        message = "Invalid value";
+        message = t("A3VsAhH");
         icon = "info-tt";
       }
       if (!checkKey) {
-        message = "Unknown key";
+        message = t("ApJBuXY");
         icon = "crossmark-tt";
       }
       return {
@@ -82,15 +81,15 @@ export default function SmartWidgetChecker() {
       let checkKey = ["content", "text_color", "weight", "size"].includes(key);
       let checkValue = validateWidgetValues(value, key);
 
-      let message = "Valid";
+      let message = t("A1FzpC8");
       let icon = "checkmark-tt";
 
       if (!checkValue) {
-        message = "Invalid value";
+        message = t("A3VsAhH");
         icon = "info-tt";
       }
       if (!checkKey) {
-        message = "Unknown key";
+        message = t("ApJBuXY");
         icon = "crossmark-tt";
       }
       return {
@@ -113,15 +112,15 @@ export default function SmartWidgetChecker() {
         key === "url" ? extra : ""
       );
 
-      let message = "Valid";
+      let message = t("A1FzpC8");
       let icon = "checkmark-tt";
 
       if (!checkValue) {
-        message = "Invalid value";
+        message = t("A3VsAhH");
         icon = "info-tt";
       }
       if (!checkKey) {
-        message = "Unknown key";
+        message = t("ApJBuXY");
         icon = "crossmark-tt";
       }
       return {
@@ -139,15 +138,15 @@ export default function SmartWidgetChecker() {
       ].includes(key);
       let checkValue = validateWidgetValues(value, key);
 
-      let message = "Valid";
+      let message = t("A1FzpC8");
       let icon = "checkmark-tt";
 
       if (!checkValue) {
-        message = "Invalid value";
+        message = t("A3VsAhH");
         icon = "info-tt";
       }
       if (!checkKey) {
-        message = "Unknown key";
+        message = t("ApJBuXY");
         icon = "crossmark-tt";
       }
       return {
@@ -165,15 +164,15 @@ export default function SmartWidgetChecker() {
       value
     );
     let checkKey = type === "type";
-    let message = "Valid";
+    let message = t("A1FzpC8");
     let icon = "checkmark-tt";
 
     if (!checkValue) {
-      message = "Invalid value";
+      message = t("A3VsAhH");
       icon = "info-tt";
     }
     if (!checkKey) {
-      message = "Unknown key";
+      message = t("ApJBuXY");
       icon = "crossmark-tt";
     }
     return {
@@ -186,15 +185,15 @@ export default function SmartWidgetChecker() {
     let checkKey = ["layout", "division"].includes(key);
     let checkValue = validateWidgetValues(value, key);
 
-    let message = "Valid";
+    let message = t("A1FzpC8");
     let icon = "checkmark-tt";
 
     if (!checkValue) {
-      message = "Invalid value";
+      message = t("A3VsAhH");
       icon = "info-tt";
     }
     if (!checkKey) {
-      message = "Unknown key";
+      message = t("ApJBuXY");
       icon = "crossmark-tt";
     }
     return {
@@ -206,16 +205,16 @@ export default function SmartWidgetChecker() {
     let checkKey = ["border_color", "background_color"].includes(key);
     let checkValue = validateWidgetValues(value, key);
 
-    let message = "Valid";
+    let message = t("A1FzpC8");
     let icon = "checkmark-tt";
 
     if (!checkValue) {
-      message = "Invalid value";
+      message = t("A3VsAhH");
       icon = "info-tt";
     }
 
     if (!checkKey) {
-      message = "Unknown key";
+      message = t("ApJBuXY");
       icon = "crossmark-tt";
     }
     return {
@@ -240,7 +239,7 @@ export default function SmartWidgetChecker() {
               "#d": [data.identifier],
             },
           ],
-          {  cacheUsage: "CACHE_FIRST" , groupable: false}
+          { cacheUsage: "CACHE_FIRST", groupable: false }
         );
 
         sub.on("event", async (event) => {
@@ -292,7 +291,7 @@ export default function SmartWidgetChecker() {
                   };
                 }) || []
               );
-              sub.stop()
+              sub.stop();
               setIsLoading(false);
             }
           } catch (err) {
@@ -308,7 +307,7 @@ export default function SmartWidgetChecker() {
         dispatch(
           setToast({
             type: 2,
-            desc: "Invalid naddr",
+            desc: t("As0d1J3"),
           })
         );
         setIsLoading(false);
@@ -321,7 +320,7 @@ export default function SmartWidgetChecker() {
     dispatch(
       setToast({
         type: 1,
-        desc: `Widget metadata was copied! 👏`,
+        desc: `${t("AnSVSCq")} 👏`,
       })
     );
   };
@@ -385,7 +384,7 @@ export default function SmartWidgetChecker() {
                         <input
                           type="text"
                           className="if if-no-border ifs-full"
-                          placeholder="Smart widget naddr"
+                          placeholder={t("AzL2pM8")}
                           disabled={isLoading}
                           value={naddr}
                           onChange={(e) => setNaddr(e.target.value)}
@@ -397,7 +396,7 @@ export default function SmartWidgetChecker() {
                             className="round-icon round-icon-tooltip"
                             disabled={isLoading}
                             onClick={clearPage}
-                            data-tooltip="Clear search"
+                            data-tooltip={t("AboMK2E")}
                           >
                             {isLoading ? (
                               <LoadingDots />
@@ -408,7 +407,7 @@ export default function SmartWidgetChecker() {
                         )}
                         <div
                           className="round-icon desk-hide round-icon-tooltip"
-                          data-tooltip="See layers"
+                          data-tooltip={t("AZBr1AS")}
                           onClick={() => setMbHide(false)}
                         >
                           <div className="curation"></div>
@@ -452,18 +451,18 @@ export default function SmartWidgetChecker() {
                           <div
                             className="round-icon desk-hide round-icon-tooltip"
                             onClick={() => setMbHide(true)}
-                            data-tooltip="Back"
+                            data-tooltip={t("ATB2h6T")}
                           >
                             <div
                               className="arrow"
                               style={{ rotate: "90deg" }}
                             ></div>
                           </div>
-                          <h4>Layers</h4>
+                          <h4>{t("AYmIvXo")}</h4>
                         </div>
                         <div className="fx-centered fx-col fit-container">
                           <p className="gray-c -medium fit-container p-left">
-                            Metadata
+                            {t("AlOJRQD")}
                           </p>
                           <div
                             className="fit-container fx-col fx-centered fx-start-v box-pad-h-m box-pad-v-m sc-s-18"
@@ -481,7 +480,7 @@ export default function SmartWidgetChecker() {
                                     minWidth: "max-content",
                                   }}
                                 >
-                                  Title
+                                  {t("AqTI7Iu")}
                                 </p>
                                 <p>
                                   {widget.title || (
@@ -499,7 +498,7 @@ export default function SmartWidgetChecker() {
                                   minWidth: "max-content",
                                 }}
                               >
-                                Description
+                                {t("AM6TPts")}
                               </p>
                               <p>
                                 {widget.description || (
@@ -514,7 +513,7 @@ export default function SmartWidgetChecker() {
                                   minWidth: "max-content",
                                 }}
                               >
-                                Created at
+                                {t("AHMARaK", { date: "" })}
                               </p>
                               <p>
                                 <Date_
@@ -532,13 +531,13 @@ export default function SmartWidgetChecker() {
                                   minWidth: "max-content",
                                 }}
                               >
-                                Identifier (#d)
+                                {t("AdVoc9X")}
                               </p>
                               <p>{widget.d}</p>
                             </div>
                           </div>
                           <div className="fit-container fx-scattered">
-                            <p className="gray-c  p-left">Widget</p>
+                            <p className="gray-c  p-left">{t("AFaMatL")}</p>
                             <div
                               className="round-icon-small"
                               onClick={copyMetadata}
@@ -596,7 +595,7 @@ export default function SmartWidgetChecker() {
                                   </div>
                                   <div
                                     className={`checkmark-tt round-icon-tooltip`}
-                                    data-tooltip={"Valid"}
+                                    data-tooltip={t("A1FzpC8")}
                                   ></div>
                                 </div>
                               )}
@@ -610,7 +609,7 @@ export default function SmartWidgetChecker() {
                                 </div>
                                 <div
                                   className={`info-tt round-icon-tooltip`}
-                                  data-tooltip={"Invalid value"}
+                                  data-tooltip={t("A3VsAhH")}
                                 ></div>
                               </div>
                             )}
@@ -678,7 +677,7 @@ export default function SmartWidgetChecker() {
                                               </div>
                                               <div
                                                 className={`checkmark-tt round-icon-tooltip`}
-                                                data-tooltip={"Valid"}
+                                                data-tooltip={t("A1FzpC8")}
                                               ></div>
                                             </div>
                                           )}
@@ -694,7 +693,7 @@ export default function SmartWidgetChecker() {
                                             </div>
                                             <div
                                               className={`info-tt round-icon-tooltip`}
-                                              data-tooltip={"Invalid value"}
+                                              data-tooltip={t("A3VsAhH")}
                                             ></div>
                                           </div>
                                         )}
@@ -783,7 +782,7 @@ export default function SmartWidgetChecker() {
                                                               <div
                                                                 className={`checkmark-tt round-icon-tooltip`}
                                                                 data-tooltip={
-                                                                  "Valid"
+                                                                  t("A1FzpC8")
                                                                 }
                                                               ></div>
                                                             </div>
@@ -802,7 +801,7 @@ export default function SmartWidgetChecker() {
                                                             <div
                                                               className={`info-tt round-icon-tooltip`}
                                                               data-tooltip={
-                                                                "Invalid value"
+                                                                t("A3VsAhH")
                                                               }
                                                             ></div>
                                                           </div>
@@ -917,7 +916,7 @@ export default function SmartWidgetChecker() {
                                               </div>
                                               <div
                                                 className={`checkmark-tt round-icon-tooltip`}
-                                                data-tooltip={"Valid"}
+                                                data-tooltip={t("A1FzpC8")}
                                               ></div>
                                             </div>
                                           )}
@@ -933,7 +932,7 @@ export default function SmartWidgetChecker() {
                                             </div>
                                             <div
                                               className={`info-tt round-icon-tooltip`}
-                                              data-tooltip={"Invalid value"}
+                                              data-tooltip={t("A3VsAhH")}
                                             ></div>
                                           </div>
                                         )}
@@ -1022,7 +1021,7 @@ export default function SmartWidgetChecker() {
                                                               <div
                                                                 className={`checkmark-tt round-icon-tooltip`}
                                                                 data-tooltip={
-                                                                  "Valid"
+                                                                  t("A1FzpC8")
                                                                 }
                                                               ></div>
                                                             </div>
@@ -1041,7 +1040,7 @@ export default function SmartWidgetChecker() {
                                                             <div
                                                               className={`info-tt round-icon-tooltip`}
                                                               data-tooltip={
-                                                                "Invalid value"
+                                                                t("A3VsAhH")
                                                               }
                                                             ></div>
                                                           </div>

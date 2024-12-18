@@ -202,7 +202,7 @@ export default function RepEventPreviewCard({
               style={{ columnGap: "16px" }}
               className="fit-container fx-scattered"
             >
-              <div style={{ width: "max(70%, 800px)" }}>
+              <div style={{ width: "max(70%, 800px)" }} dir={item.dir}>
                 <div className="fx-scattered">
                   <p className="p-two-lines p-big p-bold">{item.title}</p>
                 </div>

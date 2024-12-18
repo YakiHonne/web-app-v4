@@ -319,7 +319,7 @@ export default function Home() {
                                   setSelectedCategory(SUGGESTED_TAGS_VALUE)
                                 }
                               >
-                                Suggested interets{" "}
+                                {t("A7zJDS6")}{" "}
                                 {selectedCategory === SUGGESTED_TAGS_VALUE && (
                                   <div className="plus-sign"></div>
                                 )}
@@ -371,10 +371,7 @@ export default function Home() {
                             mainAccountUser={true}
                           />
                           <div className="sc-s-18 box-pad-h-s box-pad-v-s fit-container">
-                            <p className="gray-c p-big">
-                              {" "}
-                              What's on your mind?
-                            </p>
+                            <p className="gray-c p-big">{t("AGAXMQ3")}</p>
                           </div>
                         </div>
                       )}

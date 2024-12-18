@@ -10,9 +10,8 @@ import {
   getParsedNote,
   getParsedRepEvent,
   getuserMetadata,
-  shortenKey,
 } from "../../Helpers/Encryptions";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { nip19 } from "nostr-tools";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
@@ -23,13 +22,8 @@ import ShowPeople from "../../Components/Main/ShowPeople";
 import Helmet from "react-helmet";
 import axios from "axios";
 import NumberShrink from "../../Components/NumberShrink";
-import CheckNIP05 from "../../Components/CheckNIP05";
 import ArrowUp from "../../Components/ArrowUp";
-import {
-  getAuthPubkeyFromNip05,
-  straightUp,
-} from "../../Helpers/Helpers";
-import Footer from "../../Components/Footer";
+import { getAuthPubkeyFromNip05, straightUp } from "../../Helpers/Helpers";
 import LoadingDots from "../../Components/LoadingDots";
 import ShareLink from "../../Components/ShareLink";
 import InitiConvo from "../../Components/Main/InitConvo";
@@ -49,6 +43,7 @@ import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
 import QRSharing from "./QRSharing";
 import WidgetCard from "../../Components/Main/WidgetCard";
+import { useTranslation } from "react-i18next";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -205,30 +200,6 @@ export default function User() {
                     <UserFeed pubkey={id} user={user} />
                   </div>
                 </div>
-                {/* <div
-                  className=" fx-centered fx-col fx-start-v extras-homepage"
-                  style={{
-                    position: "sticky",
-                    top:
-                      extrasRef.current?.getBoundingClientRect().height >=
-                      window.innerHeight
-                        ? `calc(95vh - ${
-                            extrasRef.current?.getBoundingClientRect().height ||
-                            0
-                          }px)`
-                        : 0,
-                    zIndex: "10",
-                    flex: 1,
-                  }}
-                  ref={extrasRef}
-                >
-                  <div className="sticky fit-container">
-                    <SearchbarNOSTR />
-                  </div>
-                  <ImportantFlashNews />
-                  <TrendingUsers />
-                  <Footer />
-                </div> */}
               </div>
             </main>
           </div>
@@ -246,6 +217,7 @@ const UserMetadata = ({ refreshUser }) => {
   const userMutedList = useSelector((state) => state.userMutedList);
   const isPublishing = useSelector((state) => state.isPublishing);
 
+  const { t } = useTranslation();
   const [user, setUser] = useState({});
   const [showPeople, setShowPeople] = useState(false);
   const [showWritingImpact, setShowWritingImpact] = useState(false);
@@ -317,7 +289,7 @@ const UserMetadata = ({ refreshUser }) => {
           setID(pubkey);
           return;
         }
-        let id = user_id.replaceAll(",", "").replaceAll(":", "")
+        let id = user_id.replaceAll(",", "").replaceAll(":", "");
         let pubkey = nip19.decode(id);
         setID(pubkey.data.pubkey || pubkey.data);
       } catch (err) {
@@ -397,15 +369,6 @@ const UserMetadata = ({ refreshUser }) => {
   const muteUnmute = async () => {
     try {
       if (!Array.isArray(userMutedList)) return;
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
 
       let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
       if (isMuted) {
@@ -433,7 +396,7 @@ const UserMetadata = ({ refreshUser }) => {
     dispatch(
       setToast({
         type: 1,
-        desc: `Pubkey was copied! 👏`,
+        desc: `${t("AzSXXQm")} 👏`,
       })
     );
   };
@@ -509,17 +472,17 @@ const UserMetadata = ({ refreshUser }) => {
                 <UserPP size={128} src={user?.picture} user_id={user?.pubkey} />
                 <div className="fit-container fx-scattered fx-end-h box-marg-s">
                   <div className="fx-centered">
-                  <div>
-                    {user.pubkey !== userKeys.pub && (
-                      <Follow
-                        toFollowKey={user?.pubkey}
-                        toFollowName={user?.name}
-                        setTimestamp={setTimestamp}
-                        bulkList={[]}
-                        icon={false}
-                      />
-                    )}
-                  </div>
+                    <div>
+                      {user.pubkey !== userKeys.pub && (
+                        <Follow
+                          toFollowKey={user?.pubkey}
+                          toFollowName={user?.name}
+                          setTimestamp={setTimestamp}
+                          bulkList={[]}
+                          icon={false}
+                        />
+                      )}
+                    </div>
                     {user.pubkey === userKeys.pub && (
                       <button
                         className="btn btn-gray"
@@ -811,7 +774,6 @@ const UserFeed = ({ user }) => {
     });
 
     subscription.on("event", async (event) => {
-
       if ([1, 6].includes(event.kind)) {
         let event_ = await getParsedNote(event);
         if (event_) {
@@ -836,7 +798,7 @@ const UserFeed = ({ user }) => {
       }
       if ([34235, 34236].includes(event.kind)) {
         let event_ = getParsedRepEvent(event);
-        console.log(event_)
+        console.log(event_);
         events_.push(event_);
       }
     });

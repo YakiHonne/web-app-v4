@@ -11,7 +11,7 @@ import {
   minimizeKey,
   removeDuplicants,
 } from "../../Helpers/Encryptions";
-import { copyText, getAuthPubkeyFromNip05, redirectToLogin } from "../../Helpers/Helpers";
+import { copyText, getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import Date_ from "../../Components/Date_";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
@@ -19,11 +19,10 @@ import LoadingScreen from "../../Components/LoadingScreen";
 import LoadingDots from "../../Components/LoadingDots";
 import ZapTip from "../../Components/Main/ZapTip";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
-import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import CheckNOSTRClient from "../../Components/Main/CheckNOSTRClient";
 import { useDispatch, useSelector } from "react-redux";
-import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { setToast } from "../../Store/Slides/Publishers";
 import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
@@ -40,14 +39,14 @@ import RepEventCommentsSection from "../../Components/Main/RepEventCommentsSecti
 import { customHistory } from "../../Helpers/History";
 import Backbar from "../../Components/Main/Backbar";
 import DynamicIndicator from "../../Components/DynamicIndicator";
+import { useTranslation } from "react-i18next";
 
 export default function Curation() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
-
+  const { t } = useTranslation();
   const { id, CurationKind, AuthNip05, ArtIdentifier } = useParams();
-  const navigateTo = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isArtsLoaded, setIsArtsLoaded] = useState(false);
   const [curation, setCuration] = useState(false);
@@ -106,11 +105,10 @@ export default function Curation() {
             dispatch(
               setToast({
                 type: 2,
-                desc: "This curation does not exist",
+                desc: t("ADuKAP4"),
               })
             );
           } else {
-            console.log(_curation);
             let authPubkeys = removeDuplicants(
               getAuthPubkeys(_curation?.tags || [])
             );
@@ -149,7 +147,7 @@ export default function Curation() {
         dispatch(
           setToast({
             type: 2,
-            desc: "Problem in connecting with the relay",
+            desc: t("AAZJZMU"),
           })
         );
         setTimeout(() => {
@@ -329,7 +327,7 @@ export default function Curation() {
                           />
                           <div className="fx-centered fx-col fx-start-v">
                             <div>
-                              <p className="gray-c">Post by</p>
+                              <p className="gray-c">{t("AVG3Uga")}</p>
                               <p className="p-big p-caps">
                                 {curationAuthor.display_name ||
                                   curationAuthor.name ||
@@ -372,7 +370,7 @@ export default function Curation() {
                           className="fx-centered fit-container fx-start-h"
                           style={{ minWidth: "max-content" }}
                         >
-                          <p className="gray-c">Posted from</p>
+                          <p className="gray-c">{t("AHhPGax")}</p>
                           <span
                             className="orange-c p-one-line"
                             style={{ maxWidth: "200px" }}
@@ -383,11 +381,12 @@ export default function Curation() {
                           <div className="fx-start-h fx-centered">
                             <p
                               className="gray-c pointer round-icon-tooltip"
-                              data-tooltip={`created at ${convertDate(
-                                curation.published_at * 1000
-                              )}, edited on ${convertDate(
-                                curation.created_at * 1000
-                              )}`}
+                              data-tooltip={t("AOsxQxu", {
+                                cdate: convertDate(
+                                  curation.published_at * 1000
+                                ),
+                                edate: convertDate(curation.created_at * 1000),
+                              })}
                             >
                               <Date_
                                 toConvert={new Date(curation.created_at * 1000)}
@@ -420,16 +419,19 @@ export default function Curation() {
                             className="fx-centered fit-container"
                             style={{ height: "20vh" }}
                           >
-                            <p className="gray-c p-medium">Loading</p>
+                            <p className="gray-c p-medium">{t("AKvHyxG")}</p>
                             <LoadingDots />
                           </div>
                         )}
                         {articlesOnCuration.length > 0 && isArtsLoaded && (
                           <div className="fit-container box-marg-s fx-start-h fx-centered">
-                            <h4>{articlesOnCuration.length} Item(s)</h4>
+                            <h4>
+                              {t("A04okTg", {
+                                count: articlesOnCuration.length,
+                              })}
+                            </h4>
                           </div>
                         )}
-
                         <div
                           className="fit-container fx-scattered"
                           style={{
@@ -458,7 +460,7 @@ export default function Curation() {
                           {articlesOnCuration.length === 0 && isArtsLoaded && (
                             <div className="fx-centered fx-col">
                               <p className="gray-c box-pad-v-s">
-                                more articles will join this topic, stay tuned!
+                                {t("AghKyAt")}
                               </p>
                             </div>
                           )}
@@ -472,7 +474,7 @@ export default function Curation() {
                             border: "none",
                           }}
                         >
-                          <h4>You might also like</h4>
+                          <h4>{t("Aag9u1h")}</h4>
                           <div className="fit-container fx-centered fx-wrap">
                             {morePosts.map((curation_) => {
                               if (
@@ -499,7 +501,7 @@ export default function Curation() {
                                     ></div>
                                     <div>
                                       <p className=" p-two-lines">
-                                        {curation_.title || "Untitled"}
+                                        {curation_.title || t("AMvUjqZ")}
                                       </p>
                                       <p className="p-small gray-c">
                                         <DynamicIndicator item={curation_} />
@@ -526,7 +528,7 @@ export default function Curation() {
                   <div className="main-middle fx-even">
                     <div className="fx-centered  pointer">
                       <div
-                        data-tooltip="Leave a comment"
+                        data-tooltip={t("ADHdLfJ")}
                         className={`pointer icon-tooltip ${
                           isZapped ? "orange-c" : ""
                         }`}
@@ -537,7 +539,7 @@ export default function Curation() {
                         <div className="comment-24"></div>
                       </div>
                       <div
-                        data-tooltip="See comments"
+                        data-tooltip={t("AMBxvKP")}
                         className={`pointer icon-tooltip `}
                         onClick={() =>
                           setShowCommentsSections({ comment: false })
@@ -557,12 +559,12 @@ export default function Curation() {
                         className={`pointer icon-tooltip ${
                           isLiked ? "orange-c" : ""
                         }`}
-                        data-tooltip="Reactions "
+                        data-tooltip={t("Alz0E9Y")}
                         onClick={(e) => {
                           e.stopPropagation();
                           postActions.likes.likes.length > 0 &&
                             setUsersList({
-                              title: "Reactions ",
+                              title: t("Alz0E9Y"),
                               list: postActions.likes.likes.map(
                                 (item) => item.pubkey
                               ),
@@ -581,12 +583,12 @@ export default function Curation() {
                       />
                       <div
                         className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
-                        data-tooltip="Quoters"
+                        data-tooltip={t("AWmDftG")}
                         onClick={(e) => {
                           e.stopPropagation();
                           postActions.quotes.quotes.length > 0 &&
                             setUsersList({
-                              title: "Quoters",
+                              title: t("AWmDftG"),
                               list: postActions.quotes.quotes.map(
                                 (item) => item.pubkey
                               ),
@@ -607,14 +609,14 @@ export default function Curation() {
                         isZapped={isZapped}
                       />
                       <div
-                        data-tooltip="See zappers"
+                        data-tooltip={t("AO0OqWT")}
                         className={`pointer icon-tooltip ${
                           isZapped ? "orange-c" : ""
                         }`}
                         onClick={() =>
                           postActions.zaps.total > 0 &&
                           setUsersList({
-                            title: "Zappers",
+                            title: t("AVDZ5cJ"),
                             list: postActions.zaps.zaps.map(
                               (item) => item.pubkey
                             ),
@@ -631,15 +633,15 @@ export default function Curation() {
                           onClick={(e) => copyText(curation.naddr, "Naddr", e)}
                           className="pointer"
                         >
-                          <p>Copy naddr</p>
+                          <p>{t("ApPw14o", {item: "naddr"})}</p>
                         </div>,
                         <BookmarkEvent
-                          label={"Bookmark curation"}
+                          label={t("A8YL3m4")}
                           pubkey={curation.author_pubkey}
                           d={curation.d}
                         />,
                         <ShareLink
-                          label={"Share curation"}
+                          label={t("AVUI6uC")}
                           title={curation.title}
                           description={curation.description}
                           path={`/${curation.naddr}`}

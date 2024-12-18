@@ -8,10 +8,11 @@ import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { customHistory } from "../../Helpers/History";
 import { decode } from "light-bolt11-decoder";
+import { useTranslation } from "react-i18next";
 
 export default function WalletNWC() {
   const dispatch = useDispatch();
-  const navigateTo = useNavigate();
+  const { t } = useTranslation();
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,7 +40,7 @@ export default function WalletNWC() {
         dispatch(
           setToast({
             type: 2,
-            desc: "Could not extract your lightning address.",
+            desc: t("A4FVHJa"),
           })
         );
         return;
@@ -82,7 +83,7 @@ export default function WalletNWC() {
       dispatch(
         setToast({
           type: 2,
-          desc: "Invalid input, please check your NWC URL",
+          desc: t("AhM21RA"),
         })
       );
     }
@@ -109,10 +110,8 @@ export default function WalletNWC() {
                     </div>
                   </Link>
                   <div className="fx-centered fx-col fx-start-h box-pad-v-m">
-                    <h4>Nostr Wallet Connect</h4>
-                    <p className="gray-c">
-                      Add new wallet using Nostr Wallet Connect (NWC)
-                    </p>
+                    <h4>{t("AO3Hd2n")}</h4>
+                    <p className="gray-c">{t("Aq8tvve")}</p>
                   </div>
                   <input
                     type="text"
@@ -121,19 +120,23 @@ export default function WalletNWC() {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                   />
-                  <p className="gray-c p-medium">
-                    Using Alby? Go to{" "}
-                    <a href="https://nwc.getalby.com" target="_blank">
-                      nwc.getalby.com
-                    </a>{" "}
-                    to get your NWC config!
+                  <p className="gray-c">
+                    {t("ARihsdt")}{" "}
+                    <a
+                      href="https://nwc.getalby.com"
+                      className="c1-c"
+                      style={{ textDecoration: "underline" }}
+                      target="_blank"
+                    >
+                      {t("ArGP8uD")}
+                    </a>
                   </p>
                   <button
                     className="btn btn-normal btn-full"
                     onClick={addNWC}
                     disabled={isLoading}
                   >
-                    {isLoading ? <LoadingDots /> : "Connect"}
+                    {isLoading ? <LoadingDots /> : t("Azb0lto")}
                   </button>
                 </div>
               </div>

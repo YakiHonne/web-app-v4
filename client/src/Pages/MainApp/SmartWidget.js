@@ -13,6 +13,7 @@ import {
   filterRelays,
   getEmptyuserMetadata,
   getParsedRepEvent,
+  timeAgo,
 } from "../../Helpers/Encryptions";
 import BrowsePolls from "../../Components/Main/BrowsePolls";
 import widget from "../../media/JSONs/widgets.json";
@@ -35,6 +36,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { customHistory } from "../../Helpers/History";
+import { useTranslation } from "react-i18next";
+import { t } from "i18next";
 
 const getTypeMetada = (type, isDarkMode) => {
   let text_color = isDarkMode === "0" ? "#ffffff" : "#1C1B1F";
@@ -72,17 +75,6 @@ const getTypeMetada = (type, isDarkMode) => {
       options_background_color: background_color,
       options_foreground_color: "#ee7700",
     };
-};
-
-const getuserKeys = () => {
-  let userKeys = localStorage.getItem("_userMetadatakeys");
-  try {
-    userKeys = userKeys ? JSON.parse(userKeys) : false;
-    return userKeys;
-  } catch (err) {
-    console.log(err);
-    return false;
-  }
 };
 
 const getTemplate = (template) => {
@@ -341,6 +333,7 @@ export default function NostrSmartWidget() {
 }
 
 const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="fit-container fit-height fx-scattered "
@@ -352,11 +345,8 @@ const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
           <Lottie animationData={widget} loop={true} />
         </div>
         <div className="fx-centered fx-col">
-          <h3 className="p-centered">Smart widget builder</h3>
-          <p className="gray-c p-centered">
-            Start building and customize your smart widget to use on Nostr
-            network
-          </p>
+          <h3 className="p-centered">{t("AgnT2y8")}</h3>
+          <p className="gray-c p-centered">{t("AG1WdKb")}</p>
         </div>
         <div
           className="fit-container fx-centered box-pad-v"
@@ -370,7 +360,7 @@ const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
             <div className="round-icon">
               <div className="plus-sign"></div>
             </div>
-            <p className="gray-c">Blank widget</p>
+            <p className="gray-c">{t("AbvONJd")}</p>
           </div>
           <div
             className="fx fx-centered fx-col sc-s-18 option pointer"
@@ -381,7 +371,7 @@ const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
               className="smart-widget-draft"
               style={{ minWidth: "36px", height: "64px" }}
             ></div>
-            <p className="gray-c">My drafts</p>
+            <p className="gray-c">{t("AaXbNvT")}</p>
           </div>
           <div
             className="fx fx-centered fx-col sc-s-18 option pointer"
@@ -392,18 +382,18 @@ const BuildOptions = ({ setTemplate, template, back, setBuildOption }) => {
               className="frames"
               style={{ minWidth: "36px", height: "64px" }}
             ></div>
-            <p className="gray-c">Templates</p>
+            <p className="gray-c">{t("A60QDNZ")}</p>
           </div>
         </div>
         {template.length > 0 && (
           <div className="fx-centered pointer" onClick={back}>
             <div
               className="round-icon-small roun-icon-tooltip"
-              data-tooltip="Change plan"
+              data-tooltip={t("AufOzcc")}
             >
               <div className="arrow" style={{ rotate: "90deg" }}></div>
             </div>
-            <p className="orange-c">Resume work</p>
+            <p className="orange-c">{t("ARVqa3s")}</p>
           </div>
         )}
       </div>
@@ -435,9 +425,9 @@ const SmartWidgetBuilder = ({
 }) => {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const userMetadata = useSelector((state) => state.userMetadata);
   const isDarkMode = useSelector((state) => state.isDarkMode);
-  const navigateTo = useNavigate();
+
+  const { t } = useTranslation();
   const [showComponents, setShowComponents] = useState(false);
   const [componentsTree, setComponentsTree] = useState(
     template.length > 0
@@ -882,7 +872,7 @@ const SmartWidgetBuilder = ({
       dispatch(
         setToast({
           type: 3,
-          desc: "The smart widget should have at least one component",
+          desc: t("A1vIUhO"),
         })
       );
       return;
@@ -898,7 +888,7 @@ const SmartWidgetBuilder = ({
       dispatch(
         setToast({
           type: 3,
-          desc: "You need to have a title to your widget",
+          desc: t("AoJdU1P"),
         })
       );
       setIsLoading(false);
@@ -940,7 +930,7 @@ const SmartWidgetBuilder = ({
       dispatch(
         setToast({
           type: 3,
-          desc: "The smart widget should have at least one component",
+          desc: t("A1vIUhO"),
         })
       );
       setIsLoading(false);
@@ -1078,18 +1068,18 @@ const SmartWidgetBuilder = ({
             <div className="fx-centered">
               <div
                 className="round-icon-small round-icon-tooltip"
-                data-tooltip="Change plan"
+                data-tooltip={t("AufOzcc")}
                 onClick={handleBack}
               >
                 <div className="arrow" style={{ rotate: "90deg" }}></div>
               </div>
-              <h3>Smart widget</h3>
+              <h3>{t("AkvXmyz")}</h3>
             </div>
             <div className="fx-centered">
               {preview && (
                 <div
                   className="round-icon-small round-icon-tooltip"
-                  data-tooltip="Edit widget"
+                  data-tooltip={t("ApFLGmG")}
                   onClick={() => setPreview(false)}
                 >
                   <div className="edit"></div>
@@ -1098,7 +1088,7 @@ const SmartWidgetBuilder = ({
               {!preview && (
                 <div
                   className="round-icon-small round-icon-tooltip"
-                  data-tooltip="Preview widget"
+                  data-tooltip={t("A1YJuF6")}
                   onClick={() => setPreview(true)}
                 >
                   <div className="eye-opened"></div>
@@ -1108,12 +1098,12 @@ const SmartWidgetBuilder = ({
                 className="btn btn-normal btn-small"
                 onClick={handlShowFinalStep}
               >
-                Post my widget
+                {t("AxcZwzc")}
               </button>
               <div style={{ position: "relative" }} ref={optionsRef}>
                 <div
                   className="round-icon-small round-icon-tooltip"
-                  data-tooltip="Templates"
+                  data-tooltip={t("A60QDNZ")}
                   onClick={() => setShowOptions(!showOptions)}
                 >
                   <div className="frames"></div>
@@ -1190,7 +1180,7 @@ const SmartWidgetBuilder = ({
               </div>
               <div
                 className="round-icon-small desk-hide round-icon-tooltip"
-                data-tooltip="See layers"
+                data-tooltip={t("A3AtiVD")}
                 onClick={() => setMbHide(false)}
               >
                 <div className="layers"></div>
@@ -1244,25 +1234,13 @@ const SmartWidgetBuilder = ({
             <div className="fit-container fx-centered box-pad-v">
               <div
                 className="round-icon purple-pulse round-icon-tooltip"
-                data-tooltip="Load last desgin"
+                data-tooltip={t("AcJpfjK")}
                 onClick={loadLastDesign}
               >
                 <div className="upload-file"></div>
               </div>
             </div>
           )}
-          {/* {componentsTree.length === 1 &&
-            componentsTree[0].left_side.length === 0 && (
-              <div className="fit-container fx-centered box-pad-v">
-                <div
-                  className="round-icon purple-pulse round-icon-tooltip"
-                  data-tooltip="Load last desgin"
-                  onClick={loadLastDesign}
-                >
-                  <div className="upload-file"></div>
-                </div>
-              </div>
-            )} */}
         </div>
         <div
           style={{
@@ -1281,8 +1259,6 @@ const SmartWidgetBuilder = ({
             height: "100vh",
             overflow: "scroll",
             flex: 1,
-            // padding: "1rem",
-            // borderLeft: "1px solid var(--pale-gray)",
           }}
           className={`box-pad-h-m box-pad-v sticky ${
             mbHide ? "mb-hide-800" : ""
@@ -1292,24 +1268,26 @@ const SmartWidgetBuilder = ({
             <div
               className="round-icon-small  round-icon-tooltip "
               onClick={() => setMbHide(true)}
-              data-tooltip="Back"
+              data-tooltip={t("ATB2h6T")}
             >
               <div
                 className="arrow"
                 style={{ rotate: "90deg", scale: ".7" }}
               ></div>
             </div>
-            <p>Back to preview</p>
+            <p>{t("AzZ1GXv")}</p>
           </div>
           <div className="fit-container fx-scattered">
-            <h4 className="orange-c box-marg-s fit-container">Customize</h4>
+            <h4 className="orange-c box-marg-s fit-container">
+              {t("Akxf8vJ")}
+            </h4>
             {/* <div className="arrow"></div> */}
           </div>
           {/* <hr style={{margin: "1rem auto"}}/> */}
           <div className="fit-container fx-centered fx-col fx-start-v box-pad-v-s">
-            <p className="gray-c p-medium">Main widget container</p>
+            <p className="gray-c p-medium">{t("AKO2sOw")}</p>
             <div className="fx-scattered fit-container">
-              <p>Background color</p>
+              <p>{t("AR2VGhW")}</p>
               <div className="fx-centered">
                 <label
                   htmlFor="bg-color"
@@ -1355,7 +1333,7 @@ const SmartWidgetBuilder = ({
               </div>
             </div>
             <div className="fx-scattered fit-container">
-              <p>Border color</p>
+              <p>{t("AOdNhyn")}</p>
               <div className="fx-centered">
                 <label
                   htmlFor="b-color"
@@ -1400,7 +1378,7 @@ const SmartWidgetBuilder = ({
           {selectedLayer && (
             <div className="fit-container fx-centered fx-col fx-start-v box-pad-v-s">
               <p className="gray-c p-medium">
-                Customize this {selectedLayer.type.replace("-", " ")}
+                {t("AYTZb03", { type: selectedLayer.type.replace("-", " ") })}
               </p>
               <CustomizeComponent
                 metadata={selectedLayer}
@@ -1410,7 +1388,7 @@ const SmartWidgetBuilder = ({
           )}
           <div className="box-pad-v-m"></div>
           <div className="fit-container fx-scattered">
-            <h4 className="orange-c">Layers</h4>
+            <h4 className="orange-c">{t("AYmIvXo")}</h4>
           </div>
           <div className="fit-container fx-centered fx-col fx-start-v box-pad-v-m">
             {componentsTree.map((comp, index) => {
@@ -1433,7 +1411,7 @@ const SmartWidgetBuilder = ({
                   >
                     <div className="fx-centered fx-start-h">
                       <div className="container-one-24"></div>
-                      <p>Container</p>
+                      <p>{t("Ajuho3Z")}</p>
                     </div>
                     {componentsTree.length > 1 && (
                       <div
@@ -1587,25 +1565,21 @@ const EditContainer = ({
             >
               <div className="fx-centered fx-col">
                 <div className="warning-24"></div>
-                <h3>Warning!</h3>
+                <h3>{t("APW25Bv")}</h3>
               </div>
-              <p className="gray-c p-centered">
-                You're switching to a mono layout whilst having elements on both
-                sides, this will erase the container content, do you wish to
-                proceed?
-              </p>
+              <p className="gray-c p-centered">{t("ALE9zp8")}</p>
               <div className="fx-centered">
                 <button
                   className="btn btn-gst-red"
                   onClick={() => confirmContainerOps(true)}
                 >
-                  Erase elements
+                  {t("ADtXEGl")}
                 </button>
                 <button
                   className="btn btn-normal"
                   onClick={() => confirmContainerOps(false)}
                 >
-                  Cancel
+                  {t("AB4BSCe")}
                 </button>
               </div>
             </div>
@@ -1637,7 +1611,7 @@ const EditContainer = ({
                 }}
               >
                 <div className="plus-sign" style={{ minWidth: "10px" }}></div>{" "}
-                <p className="p-medium">Add component</p>
+                <p className="p-medium">{t("AL1bSXN")}</p>
               </div>
             )}
             {metadata.left_side.length > 0 && (
@@ -1923,13 +1897,13 @@ const EditContainer = ({
                 }}
               >
                 <div className="plus-sign" style={{ minWidth: "10px" }}></div>{" "}
-                <p className="p-medium">Add component</p>
+                <p className="p-medium">{t("AL1bSXN")}</p>
               </div>
             )}
             {metadata.layout === 2 && (
               <div
                 className="round-icon-small round-icon-tooltip"
-                data-tooltip="Switch sections"
+                data-tooltip={t("Af49McO")}
                 onClick={() =>
                   handleContainerOps("switch sections", {
                     ...metadata,
@@ -1956,7 +1930,7 @@ const EditContainer = ({
                 className={`round-icon-small round-icon-tooltip ${
                   index === 0 ? "if-disabled" : ""
                 }`}
-                data-tooltip="Move up"
+                data-tooltip={t("Ap7JU2L")}
                 style={{ zIndex: 5 }}
                 onClick={() =>
                   index === 0
@@ -1988,7 +1962,7 @@ const EditContainer = ({
                   zIndex: 4,
                 }}
                 className="fx-centered option pointer fit-height round-icon-tooltip"
-                data-tooltip={isMonoLayoutRequired ? "Only Mono layout" : ""}
+                data-tooltip={isMonoLayoutRequired ? t("AzrYsNt") : ""}
                 onClick={() =>
                   !isMonoLayoutRequired
                     ? metadata.layout === 1
@@ -2028,7 +2002,7 @@ const EditContainer = ({
                   }}
                 >
                   <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
-                    Choose a layout
+                    {t("AcV4mZS")}
                   </p>
                   <div
                     className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m box-pad-v-s"
@@ -2047,7 +2021,7 @@ const EditContainer = ({
                     }}
                   >
                     <div className="container-one-24"></div>
-                    <p className="p-medium">Mono layout</p>
+                    <p className="p-medium">{t("AgNgjlp")}</p>
                   </div>
 
                   <div
@@ -2120,7 +2094,7 @@ const EditContainer = ({
               <>
                 <div
                   className="round-icon-small round-icon-tooltip"
-                  data-tooltip="Delete section"
+                  data-tooltip={t("AScasnF")}
                   style={{ zIndex: 3 }}
                   onClick={() =>
                     handleContainerOps("delete", {
@@ -2135,7 +2109,7 @@ const EditContainer = ({
                   className={`round-icon-small round-icon-tooltip ${
                     index + 1 === totalContainers ? "if-disabled" : ""
                   }`}
-                  data-tooltip="Move down"
+                  data-tooltip={t("AvlnL6l")}
                   style={{ zIndex: 2 }}
                   onClick={() =>
                     index + 1 === totalContainers
@@ -2184,6 +2158,7 @@ const FinilizePublishing = ({
   isLoading,
   setIsLoading,
 }) => {
+  const { t } = useTranslation();
   const [title_, setTitle] = useState(title || "");
   const [description_, setDescription] = useState(description || "");
 
@@ -2193,20 +2168,18 @@ const FinilizePublishing = ({
         className="sc-s-18 box-pad-h box-pad-v fx-centered fx-col bg-sp"
         style={{ width: "min(100%, 400px)" }}
       >
-        <h4>Finilize your widget</h4>
-        <p className="gray-c p-centered">
-          Give a title and a description to your smart widget
-        </p>
+        <h4>{t("A6BUjEK")}</h4>
+        <p className="gray-c p-centered">{t("ADTxqKM")}</p>
         <input
           type="text"
           className="if ifs-full"
-          placeholder="Title"
+          placeholder={t("AqTI7Iu")}
           value={title_}
           onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
           className="txt-area ifs-full"
-          placeholder="Description (optional)"
+          placeholder={t("Ascc4eS")}
           value={description_}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -2218,16 +2191,16 @@ const FinilizePublishing = ({
           }}
           disabled={isLoading}
         >
-          {isLoading ? <LoadingDots /> : "Publish widget"}
+          {isLoading ? <LoadingDots /> : t("AIFq7fa")}
         </button>
         <div className="fx-centered pointer " onClick={exit}>
           <div
             className="round-icon-small roun-icon-tooltip"
-            data-tooltip="Change plan"
+            data-tooltip={t("Afnv5k6")}
           >
             <div className="arrow" style={{ rotate: "90deg" }}></div>
           </div>
-          <p className="orange-c">Keep editing</p>
+          <p className="orange-c">{t("APjAqB5")}</p>
         </div>
       </div>
     </div>
@@ -2235,6 +2208,7 @@ const FinilizePublishing = ({
 };
 
 const Components = ({ exit, addComp, isMonoLayout }) => {
+  const { t } = useTranslation();
   return (
     <div className="fixed-container box-pad-h fx-centered" onClick={exit}>
       <div
@@ -2249,7 +2223,7 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
         <div className="close" onClick={exit}>
           <div></div>
         </div>
-        <h4 className="box-marg-s">Components</h4>
+        <h4 className="box-marg-s">{t("AAOFuOo")}</h4>
         <div className="fx-centered fx-start-h fx-wrap">
           <div
             className="fx-centered fx-col sc-s-18 box-pad-h-m box-pad-v-m option pointer"
@@ -2260,7 +2234,7 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
               style={{ width: "32px", height: "32px" }}
               className="image-24"
             ></div>
-            <p className="gray-c p-medium">Image</p>
+            <p className="gray-c p-medium">{t("A37QlLV")}</p>
           </div>
           <div
             className="fx-centered fx-col sc-s-18 box-pad-h-m box-pad-v-m option pointer"
@@ -2271,21 +2245,21 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
               style={{ width: "32px", height: "32px" }}
               className="button-24"
             ></div>
-            <p className="gray-c p-medium">Button</p>
+            <p className="gray-c p-medium">{t("AJEwmWa")}</p>
           </div>
           <div
             className={`fx-centered fx-col round-icon-tooltip sc-s-18 box-pad-h-m box-pad-v-m option pointer ${
               !isMonoLayout ? "if-disabled" : ""
             }`}
             style={{ width: "48%", overflow: "visible" }}
-            data-tooltip={isMonoLayout ? "" : "Mono layout is required"}
+            data-tooltip={isMonoLayout ? "" : t("AlZGFtB")}
             onClick={() => (isMonoLayout ? addComp("video") : null)}
           >
             <div
               style={{ width: "32px", height: "32px" }}
               className="play-24"
             ></div>
-            <p className="gray-c p-medium">Video</p>
+            <p className="gray-c p-medium">{t("AVdmifm")}</p>
           </div>
           <div
             className="fx-centered fx-col sc-s-18 box-pad-h-m box-pad-v-m option pointer"
@@ -2296,21 +2270,21 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
               style={{ width: "32px", height: "32px" }}
               className="text-24"
             ></div>
-            <p className="gray-c p-medium">Text</p>
+            <p className="gray-c p-medium">{t("AyICe7g")}</p>
           </div>
           <div
             className={`fx-centered fx-col round-icon-tooltip sc-s-18 box-pad-h-m box-pad-v-m option pointer ${
               !isMonoLayout ? "if-disabled" : ""
             }`}
             style={{ width: "48%", overflow: "visible" }}
-            data-tooltip={isMonoLayout ? "" : "Mono layout is required"}
+            data-tooltip={isMonoLayout ? "" : t("AlZGFtB")}
             onClick={() => (isMonoLayout ? addComp("zap-poll") : null)}
           >
             <div
               style={{ width: "32px", height: "32px" }}
               className="polls-24"
             ></div>
-            <p className="gray-c p-medium">Zap poll</p>
+            <p className="gray-c p-medium">{t("AhAwwFJ")}</p>
           </div>
         </div>
       </div>
@@ -2319,7 +2293,7 @@ const Components = ({ exit, addComp, isMonoLayout }) => {
 };
 
 const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
-  const userMetadata = useSelector((state) => state.userMetadata);
+  const { t } = useTranslation();
   const isDarkMode = useSelector((state) => state.isDarkMode);
   const [showAddPoll, setShowAddPoll] = useState(false);
   const [showBrowsePolls, setShowBrowsePolls] = useState(false);
@@ -2425,12 +2399,12 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           />
         </div>
         <div className="fit-container fx-scattered">
-          <p>Aspect ratio</p>
+          <p>{t("AuJwyEC")}</p>
           <Select
             options={imageAspectRatio}
             setSelectedValue={(value) => handleMetadata("aspect_ratio", value)}
             value={metadata.metadata.aspect_ratio}
-            defaultLabel="-- Aspect ratio --"
+            defaultLabel={`-- ${t("AuJwyEC")} --`}
           />
         </div>
       </div>
@@ -2462,7 +2436,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
       <div className="fit-container fx-centered fx-col fx-start-v">
         <div className="fit-container fx-scattered">
           <textarea
-            placeholder="Content"
+            placeholder={t("AepwLlB")}
             className="txt-area ifs-full"
             value={metadata.metadata.content}
             onChange={(e) => {
@@ -2472,25 +2446,25 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           />
         </div>
         <div className="fit-container fx-scattered">
-          <p>Size</p>
+          <p>{t("AcwrhJU")}</p>
           <Select
             options={textSizes}
             setSelectedValue={(value) => handleMetadata("size", value)}
             value={metadata.metadata.size}
-            defaultLabel="-- Text sizes --"
+            defaultLabel={`-- ${t("AkyHW36")} --`}
           />
         </div>
         <div className="fit-container fx-scattered">
-          <p>Weight</p>
+          <p>{t("APkt2nG")}</p>
           <Select
             options={textWeights}
             setSelectedValue={(value) => handleMetadata("weight", value)}
             value={metadata.metadata.weight}
-            defaultLabel="-- Text weights --"
+            defaultLabel={`-- ${t("A8jEQ4F")} --`}
           />
         </div>
         <div className="fx-scattered fit-container">
-          <p>Text color</p>
+          <p>{t("AKTOyML")}</p>
           <div className="fx-centered">
             <label
               htmlFor="text-color"
@@ -2544,7 +2518,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         <div className="fit-container fx-scattered">
           <input
             type="text"
-            placeholder="Content"
+            placeholder={t("AepwLlB")}
             className="if ifs-full"
             value={metadata.metadata.content}
             onChange={(e) => handleMetadata("content", e.target.value)}
@@ -2559,7 +2533,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                 handleMetadata("url", "");
               }}
             >
-              <p>Use invoice</p>
+              <p>{t("AI19tdC")}</p>
               <div
                 className={`toggle ${!invoiceData ? "toggle-dim-gray" : ""} ${
                   invoiceData ? "toggle-c1" : "toggle-dim-gray"
@@ -2572,7 +2546,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             placeholder={
               metadata.metadata.type === "zap"
                 ? invoiceData
-                  ? "Invoice"
+                  ? t("AvEHTiP")
                   : "Lightning address"
                 : "URL"
             }
@@ -2589,7 +2563,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
                 <UserSearchBar
                   onClick={(pubkey) => handleMetadata("pubkey", pubkey)}
                   full={true}
-                  placeholder="Search user to send as zap (optional)"
+                  placeholder={t("ABRi9O2")}
                 />
               )}
               {metadata.metadata?.pubkey && (
@@ -2606,9 +2580,9 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           )}
           {metadata.metadata.type === "zap" && invoiceData && (
             <p className="gray-c p-medium">
-              Generate an invoice in the{" "}
+              {t("ANWrzRX")}{" "}
               <a href="/wallet" className="orange-c" target="_blank">
-                wallet page
+                the wallet page
               </a>
             </p>
           )}
@@ -2624,7 +2598,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
               : 1,
           }}
         >
-          <p>Background color</p>
+          <p>{t("AR2VGhW")}</p>
           <div
             className="fx-centered"
             style={{
@@ -2696,7 +2670,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
               : 1,
           }}
         >
-          <p>Text color</p>
+          <p>{t("AKTOyML")}</p>
           <div
             className="fx-centered"
             style={{
@@ -2756,13 +2730,13 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         </div>
 
         <div className="fit-container fx-scattered">
-          <p>Button type</p>
+          <p>{t("Ayd7Ojf")}</p>
           <Select
             options={buttonTypes}
             className="if"
             setSelectedValue={(value) => handleMetadata("type", value)}
             value={metadata.metadata.type}
-            defaultLabel="-- Button types --"
+            defaultLabel={`-- ${t("Ayd7Ojf")} --`}
           />
         </div>
       </div>
@@ -2801,14 +2775,14 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             <div className="fx-centered">
               <div
                 className="round-icon round-icon-tooltip"
-                data-tooltip="Browse polls"
+                data-tooltip={t("ADNeql1")}
                 onClick={() => setShowBrowsePolls(true)}
               >
                 <div className="polls"></div>
               </div>
               <div
                 className="round-icon round-icon-tooltip"
-                data-tooltip="Add poll"
+                data-tooltip={t("A4gfpc6")}
                 onClick={() => setShowAddPoll(true)}
               >
                 <div className="plus-sign"></div>
@@ -2816,7 +2790,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             </div>
           </div>
           <div className="fx-scattered fit-container">
-            <p>Content text color</p>
+            <p>{t("AhnKhk8")}</p>
             <div className="fx-centered">
               <label
                 htmlFor="content_text_color"
@@ -2861,7 +2835,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             </div>
           </div>
           <div className="fx-scattered fit-container">
-            <p>Options text color</p>
+            <p>{t("AmzEFgK")}</p>
             <div className="fx-centered">
               <label
                 htmlFor="options_text_color"
@@ -2909,7 +2883,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             </div>
           </div>
           <div className="fx-scattered fit-container">
-            <p>Options background color</p>
+            <p>{t("AbemnE0")}</p>
             <div className="fx-centered">
               <label
                 htmlFor="options_background_color"
@@ -2957,7 +2931,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
             </div>
           </div>
           <div className="fx-scattered fit-container">
-            <p>Options foreground color</p>
+            <p>{t("AdXEfSV")}</p>
             <div className="fx-centered">
               <label
                 htmlFor="options_foreground_color"
@@ -3007,6 +2981,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
 };
 
 const SWTemplates = ({ setBuildOption, setTemplate }) => {
+  const { t } = useTranslation();
   const [selectedTemplate, setSelectedTemplate] = useState(false);
   const useTemplate = () => {
     setTemplate(selectedTemplate.metadata.components);
@@ -3031,12 +3006,12 @@ const SWTemplates = ({ setBuildOption, setTemplate }) => {
         <div className="fx-centered box-marg-s fx-start-h fit-container">
           <div
             className="round-icon-small round-icon-tooltip"
-            data-tooltip="Change plan"
+            data-tooltip={t("Afnv5k6")}
             onClick={() => setBuildOption("normal")}
           >
             <div className="arrow" style={{ rotate: "90deg" }}></div>
           </div>
-          <h3>Templates</h3>
+          <h3>{t("A60QDNZ")}</h3>
         </div>
         <div
           className="fit-container fx-centered fx-col fx-start-h fx-start-v"
@@ -3086,6 +3061,7 @@ const SWTemplates = ({ setBuildOption, setTemplate }) => {
 };
 
 const SWTemplate = ({ template, useTemplate, exit }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="fixed-container box-pad-h fx-centered"
@@ -3137,7 +3113,7 @@ const SWTemplate = ({ template, useTemplate, exit }) => {
           className="sticky fit-container fx-centered"
           onClick={useTemplate}
         >
-          <button className="btn btn-orange btn-full">Use template</button>
+          <button className="btn btn-orange btn-full">{t("AGsDvGJ")}</button>
         </div>
       </div>
     </div>
@@ -3145,6 +3121,7 @@ const SWTemplate = ({ template, useTemplate, exit }) => {
 };
 
 const SWDrafts = ({ back, setTemplate }) => {
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const [drafts, setDrafts] = useState(getDrafts());
   const deleteDraft = (index) => {
@@ -3159,12 +3136,12 @@ const SWDrafts = ({ back, setTemplate }) => {
         <div className="fx-centered box-marg-s fx-start-h fit-container">
           <div
             className="round-icon-small round-icon-tooltip"
-            data-tooltip="Change plan"
+            data-tooltip={t("Afnv5k6")}
             onClick={() => back("normal")}
           >
             <div className="arrow" style={{ rotate: "90deg" }}></div>
           </div>
-          <h3>Drafts</h3>
+          <h3>{t("Ayh5F4w")}</h3>
         </div>
       )}
       {drafts.length > 0 && (
@@ -3178,22 +3155,24 @@ const SWDrafts = ({ back, setTemplate }) => {
               >
                 <div className="fit-container fx-scattered">
                   <div>
-                    <p className="gray-c p-medium">Last updated</p>
-                    <Date_
-                      toConvert={
-                        new Date(draft?.last_updated * 1000 || Date.now())
-                      }
-                      time={true}
-                    />
+                    <p className="gray-c p-medium">
+                      {t("AcKscQl", {
+                        date: timeAgo(
+                          new Date(draft?.last_updated * 1000 || Date.now())
+                        ),
+                      })}
+                    </p>
                   </div>
                   <OptionsDropdown
                     options={[
                       <div onClick={() => setTemplate(draft, true)}>
-                        Publish
+                        {t("As7IjvV")}
                       </div>,
-                      <div onClick={() => setTemplate(draft)}>Edit</div>,
+                      <div onClick={() => setTemplate(draft)}>
+                        {t("AsXohpb")}
+                      </div>,
                       <div className="red-c" onClick={() => deleteDraft(index)}>
-                        Delete
+                        {t("Almq94P")}
                       </div>,
                     ]}
                   />
@@ -3210,7 +3189,7 @@ const SWDrafts = ({ back, setTemplate }) => {
                     style={{ height: "150px" }}
                   >
                     <div className="smart-widget-24"></div>
-                    <p className="gray-c p-medium">Empty widget</p>
+                    <p className="gray-c p-medium">{t("AVkL6nq")}</p>
                   </div>
                 )}
               </div>

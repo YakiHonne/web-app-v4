@@ -2,10 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
-import ToChangeProfilePic from "../../Components/Main/ToChangeProfilePic";
 import { shortenKey } from "../../Helpers/Encryptions";
 import ToUpdateRelay from "../../Components/Main/ToUpdateRelay";
 import axios from "axios";
@@ -32,6 +30,7 @@ import ZapTip from "../../Components/Main/ZapTip";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { nip19 } from "nostr-tools";
 import Select from "../../Components/Main/Select";
+import { useTranslation } from "react-i18next";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -40,11 +39,10 @@ export default function Settings() {
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
   const userAllRelays = useSelector((state) => state.userAllRelays);
-  const isPublishing = useSelector((state) => state.isPublishing);
   const isYakiChestLoaded = useSelector((state) => state.isYakiChestLoaded);
   const yakiChestStats = useSelector((state) => state.yakiChestStats);
   const relaysContainer = useRef(null);
-
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [showRelaysInfo, setShowRelaysInfo] = useState(false);
   const [allRelays, setAllRelays] = useState([]);
@@ -58,7 +56,14 @@ export default function Settings() {
   const [selectedMediaServer, setSelectedMediaServer] = useState(
     getSelectedServer() || mediaUploader[0].value
   );
-
+  const contentCategoriesDN = {
+    recent: t("AiAJcg1"),
+    "recent-with-replies": t("AgF8nZU"),
+    trending: t("AqqxTe4"),
+    paid: t("AAg9D6c"),
+    widgets: t("AM4vyRX"),
+    highlights: t("AWj53bb"),
+  };
   const [customServer, setCustomServer] = useState(false);
 
   const [homeContentSuggestion, setHomeContentSuggestion] = useState(
@@ -144,7 +149,7 @@ export default function Settings() {
     dispatch(
       setToast({
         type: 1,
-        desc: `${prefix} was copied! 👏`,
+        desc: `${prefix} 👏`,
       })
     );
   };
@@ -161,15 +166,6 @@ export default function Settings() {
   };
 
   const saveRelays = async () => {
-    if (isPublishing) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        })
-      );
-      return;
-    }
     saveInKind10002();
     setSelectedTab("");
   };
@@ -354,7 +350,7 @@ export default function Settings() {
       dispatch(
         setToast({
           type: 2,
-          desc: "At least one item should be present.",
+          desc: t("AHfFgQL"),
         })
       );
       return;
@@ -375,7 +371,7 @@ export default function Settings() {
       dispatch(
         setToast({
           type: 2,
-          desc: "This url does not seem to be found, please recheck.",
+          desc: t("AQIc1lO"),
         })
       );
       setIsLoading(false);
@@ -384,7 +380,7 @@ export default function Settings() {
         dispatch(
           setToast({
             type: 2,
-            desc: "This url does not seem to be found, please recheck.",
+            desc: t("AQIc1lO"),
           })
         );
         setIsLoading(false);
@@ -439,6 +435,7 @@ export default function Settings() {
         <DeletionPopUp
           exit={() => setShowDeletionPopup(false)}
           handleDelete={handleDelete}
+          wallet={showDeletionPopup}
         />
       )}
 
@@ -468,7 +465,7 @@ export default function Settings() {
                 <div className="main-middle">
                   {userMetadata && (userKeys.sec || userKeys.ext) && (
                     <>
-                      <h3 className="box-pad-h box-pad-v-m">Settings</h3>
+                      <h3 className="box-pad-h box-pad-v-m">{t("ABtsLBp")}</h3>
                       <div
                         className="fit-container fx-scattered pointer box-pad-v-m box-pad-h-m"
                         style={{
@@ -484,12 +481,12 @@ export default function Settings() {
                             })}`}
                           >
                             <button className="btn btn-normal">
-                              view profile
+                              {t("ACgjh46")}
                             </button>
                           </Link>
                           <Link to={"/settings/profile"}>
                             <button className="btn btn-gray">
-                              Edit profile
+                              {t("AfxwB6z")}
                             </button>
                           </Link>
                         </div>
@@ -515,7 +512,7 @@ export default function Settings() {
                           >
                             <div className="fx-centered fx-start-h">
                               <div className="key-icon-24"></div>
-                              <p>Your keys</p>
+                              <p>{t("Adl0miS")}</p>
                             </div>
                             <div className="arrow"></div>
                           </div>
@@ -523,7 +520,7 @@ export default function Settings() {
                           {selectedTab === "keys" && (
                             <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                               <p className="c1-c p-left fit-container">
-                                Your secret key
+                                {t("Az0mazr")}
                               </p>
                               <div
                                 className={`fx-scattered if pointer fit-container ${
@@ -533,7 +530,7 @@ export default function Settings() {
                                 onClick={() =>
                                   userKeys.sec
                                     ? copyKey(
-                                        "Private key",
+                                        t("AStACDI"),
                                         getBech32("nsec", userKeys.sec)
                                       )
                                     : null
@@ -545,8 +542,8 @@ export default function Settings() {
                                   ) : (
                                     <span className="italic-txt gray-c">
                                       {userKeys.ext
-                                        ? "check your extension settings"
-                                        : "No secret key is provided"}
+                                        ? t("ApmycvH")
+                                        : t("Au372KY")}
                                     </span>
                                   )}
                                 </p>
@@ -555,14 +552,14 @@ export default function Settings() {
                                 )}
                               </div>
                               <p className="c1-c p-left fit-container">
-                                Your public key
+                                {t("AZRwERj")}
                               </p>
                               <div
                                 className="fx-scattered if pointer dashed-onH fit-container"
                                 style={{ borderStyle: "dashed" }}
                                 onClick={() =>
                                   copyKey(
-                                    "Public key",
+                                    t("AzSXXQm"),
                                     getBech32("npub", userKeys.pub)
                                   )
                                 }
@@ -593,13 +590,13 @@ export default function Settings() {
                           >
                             <div className="fx-centered fx-start-h">
                               <div className="server-24"></div>
-                              <p>Relays settings</p>
+                              <p>{t("A23C0Di")}</p>
                             </div>
                             <div className="fx-centered">
                               <p className="green-c">
                                 {connectedRelays.connected}{" "}
                                 <span className="gray-c">
-                                  / {connectedRelays.total} connected
+                                  / {connectedRelays.total} {t("A5aXNG9")}
                                 </span>
                               </p>
                               <div className="arrow"></div>
@@ -716,7 +713,7 @@ export default function Settings() {
                                                 changeRelayStatus("read", index)
                                               }
                                             >
-                                              Read only
+                                              {t("AANojFe")}
                                             </button>
                                             <button
                                               style={{
@@ -733,7 +730,7 @@ export default function Settings() {
                                                 )
                                               }
                                             >
-                                              Write only
+                                              {t("AHG1OTt")}
                                             </button>
                                             <button
                                               style={{
@@ -747,7 +744,7 @@ export default function Settings() {
                                                 changeRelayStatus("", index)
                                               }
                                             >
-                                              Read-Write
+                                              {t("AvnTmjx")}
                                             </button>
                                           </div>
                                         )}
@@ -775,7 +772,7 @@ export default function Settings() {
                                     JSON.stringify(tempUserRelays)
                                   }
                                 >
-                                  Save
+                                  {t("AZWpmir")}
                                 </button>
                               </div>
                             </>
@@ -799,24 +796,24 @@ export default function Settings() {
                           >
                             <div className="fx-centered fx-start-h">
                               <div className="content-s-24"></div>
-                              <p>Content moderation</p>
+                              <p>{t("Ayh6w9C")}</p>
                             </div>
                             <div className="arrow"></div>
                           </div>
                           {selectedTab === "moderation" && (
                             <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                               <div className="fx-scattered fit-container">
-                                <p>Muted list</p>
+                                <p>{t("AX2OYcg")}</p>
                                 <div
                                   className="btn-text-gray"
                                   style={{ marginRight: ".75rem" }}
                                   onClick={() => setShowMutedList(true)}
                                 >
-                                  Edit
+                                  {t("AsXohpb")}
                                 </div>
                               </div>
                               <div className="fx-scattered fit-container">
-                                <p>Media uploader</p>
+                                <p>{t("A1XtC0x")}</p>
                                 {customServer === false && (
                                   <div className="fx-centered">
                                     <Select
@@ -826,7 +823,7 @@ export default function Settings() {
                                     />
                                     <div
                                       className="round-icon-small round-icon-tooltip"
-                                      data-tooltip="Add server"
+                                      data-tooltip={t("ALyj7Li")}
                                       onClick={() => setCustomServer("")}
                                     >
                                       <div className="plus-sign"></div>
@@ -844,7 +841,7 @@ export default function Settings() {
                                 >
                                   <input
                                     type="text"
-                                    placeholder="Server path"
+                                    placeholder={t("A8PtjSa")}
                                     className="if ifs-full"
                                     style={{ height: "40px" }}
                                     value={customServer}
@@ -858,19 +855,19 @@ export default function Settings() {
                                     onClick={addNewServer}
                                     disabled={isLoading}
                                   >
-                                    {isLoading ? <LoadingDots /> : "Add server"}
+                                    {isLoading ? <LoadingDots /> : t("ALyj7Li")}
                                   </button>
                                   <button
                                     className="btn btn-red"
                                     onClick={() => setCustomServer(false)}
                                     disabled={isLoading}
                                   >
-                                    {isLoading ? <LoadingDots /> : "Cancel"}
+                                    {isLoading ? <LoadingDots /> : t("AB4BSCe")}
                                   </button>
                                 </div>
                               )}
                               <div className="fx-scattered fit-container">
-                                <p>Secure Direct Messaging</p>
+                                <p>{t("A3KL0O7")}</p>
                                 <div
                                   className={`toggle ${
                                     legacyDM ? "toggle-dim-gray" : ""
@@ -881,10 +878,24 @@ export default function Settings() {
                                 ></div>
                               </div>
                               <p className="gray-c p-medium">
-                                By enabling this, you will be using the new
-                                specification for the private messaging which is
-                                based on <a href="https://github.com/nostr-protocol/nips/blob/master/44.md" className="c1-c" style={{textDecoration: "underline"}} target="_blank">nip-44</a>, hence that disabling it will
-                                allow you to use the <a href="https://github.com/nostr-protocol/nips/blob/master/04.md" className="c1-c" style={{textDecoration: "underline"}} target="_blank">older version nip-04.</a>
+                                {t("AsTdJ5U")}{" "}
+                                <a
+                                  href="https://github.com/nostr-protocol/nips/blob/master/44.md"
+                                  className="c1-c"
+                                  style={{ textDecoration: "underline" }}
+                                  target="_blank"
+                                >
+                                  nip-44
+                                </a>
+                                {t("AgOr2Vf")}{" "}
+                                <a
+                                  href="https://github.com/nostr-protocol/nips/blob/master/04.md"
+                                  className="c1-c"
+                                  style={{ textDecoration: "underline" }}
+                                  target="_blank"
+                                >
+                                  nip-04.
+                                </a>
                               </p>
                             </div>
                           )}
@@ -906,7 +917,7 @@ export default function Settings() {
                           >
                             <div className="fx-centered fx-start-h">
                               <div className="wallet-24"></div>
-                              <p>Wallets</p>
+                              <p>{t("ACERu54")}</p>
                             </div>
                             <div className="arrow"></div>
                           </div>
@@ -916,12 +927,12 @@ export default function Settings() {
                             <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                               <div className="fit-container fx-scattered">
                                 <div>
-                                  <p className="gray-c">Add wallet</p>
+                                  <p className="gray-c">{t("A8fEwNq")}</p>
                                 </div>
                                 <div className="fx-centered">
                                   <div
                                     className="round-icon-small round-icon-tooltip"
-                                    data-tooltip="Add wallet"
+                                    data-tooltip={t("A8fEwNq")}
                                     onClick={() => setShowAddWallet(true)}
                                   >
                                     <div
@@ -973,12 +984,12 @@ export default function Settings() {
                                                 className="sticker sticker-gray-black fx-centered"
                                                 onClick={() =>
                                                   copyKey(
-                                                    "NWC secret",
+                                                    t("A6Pj02S"),
                                                     wallet.data
                                                   )
                                                 }
                                               >
-                                                Copy NWC
+                                                {t("Aoq0uKa")}
                                                 <div className="copy"></div>
                                               </div>
                                             )}
@@ -987,12 +998,12 @@ export default function Settings() {
                                                 className="sticker sticker-gray-black fx-centered"
                                                 onClick={() =>
                                                   copyKey(
-                                                    "Lightning address",
+                                                    t("ALR84Tq"),
                                                     wallet.entitle
                                                   )
                                                 }
                                               >
-                                                Copy address
+                                                {t("ArCMp34")}
                                                 <div className="copy"></div>
                                               </div>
                                             )}
@@ -1005,7 +1016,7 @@ export default function Settings() {
                                       {!wallet.active && (
                                         <div
                                           className="round-icon-small round-icon-tooltip"
-                                          data-tooltip="Switch wallet"
+                                          data-tooltip={t("Ar6TTrh")}
                                           onClick={() =>
                                             handleSelectWallet(wallet.id)
                                           }
@@ -1016,7 +1027,7 @@ export default function Settings() {
                                       {wallet.kind !== 1 && (
                                         <div
                                           className="round-icon-small round-icon-tooltip"
-                                          data-tooltip="Remove wallet"
+                                          data-tooltip={t("AawdN9R")}
                                           onClick={() =>
                                             setShowDeletionPopup(wallet)
                                           }
@@ -1049,7 +1060,7 @@ export default function Settings() {
                           >
                             <div className="fx-centered fx-start-h">
                               <div className="custom-24"></div>
-                              <p>Customization</p>
+                              <p>{t("ARS24Cc")}</p>
                             </div>
                             <div className="arrow"></div>
                           </div>
@@ -1057,10 +1068,10 @@ export default function Settings() {
                           {selectedTab === "customization" && (
                             <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                               <div className="fit-container">
-                                <p className="gray-c">General</p>
+                                <p className="gray-c">{t("Amm6e0Z")}</p>
                               </div>
                               <div className="fx-scattered fit-container">
-                                <p>On hover profile preview</p>
+                                <p>{t("AFVPHti")}</p>
                                 <div
                                   className={`toggle ${
                                     !userHoverPreview ? "toggle-dim-gray" : ""
@@ -1074,12 +1085,10 @@ export default function Settings() {
                               </div>
                               <hr />
                               <div className="fit-container">
-                                <p className="gray-c">
-                                  Home feed customization
-                                </p>
+                                <p className="gray-c">{t("AKjfaA8")}</p>
                               </div>
                               <div className="fx-scattered fit-container">
-                                <p>Show suggestions box</p>
+                                <p>{t("AZZ4XLg")}</p>
                                 <div
                                   className={`toggle ${
                                     homeContentSuggestion
@@ -1095,7 +1104,7 @@ export default function Settings() {
                               </div>
                               <hr />
                               <div className="fx-scattered fit-container">
-                                <p>Show suggested people to follow</p>
+                                <p>{t("AE7aj4C")}</p>
                                 <div
                                   className={`toggle ${
                                     userToFollowSuggestion
@@ -1111,7 +1120,7 @@ export default function Settings() {
                               </div>
                               <hr />
                               <div className="fx-scattered fit-container">
-                                <p>Show articles/notes suggestions</p>
+                                <p>{t("Ax8NFUb")}</p>
                                 <div
                                   className={`toggle ${
                                     contentSuggestion ? "toggle-dim-gray" : ""
@@ -1125,7 +1134,7 @@ export default function Settings() {
                               </div>
                               <hr />
                               <div className="fx-scattered fit-container">
-                                <p>Show suggested interests</p>
+                                <p>{t("ANiWe9M")}</p>
                                 <div
                                   className={`toggle ${
                                     interestSuggestion ? "toggle-dim-gray" : ""
@@ -1143,7 +1152,7 @@ export default function Settings() {
                                 className="fx-scattered fit-container fx-col fx-start-v"
                                 style={{ gap: 0 }}
                               >
-                                <p>Feed options</p>
+                                <p>{t("ABza23y")}</p>
                                 <div className="fit-container fx-centered fx-col">
                                   <DragDropContext onDragEnd={handleDragEnd}>
                                     <Droppable droppableId="set-carrousel">
@@ -1158,6 +1167,7 @@ export default function Settings() {
                                           }}
                                           className="box-pad-v-m fit-container fx-centered fx-start-h fx-start-v fx-col"
                                         >
+                                          {console.log(contentList)}
                                           {contentList.map((item, index) => {
                                             return (
                                               <Draggable
@@ -1184,10 +1194,11 @@ export default function Settings() {
                                                     className="fx-scattered fit-container sc-s-18 box-pad-h-s box-pad-v-s"
                                                   >
                                                     <p className="p-maj">
-                                                      {item.tab.replaceAll(
-                                                        "-",
-                                                        " "
-                                                      )}
+                                                      {
+                                                        contentCategoriesDN[
+                                                          item.tab
+                                                        ]
+                                                      }
                                                     </p>
                                                     <div className="fx-centered">
                                                       <div
@@ -1225,18 +1236,6 @@ export default function Settings() {
                                       )}
                                     </Droppable>
                                   </DragDropContext>
-
-                                  {/* {contentList.map((item, index) => {
-                                    return(
-                                      <div key={index} className="fx-scattered fit-container sc-s-18 box-pad-h-s box-pad-v-s">
-                                        <p className="p-caps">{item.tab}</p>
-                                        <div className="fx-centered">
-                                          {!item.isHidden && <div className="eye-closed"></div>}
-                                          {item.isHidden && <div className="eye-opened"></div>}
-                                        </div>
-                                      </div>
-                                    )
-                                  })} */}
                                 </div>
                               </div>
                             </div>
@@ -1259,12 +1258,12 @@ export default function Settings() {
                           >
                             <div className="fx-centered fx-start-h">
                               <div className="theme-24"></div>
-                              <p>Appearance</p>
+                              <p>{t("A1iiDWU")}</p>
                             </div>
                             <div className="arrow"></div>
                           </div>
                           {selectedTab === "theme" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                            <div className="fit-container fx-col fx-centered box-pad-h-m box-pad-v-m ">
                               <div className="fx-scattered fit-container">
                                 <DtoLToggleButton />
                               </div>
@@ -1279,11 +1278,11 @@ export default function Settings() {
                         >
                           <div className="fx-centered fx-start-h">
                             <div className="cup-24"></div>
-                            <p>Yaki chest</p>
+                            <p>{t("ACALoWH")}</p>
                           </div>
                           {yakiChestStats && isYakiChestLoaded && (
                             <div className="fx-centered">
-                              <p className="green-c p-medium">Connected</p>
+                              <p className="green-c p-medium">{t("A5aXNG9")}</p>
                               <div
                                 style={{
                                   minWidth: "8px",
@@ -1300,7 +1299,7 @@ export default function Settings() {
                                 className="btn btn-small btn-normal"
                                 onClick={() => setShowYakiChest(true)}
                               >
-                                Connect
+                                {t("Azb0lto")}
                               </button>
                             </div>
                           )}
@@ -1316,7 +1315,7 @@ export default function Settings() {
                         >
                           <div className="fx-centered fx-start-h">
                             <div className="logout-24"></div>
-                            <p>Logout</p>
+                            <p>{t("AyXwdfE")}</p>
                           </div>
                         </div>
                         <div
@@ -1328,8 +1327,7 @@ export default function Settings() {
                             className="p-centered gray-c"
                             style={{ maxWidth: "400px" }}
                           >
-                            We strive to make the best out of Nostr, support us
-                            below or send us your valuable feedback.
+                            {t("AFZ1jAD")}
                           </p>
                           <p className="c1-c">
                             v{process.env.REACT_APP_APP_VERSION}
@@ -1350,7 +1348,7 @@ export default function Settings() {
                             <a href="mailto:info@yakihonne.com">
                               <div
                                 className="round-icon round-icon-tooltip"
-                                data-tooltip="Send us your feedback"
+                                data-tooltip={t("AheSXrs")}
                               >
                                 <div className="env"></div>
                               </div>
@@ -1378,6 +1376,7 @@ export default function Settings() {
 
 const MutedList = ({ exit }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userRelays = useSelector((state) => state.userRelays);
   const userKeys = useSelector((state) => state.userKeys);
   const userMutedList = useSelector((state) => state.userMutedList);
@@ -1422,7 +1421,7 @@ const MutedList = ({ exit }) => {
           <div></div>
         </div>
         {userMutedList.length > 0 && (
-          <h4 className="p-centered box-marg-s">Muted list</h4>
+          <h4 className="p-centered box-marg-s">{t("AX2OYcg")}</h4>
         )}
         {userMutedList.length > 0 && (
           <div
@@ -1449,10 +1448,8 @@ const MutedList = ({ exit }) => {
             style={{ height: "20vh" }}
           >
             <div className="user-24"></div>
-            <p>No muted list</p>
-            <p className="gray-c p-medium p-centered">
-              The muted list is empty
-            </p>
+            <p>{t("ACzeK4g")}</p>
+            <p className="gray-c p-medium p-centered">{t("Ap5S8lY")}</p>
           </div>
         )}
       </div>
@@ -1460,154 +1457,19 @@ const MutedList = ({ exit }) => {
   );
 };
 
-const CoverUploader = ({ exit, oldThumbnail, uploadCover }) => {
+const DeletionPopUp = ({ exit, handleDelete, wallet }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
-  const [thumbnail, setThumbnail] = useState("");
-  const [thumbnailPrev, setThumbnailPrev] = useState(oldThumbnail || "");
-  const [thumbnailUrl, setThumbnailUrl] = useState(oldThumbnail || "");
 
-  const handleImageUpload = (e) => {
-    let file = e.target.files[0];
-    if (file && !file.type.includes("image/")) {
-      dispatch(
-        setToast({
-          type: 2,
-          desc: "Image type is unsupported!",
-        })
-      );
-      return;
-    }
-    if (file) {
-      setThumbnail(file);
-      setThumbnailPrev(URL.createObjectURL(file));
-      setThumbnailUrl("");
-    }
+  const copyKey = (keyType, key) => {
+    navigator.clipboard.writeText(key);
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `${keyType} 👏`,
+      })
+    );
   };
-
-  const initThumbnail = async () => {
-    setThumbnailPrev("");
-    setThumbnailUrl("");
-    setThumbnail("");
-  };
-
-  const handleThumbnailValue = (e) => {
-    let value = e.target.value;
-    setThumbnailUrl(value);
-    setThumbnailPrev(value);
-    setThumbnail("");
-  };
-
-  const save = () => {
-    if (!thumbnail && !thumbnailUrl) return;
-    if (thumbnail) {
-      uploadCover(true, thumbnail);
-      exit();
-      return;
-    }
-    uploadCover(false, thumbnailUrl);
-    exit();
-    return;
-  };
-
-  return (
-    <div className="fixed-container fx-centered">
-      <div
-        className="sc-s box-pad-v box-pad-h fx-centered fx-col"
-        style={{ position: "relative", width: "min(100%, 500px)" }}
-      >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
-        <div className="fit-container box-pad-h box-marg-s fx-centered">
-          <h4>Refresh your cover image</h4>
-        </div>
-        <div
-          className="fit-container fx-centered fx-col box-pad-h sc-s-d bg-img cover-bg"
-          style={{
-            position: "relative",
-            height: "200px",
-            backgroundImage: `url(${thumbnailPrev})`,
-            borderStyle: thumbnailPrev ? "none" : "dotted",
-          }}
-        >
-          {thumbnailPrev && (
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                position: "absolute",
-                right: "16px",
-                top: "16px",
-                backgroundColor: "var(--dim-gray)",
-                borderRadius: "var(--border-r-50)",
-                zIndex: 10,
-              }}
-              className="fx-centered pointer"
-              onClick={initThumbnail}
-            >
-              <div className="trash"></div>
-            </div>
-          )}
-
-          {!thumbnailPrev && (
-            <>
-              <div className="image-24"></div>
-              <p className="gray-c p-medium">(thumbnail)</p>
-            </>
-          )}
-        </div>
-        <div className="fit-container fx-centered">
-          <input
-            type="text"
-            className="if ifs-full"
-            placeholder="Image url..."
-            value={thumbnailUrl}
-            onChange={handleThumbnailValue}
-          />
-          <label
-            htmlFor="image-up"
-            className="fit-container fx-centered fx-col box-pad-h sc-s pointer bg-img cover-bg"
-            style={{
-              position: "relative",
-              minHeight: "50px",
-              minWidth: "50px",
-              maxWidth: "50px",
-            }}
-          >
-            <div className="upload-file-24"></div>
-            <input
-              type="file"
-              id="image-up"
-              style={{
-                width: "100%",
-                height: "100%",
-                position: "absolute",
-                left: 0,
-                top: 0,
-                opacity: 0,
-              }}
-              value={thumbnail.fileName}
-              onChange={handleImageUpload}
-              // disabled={thumbnail}
-              className="pointer"
-              accept="image/jpg,image/png,image/gif"
-            />
-          </label>
-        </div>
-        <button
-          className={`btn ${
-            !thumbnail && !thumbnailUrl ? "btn-disabled" : "btn-normal"
-          } btn-full`}
-          onClick={save}
-        >
-          Save changes
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const DeletionPopUp = ({ exit, handleDelete }) => {
   return (
     <section className="fixed-container fx-centered box-pad-h">
       <section
@@ -1625,16 +1487,22 @@ const DeletionPopUp = ({ exit, handleDelete }) => {
         >
           <div className="warning"></div>
         </div>
-        <h3 className="p-centered">Delete wallet?</h3>
-        <p className="p-centered gray-c box-pad-v-m">
-          You're about to delete this wallet, do you wish to proceed?
-        </p>
+        <h3 className="p-centered">{t("APJU882")}</h3>
+        <p className="p-centered gray-c box-pad-v-s">{t("AOlHR1d")}</p>
+        <div
+          className={"fx-scattered if pointer fit-container dashed-onH"}
+          style={{ borderStyle: "dashed" }}
+          onClick={() => copyKey(t("A6Pj02S"), wallet.data)}
+        >
+          <p>{shortenKey(wallet.data, 20)}</p>
+          <div className="copy-24"></div>
+        </div>
         <div className="fx-centered fit-container">
           <button className="fx btn btn-gst-red" onClick={handleDelete}>
-            delete
+            {t("Almq94P")}
           </button>
           <button className="fx btn btn-red" onClick={exit}>
-            cancel
+            {t("AB4BSCe")}
           </button>
         </div>
       </section>
@@ -1643,6 +1511,7 @@ const DeletionPopUp = ({ exit, handleDelete }) => {
 };
 
 const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
+  const { t } = useTranslation();
   const [showList, setShowList] = useState(false);
   const [searchedRelay, setSearchedRelay] = useState("");
 
@@ -1682,7 +1551,7 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
       onClick={() => setShowList(true)}
     >
       <input
-        placeholder="Search or add relay"
+        placeholder={t("ALPrAZz")}
         className="if ifs-full"
         style={{ height: "var(--40)" }}
         value={searchedRelay}
@@ -1730,6 +1599,7 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
 };
 
 const RelaysInfo = ({ url, exit }) => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [relayInfo, setRelayInfo] = useState(false);
 
@@ -1790,7 +1660,7 @@ const RelaysInfo = ({ url, exit }) => {
               }}
             >
               <div className="fx-scattered fit-container">
-                <p>Owner</p>
+                <p>{t("AD6LbxW")}</p>
                 <div className="fx-centered">
                   {relayInfo.owner && (
                     <p>
@@ -1810,24 +1680,24 @@ const RelaysInfo = ({ url, exit }) => {
               </div>
               <hr />
               <div className="fx-scattered fit-container">
-                <p style={{ minWidth: "max-content" }}>Contact</p>
+                <p style={{ minWidth: "max-content" }}>{t("ADSorr1")}</p>
                 <p className="p-one-line">{relayInfo.contact || "N/A"}</p>
               </div>
               <hr />
               <div className="fx-scattered fit-container">
-                <p>Software</p>
+                <p>{t("Software")}</p>
                 <p>{relayInfo.software.split("/")[4]}</p>
               </div>
               <hr />
               <div className="fx-scattered fit-container">
-                <p>Version</p>
+                <p>{t("ARDY1XM")}</p>
                 <p>{relayInfo.version}</p>
               </div>
               <hr />
             </div>
             <div className="box-pad-v-m fx-centered fx-col">
               <p className="gray-c p-centered p-medium box-marg-s">
-                Supported nips
+                {t("AVabTbf")}
               </p>
               <div className="fx-centered fx-wrap ">
                 {relayInfo.supported_nips.map((nip) => {

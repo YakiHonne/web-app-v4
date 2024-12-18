@@ -86,7 +86,6 @@ export default function SmallButtonDropDown({
               </p>
             );
           })}
-
           {showSettings && (
             <Link
               to="/settings"

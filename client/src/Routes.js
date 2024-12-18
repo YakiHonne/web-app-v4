@@ -3,14 +3,10 @@ import React from "react";
 import Home from "./Pages/MainApp/Home";
 import Writing from "./Pages/MainApp/WritingArticle";
 import Article from "./Pages/MainApp/Article";
-import Curations from "./Pages/MainApp/Curations";
 import Settings from "./Pages/MainApp/Settings";
 import User from "./Pages/MainApp/User";
 import Curation from "./Pages/MainApp/Curation";
 import FourOFour from "./Pages/FourOFour";
-import SearchTag from "./Pages/MainApp/SearchTag";
-import Bookmarks from "./Pages/MainApp/Bookmarks";
-import FlashNews from "./Pages/MainApp/FlashNews";
 import YakiMobileApp from "./Pages/YakiMobileApp";
 import YMARedirection from "./Pages/YMARedirection";
 import UN from "./Pages/MainApp/UncensoredNotes";
@@ -19,8 +15,6 @@ import YakiFN from "./Pages/YakiFN";
 import Privacy from "./Pages/Privacy";
 import Terms from "./Pages/Terms";
 import DMS from "./Pages/MainApp/DMS";
-import Videos from "./Pages/MainApp/Videos";
-import Articles from "./Pages/MainApp/Articles";
 import Video from "./Pages/MainApp/Video";
 import UserLevels from "./Pages/MainApp/UserLevels";
 import YakiLevelingFeature from "./Pages/YakiLevelingFeature";
@@ -60,7 +54,6 @@ const routes = [
   { path: "/article/:id", element: <Article /> },
   { path: "/article/:AuthNip05/:ArtIdentifier", element: <Article /> },
   { path: "/users/:user_id", element: <User /> },
-  { path: "/tags/:tag", element: <SearchTag /> },
   { path: "/verify-notes", element: <UN /> },
   { path: "/verify-notes/:nevent", element: <UNEvent /> },
   { path: "/videos/:id", element: <Video /> },

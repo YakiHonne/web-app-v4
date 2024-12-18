@@ -19,9 +19,11 @@ import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function SmartWidgets() {
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const [comWidgets, setComWidgets] = useState([]);
   const [myWidgets, setMyWidgets] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -55,28 +57,12 @@ export default function SmartWidgets() {
               {
                 ...parsedContent,
                 metadata,
-                // ...event,
                 author: getEmptyuserMetadata(event.pubkey),
               },
               ...prev,
             ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
           });
         }
-        // if (contentSource === "self") {
-        //   setMyWidgets((prev) => {
-        //     let element = prev.find((widget) => widget.id === event.id);
-        //     if (element) return prev;
-        //     return [
-        //       {
-        //         ...parsedContent,
-        //         metadata,
-        //         ...event,
-        //         author: getEmptyuserMetadata(event.pubkey),
-        //       },
-        //       ...prev,
-        //     ].sort((el_1, el_2) => el_2.created_at - el_1.created_at);
-        //   });
-        // }
       } catch (err) {
         console.log(err);
         setIsLoading(false);
@@ -240,50 +226,32 @@ export default function SmartWidgets() {
         <div className="main-container">
           <SidebarNOSTR />
           <main className="main-page-nostr-container">
-            <div className="fx-centered fit-container fx-start-h fx-start-v" style={{gap: 0}}>
+            <div
+              className="fx-centered fit-container fx-start-h fx-start-v"
+              style={{ gap: 0 }}
+            >
               <div
                 className="box-pad-h-m fx-col fx-centered fx-start-h fx-start-v main-middle"
-                style={{  gap: 0 }}
+                style={{ gap: 0 }}
               >
                 <div
                   className="fit-container sticky fx-centered fx-col"
                   style={{ rowGap: "16px" }}
                 >
                   <div className="fit-container fx-scattered ">
-                    <h4>Smart widgets</h4>
+                    <h4>{t("A2mdxcf")}</h4>
                     <Link to="/smart-widget-checker">
                       <div
                         className="round-icon-small round-icon-tooltip"
-                        data-tooltip="Checker"
+                        data-tooltip={t("Ax1rvqR")}
                       >
                         <div className="smart-widget-checker"></div>
                       </div>
                     </Link>
-                    {/* <div
-                      className={`list-item fx-centered fx ${
-                        contentSource === "community"
-                          ? "selected-list-item"
-                          : ""
-                      }`}
-                      onClick={() => handleContentSource("community")}
-                    >
-                      <p>Community</p>
-                    </div>
-                    {userKeys && (
-                      <div
-                        className={`list-item fx-centered fx ${
-                          contentSource === "self" ? "selected-list-item" : ""
-                        }`}
-                        onClick={() => handleContentSource("self")}
-                      >
-                        <p>My smart widget</p>
-                      </div>
-                    )} */}
                   </div>
                 </div>
                 <div
                   className={`fit-container fx-col fx-centered fx-start-h fx-start-v`}
-                  // style={{ width: "min(100%,700px)" }}
                 >
                   {contentSource === "community" &&
                     comWidgets.map((widget) => {
@@ -311,7 +279,7 @@ export default function SmartWidgets() {
                     className="fit-container fx-centered"
                     style={{ height: "30vh" }}
                   >
-                    <p className="gray-c">Loading</p>
+                    <p className="gray-c">{t("AKvHyxG")}</p>
                     <LoadingDots />
                   </div>
                 )}
@@ -326,7 +294,7 @@ export default function SmartWidgets() {
                           extrasRef.current?.getBoundingClientRect().height || 0
                         }px)`
                       : 0,
-                      padding: '0 1rem'
+                  padding: "0 1rem",
                 }}
                 className={`fx-centered  fx-wrap fx-start-v  box-pad-v sticky extras-homepage`}
                 ref={extrasRef}
@@ -341,10 +309,10 @@ export default function SmartWidgets() {
                   >
                     {" "}
                   </div>
-                  <h4>What are smart widgets?</h4>
-                  <p className="gray-c">We got your back! Check our demo</p>
+                  <h4>{t("AuIjxur")}</h4>
+                  <p className="gray-c">{t("AoDLI81")}</p>
                   <Link target="_blank" to={"/yakihonne-smart-widgets"}>
-                    <button className="btn btn-normal">Read more</button>
+                    <button className="btn btn-normal">{t("AArGqN7")}</button>
                   </Link>
                 </div>
                 {notes.length > 0 && (
@@ -357,7 +325,7 @@ export default function SmartWidgets() {
                     }}
                   >
                     <div className="fx-centered fx-start-h">
-                      <h4>Notes with widgets</h4>
+                      <h4>{t("AUz9szc")}</h4>
                     </div>
                     {notes.map((note) => {
                       return <NoteCard note={note} key={note.id} />;
@@ -404,7 +372,9 @@ const NoteCard = ({ note }) => {
           <div className="share-icon"></div>
         </Link>
       </div>
-      <div className="fit-container" style={{wordBreak: "break-word"}}>{note.parsedContent}</div>
+      <div className="fit-container" style={{ wordBreak: "break-word" }}>
+        {note.parsedContent}
+      </div>
     </div>
   );
 };
@@ -415,7 +385,6 @@ const AuthorPreview = ({ author, size = "big" }) => {
       <UserProfilePicNOSTR
         size={size === "big" ? 40 : 30}
         mainAccountUser={false}
-        
         user_id={author.pubkey}
         img={author.picture}
         metadata={author}

@@ -620,9 +620,9 @@ function mergeConsecutivePElements(arr) {
 
       if (
         prev?.type !== "string" &&
-        prev.props?.src &&
+        prev?.props?.src &&
         next?.type !== "string" &&
-        next.props?.src
+        next?.props?.src
       ) {
         return false;
       }
@@ -1172,6 +1172,18 @@ const getArticleDraft = () => {
     return getDefaultArtDraft("");
   }
 };
+const removeArticleDraft = () => {
+  let nostkeys = getKeys();
+  let drafts = localStorage.getItem("art-drafts");
+  if (!(drafts && nostkeys)) return;
+  try {
+    drafts = JSON.parse(drafts);
+    let draft = drafts.filter((draft) => draft?.pubkey !== nostkeys.pub);
+    localStorage.setItem("art-drafts", JSON.stringify(draft));
+  } catch (err) {
+    return;
+  }
+};
 
 const updateArticleDraft = (data, pubkey_) => {
   let userKeys = getKeys();
@@ -1617,6 +1629,7 @@ export {
   getDefaultSettings,
   updateCustomSettings,
   getArticleDraft,
+  removeArticleDraft,
   updateArticleDraft,
   getNoteDraft,
   updateNoteDraft,

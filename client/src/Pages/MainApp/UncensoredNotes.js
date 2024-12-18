@@ -12,17 +12,19 @@ import UN from "../../Components/Main/UN";
 import Counter from "../../Components/Counter";
 import LoadingDots from "../../Components/LoadingDots";
 import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
-import LoginWithNostr from "../../Components/Main/LoginWithNostr";
 import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
 import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function UncensoredNotes() {
   const userKeys = useSelector((state) => state.userKeys);
   const userMutedList = useSelector((state) => state.userMutedList);
+
+  const { t } = useTranslation();
   const [flashNews, setFlashNews] = useState([]);
   const [myRewards, setMyRewards] = useState([]);
   const [rewards, setRewards] = useState([]);
@@ -223,7 +225,7 @@ export default function UncensoredNotes() {
                   ></div>
                   <div className="fx-centered fx-col fx-start-v">
                     <p className=" p-medium" style={{ color: "white" }}>
-                      Community wallet
+                      {t("Ay17eyW")}
                     </p>
                     <div className="fx-centered fx-end-v">
                       <h2 className="orange-c">{balance || "N/A"}</h2>
@@ -252,7 +254,7 @@ export default function UncensoredNotes() {
                         color: contentType === "new" ? "" : "var(--gray)",
                       }}
                     >
-                      New
+                      {t("ADOU7Ed")}
                     </div>
                     <div
                       onClick={() => handleContentType("nmh")}
@@ -263,7 +265,7 @@ export default function UncensoredNotes() {
                         color: contentType === "nmh" ? "" : "var(--gray)",
                       }}
                     >
-                      Needs your help
+                      {t("Ak8B1oL")}
                     </div>
                     <div
                       onClick={() => handleContentType("sealed")}
@@ -274,14 +276,14 @@ export default function UncensoredNotes() {
                         color: contentType === "sealed" ? "" : "var(--gray)",
                       }}
                     >
-                      Rated helpful
+                      {t("ALbnctt")}
                     </div>
                   </div>
                   <div className="fx-centered">
                     {!contentType && (
                       <div
                         className="round-icon round-icon-tooltip option"
-                        data-tooltip="Refresh"
+                        data-tooltip={t("AckKGvv")}
                         onClick={() => setTimestamp(Date.now())}
                       >
                         <div className="switch-arrows-24"></div>
@@ -289,7 +291,7 @@ export default function UncensoredNotes() {
                     )}
                     <div
                       className="round-icon round-icon-tooltip"
-                      data-tooltip="My rewards"
+                      data-tooltip={t("AXjyFcp")}
                       onClick={() => handleContentType("")}
                     >
                       <div className="cup-24"></div>
@@ -331,48 +333,45 @@ export default function UncensoredNotes() {
                       (userKeys.sec || userKeys.ext) &&
                       !myRewards.length && (
                         <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                          <h4>You have no rewards!</h4>
+                          <h4>{t("AEoE8CH")}</h4>
                           <p
                             className="gray-c p-centered"
                             style={{ maxWidth: "600px" }}
                           >
-                            Start rating peoples note or contribute to the
-                            community by writing uncensored notes,
+                            {t("A5nF77W")}
                           </p>
                           <Link to={"/"}>
                             <button className="btn btn-text-gray">
-                              See how you get rewarded
+                              {t("Aik5uGa")}
                             </button>
                           </Link>
                         </div>
                       )}
                     {!userKeys && (
                       <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                        <h4>Get rewarded!</h4>
+                        <h4>{t("AMxTRuK")}</h4>
                         <p
                           className="gray-c p-centered"
                           style={{ maxWidth: "600px" }}
                         >
-                          Login to your account so you can see your rewards for
-                          your community contribution
+                          {t("AX35a5g")}
                         </p>
                         <button
                           className="btn btn-normal"
                           onClick={() => redirectToLogin()}
                         >
-                          Login
+                          {t("AmOtzoL")}
                         </button>
                       </div>
                     )}
                     {userKeys && !userKeys.sec && !userKeys.ext && (
                       <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                        <h4>Not authorized!</h4>
+                        <h4>{t("ApmJsGe")}</h4>
                         <p
                           className="gray-c p-centered"
                           style={{ maxWidth: "600px" }}
                         >
-                          You must login to your account using your secrect key
-                          or using an extension to be able to see your rewards
+                          {t("AQ3K2E1")}
                         </p>
                         <h4 className="red-c">:(</h4>
                       </div>
@@ -384,7 +383,7 @@ export default function UncensoredNotes() {
                     className="fit-container fx-centered box-marg"
                     style={{ height: "30vh" }}
                   >
-                    <p className="gray-c">Loading</p>
+                    <p className="gray-c">{t("AKvHyxG")}</p>
                     <LoadingDots />
                   </div>
                 )}
@@ -423,7 +422,7 @@ export default function UncensoredNotes() {
                   ></div>
                   <div className="fx-centered fx-col fx-start-v">
                     <p className="p-medium" style={{ color: "white" }}>
-                      Community wallet
+                      {t("Ay17eyW")}
                     </p>
                     <div className="fx-centered fx-end-v">
                       <h2 className="orange-c">{balance || "N/A"}</h2>
@@ -438,30 +437,23 @@ export default function UncensoredNotes() {
                   >
                     {" "}
                   </div>
-                  <h4>Read about verifying notes</h4>
-                  <p className="gray-c">
-                    We've made an article for you to help you understand our
-                    purpose
-                  </p>
+                  <h4>{t("AtTBm8o")}</h4>
+                  <p className="gray-c">{t("A9YOTCh")}</p>
                   <Link
                     target="_blank"
                     to={
                       "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
                     }
                   >
-                    <button className="btn btn-normal">Read article</button>
+                    <button className="btn btn-normal">{t("Azigg0N")}</button>
                   </Link>
                 </div>
                 <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
-                  <h4>Verifying notes values</h4>
+                  <h4>{t("AlAlx8I")}</h4>
                   <ul>
-                    <li className="gray-c">
-                      Contribute to build understanding
-                    </li>
-                    <li className="gray-c">Act in good faith</li>
-                    <li className="gray-c">
-                      Be helpful, even to those who disagree
-                    </li>
+                    <li className="gray-c">{t("AEkp3uJ")}</li>
+                    <li className="gray-c">{t("ApW8X5d")}</li>
+                    <li className="gray-c">{t("AHc4MVZ")}</li>
                   </ul>
                   <Link
                     target="_blank"
@@ -469,7 +461,7 @@ export default function UncensoredNotes() {
                       "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
                     }
                   >
-                    <button className="btn btn-normal">Read article</button>
+                    <button className="btn btn-normal">{t("Azigg0N")}</button>
                   </Link>
                 </div>
                 <Footer />
@@ -484,6 +476,7 @@ export default function UncensoredNotes() {
 
 const FlashNewsCard = ({ data, refreshFlashNews }) => {
   const [content, setContent] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     setContent(data.note_tree);
@@ -520,7 +513,7 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
       >
         <div className="fit-container fx-scattered">
           <div className="fx-centered fx-start-h fit-container">
-            <p className="gray-c">By {data.author.name}</p>
+            <p className="gray-c">{t("AsXpL4b", { name: data.author.name })}</p>
             <p className="gray-c">&#x2022;</p>
             <p className="gray-c">
               <Date_
@@ -575,7 +568,7 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
               className="fx-scattered fit-container option btn pointer"
               style={{ border: "none", backgroundColor: "var(--dim-gray)" }}
             >
-              <p className="c1-c">See all attempts</p>
+              <p className="c1-c">{t("A34VVOo")}</p>
               <div
                 className="arrow"
                 style={{ transform: "rotate(-90deg)" }}
@@ -594,7 +587,7 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
                 ...data.sealed_note,
                 is_sealed: data.sealed_note ? true : false,
               },
-              label: "Uncensored note",
+              label: t("A8rd1CZ"),
             }}
           />
         </div>
@@ -612,6 +605,7 @@ const MyRewardedItem = ({
 }) => {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   let [claimPermission, setClaimPermission] = useState(false);
 
   const [showNote, setShowNote] = useState(false);
@@ -677,26 +671,25 @@ const MyRewardedItem = ({
               className="btn btn-normal"
               onClick={() => setShowNote(false)}
             >
-              close
+              {t("Ais0q3D")}
             </button>
           </div>
         )}
         <div className="box-pad-h-m box-pad-v-m sc-s-18 fx-scattered fit-container">
           <div className="fx-centered fx-start-v fx-col">
             <p className="gray-c p-medium">
-              On{" "}
               <Date_
                 toConvert={new Date(rwdItem.created_at * 1000)}
                 time={true}
               />
             </p>
             <p>
-              You have rated{" "}
+              {t("AdW30DE")}{" "}
               <span
                 className="btn-text-gray pointer"
                 onClick={() => setShowNote(true)}
               >
-                This note
+                {t("AmWgWKo")}
               </span>
             </p>
           </div>
@@ -710,7 +703,7 @@ const MyRewardedItem = ({
               }}
               disabled={true}
             >
-              Claim {getReward()} Sats in{" "}
+              {t("Ar79ZHS", { amount: getReward() })}
               <Counter
                 date={rwdItem.created_at}
                 onClick={() => setClaimPermission(true)}
@@ -724,17 +717,21 @@ const MyRewardedItem = ({
                   className="btn btn-small btn-normal"
                   onClick={claimReward}
                 >
-                  {isLoading ? <LoadingDots /> : `Claim ${getReward()} Sats`}
+                  {isLoading ? (
+                    <LoadingDots />
+                  ) : (
+                    t("A0FXaKJ", { amount: getReward() })
+                  )}
                 </button>
               )}
               {rwdItem.status === "in progress" && (
                 <div className="sticker sticker-normal sticker-orange">
-                  Request in progress
+                  {t("ABmRvXG")}
                 </div>
               )}
               {rwdItem.status === "granted" && (
                 <div className="sticker sticker-normal sticker-green">
-                  Granted
+                  {t("AXptzeX")}
                 </div>
               )}
             </>
@@ -747,14 +744,13 @@ const MyRewardedItem = ({
       <div className="box-pad-h-m box-pad-v-m sc-s-18 fx-scattered fit-container">
         <div className="fx-centered fx-start-v fx-col">
           <p className="gray-c p-medium">
-            On{" "}
             <Date_
               toConvert={new Date(rwdItem.created_at * 1000)}
               time={true}
             />
           </p>
           <p>
-            You have left a note on{" "}
+            {t("AI6tLWN")}{" "}
             <Link
               className="btn-text-gray"
               target="_blank"
@@ -762,22 +758,28 @@ const MyRewardedItem = ({
                 id: rwdItem.tags.find((tag) => tag[0] === "e")[1],
               })}`}
             >
-              This flash news
+              {t("ApZgcIc")}
             </Link>
           </p>
         </div>
         {rwdItem.status === "not found" && (
           <button className="btn btn-small btn-normal" onClick={claimReward}>
-            {isLoading ? <LoadingDots /> : `Claim ${getReward()} Sats`}
+            {isLoading ? (
+              <LoadingDots />
+            ) : (
+              t("A0FXaKJ", { amount: getReward() })
+            )}
           </button>
         )}
         {rwdItem.status === "in progress" && (
           <div className="sticker sticker-normal sticker-orange">
-            Request in progress
+            {t("ABmRvXG")}
           </div>
         )}
         {rwdItem.status === "granted" && (
-          <div className="sticker sticker-normal sticker-green">Granted</div>
+          <div className="sticker sticker-normal sticker-green">
+            {t("AXptzeX")}
+          </div>
         )}
       </div>
     );
@@ -797,42 +799,46 @@ const MyRewardedItem = ({
               className="btn btn-normal"
               onClick={() => setShowNote(false)}
             >
-              close
+              {t("Ais0q3D")}
             </button>
           </div>
         )}
         <div className="box-pad-h-m box-pad-v-m sc-s-18 fx-scattered fit-container">
           <div className="fx-centered fx-start-v fx-col">
             <p className="gray-c p-medium">
-              On{" "}
               <Date_
                 toConvert={new Date(rwdItem.created_at * 1000)}
                 time={true}
               />
             </p>
             <p>
-              You have rated{" "}
+              {t("AVz5uNT")}{" "}
               <span
                 className="btn-text-gray pointer"
                 onClick={() => setShowNote(true)}
               >
-                a note
-              </span>{" "}
-              which just got sealed
+                {t("AmWgWKo")}
+              </span>
             </p>
           </div>
           {rwdItem.status === "not found" && (
             <button className="btn btn-small btn-normal" onClick={claimReward}>
-              {isLoading ? <LoadingDots /> : `Claim ${getReward()} Sats`}
+              {isLoading ? (
+                <LoadingDots />
+              ) : (
+                t("A0FXaKJ", { amount: getReward() })
+              )}
             </button>
           )}
           {rwdItem.status === "in progress" && (
             <div className="sticker sticker-normal sticker-orange">
-              Request in progress
+              {t("ABmRvXG")}
             </div>
           )}
           {rwdItem.status === "granted" && (
-            <div className="sticker sticker-normal sticker-green">Granted</div>
+            <div className="sticker sticker-normal sticker-green">
+              {t("AXptzeX")}
+            </div>
           )}
         </div>
       </>
@@ -853,41 +859,46 @@ const MyRewardedItem = ({
               className="btn btn-normal"
               onClick={() => setShowNote(false)}
             >
-              close
+              {t("Ais0q3D")}
             </button>
           </div>
         )}
         <div className="box-pad-h-m box-pad-v-m sc-s-18 fx-scattered fit-container">
           <div className="fx-centered fx-start-v fx-col">
             <p className="gray-c p-medium">
-              On{" "}
               <Date_
                 toConvert={new Date(rwdItem.created_at * 1000)}
                 time={true}
               />
             </p>
             <p>
-              Your note has been rated helpful{" "}
+              {t("AnpKDbw")}{" "}
               <span
                 className="btn-text pointer"
                 onClick={() => setShowNote(true)}
               >
-                (see my note)
+                ({t("AmWgWKo")})
               </span>
             </p>
           </div>
           {rwdItem.status === "not found" && (
             <button className="btn btn-small btn-normal" onClick={claimReward}>
-              {isLoading ? <LoadingDots /> : `Claim ${getReward()} Sats`}
+              {isLoading ? (
+                <LoadingDots />
+              ) : (
+                t("A0FXaKJ", { amount: getReward() })
+              )}
             </button>
           )}
           {rwdItem.status === "in progress" && (
             <div className="sticker sticker-normal sticker-orange">
-              Request in progress
+              {t("ABmRvXG")}
             </div>
           )}
           {rwdItem.status === "granted" && (
-            <div className="sticker sticker-normal sticker-green">Granted</div>
+            <div className="sticker sticker-normal sticker-green">
+              {t("AXptzeX")}
+            </div>
           )}
         </div>
       </>
