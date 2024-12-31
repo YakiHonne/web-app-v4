@@ -5,11 +5,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { initiFirstLoginStats } from "../../Helpers/Controlers";
 import { setIsConnectedToYaki } from "../../Store/Slides/YakiChest";
 import { setToast } from "../../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 
 export default function LoginWithAPI({ exit }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (userKeys && !(userKeys.ext || userKeys.sec)) exit();
@@ -34,7 +35,7 @@ export default function LoginWithAPI({ exit }) {
         dispatch(
           setToast({
             type: 2,
-            desc: "An error occured while connecting, please try again.",
+            desc: t("AJY8vLC"),
           })
         );
       setIsLoading(false);
@@ -44,35 +45,31 @@ export default function LoginWithAPI({ exit }) {
       dispatch(
         setToast({
           type: 2,
-          desc: "An error occured while connecting, please try again.",
+          desc: t("AJY8vLC"),
         })
       );
     }
   };
 
-  // if (!(userKeys && (userKeys.ext || userKeys.sec))) return;
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div
         className="sc-s-18  fx-centered fx-col bg-sp slide-up"
         style={{ width: "min(100%, 400px)", padding: "2rem" }}
       >
-        <h4>Yakihonne's Chest!</h4>
-        <p className="gray-c p-centered">
-          Login to Yakihonne's chest, accumulate points by being active on the
-          platform and win precious awards!
-        </p>
+        <h4>{t("AzVvVt5")}</h4>
+        <p className="gray-c p-centered">{t("AbE7B3Z")}</p>
         <div className="chest"></div>
         <button
           className="btn btn-normal btn-full"
           onClick={connect}
           disabled={isLoading}
         >
-          {isLoading ? <LoadingDots /> : "Log in"}
+          {isLoading ? <LoadingDots /> : t("Amdv4GO")}
         </button>
         {!isLoading && (
           <button className="btn btn-text btn-small" onClick={exit}>
-            No, I'm good
+            {t("ATSr8gI")}
           </button>
         )}
       </div>

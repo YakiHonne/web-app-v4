@@ -56,7 +56,6 @@ export default function NProfilePreviewer({
     >
       <div className="fx-centered" style={{ columnGap: "12px" }}>
         <UserProfilePicNOSTR
-          
           img={author.picture}
           size={40}
           user_id={pubkey}

@@ -4,9 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
 import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function Repost({ isReposted, event, actions }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
   const [eventID, setEventID] = useState(false);
@@ -43,7 +45,7 @@ export default function Repost({ isReposted, event, actions }) {
       }
       if (isReposted) {
         setIsLoading(true);
-        let content = "This reaction will be deleted!";
+        let content = "This repost will be deleted!";
         let tags = [["e", isReposted.id]];
         let eventInitEx = await InitEvent(5, content, tags);
         if (!eventInitEx) {
@@ -89,7 +91,11 @@ export default function Repost({ isReposted, event, actions }) {
   };
 
   return (
-    <div className={"icon-tooltip"} data-tooltip="Repost" onClick={reactToNote}>
+    <div
+      className={"icon-tooltip"}
+      data-tooltip={t("AUvmzyU")}
+      onClick={reactToNote}
+    >
       <div
         className={isReposted ? "switch-arrows-bold-24" : "switch-arrows-24"}
       ></div>

@@ -12,12 +12,11 @@ import Date_ from "../../Components/Date_";
 import LoadingDots from "../../Components/LoadingDots";
 import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import ShareLink from "../../Components/ShareLink";
-import QuoteNote from "../../Components/Main/QuoteNote";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { getUser } from "../../Helpers/Controlers";
+import { getUser, translate } from "../../Helpers/Controlers";
 import useNoteStats from "../../Hooks/useNoteStats";
 import Like from "../../Components/Reactions/Like";
 import Repost from "../../Components/Reactions/Repost";
@@ -30,6 +29,7 @@ import { customHistory } from "../../Helpers/History";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import HistorySection from "../../Components/Main/HistorySection";
 import { useTranslation } from "react-i18next";
+import { getNoteTree } from "../../Helpers/Helpers";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function Note() {
@@ -47,8 +47,10 @@ export default function Note() {
   const [showHistory, setShowHistory] = useState(false);
   const [usersList, setUsersList] = useState(false);
   const [isNip05Verified, setIsNip05Verified] = useState(false);
-  const [showQuoteBox, setShowQuoteBox] = useState(false);
   const { postActions } = useNoteStats(note?.id, note?.pubkey);
+  const [isNoteTranslating, setIsNoteTranslating] = useState("");
+  const [translatedNote, setTranslatedNote] = useState("");
+  const [showTranslation, setShowTranslation] = useState(false);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -117,6 +119,9 @@ export default function Note() {
     if (note) setNote(false);
     if (isNip05Verified) setIsNip05Verified(false);
     setShowHistory(false);
+    setShowTranslation(false);
+    setTranslatedNote("");
+    setIsNoteTranslating(false);
     let isEvent = false;
     const id = nip19.decode(nevent)?.data.id || nip19.decode(nevent)?.data;
 
@@ -202,7 +207,37 @@ export default function Note() {
       })
     );
   };
-
+  const translateNote = async () => {
+    setIsNoteTranslating(true);
+    if (translatedNote) {
+      setShowTranslation(true);
+      setIsNoteTranslating(false);
+      return;
+    }
+    let res = await translate(note.content);
+    if (res.status === 500) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("AZ5VQXL"),
+        })
+      );
+    }
+    if (res.status === 400) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("AJeHuH1"),
+        })
+      );
+    }
+    if (res.status === 200) {
+      let noteTree = await getNoteTree(res.res);
+      setTranslatedNote(noteTree);
+      setShowTranslation(true);
+    }
+    setIsNoteTranslating(false);
+  };
   return (
     <>
       {usersList && (
@@ -213,9 +248,7 @@ export default function Note() {
           extras={usersList.extras}
         />
       )}
-      {showQuoteBox && (
-        <QuoteNote note={note} exit={() => setShowQuoteBox(false)} />
-      )}
+
       <div>
         {note && (
           <Helmet>
@@ -271,8 +304,8 @@ export default function Note() {
                           style={{ padding: "0 1rem" }}
                         >
                           <div
-                            className="arrow"
-                            style={{ rotate: "90deg" }}
+                            className="arrow arrow-back"
+                          
                           ></div>
                         </button>
                       </div>
@@ -347,7 +380,29 @@ export default function Note() {
                         )}
                       </div>
                       <div className="fit-container box-pad-h-m">
-                        {note.note_tree}
+                        {showTranslation ? translatedNote : note.note_tree}
+                      </div>
+                      <div
+                        className="fit-container box-pad-h-m"
+                        style={{ paddingTop: ".5rem" }}
+                      >
+                        {!isNoteTranslating && !showTranslation && (
+                          <p
+                            className="btn-text-gray pointer"
+                            onClick={translateNote}
+                          >
+                            {t("AdHV2qJ")}
+                          </p>
+                        )}
+                        {!isNoteTranslating && showTranslation && (
+                          <p
+                            className="btn-text-gray pointer"
+                            onClick={() => setShowTranslation(false)}
+                          >
+                            {t("AE08Wte")}
+                          </p>
+                        )}
+                        {isNoteTranslating && <LoadingDots />}
                       </div>
                       <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
                         <div

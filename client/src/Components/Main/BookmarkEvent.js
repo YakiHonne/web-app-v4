@@ -21,6 +21,7 @@ export default function BookmarkEvent({
     e: pubkey,
     t: extraData,
   };
+  
   const isBookmarked = useMemo(() => {
     return userKeys
       ? userBookmarks.find((bookmark) =>

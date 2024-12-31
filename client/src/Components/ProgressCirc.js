@@ -72,18 +72,6 @@ export default function ProgressCirc({
       data-tooltip={tooltip ? tooltip : ""}
       style={{ borderRadius: "var(--border-r-50)" }}
     >
-      {/* {size > 70 ? (
-        <div className="label fx-centered fx-col" style={{ rowGap: 0 }}>
-          {(percentage !== undefined) && <h5>{`${percentage || 0}%`}</h5>}
-          {!(percentage !== undefined) && <h5>N/A</h5>}
-          <p className="p-small gray-c">{label}</p>
-        </div>
-      ) : (
-        <div className="label fx-centered fx-col">
-          {(percentage !== undefined) && <h5>{`${percentage || 0}%`}</h5>}
-          {!(percentage !== undefined) && <h5>N/A</h5>}
-        </div>
-      )} */}
       {innerComp && <div className="label fx-centered fx-col">{innerComp}</div>}
       <svg width={size} height={size} viewBox={viewBox}>
         {back_circ && (

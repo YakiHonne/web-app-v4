@@ -12,6 +12,7 @@ import { setToast } from "../../Store/Slides/Publishers";
 import { compactContent } from "../../Helpers/Helpers";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function ContentSuggestionsCards({
   content,
@@ -20,6 +21,7 @@ export default function ContentSuggestionsCards({
 }) {
   const userKeys = useSelector((state) => state.userKeys);
   const [hide, setHide] = useState(localStorage.getItem("hsuggest2"));
+  const { t } = useTranslation();
 
   const handleHideSuggestion = () => {
     localStorage.setItem("hsuggest2", `${Date.now()}`);
@@ -39,13 +41,13 @@ export default function ContentSuggestionsCards({
       >
         <div className="fit-container fx-scattered box-pad-v-m">
           <h4 className=" box-pad-h-m">
-            {tag ? `People talk of ${tag}` : "People talk"}
+            {tag ? t("A2KtNoH", { tag }) : t("An8c8QZ")}
           </h4>
           {userKeys && (
             <OptionsDropdown
               options={[
                 <p className="gray-c" onClick={handleHideSuggestion}>
-                  Hide suggestions
+                  {t("A2qCLTm")}
                 </p>,
               ]}
               vertical={false}
@@ -73,12 +75,14 @@ export default function ContentSuggestionsCards({
       }}
     >
       <div className="fit-container fx-scattered box-pad-v-m">
-        <h4 className=" box-pad-h-m">{tag ? `In ${tag}` : "Suggestions"}</h4>
+        <h4 className=" box-pad-h-m">
+          {tag ? t("AJybDHv", { tag }) : t("AoO5zem")}
+        </h4>
         {userKeys && (
           <OptionsDropdown
             options={[
               <p className="gray-c" onClick={handleHideSuggestion}>
-                Hide suggestions
+                {t("A2qCLTm")}
               </p>,
             ]}
             vertical={false}
@@ -106,7 +110,7 @@ export default function ContentSuggestionsCards({
 
 const NoteCard = ({ event }) => {
   const dispatch = useDispatch();
-  const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   const [isNip05Verified, setIsNip05Verified] = useState(false);
@@ -134,7 +138,7 @@ const NoteCard = ({ event }) => {
     dispatch(
       setToast({
         type: 1,
-        desc: `Note ID was copied! 👏`,
+        desc: `${t("ARJICtS")} 👏`,
       })
     );
   };
@@ -159,16 +163,12 @@ const NoteCard = ({ event }) => {
             </p>
             {isNip05Verified && <div className="checkmark-c1"></div>}
           </div>
-          {/* <p className="gray-c p-medium">&#8226;</p>
-          <p className="gray-c p-medium">
-            <Date_ toConvert={new Date(event.created_at * 1000)} time={true} />
-          </p> */}
         </div>
         <OptionsDropdown
           vertical={false}
           options={[
             <div onClick={copyID} className="pointer">
-              <p>Copy note ID</p>
+              <p>{t("AYFAFKs")}</p>
             </div>,
           ]}
         />

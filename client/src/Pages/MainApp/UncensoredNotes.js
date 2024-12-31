@@ -14,7 +14,6 @@ import LoadingDots from "../../Components/LoadingDots";
 import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
 import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { useTranslation } from "react-i18next";
@@ -394,11 +393,8 @@ export default function UncensoredNotes() {
                   position: "sticky",
                   top: 0,
                 }}
-                className="box-pad-h-m  fx-centered fx-col extras-homepage"
+                className="box-pad-h-m box-pad-v-m fx-centered fx-col extras-homepage"
               >
-                <div className="sticky fit-container">
-                  <SearchbarNOSTR />
-                </div>
                 <div
                   className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
                   style={{

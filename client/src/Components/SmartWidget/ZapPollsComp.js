@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { nip19 } from "nostr-tools";
-import { checkForLUDS } from "../../Helpers/Encryptions";
+import { checkForLUDS, convertDate } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
 import { getNoteTree, getWallets, updateWallets } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
@@ -23,6 +23,7 @@ import { getUser, updateYakiChestStats } from "../../Helpers/Controlers";
 import { setToast } from "../../Store/Slides/Publishers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function ZapPollsComp({
   event,
@@ -35,6 +36,7 @@ export default function ZapPollsComp({
 }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [poll, setPoll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -250,7 +252,7 @@ export default function ZapPollsComp({
       dispatch(
         setToast({
           type: 3,
-          desc: "Please connect using a secret key or an extension to vote",
+          desc: t("A9L57eW"),
         })
       );
       return;
@@ -259,7 +261,7 @@ export default function ZapPollsComp({
       dispatch(
         setToast({
           type: 3,
-          desc: "The author of this poll does not have a lightning address",
+          desc: t("AekHS26"),
         })
       );
       return;
@@ -268,7 +270,7 @@ export default function ZapPollsComp({
       dispatch(
         setToast({
           type: 3,
-          desc: "The poll has been closed",
+          desc: t("AvjhH4g"),
         })
       );
       return;
@@ -277,7 +279,7 @@ export default function ZapPollsComp({
       dispatch(
         setToast({
           type: 3,
-          desc: "You cannot vote on your own poll",
+          desc: t("AxcgWsO"),
         })
       );
       return;
@@ -289,7 +291,7 @@ export default function ZapPollsComp({
       dispatch(
         setToast({
           type: 3,
-          desc: "You have already voted on this poll",
+          desc: t("AlfSF0h"),
         })
       );
       return;
@@ -301,13 +303,13 @@ export default function ZapPollsComp({
   if (!nevent && !event)
     return (
       <div className="fx-centered">
-        <p className="orange-c p-italic p-medium">No poll selected</p>
+        <p className="orange-c p-italic p-medium">{t("AsbcDvy")}</p>
       </div>
     );
   if ((isLoading && !poll) || !poll)
     return (
       <div className="fx-centered">
-        <p className="gray-c p-italic p-medium">Loading poll</p>
+        <p className="gray-c p-italic p-medium">{t("AKvHyxG")}</p>
         <LoadingDots />
       </div>
     );
@@ -343,11 +345,15 @@ export default function ZapPollsComp({
             style={{ position: "relative", zIndex: 10 }}
           >
             <div>
-              <p className="gray-c ">{poll.options.length} options</p>
+              <p className="gray-c ">
+                {t("AZDLpFt", { count: poll.options.length })}
+              </p>
             </div>
             <div
               className="round-icon-small round-icon-tooltip"
-              data-tooltip={`Stats per ${percentageType}`}
+              data-tooltip={t(
+                percentageType === "user" ? "AL9yjtS" : "AcAPQ8H"
+              )}
               onClick={() =>
                 percentageType === "user"
                   ? setPercentageType("zaps")
@@ -380,8 +386,6 @@ export default function ZapPollsComp({
                     isVoted &&
                     isVoted == index &&
                     !isVotesLoading &&
-                    // isStatsShowing == index &&
-                    // !isVotesLoading &&
                     isStatsShowing
                       ? `1px solid ${
                           options_foreground_color || "var(--orange-main)"
@@ -401,7 +405,6 @@ export default function ZapPollsComp({
                     left: 0,
                     top: 0,
                     height: "100%",
-                    // width: edit ? "30%" : `${percentage}%`,
                     width: edit
                       ? "30%"
                       : isVoted || poll.pubkey === userKeys.pub
@@ -431,7 +434,7 @@ export default function ZapPollsComp({
           <div className="fit-container fx-scattered">
             {!isStatsShowing && (
               <button className="btn btn-text btn-small" onClick={LoadStats}>
-                Show stats
+                {t("AeIWccN")}
               </button>
             )}
             {!isVotesLoading && (
@@ -441,7 +444,8 @@ export default function ZapPollsComp({
                     closingTime.status ||
                     poll.pubkey === userKeys.pub) && (
                     <p className="orange-c p-medium box-pad-h-m">
-                      {votes.length} <span className="gray-c">votes</span>
+                      {votes.length}{" "}
+                      <span className="gray-c">{t("AWXfzUx")}</span>
                     </p>
                   )}
                 {isStatsShowing &&
@@ -449,7 +453,7 @@ export default function ZapPollsComp({
                   !closingTime.status &&
                   poll.pubkey !== userKeys.pub && (
                     <p className="gray-c p-medium box-pad-h-m p-italic">
-                      Your vote is required to see the stats
+                      {t("AQFZHEB")}
                     </p>
                   )}
               </>
@@ -461,20 +465,16 @@ export default function ZapPollsComp({
             )}
             {closingTime.time && !closingTime.status && (
               <p className="gray-c p-medium">
-                Close at{" "}
-                <Date_
-                  toConvert={new Date(closingTime.time * 1000)}
-                  time={true}
-                />
+                {t("ASGLzji", {
+                  date: convertDate(new Date(closingTime.time * 1000)),
+                })}
               </p>
             )}
             {closingTime.time && closingTime.status && (
               <p className="red-c p-medium p-italic">
-                Closed at{" "}
-                <Date_
-                  toConvert={new Date(closingTime.time * 1000)}
-                  time={true}
-                />
+                {t("AfPxJDW", {
+                  date: convertDate(new Date(closingTime.time * 1000)),
+                })}
               </p>
             )}
           </div>
@@ -500,6 +500,7 @@ const Cashier = ({
   isVoted,
 }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const userMetadata = useSelector((state) => state.userMetadata);
   const [amount, setAmount] = useState(min !== null ? min : 1);
@@ -532,7 +533,7 @@ const Cashier = ({
       dispatch(
         setToast({
           type: 3,
-          desc: "You have already voted on this poll",
+          desc: t("AlfSF0h"),
         })
       );
       exit();
@@ -542,7 +543,7 @@ const Cashier = ({
       dispatch(
         setToast({
           type: 3,
-          desc: "You cannot vote on your own poll",
+          desc: t("AxcgWsO"),
         })
       );
       exit();
@@ -551,8 +552,8 @@ const Cashier = ({
   }, [isVoted, isVotesLoading]);
 
   const predefined_amounts = [
-    { amount: min, entitle: "Min sats" },
-    { amount: max, entitle: "Max sats" },
+    { amount: min, entitle: t("AEm0kT5") },
+    { amount: max, entitle: t("APpaAQM") },
   ];
 
   const onConfirmation = async () => {
@@ -562,7 +563,7 @@ const Cashier = ({
         dispatch(
           setToast({
             type: 2,
-            desc: "User is not connected or amount is null!",
+            desc: t("AbnA22A"),
           })
         );
         return;
@@ -593,7 +594,7 @@ const Cashier = ({
         dispatch(
           setToast({
             type: 2,
-            desc: "Something went wrong when processing payment!",
+            desc: t("AZ43zpG"),
           })
         );
         return;
@@ -646,7 +647,7 @@ const Cashier = ({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -664,7 +665,7 @@ const Cashier = ({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -691,7 +692,7 @@ const Cashier = ({
     dispatch(
       setToast({
         type: 1,
-        desc: `LNURL was copied! 👏`,
+        desc: `${t("AS0m8W5")} 👏`,
       })
     );
   };
@@ -768,7 +769,7 @@ const Cashier = ({
         }}
       >
         <div className="fx-centered">
-          <p className="gray-c p-medium">Loading stats</p>
+          <p className="gray-c p-medium">{t("AKvHyxG")}</p>
           <LoadingDots />
         </div>
       </div>
@@ -803,11 +804,7 @@ const Cashier = ({
         </div>
         <div className="fx-centered box-marg-s">
           <div className="fx-centered fx-col">
-            <UserProfilePicNOSTR
-              size={54}
-              mainAccountUser={true}
-              
-            />
+            <UserProfilePicNOSTR size={54} mainAccountUser={true} />
             <p className="gray-c p-medium">{userMetadata.name}</p>
           </div>
           <div style={{ position: "relative", width: "30%" }}>
@@ -830,7 +827,6 @@ const Cashier = ({
               size={54}
               img={recipientInfo.img || recipientInfo.picture}
               mainAccountUser={false}
-              
             />
             <p className="gray-c p-medium">{recipientInfo.name}</p>
           </div>
@@ -842,7 +838,7 @@ const Cashier = ({
             {forContent && (
               <div className="fit-container sc-s-18 box-pad-h-m box-pad-v-m">
                 <p>
-                  <span className="gray-c">You vote for: </span>
+                  <span className="gray-c">{t("A8E5m7a")} </span>
                   {forContent.option}
                 </p>
               </div>
@@ -858,7 +854,7 @@ const Cashier = ({
                   onClick={() => setShowWalletList(!showWalletsList)}
                 >
                   <div>
-                    <p className="gray-c p-medium">Send with</p>
+                    <p className="gray-c p-medium">{t("A7r9XS1")}</p>
                     <p>{selectedWallet.entitle}</p>
                   </div>
                   <div className="arrow"></div>
@@ -868,7 +864,6 @@ const Cashier = ({
                 <div
                   className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v fx-start-h fit-container"
                   style={{
-                    // width: "400px",
                     backgroundColor: "var(--c1-side)",
                     position: "absolute",
                     right: "0",
@@ -880,7 +875,7 @@ const Cashier = ({
                   }}
                 >
                   <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
-                    Connected wallets
+                    {t("AnXYtQy")}
                   </p>
                   {wallets.map((wallet) => {
                     return (
@@ -922,7 +917,7 @@ const Cashier = ({
               <input
                 type="number"
                 className="if ifs-full"
-                placeholder="Amount"
+                placeholder={t("AcDgXKI")}
                 value={amount}
                 onChange={handleCustomAmount}
                 style={{ borderColor: amountWarning ? "var(--red-main)" : "" }}
@@ -936,10 +931,8 @@ const Cashier = ({
               {amountWarning && (
                 <div className="box-pad-h-s box-pad-v-s fx-centered">
                   <p className="p-medium red-c">
-                    {(min !== null || max !== null) &&
-                      "The value should be between the min and max sats amount"}
-                    {!(min !== null && max !== null) &&
-                      "A minimum amount of 1 is required"}
+                    {(min !== null || max !== null) && t("ABioe4x")}
+                    {!(min !== null && max !== null) && t("AUytlmo")}
                   </p>
                 </div>
               )}
@@ -970,7 +963,7 @@ const Cashier = ({
               } btn-full`}
               onClick={onConfirmation}
             >
-              {lnbcAmount ? `Pay ${amount} sats` : "Start confirmation"}
+              {lnbcAmount ? t("AloNXcI", { amount }) : t("AMMzniY")}
             </button>
           </div>
         )}
@@ -990,7 +983,7 @@ const Cashier = ({
               <div className="copy-24"></div>
             </div>
             <div className="fit-container fx-centered">
-              <p className="gray-c p-medium">Waiting for response</p>
+              <p className="gray-c p-medium">{t("A1ufjMM")}</p>
               <LoadingDots />
             </div>
           </div>
@@ -1001,12 +994,12 @@ const Cashier = ({
             style={{ height: "16vh" }}
           >
             <div className="box-pad-v-s"></div>
-            <h4>Payment succeeded!</h4>
+            <h4>{t("ACDUO1d")}</h4>
             <p className="gray-c box-pad-v-s">
-              You have tipped <span className="orange-c">{amount}</span> sats
+              {t("ALEgwqA")} <span className="orange-c">{amount} sats</span>
             </p>
             <button className="btn btn-normal" onClick={exit}>
-              Done!
+              {t("Acglhzb")}
             </button>
           </div>
         )}

@@ -8,6 +8,7 @@ import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useDispatch, useSelector } from "react-redux";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function AddArticlesToCuration({
   curation,
@@ -20,6 +21,7 @@ export default function AddArticlesToCuration({
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userMetadata);
 
+  const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [NostrPosts, setNostrPosts] = useState([]);
   const [searchedPostsByNaddr, setSearchedPostByNaddr] = useState([]);
@@ -30,7 +32,7 @@ export default function AddArticlesToCuration({
   const [contentFrom, setContentFrom] = useState("relays");
   const [initScreen, setInitScreen] = useState(true);
   const [lastEventTime, setLastEventTime] = useState(undefined);
-  const label = postKind === 30023 ? "article" : "video";
+  const arts = postKind === 30023;
 
   useEffect(() => {
     getPostsInNOSTR();
@@ -284,7 +286,7 @@ export default function AddArticlesToCuration({
         dispatch(
           setToast({
             type: 2,
-            desc: `Could not found the ${label}.`,
+            desc: t(arts ? "A7ggsnQ" : "AzAG7f8"),
           })
         );
       }
@@ -293,7 +295,7 @@ export default function AddArticlesToCuration({
       dispatch(
         setToast({
           type: 2,
-          desc: "Invalid Naddr",
+          desc: t("As0d1J3"),
         })
       );
     }
@@ -361,7 +363,7 @@ export default function AddArticlesToCuration({
                       style={{ height: "25vh", width: "min(100%,500px)" }}
                     >
                       <p className="gray-c italic-txt">
-                        No {label} belong to this curation
+                        {t(arts ? "AuF5ZyB" : "AjjZpHF")}
                       </p>
                     </div>
                   )}
@@ -369,7 +371,9 @@ export default function AddArticlesToCuration({
                     <div
                       className={`fx-centered fx-wrap fx-start-v box-pad-h box-pad-v fit-container`}
                     >
-                      <p className="gray-c">{label}s</p>
+                      <p className="gray-c">
+                        {t(arts ? "AesMg52" : "AStkKfQ")}
+                      </p>
                       <DragDropContext onDragEnd={handleDragEnd}>
                         <Droppable droppableId="set-carrousel">
                           {(provided, snapshot) => (
@@ -407,10 +411,6 @@ export default function AddArticlesToCuration({
                                         }}
                                         className="fit-container"
                                       >
-                                        {/* <div
-                                          key={item.id}
-                                          className="fx-scattered sc-s fx-shrink fit-container box-pad-h-s box-pad-v-s pointer"
-                                        > */}
                                         <div
                                           className="sc-s fx-scattered box-pad-v-s box-pad-h-s fit-container"
                                           style={{
@@ -434,7 +434,6 @@ export default function AddArticlesToCuration({
                                             style={{ rowGap: 0 }}
                                           >
                                             <p className="gray-c p-medium">
-                                              On{" "}
                                               <Date_
                                                 toConvert={item.added_date}
                                               />
@@ -468,7 +467,7 @@ export default function AddArticlesToCuration({
               </div>
               <div className="fx-centered fit-container box-pad-v-m">
                 <button className="btn btn-gst-red" onClick={exit}>
-                  Cancel
+                  {t("AB4BSCe")}
                 </button>
                 <button
                   className="btn btn-normal fx-centered"
@@ -478,10 +477,10 @@ export default function AddArticlesToCuration({
                     className="arrow"
                     style={{ filter: "invert()", transform: "rotate(90deg)" }}
                   ></div>
-                  Pick {label}s
+                  {t(arts ? "AMrMfye" : "Aaq7HdF")}
                 </button>
                 <button className="btn btn-normal" onClick={() => saveUpdate()}>
-                  {isLoading ? <LoadingDots /> : "Update curation"}
+                  {isLoading ? <LoadingDots /> : t("ACjCNlv")}
                 </button>
               </div>
             </>
@@ -513,7 +512,7 @@ export default function AddArticlesToCuration({
                       }`}
                       onClick={() => switchContentSource("relays")}
                     >
-                      All relays
+                      {t("AR9ctVs")}
                     </button>
                     <button
                       className={`btn btn-small fx-centered fx-shrink ${
@@ -523,7 +522,7 @@ export default function AddArticlesToCuration({
                       }`}
                       onClick={() => switchContentSource("user")}
                     >
-                      My {label}s
+                      {t(arts ? "AB9K6IK" : "AEfGUaR")}
                     </button>
                     <button
                       className={`btn btn-small fx-centered fx-shrink ${
@@ -533,7 +532,7 @@ export default function AddArticlesToCuration({
                       }`}
                       onClick={() => switchContentSource("search")}
                     >
-                      Search by Naddr
+                      {t("AVv3kNf")}
                     </button>
                   </div>
                 </div>
@@ -544,7 +543,7 @@ export default function AddArticlesToCuration({
                         type="search"
                         value={searchedPost}
                         className="if ifs-full"
-                        placeholder={`Search ${label} by title (in ${NostrPosts.length} results)`}
+                        placeholder={t("Apqlout", { count: NostrPosts.length })}
                         onChange={handleSearchPostInNOSTR}
                         style={{ backgroundColor: "var(--white)" }}
                       />
@@ -554,7 +553,7 @@ export default function AddArticlesToCuration({
                         {searchRes.length === 0 && (
                           <div className="fit-container box-marg-full fx-centered">
                             <p className="gray-c italic-txt">
-                              No {label} was found
+                              {t(arts ? "AH90wGL" : "AQIAfYS")}
                             </p>
                           </div>
                         )}
@@ -595,7 +594,7 @@ export default function AddArticlesToCuration({
                                     style={{ rowGap: 0 }}
                                   >
                                     <p className="gray-c p-medium">
-                                      On <Date_ toConvert={item.added_date} />
+                                      <Date_ toConvert={item.added_date} />
                                     </p>
                                     <p className="p-one-line fit-container">
                                       {item.title}
@@ -658,7 +657,7 @@ export default function AddArticlesToCuration({
                                     style={{ rowGap: 0 }}
                                   >
                                     <p className="gray-c p-medium">
-                                      On <Date_ toConvert={item.added_date} />
+                                      <Date_ toConvert={item.added_date} />
                                     </p>
                                     <p className="p-one-line">{item.title}</p>
                                   </div>
@@ -679,7 +678,7 @@ export default function AddArticlesToCuration({
                         {isLoading && (
                           <div className="fx-centered fit-container">
                             <div className="gray-c">
-                              Loading
+                              {t("AKvHyxG")}
                               <LoadingDots />
                             </div>
                           </div>
@@ -694,7 +693,7 @@ export default function AddArticlesToCuration({
                       <input
                         type="search"
                         className="if ifs-full"
-                        placeholder={`Search ${label} by naddr..`}
+                        placeholder={t("AVv3kNf")}
                         onChange={handleSearchByNaddr}
                         style={{ backgroundColor: "var(--white)" }}
                       />
@@ -733,7 +732,7 @@ export default function AddArticlesToCuration({
                               style={{ rowGap: 0 }}
                             >
                               <p className="gray-c p-medium">
-                                On <Date_ toConvert={item.added_date} />
+                                <Date_ toConvert={item.added_date} />
                               </p>
                               <p className="p-one-line fit-container">
                                 {item.title}
@@ -757,7 +756,7 @@ export default function AddArticlesToCuration({
               </div>
               <div className="fx-centered box-pad-v-m">
                 <button className="btn btn-gst-red" onClick={exit}>
-                  Cancel
+                  {t("AB4BSCe")}
                 </button>
                 {!isLoading && (
                   <button
@@ -769,14 +768,14 @@ export default function AddArticlesToCuration({
                       setIsLoading(true);
                     }}
                   >
-                    Load more data
+                    {t("AxJRrkn")}
                   </button>
                 )}
                 <button
                   className="btn btn-normal fx-centered"
                   onClick={() => setInitScreen(false)}
                 >
-                  Review list
+                  {t("AJ1uWra")}
                   <div
                     className="arrow"
                     style={{ filter: "invert()", rotate: "-90deg" }}

@@ -3,14 +3,10 @@ import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
 import Date_ from "../../Components/Date_";
-import axiosInstance from "../../Helpers/HTTP_Client";
-import ToChangeProfilePic from "../../Components/Main/ToChangeProfilePic";
 import { Helmet } from "react-helmet";
-import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { useNavigate } from "react-router-dom";
 import { decodeUrlOrAddress, encodeLud06 } from "../../Helpers/Encryptions";
 
 import axios from "axios";
@@ -40,7 +36,6 @@ export default function ProfileEdit() {
   const [userBanner, setUserBanner] = useState(false);
 
   const [showMore, setShowMore] = useState(false);
-  const [showProfilePicChanger, setShowProfilePicChanger] = useState(false);
   const [tempUserRelays, setTempUserRelays] = useState([]);
   const [relaysStatus, setRelaysStatus] = useState([]);
 
@@ -170,15 +165,6 @@ export default function ProfileEdit() {
 
   return (
     <>
-      {showProfilePicChanger && (
-        <ToChangeProfilePic
-          cancel={() => setShowProfilePicChanger(false)}
-          exit={() => {
-            setShowProfilePicChanger(false);
-          }}
-        />
-      )}
-
       <div>
         <Helmet>
           <title>Yakihonne | Profile edit</title>

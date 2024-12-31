@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getNoteTree } from "../../Helpers/Helpers";
 import NotesComment from "./NotesComment";
 import { getParsedNote } from "../../Helpers/Encryptions";
 import { useSelector } from "react-redux";
@@ -8,10 +7,10 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveUsers } from "../../Helpers/DB";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Comments from "../Reactions/Comments";
-import LoadingDots from "../LoadingDots";
 import LoadingLogo from "../LoadingLogo";
 import { Link } from "react-router-dom";
 import { customHistory } from "../../Helpers/History";
+import { useTranslation } from "react-i18next";
 
 const filterComments = (all, id, isRoot) => {
   if (isRoot) return filterRootComments(all);
@@ -80,12 +79,8 @@ const countReplies = async (id, all) => {
     if (ev) {
       let nestedReplies = await countReplies(comment.id, all);
       let _ = await getParsedNote(comment);
-      // let note_tree = await getNoteTree(
-      //   comment.content.split(" — This is a comment on:")[0]
-      // );
       replies.push({
         ..._,
-        // note_tree,
         replies: nestedReplies,
       });
     }
@@ -118,6 +113,7 @@ export default function CommentsSection({
   rootData,
 }) {
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showWriteNote, setShowWriteNote] = useState(leaveComment);
@@ -224,7 +220,8 @@ export default function CommentsSection({
               <UserProfilePicNOSTR size={40} mainAccountUser={true} />
               <div className="sc-s-18 box-pad-h-m box-pad-v-s fit-container">
                 <p className="gray-c">
-                  Comment on {author.display_name || author.name}'s {kind}
+                  {/* Comment on {author.display_name || author.name}'s {kind} */}
+                  {t("AOmRQKF")}
                 </p>
               </div>
             </div>
@@ -248,10 +245,12 @@ export default function CommentsSection({
         <>
           <hr />
           <div className="fit-container fx-centered box-pad-v fx-col slide-up">
-            <h4>Do you have thoughts?</h4>
-            <p className="gray-c">Login to leave a comment</p>
+            <h4>{t("ASt0wnG")}</h4>
+            <p className="gray-c">{t("AAWFsjt")}</p>
             <Link to={"/login"}>
-              <button className="btn btn-normal btn-small">Login</button>
+              <button className="btn btn-normal btn-small">
+                {t("AmOtzoL")}
+              </button>
             </Link>
           </div>
         </>
@@ -266,8 +265,9 @@ export default function CommentsSection({
             className="fit-container fx-centered fx-col"
             style={{ height: "20vh" }}
           >
-            <h4>No comments</h4>
-            <p className="p-centered gray-c">Nobody commented on this {kind}</p>
+            <h4>{t("ARe2fkn")}</h4>
+            <p className="p-centered gray-c">{t("AkLuU1q")}</p>
+            {/* <p className="p-centered gray-c">Nobody commented on this {kind}</p> */}
             <div className="comment-24"></div>
           </div>
         )}
@@ -285,7 +285,7 @@ export default function CommentsSection({
             className="fit-container fx-centered fx-start-h box-pad-h-m"
             style={{ paddingTop: "1rem" }}
           >
-            <h4>Replies</h4>
+            <h4>{t("AENEcn9")}</h4>
           </div>
         )}
         {netComments.map((comment, index) => {
@@ -311,14 +311,15 @@ const Comment = ({
   isReplyBorder = false,
   index = 0,
 }) => {
+  const { t } = useTranslation();
   let allRepliesCount = useMemo(() => {
     let count = comment.replies.length > 0 ? repliesCount(comment) : 0;
     return count == 0 || count >= 10 ? count : `0${count}`;
   }, []);
   return (
     <div
-      className="fit-container"
-      style={{ borderLeft: isReplyBorder ? "1px solid var(--dim-gray)" : "" }}
+      className={`fit-container ${isReplyBorder ? "reply-side-border" : ""}`}
+      // style={{ borderLeft: isReplyBorder ? "1px solid var(--dim-gray)" : "" }}
     >
       <NotesComment
         event={comment}
@@ -333,7 +334,7 @@ const Comment = ({
             className="fx-col fit-container fx-centered"
             style={{
               width: `calc(100% - 2.5rem)`,
-              // width: `calc(100% - 1.875rem)`,
+
               gap: 0,
             }}
           >
@@ -365,22 +366,16 @@ const Comment = ({
           >
             <div
               className="reply-tail"
-              // style={{ left: isReplyBorder ? ".5rem" : 0 }}
               style={{ left: isReplyBorder ? "-.0625rem" : 0 }}
             ></div>
-            {/* <div
-              className="round-icon-small"
-              style={{ minWidth: "1.5rem", minHeight: "1.5rem" }}
-            > */}
+
             <div
               className="fx-centered box-pad-h-s box-pad-v-s sc-s-18 option"
               style={{ padding: ".25rem .5rem" }}
             >
               <div className="plus-sign"></div>
-              {/* </div> */}
               <p className="gray-c p-medium">
-                {allRepliesCount} more{" "}
-                {allRepliesCount === 1 ? "reply" : "replies"}
+                {t("ADBrveA", { count: allRepliesCount })}
               </p>
             </div>
           </div>

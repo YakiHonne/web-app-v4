@@ -24,6 +24,7 @@ export default function Zap({ event, user, actions, isZapped }) {
         name: user.name,
         picture: user.picture,
       }}
+      
       eTag={event.aTag ? "" : event.id}
       aTag={event.aTag ? event.aTag : ""}
       forContent={

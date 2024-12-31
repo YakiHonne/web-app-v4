@@ -24,7 +24,7 @@ export default function QRSharing({ user, exit }) {
   return (
     <div className="fixed-container box-pad-h fx-centered" onClick={exit}>
       <div
-        className="sc-s box-pad-h box-pad-v"
+        className="sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{
           width: "min(100%,400px)",
           position: "relative",

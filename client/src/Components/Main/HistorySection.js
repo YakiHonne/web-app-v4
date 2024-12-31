@@ -6,6 +6,7 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveUsers } from "../../Helpers/DB";
 import LoadingDots from "../LoadingDots";
 import LinkRepEventPreview from "./LinkRepEventPreview";
+import { useTranslation } from "react-i18next";
 
 const traceEventPath = async (id, all, mainEventID, tagKind) => {
   const path = [];
@@ -54,6 +55,7 @@ export default function HistorySection({
   tagKind = "e",
   showHistory = false,
 }) {
+  const { t } = useTranslation();
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [netComments, setNetComments] = useState([]);
@@ -92,15 +94,7 @@ export default function HistorySection({
         });
       }
       const events = await getSubData(filter, 500);
-      let tempEvents = events.data
-        // .map((event) => {
-        //   let is_un = event.tags.find((tag) => tag[0] === "l");
-        //   let is_quote = event.tags.find((tag) => tag[0] === "q");
-        //   if (!((is_un && is_un[1] === "UNCENSORED NOTE") || is_quote)) {
-        //     return event;
-        //   }
-        // })
-        // .filter((_) => _);
+      let tempEvents = events.data;
 
       if (tempEvents.length === 0) setIsLoading(false);
       setComments(tempEvents);
@@ -154,7 +148,7 @@ export default function HistorySection({
   if (netComments.length === 0)
     return (
       <div className="fit-container box-pad-h-m box-pad-v fx-centered sc-s-18 box-marg-s">
-        <p className="orange-c">Could not find any history :(</p>
+        <p className="orange-c">{t("AyGWRcA")}</p>
       </div>
     );
   return (
@@ -162,19 +156,11 @@ export default function HistorySection({
       className="fit-container fx-centered fx-col box-marg-s"
       style={{ gap: 0 }}
     >
-      {/* <div className="box-pad-h fit-container fx-start-h fx-centered box-marg-s">
-        <h4>Thread</h4>
-      </div> */}
       {netComments.length > 0 && netComments[0].kind !== 1 && (
         <div className="box-pad-h fit-container box-marg-s">
           <LinkRepEventPreview event={netComments[0]} />
         </div>
       )}
-      {/* {netComments.length > 0 && netComments[0].kind !== 1 && (
-        <div className="box-pad-h fit-container fx-start-h fx-centered box-marg-s">
-          <h4>Follow up thread</h4>
-        </div>
-      )} */}
       {netComments.map((comment, index) => {
         if (comment.kind === 1)
           return (
@@ -182,7 +168,6 @@ export default function HistorySection({
               event={comment}
               key={comment.id}
               hasReplies={true}
-            //   hasReplies={index !== netComments.length - 1}
               isHistory={true}
             />
           );

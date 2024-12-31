@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import AddCurationNOSTR from "./AddCurationNOSTR";
-import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { setToPublish } from "../../Store/Slides/Publishers";
 import { useDispatch, useSelector } from "react-redux";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function AddArticleToCuration({ kind = 30004, d, exit }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const isPublishing = useSelector((state) => state.isPublishing);
   const userMetadata = useSelector((state) => state.userMetadata);
 
+  const { t } = useTranslation();
   const [curations, setCurations] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showAddCuration, setShowAddCuration] = useState(false);
@@ -58,15 +59,6 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
   };
 
   const saveUpdate = async (curation, selectedRelays) => {
-    if (isPublishing) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        })
-      );
-      return;
-    }
     let tempTags = [
       [
         "client",
@@ -137,7 +129,7 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
             >
               {isLoaded && curations.length === 0 && (
                 <div className="fx-centered" style={{ marginTop: "1rem" }}>
-                  <p className="gray-c">You have no curation</p>
+                  <p className="gray-c">{t("AAUycZW")}</p>
                 </div>
               )}
               {!isLoaded && (
@@ -185,11 +177,11 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
                         <p className="p-one-line">{curation.title}</p>
                         <div className="fx-centered fx-start-h">
                           <p className="gray-c p-medium">
-                            {curation.items.length} item(s)
+                            {t("A04okTg", { count: curation.items.length })}
                           </p>
                           {status && (
                             <p className="p-medium orange-c">
-                              (item is already here)
+                              ({t("Aw0t3W3")})
                             </p>
                           )}
                         </div>
@@ -215,7 +207,7 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
               onClick={() => setShowAddCuration(true)}
             >
               {" "}
-              <p className="gray-c">Create curation</p>{" "}
+              <p className="gray-c">{t("AL8U8hq")}</p>{" "}
               <p className="gray-c p-big">&#xFF0B;</p>
             </div>
           </div>

@@ -1,13 +1,13 @@
 import React, { Fragment, useEffect, useState } from "react";
 import Date_ from "../Date_";
-import { encryptEventData } from "../../Helpers/Encryptions";
+import { convertDate, encryptEventData } from "../../Helpers/Encryptions";
 import { finalizeEvent } from "nostr-tools";
 import LoadingDots from "../LoadingDots";
 import Counter from "../Counter";
 import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
-import LoginWithNostr from "./LoginWithNostr";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 export default function UN({
   sealedCauses = [],
@@ -21,9 +21,8 @@ export default function UN({
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
-
+  const { t } = useTranslation();
   const [content, setContent] = useState("");
-
   let findSource = data.tags.find((tag) => tag[0] === "source");
   let source = findSource ? findSource[1] : "";
   let isVoted =
@@ -160,7 +159,7 @@ export default function UN({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error occurred while publishing this note",
+          desc: t("AOSllJU"),
         })
       );
     }
@@ -214,7 +213,7 @@ export default function UN({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error occurred while publishing this note",
+          desc: t("AOSllJU"),
         })
       );
     }
@@ -240,7 +239,7 @@ export default function UN({
                       backgroundColor: "var(--gray)",
                     }}
                   ></div>
-                  <p className="p-bold p-medium gray-c">Needs more rating</p>
+                  <p className="p-bold p-medium gray-c">{t("Ak8B1oL")}</p>
                 </>
               )}
               {state === "sealed" && (
@@ -252,7 +251,7 @@ export default function UN({
                     }}
                     className="checkmark"
                   ></div>
-                  <p className="p-bold p-medium green-c">Rated helpful</p>
+                  <p className="p-bold p-medium green-c">{t("ALbnctt")}</p>
                 </>
               )}
               {state === "nh" && (
@@ -265,7 +264,7 @@ export default function UN({
                       backgroundColor: "var(--red-main)",
                     }}
                   ></div>
-                  <p className="p-bold p-medium red-c">Rated not helpful</p>
+                  <p className="p-bold p-medium red-c">{t("ALpC6I3")}</p>
                 </>
               )}
             </div>
@@ -274,7 +273,7 @@ export default function UN({
                 className="sticker sticker-small sticker-gray-black"
                 style={{ minWidth: "max-content" }}
               >
-                Not sealed yet
+                {t("AqpIQ2O")}
               </div>
             )}
             {state === "sealed" && (
@@ -282,7 +281,7 @@ export default function UN({
                 className="sticker sticker-small sticker-green"
                 style={{ minWidth: "max-content" }}
               >
-                Sealed
+                {t("AyBaapX")}
               </div>
             )}
             {state === "nh" && (
@@ -290,7 +289,7 @@ export default function UN({
                 className="sticker sticker-small sticker-red"
                 style={{ minWidth: "max-content" }}
               >
-                Sealed
+                {t("AVuxQjo")}
               </div>
             )}
           </div>
@@ -302,8 +301,9 @@ export default function UN({
         >
           <div className="fit-container fx-centered fx-start-h">
             <p className="gray-c p-medium">
-              Posted on{" "}
-              <Date_ toConvert={new Date(data.created_at * 1000)} time={true} />
+              {t("Published", {
+                date: convertDate(new Date(data.created_at * 1000)),
+              })}
             </p>
             {source && (
               <>
@@ -314,7 +314,7 @@ export default function UN({
                   onClick={(e) => e.stopPropagation()}
                   className="btn-text-gray pointer p-medium"
                 >
-                  <span>Source</span>
+                  <span>{t("AhkzJxL")}</span>
                 </a>
               </>
             )}
@@ -327,45 +327,27 @@ export default function UN({
           >
             {content}
           </div>
-          {/* {source && (
-              <a
-                target={"_blank"}
-                href={source}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div
-                  className="round-icon round-icon-tooltip"
-                  data-tooltip="source"
-                >
-                  <div className="globe-24"></div>
-                </div>
-              </a>
-            )} */}
         </div>
         {state !== "sealed" && action && (
           <>
             <hr />
             <div className="fit-container fx-scattered box-pad-h-m box-pad-v-s">
               {data.pubkey === userKeys.pub && (
-                <p className="gray-c p-medium">
-                  Your note awaits the community rating
-                </p>
+                <p className="gray-c p-medium">{t("Aoihw3S")}</p>
               )}
               {flashNewsAuthor === userKeys.pub && (
-                <p className="gray-c p-medium">
-                  This note awaits the community rating
-                </p>
+                <p className="gray-c p-medium">{t("AMn82xo")}</p>
               )}
               {data.pubkey !== userKeys.pub &&
                 flashNewsAuthor !== userKeys.pub && (
                   <>
                     {!isVoted && (
                       <>
-                        <p className="gray-c">Do you find this helpful?</p>
+                        <p className="gray-c">{t("ADFU6zW")}</p>
                         <div className="fx-centered">
                           <div
                             className="round-icon round-icon-tooltip"
-                            data-tooltip={"Yes"}
+                            data-tooltip={t("A9pv8x7")}
                             onClick={handleYes}
                             style={{
                               borderColor: vote === "+" ? "var(--gray)" : "",
@@ -377,7 +359,7 @@ export default function UN({
                           </div>
                           <div
                             className="round-icon round-icon-tooltip"
-                            data-tooltip={"No"}
+                            data-tooltip={t("AL2oT3w")}
                             onClick={handleNo}
                             style={{
                               borderColor: vote === "-" ? "var(--gray)" : "",
@@ -404,12 +386,7 @@ export default function UN({
                             style={{ filter: "grayscale(100%)" }}
                           ></div>
                           <p className="p-medium">
-                            You rated this note as{" "}
-                            <span className="p-bold">
-                              {isVoted.content === "+"
-                                ? "helpful"
-                                : "not helpful"}
-                            </span>
+                            {t(isVoted.content === "+" ? "AyfQZnM" : "AEFDTqE")}
                           </p>
                         </div>
                         {!triggerUndo && revotingPermission && (
@@ -418,7 +395,7 @@ export default function UN({
                               className="btn-text p-medium"
                               onClick={() => setTriggerUndo(true)}
                             >
-                              Undo{" "}
+                              {t("Ay2FSU5")}{" "}
                               <span className="orange-c">
                                 (
                                 <Counter
@@ -437,14 +414,14 @@ export default function UN({
                               disabled={isLoading}
                               onClick={() => setTriggerUndo(false)}
                             >
-                              {isLoading ? <LoadingDots /> : "Cancel"}
+                              {isLoading ? <LoadingDots /> : t("AB4BSCe")}
                             </button>
                             <button
                               className="btn btn-small btn-normal"
                               disabled={isLoading}
                               onClick={handleUndo}
                             >
-                              {isLoading ? <LoadingDots /> : "Undo"}
+                              {isLoading ? <LoadingDots /> : t("Ay2FSU5")}
                             </button>
                           </div>
                         )}
@@ -455,7 +432,7 @@ export default function UN({
             </div>
             {vote && (
               <div className="fit-container fx-centered fx-start-v fx-col box-pad-h-m box-pad-v-s">
-                <p className="p-medium gray-c">Why do you think that?</p>
+                <p className="p-medium gray-c">{t("AFMqxUW")}</p>
                 {platformCauses[vote].map((cause) => {
                   return (
                     <label className="fit-container fx-scattered" key={cause}>
@@ -469,12 +446,8 @@ export default function UN({
                 })}
                 <hr />
                 <div className="box-pad-v-s">
-                  <p className="p-medium gray-c">Note</p>
-                  <p className="p-medium orange-c">
-                    Changing your rating will only be valid for 5 minutes, after
-                    that you will no longer have the option to undo or change
-                    it.
-                  </p>
+                  <p className="p-medium gray-c">{t("Az5ftet")}</p>
+                  <p className="p-medium orange-c">{t("AuXe5F6")}</p>
                 </div>
               </div>
             )}
@@ -487,7 +460,7 @@ export default function UN({
                     onClick={handlePublishing}
                     disabled={isLoading}
                   >
-                    {isLoading ? <LoadingDots /> : "Submit"}
+                    {isLoading ? <LoadingDots /> : t("A0hPAcy")}
                   </button>
                 </div>
               </>
@@ -498,16 +471,9 @@ export default function UN({
           <>
             <hr />
             <div className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-s">
-              {/* <p className="btn-text-gray pointer p-medium">
-              <span>Causes</span>
-            </p> */}
               <div
                 className="msg-bubbles round-icon-tooltip"
-                data-tooltip={
-                  state === "sealed"
-                    ? "Rated helpful for"
-                    : "Rated not helpful for"
-                }
+                data-tooltip={state === "sealed" ? t("AIjRDx9") : t("Ac6NF3G")}
               ></div>
               <div
                 className="fx-centered fx-start-h fx-wrap"

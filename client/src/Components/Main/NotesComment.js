@@ -1,16 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { nip19 } from "nostr-tools";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
-import QuoteNote from "./QuoteNote";
 import BookmarkEvent from "./BookmarkEvent";
 import ShareLink from "../ShareLink";
 import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
-import { getUser } from "../../Helpers/Controlers";
+import { getUser, translate } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import useNoteStats from "../../Hooks/useNoteStats";
 import Comments from "../Reactions/Comments";
@@ -21,6 +20,9 @@ import Zap from "../Reactions/Zap";
 import OptionsDropdown from "./OptionsDropdown";
 import { customHistory } from "../../Helpers/History";
 import { NDKUser } from "@nostr-dev-kit/ndk";
+import { useTranslation } from "react-i18next";
+import { getNoteTree } from "../../Helpers/Helpers";
+import LoadingDots from "../LoadingDots";
 
 export default function NotesComment({
   event,
@@ -32,6 +34,7 @@ export default function NotesComment({
   isHistory = false,
 }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
@@ -40,12 +43,13 @@ export default function NotesComment({
 
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   const [toggleComment, setToggleComment] = useState(false);
-  const [comment, setComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showQuoteBox, setShowQuoteBox] = useState(false);
   const [usersList, setUsersList] = useState(false);
   const [isNip05Verified, setIsNip05Verified] = useState(false);
   const { postActions } = useNoteStats(event.id, event.pubkey);
+  const [isNoteTranslating, setIsNoteTranslating] = useState("");
+  const [translatedNote, setTranslatedNote] = useState("");
+  const [showTranslation, setShowTranslation] = useState(false);
 
   const isLikedByAuthor = useMemo(() => {
     return postActions.likes.likes.find(
@@ -86,14 +90,6 @@ export default function NotesComment({
     return checkProfile();
   }, [userMutedList, user]);
 
-  // useEffect(() => {
-  //   let tempPubkey = event.pubkey;
-  //   let auth = getUser(tempPubkey);
-
-  //   if (auth) {
-  //     setUser(auth);
-  //   }
-  // }, [nostrAuthors]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -120,23 +116,12 @@ export default function NotesComment({
     if (!isPublishing) {
       setIsLoading(false);
       setToggleComment(false);
-      setComment("");
     }
   }, [isPublishing]);
 
   const muteUnmute = async () => {
     try {
       if (!Array.isArray(userMutedList)) return;
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
-
       let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
       if (isMuted) {
         tempTags.splice(isMuted.index, 1);
@@ -168,7 +153,7 @@ export default function NotesComment({
     dispatch(
       setToast({
         type: 1,
-        desc: `Note ID was copied! 👏`,
+        desc: `${t("ARJICtS")} 👏`,
       })
     );
   };
@@ -190,6 +175,38 @@ export default function NotesComment({
     else window.location = `/notes/${event.nEvent}`;
   };
 
+  const translateNote = async () => {
+    setIsNoteTranslating(true);
+    if (translatedNote) {
+      setShowTranslation(true);
+      setIsNoteTranslating(false);
+      return;
+    }
+    let res = await translate(event.content);
+    if (res.status === 500) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("AZ5VQXL"),
+        })
+      );
+    }
+    if (res.status === 400) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("AJeHuH1"),
+        })
+      );
+    }
+    if (res.status === 200) {
+      let noteTree = await getNoteTree(res.res);
+      setTranslatedNote(noteTree);
+      setShowTranslation(true);
+    }
+    setIsNoteTranslating(false);
+  };
+
   return (
     <div
       className={`fit-container box-pad-h-s ${isHistory ? "" : "box-pad-v-s"}`}
@@ -198,18 +215,13 @@ export default function NotesComment({
         overflow: "visible",
         paddingBottom: 0,
         position: "relative",
-        // borderLeft: isReplyBorder ? "1px solid var(--dim-gray)" : "",
       }}
     >
       {isReply && (
         <div
           className="reply-tail"
-          // style={{ left: isReplyBorder ? ".5rem" : 0 }}
-          style={{ left: isReplyBorder ? "-.0625rem" : 0 }}
+          // style={{ right: isReplyBorder ? "-.0625rem" : 0 }}
         ></div>
-      )}
-      {showQuoteBox && (
-        <QuoteNote note={event} exit={() => setShowQuoteBox(false)} />
       )}
       {usersList && (
         <ShowUsersList
@@ -234,13 +246,12 @@ export default function NotesComment({
             <UserProfilePicNOSTR
               size={isHistory ? 40 : 30}
               mainAccountUser={false}
-              
               user_id={user.pubkey}
               img={user.picture}
               metadata={user}
             />
             <div>
-              <div className="fx-centered">
+              <div className="fx-centered fit-container fx-start-h">
                 <p className={isHistory ? "" : "p-medium"}>
                   {user.display_name || user.name}
                 </p>
@@ -252,7 +263,7 @@ export default function NotesComment({
             </div>
             {isLikedByAuthor && (
               <div className="sticker sticker-small sticker-normal sticker-gray-black">
-                ♥︎ by author
+                {t("AAECdsg")}
               </div>
             )}
           </div>
@@ -261,25 +272,43 @@ export default function NotesComment({
           </p>
         </div>
         <div
-          className="fx-centered fx-col fit-container"
+          className={`fx-centered fx-col fit-container note-indent-2 ${hasReplies ? "reply-side-border-2" : ""}`}
           style={{
-            marginLeft: "1rem",
+            // marginLeft: "1rem",
             // marginLeft: ".39rem",
-            paddingLeft: "1.5rem",
+            // paddingLeft: "1.5rem",
             paddingTop: "1rem",
             paddingBottom: isHistory ? "1rem" : "unset",
-            borderLeft: hasReplies ? "1px solid var(--dim-gray)" : "",
+            // borderLeft: hasReplies ? "1px solid var(--dim-gray)" : "",
           }}
         >
           <div className="fit-container pointer" onClick={onClick}>
-            {event.note_tree}
+            {showTranslation ? translatedNote : event.note_tree}
           </div>
-
+          <div
+            className="fit-container"
+            style={{ paddingTop: ".5rem" }}
+          >
+            {!isNoteTranslating && !showTranslation && (
+              <p className="btn-text-gray pointer" onClick={translateNote}>
+                {t("AdHV2qJ")}
+              </p>
+            )}
+            {!isNoteTranslating && showTranslation && (
+              <p
+                className="btn-text-gray pointer"
+                onClick={() => setShowTranslation(false)}
+              >
+                {t("AE08Wte")}
+              </p>
+            )}
+            {isNoteTranslating && <LoadingDots />}
+          </div>
           {!noReactions && (
             <div className="fx-scattered fit-container">
               <div className="fx-centered" style={{ columnGap: "16px" }}>
                 <div className="fx-centered">
-                  <div className="icon-tooltip" data-tooltip="Leave a comment">
+                  <div className="icon-tooltip" data-tooltip={"ADHdLfJ"}>
                     <div
                       className="comment-24"
                       onClick={() => setToggleComment(!toggleComment)}
@@ -295,12 +324,12 @@ export default function NotesComment({
                     className={`pointer icon-tooltip ${
                       isLiked ? "orange-c" : ""
                     } `}
-                    data-tooltip="Reactions "
+                    data-tooltip={t("Alz0E9Y")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.likes.likes.length > 0 &&
                         setUsersList({
-                          title: "Reactions ",
+                          title: t("Alz0E9Y"),
                           list: postActions.likes.likes.map(
                             (item) => item.pubkey
                           ),
@@ -322,12 +351,12 @@ export default function NotesComment({
                   />
                   <div
                     className={`icon-tooltip ${isReposted ? "orange-c" : ""} `}
-                    data-tooltip="Reposts "
+                    data-tooltip={t("Aai65RJ")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.reposts.reposts.length > 0 &&
                         setUsersList({
-                          title: "Reposts ",
+                          title: t("Aai65RJ"),
                           list: postActions.reposts.reposts.map(
                             (item) => item.pubkey
                           ),
@@ -348,12 +377,12 @@ export default function NotesComment({
                     className={`pointer icon-tooltip ${
                       isQuoted ? "orange-c" : ""
                     }`}
-                    data-tooltip="Quoters"
+                    data-tooltip={t("AWmDftG")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.quotes.quotes.length > 0 &&
                         setUsersList({
-                          title: "Quoters",
+                          title: t("AO0OqWT"),
                           list: postActions.quotes.quotes.map(
                             (item) => item.pubkey
                           ),
@@ -365,7 +394,7 @@ export default function NotesComment({
                   </div>
                 </div>
                 <div className="fx-centered">
-                  <div className="icon-tooltip" data-tooltip="Tip note">
+                  <div className="icon-tooltip" data-tooltip={t("AtGAGPY")}>
                     <Zap
                       user={user}
                       event={event}
@@ -377,12 +406,12 @@ export default function NotesComment({
                     className={`pointer icon-tooltip ${
                       isZapped ? "orange-c" : ""
                     }`}
-                    data-tooltip="Zappers"
+                    data-tooltip={t("AVDZ5cJ")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.zaps.total > 0 &&
                         setUsersList({
-                          title: "Zappers",
+                          title: t("AVDZ5cJ"),
                           list: postActions.zaps.zaps.map(
                             (item) => item.pubkey
                           ),
@@ -397,12 +426,12 @@ export default function NotesComment({
               <OptionsDropdown
                 options={[
                   <div onClick={copyID} className="pointer">
-                    <p>Copy note ID</p>
+                    <p>{t("AYFAFKs")}</p>
                   </div>,
                   userKeys && userKeys.pub !== event.pubkey && (
                     <>
                       <BookmarkEvent
-                        label="Bookmark note"
+                        label={t("Ar5VgpT")}
                         pubkey={event.id}
                         kind={"1"}
                         itemType="e"
@@ -411,7 +440,7 @@ export default function NotesComment({
                   ),
                   <div className="fit-container fx-centered fx-start-h pointer">
                     <ShareLink
-                      label="Share note"
+                      label={t("A1IsKJ0")}
                       path={`/notes/${event.nEvent}`}
                       title={user.display_name || user.name}
                       description={event.content}
@@ -419,16 +448,16 @@ export default function NotesComment({
                       shareImgData={{
                         post: event,
                         author: user,
-                        label: "Note",
+                        label: t("Az5ftet"),
                       }}
                     />
                   </div>,
                   event.pubkey !== userKeys.pub && (
                     <div onClick={muteUnmute} className="pointer">
                       {isMuted ? (
-                        <p className="red-c">Unmute user</p>
+                        <p className="red-c">{t("AKELUbQ")}</p>
                       ) : (
-                        <p className="red-c">Mute user</p>
+                        <p className="red-c">{t("AGMxuQ0")}</p>
                       )}
                     </div>
                   ),

@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import Date_ from "../Date_";
 import BookmarkEvent from "./BookmarkEvent";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import ShareLink from "../ShareLink";
-import MediaPreview from "./MediaPreview";
-import { useDispatch, useSelector } from "react-redux";
+
+import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import OptionsDropdown from "./OptionsDropdown";
 import DynamicIndicator from "../DynamicIndicator";
 import { customHistory } from "../../Helpers/History";
-import { setToast } from "../../Store/Slides/Publishers";
 import { copyText } from "../../Helpers/Helpers";
+import { useTranslation } from "react-i18next";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -27,18 +27,16 @@ const getURL = (item) => {
 
 export default function RepEventPreviewCard({
   item,
-  highlithedTag = "",
   border = true,
   minimal = false,
 }) {
-  const dispatch = useDispatch();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userFollowings = useSelector((state) => state.userFollowings);
+  const { t } = useTranslation();
   const [authorData, setAuthorData] = useState(
     getEmptyuserMetadata(item.pubkey)
   );
   const [showContent, setShowContent] = useState(!item.contentSensitive);
-  const [showPreview, setShowPreview] = useState(false);
   const isFollowing = useMemo(() => {
     return checkFollowing(userFollowings, item.pubkey);
   }, [userFollowings]);
@@ -113,14 +111,6 @@ export default function RepEventPreviewCard({
     );
   return (
     <>
-      {showPreview && (
-        <MediaPreview
-          kind={"article"}
-          exit={() => setShowPreview(false)}
-          data={{ author: authorData, content: item }}
-        />
-      )}
-
       <div
         className={"fit-container fx-scattered box-pad-h-m mediacard"}
         onClick={(e) => e.stopPropagation()}
@@ -135,14 +125,12 @@ export default function RepEventPreviewCard({
       >
         {!showContent && (
           <div className="rvl-btn sc-s-18">
-            <p className="box-pad-v-m gray-c">
-              This is a sensitive content, do you wish to reveal it?
-            </p>
+            <p className="box-pad-v-m gray-c">{t("AhqN9mg")}</p>
             <button
               className="btn-small btn-normal"
               onClick={() => setShowContent(true)}
             >
-              Reveal
+              {t("A9VKdry")}
             </button>
           </div>
         )}
@@ -157,7 +145,7 @@ export default function RepEventPreviewCard({
                 {isFollowing && (
                   <div
                     className="round-icon-small round-icon-tooltip"
-                    data-tooltip="Following"
+                    data-tooltip={t("A9TqNxQ")}
                   >
                     <div className="user-followed"></div>
                   </div>
@@ -165,11 +153,16 @@ export default function RepEventPreviewCard({
               </div>
               <OptionsDropdown
                 options={[
-                  <div onClick={(e) => copyText(item.naddr, "Naddr", e)} className="pointer">
-                    <p>Copy naddr</p>
+                  <div
+                    onClick={(e) =>
+                      copyText(item.naddr, t("ApPw14o", { item: "naddr" }), e)
+                    }
+                    className="pointer"
+                  >
+                    <p>{t("ApPw14o", { item: "naddr" })}</p>
                   </div>,
                   <BookmarkEvent
-                    label="Bookmark"
+                    label={t("AtlqBGm")}
                     pubkey={item.pubkey}
                     kind={item.kind}
                     d={item.d}
@@ -177,7 +170,7 @@ export default function RepEventPreviewCard({
                   />,
                   <div className="fit-container fx-centered fx-start-h pointer">
                     <ShareLink
-                      label="Share"
+                      label={t("AGB5vpj")}
                       path={url}
                       title={item.title}
                       description={item.title}
@@ -190,7 +183,7 @@ export default function RepEventPreviewCard({
                           display_name:
                             authorData.display_name || authorData.name,
                         },
-                        label: "Article",
+                        label: t("AyYkCrS"),
                       }}
                     />
                   </div>,
@@ -209,13 +202,13 @@ export default function RepEventPreviewCard({
                 <div className="box-pad-v-s ">
                   <p className="p-three-lines gray-c fit-container">
                     {item.description || (
-                      <span className="p-italic p-medium ">No description</span>
+                      <span className="p-italic p-medium ">{t("AtZrjns")}</span>
                     )}
                   </p>
                 </div>
               </div>
               <div
-                className=" bg-img cover-bg sc-s"
+                className="bg-img cover-bg sc-s"
                 style={{
                   backgroundColor:
                     "linear-gradient(93deg, #880185 -6.44%, #FA4EFF 138.71%)",
@@ -250,25 +243,28 @@ export default function RepEventPreviewCard({
 }
 
 const AuthorPreview = ({ author, item }) => {
-  const getDynamicIndicator = () => {
-    let dynElem = "";
-    if (item.kind === 30023)
-      dynElem = `${
-        Math.floor(item.content.split(" ").length / 200) || 1
-      } min read`;
-    if (item.kind === 30004) dynElem = `${item.items.length} articles`;
-    if (item.kind === 30005) dynElem = `${item.items.length} videos`;
-    if (item.kind === 34235) dynElem = "Watch now";
-    return (
-      <p className="gray-c p-medium">
-        <Date_ toConvert={new Date(item.created_at * 1000)} /> &#x2022;{"  "}
-        <span className="orange-c">{dynElem}</span>
-      </p>
-    );
-  };
-  let dynamicIndicator = useMemo(() => {
-    return getDynamicIndicator();
-  }, []);
+  // const { t } = useTranslation();
+  // const getDynamicIndicator = () => {
+  //   let dynElem = "";
+  //   if (item.kind === 30023)
+  //     dynElem = t("ASlFfRX", {
+  //       min: Math.floor(item.content.split(" ").length / 200) || 1,
+  //     });
+  //   if (item.kind === 30004)
+  //     dynElem = t("AkamgHX", { count: item.items.length });
+  //   if (item.kind === 30005)
+  //     dynElem = t("APXDxmq", { count: item.items.length });
+  //   if (item.kind === 34235) dynElem = t("A8Ewal4");
+  //   return (
+  //     <p className="gray-c p-medium">
+  //       <Date_ toConvert={new Date(item.created_at * 1000)} /> &#x2022;{"  "}
+  //       <span className="orange-c">{dynElem}</span>
+  //     </p>
+  //   );
+  // };
+  // let dynamicIndicator = useMemo(() => {
+  //   return getDynamicIndicator();
+  // }, []);
 
   return (
     <div className="fx-centered fx-start-h ">
@@ -281,7 +277,8 @@ const AuthorPreview = ({ author, item }) => {
       />
       <div>
         <p className="p-bold">{author.display_name || author.name}</p>
-        {dynamicIndicator}
+        <DynamicIndicator item={item} />
+        {/* {dynamicIndicator} */}
       </div>
     </div>
   );

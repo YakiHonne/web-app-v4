@@ -6,6 +6,7 @@ import ButtonComp from "./ButtonComp";
 import TextComp from "./TextComp";
 
 export default function PreviewContainer({ metadata, pubkey }) {
+  
   return (
     <div className="fx-centered fx-col fit-container">
       <div

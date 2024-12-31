@@ -12,6 +12,7 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { finalizeEvent } from "nostr-tools";
 import { extractNip19, removeArticleDraft } from "../../Helpers/Helpers";
 import UploadFile from "../UploadFile";
+import { useTranslation } from "react-i18next";
 
 const getSuggestions = (custom) => {
   if (!custom) return [];
@@ -36,7 +37,7 @@ export default function ToPublishNOSTR({
 }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-
+  const { t } = useTranslation();
   const navigateTo = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState(
     tags.length > 0
@@ -58,7 +59,6 @@ export default function ToPublishNOSTR({
   const [deleteDraft, setDeleteDraft] = useState(
     postKind === 30024 ? true : false
   );
-  const [allRelays, setAllRelays] = useState([...relaysOnPlatform]);
   const topicSuggestions = useMemo(() => {
     return getSuggestions(tempTag);
   }, [tempTag]);
@@ -74,7 +74,6 @@ export default function ToPublishNOSTR({
       setIsLoading(true);
       if (postThumbnail && thumbnail) deleteFromS3(postThumbnail);
       let created_at = Math.floor(Date.now() / 1000);
-      // let cover = thumbnail ? await uploadToS3(thumbnail) : thumbnailUrl || "";
       let cover = thumbnailUrl;
 
       let tags = [
@@ -128,15 +127,7 @@ export default function ToPublishNOSTR({
           allRelays: relaysToPublish,
         })
       );
-      // dispatch(
-      //   setToPublish({
-      //     userKeys: userKeys,
-      //     kind: kind,
-      //     content: postContent,
-      //     tags: tags,
-      //     allRelays: relaysToPublish,
-      //   })
-      // );
+
       if (deleteDraft) {
         setTimeout(async () => {
           let tempEvent = {
@@ -164,16 +155,6 @@ export default function ToPublishNOSTR({
               allRelays: relaysToPublish,
             })
           );
-          // dispatch(
-          //   setToPublish({
-          //     userKeys,
-          //     kind: 5,
-          //     content: "A draft to delete",
-          //     tags: [["e", postId]],
-          //     allRelays: relaysToPublish,
-          //   })
-          // );
-
           setIsLoading(false);
           navigateTo("/dashboard", { state: { tabNumber: 1 } });
           exit();
@@ -188,7 +169,7 @@ export default function ToPublishNOSTR({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occurred!",
+          desc: t("Acr4Slu"),
         })
       );
       setIsLoading(false);
@@ -212,10 +193,7 @@ export default function ToPublishNOSTR({
   };
 
   const handleThumbnailValue = (data) => {
-    // let value = e.target.value;
     setThumbnailUrl(data);
-    // setThumbnailPrev(value);
-    // setThumbnail("");
   };
 
   const handleAddZapSplit = (pubkey, action) => {
@@ -271,19 +249,16 @@ export default function ToPublishNOSTR({
                 style={{ transform: "rotate(90deg)" }}
               ></div>
             </div>
-            <p className="gray-c">Back to editor</p>
+            <p className="gray-c">{t("ATB2h6T")}</p>
           </div>
 
           <div className="box-pad-v-m fx-centered fx-col fx-start-h fit-container">
-            <h4 className="p-centered">Publish your article</h4>
+            <h4 className="p-centered">{t("ATPUIv2")}</h4>
           </div>
           {warning && (
             <div className="sc-s-18 box-pad-v-s box-pad-h-s">
-              <p className="orange-c p-medium p-centered">Warning</p>
-              <p className="gray-c p-medium p-centered">
-                Your article contains HTML elements which most likely will not
-                be rendered on some clients or platforms.
-              </p>
+              <p className="orange-c p-medium p-centered">{t("APW25Bv")}</p>
+              <p className="gray-c p-medium p-centered">{t("AsaVjqG")}</p>
             </div>
           )}
 
@@ -295,7 +270,6 @@ export default function ToPublishNOSTR({
                 height: "200px",
                 backgroundImage: `url(${thumbnailUrl})`,
                 backgroundColor: "var(--dim-gray)",
-                // borderStyle: thumbnailUrl ? "none" : "dotted",
               }}
             >
               {thumbnailUrl && (
@@ -319,8 +293,7 @@ export default function ToPublishNOSTR({
 
               {!thumbnailUrl && (
                 <>
-                  {/* <div className="image-24"></div> */}
-                  <p className="gray-c p-medium">(thumbnail preview)</p>
+                  <p className="gray-c p-medium">({t("At5dj7a")})</p>
                 </>
               )}
             </div>
@@ -328,44 +301,16 @@ export default function ToPublishNOSTR({
               <input
                 type="text"
                 className="if ifs-full"
-                placeholder="Image url..."
+                placeholder={t("AA8XLSe")}
                 value={thumbnailUrl}
-                onChange={handleThumbnailValue}
+                onChange={(e) => handleThumbnailValue(e.target.value)}
               />
-              {/* <label
-                htmlFor="image-up"
-                className="fit-container fx-centered fx-col box-pad-h sc-s pointer bg-img cover-bg"
-                style={{
-                  position: "relative",
-                  minHeight: "50px",
-                  minWidth: "50px",
-                  maxWidth: "50px",
-                }}
-              >
-                <div className="upload-file-24"></div>
-                <input
-                  type="file"
-                  id="image-up"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    opacity: 0,
-                  }}
-                  value={thumbnail.fileName}
-                  onChange={handleImageUpload}
-                  // disabled={thumbnail}
-                  className="pointer"
-                  accept="image/jpg,image/png,image/gif"
-                />
-              </label> */}
+
               <UploadFile round={true} setImageURL={handleThumbnailValue} />
             </div>
             <textarea
               className="txt-area fit-container"
-              placeholder="Write a description (optional)"
+              placeholder={t("Ascc4eS")}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
             ></textarea>
@@ -384,7 +329,7 @@ export default function ToPublishNOSTR({
                   }}
                   className="sc-s-18 fx-centered fx-start-v fx-start-h fx-col box-pad-h-m box-pad-v-m"
                 >
-                  <h5>Topics suggestions</h5>
+                  <h5>{t("A9r2PLE")}</h5>
                   {topicSuggestions.map((item, index) => {
                     return (
                       <button
@@ -396,7 +341,6 @@ export default function ToPublishNOSTR({
                           paddingLeft: 0,
                           fontSize: "1rem",
                           textDecoration: "none",
-
                           transition: ".4s ease-in-out",
                         }}
                         onClick={(e) => {
@@ -408,7 +352,7 @@ export default function ToPublishNOSTR({
                             : dispatch(
                                 setToast({
                                   type: 3,
-                                  desc: "Your tag contains only spaces!",
+                                  desc: t("Axk4fkj"),
                                 })
                               );
 
@@ -434,7 +378,7 @@ export default function ToPublishNOSTR({
                     : dispatch(
                         setToast({
                           type: 3,
-                          desc: "Your tag contains only spaces!",
+                          desc: t("Axk4fkj"),
                         })
                       );
                   setTempTag("");
@@ -444,7 +388,7 @@ export default function ToPublishNOSTR({
                 <input
                   type="text"
                   className="if ifs-full"
-                  placeholder="keyword (optional)"
+                  placeholder={t("AWdcSzG")}
                   value={tempTag}
                   onChange={(e) => setTempTag(e.target.value)}
                 />
@@ -453,7 +397,7 @@ export default function ToPublishNOSTR({
                     className="btn btn-normal"
                     style={{ minWidth: "max-content" }}
                   >
-                    Add tag
+                    {t("A3yqwwq")}
                   </button>
                 )}
               </form>
@@ -461,7 +405,7 @@ export default function ToPublishNOSTR({
             {selectedCategories.length > 0 && (
               <div className="fit-container box-pad-v-m fx-centered fx-col fx-start-h">
                 <p className="p-medium gray-c fit-container p-left">
-                  Selected categories
+                  {t("ANyX947")}
                 </p>
                 <div className="fit-container  fx-scattered fx-wrap fx-start-h">
                   {selectedCategories.map((item, index) => {
@@ -484,13 +428,6 @@ export default function ToPublishNOSTR({
                 </div>
               </div>
             )}
-            {/* <button
-                  className="btn btn-normal fx-centered"
-                  onClick={() => setScreen(2)}
-                >
-                  Next{" "}
-                  <div className="arrow" style={{ filter: "invert()" }}></div>
-                </button> */}
           </div>
           <label
             className="fx-centered fx-start-h fit-container if"
@@ -502,9 +439,7 @@ export default function ToPublishNOSTR({
               checked={contentSensitive}
               onChange={() => setContentSensitive(!contentSensitive)}
             />
-            <p className={contentSensitive ? "" : "gray-c"}>
-              This is a sensitive content
-            </p>
+            <p className={contentSensitive ? "" : "gray-c"}>{t("AtRAswG")}</p>
           </label>
           <label
             htmlFor="zap-split"
@@ -521,9 +456,7 @@ export default function ToPublishNOSTR({
                 !isLoading && setZapSplitEnabled(!zapSplitEnabled)
               }
             />
-            <p className={zapSplitEnabled ? "" : "gray-c"}>
-              I want to share this article's revenues
-            </p>
+            <p className={zapSplitEnabled ? "" : "gray-c"}>{t("A07MMRw")}</p>
           </label>
 
           {zapSplitEnabled && (
@@ -535,7 +468,6 @@ export default function ToPublishNOSTR({
 
               <div
                 className="fit-container fx-wrap fx-centered"
-                // style={{ maxHeight: "30vh", overflow: "scroll" }}
                 style={{ gap: "8px" }}
               >
                 {zapSplit.map((item, index) => {
@@ -566,7 +498,7 @@ export default function ToPublishNOSTR({
                           <input
                             type="number"
                             className="if ifs-full if-no-border"
-                            placeholder="portion"
+                            placeholder={t("AnnuNdL")}
                             value={item[3]}
                             max={100}
                             style={{ height: "100%" }}
@@ -601,9 +533,7 @@ export default function ToPublishNOSTR({
                   checked={deleteDraft}
                   onChange={() => !isLoading && setDeleteDraft(!deleteDraft)}
                 />
-                <p className={deleteDraft ? "" : "gray-c"}>
-                  Publish and remove the draft
-                </p>
+                <p className={deleteDraft ? "" : "gray-c"}>{t("AjJWULI")}</p>
               </label>
             </>
           )}
@@ -614,14 +544,14 @@ export default function ToPublishNOSTR({
               className="btn btn-full  btn-gst-red"
               onClick={() => !isLoading && Submit(30024)}
             >
-              {isLoading ? <LoadingDots /> : "Save as draft"}
+              {isLoading ? <LoadingDots /> : t("ABg9vzA")}
             </button>
           )}
           <button
             className="btn btn-full  btn-normal"
             onClick={() => !isLoading && Submit(30023)}
           >
-            {isLoading ? <LoadingDots /> : "Publish"}
+            {isLoading ? <LoadingDots /> : t("As7IjvV")}
           </button>
         </div>
       </div>

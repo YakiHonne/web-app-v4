@@ -11,7 +11,6 @@ import QRCode from "react-qr-code";
 import relaysOnPlatform from "../../Content/Relays";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import LoadingDots from "../LoadingDots";
-import LoginWithNostr from "./LoginWithNostr";
 import { webln } from "@getalby/sdk";
 import { decode } from "light-bolt11-decoder";
 import {
@@ -24,6 +23,7 @@ import { updateYakiChestStats } from "../../Helpers/Controlers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function ZapTip({
   recipientLNURL,
@@ -78,7 +78,6 @@ export default function ZapTip({
       (!callback && !recipientLNURL.startsWith("lnbc")) ||
       (!lnbcAmount && recipientLNURL.startsWith("lnbc")) ||
       (!recipientPubkey && !recipientLNURL.startsWith("lnbc")) ||
-      // (!recipientPubkey && recipientLNURL.startsWith("lnbc")) ||
       senderPubkey === recipientPubkey
     )
       return (
@@ -235,6 +234,7 @@ const Cashier = ({
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userMetadata = useSelector((state) => state.userMetadata);
+  const { t } = useTranslation();
   const [amount, setAmount] = useState(
     lnbcAmount ? parseInt(lnbcAmount.value) / 1000 : 1
   );
@@ -242,7 +242,6 @@ const Cashier = ({
   const [isLoading, setIsLoading] = useState(false);
   const [invoice, setInvoice] = useState("");
   const [wallets, setWallets] = useState(getWallets());
-  // const [confirmation, setConfirmation] = useState("confirmed");
   const [selectedWallet, setSelectedWallet] = useState(
     wallets.find((wallet) => wallet.active)
   );
@@ -277,7 +276,7 @@ const Cashier = ({
         dispatch(
           setToast({
             type: 2,
-            desc: "User is not connected or amount is null!",
+            desc: t("AbnA22A"),
           })
         );
         return;
@@ -311,13 +310,6 @@ const Cashier = ({
           ? encodeLud06(decodeUrlOrAddress(recipientLNURL))
           : recipientLNURL;
         try {
-          // const res = await axios(callback, {
-          //   params: {
-          //     amount: sats,
-          //     nostr: event,
-          //     lnurl: tempRecipientLNURL,
-          //   },
-          // });
           const res = await axios(
             `${callback}${
               callback.includes("?") ? "&" : "?"
@@ -328,7 +320,7 @@ const Cashier = ({
             dispatch(
               setToast({
                 type: 2,
-                desc: "Something went wrong when processing payment!",
+                desc: t("AZ43zpG"),
               })
             );
             return;
@@ -339,7 +331,7 @@ const Cashier = ({
           dispatch(
             setToast({
               type: 2,
-              desc: "Something went wrong when creating the invoice!",
+              desc: t("AgCBh6S"),
             })
           );
           return;
@@ -406,7 +398,7 @@ const Cashier = ({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -424,7 +416,7 @@ const Cashier = ({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -452,7 +444,7 @@ const Cashier = ({
     dispatch(
       setToast({
         type: 1,
-        desc: `LNURL was copied! 👏`,
+        desc: `${t("AS0m8W5")} 👏`,
       })
     );
   };
@@ -569,7 +561,7 @@ const Cashier = ({
             {forContent && (
               <div className="fit-container sc-s-18 box-pad-h-m box-pad-v-m">
                 <p>
-                  <span className="gray-c">For </span>
+                  <span className="gray-c">{t("AKndAJd")} </span>
                   {forContent}
                 </p>
               </div>
@@ -585,7 +577,7 @@ const Cashier = ({
                   onClick={() => setShowWalletList(!showWalletsList)}
                 >
                   <div>
-                    <p className="gray-c p-medium">Send with</p>
+                    <p className="gray-c p-medium">{t("A7r9XS1")}</p>
                     <p>{selectedWallet.entitle}</p>
                   </div>
                   <div className="arrow"></div>
@@ -607,7 +599,7 @@ const Cashier = ({
                   }}
                 >
                   <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
-                    Connected wallets
+                    {t("AnXYtQy")}
                   </p>
                   {wallets.map((wallet) => {
                     return (
@@ -650,7 +642,7 @@ const Cashier = ({
                   <input
                     type="number"
                     className="if ifs-full"
-                    placeholder="Amount"
+                    placeholder={t("AcDgXKI")}
                     value={amount}
                     onChange={(e) => setAmount(parseInt(e.target.value))}
                   />
@@ -684,7 +676,7 @@ const Cashier = ({
                   className="if ifs-full"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Tip message (optional)"
+                  placeholder={t("Ark6BLW")}
                 />
               </>
             )}
@@ -696,7 +688,7 @@ const Cashier = ({
                 }}
                 disabled={isLoading}
               >
-                {isLoading ? <LoadingDots /> : "Get invoice"}
+                {isLoading ? <LoadingDots /> : t("AWADEEz")}
               </button>
               <button
                 className="btn btn-normal btn-full fx-centered"
@@ -708,7 +700,7 @@ const Cashier = ({
                 ) : (
                   <>
                     {lnbcAmount ? (
-                      `Pay ${amount} sats`
+                      t("AloNXcI", { amount: amount })
                     ) : (
                       <>
                         <div className="bolt"></div> Zap
@@ -737,7 +729,7 @@ const Cashier = ({
             </div>
             {!onlyInvoice && (
               <div className="fit-container fx-centered box-pad-v-s">
-                <p className="gray-c p-medium">Waiting for response</p>
+                <p className="gray-c p-medium">{t("A1ufjMM")}</p>
                 <LoadingDots />
               </div>
             )}
@@ -749,7 +741,7 @@ const Cashier = ({
                     exit();
                   }}
                 >
-                  I'm done!
+                  {t("AI67awJ")}
                 </button>
               </div>
             )}
@@ -761,12 +753,12 @@ const Cashier = ({
             style={{ height: "16vh" }}
           >
             <div className="box-pad-v-s"></div>
-            <h4>Payment succeeded!</h4>
+            <h4>{t("ACDUO1d")}</h4>
             <p className="gray-c box-pad-v-s">
-              You have tipped <span className="orange-c">{amount}</span> sats
+              {t("ALEgwqA")} <span className="orange-c">{amount} sats</span>
             </p>
             <button className="btn btn-normal" onClick={exit}>
-              Done!
+              {t("Acglhzb")}
             </button>
           </div>
         )}

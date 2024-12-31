@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 export default function CheckNOSTRClient({ client }) {
-  const nostrClients  = useSelector(state => state.nostrClients);
+  const nostrClients = useSelector((state) => state.nostrClients);
   const [clientData, setClientData] = useState({ name: client, url: "" });
 
   useEffect(() => {
@@ -24,12 +24,12 @@ export default function CheckNOSTRClient({ client }) {
           name: pubkey?.substring(0, 10),
           url: "",
         });
-        return
-    }
-    setClientData({
-      name: client,
-      url: "",
-    });
+        return;
+      }
+      setClientData({
+        name: client,
+        url: "",
+      });
     } catch (err) {
       console.log(err);
     }

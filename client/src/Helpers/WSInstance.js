@@ -39,6 +39,7 @@ export const PCACHE_KINDS = {
 
 const pendingRequests = new Map();
 let socket = null;
+
 const connectWebSocket = (url) => {
   return new Promise((resolve, reject) => {
     const socket_ = new WebSocket(url);

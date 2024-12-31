@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import WriteNote from "./WriteNote";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function PostNoteWithWidget({ widget, exit, onlyNext = true }) {
   const [next, setNext] = useState(onlyNext);
+  const { t } = useTranslation();
+
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div
@@ -21,14 +24,13 @@ export default function PostNoteWithWidget({ widget, exit, onlyNext = true }) {
         >
           {next && (
             <div>
-              <h4>Post in note</h4>
-              <p className="gray-c">Post this smart widget in a note</p>
+              <h4>{t("AQLVrCw")}</h4>
+              <p className="gray-c">{t("AWuY5Lk")}</p>
             </div>
           )}
           {!next && (
             <div className="fit-container fx-centered">
-              <h4>Your widget is here!</h4>
-              
+              <h4>{t("AVYs3Uq")}</h4>
             </div>
           )}
           <div className="close" style={{ position: "static" }} onClick={exit}>
@@ -51,7 +53,7 @@ export default function PostNoteWithWidget({ widget, exit, onlyNext = true }) {
                 className="arrow"
                 style={{ minWidth: "36px", height: "64px", rotate: "90deg" }}
               ></div>
-              <p className="gray-c">See smart widgets</p>
+              <p className="gray-c">{t("AJCyqKE")}</p>
             </Link>
             <div
               className="fx fx-centered fx-col sc-s-18 option pointer"
@@ -62,8 +64,8 @@ export default function PostNoteWithWidget({ widget, exit, onlyNext = true }) {
                 className="note"
                 style={{ minWidth: "36px", height: "64px" }}
               ></div>
-              <h4>Post a note</h4>
-              <p className="gray-c p-centered box-pad-h">Post my smart widget in a note</p>
+              <h4>{t("ALNe7ey")}</h4>
+              <p className="gray-c p-centered box-pad-h">{t("AztCQ11")}</p>
             </div>
           </div>
         )}

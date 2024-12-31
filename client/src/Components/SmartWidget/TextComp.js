@@ -3,7 +3,6 @@ import { getNoteTree } from "../../Helpers/Helpers";
 
 export default function TextComp({ content = "", size, weight, textColor }) {
   const [parsedContent, setParsedContent] = useState(content);
-
   useEffect(() => {
     const parseContent = async () => {
       try {

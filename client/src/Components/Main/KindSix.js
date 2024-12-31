@@ -10,7 +10,6 @@ export default function KindSix({ event }) {
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   useEffect(() => {
     let auth = getUser(event.pubkey);
-
     if (auth) {
       setUser(auth);
     }

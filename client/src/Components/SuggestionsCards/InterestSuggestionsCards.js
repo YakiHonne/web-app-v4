@@ -4,6 +4,7 @@ import { setToPublish } from "../../Store/Slides/Publishers";
 import InterestSuggestions from "../../Content/InterestSuggestions";
 import Slider from "../Slider";
 import OptionsDropdown from "../Main/OptionsDropdown";
+import { useTranslation } from "react-i18next";
 
 export default function InterestSuggestionsCards({
   list = [],
@@ -13,6 +14,7 @@ export default function InterestSuggestionsCards({
   limit = 10,
 }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const userInterestList = useSelector((state) => state.userInterestList);
   const [tempInterestList, setTempInterestList] = useState([]);
@@ -78,7 +80,6 @@ export default function InterestSuggestionsCards({
   };
   const saveSingleInterestList = async (interest) => {
     try {
-      // if (!(isChanged && !isLoading)) return;
       setIsLoading(true);
       let tags = [...new Set([interest, ...userInterestList])].map((_) => [
         "t",
@@ -113,12 +114,12 @@ export default function InterestSuggestionsCards({
     return (
       <div className="fit-container box-pad-h fx-centered fx-col fx-start-v box-pad-v">
         <div className="fx-scattered fit-container box-marg-s">
-          <h4>Suggested interests</h4>
+          <h4>{t("A5rtSRh")}</h4>
           {userKeys && (
             <OptionsDropdown
               options={[
                 <p className="gray-c" onClick={handleHideSuggestion}>
-                  Hide suggestions
+                  {t("A2qCLTm")}
                 </p>,
               ]}
               vertical={false}
@@ -175,78 +176,22 @@ export default function InterestSuggestionsCards({
                       className="btn btn-gray btn-small btn-full fx-centered"
                       onClick={() => saveSingleInterestList(item.main_tag)}
                     >
-                      <div className="plus-sign"></div> Interested
+                      <div className="plus-sign"></div> {t("APkD8MP")}
                     </button>
                   </div>
                 </div>
               );
             })}
         </div>
-        {/* <Slider
-          gap={10}
-          slideBy={200}
-          items={InterestSuggestions.filter((item) => {
-            let isAdded = userInterestList.includes(
-              item.main_tag.toLowerCase()
-            );
-            if (!isAdded) return item;
-          })
-            .splice(0, limit)
-            .map((item, index) => {
-              let isAdded = tempInterestList.includes(
-                item.main_tag.toLowerCase()
-              );
-              return (
-                <div
-                  className="fit-container fx-centered box-pad-h-m box-pad-v-m sc-s-18"
-                  style={{ minWidth: "200px" }}
-                  key={index}
-                  onClick={() =>
-                    handleContent(item.main_tag.toLowerCase(), isAdded)
-                  }
-                >
-                  <div className="fx-centered fx-col">
-                    <div
-                      style={{
-                        minWidth: `64px`,
-                        aspectRatio: "1/1",
-                        position: "relative",
-                        border: "none",
-                      }}
-                      className="sc-s-18 fx-centered"
-                    >
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          zIndex: 2,
-                          backgroundImage: `url(${item.icon})`,
-                        }}
-                        className="bg-img cover-bg fit-container fit-height"
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="fit-height fx-scattered fx-col fx-start-v">
-                    <p className="p-bold p-caps">{item.main_tag}</p>
-                    
-                    <button className="btn btn-gray btn-small btn-full fx-centered">
-                      <div className="plus-sign"></div> Interested
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-        /> */}
       </div>
     );
   return (
     <div className="fit-container box-pad-h fx-centered fx-col fx-start-v box-pad-v">
       <div className="fx-scattered fit-container box-marg-s">
-        <h4>Suggested interests</h4>
+        <h4>{t("A5rtSRh")}</h4>
         {isChanged && update && (
           <button className="btn btn-normal" onClick={saveInterestList}>
-            Update list
+            {t("A29aBCD")}
           </button>
         )}
       </div>

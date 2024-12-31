@@ -19,7 +19,6 @@ import {
 } from "../../Helpers/Helpers";
 import Footer from "../../Components/Footer";
 import ShareLink from "../../Components/ShareLink";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useTranslation } from "react-i18next";
@@ -243,7 +242,7 @@ export default function UNEvent() {
                     }}
                   >
                     <div className="round-icon">
-                      <div className="arrow" style={{ rotate: "90deg" }}></div>
+                      <div className="arrow arrow-back"></div>
                     </div>
                     <h4>{t("AuWEFcH")}</h4>
                   </div>
@@ -487,15 +486,11 @@ export default function UNEvent() {
               <div
                 style={{
                   flex: "1",
-                  // width: "400px",
                   position: "sticky",
                   top: 0,
                 }}
-                className="box-pad-h-m  fx-centered fx-col un-banners"
+                className="box-pad-h-m box-pad-v-m fx-centered fx-col un-banners"
               >
-                <div className="sticky fit-container">
-                  <SearchbarNOSTR />
-                </div>
                 <div
                   className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
                   style={{

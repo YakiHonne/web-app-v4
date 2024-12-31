@@ -825,7 +825,7 @@ const ConversationBox = ({ convo, back }) => {
   const getEventKind13 = async (pubkey) => {
     let unsignedKind14 = getEventKind14();
     let content = userKeys.sec
-      ? nip44.default.v2.encrypt(
+      ? nip44.v2.encrypt(
           JSON.stringify(unsignedKind14),
           nip44.v2.utils.getConversationKey(userKeys.sec, pubkey)
         )
@@ -885,7 +885,7 @@ const ConversationBox = ({ convo, back }) => {
       >
         <div className="fx-centered">
           <div className="round-icon desk-hide" onClick={back}>
-            <div className="arrow" style={{ rotate: "90deg" }}></div>
+            <div className="arrow arrow-back" ></div>
           </div>
           <UserProfilePicNOSTR
             img={convo.picture}

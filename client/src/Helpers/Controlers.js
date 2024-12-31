@@ -20,8 +20,16 @@ import {
   setUserMetadata,
 } from "../Store/Slides/UserData";
 import { clearDB, savefollowingsRelays } from "./DB";
-import { getCurrentLevel, getKeys, levelCount } from "./Helpers";
+import {
+  getAppLang,
+  getContentTranslationConfig,
+  getCurrentLevel,
+  getKeys,
+  levelCount,
+} from "./Helpers";
 import { finalizeEvent } from "nostr-tools";
+import { translationServicesEndpoints } from "../Content/TranslationServices";
+import axios from "axios";
 
 const ConnectNDK = async (relays) => {
   try {
@@ -194,14 +202,6 @@ const yakiChestDisconnect = async () => {
 };
 
 const logoutAllAccounts = async () => {
-  // localStorage.removeItem("_userMetadata");
-  // localStorage.removeItem("_nostruserkeys");
-  // localStorage.removeItem("comment-with-prefix");
-  // localStorage.removeItem("connect_yc");
-  // localStorage.removeItem("yaki-wallets");
-  // localStorage.removeItem("yaki-accounts");
-  // localStorage.removeItem("new-notification");
-  // localStorage.removeItem("new-notification");
   localStorage.clear();
   store.dispatch(setUserBalance("N/A"));
   store.dispatch(setUserKeys(false));
@@ -341,28 +341,6 @@ const handleReceivedEvents = (set, event) => {
   return set;
 };
 
-// const getSubData = async (filter, timeout = 1000) => {
-//   if (!filter || filter.length === 0) return { data: [], pubkeys: [] };
-//   return new Promise((resolve, reject) => {
-//     let events = [];
-//     let pubkeys = [];
-//     let sub = ndkInstance.subscribe(filter, { cacheUsage: "CACHE_FIRST" });
-
-//     sub.on("event", (event) => {
-//       pubkeys.push(event.pubkey);
-//       events.push(event.rawEvent());
-//     });
-//     let timer = setTimeout(() => {
-//       sub.stop();
-//       clearTimeout(timer);
-//       resolve({
-//         data: sortEvents(removeEventsDuplicants(events)),
-//         pubkeys: [...new Set(pubkeys)],
-//       });
-//     }, timeout);
-//   });
-// };
-
 const getSubData = async (filter, timeout = 1000) => {
   if (!filter || filter.length === 0) return { data: [], pubkeys: [] };
 
@@ -458,6 +436,201 @@ const getEventStatAfterEOSE = (
   return stats;
 };
 
+const translate = async (text) => {
+  let service = getContentTranslationConfig();
+  let lang = getAppLang();
+  let { raw, specialContent } = extractRawContent(text);
+
+  let res = await axiosInstance.post("/api/v1/translate", {
+    service,
+    lang,
+    text,
+  });
+  return res.data;
+  // if (service.service === "dl") {
+  //   let translatedContent = await dlTranslate(
+  //     raw,
+  //     service,
+  //     lang,
+  //     specialContent
+  //   );
+  //   return translatedContent;
+  // }
+  // if (service.service === "lt") {
+  //   let translatedContent = await ltTranslate(
+  //     raw,
+  //     service,
+  //     lang,
+  //     specialContent
+  //   );
+  //   return translatedContent;
+  // }
+  // if (service.service === "nw") {
+  //   let translatedContent = await nwTranslate(
+  //     raw,
+  //     service,
+  //     lang,
+  //     specialContent
+  //   );
+  //   return translatedContent;
+  // }
+};
+
+const dlTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.plan
+      ? translationServicesEndpoints.dl.pro
+      : translationServicesEndpoints.dl.free;
+    let apikey = service.plan ? service.proApikey : service.freeApikey;
+    if (!apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        text: [text],
+        target_lang: lang,
+      },
+      {
+        headers: {
+          Authorization: `DeepL-Auth-key ${apikey}`,
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translations[0].text, specialContent),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+const ltTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.plan
+      ? translationServicesEndpoints.lt.pro
+      : translationServicesEndpoints.lt.free;
+    let apikey = service.plan ? service.proApikey : service.freeApikey;
+    if (service.plan && !apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        format: "text",
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+const nwTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = translationServicesEndpoints.nw.pro;
+
+    let apikey = service.proApikey;
+    if (!apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        format: "text",
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+
+const extractRawContent = (text) => {
+  let raw = text
+    .split(/(\n)/)
+    .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
+    .filter(Boolean);
+
+  let specialContent = [];
+  let scIndex = 0;
+  for (let i = 0; i < raw.length; i++) {
+    if (
+      /(https?:\/\/)/i.test(raw[i]) ||
+      raw[i].startsWith("npub1") ||
+      raw[i].startsWith("nprofile1") ||
+      raw[i].startsWith("nevent") ||
+      raw[i].startsWith("naddr") ||
+      raw[i].startsWith("note1") ||
+      raw[i].startsWith("nostr:") ||
+      raw[i].startsWith("#")
+    ) {
+      specialContent.push(raw[i]);
+      raw[i] = `{${scIndex}}`;
+      scIndex = scIndex + 1;
+    }
+  }
+  return {
+    raw: raw.join(" "),
+    specialContent,
+  };
+};
+const revertContent = (rawContent, specialContent) => {
+  let raw = rawContent;
+  for (let i = 0; i < specialContent.length; i++) {
+    raw = raw.replace(`{${i}}`, specialContent[i]);
+  }
+  return raw;
+};
+
 export {
   ConnectNDK,
   aggregateUsers,
@@ -477,4 +650,5 @@ export {
   getSubData,
   InitEvent,
   getEventStatAfterEOSE,
+  translate,
 };

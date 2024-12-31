@@ -2,10 +2,13 @@ import React from "react";
 import { getLinkFromAddr } from "../../Helpers/Helpers";
 import { customHistory } from "../../Helpers/History";
 import KindOne from "./KindOne";
+import { useTranslation } from "react-i18next";
 
 export default function LinkRepEventPreview({ event, allowClick = true }) {
   let url = getLinkFromAddr(event.naddr || event.nEvent);
-  if (event.kind === 1) return <KindOne event={event} reactions={false} minmal={true}/>;
+  const { t } = useTranslation();
+  if (event.kind === 1)
+    return <KindOne event={event} reactions={false} minmal={true} />;
   return (
     <div
       className={`fit-container sc-s-18 fx-centered fx-start-h fx-stretch ${
@@ -29,7 +32,7 @@ export default function LinkRepEventPreview({ event, allowClick = true }) {
         <p className="p-two-lines">{event.title || "Untitled"}</p>
         <p className="gray-c p-one-line">
           {event.description || (
-            <span className="p-italic">No description</span>
+            <span className="p-italic">{t("AtZrjns")}</span>
           )}
         </p>
       </div>

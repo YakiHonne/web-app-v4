@@ -13,6 +13,7 @@ import {
   getParsedRepEvent,
   minimizeKey,
   getParsedAuthor,
+  detectDirection,
 } from "../../Helpers/Encryptions";
 import {
   copyText,
@@ -32,7 +33,7 @@ import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import AddArticleToCuration from "../../Components/Main/AddArticleToCuration";
 import CheckNOSTRClient from "../../Components/Main/CheckNOSTRClient";
 import ShareLink from "../../Components/ShareLink";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import TopicsTags from "../../Content/TopicsTags";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
@@ -45,10 +46,14 @@ import RepEventCommentsSection from "../../Components/Main/RepEventCommentsSecti
 import { customHistory } from "../../Helpers/History";
 import Backbar from "../../Components/Main/Backbar";
 import { useTranslation } from "react-i18next";
+import { translate } from "../../Helpers/Controlers";
+import LoadingDots from "../../Components/LoadingDots";
+import { setToast } from "../../Store/Slides/Publishers";
 
 export default function Article() {
   const { t } = useTranslation();
   const { id, AuthNip05, ArtIdentifier } = useParams();
+  const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const isDarkMode = useSelector((state) => state.isDarkMode);
 
@@ -61,6 +66,12 @@ export default function Article() {
   const [showAddArticleToCuration, setShowArticleToCuration] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showCommentsSection, setShowCommentsSections] = useState(false);
+  const [translatedTitle, setTranslatedTitle] = useState("");
+  const [translatedDescription, setTranslatedDescription] = useState("");
+  const [translatedDir, setTranslatedDir] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState("");
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [isContentTranslating, setIsContentTranslating] = useState(false);
   const { postActions } = useRepEventStats(post.aTag, post.pubkey);
   const containerRef = useRef(null);
 
@@ -188,29 +199,6 @@ export default function Article() {
     if (naddrData) fetchData();
   }, [naddrData]);
 
-  function detectDirection(text) {
-    const rtlCharRegExp =
-      /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
-    const ltrCharRegExp = /[a-zA-Z]/;
-
-    let rtlCount = 0;
-    let ltrCount = 0;
-
-    for (const char of text) {
-      if (rtlCharRegExp.test(char)) {
-        rtlCount++;
-      } else if (ltrCharRegExp.test(char)) {
-        ltrCount++;
-      }
-    }
-
-    if (rtlCount > ltrCount) {
-      return "RTL";
-    } else if (ltrCount > rtlCount) {
-      return "LTR";
-    }
-  }
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -243,6 +231,53 @@ export default function Article() {
     };
     fetchData();
   }, []);
+
+  const translateArticle = async () => {
+    setIsContentTranslating(true);
+    if (translatedContent) {
+      setShowTranslation(true);
+      setIsContentTranslating(false);
+      return;
+    }
+    try {
+      let res = await translate(
+        [post.title, post.description || " ", post.content].join(" ABCAF ")
+      );
+      if (res.status === 500) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AZ5VQXL"),
+          })
+        );
+      }
+      if (res.status === 400) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AJeHuH1"),
+          })
+        );
+      }
+      if (res.status === 200) {
+        setTranslatedTitle(res.res.split("ABCAF")[0]);
+        setTranslatedDescription(res.res.split("ABCAF")[1]);
+        setTranslatedContent(res.res.split("ABCAF")[2]);
+        setTranslatedDir(detectDirection(res.res.split("ABCAF")[2]))
+        setShowTranslation(true);
+      }
+      setIsContentTranslating(false);
+    } catch (err) {
+      setShowTranslation(false);
+      setIsContentTranslating(false);
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("AZ5VQXL"),
+        })
+      );
+    }
+  };
 
   if (!isLoaded) return <LoadingScreen />;
   return (
@@ -353,7 +388,9 @@ export default function Article() {
                               </p>
                             </div>
                           </div>
-                          <h4 dir="auto">{post.title}</h4>
+                          <h4>
+                            {showTranslation ? translatedTitle : post.title}
+                          </h4>
                           <div style={{ height: ".125rem" }}></div>
                           <ReaderIndicator />
                         </div>
@@ -437,9 +474,10 @@ export default function Article() {
                     <div
                       className="fit-container fx-scattered fx-start-v fx-col box-pad-v"
                       style={{ columnGap: "10px" }}
-                      dir="auto"
                     >
-                      <h3 dir="auto">{post.title}</h3>
+                      <h3 dir={showTranslation ? translatedDir : post.dir}>
+                        {showTranslation ? translatedTitle : post.title}
+                      </h3>
                       <div
                         className="fx-centered fit-container fx-start-h"
                         style={{ minWidth: "max-content" }}
@@ -459,11 +497,6 @@ export default function Article() {
                               cdate: convertDate(post.published_at * 1000),
                               edate: convertDate(post.created_at * 1000),
                             })}
-                            // data-tooltip={`${t("AHMARaK")} ${convertDate(
-                            //   post.published_at * 1000
-                            // )}, ${t("A1jhS42")} ${convertDate(
-                            //   post.created_at * 1000
-                            // )}`}
                           >
                             <Date_
                               toConvert={new Date(post.created_at * 1000)}
@@ -472,8 +505,10 @@ export default function Article() {
                         </div>
                       </div>
                       {post.description && (
-                        <div className="fit-container " dir={post.dir}>
-                          {post.description}
+                        <div className="fit-container " dir={showTranslation ? translatedDir : post.dir}>
+                          {showTranslation
+                            ? translatedDescription
+                            : post.description}
                         </div>
                       )}
                       {post.items?.length > 0 && (
@@ -517,13 +552,15 @@ export default function Article() {
                         ></div>
                       </div>
                     )}
-                    <div className="article fit-container" dir={post.dir}>
+                    <div className="article fit-container" dir={showTranslation ? translatedDir : post.dir}>
                       <MarkdownPreview
                         wrapperElement={{
                           "data-color-mode":
                             isDarkMode === "0" ? "dark" : "light",
                         }}
-                        source={post.content}
+                        source={
+                          showTranslation ? translatedContent : post.content
+                        }
                         rehypeRewrite={(node, index, parent) => {
                           if (
                             node.tagName === "a" &&
@@ -538,25 +575,25 @@ export default function Article() {
                             return <p>{getComponent(children)}</p>;
                           },
                           h1: ({ children }) => {
-                            return <h1 dir="auto">{children}</h1>;
+                            return <h1>{children}</h1>;
                           },
                           h2: ({ children }) => {
-                            return <h2 dir="auto">{children}</h2>;
+                            return <h2>{children}</h2>;
                           },
                           h3: ({ children }) => {
-                            return <h3 dir="auto">{children}</h3>;
+                            return <h3>{children}</h3>;
                           },
                           h4: ({ children }) => {
-                            return <h4 dir="auto">{children}</h4>;
+                            return <h4>{children}</h4>;
                           },
                           h5: ({ children }) => {
-                            return <h5 dir="auto">{children}</h5>;
+                            return <h5>{children}</h5>;
                           },
                           h6: ({ children }) => {
-                            return <h6 dir="auto">{children}</h6>;
+                            return <h6>{children}</h6>;
                           },
                           li: ({ children }) => {
-                            return <li dir="auto">{children}</li>;
+                            return <li>{children}</li>;
                           },
                           code: ({ inline, children, className, ...props }) => {
                             if (!children) return;
@@ -661,12 +698,59 @@ export default function Article() {
             </div>
             {!showCommentsSection && (
               <div
-                className="fit-container fx-centered sticky-to-fixed"
+                className="fit-container fx-centered fx-col sticky-to-fixed"
                 style={{
                   bottom: 0,
                   borderTop: "1px solid var(--very-dim-gray)",
                 }}
               >
+                <div
+                  style={{ position: "relative" }}
+                  className="slide-up fx-centered fit-container"
+                >
+                  {!isContentTranslating && !showTranslation && (
+                    <button
+                      className="btn btn-normal slide-up"
+                      style={{
+                        position: "absolute",
+                        top: "-70px",
+                        borderRadius: "45px",
+                        minWidth: "max-content",
+                      }}
+                      onClick={translateArticle}
+                    >
+                      {t("AdHV2qJ")}
+                    </button>
+                  )}
+                  {!isContentTranslating && showTranslation && (
+                    <button
+                      className="btn btn-red slide-up"
+                      style={{
+                        position: "absolute",
+                        top: "-70px",
+                        borderRadius: "45px",
+                        minWidth: "max-content",
+                        
+                      }}
+                      onClick={() => setShowTranslation(false)}
+                    >
+                      {t("AE08Wte")}
+                    </button>
+                  )}
+                  {isContentTranslating && (
+                    <button
+                      className="btn btn-normal slide-up"
+                      style={{
+                        position: "absolute",
+                        top: "-70px",
+                        borderRadius: "45px",
+                        minWidth: "max-content",
+                      }}
+                    >
+                      <LoadingDots />
+                    </button>
+                  )}
+                </div>
                 <div className="main-middle fx-even">
                   <div className="fx-centered  pointer">
                     <div
@@ -768,7 +852,13 @@ export default function Article() {
                   <OptionsDropdown
                     options={[
                       <div
-                        onClick={(e) => copyText(post.naddr, "Naddr", e)}
+                        onClick={(e) =>
+                          copyText(
+                            post.naddr,
+                            t("ApPw14o", { item: "naddr" }),
+                            e
+                          )
+                        }
                         className="pointer"
                       >
                         <p>{t("ApPw14o", { item: "naddr" })}</p>

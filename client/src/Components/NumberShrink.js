@@ -2,7 +2,6 @@ import React from "react";
 
 export default function NumberShrink({ value }) {
   var SI_SYMBOL = ["", "k", "M", "B", "T"];
-
   const abbreviateNumber = (value) => {
     var tier = (Math.log10(Math.abs(value)) / 3) | 0;
 

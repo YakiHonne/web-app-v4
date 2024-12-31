@@ -4,8 +4,10 @@ import bg from "../../media/images/leaves-bg.svg";
 import bg2 from "../../media/images/dots-bg.png";
 import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
 import QRSharing from "../../Pages/MainApp/QRSharing";
+import { useTranslation } from "react-i18next";
 
 export default function ProfileShareSuggestionCards() {
+  const { t } = useTranslation();
   const userMetadata = useSelector((state) => state.userMetadata);
   const userKeys = useSelector((state) => state.userKeys);
   const [showQR, setShowQR] = useState(false);
@@ -46,11 +48,15 @@ export default function ProfileShareSuggestionCards() {
               @{userMetadata.display_name || userMetadata.name}
             </h4>
             <p className="gray-c p-centered" style={{ maxWidth: "350px" }}>
-              Share your profile to reach more people, connect with others, and
-              grow your network.
+              {t("AjLZOWy")}
             </p>
             <div className="fit-container box-pad-h">
-              <button className="btn btn-normal btn-full" onClick={() => setShowQR(true)}>Share profile</button>
+              <button
+                className="btn btn-normal btn-full"
+                onClick={() => setShowQR(true)}
+              >
+                {t("AawXy2A")}
+              </button>
             </div>
           </div>
         </div>

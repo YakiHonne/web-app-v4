@@ -5,17 +5,19 @@ import { Link } from "react-router-dom";
 import ShareLink from "../ShareLink";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 import AuthorPreview from "./AuthorPreview";
-import PostNoteWithWidget from "./PostNoteWithWidget";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { getUser } from "../../Helpers/Controlers";
 import PostAsNote from "./PostAsNote";
+import { useTranslation } from "react-i18next";
+
 export default function WidgetCard({ widget, deleteWidget, options = true }) {
   const dispatch = useDispatch();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userKeys = useSelector((state) => state.userKeys);
   const [authorData, setAuthorData] = useState(widget.author);
   const [postNoteWithWidgets, setPostNoteWithWidget] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +45,7 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
     dispatch(
       setToast({
         type: 1,
-        desc: `Naddr was copied! 👏`,
+        desc: `${t("AHAP58g")} 👏`,
       })
     );
   };
@@ -51,17 +53,6 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
   return (
     <>
       {postNoteWithWidgets && (
-        // <PostNoteWithWidget
-        //   widget={{
-        //     ...widget,
-        //     naddr: nip19.naddrEncode({
-        //       pubkey: widget.pubkey,
-        //       identifier: widget.d,
-        //       kind: widget.kind,
-        //     }),
-        //   }}
-        //   exit={() => setPostNoteWithWidget(false)}
-        // />
         <PostAsNote
           content={`https://yakihonne.com/smart-widget-checker?naddr=${widget.naddr}`}
           exit={() => setPostNoteWithWidget(false)}
@@ -81,17 +72,17 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
                   className="fit-container"
                   onClick={() => setPostNoteWithWidget(true)}
                 >
-                  <p>Post widget in note</p>
+                  <p>{t("AB8DnjO")}</p>
                 </div>,
                 <div className="fit-container" onClick={copyNaddr}>
-                  <p>Copy naddr</p>
+                  <p>{t("ApPw14o", { item: "naddr" })}</p>
                 </div>,
                 <Link
                   className="fit-container"
                   to={"/smart-widget-builder"}
                   state={{ ops: "clone", metadata: { ...widget } }}
                 >
-                  <p>Clone</p>
+                  <p>{t("AyWVBDx")}</p>
                 </Link>,
                 <Link
                   className="fit-container"
@@ -100,9 +91,8 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
                     identifier: widget.d,
                     kind: widget.kind,
                   })}`}
-                  
                 >
-                  <p>Check validity</p>
+                  <p>{t("AavUrQj")}</p>
                 </Link>,
                 deleteWidget && userKeys.pub === widget.pubkey && (
                   <Link
@@ -110,16 +100,16 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
                     to={"/smart-widget-builder"}
                     state={{ ops: "edit", metadata: { ...widget } }}
                   >
-                    <p>Edit</p>
+                    <p>{t("AsXohpb")}</p>
                   </Link>
                 ),
                 deleteWidget && userKeys.pub === widget.pubkey && (
                   <div className="fit-container" onClick={deleteWidget}>
-                    <p className="red-c">Delete</p>
+                    <p className="red-c">{t("Almq94P")}</p>
                   </div>
                 ),
                 <ShareLink
-                  label="Share widget"
+                  label={t("AGB5vpj")}
                   path={`/${nip19.naddrEncode({
                     pubkey: widget.pubkey,
                     identifier: widget.d,
@@ -138,7 +128,7 @@ export default function WidgetCard({ widget, deleteWidget, options = true }) {
             className="fx-centered fx-col fx-start-h fx-start-v fit-container "
             style={{ rowGap: 0 }}
           >
-            <p>{widget.title || "Untitled"}</p>
+            <p>{widget.title || t("AMvUjqZ")}</p>
             {widget.description && (
               <p className="gray-c p-medium">{widget.description}</p>
             )}

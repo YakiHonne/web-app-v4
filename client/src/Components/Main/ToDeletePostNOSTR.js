@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 
+
 export default function ToDeletePostNOSTR({
   exit,
   exitAndRefresh,

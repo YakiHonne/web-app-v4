@@ -3,6 +3,7 @@ import emojis from "../Content/Emojis";
 
 
 export default function EmojisList({ onClick, position = "right" }) {
+  
   return (
     <div
       style={{

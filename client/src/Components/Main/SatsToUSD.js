@@ -23,13 +23,13 @@ const SatsToUSD = ({ sats, isHidden }) => {
 
   useEffect(() => {
     if (usdRate !== null) {
-      const btcValue = sats / 100000000; // Convert Satoshis to Bitcoin
-      const usdValue = btcValue * usdRate; // Convert Bitcoin to USD
+      const btcValue = sats / 100000000;
+      const usdValue = btcValue * usdRate;
       setUsdValue(usdValue);
     }
   }, [usdRate, sats]);
 
-  if(!usdValue) return
+  if (!usdValue) return;
   return (
     <div>
       {usdValue !== null ? (

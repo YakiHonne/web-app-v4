@@ -2,12 +2,14 @@ import React from "react";
 import ProgressCirc from "./ProgressCirc";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserFirstLoginYakiChest } from "../Store/Slides/YakiChest";
+import { useTranslation } from "react-i18next";
 
 export default function UserFirsLogin() {
   const userFirstLoginYakiChest = useSelector(
     (state) => state.userFirstLoginYakiChest
   );
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   if (!userFirstLoginYakiChest) return;
   return (
@@ -20,10 +22,9 @@ export default function UserFirsLogin() {
         style={{ width: "min(100%, 400px)", rowGap: "16px" }}
       >
         <h1>🎉</h1>
-        <h4>Congratulations!</h4>
+        <h4>{t("APeFTZA")}</h4>
         <p className="p-centered gray-c">
-          You have been awarded {userFirstLoginYakiChest.xp}xp for the following
-          actions, be active more and earn awards!
+          {t("AAmnVTp", { xp: userFirstLoginYakiChest.xp })}
         </p>
 
         <ProgressCirc
@@ -38,7 +39,9 @@ export default function UserFirsLogin() {
                 <h2>{userFirstLoginYakiChest.xp}</h2>
                 <p className="gray-c">xp</p>
               </div>
-              <p className="orange-c">Level {userFirstLoginYakiChest.lvl}</p>
+              <p className="orange-c">
+                {t("AdLQkic", { level: userFirstLoginYakiChest.lvl })}
+              </p>
             </div>
           }
         />
@@ -61,7 +64,7 @@ export default function UserFirsLogin() {
             className="btn btn-normal"
             onClick={() => dispatch(setUserFirstLoginYakiChest(false))}
           >
-            Woohoo!
+            {t("AvtdLIG")}
           </button>
         </div>
       </div>

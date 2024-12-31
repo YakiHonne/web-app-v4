@@ -10,6 +10,7 @@ import Date_ from "./Date_";
 import UN from "./Main/UN";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 
 const getNostrLink = async (path) => {
   let pathSplit = path.split("/");
@@ -61,6 +62,7 @@ export default function ShareLink({
   kind = false,
 }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [showSharing, setShowSharing] = useState(false);
   const [showCopyURL, setShowCopyURL] = useState(false);
   const [showShareSocial, setShowShareSocial] = useState(false);
@@ -86,12 +88,12 @@ export default function ShareLink({
     fetchData();
   }, []);
 
-  const copyLink = (toCopy, type = "URL") => {
+  const copyLink = (toCopy) => {
     navigator.clipboard.writeText(toCopy);
     dispatch(
       setToast({
         type: 1,
-        desc: `${type} was copied! 👏`,
+        desc: `${t("AxBmdge")} 👏`,
       })
     );
   };
@@ -147,7 +149,7 @@ export default function ShareLink({
             <div className="close" onClick={() => setShowSharing(false)}>
               <div></div>
             </div>
-            <h4 className="box-marg-s">Share on</h4>
+            <h4 className="box-marg-s">{t("AGB5vpj")}</h4>
             {shareImgData && !showCopyURL && !showShareSocial && (
               <ShareImg
                 data={shareImgData}
@@ -168,7 +170,7 @@ export default function ShareLink({
                       className="btn btn-normal btn-full fx-centered"
                       onClick={() => setShowShareSocial(true)}
                     >
-                      Share on social
+                      {t("AFnYfjs")}
                     </button>
                   )}
                   <button
@@ -177,7 +179,7 @@ export default function ShareLink({
                       isMobile ? handleSharingInMobile() : setShowCopyURL(true)
                     }
                   >
-                    Copy link
+                    {t("AahCFK4")}
                   </button>
                 </div>
                 {shareImgData && (
@@ -187,7 +189,7 @@ export default function ShareLink({
                     } fx-centered`}
                     onClick={() => (isLoading ? null : convert())}
                   >
-                    <div className="download-file"></div> Download image
+                    <div className="download-file"></div> {t("AxyxzkE")}
                   </button>
                 )}
               </div>
@@ -197,7 +199,7 @@ export default function ShareLink({
                 className="fit-container fx-centered fx-col fx-start-v  slide-up"
                 style={{ maxWidth: "400px" }}
               >
-                <p className="c1-c p-left fit-container">Human-readable URL</p>
+                <p className="c1-c p-left fit-container">{t("Aw5f61f")}</p>
                 <div
                   className={`fx-scattered if pointer fit-container dashed-onH`}
                   style={{ borderStyle: "dashed" }}
@@ -210,7 +212,7 @@ export default function ShareLink({
                   <p className="p-one-line">{`${window.location.protocol}//${window.location.hostname}${path}`}</p>
                   <div className="copy-24"></div>
                 </div>
-                <p className="c1-c p-left fit-container">Nostr URL</p>
+                <p className="c1-c p-left fit-container">{t("AezhEDd")}</p>
                 <div
                   className="fx-scattered if pointer dashed-onH fit-container"
                   style={{ borderStyle: "dashed" }}
@@ -224,21 +226,21 @@ export default function ShareLink({
                   onClick={() => setShowCopyURL(false)}
                 >
                   <div className="arrow" style={{ rotate: "90deg" }}></div>
-                  Back
+                  {t("ATB2h6T")}
                 </button>
               </div>
             )}
             {showShareSocial && (
               <div
                 className="fit-container fx-centered fx-col fx-start-v  slide-up"
-                style={{  maxWidth: "400px" }}
+                style={{ maxWidth: "400px" }}
               >
                 <a
                   className="twitter-share-button btn-gray btn btn-full fx-centered"
                   href={`https://twitter.com/intent/tweet?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
                   target="_blank"
                 >
-                  <div className="twitter-logo-24"></div> X (former Twitter)
+                  <div className="twitter-logo-24"></div> {t("AroZoen")}
                 </a>
                 <button className="btn btn-gray btn-full fx-centered">
                   <div
@@ -287,7 +289,7 @@ export default function ShareLink({
                   onClick={() => setShowShareSocial(false)}
                 >
                   <div className="arrow" style={{ rotate: "90deg" }}></div>
-                  Back
+                  {t("ATB2h6T")}
                 </button>
               </div>
             )}
@@ -296,7 +298,7 @@ export default function ShareLink({
       )}
       <div
         className={label ? "fx-scattered fit-container" : "icon-tooltip"}
-        data-tooltip="Share"
+        data-tooltip={t("AGB5vpj")}
         onClick={handleSharing}
       >
         {label && <p>{label}</p>}
@@ -305,252 +307,9 @@ export default function ShareLink({
     </>
   );
 }
-// export default function ShareLink({
-//   label = false,
-//   path = "",
-//   title = "",
-//   description = "",
-//   shareImgData = false,
-//   kind = false,
-// }) {
-//   const dispatch = useDispatch();
-//   const [showSharing, setShowSharing] = useState(false);
-//   const [showCopyURL, setShowCopyURL] = useState(false);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [nostrURL, setNostURL] = useState("");
-//   const [isMobile, setIsMobile] = useState(false);
-//   const [_, convert, ref] = useToPng({
-//     selector: "#to-print",
-//     quality: 0.8,
-//     onSuccess: (data) => {
-//       const link = document.createElement("a");
-//       link.download = "shared-from-YAKIHONNE.jpeg";
-//       link.href = data;
-//       link.click();
-//     },
-//   });
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       let url = await getNostrLink(path);
-//       setNostURL(url);
-//     };
-//     fetchData();
-//   }, []);
-
-//   const copyLink = (toCopy, type = "URL") => {
-//     navigator.clipboard.writeText(toCopy);
-//     dispatch(
-//       setToast({
-//         type: 1,
-//         desc: `${type} was copied! 👏`,
-//       })
-//     );
-//   };
-//   const handleSharing = async (e) => {
-//     e.stopPropagation();
-//     let isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
-//     if (navigator.share && isTouchScreen) {
-//       setIsMobile(true);
-//       setShowSharing(true);
-//     } else {
-//       setShowSharing(true);
-//       console.log(
-//         "Web share is currently not supported on this browser. Please provide a callback"
-//       );
-//     }
-//   };
-
-//   const handleSharingInMobile = async () => {
-//     if (navigator.share) {
-//       try {
-//         let shareDetails = {
-//           url: `${window.location.protocol}//${window.location.hostname}${path}`,
-//           title: title,
-//           text: description,
-//         };
-//         await navigator.share(shareDetails).then(() => console.log("shared"));
-//       } catch (error) {
-//         console.log(`Oops! I couldn't share to the world because: ${error}`);
-//       }
-//     } else {
-//       setShowSharing(true);
-//     }
-//   };
-
-//   return (
-//     <>
-//       {showSharing && (
-//         <div
-//           className="fixed-container fx-centered"
-//           onClick={(e) => {
-//             e.stopPropagation();
-//             setShowSharing(false);
-//           }}
-//         >
-//           <div
-//             className="box-pad-v box-pad-h fx-centered fx-col sc-s"
-//             onClick={(e) => e.stopPropagation()}
-//           >
-//             <h3>Share on</h3>
-//             {shareImgData && !showCopyURL && (
-//               <ShareImg
-//                 data={shareImgData}
-//                 kind={kind}
-//                 path={`${window.location.protocol}//${window.location.hostname}${path}`}
-//                 isLoading={isLoading}
-//                 setIsLoading={setIsLoading}
-//               />
-//             )}
-//             <div className="fx-centered" style={{ columnGap: "30px" }}>
-//               {!showCopyURL && (
-//                 <>
-//                   {shareImgData && (
-//                     <div
-//                       className={isLoading ? "flash" : "icon-tooltip"}
-//                       data-tooltip="Download image"
-//                       onClick={() => (isLoading ? null : convert())}
-//                     >
-//                       <div className="download-file-24"></div>
-//                     </div>
-//                   )}
-//                   {!isMobile && (
-//                     <>
-//                       <a
-//                         className="twitter-share-button icon-tooltip"
-//                         href={`https://twitter.com/intent/tweet?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
-//                         target="_blank"
-//                         data-tooltip="Share on X"
-//                       >
-//                         <div className="twitter-logo-24"></div>
-//                       </a>
-//                       <div
-//                         className="fb-share-button"
-//                         data-href={`${`${
-//                           window.location.protocol
-//                         }//${"yakihonne.com"}${path}`}`}
-//                         data-layout=""
-//                         data-size=""
-//                       >
-//                         <a
-//                           target="_blank"
-//                           href={`https://www.facebook.com/sharer/sharer.php?u=${`${
-//                             window.location.protocol
-//                           }//${"yakihonne.com"}${path}`}%2F&amp;src=sdkpreparse`}
-//                           className="fb-xfbml-parse-ignore icon-tooltip"
-//                           data-tooltip="Share on Facebook"
-//                         >
-//                           <div className="fb-icon-24"></div>
-//                         </a>
-//                       </div>
-//                       <a
-//                         href={`whatsapp://send?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
-//                         data-action="share/whatsapp/share"
-//                         target="_blank"
-//                         className="twitter-share-button icon-tooltip"
-//                         data-tooltip="Share on Whatsapp"
-//                       >
-//                         <div className="whatsapp-icon-24"></div>
-//                       </a>
-//                       <a
-//                         href={`https://www.linkedin.com/shareArticle?mini=true&url=${`${
-//                           window.location.protocol
-//                         }//${"yakihonne.com"}${path}`}&title=${title}&summary=${description}&source=${"https://yakihonne.com"}`}
-//                         data-action="share/whatsapp/share"
-//                         target="_blank"
-//                         className="twitter-share-button icon-tooltip"
-//                         data-tooltip="Share on LinkedIn"
-//                       >
-//                         <div className="in-icon-24"></div>
-//                       </a>
-//                       <div
-//                         className="icon-tooltip"
-//                         data-tooltip="Copy link"
-//                         onClick={() => setShowCopyURL(true)}
-//                       >
-//                         <div className="link-24 "></div>
-//                       </div>
-//                     </>
-//                   )}
-//                   {isMobile && (
-//                     <div
-//                       className="icon-tooltip"
-//                       data-tooltip="Copy link"
-//                       onClick={handleSharingInMobile}
-//                     >
-//                       <div className="link-24 "></div>
-//                     </div>
-//                   )}
-//                   <div
-//                     className="icon-tooltip"
-//                     data-tooltip="Copy n*"
-//                     onClick={() => copyLink(nostrURL.split("nostr:")[1], "n*")}
-//                   >
-//                     <div className="copy-24"></div>
-//                   </div>
-//                 </>
-//               )}
-//             </div>
-//             {showCopyURL && (
-//               <div
-//                 className="fit-container fx-centered fx-col fx-start-v sc-s-18 box-pad-h-m box-pad-v-m slide-up"
-//                 style={{ marginTop: "1rem", maxWidth: "400px" }}
-//               >
-//                 <p className="c1-c p-left fit-container">Human-readable URL</p>
-//                 <div
-//                   className={`fx-scattered if pointer fit-container dashed-onH`}
-//                   style={{ borderStyle: "dashed" }}
-//                   onClick={() =>
-//                     copyLink(
-//                       `${window.location.protocol}//${window.location.hostname}${path}`
-//                     )
-//                   }
-//                 >
-//                   <p className="p-one-line">{`${window.location.protocol}//${window.location.hostname}${path}`}</p>
-//                   <div className="copy-24"></div>
-//                 </div>
-//                 <p className="c1-c p-left fit-container">Nostr URL</p>
-//                 <div
-//                   className="fx-scattered if pointer dashed-onH fit-container"
-//                   style={{ borderStyle: "dashed" }}
-//                   onClick={() => copyLink(nostrURL)}
-//                 >
-//                   <p className="p-one-line">{nostrURL}</p>
-//                   <div className="copy-24"></div>
-//                 </div>
-//               </div>
-//             )}
-//             {showCopyURL && (
-//               <div
-//                 className="close"
-//                 style={{ position: "static" }}
-//                 onClick={() => setShowCopyURL(false)}
-//               >
-//                 <div></div>
-//               </div>
-//             )}
-//             <button
-//               className="btn-text btn"
-//               onClick={() => setShowSharing(false)}
-//             >
-//               Cancel
-//             </button>
-//           </div>
-//         </div>
-//       )}
-//       <div
-//         className={label ? "fx-scattered fit-container" : "icon-tooltip"}
-//         data-tooltip="Share"
-//         onClick={handleSharing}
-//       >
-//         {label && <p>{label}</p>}
-//         <div className="share-v2-24"></div>
-//       </div>
-//     </>
-//   );
-// }
 
 const ShareImg = ({ data, kind, path, setIsLoading }) => {
+  const { t } = useTranslation();
   const followersCountSL = useSelector((state) => state.followersCountSL);
   const [ppBase64, setPpBase64] = useState(data.author.picture || "");
   const [thumbnailBase64, setThumbnailBase64] = useState(data.post.image || "");
@@ -662,7 +421,9 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                     <div className="fit-container  box-pad-h-m box-pad-v-s">
                       <div className="fit-container fx-scattered">
                         <div className="fx-centered fit-container ">
-                          <p className="p-bold p-medium green-c">Earn sats!</p>
+                          <p className="p-bold p-medium green-c">
+                            {t("ABgVYCn")}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -671,10 +432,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                       className="fit-container fx-centered box-pad-h-m box-pad-v-s"
                       style={{ rowGap: "0px" }}
                     >
-                      <p className="p-medium p-centered">
-                        Help us provide more decentralized insights to review
-                        this flash news.
-                      </p>
+                      <p className="p-medium p-centered">{t("ASm8U6V")}</p>
                     </div>
                   </div>
                 </div>
@@ -690,12 +448,15 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
               />
               <div>
                 <p className="p-small" style={{ color: "black" }}>
-                  By{" "}
-                </p>
-                <p className="c1-c p-medium">
-                  {data.author.display_name ||
-                    data.author.name ||
-                    getBech32("npub", data.post.author_pubkey).substring(0, 10)}
+                  {t("AsXpL4b", {
+                    name:
+                      data.author.display_name ||
+                      data.author.name ||
+                      getBech32("npub", data.post.author_pubkey).substring(
+                        0,
+                        10
+                      ),
+                  })}
                 </p>
               </div>
             </div>
@@ -722,68 +483,6 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
               <QRCode value={path} size={100} />
             </div>
           </div>
-          {/* <div
-            className="sc-s-18 fx-scattered fx-col"
-            style={{
-              backgroundColor: "white",
-              position: "relative",
-              overflow: "visible",
-              zIndex: 1,
-              rowGap: 0,
-            }}
-          >
-            <div
-              className="fit-container fx-centered fx-col box-pad-h-m "
-              style={{ padding: "4.5rem 1rem 1rem" }}
-            >
-              <h4 className="p-one-line" style={{ color: "black" }}>
-                {data.author.display_name || data.author.name}
-              </h4>
-              <p className="gray-c p-three-lines p-medium p-centered box-pad-h-m">
-                {data.author.about}
-              </p>
-              {data.author.nip05 && (
-                <div className="fx-centered  box-pad-h-m">
-                  <p className="c1-c p-medium p-centered">
-                    {data.author.nip05}
-                  </p>
-                  <div className="checkmark-c1"></div>
-                </div>
-              )}
-            </div>
-            <hr style={{ margin: 0 }} />
-            <div className="fit-container fx-centered  box-pad-h-m box-pad-v-s">
-              <div className="fx-centered">
-                <p style={{ color: "black" }}>{data.followings}</p>
-                <p className="p-medium gray-c">Followings</p>
-              </div>
-              <div className="fx-centered">
-                <p style={{ color: "black" }}>{followersCountSL.length}</p>
-                <p className="p-medium gray-c">Followers</p>
-              </div>
-            </div>
-            <hr />
-            <div
-              className="fx-scattered fx-stretch fit-container"
-              style={{ columnGap: 0, marginTop: "1rem" }}
-            >
-              <div style={{ width: "100%" }} className="fx-centered fx-col">
-                <QRCode value={path} size={160} />
-              </div>
-            </div>
-
-            <div
-              className="fit-container fx-centered box-pad-h-m "
-              style={{ height: "50px" }}
-            >
-              <div>
-                <div
-                  className="yakihonne-logo"
-                  style={{ width: "70px", filter: "brightness(0)" }}
-                ></div>
-              </div>
-            </div>
-          </div> */}
         </div>
       </div>
     );
@@ -837,7 +536,6 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 mainAccountUser={false}
                 size={98}
                 img={ppBase64}
-                // img={`${data.author.picture}?test=123`}
                 allowClick={false}
               />
             </div>
@@ -864,11 +562,11 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
             <div className="fit-container fx-centered  box-pad-h-m box-pad-v-s">
               <div className="fx-centered">
                 <p style={{ color: "black" }}>{data.followings}</p>
-                <p className="p-medium gray-c">Followings</p>
+                <p className="p-medium gray-c">{t("A9TqNxQ")}</p>
               </div>
               <div className="fx-centered">
                 <p style={{ color: "black" }}>{followersCountSL.length}</p>
-                <p className="p-medium gray-c">Followers</p>
+                <p className="p-medium gray-c">{t("A6huCnT")}</p>
               </div>
             </div>
             <hr />
@@ -960,7 +658,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                     style={{ filter: "brightness(0)" }}
                   ></div>
                   <p className="p-medium" style={{ color: "black" }}>
-                    Curation
+                    {t("Ac6UnVb")}
                   </p>
                 </div>
               )}
@@ -971,7 +669,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                     style={{ filter: "brightness(0)" }}
                   ></div>
                   <p className="p-medium" style={{ color: "black" }}>
-                    Video
+                    {t("AVdmifm")}
                   </p>
                 </div>
               )}
@@ -990,7 +688,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                   ></div>
                   {kind === 34235 && (
                     <p className="p-medium" style={{ color: "black" }}>
-                      {data.views} view(s)
+                      {t("AginxGR", { count: data.views })}
                     </p>
                   )}
                 </div>
@@ -1019,28 +717,6 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                   </p>
                 )}
               </div>
-              {/* {data.author.nip05 && (
-                <div
-                  className="fx-centered"
-                  style={{
-                    borderLeft: "1px solid black",
-                    width: "10%",
-                    position: "relative",
-                  }}
-                >
-                  <p
-                    className="c1-c p-medium p-centered"
-                    style={{
-                      position: "absolute",
-                      width: "max-content",
-                      maxWidth: "220px",
-                      // rotate: "90deg",
-                    }}
-                  >
-                    yakihonne.com/users/{data.author.nip05}
-                  </p>
-                </div>
-              )} */}
             </div>
             <hr style={{ margin: 0 }} />
             <div
@@ -1056,15 +732,15 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 />
                 <div>
                   <p className="p-small" style={{ color: "black" }}>
-                    By{" "}
-                  </p>
-                  <p className="c1-c p-medium">
-                    {data.author.display_name ||
-                      data.author.name ||
-                      getBech32("npub", data.post.author_pubkey).substring(
-                        0,
-                        10
-                      )}
+                    {t("AsXpL4b", {
+                      name:
+                        data.author.display_name ||
+                        data.author.name ||
+                        getBech32("npub", data.post.author_pubkey).substring(
+                          0,
+                          10
+                        ),
+                    })}
                   </p>
                 </div>
               </div>

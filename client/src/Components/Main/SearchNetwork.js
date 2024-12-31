@@ -1,35 +1,26 @@
 import React, { useEffect, useState } from "react";
-import {
-  compactContent,
-  getAuthPubkeyFromNip05,
-  getLinkFromAddr,
-  isHex,
-} from "../../Helpers/Helpers";
+import { compactContent, getLinkFromAddr, isHex } from "../../Helpers/Helpers";
 import { customHistory } from "../../Helpers/History";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { saveFetchedUsers, saveUsers } from "../../Helpers/DB";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { nip19 } from "nostr-tools";
-import { Link } from "react-router-dom";
 import LoadingDots from "../LoadingDots";
 import { SelectTabs } from "./SelectTabs";
-import { getSubData, getUser } from "../../Helpers/Controlers";
-import {
-  getEmptyuserMetadata,
-  getParsedRepEvent,
-} from "../../Helpers/Encryptions";
-import Date_ from "../Date_";
-import DynamicIndicator from "../DynamicIndicator";
+import { getSubData } from "../../Helpers/Controlers";
+import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import SearchUserCard from "./SearchUserCard";
 import SearchContentCard from "./SearchContentCard";
+import { useTranslation } from "react-i18next";
 
 export default function SearchNetwork({ exit }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const userMutedList = useSelector((state) => state.userMutedList);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
+  const { t } = useTranslation();
 
   const handleOnChange = (e) => {
     let value = e.target.value;
@@ -152,7 +143,7 @@ export default function SearchNetwork({ exit }) {
       `#${tag.toLowerCase()}`,
       `#${String(tag).charAt(0).toUpperCase() + String(tag).slice(1)}`,
     ];
-    
+
     let content = await getSubData(
       [
         { kinds: [1], limit: 10, "#t": tags },
@@ -202,7 +193,6 @@ export default function SearchNetwork({ exit }) {
         className="sc-s-18 slide-up bg-sp"
         style={{
           width: "min(100%,600px)",
-          // backgroundColor: "var(--white)",
           height: "60vh",
           position: "relative",
         }}
@@ -215,14 +205,13 @@ export default function SearchNetwork({ exit }) {
             className="sticky fit-container fx-centered fx-start-h box-pad-h"
             style={{
               borderBottom: "1px solid var(--very-dim-gray)",
-              // backgroundColor: "var(--c1-side)",
               padding: "0 1rem",
             }}
           >
             <div className="search-24"></div>
             <input
               type="text"
-              placeholder="Search people, notes and content"
+              placeholder={t("APAkDF0")}
               className="if ifs-full if-no-border"
               onChange={handleOnChange}
               value={searchKeyword}
@@ -252,7 +241,7 @@ export default function SearchNetwork({ exit }) {
               <div className="fit-container slide-down box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-start-h pointer">
                 <div className="search"></div>{" "}
                 <p className="p-one-line">
-                  Search for{" "}
+                  {t("AvpIWa1")}{" "}
                   <span className="p-bold ">
                     #{searchKeyword.replaceAll("#", "")}
                   </span>
@@ -273,7 +262,10 @@ export default function SearchNetwork({ exit }) {
                   />
                 );
             }
-            return <SearchContentCard key={item.id} event={item} exit={exit} />;
+            if (!userMutedList.includes(item.pubkey))
+              return (
+                <SearchContentCard key={item.id} event={item} exit={exit} />
+              );
           })}
           {results.length === 0 && !isLoading && (
             <div
@@ -281,8 +273,8 @@ export default function SearchNetwork({ exit }) {
               style={{ height: "500px" }}
             >
               <div className="search-24"></div>
-              <h4>Search in nostr</h4>
-              <p className="gray-c">Find people, notes and content</p>
+              <h4>{t("AjlW15t")}</h4>
+              <p className="gray-c">{t("A0RqaoC")}</p>
             </div>
           )}
           {isLoading && (
@@ -290,7 +282,7 @@ export default function SearchNetwork({ exit }) {
               className="fit-container fx-centered"
               style={{ height: "500px" }}
             >
-              <p className="gray-c p-medium">Searching</p> <LoadingDots />
+              <p className="gray-c p-medium">{t("APAkDF0")}</p> <LoadingDots />
             </div>
           )}
         </div>
@@ -307,7 +299,7 @@ export default function SearchNetwork({ exit }) {
             <SelectTabs
               selectedTab={selectedTab}
               setSelectedTab={(data) => handleSelectedTab(data)}
-              tabs={["profiles", "content"]}
+              tabs={[t("ABn8zyu"), t("AepwLlB")]}
             />
           </div>
         )}
@@ -315,174 +307,3 @@ export default function SearchNetwork({ exit }) {
     </div>
   );
 }
-
-// const UserCard = ({ user, url, exit }) => {
-//   const [verified, setVerified] = useState(false);
-
-//   useEffect(() => {
-//     const verifyUser = async () => {
-//       if (user.nip05) {
-//         let status = await getAuthPubkeyFromNip05(user.nip05);
-//         if (status === user.pubkey) setVerified(true);
-//         else setVerified(false);
-//       } else setVerified(false);
-//     };
-//     verifyUser();
-//   }, [user]);
-
-//   return (
-//     <Link
-//       to={`/users/${url}`}
-//       className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
-//       onClick={(e) => {
-//         exit();
-//       }}
-//     >
-//       <div className="fx-centered">
-//         <UserProfilePicNOSTR
-//           img={user.picture || ""}
-//           size={36}
-//           allowClick={false}
-//           user_id={user.pubkey}
-//
-//         />
-//         <div className="fx-centered fx-start-h">
-//           <div className="fx-centered fx-col fx-start-v " style={{ rowGap: 0 }}>
-//             <div className="fx-centered">
-//               <p className={`p-one-line ${verified ? "c1-c" : ""}`}>
-//                 {user.display_name || user.name}
-//               </p>
-//               {verified && <div className="checkmark-c1"></div>}
-//             </div>
-//             {/* <p className="p-medium p-one-line">
-//               @{user.name || user.display_name}
-//             </p> */}
-//             <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
-//               {user.nip05 || "N/A"}
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-//     </Link>
-//   );
-// };
-
-// const ContentCard = ({ event, exit }) => {
-//   const nostrAuthors = useSelector((state) => state.nostrAuthors);
-
-//   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
-//   useEffect(() => {
-//     const fetchAuthor = async () => {
-//       let auth = await getUser(event.pubkey);
-//       if (auth) setUser(auth);
-//     };
-//     fetchAuthor();
-//   }, [nostrAuthors]);
-
-//   if (event.kind === 1)
-//     return (
-//       <Link
-//         to={`/notes/${nip19.noteEncode(event.id)}`}
-//         className="fx-centered fx-start-h box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
-//         onClick={(e) => {
-//           exit();
-//         }}
-//       >
-//         <UserProfilePicNOSTR
-//           img={user.picture || ""}
-//           size={48}
-//           allowClick={false}
-//           user_id={user.pubkey}
-//
-//         />
-//         <div
-//           className="fx-centered fx-col fx-start-h fx-start-v"
-//           style={{ gap: "4px" }}
-//         >
-//           <p className="p-medium">
-//             By {user.display_name || user.name}{" "}
-//             <span className="gray-c ">
-//               {" "}
-//               <Date_ toConvert={new Date(event.created_at * 1000)} />
-//             </span>
-//           </p>
-//           <p className="p-one-line gray-c">{event.content}</p>
-//         </div>
-//       </Link>
-//     );
-//   return (
-//     <Link
-//       to={`/${event.naddr}`}
-//       className="fx-centered fx-start-h box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
-//       onClick={(e) => {
-//         exit();
-//       }}
-//     >
-//       <div style={{ position: "relative" }}>
-//         {!event.image && (
-//           <div
-//             className="round-icon"
-//             style={{ minWidth: "48px", aspectRatio: "1/1" }}
-//           >
-//             {[30004, 30003].includes(event.kind) && (
-//               <div className="curation-24"></div>
-//             )}
-//             {[30023].includes(event.kind) && <div className="posts-24"></div>}
-//             {[34235].includes(event.kind) && <div className="play-24"></div>}
-//             {[30031].includes(event.kind) && (
-//               <div className="smart-widget-24"></div>
-//             )}
-//           </div>
-//         )}
-//         {event.image && (
-//           <div
-//             className="sc-s-18 bg-img cover-bg"
-//             style={{
-//               backgroundImage: `url(${event.image})`,
-//               minWidth: "48px",
-//               aspectRatio: "1/1",
-//             }}
-//           ></div>
-//         )}
-//         <div
-//           className="round-icon"
-//           style={{
-//             position: "absolute",
-//             right: "-5px",
-//             bottom: "-5px",
-//             backgroundColor: "var(--white)",
-//             border: "none",
-//             minWidth: "24px",
-//             aspectRatio: "1/1",
-//           }}
-//         >
-//           <UserProfilePicNOSTR
-//             img={user.picture || ""}
-//             size={20}
-//             allowClick={false}
-//             user_id={user.pubkey}
-//
-//           />
-//         </div>
-//       </div>
-//       <div
-//         className="fx-centered fx-col fx-start-h fx-start-v"
-//         style={{ gap: "4px" }}
-//       >
-//         <div className="fx-centered">
-//           <p className="p-medium">
-//             By {user.display_name || user.name}{" "}
-//             {/* <span className="gray-c ">
-//               {" "}
-//               <Date_ toConvert={new Date(event.created_at * 1000)} />
-//             </span> */}
-//           </p>
-//           <DynamicIndicator item={event} />
-//         </div>
-//         <p className="p-one-line gray-c">
-//           {event.title || <span className="p-italic gray-c">Untitled</span>}
-//         </p>
-//       </div>
-//     </Link>
-//   );
-// };

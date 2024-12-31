@@ -109,12 +109,4 @@ export default function ButtonComp({
       }}
     />
   );
-  // return (
-  //   <button
-  //     className="btn btn-normal btn-full"
-  //     style={{ color: textColor, backgroundColor }}
-  //   >
-  //     {content}
-  //   </button>
-  // );
 }

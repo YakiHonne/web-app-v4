@@ -19,6 +19,7 @@ export default function ArrowUp() {
     if (!el) return;
     el.scrollTop = 0;
   };
+  
 
   if (!showArrow) return null;
   return (

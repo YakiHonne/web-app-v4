@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 export default function IMGElement({ src }) {
   const [resize, setResize] = useState(false);
+
   return (
     <>
       {resize && (
@@ -50,8 +51,8 @@ export default function IMGElement({ src }) {
           maxWidth: "100%",
           // aspectRatio: "16/9",
           objectFit: "fit",
-          
-          maxHeight: "600px"
+
+          maxHeight: "600px",
         }}
         // width={"100%"}
         src={src}

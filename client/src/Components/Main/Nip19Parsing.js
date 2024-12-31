@@ -15,12 +15,14 @@ import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
 import WidgetCard from "./WidgetCard";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function Nip19Parsing({ addr, minimal = false }) {
   const [event, setEvent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isParsed, setIsParsed] = useState(false);
   const [url, setUrl] = useState("/");
+  const { t } = useTranslation();
 
   useEffect(() => {
     let filter = [];
@@ -81,9 +83,8 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       return;
     }
     setIsParsed(true);
-    
+
     const sub = ndkInstance.subscribe(filter, {
-      // cacheUsage: "ONLY_RELAY",
       cacheUsage: "CACHE_FIRST",
       groupable: false,
       subId: "nip19-parsing",
@@ -128,9 +129,9 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         let title = "";
         if (titleTag) title = titleTag[1];
         if (!title) {
-          if ([30004, 30005].includes(event.kind)) title = "Untitled curation";
-          if ([30023].includes(event.kind)) title = "Untitled Article";
-          if ([34235].includes(event.kind)) title = "Untitled video";
+          if ([30004, 30005].includes(event.kind)) title = t("A1lshru");
+          if ([30023].includes(event.kind)) title = t("Aqw9gzk");
+          if ([34235].includes(event.kind)) title = t("A3vFdLd");
         }
         setEvent({
           kind: event.kind,
@@ -173,7 +174,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
                 }}
                 className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
               >
-                <p className="p-medium gray-c">Loading note</p>
+                <p className="p-medium gray-c">{t("AgfmpuR")}</p>
                 <LoadingDots />
               </div>
             )}
@@ -185,7 +186,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
                 }}
                 className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
               >
-                <p className="p-medium gray-c">Note not available</p>
+                <p className="p-medium gray-c">{t("AQeXcer")}</p>
               </div>
             )}
           </>

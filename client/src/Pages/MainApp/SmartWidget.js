@@ -1112,7 +1112,7 @@ const SmartWidgetBuilder = ({
                   <div
                     style={{
                       position: "absolute",
-                      right: 0,
+                     
                       top: "110%",
                       border: "none",
                       maxWidth: "400px",
@@ -1123,7 +1123,7 @@ const SmartWidgetBuilder = ({
                       zIndex: 1000,
                       rowGap: "0",
                     }}
-                    className="sc-s-18 fx-centered fx-col fx-start-v fx-start-h pointer box-pad-v-s"
+                    className="sc-s-18 fx-centered fx-col fx-start-v fx-start-h pointer box-pad-v-s drop-down"
                   >
                     {swTemplates.map((category, index) => {
                       return (

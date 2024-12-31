@@ -6,17 +6,19 @@ import OptionsDropdown from "../Main/OptionsDropdown";
 import Slider from "../Slider";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 const getUsersCard = (users, userFollowings) => {
-  if(users.length === 0) return []
-  let tempUsers = users.filter(_ => !userFollowings.includes(_.pubkey))
-  if(tempUsers.length === 0) return []
+  if (users.length === 0) return [];
+  let tempUsers = users.filter((_) => !userFollowings.includes(_.pubkey));
+  if (tempUsers.length === 0) return [];
   return tempUsers.map((user) => {
     return <UserCard user={user} key={user.pubkey} />;
   });
 };
 
 export default function UserToFollowSuggestionsCards() {
+  const { t } = useTranslation();
   const userFollowings = useSelector((state) => state.userFollowings);
   const userKeys = useSelector((state) => state.userKeys);
   const trendingUsers = useSelector((state) => state.trendingUsers);
@@ -41,12 +43,12 @@ export default function UserToFollowSuggestionsCards() {
       }}
     >
       <div className="fit-container fx-scattered box-pad-v-m">
-        <h4 className="box-pad-h-m">Trending users</h4>
+        <h4 className="box-pad-h-m">{t("AIus9gb")}</h4>
         {userKeys && (
           <OptionsDropdown
             options={[
               <p className="gray-c" onClick={handleHideSuggestion}>
-                Hide suggestions
+                {t("A2qCLTm")}
               </p>,
             ]}
             vertical={false}

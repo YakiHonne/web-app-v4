@@ -12,6 +12,7 @@ import ShortenKey from "./ShortenKey";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 const getBulkListStats = (list) => {
   let toFollow = list.filter((item) => item.to_follow).length;
@@ -23,7 +24,7 @@ export default function ShowPeople({ exit, list, type = "following" }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
-  const isPublishing = useSelector((state) => state.isPublishing);
+  const { t } = useTranslation();
   const userFollowings = useSelector((state) => state.userFollowings);
   const [people, setPeople] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -70,15 +71,6 @@ export default function ShowPeople({ exit, list, type = "following" }) {
 
   const followUnfollow = async () => {
     try {
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
       const toUnfollowList = bulkList
         .filter((item) => !item.to_follow)
         .map((item) => item.pubkey);
@@ -131,62 +123,63 @@ export default function ShowPeople({ exit, list, type = "following" }) {
             gap: 0,
           }}
         >
-        <div
-          className="fit-container fx-centered sticky"
-          style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
-        >
-          <div className="fx-scattered fit-container box-pad-h">
-            <h4 className="p-caps">{type}</h4>
-            <div
-              className="close"
-              style={{ position: "static" }}
-              onClick={exit}
-            >
-              <div></div>
+          <div
+            className="fit-container fx-centered sticky"
+            style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
+          >
+            <div className="fx-scattered fit-container box-pad-h">
+              <h4 className="p-caps">{type}</h4>
+              <div
+                className="close"
+                style={{ position: "static" }}
+                onClick={exit}
+              >
+                <div></div>
+              </div>
             </div>
           </div>
-        </div>
-        <div
-          className="fit-container fx-centered fx-start-v fx-col box-pad-h box-pad-v "
-          style={{ rowGap: "24px" }}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          {people.map((item) => {
-            return (
-              <div
-                className="fx-scattered fit-container fx-start-v "
-                key={item.pubkey + item.name}
-              >
+          <div
+            className="fit-container fx-centered fx-start-v fx-col box-pad-h box-pad-v "
+            style={{ rowGap: "24px" }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {people.map((item) => {
+              return (
                 <div
-                  className="fx-centered fx-start-v"
-                  style={{ columnGap: "24px" }}
+                  className="fx-scattered fit-container fx-start-v "
+                  key={item.pubkey + item.name}
                 >
-                  <UserProfilePicNOSTR
-                    size={48}
-                    img={item.picture}
-                    user_id={item.pubkey}
-                    
-                  />
-                  <div className="fx-centered fx-col fx-start-v">
-                    <p>{item.display_name}</p>
-                    <p className="gray-c p-medium p-four-lines">{item.about}</p>
+                  <div
+                    className="fx-centered fx-start-v"
+                    style={{ columnGap: "24px" }}
+                  >
+                    <UserProfilePicNOSTR
+                      size={48}
+                      img={item.picture}
+                      user_id={item.pubkey}
+                    />
+                    <div className="fx-centered fx-col fx-start-v">
+                      <p>{item.display_name}</p>
+                      <p className="gray-c p-medium p-four-lines">
+                        {item.about}
+                      </p>
+                    </div>
                   </div>
+                  <Follow
+                    toFollowKey={item.pubkey}
+                    toFollowName={item.display_name}
+                    bulk={true}
+                    bulkList={bulkList}
+                    setBulkList={setBulkList}
+                    icon={false}
+                    size={"small"}
+                  />
                 </div>
-                <Follow
-                  toFollowKey={item.pubkey}
-                  toFollowName={item.display_name}
-                  bulk={true}
-                  bulkList={bulkList}
-                  setBulkList={setBulkList}
-                  icon={false}
-                  size={"small"}
-                />
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -197,7 +190,6 @@ export default function ShowPeople({ exit, list, type = "following" }) {
             position: "fixed",
             bottom: 0,
             left: "0",
-
             zIndex: 10000,
           }}
         >
@@ -210,12 +202,12 @@ export default function ShowPeople({ exit, list, type = "following" }) {
               onClick={followUnfollow}
             >
               {bulkListStats.toFollow > 0 &&
-                `Follow (${bulkListStats.toFollow})`}{" "}
+                t("Ae7ofjr", { count: bulkListStats.toFollow })}{" "}
               {bulkListStats.toFollow > 0 &&
                 bulkListStats.toUnfollow > 0 &&
                 " | "}
               {bulkListStats.toUnfollow > 0 &&
-                `Unfollow (${bulkListStats.toUnfollow})`}
+                t("AdZjMMb", { count: bulkListStats.toUnfollow })}
             </button>
           </div>
         </div>

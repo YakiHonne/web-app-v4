@@ -4,8 +4,6 @@ import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import axios from "axios";
-import Footer from "../../Components/Footer";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import * as secp from "@noble/secp256k1";
 import SatsToUSD from "../../Components/Main/SatsToUSD";
@@ -13,7 +11,6 @@ import {
   decodeUrlOrAddress,
   encodeLud06,
   getBech32,
-  getBolt11,
   getEmptyuserMetadata,
   getHex,
   getZapper,
@@ -34,16 +31,19 @@ import { setUserBalance } from "../../Store/Slides/UserData";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import ImportantFlashNews from "../../Components/Main/ImportantFlashNews";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
+import { useTranslation } from "react-i18next";
+import { t } from "i18next";
 
 export default function Wallet() {
   const dispatch = useDispatch();
+
   const userKeys = useSelector((state) => state.userKeys);
   const userBalance = useSelector((state) => state.userBalance);
   const userMetadata = useSelector((state) => state.userMetadata);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
+  const { t } = useTranslation();
   const [transactions, setTransactions] = useState([]);
   const [walletTransactions, setWalletTransactions] = useState([]);
   const [displayMessage, setDisplayMessage] = useState(false);
@@ -271,7 +271,6 @@ export default function Wallet() {
   };
 
   const handleSelectWallet = (walletID) => {
-    // let walletID = e.target.value;
     let index = wallets.findIndex((wallet) => wallet.id == walletID);
 
     let tempWallets = Array.from(wallets);
@@ -323,7 +322,7 @@ export default function Wallet() {
     dispatch(
       setToast({
         type: 1,
-        desc: `${prefix} was copied! 👏`,
+        desc: `${prefix} 👏`,
       })
     );
   };
@@ -352,7 +351,7 @@ export default function Wallet() {
     dispatch(
       setToast({
         type: 3,
-        desc: "We could not retrieve your address from your NWC secret, kindly check your lightning address service provider to copy your address or to update your profile accordinaly.",
+        desc: t("A4R0ICw"),
       })
     );
   };
@@ -369,6 +368,7 @@ export default function Wallet() {
         <DeletionPopUp
           exit={() => setShowDeletionPopup(false)}
           handleDelete={handleDelete}
+          wallet={showDeletionPopup}
         />
       )}
       <div>
@@ -408,12 +408,12 @@ export default function Wallet() {
                         style={{ position: "relative", zIndex: 100 }}
                       >
                         <div>
-                          <h4>Select your wallet</h4>
+                          <h4>{t("ARXDO1q")}</h4>
                         </div>
                         <div className="fx-centered">
                           <div
                             className="round-icon round-icon-small round-icon-tooltip"
-                            data-tooltip="Add wallet"
+                            data-tooltip={t("A8fEwNq")}
                             onClick={() => setShowAddWallet(true)}
                           >
                             <div className="plus-sign"></div>
@@ -436,19 +436,19 @@ export default function Wallet() {
                             )}
                             {showWalletsList && (
                               <div
-                                className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v"
+                                className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v drop-down"
                                 style={{
                                   width: "400px",
                                   backgroundColor: "var(--c1-side)",
                                   position: "absolute",
-                                  right: "0",
+                                 
                                   top: "calc(100% + 5px)",
                                   rowGap: 0,
                                   overflow: "visible",
                                 }}
                               >
                                 <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
-                                  Connected wallets
+                                  {t("AnXYtQy")}
                                 </p>
                                 {wallets.map((wallet) => {
                                   let isLinked = checkIsLinked(wallet.entitle);
@@ -488,10 +488,10 @@ export default function Wallet() {
                                         {isLinked && (
                                           <div
                                             className="round-icon-tooltip"
-                                            data-tooltip="Currently linked with your profile for zaps receiving"
+                                            data-tooltip={t("ANExIY1")}
                                           >
                                             <div className="sticker sticker-small sticker-green-pale">
-                                              linked
+                                              {t("AqlBPla")}
                                             </div>
                                           </div>
                                         )}
@@ -506,30 +506,30 @@ export default function Wallet() {
                                                   linkWallet(wallet.entitle);
                                                 }}
                                               >
-                                                Link wallet
+                                                {t("AmQVpu4")}
                                               </div>
                                             ),
                                             <div
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 copyKey(
-                                                  "Lightning address",
+                                                  t("ALR84Tq"),
                                                   selectedWallet.entitle
                                                 );
                                               }}
                                             >
-                                              Copy lightning address
+                                              {t("ApO1nbv")}
                                             </div>,
                                             <div
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 copyKey(
-                                                  "NWC secret",
+                                                  t("A6Pj02S"),
                                                   selectedWallet.data
                                                 );
                                               }}
                                             >
-                                              Copy NWC secret
+                                              {t("A6ntZLW")}
                                             </div>,
                                             <div
                                               onClick={(e) => {
@@ -538,26 +538,12 @@ export default function Wallet() {
                                               }}
                                             >
                                               <span className="red-c">
-                                                Remove wallet
+                                                {t("AawdN9R")}
                                               </span>
                                             </div>,
                                           ]}
                                         />
                                       )}
-                                      {/* {wallet.kind !== 1 && (
-                                        <div
-                                          className="round-icon-small round-icon-tooltip"
-                                          data-tooltip="Remove wallet"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowDeletionPopup(wallet);
-                                          }}
-                                        >
-                                          <p className="p-medium red-c">
-                                            &minus;
-                                          </p>
-                                        </div>
-                                      )} */}
                                     </div>
                                   );
                                 })}
@@ -568,7 +554,6 @@ export default function Wallet() {
                       </div>
                       <div
                         className="fx-scattered box-pad-h fit-container fx-col fx-wrap"
-                        // className="fx-scattered box-pad-h fit-container  gradient-border fx-wrap"
                         style={{
                           position: "relative",
                           padding: "1rem",
@@ -576,7 +561,7 @@ export default function Wallet() {
                       >
                         {!isLoading && (
                           <div className="fx-centered fx-col box-pad-v">
-                            <h5>Balance</h5>
+                            <h5>{t("AbcY4ef")}</h5>
                             <div className="fx-centered">
                               <h2 className="orange-c">{userBalance}</h2>
                               <p className="gray-c">Sats</p>
@@ -585,11 +570,10 @@ export default function Wallet() {
                             {selectedWallet.kind !== 1 && (
                               <div
                                 className="btn btn-gray btn-small fx-centered"
-                                // className="sticker sticker-gray-black fx-centered box-marg-s pointer"
                                 onClick={() =>
                                   selectedWallet.entitle.includes("@")
                                     ? copyKey(
-                                        "Lightning address",
+                                        t("ALR84Tq"),
                                         selectedWallet.entitle
                                       )
                                     : walletWarning()
@@ -608,18 +592,13 @@ export default function Wallet() {
                           ) && (
                             <div className="box-pad-h box-pad-v fit-container sc-s-18 fx-centered fx-centered fx-col gray-c p-centered">
                               {!profileHasWallet.hasWallet && (
-                                <>You have no wallet linked to your profile</>
+                                <>{t("AAPZe91")}</>
                               )}
                               {profileHasWallet.hasWallet &&
                                 !profileHasWallet.isWalletLinked && (
-                                  <>
-                                    None of the connected wallets are linked to
-                                    your profile
-                                  </>
+                                  <>{t("AHKiPjO")}</>
                                 )}
-                              {
-                                " consider linking one of yours in the menu above"
-                              }
+                              {t("AHTCsEO")}
                             </div>
                           )}
                         {isLoading && (
@@ -644,8 +623,7 @@ export default function Wallet() {
                             disabled={selectedWallet ? false : true}
                           >
                             <span className="p-big">&#8595;</span>
-                            <span>Receive</span>
-                            {/* Receive &#8595; */}
+                            <span>{t("A8SflFr")}</span>
                           </button>
                           <button
                             style={{ height: "70px", gap: 0 }}
@@ -660,9 +638,7 @@ export default function Wallet() {
                             disabled={selectedWallet ? false : true}
                           >
                             <span className="p-big">&#8593;</span>
-                            <span>Send</span>
-
-                            {/* Send &#8593; */}
+                            <span>{t("A14LwWS")}</span>
                           </button>
                         </div>
                       </div>
@@ -688,7 +664,7 @@ export default function Wallet() {
                           className="fit-container fx-centered"
                           style={{ height: "40vh" }}
                         >
-                          <p className="gray-c">Loading transactions</p>{" "}
+                          <p className="gray-c">{t("AZhgADD")}</p>{" "}
                           <LoadingDots />
                         </div>
                       )}
@@ -697,7 +673,7 @@ export default function Wallet() {
                           {transactions.length > 0 &&
                             selectedWallet?.kind === 1 && (
                               <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
-                                <p className="gray-c">Recent transactions</p>
+                                <p className="gray-c">{t("AzLQdQO")}</p>
                                 {transactions.map((transaction, index) => {
                                   let author =
                                     nostrAuthors.find(
@@ -729,7 +705,7 @@ export default function Wallet() {
                                             />
                                             <div
                                               className="round-icon-small round-icon-tooltip"
-                                              data-tooltip="Incoming"
+                                              data-tooltip={t("A4G4OJ7")}
                                               style={{
                                                 position: "absolute",
                                                 scale: ".65",
@@ -740,12 +716,10 @@ export default function Wallet() {
                                               }}
                                             >
                                               <p className="green-c">&#8595;</p>
-                                              {/* <p className="green-c">&#8595;</p> */}
                                             </div>
                                           </div>
                                           <div>
                                             <p className="gray-c p-medium">
-                                              On{" "}
                                               <Date_
                                                 toConvert={
                                                   new Date(
@@ -757,15 +731,15 @@ export default function Wallet() {
                                               />
                                             </p>
                                             <p className="p-medium">
-                                              {author.display_name ||
-                                                author.name ||
-                                                author.pubkey.substring(
-                                                  0,
-                                                  10
-                                                )}{" "}
-                                              {/* <span className="gray-c"> */}
-                                              sent you
-                                              {/* </span>{" "} */}
+                                              {t("AdrOPfO", {
+                                                name:
+                                                  author.display_name ||
+                                                  author.name ||
+                                                  author.pubkey.substring(
+                                                    0,
+                                                    10
+                                                  ),
+                                              })}
                                               <span className="orange-c">
                                                 {" "}
                                                 {transaction.amount}{" "}
@@ -779,7 +753,7 @@ export default function Wallet() {
                                         {transaction.message && (
                                           <div
                                             className="round-icon-small round-icon-tooltip"
-                                            data-tooltip="Invoice message"
+                                            data-tooltip={t("AYMJ2uj")}
                                             onClick={() =>
                                               displayMessage === transaction.id
                                                 ? setDisplayMessage(false)
@@ -802,7 +776,7 @@ export default function Wallet() {
                                             }}
                                           >
                                             <p className="gray-c p-medium">
-                                              Comment
+                                              {t("AVZHXQq")}
                                             </p>
                                             <p className="p-medium">
                                               {transaction.message}
@@ -820,16 +794,14 @@ export default function Wallet() {
                                 className="fit-container fx-centered fx-col"
                                 style={{ height: "30vh" }}
                               >
-                                <h4>No transactions</h4>
-                                <p className="gray-c">
-                                  You have no received payments
-                                </p>
+                                <h4>{t("Ag3spMM")}</h4>
+                                <p className="gray-c">{t("ABF4HcR")}</p>
                               </div>
                             )}
                           {walletTransactions.length > 0 &&
                             selectedWallet?.kind === 2 && (
                               <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
-                                <p className="gray-c">Transactions</p>
+                                <p className="gray-c">{t("Aflt0YJ")}</p>
                                 {walletTransactions.map((transaction) => {
                                   let isZap = transaction.metadata?.zap_request;
                                   let author = isZap
@@ -860,7 +832,7 @@ export default function Wallet() {
                                                 "outgoing" && (
                                                 <div
                                                   className="round-icon round-icon-tooltip"
-                                                  data-tooltip="Outgoing"
+                                                  data-tooltip={t("AkPQ73T")}
                                                 >
                                                   <p className="red-c">
                                                     &#8593;
@@ -871,7 +843,7 @@ export default function Wallet() {
                                                 "outgoing" && (
                                                 <div
                                                   className="round-icon round-icon-tooltip"
-                                                  data-tooltip="Incoming"
+                                                  data-tooltip={t("A4G4OJ7")}
                                                 >
                                                   <p className="green-c">
                                                     &#8595;
@@ -900,7 +872,7 @@ export default function Wallet() {
                                                   />
                                                   <div
                                                     className="round-icon-small round-icon-tooltip"
-                                                    data-tooltip="Incoming"
+                                                    data-tooltip={t("A4G4OJ7")}
                                                     style={{
                                                       position: "absolute",
                                                       scale: ".65",
@@ -919,7 +891,6 @@ export default function Wallet() {
                                             )}
                                           <div>
                                             <p className="gray-c p-medium">
-                                              On{" "}
                                               <Date_
                                                 toConvert={
                                                   new Date(
@@ -938,8 +909,8 @@ export default function Wallet() {
                                                 <>
                                                   {transaction.type ===
                                                   "outgoing"
-                                                    ? "You sent"
-                                                    : "You received"}
+                                                    ? t("ATyFagO")
+                                                    : t("AyVA6Q3")}
                                                 </>
                                               )}
                                               {(isZap ||
@@ -947,18 +918,17 @@ export default function Wallet() {
                                                   transaction.type !==
                                                     "outgoing")) && (
                                                 <>
-                                                  {`${
-                                                    author
+                                                  {t("AdrOPfO", {
+                                                    name: author
                                                       ? author.display_name ||
                                                         author.name
                                                       : getBech32(
                                                           "npub",
                                                           isZap.pubkey
-                                                        ).substring(0, 10)
-                                                  } sent you`}
+                                                        ).substring(0, 10),
+                                                  })}
                                                 </>
                                               )}
-
                                               <span className="orange-c">
                                                 {" "}
                                                 {transaction.amount}{" "}
@@ -973,7 +943,7 @@ export default function Wallet() {
                                           transaction.comment) && (
                                           <div
                                             className="round-icon-small round-icon-tooltip"
-                                            data-tooltip="Invoice message"
+                                            data-tooltip={t("AYMJ2uj")}
                                             onClick={() =>
                                               displayMessage ===
                                               transaction.identifier
@@ -999,7 +969,7 @@ export default function Wallet() {
                                             }}
                                           >
                                             <p className="gray-c p-medium">
-                                              Comment
+                                              {t("AVZHXQq")}
                                             </p>
                                             <p className="p-medium">
                                               {transaction.memo ||
@@ -1018,17 +988,16 @@ export default function Wallet() {
                                 className="fit-container fx-centered fx-col"
                                 style={{ height: "30vh" }}
                               >
-                                <h4>No transactions</h4>
+                                <h4>{t("Ag3spMM")}</h4>
                                 <p className="gray-c p-centered">
-                                  We did not find any transactions related to
-                                  this wallet
+                                  {t("AgaoyPx")}
                                 </p>
                               </div>
                             )}
                           {walletTransactions.length > 0 &&
                             selectedWallet?.kind === 3 && (
                               <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
-                                <p className="gray-c">Transactions</p>
+                                <p className="gray-c">{t("Aflt0YJ")}</p>
                                 {walletTransactions.map(
                                   (transaction, index) => {
                                     let isZap =
@@ -1051,55 +1020,6 @@ export default function Wallet() {
                                         }}
                                       >
                                         <div className="fit-container fx-scattered">
-                                          {/* <div className="fx-centered fx-start-h">
-                                            {transaction.type ===
-                                              "outgoing" && (
-                                              <div
-                                                className="round-icon round-icon-tooltip"
-                                                data-tooltip="Outgoing"
-                                              >
-                                                <p className="green-c">
-                                                  &#8593;
-                                                </p>
-                                              </div>
-                                            )}
-                                            {transaction.type !==
-                                              "outgoing" && (
-                                              <div
-                                                className="round-icon round-icon-tooltip"
-                                                data-tooltip="Incoming"
-                                              >
-                                                <p className="red-c">&#8595;</p>
-                                              </div>
-                                            )}
-                                            <div>
-                                              <p className="gray-c p-medium">
-                                                On{" "}
-                                                <Date_
-                                                  toConvert={
-                                                    new Date(
-                                                      transaction.created_at *
-                                                        1000
-                                                    )
-                                                  }
-                                                  time={true}
-                                                />
-                                              </p>
-                                              <p className="p-medium">
-                                                {transaction.type === "outgoing"
-                                                  ? "You sent"
-                                                  : "You received"}
-
-                                                <span className="orange-c">
-                                                  {" "}
-                                                  {transaction.amount}{" "}
-                                                  <span className="gray-c">
-                                                    Sats
-                                                  </span>
-                                                </span>
-                                              </p>
-                                            </div>
-                                          </div> */}
                                           <div className="fx-centered fx-start-h">
                                             {(!isZap ||
                                               (isZap &&
@@ -1110,7 +1030,7 @@ export default function Wallet() {
                                                   "outgoing" && (
                                                   <div
                                                     className="round-icon round-icon-tooltip"
-                                                    data-tooltip="Outgoing"
+                                                    data-tooltip={t("AkPQ73T")}
                                                   >
                                                     <p className="red-c">
                                                       &#8593;
@@ -1121,7 +1041,7 @@ export default function Wallet() {
                                                   "outgoing" && (
                                                   <div
                                                     className="round-icon round-icon-tooltip"
-                                                    data-tooltip="Incoming"
+                                                    data-tooltip={t("A4G4OJ7")}
                                                   >
                                                     <p className="green-c">
                                                       &#8595;
@@ -1151,7 +1071,9 @@ export default function Wallet() {
                                                     />
                                                     <div
                                                       className="round-icon-small round-icon-tooltip"
-                                                      data-tooltip="Incoming"
+                                                      data-tooltip={t(
+                                                        "A4G4OJ7"
+                                                      )}
                                                       style={{
                                                         position: "absolute",
                                                         scale: ".65",
@@ -1170,7 +1092,6 @@ export default function Wallet() {
                                               )}
                                             <div>
                                               <p className="gray-c p-medium">
-                                                On{" "}
                                                 <Date_
                                                   toConvert={
                                                     new Date(
@@ -1189,8 +1110,8 @@ export default function Wallet() {
                                                   <>
                                                     {transaction.type ===
                                                     "outgoing"
-                                                      ? "You sent"
-                                                      : "You received"}
+                                                      ? t("ATyFagO")
+                                                      : t("AyVA6Q3")}
                                                   </>
                                                 )}
                                                 {(isZap ||
@@ -1198,15 +1119,15 @@ export default function Wallet() {
                                                     transaction.type !==
                                                       "outgoing")) && (
                                                   <>
-                                                    {`${
-                                                      author
+                                                    {t("AdrOPfO", {
+                                                      name: author
                                                         ? author.display_name ||
                                                           author.name
                                                         : getBech32(
                                                             "npub",
                                                             isZap.pubkey
-                                                          ).substring(0, 10)
-                                                    } sent you`}
+                                                          ).substring(0, 10),
+                                                    })}
                                                   </>
                                                 )}
 
@@ -1223,7 +1144,7 @@ export default function Wallet() {
                                           {transaction.description && (
                                             <div
                                               className="round-icon-small round-icon-tooltip"
-                                              data-tooltip="Invoice message"
+                                              data-tooltip={t("AYMJ2uj")}
                                               onClick={() =>
                                                 displayMessage ===
                                                 transaction.invoice
@@ -1250,7 +1171,7 @@ export default function Wallet() {
                                               }}
                                             >
                                               <p className="gray-c p-medium">
-                                                Comment
+                                                {t("AVZHXQq")}
                                               </p>
                                               <p className="p-medium">
                                                 {transaction.description}
@@ -1269,10 +1190,9 @@ export default function Wallet() {
                                 className="fit-container fx-centered fx-col"
                                 style={{ height: "30vh" }}
                               >
-                                <h4>No transactions</h4>
+                                <h4>{t("Ag3spMM")}</h4>
                                 <p className="gray-c p-centered">
-                                  We did not find any transactions related to
-                                  this wallet
+                                  {t("AgaoyPx")}
                                 </p>
                               </div>
                             )}
@@ -1281,21 +1201,6 @@ export default function Wallet() {
                     </div>
                   )}
                 </div>
-                {/* <div
-                  className=" fx-centered fx-col fx-start-v extras-homepage"
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: "100",
-                    flex: 1,
-                  }}
-                >
-                  <div className="sticky fit-container">
-                    <SearchbarNOSTR />
-                  </div>
-                  <ImportantFlashNews />
-                  <Footer />
-                </div> */}
               </div>
             </main>
           </div>
@@ -1315,6 +1220,7 @@ const SendPayment = ({
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
 
+  const { t } = useTranslation();
   const [isZap, setIsZap] = useState(false);
   const [invoiceData, setInvoicedata] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -1337,7 +1243,10 @@ const SendPayment = ({
       dispatch(
         setToast({
           type: 1,
-          desc: `Successfully sent ${res.route.total_amt} sats, with ${res.route.total_fees} fees`,
+          desc: t("AaQzRGG", {
+            amount: res.route.total_amt,
+            fees: res.route.total_fees,
+          }),
         })
       );
       reInitParams();
@@ -1349,7 +1258,7 @@ const SendPayment = ({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -1364,7 +1273,7 @@ const SendPayment = ({
       dispatch(
         setToast({
           type: 1,
-          desc: `Successfully sent.`,
+          desc: t("A5n8Ifp"),
         })
       );
       reInitParams();
@@ -1377,7 +1286,7 @@ const SendPayment = ({
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -1400,7 +1309,10 @@ const SendPayment = ({
       dispatch(
         setToast({
           type: 1,
-          desc: `Successfully sent ${data.data.amount} sats, with ${data.data.fee} fees`,
+          desc: t("AaQzRGG", {
+            amount: data.data.amount,
+            fees: data.data.fee,
+          }),
         })
       );
       return data.data;
@@ -1410,7 +1322,7 @@ const SendPayment = ({
       dispatch(
         setToast({
           type: 2,
-          desc: `An error occured while making the transactions`,
+          desc: t("Acr4Slu"),
         })
       );
       return 0;
@@ -1425,7 +1337,7 @@ const SendPayment = ({
           dispatch(
             setToast({
               type: 3,
-              desc: "The amount needs to be more than 0.",
+              desc: t("AR2vydH"),
             })
           );
           return;
@@ -1434,7 +1346,7 @@ const SendPayment = ({
           dispatch(
             setToast({
               type: 3,
-              desc: "pubkey is missing",
+              desc: t("AJbsVsG"),
             })
           );
           return;
@@ -1445,7 +1357,7 @@ const SendPayment = ({
             dispatch(
               setToast({
                 type: 3,
-                desc: "pubkey's format is invalid.",
+                desc: t("AiHLMRi"),
               })
             );
             return;
@@ -1459,7 +1371,7 @@ const SendPayment = ({
           dispatch(
             setToast({
               type: 3,
-              desc: "pubkey's format is invalid.",
+              desc: t("AiHLMRi"),
             })
           );
           return;
@@ -1491,7 +1403,7 @@ const SendPayment = ({
         dispatch(
           setToast({
             type: 2,
-            desc: "An error occured while parsing your address",
+            desc: t("AYuUnqd"),
           })
         );
       }
@@ -1540,7 +1452,7 @@ const SendPayment = ({
       style={{ marginTop: "1rem" }}
     >
       <div className="fit-container fx-scattered">
-        <h4>Send</h4>
+        <h4>{t("A14LwWS")}</h4>
         <div className="close" style={{ position: "static" }} onClick={exit}>
           <div></div>
         </div>
@@ -1553,7 +1465,7 @@ const SendPayment = ({
           setAddr("");
         }}
       >
-        <p>Use invoice</p>
+        <p>{t("AI19tdC")}</p>
         <div
           className={`toggle ${invoiceData ? "toggle-dim-gray" : ""} ${
             !invoiceData ? "toggle-c1" : "toggle-dim-gray"
@@ -1564,7 +1476,7 @@ const SendPayment = ({
       <input
         type="text"
         className="if ifs-full"
-        placeholder={!invoiceData ? "Invoice" : "Lightning address"}
+        placeholder={!invoiceData ? t("AvEHTiP") : t("A40BuYB")}
         value={addr}
         onChange={(e) => setAddr(e.target.value)}
       />
@@ -1584,7 +1496,7 @@ const SendPayment = ({
             <UserSearchBar
               onClick={setPubkey}
               full={true}
-              placeholder="Search user to send as zap (optional)"
+              placeholder={t("ABRi9O2")}
             />
           )}
           {pubkey && (
@@ -1603,7 +1515,7 @@ const SendPayment = ({
         <input
           type="text"
           className="if ifs-full"
-          placeholder="Message (optional)"
+          placeholder={t("AAcGVGY")}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
@@ -1623,7 +1535,7 @@ const SendPayment = ({
         onClick={handleSendPayment}
         disabled={isLoading}
       >
-        {isLoading ? <LoadingDots /> : "Send"}
+        {isLoading ? <LoadingDots /> : t("A14LwWS")}
       </button>
     </div>
   );
@@ -1631,6 +1543,7 @@ const SendPayment = ({
 
 const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [comment, setComment] = useState("");
   const [amount, setAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -1653,7 +1566,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -1677,7 +1590,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
       dispatch(
         setToast({
           type: 2,
-          desc: "An error has occured",
+          desc: t("Acr4Slu"),
         })
       );
     }
@@ -1725,7 +1638,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
     dispatch(
       setToast({
         type: 1,
-        desc: `LNURL was copied! 👏`,
+        desc: `${t("AS0m8W5")} 👏`,
       })
     );
   };
@@ -1756,7 +1669,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
                 className="btn btn-normal"
                 onClick={() => setInvoiceRequest("")}
               >
-                exit
+                {t("AoUUBDI")}
               </button>
             </div>
           </div>
@@ -1767,7 +1680,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
         style={{ marginTop: "1rem" }}
       >
         <div className="fit-container fx-scattered">
-          <h4>Generate invoice</h4>
+          <h4>{t("AuOH50L")}</h4>
           <div className="close" style={{ position: "static" }} onClick={exit}>
             <div></div>
           </div>
@@ -1775,7 +1688,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
         <input
           type="text"
           className="if ifs-full"
-          placeholder="Message (optional)"
+          placeholder={t("AAcGVGY")}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
@@ -1791,7 +1704,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
           onClick={generateInvoice}
           disabled={isLoading}
         >
-          {isLoading ? <LoadingDots /> : "Generate invoice"}
+          {isLoading ? <LoadingDots /> : t("AuOH50L")}
         </button>
       </div>
     </>
@@ -1845,11 +1758,23 @@ const checkAlbyToken = async (wallets, activeWallet) => {
   }
 };
 
-const DeletionPopUp = ({ exit, handleDelete }) => {
+const DeletionPopUp = ({ exit, handleDelete, wallet }) => {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+
+  const copyKey = (keyType, key) => {
+    navigator.clipboard.writeText(key);
+    dispatch(
+      setToast({
+        type: 1,
+        desc: `${keyType} 👏`,
+      })
+    );
+  };
   return (
     <section className="fixed-container fx-centered box-pad-h">
       <section
-        className="fx-centered fx-col sc-s box-pad-h box-pad-v"
+        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{ width: "450px" }}
       >
         <div
@@ -1863,16 +1788,22 @@ const DeletionPopUp = ({ exit, handleDelete }) => {
         >
           <div className="warning"></div>
         </div>
-        <h3 className="p-centered">Delete wallet?</h3>
-        <p className="p-centered gray-c box-pad-v-m">
-          You're about to delete this wallet, do you wish to proceed?
-        </p>
+        <h3 className="p-centered">{t("APJU882")}</h3>
+        <p className="p-centered gray-c box-pad-v-m">{t("AOlHR1d")}</p>
+        <div
+          className={"fx-scattered if pointer fit-container dashed-onH"}
+          style={{ borderStyle: "dashed" }}
+          onClick={() => copyKey(t("A6Pj02S"), wallet.data)}
+        >
+          <p>{shortenKey(wallet.data, 20)}</p>
+          <div className="copy-24"></div>
+        </div>
         <div className="fx-centered fit-container">
           <button className="fx btn btn-gst-red" onClick={handleDelete}>
-            delete
+            {t("Almq94P")}
           </button>
           <button className="fx btn btn-red" onClick={exit}>
-            cancel
+            {t("AB4BSCe")}
           </button>
         </div>
       </section>

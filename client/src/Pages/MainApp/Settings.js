@@ -12,10 +12,14 @@ import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import LoginWithAPI from "../../Components/Main/LoginWithAPI";
 import AddWallet from "../../Components/Main/AddWallet";
 import {
+  getAppLang,
+  getContentTranslationConfig,
   getCustomSettings,
   getMediaUploader,
   getSelectedServer,
   getWallets,
+  handleAppDirection,
+  updateContentTranslationConfig,
   updateCustomSettings,
   updateMediaUploader,
   updateWallets,
@@ -31,6 +35,12 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { nip19 } from "nostr-tools";
 import Select from "../../Components/Main/Select";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
+import { supportedLanguage, supportedLanguageKeys } from "../../Context/I18N";
+import {
+  translationServices,
+  translationServicesEndpoints,
+} from "../../Content/TranslationServices";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -47,7 +57,6 @@ export default function Settings() {
   const [showRelaysInfo, setShowRelaysInfo] = useState(false);
   const [allRelays, setAllRelays] = useState([]);
   const [showRelaysUpdater, setShowRelaysUpdater] = useState(false);
-
   const [showMutedList, setShowMutedList] = useState(false);
   const [selectedTab, setSelectedTab] = useState(state ? state.tab : "");
   const [tempUserRelays, setTempUserRelays] = useState([]);
@@ -56,6 +65,12 @@ export default function Settings() {
   const [selectedMediaServer, setSelectedMediaServer] = useState(
     getSelectedServer() || mediaUploader[0].value
   );
+  const [selectedAppLang, setSelectedAppLang] = useState(getAppLang());
+  const [selectedTransService, setSelectedTransService] = useState("dl");
+  const [transServicePlan, setTransServicePlan] = useState(false);
+  const [showAPIKey, setShowAPIKey] = useState(false);
+  const [transServiceAPIKey, setTransServiceAPIKey] = useState("");
+
   const contentCategoriesDN = {
     recent: t("AiAJcg1"),
     "recent-with-replies": t("AgF8nZU"),
@@ -64,6 +79,18 @@ export default function Settings() {
     widgets: t("AM4vyRX"),
     highlights: t("AWj53bb"),
   };
+
+  const transServicesPlans = [
+    {
+      display_name: t("AT4BU58"),
+      value: false,
+    },
+    {
+      display_name: t("AEWXA75"),
+      value: true,
+    },
+  ];
+
   const [customServer, setCustomServer] = useState(false);
 
   const [homeContentSuggestion, setHomeContentSuggestion] = useState(
@@ -100,6 +127,7 @@ export default function Settings() {
       total: relaysStatus.length,
     };
   }, [relaysStatus]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -109,6 +137,14 @@ export default function Settings() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    let transService = getContentTranslationConfig();
+    setSelectedTransService(transService.service);
+    setTransServicePlan(transService.plan);
+    if (!transService.plan) setTransServiceAPIKey(transService.freeApikey);
+    if (transService.plan) setTransServiceAPIKey(transService.proApikey);
+  }, [selectedTransService]);
 
   useEffect(() => {
     if (userKeys) {
@@ -414,6 +450,46 @@ export default function Settings() {
       localStorage.setItem("legacy-dm", `${Date.now()}`);
       setLegacyDM(true);
     }
+  };
+
+  const handleSwitchLang = (value) => {
+    if (supportedLanguageKeys.includes(value)) {
+      setSelectedAppLang(value);
+      i18next.changeLanguage(value);
+      localStorage.setItem("app-lang", value);
+      handleAppDirection(value);
+      console.log(selectedTransService)
+      setTransServicePlan(!transServicePlan)
+    } else {
+      dispatch(
+        setToast({
+          type: 3,
+          desc: t("A9WT6DE"),
+        })
+      );
+    }
+  };
+
+  const handleTransServices = (value) => {
+    setSelectedTransService(value);
+    updateContentTranslationConfig(value);
+  };
+  const handleTransServicesPlan = (value) => {
+    setTransServicePlan(value);
+    updateContentTranslationConfig(selectedTransService, value);
+    let transService = getContentTranslationConfig();
+    if (!value) setTransServiceAPIKey(transService.freeApikey);
+    if (value) setTransServiceAPIKey(transService.proApikey);
+  };
+  const handleTransServicesAPIKey = (e) => {
+    let value = e.target.value;
+    setTransServiceAPIKey(value);
+    updateContentTranslationConfig(
+      selectedTransService,
+      undefined,
+      !transServicePlan ? value : undefined,
+      transServicePlan ? value : undefined
+    );
   };
 
   return (
@@ -779,6 +855,118 @@ export default function Settings() {
                           )}
                         </div>
 
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
+                          }}
+                        >
+                          <div
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
+                              selectedTab === "lang"
+                                ? setSelectedTab("")
+                                : setSelectedTab("lang")
+                            }
+                          >
+                            <div className="fx-centered fx-start-h">
+                              <div className="translate-24"></div>
+                              <p>{t("ALGYjOG")}</p>
+                            </div>
+                            <div className="arrow"></div>
+                          </div>
+                          {selectedTab === "lang" && (
+                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                              <div className="fit-container">
+                                <p className="gray-c">{t("AfwKx9Q")}</p>
+                              </div>
+                              <div className="fx-scattered fit-container">
+                                <p>{t("AfwKx9Q")}</p>
+                                <div className="fx-centered">
+                                  <Select
+                                    options={supportedLanguage}
+                                    value={selectedAppLang}
+                                    setSelectedValue={handleSwitchLang}
+                                  />
+                                </div>
+                              </div>
+                              <hr />
+                              <div className="fit-container">
+                                <p className="gray-c">{t("AFz9bzq")}</p>
+                              </div>
+                              <div className="fx-scattered fit-container">
+                                <p>{t("AFz9bzq")}</p>
+                                <Select
+                                  options={translationServices}
+                                  value={selectedTransService}
+                                  setSelectedValue={handleTransServices}
+                                />
+                              </div>
+                              <div className="fit-container fx-centered fx-col">
+                                {translationServicesEndpoints[
+                                  selectedTransService
+                                ].plans && (
+                                  <div className="fx-scattered fit-container">
+                                    <p>{t("AFLFvbx")}</p>
+                                    <Select
+                                      options={transServicesPlans}
+                                      value={transServicePlan}
+                                      setSelectedValue={handleTransServicesPlan}
+                                    />
+                                  </div>
+                                )}
+                                {!(
+                                  selectedTransService === "lt" &&
+                                  !transServicePlan
+                                ) && (
+                                  <>
+                                    <label
+                                      htmlFor="ser-apikey"
+                                      className="if fit-container fx-scattered"
+                                    >
+                                      <input
+                                        type={showAPIKey ? "text" : "password"}
+                                        className="if ifs-full if-no-border"
+                                        style={{ paddingLeft: 0 }}
+                                        placeholder={t("AMbIPen")}
+                                        value={transServiceAPIKey}
+                                        onChange={handleTransServicesAPIKey}
+                                      />
+                                      {showAPIKey && (
+                                        <div
+                                          className="eye-opened"
+                                          onClick={() =>
+                                            setShowAPIKey(!showAPIKey)
+                                          }
+                                        ></div>
+                                      )}
+                                      {!showAPIKey && (
+                                        <div
+                                          className="eye-closed"
+                                          onClick={() =>
+                                            setShowAPIKey(!showAPIKey)
+                                          }
+                                        ></div>
+                                      )}
+                                    </label>
+                                    <a
+                                      href={
+                                        translationServicesEndpoints[
+                                          selectedTransService
+                                        ].url
+                                      }
+                                      className="c1-c p-medium"
+                                      style={{ textDecoration: "underline" }}
+                                    >
+                                      {t("AJKDh94")}
+                                    </a>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         <div
                           className="fit-container fx-scattered fx-col pointer"
                           style={{
@@ -1473,7 +1661,7 @@ const DeletionPopUp = ({ exit, handleDelete, wallet }) => {
   return (
     <section className="fixed-container fx-centered box-pad-h">
       <section
-        className="fx-centered fx-col sc-s box-pad-h box-pad-v"
+        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{ width: "450px" }}
       >
         <div
@@ -1628,7 +1816,7 @@ const RelaysInfo = ({ url, exit }) => {
   return (
     <div className="fixed-container box-pad-h fx-centered">
       <div
-        className="sc-s box-pad-h box-pad-v"
+        className="sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{
           width: "min(100%,500px)",
           position: "relative",

@@ -14,6 +14,7 @@ const getSuggestions = (custom) => {
     )
     .map((item) => item.replace("#", ""));
 };
+
 export default function HashSuggestions({ tag, setSelectedTag }) {
   const topicSuggestions = useMemo(() => {
     return getSuggestions(tag);

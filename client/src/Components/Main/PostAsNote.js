@@ -2,6 +2,7 @@ import React from "react";
 import WriteNote from "./WriteNote";
 
 export default function PostAsNote({ exit , content = "", linkedEvent}) {
+  
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div

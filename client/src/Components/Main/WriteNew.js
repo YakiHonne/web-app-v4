@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import LoginWithNostr from "./LoginWithNostr";
 import { useSelector } from "react-redux";
 import { redirectToLogin } from "../../Helpers/Helpers";
 import { customHistory } from "../../Helpers/History";
+import { useTranslation } from "react-i18next";
 
 export default function WriteNew({ exit }) {
   const userKeys = useSelector((state) => state.userKeys);
   const [redirectLinks, setRedirectLinks] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -31,14 +32,14 @@ export default function WriteNew({ exit }) {
         }
       >
         <div className="plus-sign-w"></div>
-        <div className="link-label">Post new</div>
+        <div className="link-label">{t("AAxCaYH")}</div>
       </button>
     </>
   );
 }
 
 const RedictingLinks = ({ exit, internalExit }) => {
-  const navigateTo = useNavigate();
+  const { t } = useTranslation();
   return (
     <div
       className="fixed-container fx-centered box-pad-h"
@@ -61,7 +62,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
         >
           <div></div>
         </div>
-        <h4 className="box-marg-s">New publication</h4>
+        <h4 className="box-marg-s">{t("AfTMpSr")}</h4>
         <div className="fx-centered fx-wrap" onClick={exit}>
           <Link
             to="/dashboard"
@@ -77,7 +78,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
               className="note-plus-24"
               style={{ width: "32px", height: "32px" }}
             ></div>
-            <div>Note</div>
+            <div>{t("Az5ftet")}</div>
           </Link>
           <div
             onClick={() => customHistory.push("/write-article")}
@@ -92,7 +93,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
               className="posts-plus-24"
               style={{ width: "32px", height: "32px" }}
             ></div>
-            <div>Article</div>
+            <div>{t("AyYkCrS")}</div>
           </div>
 
           <Link
@@ -109,7 +110,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
               className="curation-plus-24"
               style={{ width: "32px", height: "32px" }}
             ></div>
-            <div>Curation</div>
+            <div>{t("Ac6UnVb")}</div>
           </Link>
 
           <Link
@@ -125,7 +126,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
               className="smart-widget-add-24"
               style={{ width: "32px", height: "32px" }}
             ></div>
-            <div style={{ width: "max-content" }}>Smart widget</div>
+            <div style={{ width: "max-content" }}>{t("AkvXmyz")}</div>
           </Link>
           <Link
             to="/dashboard"
@@ -140,7 +141,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
               className="play-plus-24"
               style={{ width: "32px", height: "32px" }}
             ></div>
-            <div>Video</div>
+            <div>{t("AVdmifm")}</div>
           </Link>
         </div>
       </div>

@@ -4,6 +4,7 @@ import LoadingDots from "../LoadingDots";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function ToDeleteGeneral({
   title,
@@ -17,18 +18,7 @@ export default function ToDeleteGeneral({
   const userRelays = useSelector((state) => state.userRelays);
   const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
-
-  // useEffect(() => {
-  //   let subscription = ndkInstance.subscribe([{ kinds: [5], "#e": [eventId] }]);
-  //   subscription.on("event", (event) => {
-  //     dispatch(setToast({ type: 1, desc: `${kind} deleted successfully` }));
-  //     subscription.stop();
-  //     refresh();
-  //   });
-  //   return () => {
-  //     if (subscription) subscription.stop();
-  //   };
-  // }, [eventId]);
+  const { t } = useTranslation();
 
   const deleteEvent = async () => {
     try {
@@ -50,7 +40,7 @@ export default function ToDeleteGeneral({
           dispatch(
             setToast({
               type: 2,
-              desc: "An error occurred while deleting the event",
+              desc: t("AT94ell"),
             })
           );
           setIsLoading(false);
@@ -66,14 +56,14 @@ export default function ToDeleteGeneral({
           aTag,
         })
       );
-      dispatch(setToast({ type: 1, desc: `${kind} deleted successfully` }));
+      dispatch(setToast({ type: 1, desc: t("Armbzm8") }));
       refresh();
     } catch (err) {
       console.log(err);
       dispatch(
         setToast({
           type: 2,
-          desc: "An error occurred while deleting the event",
+          desc: t("AT94ell"),
         })
       );
       setIsLoading(false);
@@ -83,7 +73,7 @@ export default function ToDeleteGeneral({
   return (
     <section className="fixed-container fx-centered box-pad-h">
       <section
-        className="fx-centered fx-col sc-s box-pad-h box-pad-v"
+        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{ width: "450px" }}
       >
         <div
@@ -99,28 +89,27 @@ export default function ToDeleteGeneral({
         </div>
         {title && (
           <h3 className="p-centered" style={{ wordBreak: "break-word" }}>
-            Delete "{title.substring(0, 20)}
-            {title.length > 20 && "..."}"?
+            {t("A59GAeQ", {
+              item: title.substring(0, 20) + (title.length > 20 ? "..." : ""),
+            })}
           </h3>
         )}
         {!title && (
           <h3 className="p-centered" style={{ wordBreak: "break-word" }}>
-            Delete event?
+            {t("AQ9Wcw7")}
           </h3>
         )}
-        <p className="p-centered gray-c box-pad-v-m">
-          You're about to delete this {kind}, do you wish to proceed?
-        </p>
+        <p className="p-centered gray-c box-pad-v-m">{t("A2QosxI")}</p>
         <div className="fx-centered fit-container">
           <button
             className="fx btn btn-gst-red"
             onClick={deleteEvent}
             disabled={isLoading}
           >
-            {isLoading ? <LoadingDots /> : "Delete"}
+            {isLoading ? <LoadingDots /> : t("Almq94P")}
           </button>
           <button className="fx btn btn-red" onClick={cancel}>
-            {isLoading ? <LoadingDots /> : "Cancel"}
+            {isLoading ? <LoadingDots /> : t("AB4BSCe")}
           </button>
         </div>
       </section>

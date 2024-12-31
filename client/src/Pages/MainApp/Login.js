@@ -255,7 +255,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
         <div className="fit-container  box-pad-v-m fx-scattered">
           <div className="fx-centered pointer">
             <div className="round-icon-small">
-              <div className="arrow" style={{ rotate: "90deg" }}></div>{" "}
+              <div className="arrow arrow-back" ></div>{" "}
             </div>
             <p className="gray-c" onClick={() => customHistory.back()}>
               {isNewAccount ? t("AB4BSCe") : t("AVCdQku")}
@@ -891,7 +891,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
       <div className="fx-scattered  fit-container box-pad-v-m">
         <div className="fx-centered pointer">
           <div className="round-icon-small">
-            <div className="arrow" style={{ rotate: "90deg" }}></div>{" "}
+            <div className="arrow arrow-back"></div>{" "}
           </div>
           <p className="gray-c" onClick={() => customHistory.back()}>
             {isNewAccount ? t("AB4BSCe") : t("AVCdQku")}

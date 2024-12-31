@@ -3,12 +3,14 @@ import LoadingDots from "../LoadingDots";
 import { nanoid } from "nanoid";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 
 export default function AddBookmark({ bookmark, exit, tags = [] }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
 
+  const { t } = useTranslation();
   const [title, setTitle] = useState(bookmark?.title || "");
   const [description, setDescription] = useState(bookmark?.description || "");
   const [image, setImage] = useState(bookmark?.image || "");
@@ -34,7 +36,7 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
       console.log(err);
       setToast({
         type: 2,
-        desc: "An error has occurred!",
+        desc: t("Acr4Slu"),
       });
     }
   };
@@ -81,7 +83,7 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
       dispatch(
         setToast({
           type: 3,
-          desc: "Missing title",
+          desc: t("AJFeKRU"),
         })
       );
       return;
@@ -102,7 +104,7 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
           <div></div>
         </div>
         <div className="fit-container fx-centered box-pad-h box-pad-v">
-          <h4>{bookmark ? <>Update bookmark</> : <>Add new bookmark</>}</h4>
+          <h4>{bookmark ? <>{t("A9nS8Wz")}</> : <>{t("AvADsej")}</>}</h4>
         </div>
         {/* <hr /> */}
         <div className="fit-container fx-centered fx-col">
@@ -110,14 +112,14 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
             <input
               type="text"
               className="if ifs-full"
-              placeholder="Title"
+              placeholder={t("AqTI7Iu")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
             <textarea
               type="text"
               className="if ifs-full"
-              placeholder="Description"
+              placeholder={t("AM6TPts")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               style={{ height: "100px", paddingTop: "1rem" }}
@@ -130,9 +132,9 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
             {isLoading ? (
               <LoadingDots />
             ) : bookmark ? (
-              <>Update bookmark</>
+              <>{t("A9nS8Wz")}</>
             ) : (
-              <>Create bookmark</>
+              <>{t("A984pJy")}</>
             )}
           </button>
         </div>

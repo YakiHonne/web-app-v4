@@ -6,6 +6,7 @@ import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
 import { getNoteTree } from "./Helpers";
+import { t } from "i18next";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -286,7 +287,7 @@ const detectDirection = (text) => {
   } else if (ltrCount > rtlCount) {
     return "LTR";
   }
-  return "LTR"
+  return "LTR";
 };
 
 const getParsedNote = async (event) => {
@@ -389,31 +390,17 @@ const checkForLUDS = (lud06, lud16) => {
 };
 
 const convertDate = (toConvert) => {
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
-  const year = new Date(toConvert).getFullYear();
-  const month = months[new Date(toConvert).getMonth()];
-  const day = new Date(toConvert).getDate();
-
-  return `${month} ${day}, ${year}`;
+  return t("A3fEQj5", {
+    val: toConvert,
+    formatParams: {
+      val: { year: "numeric", month: "short", day: "numeric" },
+    },
+  });
 };
 
 const timeAgo = (date) => {
   const now = new Date();
-  const diff = now - date; // Difference in milliseconds
+  const diff = now - date;
   const diffInSeconds = Math.floor(diff / 1000);
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   const diffInHours = Math.floor(diffInMinutes / 60);
@@ -422,46 +409,34 @@ const timeAgo = (date) => {
   const diffInMonths = Math.floor(diffInDays / 30);
   const diffInYears = now.getFullYear() - date.getFullYear();
 
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
   if (diffInSeconds < 60) {
-    return "now";
+    return t("ArG9ME2");
   } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} min ago`;
+    return t("AOPBXtv", {
+      val: -diffInMinutes,
+      style: "narrow",
+      range: "minute",
+    });
   } else if (diffInHours < 24) {
-    return `${diffInHours}h ago`;
+    return t("AOPBXtv", { val: -diffInHours, style: "narrow", range: "hour" });
   } else if (diffInDays < 7) {
-    return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+    return t("AOPBXtv", { val: -diffInDays, style: "narrow", range: "day" });
   } else if (diffInWeeks < 5) {
-    return `${diffInWeeks} week${diffInWeeks > 1 ? "s" : ""} ago`;
+    return t("AOPBXtv", { val: -diffInWeeks, style: "narrow", range: "weeks" });
   } else if (diffInMonths < 11 && diffInYears === 0) {
-    return `${diffInMonths} month${diffInMonths > 1 ? "s" : ""} ago`;
-  } else if (diffInYears === 0) {
-    return `${months[date.getMonth()]} ${date.getDate()}`;
+    return t("AOPBXtv", {
+      val: -diffInMonths,
+      style: "narrow",
+      range: "month",
+    });
   } else {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return convertDate(date);
   }
 };
 
 const removeRelayLastSlash = (relay) => {
   let charToRemove = "/";
-  const escapedChar = charToRemove.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // Escape special characters if any
+  const escapedChar = charToRemove.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(`^[${escapedChar}]+|[${escapedChar}]+$`, "g");
   return relay.replace(regex, "");
 };
@@ -535,15 +510,13 @@ const getClaimingData = async (pubkey, event_id, kind) => {
     if (!window.nostr)
       return {
         status: false,
-        message:
-          "You don't appear to be using any extension, please login using an extension or use Yakihonne mobile app.",
+        message: t("AI6im93"),
       };
     let walletPubkey = await window.nostr.getPublicKey();
     if (walletPubkey !== pubkey)
       return {
         status: false,
-        message:
-          "You're not authorized to claim this reward, the extension account mismatches your current Yakihonne account",
+        message: t("AZsINLj"),
       };
     const encrypted = await window.nostr.nip04.encrypt(
       process.env.REACT_APP_YAKI_PUBKEY,
@@ -552,7 +525,7 @@ const getClaimingData = async (pubkey, event_id, kind) => {
     return { status: true, message: encrypted };
   } catch (err) {
     console.log(err);
-    return { status: false, message: "You have cancel this operation." };
+    return { status: false, message: t("AXd65kJ") };
   }
 };
 
@@ -635,4 +608,5 @@ export {
   getParsedNote,
   sortEvents,
   timeAgo,
+  detectDirection
 };

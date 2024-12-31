@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import Date_ from "../Date_";
 import AddBookmark from "./AddBookMark";
 import { useDispatch, useSelector } from "react-redux";
-import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { setToPublish } from "../../Store/Slides/Publishers";
+import { convertDate } from "../../Helpers/Encryptions";
+import { useTranslation } from "react-i18next";
 
 export default function BookmarksPicker({
   kind,
@@ -16,8 +18,8 @@ export default function BookmarksPicker({
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userBookmarks = useSelector((state) => state.userBookmarks);
-  const isPublishing = useSelector((state) => state.isPublishing);
   const userRelays = useSelector((state) => state.userRelays);
+  const { t } = useTranslation();
 
   const [showAddBookmark, setShowAddBookmark] = useState(false);
   const itemTypes = {
@@ -35,15 +37,6 @@ export default function BookmarksPicker({
       return false;
     }
 
-    if (isPublishing) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        })
-      );
-      return;
-    }
     let bookmarkD = bookmark.tags.find((item) => item[0] === "d")[1];
     let itemsLeft = bookmark.tags.filter((tag) =>
       ["a", "e", "t"].includes(tag[0])
@@ -123,11 +116,11 @@ export default function BookmarksPicker({
             <div></div>
           </div>
           <div className="fx-centered fx-col fit-container">
-            <h4 className="box-marg-s">Add to Bookmark</h4>
+            <h4 className="box-marg-s">{t("AXMpXlH")}</h4>
 
             {userBookmarks.length === 0 && (
               <div className="fx-centered" style={{ marginBottom: "1rem" }}>
-                <p className="gray-c">You have no bookmarks</p>
+                <p className="gray-c">{t("Aej5MOj")}</p>
               </div>
             )}
             {userBookmarks.map((bookmark) => {
@@ -154,14 +147,15 @@ export default function BookmarksPicker({
                     ></div>
                     <div>
                       <p className="p-one-line">{bookmark.title}</p>
-
                       <p className="gray-c p-medium">
-                        {bookmark.items.length} item(s) &#8226;{" "}
+                        {t("A04okTg", { count: bookmark.items.length })}
+                        &#8226;{" "}
                         <span className="orange-c">
-                          Edited{" "}
-                          <Date_
-                            toConvert={new Date(bookmark.created_at * 1000)}
-                          />
+                          {t("A1jhS42", {
+                            date: convertDate(
+                              new Date(bookmark.created_at * 1000)
+                            ),
+                          })}
                         </span>
                       </p>
                     </div>
@@ -178,8 +172,7 @@ export default function BookmarksPicker({
               className="sc-s-d fit-container if pointer fx-centered"
               onClick={() => setShowAddBookmark(true)}
             >
-              {" "}
-              <p className="gray-c">Create bookmark set</p>{" "}
+              <p className="gray-c">{t("AxGQiuq")}</p>{" "}
               <p className="gray-c p-big">&#xFF0B;</p>
             </div>
           </div>
