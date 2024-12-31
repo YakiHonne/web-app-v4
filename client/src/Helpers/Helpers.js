@@ -1148,7 +1148,7 @@ const getAppLang = () => {
 };
 const getContentTranslationConfig = () => {
   let defaultService = {
-    service: "dl",
+    service: "lt",
     plan: false,
     selected: true,
     freeApikey: "",
