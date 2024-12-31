@@ -14,6 +14,7 @@ export default function CountDownToNewProduct() {
     return () => clearInterval(interval);
   }, [targetTimestamp]);
 
+  
   function calculateTimeLeft(targetTimestamp) {
     const difference = targetTimestamp * 1000 - Date.now();
     let timeLeft = {};

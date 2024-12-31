@@ -8,14 +8,34 @@ const UncensoredNotes = require("../Models/UncensoredNotes");
 const UNRatings = require("../Models/UNRatings");
 const SealedNotes = require("../Models/SealedNotes");
 const UserLevels = require("../Models/UserLevels");
-const { auth_user, user_login, user_tokenizing } = require("../Helpers/Auth");
+const { auth_user, user_login, user_tokenizing, auth_data } = require("../Helpers/Auth");
 const { actions_keys, levels, tiers } = require("../DB/LevelsActions");
 const MongoStore = require("connect-mongo");
 const Users = require("../Models/Users");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
+const deepl = require("deepl-node");
+const translationServicesEndpoints = {
+  dl: {
+    free: "https://api-free.deepl.com/v2/translate",
+    pro: "https://api.deepl.com/v2/translate",
+    plans: true,
+    url: "https://deepl.com",
+  },
+  lt: {
+    free: "https://translator.yakihonne.com/translate",
+    pro: "https://libretranslate.com/translate",
+    plans: true,
+    url: "https://libretranslate.com",
+  },
+  nw: {
+    free: "",
+    pro: "https://translate.nostr.wine/translate",
+    plans: false,
+    url: "https://nostr.wine/",
+  },
+};
 const getCurrentLevel = (points) => {
   return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
 };
@@ -432,6 +452,43 @@ router.get("/api/v1/user-impact", async (req, res) => {
   }
 });
 
+router.post("/api/v1/translate", auth_data, async (req, res) => {
+  try {
+    let { service, lang, text } = req.body;
+    let { raw, specialContent } = extractRawContent(text);
+    if (service.service === "dl") {
+      let translatedContent = await dlTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+    if (service.service === "lt") {
+      let translatedContent = await ltTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+    if (service.service === "nw") {
+      let translatedContent = await nwTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+  } catch (err) {
+    console.log(err);
+    res.send({ status: 500, res: "" });
+  }
+});
+
 const actionToUpdate = (
   action_key,
   action_details,
@@ -811,4 +868,202 @@ const updateUserImpact = async (action_key, userLevels, pubkey) => {
     );
   }
 };
+const dlTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.plan
+      ? translationServicesEndpoints.dl.pro
+      : translationServicesEndpoints.dl.free;
+    let apikey = service.plan ? service.proApikey : service.freeApikey;
+    if (!apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    const translator = new deepl.Translator(apikey);
+    let data = await translator.translateText(
+      text,
+      null,
+      lang === "en" ? "en-US" : lang
+    );
+
+    return {
+      status: 200,
+      res: revertContent(data.text, specialContent, lang),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+// const dlTranslate = async (text, service, lang, specialContent) => {
+//   try {
+//     let path = service.plan
+//       ? translationServicesEndpoints.dl.pro
+//       : translationServicesEndpoints.dl.free;
+//     let apikey = service.plan ? service.proApikey : service.freeApikey;
+//     if (!apikey) {
+//       return {
+//         status: 400,
+//         res: "",
+//       };
+//     }
+//     console.log(apikey);
+//     let data = await axios.post(
+//       path,
+//       {
+//         text: [text],
+//         target_lang: lang,
+//       },
+//       {
+//         headers: {
+//           Authorization: `DeepL-Auth-key ${apikey}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+//     return {
+//       status: 200,
+//       res: revertContent(data.data.translations[0].text, specialContent),
+//     };
+//   } catch (err) {
+//     console.log(err);
+//     return {
+//       status:
+//         err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+//       res: "",
+//     };
+//   }
+// };
+const ltTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.plan
+      ? translationServicesEndpoints.lt.pro
+      : translationServicesEndpoints.lt.free;
+    let apikey = service.plan ? service.proApikey : service.freeApikey;
+    if (service.plan && !apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        format: "text",
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent, lang),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+const nwTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = translationServicesEndpoints.nw.pro;
+
+    let apikey = service.proApikey;
+    if (!apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        format: "text",
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent, lang),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+
+const extractRawContent = (text) => {
+  let raw = text
+    .split(/(\n)/)
+    .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
+    .filter(Boolean);
+
+  let specialContent = [];
+  let scIndex = 0;
+  for (let i = 0; i < raw.length; i++) {
+    if (
+      /(https?:\/\/)/i.test(raw[i]) ||
+      raw[i].startsWith("npub1") ||
+      raw[i].startsWith("nprofile1") ||
+      raw[i].startsWith("nevent") ||
+      raw[i].startsWith("naddr") ||
+      raw[i].startsWith("note1") ||
+      raw[i].startsWith("nostr:") ||
+      raw[i].startsWith("#")
+    ) {
+      specialContent.push(raw[i]);
+      raw[i] = `{${scIndex}}`;
+      scIndex = scIndex + 1;
+    }
+  }
+  return {
+    raw: raw.join(" "),
+    specialContent,
+  };
+};
+const revertContent = (rawContent, specialContent, lang) => {
+  let raw = rawContent;
+
+  let isAsian = ["zh", "ja", "th"].includes(lang);
+
+  for (let i = 0; i < specialContent.length; i++) {
+    raw = raw.replace(
+      `{${i}}`,
+      isAsian ? ` ${specialContent[i]} ` : specialContent[i]
+    );
+    raw = raw.replace(
+      `[${i}]`,
+      isAsian ? ` ${specialContent[i]} ` : specialContent[i]
+    );
+  }
+  return raw;
+};
+
 module.exports = router;

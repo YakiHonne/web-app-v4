@@ -15,9 +15,9 @@ import { Link } from "react-router-dom";
 import UploadFile from "../UploadFile";
 import MentionSuggestions from "../Main/MentionSuggestions";
 import Gifs from "../Gifs";
-import Slider from "../Slider";
 import Emojis from "../Emojis";
 import NotePreview from "../Main/NotePreview";
+import { useTranslation } from "react-i18next";
 
 export default function Comments({
   noteTags = false,
@@ -29,6 +29,7 @@ export default function Comments({
   kind = "note",
 }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const [comment, setComment] = useState("");
   const [showWarningBox, setShowWarningBox] = useState(false);
@@ -124,12 +125,6 @@ export default function Comments({
     }
   };
 
-  // const handleWriteComment = (e) => {
-  //   let value = e.target.value;
-  //   setComment(value);
-  //   updateNoteDraft(replyId, value);
-  // };
-
   useEffect(() => {
     updateNoteDraft(replyId, comment);
     adjustHeight();
@@ -137,21 +132,6 @@ export default function Comments({
 
   const adjustHeight = () => {
     if (textareaRef.current) {
-      // if (comment.charAt(comment.length - 1) === "@")
-      //   setShowMentionSuggestions(true);
-      // else {
-      //   let splitedNoteByMention = comment.split("@");
-
-      //   if (
-      //     (splitedNoteByMention[splitedNoteByMention.length - 1].includes(
-      //       " "
-      //     ) &&
-      //       comment.charAt(comment.length - 1) !== "@") ||
-      //     !comment
-      //   ) {
-      //     setShowMentionSuggestions(false);
-      //   }
-      // }
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
       textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
@@ -159,23 +139,8 @@ export default function Comments({
     }
   };
 
-  // const handleTextAreaMentions = (keyword) => {
-  //   if (textareaRef.current) textareaRef.current.focus();
-  //   if (comment) setComment(comment + ` ${keyword}`);
-  //   else setComment(keyword);
-  // };
-
   const handleSelectingMention = (data) => {
-    // let splitedNoteByMention = comment.split("@");
-    // splitedNoteByMention[splitedNoteByMention.length - 1] = data;
-
-    // setComment(splitedNoteByMention.join("@").replace("@npub", "npub"));
-
-    // setShowMentionSuggestions(false);
-    // setMention("");
-    // if (textareaRef.current) textareaRef.current.focus();
     setComment((prev) => prev.replace(`@${mention}`, data));
-    // setMentionSet((prev) => [...prev, data]);
     setShowMentionSuggestions(false);
     setMention("");
     if (textareaRef.current) textareaRef.current.focus();
@@ -226,59 +191,29 @@ export default function Comments({
     }
   };
 
-  const removeImage = (index) => {
-    let tempImgSet = Array.from(imgsSet);
-    setComment(comment.replace(tempImgSet[index], ""));
-    tempImgSet.splice(index, 1);
-    setImgsSet(tempImgSet);
-  };
-
   const handleAddImage = (data) => {
-    // if (comment) setComment(comment + " " + data);
-    // if (!comment) setComment(data);
     handleInsertTextInPosition(data);
     setImgsSet((prev) => [...prev, data]);
   };
 
   const handleOnChange = (event) => {
-    // let value = event.target.value;
-    // let splitedNoteByHashtag = value.split("#");
-    // let splitedNoteByMention = value.split("@");
-
-    // if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
-    //   setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
-    // }
-    // setComment(value);
-    // if (!content && !linkedEvent) updateNoteDraft("root", value);
     let value = event.target.value;
     let cursorPosition = event.target.selectionStart;
-    // let splitedNoteByHashtag = value.split("#");
-    // let splitedNoteByMention = value.split("@");
     const textUpToCursor = value.slice(0, cursorPosition);
-
-    // Match word starting with @ before the cursor
     const match = textUpToCursor.match(/@(\w*)$/);
-
-    // Set the word after @, or empty string if no match
     setMention(match ? match[1] : "");
     if (match && !showMentionSuggestions) setShowMentionSuggestions(true);
     if (!match) setShowMentionSuggestions(false);
-    // if (!splitedNoteByHashtag[splitedNoteByHashtag.length - 1].includes(" ")) {
-    //   setTag(splitedNoteByHashtag[splitedNoteByHashtag.length - 1]);
-    // }
-    // if (!splitedNoteByMention[splitedNoteByMention.length - 1].includes(" ")) {
-    //   setMention(splitedNoteByMention[splitedNoteByMention.length - 1]);
-    // }
     setComment(value);
   };
 
   if (!userKeys)
     return (
       <div className="fit-container fx-centered box-pad-v fx-col slide-up">
-        <h4>Do you have thoughts?</h4>
-        <p className="gray-c">Login to leave a comment</p>
+        <h4>{t("ASt0wnG")}</h4>
+        <p className="gray-c">{t("AAWFsjt")}</p>
         <Link to={"/login"}>
-          <button className="btn btn-normal btn-small">Login</button>
+          <button className="btn btn-normal btn-small">{t("AmOtzoL")}</button>
         </Link>
       </div>
     );
@@ -291,24 +226,21 @@ export default function Comments({
             style={{ width: "min(100%, 500px)" }}
           >
             <div className="fx-centered fx-col">
-              <h4>Save draft?</h4>
-              <p className="gray-c p-centered box-pad-v-m">
-                You're about to quit your editing, do you wish to save it as a
-                draft?
-              </p>
+              <h4>{t("AGNjoi1")}</h4>
+              <p className="gray-c p-centered box-pad-v-m">{t("AdeLRrz")}</p>
               <div className="fit-container fx-centered">
                 <div className="fx-centered">
                   <button
                     className="btn btn-gst-red"
                     onClick={() => handleDiscard(false)}
                   >
-                    Discard
+                    {t("AT7NTrQ")}
                   </button>
                   <button
                     className="btn btn-gst"
                     onClick={() => handleDiscard(true)}
                   >
-                    Save & quit
+                    {t("ACLAlFM")}
                   </button>
                 </div>
                 <div>
@@ -316,7 +248,7 @@ export default function Comments({
                     className="btn btn-normal"
                     onClick={() => setShowWarningBox(false)}
                   >
-                    Continue editing
+                    {t("A7hAlr2")}
                   </button>
                 </div>
               </div>
@@ -348,14 +280,11 @@ export default function Comments({
                 type="text"
                 style={{
                   padding: 0,
-                  // height: "auto",
-                  // minHeight: "200px",
                   maxHeight: "30vh",
-                  // maxHeight: "100%",
                   borderRadius: 0,
                 }}
                 className="txt-area ifs-full if if-no-border"
-                placeholder={`Comment on this ${kind}`}
+                placeholder={t("AOmRQKF")}
                 value={comment}
                 onChange={handleOnChange}
                 disabled={isLoading}
@@ -371,38 +300,6 @@ export default function Comments({
             </div>
             <NotePreview content={comment} viewPort={40} />
           </div>
-          {/* {imgsSet.length > 0 && (
-            <div
-              className="box-pad-v-m fit-container fx-centered fx-start-h"
-              style={{ maxWidth: "100%" }}
-            >
-              <Slider
-                slideBy={200}
-                items={imgsSet.map((img, index) => {
-                  return (
-                    <div
-                      className="bg-img cover-bg sc-s-18"
-                      style={{
-                        backgroundImage: `url(${img})`,
-                        height: "100px",
-                        aspectRatio: "16/9",
-                        position: "relative",
-                      }}
-                      key={index}
-                    >
-                      <div
-                        className="close"
-                        style={{ top: "8px", right: "8px" }}
-                        onClick={() => removeImage(index)}
-                      >
-                        <div></div>
-                      </div>
-                    </div>
-                  );
-                })}
-              />
-            </div>
-          )} */}
           <div className="fit-container fx-scattered">
             <div className="fx-centered" style={{ gap: "12px" }}>
               <div
@@ -421,12 +318,7 @@ export default function Comments({
                 setFileMetadata={() => null}
                 setIsUploadsLoading={() => null}
               />
-              <Emojis
-                setEmoji={
-                  (data) => handleInsertTextInPosition(data)
-                  // setComment(comment ? `${comment} ${data}` : data)
-                }
-              />
+              <Emojis setEmoji={(data) => handleInsertTextInPosition(data)} />
               <div style={{ position: "relative" }}>
                 <div
                   className="p-small box-pad-v-s box-pad-h-s pointer fx-centered"
@@ -456,17 +348,16 @@ export default function Comments({
               <button
                 className="btn btn-gst btn-small"
                 onClick={() => (comment ? setShowWarningBox(true) : exit())}
-                // onClick={exit}
                 disabled={isLoading}
               >
-                {isLoading ? <LoadingDots /> : "Cancel"}
+                {isLoading ? <LoadingDots /> : t("AB4BSCe")}
               </button>
               <button
                 className="btn btn-normal btn-small"
                 onClick={commentNote}
                 disabled={isLoading}
               >
-                {isLoading ? <LoadingDots /> : "Post"}
+                {isLoading ? <LoadingDots /> : t("AT4tygn")}
               </button>
             </div>
           </div>

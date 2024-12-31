@@ -6,6 +6,7 @@ import LoginWithNostr from "./LoginWithNostr";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { redirectToLogin } from "../../Helpers/Helpers";
+import { useTranslation } from "react-i18next";
 
 const FOLLOWING = <div className="user-followed-w-24"></div>;
 const FOLLOW = <div className="user-to-follow-24"></div>;
@@ -15,7 +16,6 @@ const FOLLOWING_ = "Unfollow";
 const FOLLOW_ = "Follow";
 const TOFOLLOW = "To follow";
 const TOUNFOLLOW = "To unfollow";
-const UNFOLLOW_ = "Unfollow";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -71,9 +71,14 @@ const FollowText = ({
   const userFollowings = useSelector((state) => state.userFollowings);
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
-  const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [tags, setTags] = useState([]);
+  const { t } = useTranslation();
+
+  const FOLLOWING_ = t("ASi0a0d");
+  const FOLLOW_ = t("A9o2pLM");
+  const TOFOLLOW = t("AskTU9f");
+  const TOUNFOLLOW = t("AZ7GX3Q");
 
   useEffect(() => {
     setTags(
@@ -97,21 +102,11 @@ const FollowText = ({
 
   const followUnfollow = async () => {
     try {
-      
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
       setIsLoading(true);
       let tempTags = Array.from(userFollowings || []);
       if (isFollowing.status) {
         let index = tempTags.findIndex((item) => item === toFollowKey);
-        console.log(tempTags)
+        console.log(tempTags);
         tempTags.splice(index, 1);
       } else {
         tempTags.push(toFollowKey);
@@ -153,7 +148,9 @@ const FollowText = ({
     return (
       <>
         <button
-          className={`btn btn-normal  ${size === "small" ? "btn-small" : ""} ${full ? "btn-full" : ""}`}
+          className={`btn btn-normal  ${size === "small" ? "btn-small" : ""} ${
+            full ? "btn-full" : ""
+          }`}
           disabled={isLoading}
           onClick={() => redirectToLogin()}
         >
@@ -164,7 +161,9 @@ const FollowText = ({
   if (!toFollowKey || toFollowKey === userKeys.pub)
     return (
       <button
-        className={`btn btn-disabled  ${size === "small" ? "btn-small" : ""} ${full ? "btn-full" : ""}`}
+        className={`btn btn-disabled  ${size === "small" ? "btn-small" : ""} ${
+          full ? "btn-full" : ""
+        }`}
         disabled={isLoading}
       >
         {FOLLOW_}
@@ -176,12 +175,12 @@ const FollowText = ({
         className={`btn ${size === "small" ? "btn-small" : ""} ${
           isFollowing.bulk
             ? `btn-green`
-            // ? `${isFollowing.status ? "btn-gray" : "btn-normal"}`
-            : `${isFollowing.status ? "btn-gray" : "btn-normal"}`
+            : // ? `${isFollowing.status ? "btn-gray" : "btn-normal"}`
+              `${isFollowing.status ? "btn-gray" : "btn-normal"}`
         } ${full ? "btn-full" : ""}`}
         style={{
           borderColor: isFollowing.bulk && !isFollowing.status ? "initial" : "",
-          minWidth: "max-content"
+          minWidth: "max-content",
         }}
         disabled={isLoading}
         onClick={handleBulkList}
@@ -204,12 +203,12 @@ const FollowText = ({
 
   return (
     <button
-      className={`btn ${
-        isFollowing.status ? "btn-gray" : "btn-normal"
-      } ${size === "small" ? "btn-small" : ""} ${full ? "btn-full" : ""}`}
+      className={`btn ${isFollowing.status ? "btn-gray" : "btn-normal"} ${
+        size === "small" ? "btn-small" : ""
+      } ${full ? "btn-full" : ""}`}
       disabled={isLoading}
       onClick={followUnfollow}
-      data-tooltip={isFollowing.status ? "Unfollow" : "Follow"}
+      data-tooltip={isFollowing.status ? t("ASi0a0d") : t("A9o2pLM")}
     >
       {isLoading ? <LoadingDots /> : isFollowing.status ? FOLLOWING_ : FOLLOW_}
     </button>
@@ -232,6 +231,12 @@ const FollowIcon = ({
   const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [tags, setTags] = useState([]);
+  const { t } = useTranslation();
+
+  const FOLLOWING_ = t("ASi0a0d");
+  const FOLLOW_ = t("A9o2pLM");
+  const TOFOLLOW = t("AskTU9f");
+  const TOUNFOLLOW = t("AZ7GX3Q");
 
   useEffect(() => {
     setTags(
@@ -255,15 +260,6 @@ const FollowIcon = ({
 
   const followUnfollow = async () => {
     try {
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
       setIsLoading(true);
       let tempTags = Array.from(userFollowings || []);
       if (isFollowing.status) {
@@ -314,7 +310,7 @@ const FollowIcon = ({
           }`}
           disabled={isLoading}
           onClick={() => redirectToLogin()}
-          data-tooltip={"Login to follow"}
+          data-tooltip={t("A7xXZ7B")}
         >
           {FOLLOW}
         </div>
@@ -347,10 +343,8 @@ const FollowIcon = ({
         disabled={isLoading}
         data-tooltip={
           isFollowing.bulk
-            ? `${
-                isFollowing.status ? "Pending to follow" : "Pending to unfollow"
-              }`
-            : `${isFollowing.status ? "Unfollow" : "Follow"}`
+            ? `${isFollowing.status ? t("AT455VV") : t("AMwSDLJ")}`
+            : `${isFollowing.status ? t("ASi0a0d") : t("A9o2pLM")}`
         }
         onClick={handleBulkList}
       >
@@ -377,7 +371,7 @@ const FollowIcon = ({
       } ${size === "small" ? "round-icon-small" : ""}`}
       disabled={isLoading}
       onClick={followUnfollow}
-      data-tooltip={isFollowing.status ? "Unfollow" : "Follow"}
+      data-tooltip={isFollowing.status ? t("ASi0a0d") : t("A9o2pLM")}
     >
       {isLoading ? <LoadingDots /> : isFollowing.status ? FOLLOWING : FOLLOW}
     </div>

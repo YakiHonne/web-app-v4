@@ -10,7 +10,6 @@ import {
 } from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
 import { Link } from "react-router-dom";
 import Footer from "../../Components/Footer";
 import ToDeleteGeneral from "../../Components/Main/ToDeleteGeneral";
@@ -294,14 +293,10 @@ export default function SmartWidgets() {
                           extrasRef.current?.getBoundingClientRect().height || 0
                         }px)`
                       : 0,
-                  padding: "0 1rem",
                 }}
-                className={`fx-centered  fx-wrap fx-start-v  box-pad-v sticky extras-homepage`}
+                className={`fx-centered  fx-wrap fx-start- box-pad-v sticky extras-homepage`}
                 ref={extrasRef}
               >
-                <div className="sticky fit-container" style={{}}>
-                  <SearchbarNOSTR />
-                </div>
                 <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
                   <div
                     className="smart-widget"

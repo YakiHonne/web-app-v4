@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import LevelingSystem from "./YakiNewFeatureIntroComponents/LevelingSystem";
 import SmartWidgetsSystem from "./YakiNewFeatureIntroComponents/SmartWidgetsSystem";
 
 export default function YakiNewFeatureIntro() {

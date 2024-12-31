@@ -6,14 +6,14 @@ export default function Backbar() {
     <div
       className="fx-centered fit-container fx-start-h box-pad-v-s sticky"
       onClick={() => customHistory.back()}
-      style={{padding: '.5rem 0'}}
+      style={{ padding: ".5rem 0" }}
     >
-      <div >
+      <div>
         <button
           className="btn btn-normal btn-gray"
           style={{ padding: "0 1rem" }}
         >
-          <div className="arrow" style={{ rotate: "90deg" }}></div>
+          <div className="arrow arrow-back"></div>
         </button>
       </div>
     </div>

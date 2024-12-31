@@ -8,11 +8,13 @@ import { useSelector } from "react-redux";
 import { saveUsers } from "../../Helpers/DB";
 import { getUser } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function BrowsePolls({ setNevent, exit }) {
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
 
+  const { t } = useTranslation();
   const [myPolls, setMyPolls] = useState([]);
   const [comPolls, setComPolls] = useState([]);
   const [myPollsLE, setMyPollsLE] = useState(undefined);
@@ -58,7 +60,6 @@ export default function BrowsePolls({ setNevent, exit }) {
               return prev;
             });
           }
-          // setIsLoading(false);
         } catch (err) {
           console.log(err);
           setIsLoading(false);
@@ -151,7 +152,7 @@ export default function BrowsePolls({ setNevent, exit }) {
             }`}
             onClick={() => handleContentSource("self")}
           >
-            <p>My polls</p>
+            <p>{t("AQyoumZ")}</p>
           </div>
           <div
             className={`list-item fx-centered fx ${
@@ -159,7 +160,7 @@ export default function BrowsePolls({ setNevent, exit }) {
             }`}
             onClick={() => handleContentSource("com")}
           >
-            <p>Community polls</p>
+            <p>{t("ADAU7C1")}</p>
           </div>
           <div className="close" style={{ position: "static" }} onClick={exit}>
             <div></div>
@@ -177,13 +178,12 @@ export default function BrowsePolls({ setNevent, exit }) {
                     <AuthorPreview pubkey={poll.pubkey} />
                     <div
                       className="round-icon-small round-icon-tooltip"
-                      data-tooltip="Use poll"
+                      data-tooltip={t("Afcj438")}
                       onClick={() => setNevent(poll.nEvent)}
                     >
                       <div className="plus-sign"></div>
                     </div>
                   </div>
-                  {/* <ZapPollsComp event={poll} /> */}
                   <MinimalZapPollPreview event={poll} />
                 </div>
               );
@@ -199,14 +199,13 @@ export default function BrowsePolls({ setNevent, exit }) {
                     <AuthorPreview pubkey={poll.pubkey} />
                     <div
                       className="round-icon-small round-icon-tooltip"
-                      data-tooltip="Use poll"
+                      data-tooltip={t("Afcj438")}
                       onClick={() => setNevent(poll.nEvent)}
                     >
                       <div className="plus-sign"></div>
                     </div>
                   </div>
                   <MinimalZapPollPreview event={poll} />
-                  {/* <ZapPollsComp event={poll} /> */}
                 </div>
               );
             })}
@@ -215,7 +214,7 @@ export default function BrowsePolls({ setNevent, exit }) {
               className="fit-container fx-centered"
               style={{ height: "30vh" }}
             >
-              <p className="gray-c">Loading</p>
+              <p className="gray-c">{t("AKvHyxG")}</p>
               <LoadingDots />
             </div>
           )}
@@ -244,7 +243,6 @@ const AuthorPreview = ({ pubkey }) => {
       <UserProfilePicNOSTR
         size={40}
         mainAccountUser={false}
-        
         user_id={author.pubkey}
         img={author.picture}
         metadata={author}

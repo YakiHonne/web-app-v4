@@ -406,23 +406,6 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                  {/* <div
-                    className=" fx-centered fx-col fx-start-v extras-homepage"
-                    style={{
-                      position: "sticky",
-                      zIndex: "100",
-                      flex: 1,
-                    }}
-                    ref={extrasRef}
-                  >
-                    <div className="sticky fit-container">
-                      <SearchbarNOSTR />
-                    </div>
-                    <ImportantFlashNews />
-                    <TrendingUsers />
-                    <RecentTags />
-                    <Footer />
-                  </div> */}
                 </div>
               </div>
             </main>
@@ -434,7 +417,6 @@ export default function Home() {
 }
 
 const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
-  // const smallButtonDropDownOptions = getContentList();
   const userMutedList = useSelector((state) => state.userMutedList);
   const userInterestList = useSelector((state) => state.userInterestList);
   const userKeys = useSelector((state) => state.userKeys);

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import PreviewWidget from "./PreviewWidget";
+import { useTranslation } from "react-i18next";
 
 export default function MinimalPreviewWidget({ widget }) {
   const [showFullWidget, setShowFullWidget] = useState(false);
+  const { t } = useTranslation();
   return (
     <>
       {showFullWidget && (
@@ -19,7 +21,7 @@ export default function MinimalPreviewWidget({ widget }) {
           className="btn btn-normal btn-small"
           onClick={() => setShowFullWidget(true)}
         >
-          View
+          {t("AYO6i7Y")}
         </button>
       </div>
     </>

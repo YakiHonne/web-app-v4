@@ -20,22 +20,23 @@ import AddWallet from "./Main/AddWallet";
 import { useSelector } from "react-redux";
 import { userLogout } from "../Helpers/Controlers";
 import { redirectToLogin } from "../Helpers/Helpers";
+import { useTranslation } from "react-i18next";
 
 export default function PagePlaceholder({ page, onClick = null }) {
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [showAddWallet, setShowAddWallet] = useState(false);
   if (page === "404")
     return (
       <div className="fit-container">
         <div className="fx-centered fx-col" style={{ height: "100vh" }}>
-          <h2 className="box-marg-s p-centered">You're lost!</h2>
+          <h2 className="box-marg-s p-centered">{t("ABEx38g")}</h2>
           <p
             className="p-centered gray-c box-pad-h"
             style={{ maxWidth: "450px" }}
           >
-            No such page is in our platform, head back to the main home to enjoy
-            our stories!
+            {t("AYTKHbY")}
           </p>
           <div
             className="bg-img contained-bg"
@@ -49,7 +50,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
             className="btn btn-normal"
             onClick={() => (window.location = "/")}
           >
-            we are this way!
+            {t("A9Un0Og")}
           </button>
         </div>
       </div>
@@ -59,10 +60,9 @@ export default function PagePlaceholder({ page, onClick = null }) {
       <>
         <div className="fit-container fx-centered">
           <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-            <h2 className="box-marg-s p-centered">You're not connected</h2>
+            <h2 className="box-marg-s p-centered">{t("AADL1TO")}</h2>
             <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-              It seems that you're not connected to the NOSTR network, please
-              sign in and join the community.
+              {t("AD0otkO")}
             </p>
             <div
               className="bg-img contained-bg"
@@ -76,7 +76,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
               className="btn btn-normal"
               onClick={() => redirectToLogin()}
             >
-              Login
+              {t("AmOtzoL")}
             </button>
           </div>
         </div>
@@ -86,10 +86,9 @@ export default function PagePlaceholder({ page, onClick = null }) {
     return (
       <div className="fit-container">
         <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-          <h2 className="box-marg-s p-centered">Private key required!</h2>
+          <h2 className="box-marg-s p-centered">{t("AEm25j4")}</h2>
           <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            It seems that you don't own this account, please reconnect with the
-            secret key to commit actions on this account.
+            {t("ApcEX6u")}
           </p>
           <div
             className="bg-img contained-bg"
@@ -100,112 +99,12 @@ export default function PagePlaceholder({ page, onClick = null }) {
             }}
           ></div>
           <button className="btn btn-normal" onClick={userLogout}>
-            Logout
+            {t("AVEtnb9")}
           </button>
         </div>
       </div>
     );
-  if (page === "nostr-no-posts")
-    return (
-      <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-        <h2 className="box-marg-s p-centered">You have no articles</h2>
-        <p className="p-centered gray-c" style={{ maxWidth: "400px" }}>
-          Contribute in DAOrayaki NOSTR community by posting interesting
-          articles in a variety of categories
-        </p>
-        <div
-          className="bg-img contained-bg"
-          style={{
-            backgroundImage: `url(${HeroNostrNoPosts})`,
-            width: "min(300px, 500px)",
-            height: "300px",
-          }}
-        ></div>
-        <Link to={"/write"}>
-          <button className="btn btn-normal">write an article</button>
-        </Link>
-      </div>
-    );
-  if (page === "nostr-no-bookmarks")
-    return (
-      <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-        <h2 className="box-marg-s p-centered">You have no bookmarks</h2>
-        <p className="p-centered gray-c" style={{ maxWidth: "400px" }}>
-          You have a busy schedule? No problem! Save your favorite articles to
-          read later on your comfortable chair.
-        </p>
-        <div
-          className="bg-img contained-bg"
-          style={{
-            backgroundImage: `url(${HeroNostrNoPosts})`,
-            width: "min(300px, 500px)",
-            height: "300px",
-          }}
-        ></div>
-      </div>
-    );
-  if (page === "nostr-curations")
-    return (
-      <div className="fit-container">
-        <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-          <h2 className="box-marg-s p-centered">You have no curations!</h2>
-          <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            Start creating your favorite curations and gather your preferred
-            articles from NOSTR!
-          </p>
-          <div
-            className="bg-img contained-bg"
-            style={{
-              backgroundImage: `url(${HeroTopics})`,
-              width: "min(300px, 500px)",
-              height: "300px",
-            }}
-          ></div>
-          <button className="btn btn-normal" onClick={onClick}>
-            Create curation
-          </button>
-        </div>
-      </div>
-    );
-  if (page === "nostr-curations-2")
-    return (
-      <div className="fit-container">
-        <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-          <h2 className="box-marg-s p-centered">Curations coming!</h2>
-          <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            We'll have you dazzled with curations once there is enough content,
-            stay tuned!
-          </p>
-          <div
-            className="bg-img contained-bg"
-            style={{
-              backgroundImage: `url(${HeroTopics2})`,
-              width: "min(300px, 500px)",
-              height: "300px",
-            }}
-          ></div>
-        </div>
-      </div>
-    );
-  if (page === "nostr-news")
-    return (
-      <div className="fit-container">
-        <div className="fx-centered fx-col" style={{ height: "70vh" }}>
-          <div
-            className="bg-img contained-bg"
-            style={{
-              backgroundImage: `url(${HeroNostrNoNews})`,
-              width: "min(300px, 500px)",
-              height: "300px",
-            }}
-          ></div>
-          <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            There are no news here, change dates or wait until some magic to
-            happen
-          </p>
-        </div>
-      </div>
-    );
+
   if (page === "nostr-un")
     return (
       <div className="fit-container">
@@ -219,7 +118,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
             }}
           ></div>
           <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            It's quiet here! No community notes yet.
+            {t("Ax1Hh4U")}
           </p>
         </div>
       </div>
@@ -228,10 +127,9 @@ export default function PagePlaceholder({ page, onClick = null }) {
     return (
       <div className="fit-container">
         <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-          <h2 className="box-marg-s p-centered">Private key required!</h2>
+          <h2 className="box-marg-s p-centered">{t("AEm25j4")}</h2>
           <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            It seems that you don't own this account, messages are personals,
-            please reconnect with the secret key or extension to use this page
+            {t("AthLKvF")}
           </p>
           <div
             className="bg-img contained-bg"
@@ -242,7 +140,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
             }}
           ></div>
           <button className="btn btn-normal" onClick={userLogout}>
-            Logout
+            {t("AyXwdfE")}
           </button>
         </div>
       </div>
@@ -251,9 +149,9 @@ export default function PagePlaceholder({ page, onClick = null }) {
     return (
       <div className="fit-container">
         <div className="fx-centered fx-col" style={{ height: "90vh" }}>
-          <h2 className="box-marg-s p-centered">Here is your room!</h2>
+          <h2 className="box-marg-s p-centered">{t("AWEqHfP")}</h2>
           <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            Pick a friend to talk to, we promise you'll enjoy it
+            {t("AzfjyGO")}
           </p>
           <div
             className="bg-img contained-bg"
@@ -270,9 +168,9 @@ export default function PagePlaceholder({ page, onClick = null }) {
     return (
       <div className="fit-container">
         <div className="fx-centered fx-col" style={{ height: "80vh" }}>
-          <h2 className="box-marg-s p-centered">We got ya!</h2>
+          <h2 className="box-marg-s p-centered">{t("A0sXNyM")}</h2>
           <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-            We're getting your inbox ready, we promise we won't take long...
+            {t("AVyHzwC")}
           </p>
           <div
             className="bg-img contained-bg"
@@ -299,20 +197,19 @@ export default function PagePlaceholder({ page, onClick = null }) {
                 height: "300px",
               }}
             ></div>
-            <h3 className="box-marg-s p-centered">Yakihonne point system</h3>
+            <h3 className="box-marg-s p-centered">{t("AXYiu6Y")}</h3>
             <p
               className="p-centered gray-c box-marg-s "
               style={{ maxWidth: "450px" }}
             >
-              You need to connect to Yakihonne point system in order to gain
-              points and win rewards.
+              {t("ATSLvF2")}
             </p>
             {userKeys && (userKeys.ext || userKeys.sec) && (
               <button
                 className="btn btn-normal"
                 onClick={() => setShowYakiChest(true)}
               >
-                Connect to Yaki chest
+                {t("Ag1xrtA")}
               </button>
             )}
           </div>
@@ -332,16 +229,15 @@ export default function PagePlaceholder({ page, onClick = null }) {
                 height: "300px",
               }}
             ></div>
-            <h3 className=" p-centered">Full connection is required</h3>
+            <h3 className=" p-centered">{t("ALRlj3f")}</h3>
             <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-              It seems that you're not connected using an extension nor a secret
-              key, please reconnect using either methods to access this page
+              {t("AwxZeBC")}
             </p>
             <button
               className="btn btn-normal"
               onClick={() => (userKeys ? userLogout() : redirectToLogin())}
             >
-              {userKeys ? "reconnect" : "Login"}
+              {userKeys ? t("Ak2D1hf") : t("AmOtzoL")}
             </button>
           </div>
         </div>
@@ -350,7 +246,12 @@ export default function PagePlaceholder({ page, onClick = null }) {
   if (page === "nostr-add-wallet")
     return (
       <>
-        {showAddWallet && <AddWallet exit={() => setShowAddWallet(false)} refresh={onClick ? onClick : () => null}/>}
+        {showAddWallet && (
+          <AddWallet
+            exit={() => setShowAddWallet(false)}
+            refresh={onClick ? onClick : () => null}
+          />
+        )}
         <div className="fit-container fx-centered">
           <div
             className="fx-centered fx-col"
@@ -396,14 +297,13 @@ export default function PagePlaceholder({ page, onClick = null }) {
             </div>
 
             <p className="p-centered gray-c" style={{ maxWidth: "400px" }}>
-              To be able to send zaps, please make sure to connect your bitcoin
-              lightning wallet.
+              {t("AToSVHy")}
             </p>
             <button
               className="btn btn-orange fx-centered"
               onClick={() => setShowAddWallet(!showAddWallet)}
             >
-              <div className="plus-sign"></div> Add wallet
+              <div className="plus-sign"></div> {t("A8fEwNq")}
             </button>
           </div>
         </div>
@@ -425,7 +325,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
             ></div>
             <h4>Smart widget checker</h4>
             <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-              Enter a smart widget naddr to check for its validity
+              {t("Ax7qE5o")}
             </p>
           </div>
         </div>
@@ -444,13 +344,12 @@ export default function PagePlaceholder({ page, onClick = null }) {
                 height: "280px",
               }}
             ></div>
-            <h4>No drafts</h4>
+            <h4>{t("A14HHPP")}</h4>
             <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
-              Your drafts list is empty, any created or cloned widgets will be
-              automatically saved here!
+              {t("A4hlacc")}
             </p>
             <button className="btn btn-normal" onClick={onClick}>
-              Add a widget
+              {t("AxgWICf")}
             </button>
           </div>
         </div>

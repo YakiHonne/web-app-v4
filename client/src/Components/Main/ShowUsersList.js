@@ -13,6 +13,7 @@ import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 const getBulkListStats = (list) => {
   let toFollow = list.filter((item) => item.to_follow).length;
@@ -25,7 +26,7 @@ export default function ShowUsersList({ exit, list, title, extras }) {
   const userFollowings = useSelector((state) => state.userFollowings);
   const userRelays = useSelector((state) => state.userRelays);
   const userKeys = useSelector((state) => state.userKeys);
-  const isPublishing = useSelector((state) => state.isPublishing);
+  const { t } = useTranslation();
 
   const [people, setPeople] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -80,28 +81,17 @@ export default function ShowUsersList({ exit, list, title, extras }) {
 
   const followUnfollow = async () => {
     try {
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
       const toUnfollowList = bulkList
         .filter((item) => !item.to_follow)
         .map((item) => item.pubkey);
 
       let tempTags = Array.from(
-        userFollowings?.filter((item) => !toUnfollowList.includes(item)).map(_ => ["p", _]) || []
+        userFollowings
+          ?.filter((item) => !toUnfollowList.includes(item))
+          .map((_) => ["p", _]) || []
       );
       for (let item of bulkList) {
-        if (item.to_follow)
-          tempTags.push([
-            "p",
-            item.pubkey,
-          ]);
+        if (item.to_follow) tempTags.push(["p", item.pubkey]);
       }
 
       dispatch(
@@ -218,8 +208,8 @@ export default function ShowUsersList({ exit, list, title, extras }) {
               );
             })}
           </div>
-          {bulkList.length > 0 &&  <div className="box-pad-v"></div>}
-        </div> 
+          {bulkList.length > 0 && <div className="box-pad-v"></div>}
+        </div>
       </div>
       {bulkList.length > 0 && (
         <div
@@ -243,12 +233,12 @@ export default function ShowUsersList({ exit, list, title, extras }) {
               onClick={followUnfollow}
             >
               {bulkListStats.toFollow > 0 &&
-                `Follow (${bulkListStats.toFollow})`}{" "}
+                t("Ae7ofjr", { count: bulkListStats.toFollow })}{" "}
               {bulkListStats.toFollow > 0 &&
                 bulkListStats.toUnfollow > 0 &&
                 " | "}
               {bulkListStats.toUnfollow > 0 &&
-                `Unfollow (${bulkListStats.toUnfollow})`}
+                t("AdZjMMb", { count: bulkListStats.toUnfollow })}
             </button>
           </div>
         </div>

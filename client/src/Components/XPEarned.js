@@ -1,6 +1,7 @@
 import React from "react";
 
 export default function XPEarned() {
+  
   return (
     <div
       className="fx-end-v fx-centered"

@@ -86,7 +86,7 @@ export default function UserLevels() {
     video_post: t("A5qKCQ4"),
     bookmark: t("AuOVsg9"),
     zap: t("AetoahH"),
-    reaction: t("Av0oCQp"),
+    reaction: t("Alz0E9Y"),
     dms: t("AwpwbAl"),
     user_impact: t("Ag6EZcj"),
     comment_post: t("AsCfe1h"),

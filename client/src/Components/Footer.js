@@ -1,37 +1,39 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <div className="box-pad-h fx-scattered fx-wrap">
       <div className="fx-centered fx-wrap fx-start-h">
         <Link to={"/privacy"} target="_blank">
-          <p className="p-medium gray-c">Privacy policies</p>
+          <p className="p-medium gray-c">{t("AH6LUz3")}</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/terms"} target="_blank">
-          <p className="p-medium gray-c">Terms & conditions</p>
+          <p className="p-medium gray-c">{t("A5LsZ43")}</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/points-system"} target="_blank">
-          <p className="p-medium gray-c">Points system</p>
+          <p className="p-medium gray-c">{t("Af8As64")}</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/yakihonne-smart-widgets"} target="_blank">
-          <p className="p-medium gray-c">Smart widgets</p>
+          <p className="p-medium gray-c">{t("A2mdxcf")}</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/yakihonne-paid-notes"} target="_blank">
-          <p className="p-medium gray-c">About paid notes</p>
+          <p className="p-medium gray-c">{t("AnI56Th")}</p>
         </Link>
         <p className="p-small gray-c">&#9679;</p>
         <Link to={"/yakihonne-mobile-app"} target="_blank">
-          <p className="p-medium gray-c">Mobile app</p>
+          <p className="p-medium gray-c">{t("Ai28b6B")}</p>
         </Link>
       </div>
       <div className="fx-centered fx-wrap fx-start-h">
         <p className="p-medium gray-c">
-          All rights reserved. Yakihonne {new Date().getFullYear()}
+          {t("Am8bwOh", { year: new Date().getFullYear() })}
         </p>
         <div className="fx-centered fx-wrap">
           <Link

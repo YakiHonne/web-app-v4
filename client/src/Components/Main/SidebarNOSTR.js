@@ -1,11 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import DtoLToggleButton from "../DtoLToggleButton";
 import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { minimizeKey } from "../../Helpers/Encryptions";
-import { nip19 } from "nostr-tools";
-import relaysOnPlatform from "../../Content/Relays";
-import LoginWithNostr from "./LoginWithNostr";
 import { useMemo } from "react";
 import NotificationCenter from "./NotificationCenter";
 import { useEffect } from "react";
@@ -27,9 +23,10 @@ import Publishing from "../Publishing";
 import SearchSidebar from "./SearchSidebar";
 import { customHistory } from "../../Helpers/History";
 import YakiMobileappSidebar from "../YakiMobileappSidebar";
+import { useTranslation } from "react-i18next";
 
 export default function SidebarNOSTR() {
-  const navigateTo = useNavigate();
+  const { t } = useTranslation();
   const userMetadata = useSelector((state) => state.userMetadata);
   const userKeys = useSelector((state) => state.userKeys);
   const userChatrooms = useSelector((state) => state.userChatrooms);
@@ -129,8 +126,6 @@ export default function SidebarNOSTR() {
       <div
         className="fx-scattered fx-end-v nostr-sidebar box-pad-v-m fx-col "
         style={{
-          paddingBottom: "1em",
-          paddingRight: ".75rem",
           zIndex: isActive ? 1000 : 200,
         }}
         onClick={() => setIsActive(true)}
@@ -162,7 +157,7 @@ export default function SidebarNOSTR() {
                 }`}
               >
                 <div className={isPage("/") ? "home-bold-24" : "home-24"}></div>
-                <div className="link-label">Home</div>
+                <div className="link-label">{t("AJDdA3h")}</div>
               </div>
 
               <div
@@ -178,7 +173,7 @@ export default function SidebarNOSTR() {
                     isPage("/discover") ? "discover-bold-24" : "discover-24"
                   }
                 ></div>
-                <div className="link-label">Discover</div>
+                <div className="link-label">{t("ABSoIm9")}</div>
               </div>
               <div
                 onClick={() => {
@@ -195,7 +190,7 @@ export default function SidebarNOSTR() {
                       : "smart-widget-24"
                   }
                 ></div>
-                <div className="link-label">Smart widgets</div>
+                <div className="link-label">{t("A2mdxcf")}</div>
               </div>
               <div
                 onClick={() => customHistory.push("/verify-notes")}
@@ -208,7 +203,7 @@ export default function SidebarNOSTR() {
                     isPage("/verify-notes") ? "note-bold-24" : "note-24"
                   }
                 ></div>
-                <div className="link-label">Verify notes</div>
+                <div className="link-label">{t("AltGBkP")}</div>
               </div>
               {!(showMedia || showMyContent || showWritingOptions) && (
                 <>
@@ -225,7 +220,7 @@ export default function SidebarNOSTR() {
                           isPage("/messages") ? "env-bold-24" : "env-24"
                         }
                       ></div>
-                      <div className="link-label">Messages</div>
+                      <div className="link-label">{t("As2zi6P")}</div>
                     </div>
                     {isNewMsg && <div className="notification-dot"></div>}
                   </div>
@@ -256,7 +251,7 @@ export default function SidebarNOSTR() {
                             : "dashboard-24"
                         }
                       ></div>
-                      <div className="link-label">Dashboard</div>
+                      <div className="link-label">{t("ALBhi3j")}</div>
                     </div>
                   </div>
                 </div>
@@ -351,7 +346,7 @@ export default function SidebarNOSTR() {
                   {isYakiChestLoaded && !yakiChestStats && (
                     <div
                       className="round-icon round-icon-tooltip purple-pulse"
-                      data-tooltip={"Yaki chest"}
+                      data-tooltip={t("ACALoWH")}
                       style={{ minWidth: "40px", minHeight: "40px" }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -400,11 +395,15 @@ export default function SidebarNOSTR() {
                               {yakiChestStats.xp} xp
                             </p>
                             <p className="gray-c p-small">
-                              Lvl {yakiChestStats.currentLevel}
+                              {t("AdLQkic", {
+                                level: yakiChestStats.currentLevel,
+                              })}
                             </p>
                           </div>
                         }
-                        tooltip={`Level ${yakiChestStats.currentLevel}`}
+                        tooltip={t("AdLQkic", {
+                          level: yakiChestStats.currentLevel,
+                        })}
                       />
                     </div>
                   )}
@@ -428,45 +427,14 @@ export default function SidebarNOSTR() {
                       className="fx-centered fx-col fx-start-v fit-container"
                       style={{ rowGap: "0" }}
                     >
-                      {/* <div
-                        className="fit-container fx-centered fx-start-h  box-pad-h-m box-pad-v-m nostr-navbar-link"
-                        onClick={() =>
-                          customHistory.push(
-                            `/users/${nip19.nprofileEncode({
-                              pubkey: userKeys.pub,
-                              relays: relaysOnPlatform,
-                            })}`
-                          )
-                        }
-                        style={{ padding: ".75rem 1rem" }}
-                      >
-                        <div className="user"></div>
-                        <p className="gray-c">Profile</p>
-                      </div> */}
-                      {/* <div
-                        className="fit-container fx-centered fx-start-h box-pad-h-m  box-pad-v-m nostr-navbar-link"
-                        onClick={() => customHistory.push(`/yaki-points`)}
-                        style={{ padding: ".75rem 1rem" }}
-                      >
-                        <div className="cup"></div>
-                        <p className="gray-c">Yaki points</p>
-                      </div> */}
-
                       <div
                         className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
                         onClick={() => customHistory.push(`/settings`)}
                         style={{ padding: ".75rem 1rem" }}
                       >
                         <div className="setting"></div>
-                        <p className="gray-c">Settings</p>
+                        <p className="gray-c">{t("ABtsLBp")}</p>
                       </div>
-
-                      {/* <div
-                        className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m nostr-navbar-link"
-                        style={{ padding: ".75rem 1rem" }}
-                      >
-                        <DtoLToggleButton small={true} />
-                      </div> */}
                       <div
                         className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-m nostr-navbar-link"
                         onClick={() => {
@@ -477,7 +445,7 @@ export default function SidebarNOSTR() {
                       >
                         <div className="logout"></div>
                         <p className="fx-centered">
-                          Logout
+                          {t("AyXwdfE")}
                           <span className="sticker sticker-normal sticker-small sticker-orange-side">
                             {userMetadata.name ||
                               userMetadata.display_name ||
@@ -489,7 +457,7 @@ export default function SidebarNOSTR() {
                     <hr />
                     <div className="fit-container fx-centered fx-col box-pad-h-s box-pad-v-s">
                       <div className="fit-container">
-                        <p className="gray-c p-small">SWITCH ACCOUNT</p>
+                        <p className="gray-c p-small">{t("AT2OPkx")}</p>
                       </div>
                       <div className="fit-container">
                         {accounts.map((account) => {
@@ -583,10 +551,9 @@ export default function SidebarNOSTR() {
                         }}
                       >
                         <div className="plus-sign"></div>
-                        <p className="gray-c p-medium">Add account</p>
+                        <p className="gray-c p-medium">{t("AnDg41L")}</p>
                       </div>
                     </div>
-                    {/* <hr /> */}
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-s"
                       onClick={() => {
@@ -602,7 +569,7 @@ export default function SidebarNOSTR() {
                         }}
                       >
                         <div className="logout"></div>
-                        <p>Logout of all accounts</p>
+                        <p>{t("AWFCAQG")}</p>
                       </div>
                     </div>
                   </div>
@@ -616,7 +583,7 @@ export default function SidebarNOSTR() {
               // onClick={() => customHistory.push("/login")}
               onClick={() => redirectToLogin()}
             >
-              <div className="link-label">Login</div>
+              <div className="link-label">{t("AmOtzoL")}</div>
               <div className="connect-24"></div>
             </button>
           )}
@@ -627,6 +594,7 @@ export default function SidebarNOSTR() {
 }
 
 const AccountSwitching = ({ exit }) => {
+  const { t } = useTranslation();
   const userMetadata = useSelector((state) => state.userMetadata);
   useEffect(() => {
     let timeout = setTimeout(() => {
@@ -641,10 +609,7 @@ const AccountSwitching = ({ exit }) => {
     <div className="fixed-container fx-centered">
       <div className="fx-centered fx-col">
         <div className="fx-centered popout">
-          <div
-            // className="purple-pulse"
-            style={{ borderRadius: "var(--border-r-50)" }}
-          >
+          <div style={{ borderRadius: "var(--border-r-50)" }}>
             <UserProfilePicNOSTR
               size={200}
               mainAccountUser={true}
@@ -653,7 +618,7 @@ const AccountSwitching = ({ exit }) => {
           </div>
         </div>
         <div className="box-pad-v fx-centered fx-col">
-          <p className="orange-c p-medium">Switching to</p>
+          <p className="orange-c p-medium">{t("AhxSvbf")}</p>
           <h3>{userMetadata.display_name || userMetadata.name}</h3>
           <p className="gray-c">@{userMetadata.name}</p>
         </div>

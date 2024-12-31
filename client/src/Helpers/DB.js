@@ -43,7 +43,6 @@ export { db, ndkdb };
 export const getChatrooms = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let chatroomsKeys = await db
         .table("chatrooms")
         .filter((item) => item)
@@ -68,7 +67,6 @@ export const getChatrooms = async (pubkey) => {
 export const getFollowings = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let followings = await db.table("followings").get(pubkey);
       return followings || [];
     } catch (err) {
@@ -80,7 +78,6 @@ export const getFollowings = async (pubkey) => {
 export const getInterestsList = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let interests = await db.table("interests").get(pubkey);
       return interests || [];
     } catch (err) {
@@ -93,7 +90,6 @@ export const getInterestsList = async (pubkey) => {
 export const getMutedlist = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let mutedlist = await db.table("muted").get(pubkey);
       return mutedlist || [];
     } catch (err) {
@@ -106,7 +102,6 @@ export const getMutedlist = async (pubkey) => {
 export const getNotificationLastEventTS = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let mutedlist = await db.table("notificationLastEventTS").get(pubkey);
       return mutedlist || undefined;
     } catch (err) {
@@ -119,7 +114,6 @@ export const getNotificationLastEventTS = async (pubkey) => {
 export const getRelays = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let relays = await db.table("relays").get(pubkey);
       return relays || [];
     } catch (err) {
@@ -132,7 +126,6 @@ export const getRelays = async (pubkey) => {
 export const getBookmarks = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let bookmarks = await db.table("bookmarks").get(pubkey);
 
       return bookmarks || [];
@@ -146,7 +139,6 @@ export const getBookmarks = async (pubkey) => {
 export const getUserDDB = async (pubkey) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let user = await db.table("users").get(pubkey);
 
       return user || getEmptyuserMetadata(pubkey);
@@ -160,7 +152,6 @@ export const getUserDDB = async (pubkey) => {
 export const getUsers = async () => {
   if (db) {
     try {
-      // let openDB = await db.open();
       // if (!db.isOpen()) {
       //   await db.open();
       // }
@@ -177,7 +168,6 @@ export const getUsers = async () => {
 export const getClients = async () => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let clients = await db.table("clients").toArray();
       return clients;
     } catch (err) {
@@ -190,7 +180,6 @@ export const getClients = async () => {
 export const getFollowingsRelays = async () => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let followingsRelays = await db.table("followingsRelays").toArray();
       return followingsRelays;
     } catch (err) {
@@ -202,7 +191,6 @@ export const getFollowingsRelays = async () => {
 export const getEventStats = async (event_id) => {
   if (db) {
     try {
-      // let openDB = await db.open();
       let user = await db.table("eventStats").get(event_id);
 
       return user || getEmptyEventStats(event_id);

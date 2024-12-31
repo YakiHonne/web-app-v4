@@ -8,9 +8,10 @@ import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserBalance } from "../../Store/Slides/UserData";
 import { customHistory } from "../../Helpers/History";
+import { useTranslation } from "react-i18next";
 
 export default function UserBalance() {
-  const navigateTo = useNavigate();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userBalance = useSelector((state) => state.userBalance);
@@ -139,7 +140,7 @@ export default function UserBalance() {
           className="wallet-add"
           style={{ width: "32px", height: "32px" }}
         ></div>
-        <p>Add wallet</p>
+        <p>{t("A8fEwNq")}</p>
       </Link>
     );
   return (
@@ -155,13 +156,12 @@ export default function UserBalance() {
         className="fx-centered fx-col fit-container fx-start-v "
         style={{ rowGap: 0 }}
       >
-       
-          <div className="fx-centered">
-            {!isHidden && <h3>{userBalance}</h3>}
-            {isHidden && <h3>*****</h3>}
-            <div className="sats-24"></div>
-          </div>
-     
+        <div className="fx-centered">
+          {!isHidden && <h3>{userBalance}</h3>}
+          {isHidden && <h3>*****</h3>}
+          <div className="sats-24"></div>
+        </div>
+
         {/* {isLoading && <LoadingDots />} */}
         <SatsToUSD sats={userBalance} isHidden={isHidden} />
       </div>

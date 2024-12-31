@@ -5,7 +5,7 @@ const getZapEventRequest = async (userKeys, content, tags = [], created_at) => {
   let event = {
     kind: 9734,
     content,
-    created_at:created_at || Math.floor(Date.now() / 1000),
+    created_at: created_at || Math.floor(Date.now() / 1000),
     tags,
   };
   if (userKeys.ext) {

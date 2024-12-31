@@ -18,6 +18,8 @@ import { uploadToS3 } from "./NostrPublisher";
 import { customHistory } from "./History";
 import { Link } from "react-router-dom";
 import MediaUploaderServer from "../Content/MediaUploaderServer";
+import { t } from "i18next";
+import { supportedLanguageKeys } from "../Context/I18N";
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
@@ -149,7 +151,6 @@ const getNoteTree = async (note, minimal = false) => {
                   borderRadius: "var(--border-r-18)",
                 }}
                 src={`https://www.youtube.com/embed/${isURLVid.videoId}`}
-                title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
                 frameBorder="0"
                 allowFullScreen
               ></iframe>
@@ -165,7 +166,6 @@ const getNoteTree = async (note, minimal = false) => {
                   borderRadius: "var(--border-r-18)",
                 }}
                 src={`https://player.vimeo.com/video/${isURLVid.videoId}`}
-                title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
                 frameBorder="0"
                 allowFullScreen
               ></iframe>
@@ -252,58 +252,9 @@ const getNoteTree = async (note, minimal = false) => {
       const nip19add = el
         .replace("https://yakihonne.com/smart-widget-checker?naddr=", "")
         .replace("nostr:", "");
-      // .replaceAll("@", "")
-      // .replaceAll(".", "")
-      // .replaceAll(",", "")
-      // .replaceAll("?", "")
-      // .replaceAll("!", "");
 
-      // finalTree.push(
-      //   <Fragment key={key}>
-      //     <Nip19Parsing addr={nip19add} minimal={minimal} />{" "}
-      //   </Fragment>
-      // );
-      // Step 1: Extract clean string and keep track of removed characters
-      // let removedChars = [];
-      // let cleanString = "";
+      const parts = nip19add.split(/([@.,?!\s:])/);
 
-      // for (let i = 0; i < nip19add.length; i++) {
-      //   const char = nip19add[i];
-      //   if ("@.;+-/|,?!".includes(char)) {
-      //     removedChars.push({ char, index: i }); // Store removed character and its position
-      //   } else {
-      //     cleanString += char; // Build clean string
-      //   }
-      // }
-
-      // // Step 2: Create the decoded React component
-      // const decodedComponent = (
-      //   <Fragment key={el}>
-      //     <Nip19Parsing addr={cleanString} minimal={true} />
-      //   </Fragment>
-      // );
-
-      // // Step 3: Reinsert removed characters
-      // const finalOutput = [];
-      // let decodedInserted = false;
-      // let currentIndex = 0;
-
-      // for (let i = 0; i <= nip19add.length; i++) {
-      //   // Check if this is the position of a removed character
-      //   const removedChar = removedChars.find(({ index }) => index === i);
-      //   if (removedChar) {
-      //     finalOutput.push(removedChar.char); // Add removed character
-      //   } else if (!decodedInserted && i >= currentIndex) {
-      //     // Insert the decoded React component only once in its place
-      //     finalOutput.push(decodedComponent);
-      //     decodedInserted = true;
-      //     currentIndex = i;
-      //   }
-      // }
-
-      const parts = nip19add.split(/([@.,?!\s:])/); // Matches delimiters and preserves them in the result
-
-      // Step 2: Process each part
       const finalOutput = parts.map((part, index) => {
         if (
           part.startsWith("npub1") ||
@@ -312,8 +263,7 @@ const getNoteTree = async (note, minimal = false) => {
           part.startsWith("naddr") ||
           part.startsWith("note1")
         ) {
-          // Clean and decode addresses
-          const cleanedPart = part.replace(/[@.,?!]/g, ""); // Remove unwanted characters
+          const cleanedPart = part.replace(/[@.,?!]/g, "");
 
           return (
             <Fragment key={index}>
@@ -321,23 +271,11 @@ const getNoteTree = async (note, minimal = false) => {
             </Fragment>
           );
         }
-        // Return non-address parts as-is
+
         return part;
       });
-      finalTree.push(<Fragment key={el}>{finalOutput} </Fragment>);
+      finalTree.push(<Fragment key={key}>{finalOutput} </Fragment>);
     } else if (el.startsWith("#")) {
-      // finalTree.push(
-      //   <Link
-      //     style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
-      //     to={`/search?keyword=${el.replace("#", "")}`}
-      //     state={{ tab: "notes" }}
-      //     className="btn-text-gray"
-      //     key={key}
-      //     onClick={(e) => e.stopPropagation()}
-      //   >
-      //     {el}
-      //   </Link>
-      // );
       const match = el.match(/(#+)([\w-+]+)/);
 
       if (match) {
@@ -375,34 +313,6 @@ const getNoteTree = async (note, minimal = false) => {
   }
 
   return mergeConsecutivePElements(finalTree);
-};
-
-const highlightUrls = (text) => {
-  // Regex to match URLs
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-  // Split the text into parts: URLs and non-URLs
-  const parts = text.split(urlRegex);
-
-  return parts.map((part, index) => {
-    // Check if the part is a URL
-    if (urlRegex.test(part)) {
-      return (
-        <Fragment key={index}>
-          <a
-            style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
-            href={part}
-            className="btn-text-gray"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {part}
-          </a>{" "}
-        </Fragment>
-      );
-    }
-    // Render non-URL parts as plain text
-    return <Fragment key={index}>{part}</Fragment>;
-  });
 };
 
 const getLinkFromAddr = (addr_) => {
@@ -443,7 +353,6 @@ const getLinkFromAddr = (addr_) => {
 
     return addr;
   } catch (err) {
-    // console.log(err);
     return addr_;
   }
 };
@@ -527,28 +436,6 @@ const getComponent = (children) => {
               ))}
             </span>
           );
-          // res.push(
-          //   <span
-          //     dir="auto"
-          //     key={key}
-          //     style={{
-          //       wordBreak: "break-word",
-          //     }}
-          //   >
-          //     {child_}{" "}
-          //   </span>
-          // );
-          // res.push(
-          //   <span
-          //     dir="auto"
-          //     key={key}
-          //     style={{
-          //       wordBreak: "break-word",
-          //     }}
-          //   >
-          //     {child_}{" "}
-          //   </span>
-          // );
         }
       }
     }
@@ -580,13 +467,7 @@ const getComponent = (children) => {
         );
     }
   }
-  return (
-    // <div
-    //   className="fx-centered fx-start-h fx-wrap fit-container"
-    //   style={{ columnGap: "3px", rowGap: "8px" }}
-    // >
-    <div className="fit-container">{mergeConsecutivePElements(res)}</div>
-  );
+  return <div className="fit-container">{mergeConsecutivePElements(res)}</div>;
 };
 
 function mergeConsecutivePElements(arr) {
@@ -881,7 +762,6 @@ const getVideoFromURL = (url) => {
             borderRadius: "var(--border-r-18)",
           }}
           src={`https://www.youtube.com/embed/${isURLVid.videoId}`}
-          title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
           frameBorder="0"
           allowFullScreen
         ></iframe>
@@ -896,7 +776,6 @@ const getVideoFromURL = (url) => {
             borderRadius: "var(--border-r-18)",
           }}
           src={`https://player.vimeo.com/video/${isURLVid.videoId}`}
-          title="justin timberlake feat. timbaland - cry me a river [ slowed + reverb ]"
           frameBorder="0"
           allowFullScreen
         ></iframe>
@@ -1256,6 +1135,99 @@ const getCustomSettings = () => {
   }
 };
 
+const getAppLang = () => {
+  let browserLanguage = navigator.languages
+    ? navigator.languages[0]
+    : navigator.language || "en";
+  browserLanguage = browserLanguage.split("-")[0];
+
+  let userLang = localStorage.getItem("app-lang");
+  let lang = userLang || browserLanguage;
+  if (supportedLanguageKeys.includes(lang)) return lang;
+  return "en";
+};
+const getContentTranslationConfig = () => {
+  let defaultService = {
+    service: "dl",
+    plan: false,
+    selected: true,
+    freeApikey: "",
+    proApikey: "",
+  };
+  try {
+    let config = localStorage.getItem("content-lang-config");
+    if (config) {
+      config = JSON.parse(config);
+      let selectedService = config.find((_) => _.selected);
+      return selectedService || defaultService;
+    } else {
+      return defaultService;
+    }
+  } catch (err) {
+    return defaultService;
+  }
+};
+const updateContentTranslationConfig = (
+  service,
+  plan,
+  freeApikey,
+  proApikey
+) => {
+  try {
+    let config = localStorage.getItem("content-lang-config");
+    let newService = {
+      service,
+      plan: service === "nw" ? true : plan || false,
+      freeApikey: freeApikey || "",
+      proApikey: proApikey || "",
+      selected: true,
+    };
+    if (config) {
+      config = JSON.parse(config) || [];
+
+      let selectedService = config.findIndex((_) => _.service === service);
+      config = config.map((_) => {
+        return {
+          ..._,
+          selected: false,
+        };
+      });
+
+      if (selectedService !== -1) {
+        config[selectedService] = {
+          service,
+          plan: plan !== undefined ? plan : config[selectedService].plan,
+          freeApikey: freeApikey || config[selectedService].freeApikey,
+          proApikey: proApikey || config[selectedService].proApikey,
+          selected: true,
+        };
+      } else {
+        config.push(newService);
+      }
+    } else {
+      config = [newService];
+    }
+    localStorage.setItem("content-lang-config", JSON.stringify(config));
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const handleAppDirection = (toChangeLang) => {
+  const rtlLanguages = ["ar", "he", "fa", "ur"];
+  let langToChange = toChangeLang || getAppLang();
+  let docDir = document.documentElement.dir;
+
+  if (
+    (!docDir && !rtlLanguages.includes(langToChange)) ||
+    (docDir === "ltr" && !rtlLanguages.includes(langToChange))
+  )
+    return;
+  if (rtlLanguages.includes(langToChange)) document.documentElement.dir = "rtl";
+  if (!rtlLanguages.includes(langToChange))
+    document.documentElement.dir = "ltr";
+};
+
 const getDefaultSettings = (pubkey) => {
   return {
     pubkey,
@@ -1281,16 +1253,6 @@ const getDefaultArtDraft = (pubkey) => {
   };
 };
 
-// const getWallets = () => {
-//   let wallets = localStorage.getItem("yaki-wallets");
-//   if (!wallets) return [];
-//   try {
-//     wallets = JSON.parse(wallets);
-//     return wallets;
-//   } catch (err) {
-//     return [];
-//   }
-// };
 const updateWallets = (wallets_, pubkey_) => {
   let userKeys = getKeys();
   let wallets = localStorage.getItem("yaki-wallets");
@@ -1367,12 +1329,12 @@ const getCAEATooltip = (published_at, created_at) => {
   }`;
 };
 
-const FileUpload = async (file, m = "nostr.build", userKeys) => {
+const FileUpload = async (file, m = "nostr.build", userKeys, cb) => {
   let servers = getMediaUploader();
   let selected = getSelectedServer();
   const nip96Endpoints = servers.find((_) => _.value === selected);
   let endpoint = nip96Endpoints ? selected : MediaUploaderServer[0][1];
-  console.log(endpoint);
+
   if (endpoint === "yakihonne") {
     let imageURL = await uploadToS3(file, userKeys.pub);
     if (imageURL) return imageURL;
@@ -1380,7 +1342,7 @@ const FileUpload = async (file, m = "nostr.build", userKeys) => {
       store.dispatch(
         setToast({
           type: 2,
-          desc: "Error uploading file",
+          desc: t("AOKDMRt"),
         })
       );
     }
@@ -1403,7 +1365,7 @@ const FileUpload = async (file, m = "nostr.build", userKeys) => {
       store.dispatch(
         setToast({
           type: 2,
-          desc: "Error uploading file",
+          desc: t("AOKDMRt"),
         })
       );
       console.log(err);
@@ -1421,6 +1383,12 @@ const FileUpload = async (file, m = "nostr.build", userKeys) => {
         "Content-Type": "multipart/formdata",
         Authorization: `Nostr ${encodeB64}`,
       },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        if (cb) cb(percentCompleted);
+      },
     });
 
     return imageURL.data.nip94_event.tags.find((tag) => tag[0] === "url")[1];
@@ -1428,40 +1396,20 @@ const FileUpload = async (file, m = "nostr.build", userKeys) => {
     store.dispatch(
       setToast({
         type: 2,
-        desc: "Error uploading file",
+        desc: t("AOKDMRt"),
       })
     );
     return false;
   }
 };
 
-// const extractNip19 = (note) => {
-//   let note_ = note.split(/\s/g);
-//   let tags = [];
-//   let processedNote = [];
-//   for (let word of note_) {
-//     let decoded = decodeNip19(word);
-//     if (decoded) {
-//       tags.push(decoded.tag);
-//       if (decoded.id.includes("30031")) tags.push(["l", "smart-widget"]);
-//       processedNote.push(decoded.scheme);
-//     } else if (word.startsWith("#")) {
-//       tags.push(["t", word.replaceAll("#", "")]);
-//       processedNote.push(word);
-//     } else processedNote.push(word);
-//   }
-//   return { tags: removeObjDuplicants(tags), content: processedNote.join(" ") };
-// };
-
 const extractNip19 = (note) => {
-  // Split text while preserving newlines
-  let note_ = note.split(/(\s|\n)/g); // Split by space or newline but keep them
+  let note_ = note.split(/(\s|\n)/g);
   let tags = [];
   let processedNote = [];
 
   for (let word of note_) {
     if (word === "\n") {
-      // Preserve newlines
       processedNote.push(word);
       continue;
     }
@@ -1481,7 +1429,7 @@ const extractNip19 = (note) => {
 
   return {
     tags: removeObjDuplicants(tags),
-    content: processedNote.join(""), // Join without adding spaces (spaces are already in the array)
+    content: processedNote.join(""),
   };
 };
 
@@ -1593,7 +1541,7 @@ const copyText = (value, message, event) => {
   store.dispatch(
     setToast({
       type: 1,
-      desc: `${message} was copied! 👏`,
+      desc: `${message} 👏`,
     })
   );
 };
@@ -1638,4 +1586,8 @@ export {
   updateMediaUploader,
   getSelectedServer,
   copyText,
+  getAppLang,
+  handleAppDirection,
+  getContentTranslationConfig,
+  updateContentTranslationConfig,
 };

@@ -6,7 +6,6 @@ import { useSelector } from "react-redux";
 
 export default function LoadingLogo({ size = 64 }) {
   const isDarkMode = useSelector((state) => state.isDarkMode);
-
   return (
     <div style={{ width: `${size}px` }}>
       <Lottie

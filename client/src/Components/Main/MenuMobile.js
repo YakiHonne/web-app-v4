@@ -5,12 +5,10 @@ import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
 import { getBech32, minimizeKey } from "../../Helpers/Encryptions";
 import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
-import DtoLToggleButton from "../DtoLToggleButton";
 import { useMemo } from "react";
 import WriteNew from "./WriteNew";
 import NotificationCenter from "./NotificationCenter";
 import { getConnectedAccounts, redirectToLogin } from "../../Helpers/Helpers";
-import LoginWithNostr from "./LoginWithNostr";
 import { useSelector } from "react-redux";
 import {
   handleSwitchAccount,
@@ -19,6 +17,7 @@ import {
 } from "../../Helpers/Controlers";
 import { customHistory } from "../../Helpers/History";
 import YakiMobileappSidebar from "../YakiMobileappSidebar";
+import { useTranslation } from "react-i18next";
 
 export default function MenuMobile({ toggleLogin, exit }) {
   const userMetadata = useSelector((state) => state.userMetadata);
@@ -32,10 +31,11 @@ export default function MenuMobile({ toggleLogin, exit }) {
     userKeys.pub ? getBech32("npub", userKeys.pub) : ""
   );
   const [dismissed, setDismissed] = useState(false);
-  const navigateTo = useNavigate();
+  const { t } = useTranslation();
   const [showSettings, setShowSettings] = useState(false);
   const [showMyContent, setShowMyContent] = useState(false);
   const [showWritingOptions, setShowWritingOptions] = useState(false);
+
   const accounts = useMemo(() => {
     return getConnectedAccounts();
   }, [userKeys, userMetadata]);
@@ -102,9 +102,9 @@ export default function MenuMobile({ toggleLogin, exit }) {
       {!userMetadata && (
         <>
           <div className="fit-container fx-scattered">
-            <h4>Join us</h4>
+            <h4>{t("AXsKX9G")}</h4>
             <button className="btn btn-normal" onClick={toggleLogin}>
-              Login
+              {t("AmOtzoL")}
             </button>
           </div>
           <hr style={{ margin: "1rem 0" }} />
@@ -137,7 +137,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           }`}
         >
           <div className="home-24"></div>
-          <div className="p-big">Home</div>
+          <div className="p-big">{t("AJDdA3h")}</div>
         </div>
         <div
           onClick={() => {
@@ -149,7 +149,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           }`}
         >
           <div className="discover-24"></div>
-          <div className="p-big">Discover</div>
+          <div className="p-big">{t("ABSoIm9")}</div>
         </div>
 
         <div
@@ -162,7 +162,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           }`}
         >
           <div className="smart-widget-24"></div>
-          <div className="p-big">Smart widget</div>
+          <div className="p-big">{t("AkvXmyz")}</div>
         </div>
 
         <div
@@ -175,7 +175,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           }`}
         >
           <div className="news-24"></div>
-          <div className="p-big">Verify notes</div>
+          <div className="p-big">{t("AltGBkP")}</div>
         </div>
         <div
           onClick={() => {
@@ -188,7 +188,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
         >
           <div className="fx-centered">
             <div className="env-24"></div>
-            <div className="link-labe p-big">Messages</div>
+            <div className="link-labe p-big">{t("As2zi6P")}</div>
           </div>
           {isNewMsg && (
             <div
@@ -253,14 +253,14 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 }}
               >
                 <div className="user-24"></div>
-                <p className="p-big">Profile</p>
+                <p className="p-big">{t("AyBBPWE")}</p>
               </div>
               <div
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
                 onClick={() => customHistory.push(`/yaki-points`)}
               >
                 <div className="cup-24"></div>
-                <p className="p-big">Yaki points</p>
+                <p className="p-big">{t("ABsx3n9")}</p>
               </div>
               <div
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
@@ -270,7 +270,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 }}
               >
                 <div className="setting-24"></div>
-                <p className="p-big">Settings</p>
+                <p className="p-big">{t("ABtsLBp")}</p>
               </div>
             </div>
             <div
@@ -281,9 +281,8 @@ export default function MenuMobile({ toggleLogin, exit }) {
             >
               <div className="logout-24"></div>
               <p className="fx-centered p-big">
-                Logout
+                {t("AyXwdfE")}
                 <span className="sticker sticker-normal sticker-orange-side">
-                  {" "}
                   {userMetadata.name ||
                     userMetadata.display_name ||
                     minimizeKey(userKeys.pub)}
@@ -294,7 +293,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           <hr style={{ margin: "1rem 0" }} />
           <div className="fit-container fx-centered fx-col box-pad-h-s box-pad-v-s">
             <div className="fit-container">
-              <p className="gray-c">SWITCH ACCOUNT</p>
+              <p className="gray-c">{t("AT2OPkx")}</p>
             </div>
             <div className="fit-container">
               {accounts.map((account) => {
@@ -390,7 +389,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
               }}
             >
               <div className="plus-sign"></div>
-              <p className="gray-c">Add account</p>
+              <p className="gray-c">{t("AnDg41L")}</p>
             </div>
             <div
               className="fit-container fx-centered fx-start-h"
@@ -406,7 +405,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 }}
               >
                 <div className="logout"></div>
-                <p>Logout of all accounts</p>
+                <p>{t("AWFCAQG")}</p>
               </div>
             </div>
           </div>

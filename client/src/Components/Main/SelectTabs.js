@@ -9,6 +9,7 @@ export function SelectTabs({ selectedTab, tabs, setSelectedTab }) {
     }));
   }, [tabs]);
 
+  
   useEffect(() => {
     const selectedButton = buttonRefs[selectedTab]?.ref?.current;
     const slider = sliderRef.current;

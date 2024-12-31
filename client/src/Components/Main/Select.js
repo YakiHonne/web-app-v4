@@ -13,7 +13,6 @@ export default function Select({
     return options.find((option) => option?.value === value);
   }, [value]);
   const optionsRef = useRef(null);
-
   useEffect(() => {
     const handleOffClick = (e) => {
       if (optionsRef.current && !optionsRef.current.contains(e.target))
@@ -36,14 +35,17 @@ export default function Select({
         style={{ height: "var(--40)", padding: "1rem" }}
         onClick={() => (disabled ? null : setShowOptions(!showOptions))}
       >
-        <p>{selectedValue?.display_name || defaultLabel}</p>
+        <div className="fx-centered">
+          {selectedValue?.left_el && selectedValue?.left_el}
+          <p>{selectedValue?.display_name || defaultLabel}</p>
+        </div>
         <div className="arrow-12"></div>
       </div>
       {showOptions && (
         <div
           style={{
             position: "absolute",
-            right: 0,
+        
             top: revert ? 0 : "110%",
             transform: revert ? "translateY(calc(-100% - 5px))" : "none",
             // border: "none",
@@ -52,24 +54,27 @@ export default function Select({
             zIndex: 1000,
             rowGap: "0",
           }}
-          className="sc-s-18 fx-centered fx-col fx-start-v pointer box-pad-v-s"
+          className="sc-s-18 fx-centered fx-col fx-start-v pointer box-pad-v-s drop-down"
         >
           {options.map((option, index) => {
             return (
               <div
                 key={index}
-                className="option-no-scale fit-container fx-scattered sc-s-18 pointer box-pad-h-m"
+                className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m"
                 style={{
                   border: "none",
                   overflow: "visible",
                   borderRadius: 0,
                   padding: ".25rem 1rem",
+                  cursor: option.disabled ? "not-allowed" : "pointer",
+                  opacity: option.disabled ? .5 : 1
                 }}
                 onClick={() => {
                   setSelectedValue(option?.value);
                   setShowOptions(false);
                 }}
               >
+                {option?.left_el && option?.left_el}
                 <div
                   className={
                     selectedValue?.value === option?.value

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import ymaQR from "../media/images/yma-qr.png";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function YakiMobileappSidebar() {
   const [showDemo, setShowDemo] = useState(false);
+  const { t } = useTranslation();
   return (
     <>
       {showDemo && <MobileDemo exit={() => setShowDemo(false)} />}
@@ -19,7 +21,7 @@ export default function YakiMobileappSidebar() {
         >
           <div className="fx-centered">
             <div className={"mobile-24"}></div>
-            <div className="link-label">Download app</div>
+            <div className="link-label">{t("A70sntU")}</div>
           </div>
         </div>
       </div>
@@ -28,6 +30,7 @@ export default function YakiMobileappSidebar() {
 }
 
 const MobileDemo = ({ exit }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="fixed-container fx-centered fx-col box-pad-h"
@@ -49,16 +52,10 @@ const MobileDemo = ({ exit }) => {
         <video
           autoPlay="autoplay"
           loop="loop"
-          // muted
           playsInline
-          // onContextMenu={() => {
-          //   return false;
-          // }}
           preload="auto"
           id="myVideo"
           controls={true}
-
-          // autoPlay muted loop id="myVideo"
           style={{
             position: "relative",
             border: "none",
@@ -66,9 +63,6 @@ const MobileDemo = ({ exit }) => {
             borderRadius: "var(--border-r-18)",
           }}
           className="fit-container"
-          // src={
-          //   "https://yakihonne.s3.ap-east-1.amazonaws.com/videos/yakihonne-mobile-app-promo.mp4"
-          // }
         >
           <source
             src="https://yakihonne.s3.ap-east-1.amazonaws.com/videos/yakihonne-mobile-app-promo-2.mp4"
@@ -94,10 +88,8 @@ const MobileDemo = ({ exit }) => {
           </div>
           <div className="fx-centered fx-col" style={{ gap: "10px" }}>
             <div className="fx-centered fx-col">
-              <h4>Get the mobile app</h4>
-              <p className="gray-c p-centered">
-                Download the YakiHonne app for Android or iOS
-              </p>
+              <h4>{t("AQgPFMM")}</h4>
+              <p className="gray-c p-centered">{t("A2GbLaw")}</p>
             </div>
             <div className="fx-centered fx-co fx-start-v">
               <a
@@ -105,7 +97,7 @@ const MobileDemo = ({ exit }) => {
                 target="_blank"
               >
                 <button className="btn btn-gray fx-centered">
-                  <div className="apple"></div> Download iOS
+                  <div className="apple"></div> {t("AGpzpu6")}
                 </button>
               </a>
               <a
@@ -113,7 +105,7 @@ const MobileDemo = ({ exit }) => {
                 target="_blank"
               >
                 <button className="btn btn-gray fx-centered">
-                  <div className="google"></div> Download Android
+                  <div className="google"></div> {t("ArHaw72")}
                 </button>
               </a>
             </div>
@@ -122,7 +114,9 @@ const MobileDemo = ({ exit }) => {
               className="fit-container"
               target="_blank"
             >
-              <button className="btn btn-normal btn-full">Read more</button>
+              <button className="btn btn-normal btn-full">
+                {t("AArGqN7")}
+              </button>
             </Link>
           </div>
         </div>
@@ -130,21 +124,3 @@ const MobileDemo = ({ exit }) => {
     </div>
   );
 };
-
-{
-  /* {userKeys &&  <ZapTip
-recipientLNURL={process.env.REACT_APP_YAKI_LUD16}
-recipientPubkey={process.env.REACT_APP_YAKI_PUBKEY}
-senderPubkey={userKeys.pub}
-recipientInfo={{
-  name: "Yakihonne",
-  img:
-    "https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png",
-}}
-custom={{
-  textColor: "",
-  backgroundColor: "",
-  content: "❤︎ Support us",
-}}
-/>} */
-}

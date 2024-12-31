@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-
-import { useNavigate } from "react-router-dom";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 
@@ -13,21 +11,17 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import NumberShrink from "../NumberShrink";
 import { customHistory } from "../../Helpers/History";
+import { useTranslation } from "react-i18next";
 
 export default function NotificationCenter({
   icon = false,
   mobile = false,
   dismiss = false,
 }) {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const [notifications, setNotifications] = useState(
-    // localStorage.getItem("new-notification")
-    //   ? parseInt(localStorage.getItem("new-notification"))
-    //   : 0
-    0
-  );
+  const [notifications, setNotifications] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,7 +115,7 @@ export default function NotificationCenter({
               dispatch(
                 setToast({
                   type: 1,
-                  desc: "New Notification!",
+                  desc: t("AtbtAF9"),
                 })
               );
             }
@@ -161,7 +155,7 @@ export default function NotificationCenter({
           <div className="ringbell-24"></div>
           {!icon && (
             <div className={`link-label ${mobile ? "p-big" : ""}`}>
-              Notifications
+              {t("ASSFfFZ")}
             </div>
           )}
         </div>

@@ -23,7 +23,6 @@ export default function CheckNIP05({
     };
     fetchData();
   }, [address, pubkey]);
-
   if (!address) return;
   return (
     <div className="fx-centered">

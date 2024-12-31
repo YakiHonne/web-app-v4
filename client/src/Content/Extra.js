@@ -13,4 +13,3 @@ export const eventKinds = {
     30031: "smart widget",
     9734: "zaps",
   };
-  

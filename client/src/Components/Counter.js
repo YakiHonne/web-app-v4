@@ -7,6 +7,7 @@ export default function Counter({ date, onClick }) {
     min: new Date(timer).getMinutes(),
     sec: new Date(timer).getSeconds(),
   });
+  
   useEffect(() => {
     let intervalID = setInterval(() => {
       if (timer <= 0) {

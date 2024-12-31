@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
+import { useTranslation } from "react-i18next";
 
 const gf = new GiphyFetch(process.env.REACT_APP_GHIPHY_API_KEY);
 
-export default function Gifs({ setGif , exit, position = "left"}) {
+export default function Gifs({ setGif, exit, position = "left" }) {
   const ref = useRef(null);
+  const { t } = useTranslation();
   const [search, setSearch] = useState();
   const [width, setWidth] = useState(0);
 
@@ -15,30 +17,28 @@ export default function Gifs({ setGif , exit, position = "left"}) {
     }
   }, [ref.current]);
 
-
   useEffect(() => {
     const handleOffClick = (e) => {
       e.stopPropagation();
-      if (ref.current && !ref.current.contains(e.target))
-        exit()
+      if (ref.current && !ref.current.contains(e.target)) exit();
     };
     document.addEventListener("mousedown", handleOffClick);
     return () => {
       document.removeEventListener("mousedown", handleOffClick);
     };
-  }, [ref])
+  }, [ref]);
 
   const fetchGifs = (offset) =>
     gf.search(search || "trending", { offset, limit: 10 });
 
   return (
     <div
-      className="fit-container fx-centered fx-col fx-start-h sc-s-18 bg-sp"
+      className={`fit-container fx-centered fx-col fx-start-h sc-s-18 bg-sp ${position === "left" ? "drop-down-r" : "drop-down"}`}
       style={{
         maxHeight: "300px",
         overflow: "scroll",
         position: "absolute",
-        [position]: 0,
+        // [position]: 0,
         bottom: "calc(100% + 5px)",
         width: "200px",
         zIndex: 102,
@@ -61,7 +61,7 @@ export default function Gifs({ setGif , exit, position = "left"}) {
           <div className="search-24"></div>
           <input
             type="text"
-            placeholder="Search GIFs"
+            placeholder={t("AWYdgPH")}
             className="if ifs-full if-no-border"
             onChange={(e) => setSearch(e.target.value)}
             value={search}
@@ -71,7 +71,7 @@ export default function Gifs({ setGif , exit, position = "left"}) {
           {search && (
             <div
               className="close"
-              style={{top: '8px', right: "8px"}}
+              style={{ top: "8px", right: "8px" }}
               onClick={() => {
                 setSearch("");
               }}

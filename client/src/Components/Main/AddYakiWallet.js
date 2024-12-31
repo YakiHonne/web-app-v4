@@ -4,10 +4,11 @@ import { setToast } from "../../Store/Slides/Publishers";
 import { useDispatch, useSelector } from "react-redux";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
+import { useTranslation } from "react-i18next";
 
 export default function AddYakiWallet({ refresh }) {
   const dispatch = useDispatch();
-  const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCreateWallet = async (e) => {
@@ -55,7 +56,7 @@ export default function AddYakiWallet({ refresh }) {
       dispatch(
         setToast({
           type: 3,
-          desc: "Could not create your wallet, retry later in settings",
+          desc: t("AQ12OQz"),
         })
       );
     }
@@ -73,10 +74,8 @@ export default function AddYakiWallet({ refresh }) {
         ></div>
         {!isLoading && (
           <div>
-            <p>Yakihonne's NWC</p>
-            <p className="gray-c p-medium">
-              Create a wallet using Yakihonne's channel
-            </p>
+            <p>{t("AXj1AXD")}</p>
+            <p className="gray-c p-medium">{t("AzefMgD")}</p>
           </div>
         )}
         {isLoading && <LoadingDots />}

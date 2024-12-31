@@ -368,7 +368,25 @@
 .apple,
 .apple-24,
 .emoji,
-.emoji-24 {
+.emoji-24,
+.translate,
+.translate-24,
+.flag-en,
+.flag-en-24,
+.flag-ar,
+.flag-ar-24,
+.flag-es,
+.flag-es-24,
+.flag-pt,
+.flag-pt-24,
+.flag-ja,
+.flag-ja-24,
+.flag-zh,
+.flag-zh-24,
+.flag-th,
+.flag-th-24,
+.flag-it,
+.flag-it-24 {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -719,7 +737,9 @@
     .apple,
     .apple-24,
     .emoji,
-    .emoji-24 {
+    .emoji-24,
+    .translate,
+    .translate-24 {
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -925,7 +945,15 @@
 .check,
 .google,
 .apple,
-.emoji {
+.emoji,
+.flag-en,
+.flag-ar,
+.flag-es,
+.flag-pt,
+.flag-ja,
+.flag-zh,
+.flag-th,
+.flag-it {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1119,7 +1147,16 @@
 .check-24,
 .google-24,
 .apple-24,
-.emoji-24 {
+.emoji-24,
+.translate-24,
+.flag-en-24,
+.flag-ar-24,
+.flag-es-24,
+.flag-pt-24,
+.flag-ja-24,
+.flag-zh-24,
+.flag-th-24,
+.flag-it-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1135,6 +1172,50 @@
     min-height: 8rem;
 }
 
+.flag-it,
+.flag-it-24 {
+    background-image: url('../media/icons/flag-it.svg');
+}
+
+.flag-th,
+.flag-th-24 {
+    background-image: url('../media/icons/flag-th.svg');
+}
+
+.flag-ar,
+.flag-ar-24 {
+    background-image: url('../media/icons/flag-ar.svg');
+}
+
+.flag-en,
+.flag-en-24 {
+    background-image: url('../media/icons/flag-en.svg');
+}
+
+.flag-zh,
+.flag-zh-24 {
+    background-image: url('../media/icons/flag-zh.svg');
+}
+
+.flag-es,
+.flag-es-24 {
+    background-image: url('../media/icons/flag-es.svg');
+}
+
+.flag-pt,
+.flag-pt-24 {
+    background-image: url('../media/icons/flag-pt.svg');
+}
+
+.flag-ja,
+.flag-ja-24 {
+    background-image: url('../media/icons/flag-ja.svg');
+}
+
+.translate,
+.translate-24 {
+    background-image: url('../media/icons/translate.svg');
+}
 
 .emoji,
 .emoji-24 {

@@ -2,9 +2,11 @@ import React from "react";
 import ZapTip from "../Main/ZapTip";
 import { useSelector } from "react-redux";
 import bg from "../../media/images/bolts-bg.svg";
+import { useTranslation } from "react-i18next";
 
 export default function DonationBoxSuggestionCards({ padding = true }) {
   const userKeys = useSelector((state) => state.userKeys);
+  const { t } = useTranslation();
   if (!userKeys) return;
 
   return (
@@ -12,7 +14,7 @@ export default function DonationBoxSuggestionCards({ padding = true }) {
       className={`fit-container fx-centered ${
         padding ? "box-pad-h box-pad-v-m" : ""
       }`}
-      style={{ borderBottom: padding ? "1px solid var(--very-dim-gray)" : ""}}
+      style={{ borderBottom: padding ? "1px solid var(--very-dim-gray)" : "" }}
     >
       <div
         className="fit-container sc-s-18 fx-centered fx-col"
@@ -27,10 +29,9 @@ export default function DonationBoxSuggestionCards({ padding = true }) {
           className="fit-container bg-img cover-bg"
         ></div>
         <div className="box-pad-h box-marg-s fx-centered fx-col">
-          <h4>Support Yakihonne</h4>
+          <h4>{t("AjQoY5d")}</h4>
           <p className="gray-c p-centered" style={{ maxWidth: "400px" }}>
-            Fuel Yakihonne’s growth! Your support drives new features and a
-            better experience for everyone.
+            {t("Alny3yt")}
           </p>
 
           <ZapTip
@@ -44,7 +45,7 @@ export default function DonationBoxSuggestionCards({ padding = true }) {
             custom={{
               textColor: "",
               backgroundColor: "",
-              content: "❤︎ Support us",
+              content: t("A1lDFjz"),
             }}
             setReceivedEvent={() => null}
           />

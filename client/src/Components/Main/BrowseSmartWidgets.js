@@ -11,11 +11,12 @@ import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function BrowseSmartWidgets({ setWidget, exit }) {
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
-
+  const { t } = useTranslation();
   const [comWidgets, setComWidgets] = useState([]);
   const [myWidgets, setMyWidgets] = useState([]);
   const [contentSource, setContentSource] = useState("community");
@@ -166,7 +167,7 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
                 }`}
                 onClick={() => handleContentSource("community")}
               >
-                <p>Community</p>
+                <p>{t("A1RYH3h")}</p>
               </div>
               <div
                 className={`list-item fx-centered fx ${
@@ -174,7 +175,7 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
                 }`}
                 onClick={() => handleContentSource("self")}
               >
-                <p>My smart widget</p>
+                <p>{t("Ak5dbF4")}</p>
               </div>
               <div
                 className="close"
@@ -215,7 +216,7 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
               className="fit-container fx-centered"
               style={{ height: "30vh" }}
             >
-              <p className="gray-c">Loading</p>
+              <p className="gray-c">{t("AKvHyxG")}</p>
               <LoadingDots />
             </div>
           )}
@@ -226,6 +227,7 @@ export default function BrowseSmartWidgets({ setWidget, exit }) {
 }
 
 const WidgetCard = ({ setWidget, widget }) => {
+  const { t } = useTranslation();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [authorData, setAuthorData] = useState(widget.author);
 
@@ -267,7 +269,7 @@ const WidgetCard = ({ setWidget, widget }) => {
         >
           <div
             className="round-icon-small round-icon-tooltip"
-            data-tooltip="Add widget"
+            data-tooltip={t("AcXhvAu")}
           >
             <div className="plus-sign"></div>
           </div>
@@ -280,12 +282,12 @@ const WidgetCard = ({ setWidget, widget }) => {
             className="fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-v-s"
             style={{ rowGap: 0 }}
           >
-            <p>{widget.title || "Untitled"}</p>
+            <p>{widget.title || t("AMvUjqZ")}</p>
             {widget.description && (
               <p className="gray-c p-medium">{widget.description}</p>
             )}
             {!widget.description && (
-              <p className="gray-c p-italic p-medium">No description</p>
+              <p className="gray-c p-italic p-medium">{t("AtZrjns")}</p>
             )}
           </div>
           <hr />
@@ -301,7 +303,6 @@ const AuthorPreview = ({ author }) => {
       <UserProfilePicNOSTR
         size={40}
         mainAccountUser={false}
-        
         user_id={author.pubkey}
         img={author.picture}
         metadata={author}

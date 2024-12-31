@@ -398,6 +398,7 @@ import MDEditor, {
   orderedListCommand,
   checkedListCommand,
   comment,
+  divider,
 } from "@uiw/react-md-editor";
 import { useState } from "react";
 import PagePlaceholder from "../../Components/PagePlaceholder";
@@ -410,6 +411,7 @@ import katex from "katex";
 import "katex/dist/katex.css";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import {
+  getAppLang,
   getArticleDraft,
   getComponent,
   updateArticleDraft,
@@ -419,7 +421,6 @@ import LoadingDots from "../../Components/LoadingDots";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { customHistory } from "../../Helpers/History";
-import { SelectTabs } from "../../Components/Main/SelectTabs";
 import { useTranslation } from "react-i18next";
 
 const getUploadsHistory = () => {
@@ -462,7 +463,10 @@ export default function WritingArticle() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadsHistory, setUploadsHistory] = useState(getUploadsHistory());
   const [showUploadsHistory, setShowUploadsHistory] = useState(false);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [showClearEditPopup, setShowClearEditPopup] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(
+    ["ar", "he", "fa", "ur"].includes(getAppLang()) ? 1 : 0
+  );
   const [isEdit, setIsEdit] = useState(true);
   const [triggerHTMLWarning, setTriggerHTMLWarning] = useState(false);
 
@@ -575,6 +579,19 @@ export default function WritingArticle() {
     setContent(data);
   };
 
+  const clearContent = () => {
+    setTitle("");
+    setContent("");
+    updateArticleDraft({ title: "", content: "" });
+  };
+
+  const handleClearOptions = (data) => {
+    if (data) {
+      clearContent();
+    }
+    setShowClearEditPopup(false);
+  };
+
   return (
     <>
       {showPublishingScreen && (
@@ -614,6 +631,9 @@ export default function WritingArticle() {
           exit={() => setShowUploadsHistory(false)}
           list={uploadsHistory}
         />
+      )}
+      {showClearEditPopup && (
+        <ClearEditPopup handleClearOptions={handleClearOptions} />
       )}
       <div>
         <Helmet>
@@ -670,10 +690,7 @@ export default function WritingArticle() {
                                   style={{ padding: "0 1rem" }}
                                   onClick={() => customHistory.back()}
                                 >
-                                  <div
-                                    className="arrow"
-                                    style={{ rotate: "90deg" }}
-                                  ></div>
+                                  <div className="arrow arrow-back"></div>
                                 </button>
                                 {!isSaving && (
                                   <button
@@ -697,11 +714,19 @@ export default function WritingArticle() {
                                     </div>
                                   </button>
                                 )}
-                                <SelectTabs
+                                {(title || content) && (
+                                  <button
+                                    className="btn btn-gst"
+                                    onClick={() => setShowClearEditPopup(true)}
+                                  >
+                                    {t("AUdbtv8")}
+                                  </button>
+                                )}
+                                {/* <SelectTabs
                                   selectedTab={selectedTab}
                                   tabs={["LTR", "RTL"]}
                                   setSelectedTab={setSelectedTab}
-                                />
+                                /> */}
                               </div>
                               <div className="fx-centered">
                                 {uploadsHistory.length > 0 && (
@@ -804,6 +829,82 @@ export default function WritingArticle() {
                                 value={content}
                                 onChange={handleSetContent}
                                 commands={[
+                                  commands.group([], {
+                                    name: "ltr",
+                                    icon: (
+                                      <svg
+                                        // class="icon icon-tabler icon-tabler-text-direction-ltr"
+                                        fill="none"
+                                        height="18"
+                                        width="18"
+                                        stroke={
+                                          selectedTab === 0
+                                            ? "var(--c1)"
+                                            : "currentColor"
+                                        }
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M0 0h24v24H0z"
+                                          fill="none"
+                                          stroke="none"
+                                        />
+                                        <path d="M5 19h14" />
+                                        <path d="M17 21l2 -2l-2 -2" />
+                                        <path d="M16 4h-6.5a3.5 3.5 0 0 0 0 7h.5" />
+                                        <path d="M14 15v-11" />
+                                        <path d="M10 15v-11" />
+                                      </svg>
+                                    ),
+                                    execute: async (state, api) => {
+                                      setSelectedTab(0);
+                                    },
+                                    buttonProps: {
+                                      "aria-label": "LTR",
+                                    },
+                                  }),
+                                  commands.group([], {
+                                    name: "ltr",
+                                    icon: (
+                                      <svg
+                                        fill="none"
+                                        height="18"
+                                        width="18"
+                                        stroke={
+                                          selectedTab === 1
+                                            ? "var(--c1)"
+                                            : "currentColor"
+                                        }
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M0 0h24v24H0z"
+                                          fill="none"
+                                          stroke="none"
+                                        />
+                                        <path d="M16 4h-6.5a3.5 3.5 0 0 0 0 7h.5" />
+                                        <path d="M14 15v-11" />
+                                        <path d="M10 15v-11" />
+                                        <path d="M5 19h14" />
+                                        <path d="M7 21l-2 -2l2 -2" />
+                                      </svg>
+                                    ),
+                                    execute: async (state, api) => {
+                                      setSelectedTab(1);
+                                    },
+                                    buttonProps: {
+                                      "aria-label": "LTR",
+                                    },
+                                  }),
+                                  divider,
                                   bold,
                                   italic,
                                   strikethrough,
@@ -1242,6 +1343,49 @@ const ChatGPTConvo = () => {
           <div className="round-icon">
             <p style={{ rotate: "-45deg" }}>&#x27A4;</p>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ClearEditPopup = ({ handleClearOptions }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="fixed-container fx-centered box-pad-h">
+      <div
+        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v slide-up"
+        style={{ width: "450px" }}
+      >
+        <div
+          className="fx-centered box-marg-s"
+          style={{
+            minWidth: "54px",
+            minHeight: "54px",
+            borderRadius: "var(--border-r-50)",
+            backgroundColor: "var(--red-main)",
+          }}
+        >
+          <div className="warning"></div>
+        </div>
+        <h3 className="p-centered" style={{ wordBreak: "break-word" }}>
+          {t("AirKalq")}
+        </h3>
+
+        <p className="p-centered gray-c box-pad-v-m">{t("ASGtOLO")}</p>
+        <div className="fx-centered fit-container">
+          <button
+            className="fx btn btn-gst-red"
+            onClick={() => handleClearOptions(true)}
+          >
+            {t("AUdbtv8")}
+          </button>
+          <button
+            className="fx btn btn-red"
+            onClick={() => handleClearOptions(false)}
+          >
+            {t("AB4BSCe")}
+          </button>
         </div>
       </div>
     </div>

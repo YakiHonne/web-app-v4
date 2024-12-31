@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 export default function SmallButtonDropDown({
@@ -9,7 +10,17 @@ export default function SmallButtonDropDown({
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef(null);
-
+  const { t } = useTranslation();
+  const categoryDisplayName = {
+    highlights: t("AWj53bb"),
+    widgets: t("AM4vyRX"),
+    recent: t("AiAJcg1"),
+    "recent-with-replies": t("AgF8nZU"),
+    paid: t("AAg9D6c"),
+    trending: t("AqqxTe4"),
+    explore: t("A9aq49d"),
+    following: t("A9TqNxQ"),
+  };
   useEffect(() => {
     const handleOffClick = (e) => {
       if (optionsRef.current && !optionsRef.current.contains(e.target))
@@ -30,23 +41,21 @@ export default function SmallButtonDropDown({
             ? ""
             : "transparent",
           color: options.includes(selectedCategory) ? "" : "var(--gray)",
-          minWidth: "max-content"
+          minWidth: "max-content",
         }}
-        onClick={
-          () =>
-            (options.includes(selectedCategory) &&
-              options.length > 1 &&
-              !showSettings) ||
-            (options.includes(selectedCategory) && showSettings)
-              ? setShowOptions(!showOptions)
-              : setSelectedCategory(options[0])
-          // : setShowOptions(false)
+        onClick={() =>
+          (options.includes(selectedCategory) &&
+            options.length > 1 &&
+            !showSettings) ||
+          (options.includes(selectedCategory) && showSettings)
+            ? setShowOptions(!showOptions)
+            : setSelectedCategory(options[0])
         }
       >
         <span className="p-maj">
           {options.includes(selectedCategory)
-            ? selectedCategory.replaceAll("-", " ")
-            : options[0].replaceAll("-", " ")}
+            ? categoryDisplayName[selectedCategory]
+            : categoryDisplayName[options[0]]}
         </span>
         {((options.includes(selectedCategory) &&
           options.length > 1 &&
@@ -59,7 +68,7 @@ export default function SmallButtonDropDown({
         <div
           style={{
             position: "absolute",
-            left: 0,
+       
             top: "110%",
             backgroundColor: "var(--dim-gray)",
             border: "none",
@@ -68,7 +77,7 @@ export default function SmallButtonDropDown({
             zIndex: 1000,
             rowGap: "0",
           }}
-          className="sc-s-18 fx-centered fx-col fx-start-v pointer"
+          className="sc-s-18 fx-centered fx-col fx-start-v pointer drop-down-r"
         >
           {options.map((option, index) => {
             return (
@@ -82,7 +91,8 @@ export default function SmallButtonDropDown({
                   selectedCategory === option ? "c1-c" : " "
                 }`}
               >
-                {option.replaceAll("-", " ")}
+                {categoryDisplayName[option]}
+                {/* {option.replaceAll("-", " ")} */}
               </p>
             );
           })}
@@ -93,7 +103,7 @@ export default function SmallButtonDropDown({
               className="fit-container fx-scattered  pointer box-pad-h-m box-pad-v-s"
               style={{ backgroundColor: "var(--c1-side)" }}
             >
-              <p className="p-medium gray-c btn-text-gray">Customize feeds</p>
+              <p className="p-medium gray-c btn-text-gray">{t("AV40SRR")}</p>
               <div
                 className="setting"
                 style={{ minWidth: "12px", minHeight: "12px" }}
@@ -101,44 +111,6 @@ export default function SmallButtonDropDown({
             </Link>
           )}
         </div>
-        // <div
-        //   style={{
-        //     position: "absolute",
-        //     left: 0,
-        //     top: "110%",
-        //     backgroundColor: "var(--dim-gray)",
-        //     border: "none",
-        //     minWidth: "200px",
-        //     width: "max-content",
-        //     zIndex: 1000,
-        //     rowGap: "10px",
-        //   }}
-        //   className="box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-col fx-start-v pointer"
-        // >
-        //   {options.map((option, index) => {
-        //     return (
-        //       <p
-        //         key={index}
-        //         onClick={() => {
-        //           setSelectedCategory(option);
-        //           setShowOptions(false);
-        //         }}
-        //         className={
-        //           selectedCategory === option
-        //             ? "c1-c fit-container p-maj"
-        //             : " fit-container  p-maj"
-        //         }
-        //       >
-        //         {option.replaceAll("-", " ")}
-        //       </p>
-        //     );
-        //   })}
-        //   <hr style={{margin: 0, borderColor: "var(--gray)"}}/>
-        //   <div className="fit-container fx-centered fx-start-h pointer">
-        //     <div className="custom" style={{minWidth: "12px", minHeight: "12px"}}></div>
-        //     <p className="gray-c">Edit</p>
-        //   </div>
-        // </div>
       )}
     </div>
   );

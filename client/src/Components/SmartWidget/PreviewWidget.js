@@ -2,6 +2,7 @@ import React from "react";
 import PreviewContainer from "./PreviewContainer";
 
 export default function PreviewWidget({ widget, pubkey }) {
+
   if (!widget || !(widget?.components && Array.isArray(widget?.components)))
     return;
   return (

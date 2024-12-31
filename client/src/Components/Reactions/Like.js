@@ -4,9 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
 import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function Like({ isLiked, event, actions, tagKind = "e" }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
   const [eventID, setEventID] = useState(false);
@@ -87,7 +89,11 @@ export default function Like({ isLiked, event, actions, tagKind = "e" }) {
   };
 
   return (
-    <div className={"icon-tooltip"} data-tooltip="React" onClick={reactToNote}>
+    <div
+      className={"icon-tooltip"}
+      data-tooltip={t("AJW1vH9")}
+      onClick={reactToNote}
+    >
       <div className={isLiked ? "heart-bold-24" : "heart-24"}></div>
     </div>
   );

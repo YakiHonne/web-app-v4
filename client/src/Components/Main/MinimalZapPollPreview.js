@@ -5,7 +5,6 @@ export default function MinimalZapPollPreview({ event }) {
     .filter((tag) => tag[0] === "poll_option")
     .map((tag) => tag[2]);
   const poll = { options, content: event.content, ...event };
-
   return (
     <div className="fit-container fx-centered fx-col">
       <p className="fit-container p-five-lines">{poll.content}</p>

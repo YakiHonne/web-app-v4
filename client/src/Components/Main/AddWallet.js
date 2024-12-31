@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import AddYakiWallet from "./AddYakiWallet";
+import { useTranslation } from "react-i18next";
 
 export default function AddWallet({ exit, refresh }) {
+  const { t } = useTranslation();
   return (
     <div
       className="fixed-container fx-centered box-pad-h"
@@ -19,11 +21,11 @@ export default function AddWallet({ exit, refresh }) {
         <div className="close">
           <div></div>
         </div>
-        <h4 className="box-marg-s">Add wallet</h4>
-     
-        <AddYakiWallet refresh={refresh}/>
+        <h4 className="box-marg-s">{t("A8fEwNq")}</h4>
+
+        <AddYakiWallet refresh={refresh} />
         <div className="fit-container fx-centered">
-          <p>Or use yours</p>
+          <p>{t("AvVawBi")}</p>
         </div>
         <Link
           className="fit-container fx-scattered sc-s-18 box-pad-h-s box-pad-v-s option pointer"
@@ -36,8 +38,8 @@ export default function AddWallet({ exit, refresh }) {
               style={{ width: "48px", height: "48px" }}
             ></div>
             <div>
-              <p>Nostr Wallet Connect</p>
-              <p className="gray-c p-medium">Native nostr wallet connection</p>
+              <p>{t("AO3Hd2n")}</p>
+              <p className="gray-c p-medium">{t("Ah0bYM3")}</p>
             </div>
           </div>
           <div className="box-pad-h-s">
@@ -58,18 +60,14 @@ export default function AddWallet({ exit, refresh }) {
             ></div>
             <div>
               <p>Alby</p>
-              <p className="gray-c p-medium">Alby Connect</p>
+              <p className="gray-c p-medium">{t("AFB7e2a")}</p>
             </div>
           </div>
           <div className="box-pad-h-s">
             <div className="plus-sign"></div>
           </div>
         </div>
-        <p className="gray-c p-medium p-centered">
-          Note: All the data related to your wallet will be safely and securely
-          stored locally and are never shared outside the confines of the
-          application.
-        </p>
+        <p className="gray-c p-medium p-centered">{t("APcRx0f")}</p>
       </div>
     </div>
   );

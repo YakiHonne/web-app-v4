@@ -2,18 +2,14 @@ import React, { useRef } from "react";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
 import { useState } from "react";
 import { useEffect } from "react";
-import { nip19 } from "nostr-tools";
 import ToDeletePostNOSTR from "../../Components/Main/ToDeletePostNOSTR";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
-import { getBech32, getEmptyuserMetadata, getParsedNote } from "../../Helpers/Encryptions";
-import { getNoteTree } from "../../Helpers/Helpers";
+import {
+  getParsedNote,
+} from "../../Helpers/Encryptions";
 import KindOne from "../../Components/Main/KindOne";
-import TopCreators from "../../Components/Main/TopCreators";
-import TrendingNotes from "../../Components/Main/TrendingNotes";
 import Footer from "../../Components/Footer";
-import SearchbarNOSTR from "../../Components/Main/SearchbarNOSTR";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
@@ -25,8 +21,6 @@ export default function MyNotesHidden() {
   const isPublishing = useSelector((state) => state.isPublishing);
 
   const [notes, setNotes] = useState([]);
-  const [trendingNotes, setTrendingNotes] = useState([]);
-  const [topCreators, setTopCreators] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [postToDelete, setPostToDelete] = useState(false);
   const extrasRef = useRef(null);
@@ -87,88 +81,7 @@ export default function MyNotesHidden() {
     }
   };
 
-  const onEvent = async (event) => {
-    try {
-      let isComment = event.tags.find(
-        (tag) => tag[0] === "e" || tag[0] === "a"
-      );
-      let label = event.tags.find((tag) => tag[0] === "l");
-      let isQuote = event.tags.find((tag) => tag[0] === "q");
-      if (
-        (isComment && event.kind === 1 && !label) ||
-        (label && label[1] !== "smart-widget")
-      )
-        return false;
-      let author_img = "";
-      let author_name = getBech32("npub", event.pubkey).substring(0, 10);
-      let author_pubkey = event.pubkey;
-      let nEvent = nip19.neventEncode({
-        id: event.id,
-        author: event.pubkey,
-      });
-      if (event.kind === 1) {
-        let note_tree = await getNoteTree(event.content);
-        return {
-          ...event,
-          note_tree,
-          isQuote: isQuote ? isQuote[1] : "",
-          author_img,
-          author_name,
-          author_pubkey,
-          // stringifiedEvent: JSON.stringify(event),
-          nEvent,
-        };
-      }
-    } catch (err) {
-      console.log(err);
-      return false;
-    }
-  };
-  useEffect(() => {
-    const getTrendingNotes = async () => {
-      try {
-        let [nostrBandNotes, nostrBandProfiles] = await Promise.all([
-          axios.get("https://api.nostr.band/v0/trending/notes"),
-          axios.get("https://api.nostr.band/v0/trending/profiles"),
-        ]);
-        let tNotes = nostrBandNotes.data?.notes.splice(0, 10) || [];
-
-        let profiles = nostrBandProfiles.data.profiles
-          ? nostrBandProfiles.data.profiles
-              .filter((profile) => profile.profile)
-              .map((profile) => {
-                let author = getEmptyuserMetadata(profile.profile.pubkey);
-                try {
-                  author = JSON.parse(profile.profile.content);
-                } catch (err) {
-                  console.log(err);
-                }
-                return {
-                  pubkey: profile.profile.pubkey,
-                  articles_number: profile.new_followers_count,
-                  ...author,
-                };
-              })
-          : [];
-        setTopCreators(profiles.slice(0, 6));
-        setTrendingNotes(
-          tNotes.map((note) => {
-            return {
-              ...note,
-              nEvent: nip19.neventEncode({
-                id: note.id,
-                author: note.pubkey,
-                relays: note.relays,
-              }),
-            };
-          })
-        );
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    getTrendingNotes();
-  }, []);
+ 
   return (
     <>
       {postToDelete && (
@@ -417,41 +330,11 @@ export default function MyNotesHidden() {
                             }px)`
                           : 0,
                     }}
-                    className={`fx-centered  fx-wrap  box-pad-v sticky extras-homepage`}
+                    className={`fx-centered  fx-wrap box-pad-v-m box-pad-v sticky extras-homepage`}
                     ref={extrasRef}
                   >
-                    <div className="sticky fit-container">
-                      <SearchbarNOSTR />
-                    </div>
-
-                    {trendingNotes.length > 0 && (
-                      <div
-                        className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v "
-                        style={{
-                          backgroundColor: "var(--c1-side)",
-                          rowGap: "24px",
-                          border: "none",
-                        }}
-                      >
-                        <h4>Trending notes</h4>
-                        <TrendingNotes notes={trendingNotes} />
-                      </div>
-                    )}
-                    <div
-                      className="fit-container sc-s-18 box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                      style={{
-                        backgroundColor: "var(--c1-side)",
-                        rowGap: "24px",
-                        border: "none",
-                        overflow: "visible",
-                      }}
-                    >
-                      <h4>Trending users</h4>
-                      <TopCreators
-                        top_creators={topCreators}
-                        kind="Followers"
-                      />
-                    </div>
+                   
+                    
                     <Footer />
                   </div>
                 </div>

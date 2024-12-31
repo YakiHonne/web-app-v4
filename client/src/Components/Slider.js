@@ -17,10 +17,8 @@ export default function Slider({
     let carousel = noScrollBarContainer.current;
     if (carousel_container.clientWidth < carousel.scrollWidth) {
       setShowArrows(true);
-      // setScrollPX(0);
     } else {
       setShowArrows(false);
-      // setScrollPX(0);
     }
   }, [items]);
 
@@ -43,8 +41,6 @@ export default function Slider({
       className="fit-container fx-scattered fx-start-h"
       style={{
         position: "relative",
-        // paddingLeft: showArrows ? "1.5rem" : 0,
-        // paddingRight: showArrows ? "1.5rem" : 0,
       }}
     >
       {showArrows && (

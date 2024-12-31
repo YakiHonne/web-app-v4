@@ -8,7 +8,6 @@ export default function ImgComp({ url = "", aspectRatio }) {
         style={{
           aspectRatio: aspectRatio?.startsWith("16") ? "16/9" : "1/1",
           backgroundImage: `url(${url})`,
-
           border: "none",
         }}
       >

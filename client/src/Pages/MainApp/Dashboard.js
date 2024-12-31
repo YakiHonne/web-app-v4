@@ -31,7 +31,6 @@ import { nip19 } from "nostr-tools";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useLocation, useNavigate } from "react-router-dom";
 import useRepEventStats from "../../Hooks/useRepEventStats";
-import { eventKinds } from "../../Content/Extra";
 import Select from "../../Components/Main/Select";
 import AddCurationNOSTR from "../../Components/Main/AddCurationNOSTR";
 import { Link } from "react-router-dom";
@@ -649,7 +648,11 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
         </div>
         <div className="fit-container fx-scattered  box-pad-v box-pad-h">
           <h3 className="p-caps">
-            {contentFrom === "drafts" ? "articles" : contentFrom}
+            { ["articles", "drafts"].includes(contentFrom) && t("AesMg52")}
+            {contentFrom === "widgets" && t("A2mdxcf")}
+            {contentFrom === "videos" && t("AStkKfQ")}
+            {contentFrom === "curations" && t("AVysZ1s")}
+            {contentFrom === "notes" && t("AYIXG83")}
           </h3>
           <div className="fx-centered">
             {["articles", "drafts"].includes(contentFrom) && (
@@ -1370,6 +1373,20 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
       customHistory.push("/smart-widget-builder");
     }
   };
+  const eventKindsDisplayName = {
+    1: t("Az5ftet"),
+    11: t("Az5ftet"),
+    7: t("Alz0E9Y"),
+    6: t("Aai65RJ"),
+    30023: t("AyYkCrS"),
+    30024: t("AsQyoY0"),
+    30004: t("Ac6UnVb"),
+    30005: t("Ac6UnVb"),
+    34235: t("AVdmifm"),
+    34236: t("AVdmifm"),
+    300311: t("AkvXmyz"),
+    30031: t("AkvXmyz"),
+  };
   return (
     <div
       className="fit-container fx-scattered sc-s-18 box-pad-h-m box-pad-v-m pointer"
@@ -1397,7 +1414,7 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
               })}
             </p>
             <div className="sticker sticker-normal sticker-gray-black">
-              {eventKinds[event.kind]}
+              {eventKindsDisplayName[event.kind]}
             </div>
           </div>
           <p className="p-two-lines">
@@ -1496,7 +1513,7 @@ const RepCard = ({
         ),
         <div className="fit-container fx-centered fx-start-h pointer">
           <ShareLink
-            label={`Share ${eventKinds[event.kind]}`}
+            label={t("AGB5vpj")}
             path={`/${event.naddr}`}
             title={userMetadata.display_name || userMetadata.name}
             description={event.content}
@@ -1568,7 +1585,7 @@ const RepCard = ({
       ),
       <div className="fit-container fx-centered fx-start-h pointer">
         <ShareLink
-          label={`Share ${eventKinds[event.kind]}`}
+          label={t("AGB5vpj")}
           path={`/${event.naddr}`}
           title={userMetadata.display_name || userMetadata.name}
           description={event.content}
@@ -1589,6 +1606,21 @@ const RepCard = ({
   const options = useMemo(() => {
     return getOptions();
   }, []);
+
+  const eventKindsDisplayName = {
+    1: t("Az5ftet"),
+    11: t("Az5ftet"),
+    7: t("Alz0E9Y"),
+    6: t("Aai65RJ"),
+    30023: t("AyYkCrS"),
+    30024: t("AsQyoY0"),
+    30004: t("Ac6UnVb"),
+    30005: t("Ac6UnVb"),
+    34235: t("AVdmifm"),
+    34236: t("AVdmifm"),
+    300311: t("AkvXmyz"),
+    30031: t("AkvXmyz"),
+  };
 
   return (
     <div
@@ -1652,7 +1684,7 @@ const RepCard = ({
             </div>
             <div className="box-pad-h-s">
               <div className="sticker sticker-normal sticker-gray-black">
-                {eventKinds[event.kind]}
+                {eventKindsDisplayName[event.kind]}
               </div>
             </div>
           </div>
@@ -1712,7 +1744,7 @@ const NoteCard = ({ event }) => {
         <div className="fx-centered fx-col fx-start-h fx-start-v">
           <div className="fx-centered">
             <p className="gray-c p-medium">
-              {t("AHhPGax", {
+              {t("A65LO6w", {
                 date: timeAgo(new Date(isRepost.created_at * 1000)),
               })}{" "}
             </p>
@@ -2089,7 +2121,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                       <div>
                         <p className="p-one-line">{content.title}</p>
                         <p className="p-medium gray-c">
-                          {t("AHhPGax", {
+                          {t("A65LO6w", {
                             date: timeAgo(new Date(item.created_at * 1000)),
                           })}
                         </p>
@@ -2215,7 +2247,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                           {item.content.substring(0, 100)}
                         </p>
                         <p className="p-medium gray-c">
-                        {t("A1jhS42", {
+                          {t("A1jhS42", {
                             date: convertDate(new Date(item.created_at * 1000)),
                           })}
                         </p>
@@ -2270,7 +2302,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
                       <div>
                         <p className="p-one-line">{content.title}</p>
                         <p className="p-medium gray-c">
-                        {t("A1jhS42", {
+                          {t("A1jhS42", {
                             date: convertDate(new Date(item.created_at * 1000)),
                           })}
                         </p>
@@ -2614,22 +2646,3 @@ const ManageInterest = ({ exit }) => {
     </div>
   );
 };
-
-{
-  /* <div
-  className=" fx-centered fx-col fx-start-v extras-homepage"
-  style={{
-    position: "sticky",
-    top: 0,
-    // backgroundColor: "var(--white)",
-    zIndex: "100",
-    flex: 1,
-  }}
->
-  <div className="sticky fit-container">
-    <SearchbarNOSTR />
-  </div>
-  <ImportantFlashNews />
-  <Footer />
-</div>; */
-}

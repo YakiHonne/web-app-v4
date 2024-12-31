@@ -4,12 +4,14 @@ import LoadingDots from "../LoadingDots";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { useTranslation } from "react-i18next";
 
 export default function AddPoll({ exit, setNevent }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
 
+  const { t } = useTranslation();
   const [content, setContent] = useState("");
   const [options, setOptions] = useState([]);
   const [tempOption, setTempOption] = useState("");
@@ -59,7 +61,7 @@ export default function AddPoll({ exit, setNevent }) {
       dispatch(
         setToast({
           type: 3,
-          desc: "The content must not stay empty",
+          desc: t("A27e02j"),
         })
       );
       return;
@@ -68,7 +70,7 @@ export default function AddPoll({ exit, setNevent }) {
       dispatch(
         setToast({
           type: 3,
-          desc: "The poll should have at least two options.",
+          desc: t("A8kBPLg"),
         })
       );
       return;
@@ -77,7 +79,7 @@ export default function AddPoll({ exit, setNevent }) {
       dispatch(
         setToast({
           type: 3,
-          desc: "The poll closing time must be greater than the current time",
+          desc: t("AGMAEDk"),
         })
       );
       return;
@@ -86,7 +88,7 @@ export default function AddPoll({ exit, setNevent }) {
       dispatch(
         setToast({
           type: 3,
-          desc: "The maximum satoshi must be greater than the minimum satochi",
+          desc: t("ABcXmEu"),
         })
       );
       return;
@@ -141,7 +143,7 @@ export default function AddPoll({ exit, setNevent }) {
       dispatch(
         setToast({
           type: 1,
-          desc: "Poll was posted successfully",
+          desc: t("AcX6TcC"),
         })
       );
       setNevent(nEvent);
@@ -161,17 +163,17 @@ export default function AddPoll({ exit, setNevent }) {
         <div className="close" onClick={exit}>
           <div></div>
         </div>
-        <h4 className="box-marg-s">Add poll</h4>
+        <h4 className="box-marg-s">{t("A4gfpc6")}</h4>
         <textarea
           className="txt-area fit-container"
           onChange={handleChange}
           value={content}
-          placeholder="Description"
+          placeholder={t("AM6TPts")}
         />
         <input
           type="number"
           className="if ifs-full"
-          placeholder="Minimum Satoshi (optional)"
+          placeholder={t("AHw7r4k")}
           value={minSats}
           onChange={(e) => {
             setMinSats(parseInt(e.target.value) || "");
@@ -180,14 +182,14 @@ export default function AddPoll({ exit, setNevent }) {
         <input
           type="number"
           className="if ifs-full"
-          placeholder="Maximum Satoshi (optional)"
+          placeholder={t("AVuHanv")}
           value={maxSats}
           onChange={(e) => setMaxSats(parseInt(e.target.value) || "")}
         />
         <input
           type="datetime-local"
           className="if ifs-full pointer"
-          placeholder="Poll close date"
+          placeholder={t("ATAnXen")}
           value={closedAt}
           min={new Date().toISOString()}
           onChange={(e) => {
@@ -195,7 +197,7 @@ export default function AddPoll({ exit, setNevent }) {
           }}
         />
         <div className="fit-container fx-centered fx-col fx-start-v">
-          <p className="p-medium gray-c">Options</p>
+          <p className="p-medium gray-c">{t("A5DDopE")}</p>
           {options.map((option, index) => {
             return (
               <div className="fit-container fx-centered" key={index}>
@@ -208,7 +210,7 @@ export default function AddPoll({ exit, setNevent }) {
                 />
                 <div
                   className="round-icon round-icon-tooltip"
-                  data-tooltip="Delete option"
+                  data-tooltip={t("Almq94P")}
                   onClick={() => handleDeleteOption(index)}
                 >
                   <div className="trash"></div>
@@ -228,14 +230,14 @@ export default function AddPoll({ exit, setNevent }) {
               className={`round-icon round-icon-tooltip ${
                 tempOption ? "pointer" : "if-disabled"
               }`}
-              data-tooltip="Add option"
+              data-tooltip={t("AI4ia0I")}
               onClick={handleAddOption}
             >
               <div className="plus-sign" style={{ cursor: "unset" }}></div>
             </div>
           </div>
           <button className="btn btn-normal btn-full" onClick={postPoll}>
-            {isLoading ? <LoadingDots /> : "Post poll"}
+            {isLoading ? <LoadingDots /> : t("As7IjvV")}
           </button>
         </div>
       </div>

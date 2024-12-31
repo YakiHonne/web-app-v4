@@ -582,7 +582,7 @@ hr:last-child {
 }
 
 .btn-red:hover {
-    background-color: var(--red-side);
+    background-color: #560101;
     border: none;
     color: var(--red-main);
 }
@@ -1422,6 +1422,39 @@ a:hover {
     animation-fill-mode: forwards;
     animation-delay: .3s;
     cursor: pointer;
+}
+
+[dir="rtl"] .close {
+    position: absolute;
+    right: unset;
+    top: 16px;
+    left: 16px;
+    transition: .2s ease-in-out;
+    z-index: 10;
+    animation-name: popout;
+    animation-duration: .2s;
+    transform: scale(0);
+    animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation-fill-mode: forwards;
+    animation-delay: .3s;
+    cursor: pointer;
+}
+
+.note-indent {
+    padding-left: 48px;
+}
+
+[dir="rtl"] .note-indent {
+    padding-right: 48px;
+    padding-left: unset;
+}
+.note-indent-2 {
+    padding-left: 1.5rem;
+}
+
+[dir="rtl"] .note-indent-2 {
+    padding-right: 1.5rem;
+    padding-left: unset;
 }
 
 .close div {

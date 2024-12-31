@@ -369,7 +369,6 @@ const UserMetadata = ({ refreshUser }) => {
   const muteUnmute = async () => {
     try {
       if (!Array.isArray(userMutedList)) return;
-
       let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
       if (isMuted) {
         tempTags.splice(isMuted.index, 1);
@@ -488,7 +487,7 @@ const UserMetadata = ({ refreshUser }) => {
                         className="btn btn-gray"
                         onClick={() => customHistory.push("/settings/profile")}
                       >
-                        Edit profile
+                        {t("AfxwB6z")}
                       </button>
                     )}
                     {user.pubkey !== userKeys.pub && (
@@ -510,10 +509,8 @@ const UserMetadata = ({ refreshUser }) => {
                           className="round-icon round-icon-tooltip"
                           data-tooltip={
                             userKeys && (userKeys.sec || userKeys.ext)
-                              ? `Message ${user?.name || "this profile"}`
-                              : `Login to message ${
-                                  user?.name || "this profile"
-                                }`
+                              ? t("AEby39n", { name: user?.name || "" })
+                              : t("ASuKdFB", { name: user?.name || "" })
                           }
                           onClick={handleInitConvo}
                         >
@@ -528,17 +525,17 @@ const UserMetadata = ({ refreshUser }) => {
                           className="fit-container fx-centered fx-start-h pointer"
                           onClick={(e) => copyID(e, user?.pubkey)}
                         >
-                          <p className="fx-centered">Copy user pubkey</p>
+                          <p className="fx-centered">{t("AHrJpSX")}</p>
                         </div>,
                         <div
                           className="fit-container fx-centered fx-start-h pointer"
                           onClick={() => setShowUserImpact(true)}
                         >
-                          <p className="fx-centered">User impact</p>
+                          <p className="fx-centered">{t("AP8YaBk")}</p>
                         </div>,
                         <div className="fit-container fx-centered fx-start-h pointer">
                           <ShareLink
-                            label={"Share profile"}
+                            label={t("AawXy2A")}
                             path={`/users/${user_id}`}
                             title={user?.display_name || user?.name}
                             description={user?.about || ""}
@@ -561,7 +558,8 @@ const UserMetadata = ({ refreshUser }) => {
                                 opacity: isPublishing ? 0.5 : 1,
                               }}
                             >
-                              {isMuted ? "Unmute" : "Mute"} profile
+                              {isMuted && t("AKELUbQ")}
+                              {!isMuted && t("AGMxuQ0")}
                             </p>
                             {isMuted ? (
                               <div className="unmute-24"></div>
@@ -648,7 +646,7 @@ const UserMetadata = ({ refreshUser }) => {
                     >
                       <p>
                         <NumberShrink value={userStats.followings} />{" "}
-                        <span className="gray-c">Following</span>
+                        <span className="gray-c">{t("A9TqNxQ")}</span>
                       </p>
                     </div>
                     <UserFollowers
@@ -657,7 +655,7 @@ const UserMetadata = ({ refreshUser }) => {
                     />
                     {userKeys && following.includes(userKeys?.pub) && (
                       <div className="sticker sticker-gray-black">
-                        Follows you
+                        {t("AjfORVL")}
                       </div>
                     )}
                   </div>
@@ -675,6 +673,7 @@ const UserFeed = ({ user }) => {
   const { user_id } = useParams();
   const [pubkey, setPubkey] = useState(decodeURL(user_id));
 
+  const { t } = useTranslation();
   const [events, dispatchEvents] = useReducer(
     eventsReducer,
     eventsInitialState
@@ -848,7 +847,7 @@ const UserFeed = ({ user }) => {
           }`}
           onClick={() => switchContentType("notes")}
         >
-          Notes
+          {t("AYIXG83")}
         </div>
         <div
           className={`list-item-b fx-centered fx-shrink ${
@@ -856,7 +855,7 @@ const UserFeed = ({ user }) => {
           }`}
           onClick={() => switchContentType("articles")}
         >
-          Articles
+          {t("AesMg52")}
         </div>
         <div
           className={`list-item-b fx-centered fx-shrink ${
@@ -864,7 +863,7 @@ const UserFeed = ({ user }) => {
           }`}
           onClick={() => switchContentType("curations")}
         >
-          Curations
+          {t("AVysZ1s")}
         </div>
         <div
           className={`list-item-b fx-centered fx-shrink ${
@@ -872,7 +871,7 @@ const UserFeed = ({ user }) => {
           }`}
           onClick={() => switchContentType("videos")}
         >
-          Videos
+          {t("AStkKfQ")}
         </div>
         <div
           className={`list-item-b fx-centered fx-shrink ${
@@ -880,7 +879,7 @@ const UserFeed = ({ user }) => {
           }`}
           onClick={() => switchContentType("smart-widget")}
         >
-          Smart widgets
+          {t("A2mdxcf")}
         </div>
       </div>
       {contentFrom === "notes" && (
@@ -904,10 +903,8 @@ const UserFeed = ({ user }) => {
               className="fx-centered fx-col box-pad-v"
               style={{ height: "30vh" }}
             >
-              <h4>Oops! Nothing to show here!</h4>
-              <p className="gray-c">
-                {user?.name} hasn't written any notes or replies
-              </p>
+              <h4>{t("Aezm5AZ")}</h4>
+              <p className="gray-c">{t("AmK41uU", { name: user?.name })}</p>
               <div
                 className="note-2-24"
                 style={{ width: "48px", height: "48px" }}
@@ -935,8 +932,8 @@ const UserFeed = ({ user }) => {
               className="fx-centered fx-col box-pad-v"
               style={{ height: "30vh" }}
             >
-              <h4>Oops! Nothing to show here!</h4>
-              <p className="gray-c">{user?.name} has no curations</p>
+              <h4>{t("Aezm5AZ")}</h4>
+              <p className="gray-c">{t("A8pbTGs", { name: user?.name })}</p>
               <div
                 className="curation-24"
                 style={{ width: "48px", height: "48px" }}
@@ -952,10 +949,8 @@ const UserFeed = ({ user }) => {
               className="fx-centered fx-col box-pad-v"
               style={{ height: "30vh" }}
             >
-              <h4>Oops! Nothing to read here!</h4>
-              <p className="gray-c">
-                {user?.name} hasn't written any article yet
-              </p>
+              <h4>{t("AUBYIOq")}</h4>
+              <p className="gray-c">{t("AkqCrW5", { name: user?.name })}</p>
               <div
                 className="posts"
                 style={{ width: "48px", height: "48px" }}
@@ -991,10 +986,8 @@ const UserFeed = ({ user }) => {
               className="fx-centered fx-col box-pad-v"
               style={{ height: "30vh" }}
             >
-              <h4>Oops! Nothing to watch here!</h4>
-              <p className="gray-c">
-                {user?.name} hasn't posted any videos yet
-              </p>
+              <h4>{t("A3QrgxE")}</h4>
+              <p className="gray-c">{t("A70xEba", { name: user?.name })}</p>
               <div
                 className="play-24"
                 style={{ width: "48px", height: "48px" }}
@@ -1026,10 +1019,8 @@ const UserFeed = ({ user }) => {
               className="fx-centered fx-col box-pad-v"
               style={{ height: "30vh" }}
             >
-              <h4>Oops! Nothing to show here!</h4>
-              <p className="gray-c">
-                {user?.name} hasn't posted any smart widget yet
-              </p>
+              <h4>{t("Aezm5AZ")}</h4>
+              <p className="gray-c">{t("A1MlrcU", { name: user?.name })}</p>
               <div
                 className="play-24"
                 style={{ width: "48px", height: "48px" }}
@@ -1071,7 +1062,7 @@ const UserFeed = ({ user }) => {
 };
 
 const UserFollowers = ({ id, followersCount }) => {
-  const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [followers, setFollowers] = useState([]);
   const [showPeople, setShowPeople] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -1108,112 +1099,54 @@ const UserFollowers = ({ id, followersCount }) => {
       <div className="pointer" onClick={() => setShowPeople("followers")}>
         <p>
           <NumberShrink value={followersCount} />{" "}
-          <span className="gray-c">Followers</span>
+          <span className="gray-c">{t("A6huCnT")}</span>
         </p>
       </div>
     </>
   );
 };
 
-const SatsReceived = ({ id }) => {
-  const [satsRec, setSatsRec] = useState([]);
-  useEffect(() => {
-    if (!id) return;
-    if (satsRec.length > 0) setSatsRec([]);
-    let sub = ndkInstance.subscribe(
-      [
-        {
-          kinds: [9735],
-          "#p": [id],
-        },
-      ],
-      { cacheUsage: "CACHE_FIRST" }
-    );
-
-    sub.on("event", (event) => {
-      let sats = decodeBolt11(getBolt11(event));
-      let tempEv = {
-        ...event,
-        amount: sats,
-      };
-      setSatsRec((prev) => [...prev, tempEv]);
-    });
-    return () => {
-      sub.stop();
-    };
-  }, [id]);
-
-  return (
-    <div>
-      <p>
-        <NumberShrink
-          value={satsRec.reduce((total, item) => (total += item.amount), 0)}
-        />{" "}
-        <span className="gray-c">Received</span>
-      </p>
-    </div>
-  );
-};
-
 const WritingImpact = ({ writingImpact }) => {
+  const { t } = useTranslation();
   return (
     <div className="fit-container fx-centered fx-col">
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="green-c">+{writingImpact.positive_writing_impact}</h4>
-        <p>Notes that earned the status of Helpful</p>
-        <p className="gray-c p-medium">
-          These notes are now showing to everyone who sees the post, adding
-          context and helping keep people informed.
-        </p>
+        <p>{t("Aqnw40M")}</p>
+        <p className="gray-c p-medium">{t("AKWbsS4")}</p>
       </div>
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="red-c">-{writingImpact.negative_writing_impact}</h4>
-        <p>Notes that reached the status of Not Helpful</p>
-        <p className="gray-c p-medium">
-          These notes have been rated Not Helpful by enough contributors,
-          including those who sometimes disagree in their past ratings.
-        </p>
+        <p>{t("AsC8aFW")}</p>
+        <p className="gray-c p-medium">{t("AniOQt4")}</p>
       </div>
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="gray-c">{writingImpact.ongoing_writing_impact}</h4>
-        <p>Notes that need more ratings</p>
-        <p className="gray-c p-medium">
-          Notes that don’t yet have a status of Helpful or Not Helpful.
-        </p>
+        <p>{t("ArkRgJu")}</p>
+        <p className="gray-c p-medium">{t("AWR7eI9")}</p>
       </div>
     </div>
   );
 };
 
 const RatingImpact = ({ ratingImpact }) => {
+  const { t } = useTranslation();
   return (
     <div className="fit-container fx-centered fx-col">
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="green-c">+{ratingImpact.positive_rating_impact_h}</h4>
-        <p>Ratings that helped a note earn the status of Helpful</p>
-        <p className="gray-c p-medium">
-          These ratings identified Helpful notes that get shown as context on
-          posts and help keep people informed.
-        </p>
+        <p>{t("APnZzQa")}</p>
+        <p className="gray-c p-medium">{t("AFwN7DV")}</p>
       </div>
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="green-c">+{ratingImpact.positive_rating_impact_nh}</h4>
-        <p>Ratings that helped a note reach the status of Not Helpful</p>
-        <p className="gray-c p-medium">
-          These ratings improve Community Notes by giving feedback to note
-          authors, and allowing contributors to focus on the most promising
-          notes.
-        </p>
+        <p>{t("AYnS32k")}</p>
+        <p className="gray-c p-medium">{t("A7oOA48")}</p>
       </div>
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="red-c">-{ratingImpact.negative_rating_impact_h}</h4>
-        <p>
-          Ratings of Not Helpful on notes that ended up with a status of Helpful
-        </p>
-        <p className="gray-c p-medium">
-          These ratings are common and can lead to status changes if enough
-          people agree that a "Helpful" note isn’t sufficiently helpful.
-        </p>
+        <p>{t("AjCrjhx")}</p>
+        <p className="gray-c p-medium">{t("AU1uyHU")}</p>
       </div>
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="red-c fx-centered">
@@ -1229,339 +1162,20 @@ const RatingImpact = ({ ratingImpact }) => {
             x2
           </span>
         </h4>
-        <p>
-          Ratings of Helpful on notes that ended up with a status of Not Helpful
-        </p>
-        <p className="gray-c p-medium">
-          These ratings are counted twice because they often indicate support
-          for notes that others deemed low-quality.
-        </p>
+        <p>{t("ArOeceG")}</p>
+        <p className="gray-c p-medium">{t("A41M6w5")}</p>
       </div>
       <div className="fx-centered fx-col fit-container fx-start-v">
         <h4 className="gray-c">{ratingImpact.ongoing_rating_impact}</h4>
-        <p>Pending</p>
-        <p className="gray-c p-medium">
-          Ratings on notes that don’t currently have a status of Helpful or Not
-          Helpful.
-        </p>
+        <p>{t("Am1FnXt")}</p>
+        <p className="gray-c p-medium">{t("AnvvOLs")}</p>
       </div>
     </div>
   );
 };
 
-const KindOneComments = ({ event }) => {
-  const nostrAuthors = useSelector((state) => state.nostrAuthors);
-  const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
-  const [relatedEvent, setRelatedEvent] = useState(false);
-  const [isRelatedEventLoaded, setIsRelatedEventLoaded] = useState(false);
-
-  useEffect(() => {
-    const fetchAuthor = async () => {
-      try {
-        let auth = await getUser(event.pubkey);
-        setUser(auth);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchAuthor();
-  }, [nostrAuthors]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let event_ = await getSubData(
-          [{ kinds: [1], ids: [event.isComment] }],
-          500
-        );
-
-        event_ = event_.data.length > 0 ? event_.data[0] : false;
-        if (event_) setRelatedEvent(await getParsedNote(event_));
-        setIsRelatedEventLoaded(true);
-      } catch (err) {
-        setIsRelatedEventLoaded(true);
-      }
-    };
-    if (!relatedEvent) {
-      fetchData();
-    }
-  }, []);
-
-  return (
-    <div
-      className="fx-centered fx-col fx-start-v fit-container"
-      style={{
-        // backgroundColor: "var(--c1-side)",
-        gap: 0,
-        overflow: "visible",
-        borderBottom: "1px solid var(--very-dim-gray)",
-      }}
-    >
-      {relatedEvent && (
-        <div className="fit-container">
-          <KindOne event={relatedEvent} />
-        </div>
-      )}
-    </div>
-  );
-};
-// const KindOneComments = ({ event }) => {
-//   const nostrAuthors = useSelector((state) => state.nostrAuthors);
-//   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
-//   const [relatedEvent, setRelatedEvent] = useState(false);
-//   const [isRelatedEventLoaded, setIsRelatedEventLoaded] = useState(false);
-
-//   useEffect(() => {
-//     const fetchAuthor = async () => {
-//       try {
-//         let auth = await getUser(event.pubkey);
-//         setUser(auth);
-//       } catch (err) {
-//         console.log(err);
-//       }
-//     };
-//     fetchAuthor();
-//   }, [nostrAuthors]);
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         console.log(event.isComment)
-//         let event_ = await getSubData(
-//           [{ kinds: [1], ids: [event.isComment] }],
-//           500
-//           // { cacheUsage: "CACHE_FIRST" }
-//         );
-//         // let event_ = await ndkInstance.fetchEvent(
-//         //   [{ kinds: [1], ids: [event.isComment] }],
-//         //   { groupable: false, cacheUsage: "CACHE_FIRST" }
-//         //   // { cacheUsage: "CACHE_FIRST" }
-//         // );
-//         event_ = event_.data.length > 0 ? event_.data[0] : false;
-//         if (event_) setRelatedEvent(await getParsedNote(event_));
-//         setIsRelatedEventLoaded(true);
-//       } catch (err) {
-//         setIsRelatedEventLoaded(true);
-//       }
-//     };
-//     if (!relatedEvent) {
-//       fetchData();
-//       // let sub = ndkInstance.subscribe(
-//       //   [{ kinds: [1], ids: [event.isComment] }]
-//       //   // { cacheUsage: "CACHE_FIRST" }
-//       // );
-//       // console.log(event.isComment);
-//       // sub.on("event", async (event_) => {
-//       //   console.log(event_);
-//       //   setRelatedEvent(await getParsedNote(event_));
-//       // });
-//       // sub.on("close", () => {
-//       //   setIsRelatedEventLoaded(true);
-//       // });
-//     }
-//   }, []);
-
-//   return (
-//     <div
-//       className="fx-centered fx-col fx-start-v fit-container"
-//       style={{
-//         // backgroundColor: "var(--c1-side)",
-//         gap: 0,
-//         overflow: "visible",
-//         borderBottom: "1px solid var(--very-dim-gray)",
-//       }}
-//     >
-//       <div
-//         className="fx-centered  box-pad-h-s box-pad-v-s fx-start-h sc-s-18 round-icon-tooltip pointer box-pad-h-m"
-//         style={{ overflow: "visible", marginLeft: ".5rem", marginTop: ".5rem" }}
-//         data-tooltip={`commented on ${new Date(
-//           event.created_at * 1000
-//         ).toLocaleDateString()}`}
-//       >
-//         <UserProfilePicNOSTR
-//           size={20}
-//           mainAccountUser={false}
-//
-//           user_id={user?.pubkey}
-//           img={user?.picture}
-//         />
-//         <div>
-//           <p className="p-medium">
-//             {user?.display_name || user?.name}{" "}
-//             <span className="orange-c">Commented on this</span>
-//           </p>
-//         </div>
-//       </div>
-//       {relatedEvent && (
-//         <div className="fit-container">
-//           <KindOne event={relatedEvent} />
-//         </div>
-//       )}
-//       {!isRelatedEventLoaded && !relatedEvent && (
-//         <div
-//           style={{
-//             backgroundColor: "var(--c1-side)",
-//             width: "95%",
-//             margin: ".5rem auto",
-//           }}
-//           className="fit-container box-pad-h box-pad-v sc-s-18 fx-centered"
-//         >
-//           <p className="p-medium gray-c">Loading note</p>
-//           <LoadingDots />
-//         </div>
-//       )}
-
-//       {isRelatedEventLoaded && !relatedEvent && (
-//         <div
-//           style={{
-//             backgroundColor: "var(--c1-side)",
-//             width: "95%",
-//             margin: ".5rem auto",
-//           }}
-//           className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
-//         >
-//           <p className="p-medium orange-c p-italic">
-//             The note does not seem to be found
-//           </p>
-//         </div>
-//       )}
-//       <div className="fit-container fx-centered fx-end-h box-marg-s box-pad-h-m">
-//         <div
-//           className="fx-centered fx-start-v fx-start-h box-pad-h-m box-pad-v-m sc-s-18"
-//           style={{ backgroundColor: "var(--c1-side)", width: "95%" }}
-//         >
-//           <UserProfilePicNOSTR
-//             size={20}
-//             mainAccountUser={false}
-//
-//             user_id={user?.pubkey}
-//             img={user?.picture}
-//           />
-//           <div className="fit-container p-medium">{event.note_tree}</div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// const QRSharing = ({ user, exit }) => {
-//   const dispatch = useDispatch();
-//   const [selectedTab, setSelectedTab] = useState("pk");
-//   const copyKey = (keyType, key) => {
-//     navigator.clipboard.writeText(key);
-//     dispatch(
-//       setToast({
-//         type: 1,
-//         desc: `${keyType} was copied! 👏`,
-//       })
-//     );
-//   };
-
-//   return (
-//     <div className="fixed-container box-pad-h fx-centered" onClick={exit}>
-//       <div
-//         className="sc-s box-pad-h box-pad-v"
-//         style={{
-//           width: "min(100%,400px)",
-//           position: "relative",
-//           // background:
-//           //   "linear-gradient(180deg, rgba(156,39,176,1) 0%, rgba(41,121,255,1) 100%)",
-//         }}
-//         onClick={(e) => e.stopPropagation()}
-//       >
-//         <div className="close" onClick={exit}>
-//           <div></div>
-//         </div>
-//         <div className="fx-centered fx-col">
-//           <UserProfilePicNOSTR
-//             user_id={user?.pubkey}
-//             mainAccountUser={false}
-//             size={100}
-//             img={user?.picture}
-//           />
-//           <h4 className="p-centered">{user?.display_name || user?.name}</h4>
-//         </div>
-//         <div className="fx-centered box-pad-v-m">
-//           <div
-//             className={`list-item ${
-//               selectedTab === "pk" ? "selected-list-item" : ""
-//             }`}
-//             onClick={() => setSelectedTab("pk")}
-//           >
-//             Pubkey
-//           </div>
-//           {user?.lud16 && (
-//             <div
-//               className={`list-item ${
-//                 selectedTab === "ln" ? "selected-list-item" : ""
-//               }`}
-//               onClick={() => setSelectedTab("ln")}
-//             >
-//               Lightning address
-//             </div>
-//           )}
-//         </div>
-//         <div className="fx-centered fit-container box-marg-s">
-//           <div
-//             className="box-pad-v-m box-pad-h-m sc-s-18"
-//             style={{ backgroundColor: "white" }}
-//           >
-//             {selectedTab === "pk" && (
-//               <QRCode
-//                 size={200}
-//                 value={`nostr:${getBech32("npub", user?.pubkey)}`}
-//               />
-//             )}
-//             {selectedTab === "ln" && <QRCode size={200} value={user?.lud16} />}
-//           </div>
-//         </div>
-//         <div className="fit-container fx-col fx-centered">
-//           <div
-//             className={"fx-scattered if pointer fit-container dashed-onH"}
-//             style={{ borderStyle: "dashed" }}
-//             onClick={() =>
-//               copyKey(
-//                 "Your profile",
-//                 `https://yakihonne.com/users/${getBech32("npub", user.pubkey)}`
-//               )
-//             }
-//           >
-//             <div className="link-24"></div>
-//             <p className="p-one-line">{`https://yakihonne.com/users/${getBech32(
-//               "npub",
-//               user.pubkey
-//             )}`}</p>
-//             <div className="copy-24"></div>
-//           </div>
-//           <div
-//             className={"fx-scattered if pointer fit-container dashed-onH"}
-//             style={{ borderStyle: "dashed" }}
-//             onClick={() =>
-//               copyKey("The pubkey", `nostr:${getBech32("npub", user?.pubkey)}`)
-//             }
-//           >
-//             <div className="key-icon-24"></div>
-//             <p>{shortenKey(`nostr:${getBech32("npub", user?.pubkey)}`)}</p>
-//             <div className="copy-24"></div>
-//           </div>
-//           {user?.lud16 && (
-//             <div
-//               className={"fx-scattered if pointer fit-container dashed-onH"}
-//               style={{ borderStyle: "dashed" }}
-//               onClick={() => copyKey("The lightning address", user?.lud16)}
-//             >
-//               <div className="bolt-24"></div>
-//               <p className="p-one-line">{user?.lud16}</p>
-//               <div className="copy-24"></div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
 const UserImpact = ({ user, exit, userImpact }) => {
+  const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState("write");
 
   return (
@@ -1571,7 +1185,7 @@ const UserImpact = ({ user, exit, userImpact }) => {
       onClick={exit}
     >
       <div
-        className="sc-s box-pad-h box-pad-v"
+        className="sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{
           width: "min(100%,500px)",
           position: "relative",
@@ -1600,7 +1214,7 @@ const UserImpact = ({ user, exit, userImpact }) => {
             onClick={() => setSelectedTab("write")}
           >
             <h4>{userImpact.writing_impact.writing_impact}</h4>
-            <p className="gray-c">Writing impact</p>
+            <p className="gray-c">{t("AlBboNU")}</p>
           </div>
 
           <div
@@ -1610,7 +1224,7 @@ const UserImpact = ({ user, exit, userImpact }) => {
             onClick={() => setSelectedTab("rate")}
           >
             <h4>{userImpact.rating_impact.rating_impact}</h4>
-            <p className="gray-c">Rating impact</p>
+            <p className="gray-c">{t("Ar691Yl")}</p>
           </div>
         </div>
         <div className="fx-centered fit-container ">

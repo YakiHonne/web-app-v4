@@ -8,7 +8,7 @@ import ShareLink from "../ShareLink";
 import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
-import { getSubData, getUser } from "../../Helpers/Controlers";
+import { getSubData, getUser, translate } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import OptionsDropdown from "./OptionsDropdown";
@@ -21,7 +21,9 @@ import Comments from "../Reactions/Comments";
 import { customHistory } from "../../Helpers/History";
 import { saveUsers } from "../../Helpers/DB";
 import CommentsSection from "./CommentsSection";
-import { compactContent } from "../../Helpers/Helpers";
+import { compactContent, getNoteTree } from "../../Helpers/Helpers";
+import { useTranslation } from "react-i18next";
+import LoadingDots from "../LoadingDots";
 
 export default function KindOne({
   event,
@@ -35,7 +37,7 @@ export default function KindOne({
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const isPublishing = useSelector((state) => state.isPublishing);
   const userMutedList = useSelector((state) => state.userMutedList);
-
+  const { t } = useTranslation();
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   const [isNip05Verified, setIsNip05Verified] = useState(false);
   const [toggleComment, setToggleComment] = useState(false);
@@ -43,6 +45,9 @@ export default function KindOne({
   const [showComments, setShowComments] = useState(false);
   const [usersList, setUsersList] = useState(false);
   const { postActions } = useNoteStats(event?.id, event?.pubkey);
+  const [isNoteTranslating, setIsNoteTranslating] = useState("");
+  const [translatedNote, setTranslatedNote] = useState("");
+  const [showTranslation, setShowTranslation] = useState(false);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -129,16 +134,6 @@ export default function KindOne({
   const muteUnmute = async () => {
     try {
       if (!Array.isArray(userMutedList)) return;
-      if (isPublishing) {
-        dispatch(
-          setToast({
-            type: 3,
-            desc: "An event publishing is in process!",
-          })
-        );
-        return;
-      }
-
       let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
       if (isMuted) {
         tempTags.splice(isMuted.index, 1);
@@ -166,9 +161,52 @@ export default function KindOne({
     dispatch(
       setToast({
         type: 1,
-        desc: `Note ID was copied! 👏`,
+        desc: `${t("ARJICtS")} 👏`,
       })
     );
+  };
+
+  const translateNote = async () => {
+    setIsNoteTranslating(true);
+    if (translatedNote) {
+      setShowTranslation(true);
+      setIsNoteTranslating(false);
+      return;
+    }
+    try {
+      let res = await translate(event.content);
+      if (res.status === 500) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AZ5VQXL"),
+          })
+        );
+      }
+      if (res.status === 400) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AJeHuH1"),
+          })
+        );
+      }
+      if (res.status === 200) {
+        let noteTree = await getNoteTree(res.res);
+        setTranslatedNote(noteTree);
+        setShowTranslation(true);
+      }
+      setIsNoteTranslating(false);
+    } catch (err) {
+      setShowTranslation(false);
+      setIsNoteTranslating(false);
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("AZ5VQXL"),
+        })
+      );
+    }
   };
 
   return (
@@ -242,14 +280,14 @@ export default function KindOne({
                   </p>
                 </div>
                 {event.isFlashNews && (
-                  <div className="sticker sticker-c1">Paid</div>
+                  <div className="sticker sticker-c1">{t("AAg9D6c")}</div>
                 )}
               </div>
               {event.isComment && <RelatedEvent event={event.isComment} />}
               <div className="fx-centered fx-col fit-container">
                 <div className="fit-container" onClick={onClick}>
                   {!minmal ? (
-                    event.note_tree
+                    <>{showTranslation ? translatedNote : event.note_tree}</>
                   ) : (
                     <p className="p-four-lines">
                       {compactContent(event.content)}
@@ -259,14 +297,33 @@ export default function KindOne({
               </div>
             </div>
           </div>
+          <div
+            className="fit-container note-indent"
+            style={{ paddingTop: ".5rem" }}
+          >
+            {!isNoteTranslating && !showTranslation && (
+              <p className="btn-text-gray" onClick={translateNote}>
+                {t("AdHV2qJ")}
+              </p>
+            )}
+            {!isNoteTranslating && showTranslation && (
+              <p
+                className="btn-text-gray"
+                onClick={() => setShowTranslation(false)}
+              >
+                {t("AE08Wte")}
+              </p>
+            )}
+            {isNoteTranslating && <LoadingDots />}
+          </div>
           {reactions && (
             <div
-              className="fx-scattered fit-container"
-              style={{ paddingTop: "1rem", paddingLeft: "48px" }}
+              className="fx-scattered fit-container note-indent"
+              style={{ paddingTop: "1rem" }}
             >
               <div className="fx-centered" style={{ columnGap: "1rem" }}>
                 <div className="fx-centered">
-                  <div className="icon-tooltip" data-tooltip="Leave a comment">
+                  <div className="icon-tooltip" data-tooltip={t("ADHdLfJ")}>
                     <div
                       className="comment-24"
                       onClick={() => setToggleComment(!toggleComment)}
@@ -274,7 +331,7 @@ export default function KindOne({
                   </div>
                   <div
                     className="icon-tooltip"
-                    data-tooltip="See comments"
+                    data-tooltip={t("AMBxvKP")}
                     onClick={() =>
                       postActions.replies.replies.length > 0
                         ? setShowComments(true)
@@ -289,12 +346,12 @@ export default function KindOne({
                   <Like isLiked={isLiked} event={event} actions={postActions} />
                   <div
                     className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
-                    data-tooltip="Reactions "
+                    data-tooltip={t("Alz0E9Y")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.likes.likes.length > 0 &&
                         setUsersList({
-                          title: "Reactions ",
+                          title: t("Alz0E9Y"),
                           list: postActions.likes.likes.map(
                             (item) => item.pubkey
                           ),
@@ -316,12 +373,12 @@ export default function KindOne({
                   />
                   <div
                     className={`icon-tooltip ${isReposted ? "orange-c" : ""}`}
-                    data-tooltip="Reposts "
+                    data-tooltip={t("Aai65RJ")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.reposts.reposts.length > 0 &&
                         setUsersList({
-                          title: "Reposts ",
+                          title: t("Aai65RJ"),
                           list: postActions.reposts.reposts.map(
                             (item) => item.pubkey
                           ),
@@ -340,12 +397,12 @@ export default function KindOne({
                   />
                   <div
                     className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
-                    data-tooltip="Quoters"
+                    data-tooltip={t("AWmDftG")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.quotes.quotes.length > 0 &&
                         setUsersList({
-                          title: "Quoters",
+                          title: t("AWmDftG"),
                           list: postActions.quotes.quotes.map(
                             (item) => item.pubkey
                           ),
@@ -367,12 +424,12 @@ export default function KindOne({
                   </div>
                   <div
                     className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
-                    data-tooltip="Zappers"
+                    data-tooltip={t("AVDZ5cJ")}
                     onClick={(e) => {
                       e.stopPropagation();
                       postActions.zaps.total > 0 &&
                         setUsersList({
-                          title: "Zappers",
+                          title: t("AVDZ5cJ"),
                           list: postActions.zaps.zaps.map(
                             (item) => item.pubkey
                           ),
@@ -387,12 +444,12 @@ export default function KindOne({
               <OptionsDropdown
                 options={[
                   <div onClick={copyID} className="pointer">
-                    <p>Copy note ID</p>
+                    <p>{t("AYFAFKs")}</p>
                   </div>,
                   userKeys && userKeys.pub !== event.pubkey && (
                     <>
                       <BookmarkEvent
-                        label="Bookmark note"
+                        label={t("Ar5VgpT")}
                         pubkey={event.id}
                         kind={"1"}
                         itemType="e"
@@ -401,7 +458,7 @@ export default function KindOne({
                   ),
                   <div className="fit-container fx-centered fx-start-h pointer">
                     <ShareLink
-                      label="Share note"
+                      label={t("A1IsKJ0")}
                       path={`/notes/${event.nEvent}`}
                       title={user.display_name || user.name}
                       description={event.content}
@@ -409,7 +466,7 @@ export default function KindOne({
                       shareImgData={{
                         post: event,
                         author: user,
-                        label: "Note",
+                        label: t("Az5ftet"),
                       }}
                     />
                   </div>,
@@ -419,9 +476,9 @@ export default function KindOne({
                       className="fit-container fx-scattered pointer"
                     >
                       {isMuted ? (
-                        <p className="red-c">Unmute user</p>
+                        <p className="red-c">{t("AKELUbQ")}</p>
                       ) : (
-                        <p className="red-c">Mute user</p>
+                        <p className="red-c">{t("AGMxuQ0")}</p>
                       )}
                       {isMuted ? (
                         <div className="unmute-24"></div>
@@ -451,6 +508,7 @@ export default function KindOne({
 
 const RelatedEvent = ({ event }) => {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
+  const { t } = useTranslation();
   const [user, setUser] = useState(false);
   const [relatedEvent, setRelatedEvent] = useState(false);
   const [isRelatedEventLoaded, setIsRelatedEventLoaded] = useState(false);
@@ -504,7 +562,7 @@ const RelatedEvent = ({ event }) => {
       onClick={handleOnClick}
     >
       <p className="gray-c">
-        Replying to{" "}
+        {t("AoUrRsg")}{" "}
         <span className="c1-c">
           @{user?.display_name || user?.name || "USER"}
         </span>
@@ -521,6 +579,7 @@ const FastAccessCS = ({
   exit,
   isRoot = true,
 }) => {
+  const { t } = useTranslation();
   return (
     <div
       className="fixed-container fx-centered fx-start-v"
@@ -549,7 +608,7 @@ const FastAccessCS = ({
           style={{ borderBottom: "1px solid var(--very-dim-gray)" }}
         >
           <div className="fx-scattered fit-container box-pad-h">
-            <h4 className="p-caps">Thread</h4>
+            <h4 className="p-caps">{t("Aog1ulK")}</h4>
             <div
               className="close"
               style={{ position: "static" }}

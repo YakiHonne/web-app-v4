@@ -3,7 +3,6 @@ import React from "react";
 
 export function FilePicker({ element, kind = "image/*", setFile }) {
   let id = nanoid();
-
   const Upload = async (e) => {
     let file = e.target.files[0];
     let url = URL.createObjectURL(file);

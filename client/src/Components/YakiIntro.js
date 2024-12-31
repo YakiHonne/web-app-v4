@@ -182,7 +182,7 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated Oct 30, 2024
+                  Last updated Dec 31, 2024
                 </p>
               </div>
               <p className="orange-c p-medium">
@@ -190,12 +190,12 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- Resolved issues causing the article editor to appear malformed.
-- Added support for both LTR and RTL languages in the article editor.
-- Enhanced the messaging box to support long text writing.
-- Secure DMs (Nip44) can now be enabled globally via the messages and settings pages.
+- Yakihonne is now multilingual! Enjoy the app in English and Chinese, with more languages coming soon, including Spanish, Portuguese, Thai, Arabic, Japanese, and Italian.
+- Added support for translating notes and articles into the app's selected language.
+- Copy-paste images to upload seamlessly across the app.
+- Resolved issues with secure DMs when logging in using a private key.
 - General bug fixes and improvements.
-`}</p> 
+`}</p>
           </div>
           {content.map((card, index) => {
             return (
@@ -248,20 +248,8 @@ const Banner = ({ exit }) => {
             );
           })}
           <DonationBoxSuggestionCards padding={false} />
-          {/* <div className="box-pad-v"></div> */}
         </div>
       </div>
     </div>
   );
 };
-
-// - An entirely enhanced app core for faster, more reliable, and solid interaction with the Nostr network.
-// - A redesigned UI/UX offering greater content visibility and a more user-friendly experience, featuring a new color palette, modern typeface, and sleek content cards.
-// - A refreshed onboarding page to make logging in or creating new accounts quicker and more welcoming.
-// - The new Discover page is now the hub for all media content, including articles, videos, and curated posts, offering easy access to what people are sharing and posting recently.
-// - A redesigned Notifications page keeps you updated on the activities of those you follow and what others are saying about your published content.
-// - A welcoming Dashboard, where you can manage all your published content in one place, quickly and easily.
-// - Users without a wallet can now create one directly within Yakihonne to start sending and receiving zaps with their favorite people.
-// - The Search feature is now faster, allowing you to paste any Nostr scheme or search for users or content directly from your sidebar.
-// - Your published events are now saved in your browser for later management if they fail to publish when relays don't connect on the first try.
-// - The Uncensored Notes page has been renamed to Verify Notes, keeping all the features you love, just as before.

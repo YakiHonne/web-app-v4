@@ -32,6 +32,7 @@ export default function Search() {
   const urlKeyword = getKeyword(location);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userKeys = useSelector((state) => state.userKeys);
+  const userMutedList = useSelector((state) => state.userMutedList);
   const userInterestList = useSelector((state) => state.userInterestList);
   const [searchKeyword, setSearchKeyword] = useState(urlKeyword);
   const [results, setResults] = useState([]);
@@ -418,11 +419,11 @@ export default function Search() {
                           />
                         );
                     }
-                    if ([1].includes(item.kind))
+                    if ([1].includes(item.kind) && !userMutedList.includes(item.pubkey))
                       return (
                         <KindOne key={item.id} event={item} border={true} />
                       );
-                    if ([30023, 34235].includes(item.kind))
+                    if ([30023, 34235].includes(item.kind) && !userMutedList.includes(item.pubkey))
                       return <RepEventPreviewCard key={item.id} item={item} />;
                   })}
                   {isLoading && (

@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { nip19 } from "nostr-tools";
 import {
-  checkForLUDS,
   getEmptyuserMetadata,
   getParsedRepEvent,
 } from "../../Helpers/Encryptions";
@@ -15,7 +14,6 @@ import NumberShrink from "../../Components/NumberShrink";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import { Link } from "react-router-dom";
 import Date_ from "../../Components/Date_";
-import ZapTip from "../../Components/Main/ZapTip";
 import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import {
   copyText,
@@ -39,15 +37,16 @@ import Zap from "../../Components/Reactions/Zap";
 import RepEventCommentsSection from "../../Components/Main/RepEventCommentsSection";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import Backbar from "../../Components/Main/Backbar";
+import { useTranslation } from "react-i18next";
 
 export default function Video() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const userMetadata = useSelector((state) => state.userMetadata);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
   const { id, AuthNip05, VidIdentifier } = useParams();
-  const navigateTo = useNavigate();
+
+  const { t } = useTranslation();
   const [video, setVideo] = useState(false);
   const [parsedAddr, setParsedAddr] = useState({});
 
@@ -332,7 +331,7 @@ export default function Video() {
                         >
                           <div className="fit-container fx-centered fx-start-h">
                             <p className="gray-c p-medium">
-                              {videoViews} view(s)
+                              {t("AginxGR", { count: videoViews })}
                             </p>
                             <p className="p-small gray-c">&#9679;</p>
                             <p className="gray-c p-medium">
@@ -351,7 +350,7 @@ export default function Video() {
                           </p>
                           {!video.content && (
                             <p className="gray-c p-medium p-italic">
-                              No description.
+                              {t("AtZrjns")}
                             </p>
                           )}
 
@@ -381,7 +380,7 @@ export default function Video() {
                               border: "none",
                             }}
                           >
-                            <h4>You might also like</h4>
+                            <h4>{t("Aag9u1h")}</h4>
                             <div className="fit-container fx-centered fx-wrap">
                               {morePosts.map((video_) => {
                                 if (video_.id !== video.id)
@@ -455,7 +454,7 @@ export default function Video() {
                   <div className="main-middle fx-even">
                     <div className="fx-centered  pointer">
                       <div
-                        data-tooltip="Leave a comment"
+                        data-tooltip={t("ADHdLfJ")}
                         className={`pointer icon-tooltip ${
                           isZapped ? "orange-c" : ""
                         }`}
@@ -466,7 +465,7 @@ export default function Video() {
                         <div className="comment-24"></div>
                       </div>
                       <div
-                        data-tooltip="See comments"
+                        data-tooltip={t("AMBxvKP")}
                         className={`pointer icon-tooltip `}
                         onClick={() =>
                           setShowCommentsSections({ comment: false })
@@ -486,12 +485,12 @@ export default function Video() {
                         className={`pointer icon-tooltip ${
                           isLiked ? "orange-c" : ""
                         }`}
-                        data-tooltip="Reactions "
+                        data-tooltip={t("Alz0E9Y")}
                         onClick={(e) => {
                           e.stopPropagation();
                           postActions.likes.likes.length > 0 &&
                             setUsersList({
-                              title: "Reactions ",
+                              title: t("Alz0E9Y"),
                               list: postActions.likes.likes.map(
                                 (item) => item.pubkey
                               ),
@@ -510,12 +509,12 @@ export default function Video() {
                       />
                       <div
                         className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
-                        data-tooltip="Quoters"
+                        data-tooltip={t("AWmDftG")}
                         onClick={(e) => {
                           e.stopPropagation();
                           postActions.quotes.quotes.length > 0 &&
                             setUsersList({
-                              title: "Quoters",
+                              title: t("AWmDftG"),
                               list: postActions.quotes.quotes.map(
                                 (item) => item.pubkey
                               ),
@@ -536,14 +535,14 @@ export default function Video() {
                         isZapped={isZapped}
                       />
                       <div
-                        data-tooltip="See zappers"
+                        data-tooltip={t("AO0OqWT")}
                         className={`pointer icon-tooltip ${
                           isZapped ? "orange-c" : ""
                         }`}
                         onClick={() =>
                           postActions.zaps.total > 0 &&
                           setUsersList({
-                            title: "Zappers",
+                            title: t("AVDZ5cJ"),
                             list: postActions.zaps.zaps.map(
                               (item) => item.pubkey
                             ),
@@ -557,10 +556,10 @@ export default function Video() {
                     <OptionsDropdown
                       options={[
                         <div
-                          onClick={(e) => copyText(video.naddr, "Naddr", e)}
+                          onClick={(e) => copyText(video.naddr, t("ApPw14o", { item: "naddr" }), e)}
                           className="pointer"
                         >
-                          <p>Copy naddr</p>
+                          <p>{t("ApPw14o", { item: "naddr" })}</p>
                         </div>,
                         userKeys && userKeys.pub !== video.pubkey && (
                           <>
@@ -568,10 +567,10 @@ export default function Video() {
                               className="fit-container fx-centered fx-start-h pointer"
                               onClick={() => setShowArticleToCuration(true)}
                             >
-                              <p>Add to curation</p>
+                              <p>{t("A89Qqmt")}</p>
                             </div>
                             <BookmarkEvent
-                              label="Bookmark video"
+                              label={t("As4mP1x")}
                               pubkey={video.pubkey}
                               kind={video.kind}
                               d={parsedAddr.identifier}
@@ -581,7 +580,7 @@ export default function Video() {
                         ),
                         <div className="fit-container fx-centered fx-start-h pointer">
                           <ShareLink
-                            label="Share video"
+                            label={t("AT9KulV")}
                             path={`/videos/${video.naddr}`}
                             title={author.display_name || author.name}
                             description={video.content}

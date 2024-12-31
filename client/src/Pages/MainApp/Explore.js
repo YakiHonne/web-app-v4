@@ -189,23 +189,6 @@ export default function Explore() {
                   />
                 </div>
               </div>
-              {/* <div
-                className=" fx-centered fx-col fx-start-v extras-homepage"
-                style={{
-                  position: "sticky",
-                  zIndex: "100",
-                  flex: 1,
-                }}
-                ref={extrasRef}
-              >
-                <div className="sticky fit-container">
-                  <SearchbarNOSTR />
-                </div>
-                
-                <TrendingUsers />
-                <RecentTags />
-                <Footer />
-              </div> */}
             </div>
           </main>
         </div>

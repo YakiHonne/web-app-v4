@@ -17,6 +17,14 @@ export default function SearchUserCard({ user, url, exit }) {
     verifyUser();
   }, [user]);
 
+  if (
+    !(
+      typeof user.nip05 === "string" &&
+      typeof user.display_name === "string" &&
+      typeof user.name === "string"
+    )
+  )
+    return;
   if (!url)
     return (
       <div className="fx-scattered fit-container pointer search-bar-post">
@@ -38,9 +46,6 @@ export default function SearchUserCard({ user, url, exit }) {
                 </p>
                 {verified && <div className="checkmark-c1"></div>}
               </div>
-              {/* <p className="p-medium p-one-line">
-                @{user.name || user.display_name}
-              </p> */}
               <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
                 {user.nip05 || "N/A"}
               </p>
@@ -72,9 +77,6 @@ export default function SearchUserCard({ user, url, exit }) {
               </p>
               {verified && <div className="checkmark-c1"></div>}
             </div>
-            {/* <p className="p-medium p-one-line">
-                @{user.name || user.display_name}
-              </p> */}
             <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
               {user.nip05 || "N/A"}
             </p>

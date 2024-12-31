@@ -4,12 +4,13 @@ import axios from "axios";
 import LoadingScreen from "../LoadingScreen";
 import LoadingDots from "../LoadingDots";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 
 export default function ToUpdateRelay({ exit }) {
   const dispatch = useDispatch();
   const userRelays = useSelector((state) => state.userRelays);
   const userKeys = useSelector((state) => state.userKeys);
-  const isPublishing = useSelector((state) => state.isPublishing);
+  const { t } = useTranslation();
   const [tempuserMetadataRelays, setTempuserMetadataRelays] = useState(
     userRelays || []
   );
@@ -30,7 +31,7 @@ export default function ToUpdateRelay({ exit }) {
         dispatch(
           setToast({
             type: 2,
-            desc: "Error has occurred!",
+            desc: t("Acr4Slu"),
           })
         );
         exit();
@@ -54,7 +55,7 @@ export default function ToUpdateRelay({ exit }) {
           dispatch(
             setToast({
               type: 3,
-              desc: "Relay is already on list!",
+              desc: t("AYo9s8g"),
             })
           );
           return false;
@@ -66,7 +67,7 @@ export default function ToUpdateRelay({ exit }) {
         dispatch(
           setToast({
             type: 2,
-            desc: "Relay format is invalid!",
+            desc: t("AATNADF"),
           })
         );
         return false;
@@ -99,15 +100,6 @@ export default function ToUpdateRelay({ exit }) {
   const saveRelays = async () => {
     let relaysToAdd = addCustomRelay();
     if (relaysToAdd === false) return;
-    if (isPublishing) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: "An event publishing is in process!",
-        })
-      );
-      return;
-    }
     saveInKind10002();
     exit();
   };
@@ -177,18 +169,18 @@ export default function ToUpdateRelay({ exit }) {
                 backgroundColor: "var(--white)",
               }}
             >
-              <h4>All relays</h4>
+              <h4>{t("AWjKzZJ")}</h4>
               <input
                 type="search"
                 className="if ifs-small"
-                placeholder="search relay"
+                placeholder={t("AWiH4mf")}
                 value={searchedRelay}
                 onChange={handleSearchRelay}
               />
             </div>
             {searchedRelay && searchedResult.length === 0 && (
               <div className="fit-container fx-centered box-marg-full box-pad-h">
-                <p className="gray-c italic-txt">No relay was found</p>
+                <p className="gray-c italic-txt">{t("AR04C4C")}</p>
               </div>
             )}
             {searchedRelay &&
@@ -239,12 +231,6 @@ export default function ToUpdateRelay({ exit }) {
                 );
               })}
           </div>
-          {/* <div className="fx-centered fit-container">
-          <button className="btn btn-gst-red fx" onClick={exit}>
-            Cancel
-          </button>
-          <button className="btn btn-normal fx">Save</button>
-        </div> */}
         </div>
         <div
           className="fx-centered fx-col slide-up"
@@ -270,18 +256,9 @@ export default function ToUpdateRelay({ exit }) {
                 zIndex: 10,
               }}
             >
-              <h4>My relays</h4>
+              <h4>{t("AZjgE2A")}</h4>
             </div>
             {tempuserMetadataRelays.map((relay, index) => {
-              // if ([0, 1,2,3,4].includes(index))
-              //   return (
-              //     <div
-              //       key={`${relay}-${index}`}
-              //       className="if fit-container fx-centered  fx-start-h if-disabled fx-shrink"
-              //     >
-              //       <p className="c1-c">{relay}</p>
-              //     </div>
-              //   );
               return (
                 <div
                   key={`${relay}-${index}`}
@@ -301,12 +278,12 @@ export default function ToUpdateRelay({ exit }) {
               <input
                 type="text"
                 className="if ifs-full"
-                placeholder="Relay url"
+                placeholder={t("ACi22Cf")}
                 value={customRelay}
                 onChange={(e) => setCustomRelay(e.target.value)}
               />
               <button className="btn btn-normal" onClick={addCustomRelay}>
-                Add
+                {t("ARWeWgJ")}
               </button>
             </div>
             <div className="fx-centered box-pad-v">
@@ -315,14 +292,14 @@ export default function ToUpdateRelay({ exit }) {
                 onClick={exit}
                 disabled={isLoading}
               >
-                {isLoading ? <LoadingDots /> : "Cancel"}
+                {isLoading ? <LoadingDots /> : t("AB4BSCe")}
               </button>
               <button
                 className="btn btn-normal fx"
                 onClick={saveRelays}
                 disabled={isLoading}
               >
-                {isLoading ? <LoadingDots /> : "Save"}
+                {isLoading ? <LoadingDots /> : t("AZWpmir")}
               </button>
             </div>
           </div>

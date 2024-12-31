@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  SimplePool,
   nip04,
   nip44,
   getEventHash,
@@ -8,7 +7,6 @@ import {
   finalizeEvent,
 } from "nostr-tools";
 import { bytesTohex } from "../../Helpers/Encryptions";
-import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../../Components/LoadingDots";
 import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import UserSearchBar from "../../Components/UserSearchBar";
@@ -19,9 +17,11 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { NDKEvent } from "@nostr-dev-kit/ndk";
+import { useTranslation } from "react-i18next";
 
 export default function InitiConvo({ exit, receiver = false }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
@@ -32,10 +32,6 @@ export default function InitiConvo({ exit, receiver = false }) {
       : true
   );
   const [isLoading, setIsLoading] = useState(false);
-
-  // useEffect(() => {
-  //   if (!isPublishing && toPublish) exit();
-  // }, [isPublishing]);
 
   const handleSendMessage = async () => {
     if (
@@ -193,7 +189,7 @@ export default function InitiConvo({ exit, receiver = false }) {
   const getEventKind13 = async (pubkey) => {
     let unsignedKind14 = getEventKind14();
     let content = userKeys.sec
-      ? nip44.default.v2.encrypt(
+      ? nip44.v2.encrypt(
           JSON.stringify(unsignedKind14),
           nip44.v2.utils.getConversationKey(userKeys.sec, pubkey)
         )
@@ -219,20 +215,10 @@ export default function InitiConvo({ exit, receiver = false }) {
       let ev2 = new NDKEvent(ndkInstance, event2);
       let [res1, res2] = await Promise.race([ev1.publish(), ev2.publish()]);
 
-      // if (res1.status === "rejected") {
-      //   dispatch(
-      //     setToast({
-      //       type: 2,
-      //       desc: "Error sending the message.",
-      //     })
-      //   );
-      //   return false;
-      // }
-
       dispatch(
         setToast({
           type: 1,
-          desc: "Message sent!",
+          desc: t("Ax4F7eu"),
         })
       );
 
@@ -242,7 +228,7 @@ export default function InitiConvo({ exit, receiver = false }) {
       dispatch(
         setToast({
           type: 2,
-          desc: "Error sending the message.",
+          desc: t("A4cCSy5"),
         })
       );
       return false;
@@ -262,7 +248,7 @@ export default function InitiConvo({ exit, receiver = false }) {
   return (
     <div className="fixed-container fx-centered box-pad-h">
       <div
-        className="box-pad-h box-pad-v sc-s-18"
+        className="box-pad-h box-pad-v sc-s-18 bg-sp"
         style={{
           position: "relative",
           width: "min(100%, 500px)",
@@ -273,7 +259,7 @@ export default function InitiConvo({ exit, receiver = false }) {
         <div className="close" onClick={exit}>
           <div></div>
         </div>
-        <h4 className="box-marg-s">Start a conversation</h4>
+        <h4 className="box-marg-s">{t("AuUoz1R")}</h4>
         <div
           className="fx-centered fx-col fit-container"
           style={{ pointerEvents: isLoading ? "none" : "auto" }}
@@ -290,7 +276,7 @@ export default function InitiConvo({ exit, receiver = false }) {
           )}
           <textarea
             className="txt-area ifs-full"
-            placeholder="What do you want to say?"
+            placeholder={t("ATjclmk")}
             style={{ height: "200px" }}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -303,17 +289,15 @@ export default function InitiConvo({ exit, receiver = false }) {
               onClick={handleSendMessage}
               disabled={isLoading}
             >
-              {isLoading ? <LoadingDots /> : "Send message"}
+              {isLoading ? <LoadingDots /> : t("AsEtDNy")}
             </button>
             {(userKeys.sec || window?.nostr?.nip44) && (
               <div
                 className="fx-centered round-icon-tooltip"
-                data-tooltip={
-                  legacy ? "Switch Secure DMs" : "Switch back to legacy"
-                }
+                data-tooltip={legacy ? t("Al6NH4U") : t("AfN9sMV")}
               >
                 {/* {!legacy && ( */}
-                <p className="p-medium slide-left">Secure DMs</p>
+                <p className="p-medium slide-left">{t("ATta6yb")}</p>
                 {/* // )} */}
                 {/* {legacy && (
                   <p className="p-medium gray-c slide-right">Legacy encryption</p>
@@ -331,9 +315,7 @@ export default function InitiConvo({ exit, receiver = false }) {
             <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
               <div className="info-tt-24"></div>
               <div>
-                <p className="c1-c p-medium">
-                  For more security & privacy, consider enabling Secure DMs.
-                </p>
+                <p className="c1-c p-medium">{t("AakbxOk")}</p>
               </div>
             </div>
           )}

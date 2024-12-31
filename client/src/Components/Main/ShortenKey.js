@@ -1,9 +1,11 @@
 import React from "react";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
+import { useTranslation } from "react-i18next";
 
 export default function ShortenID({ id }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   if (!id) return;
   let firstHalf = id.substring(0, 10);
   const copyID = (e) => {
@@ -12,7 +14,7 @@ export default function ShortenID({ id }) {
     dispatch(
       setToast({
         type: 1,
-        desc: `Pubkey was copied! 👏`,
+        desc: `${t("AzSXXQm")} 👏`,
       })
     );
   };

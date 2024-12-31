@@ -454,8 +454,8 @@ export default function SmartWidgetChecker() {
                             data-tooltip={t("ATB2h6T")}
                           >
                             <div
-                              className="arrow"
-                              style={{ rotate: "90deg" }}
+                              className="arrow arrow-back"
+                             
                             ></div>
                           </div>
                           <h4>{t("AYmIvXo")}</h4>

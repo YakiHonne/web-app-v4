@@ -10,11 +10,13 @@ import { nip19 } from "nostr-tools";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { getLinkFromAddr } from "../../Helpers/Helpers";
+import { useTranslation } from "react-i18next";
 
 export default function SearchContentCard({ event, exit, userProfile = true }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
   const [isNip05Verified, setIsNip05Verified] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchAuthor = async () => {
@@ -134,7 +136,9 @@ export default function SearchContentCard({ event, exit, userProfile = true }) {
           <DynamicIndicator item={event} />
         </div>
         <p className="p-one-line">
-          {event.title || <span className="p-italic gray-c">Untitled</span>}
+          {event.title || (
+            <span className="p-italic gray-c">{t("AMvUjqZ")}</span>
+          )}
         </p>
       </div>
     </Link>
