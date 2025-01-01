@@ -79,7 +79,7 @@ const chineseTranslation = {
   AehNuZK: "还剩{{points}}",
   ARagjJY: "约{{time}}分钟",
   A3fEQj5: "{{val, datetime}}",
-  AOPBXtv: "{{val, datetime}}",
+  AOPBXtv: "{{val, relativetime}}",
   AZzyBMI: "+ {{count}}人",
   ALJ9RPE: "+{{count}}共同好友",
   AAECdsg: "♥︎ 作者：",
