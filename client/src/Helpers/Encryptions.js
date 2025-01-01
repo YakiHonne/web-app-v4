@@ -408,7 +408,7 @@ const timeAgo = (date) => {
   const diffInWeeks = Math.floor(diffInDays / 7);
   const diffInMonths = Math.floor(diffInDays / 30);
   const diffInYears = now.getFullYear() - date.getFullYear();
-
+console.log(diffInHours)
   if (diffInSeconds < 60) {
     return t("ArG9ME2");
   } else if (diffInMinutes < 60) {
