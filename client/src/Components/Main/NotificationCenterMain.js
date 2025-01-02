@@ -165,8 +165,8 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
           url: `/notes/${nip19.noteEncode(event.id)}`,
         };
       }
-
-      let label_1 = t("AtWXTcu", { name: "username" });
+ 
+      let label_1 = t("AtWXTcu", { name: username });
       let label_2 = compactContent(event.content);
 
       return {
