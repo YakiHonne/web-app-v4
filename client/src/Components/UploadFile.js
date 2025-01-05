@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import ProgressCirc from "./ProgressCirc";
 
 export default function UploadFile({
-  kind = "image/*",
+  kind = "audio/*,video/*,image/*",
   round = false,
   small = false,
   setImageURL,
