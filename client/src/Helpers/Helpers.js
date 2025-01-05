@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 import MediaUploaderServer from "../Content/MediaUploaderServer";
 import { t } from "i18next";
 import { supportedLanguageKeys } from "../Context/I18N";
+import LNBCInvoice from "../Components/Main/LNBCInvoice";
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
@@ -275,6 +276,8 @@ const getNoteTree = async (note, minimal = false) => {
         return part;
       });
       finalTree.push(<Fragment key={key}>{finalOutput} </Fragment>);
+    } else if (el.startsWith("lnbc") && el.length > 30) {
+      finalTree.push(<LNBCInvoice lnbc={el} key={key}/>);
     } else if (el.startsWith("#")) {
       const match = el.match(/(#+)([\w-+]+)/);
 
@@ -714,6 +717,8 @@ const getVideoContent = (video) => {
   let url = "";
   let d = "";
   let image = "";
+  let imeta_url = "";
+  let imeta_image = "";
   let duration = 0;
 
   for (let tag of tags) {
@@ -722,9 +727,14 @@ const getVideoContent = (video) => {
     if (tag[0] === "duration" && tag[1]) duration = parseInt(tag[1]);
     if (tag[0] === "d") d = tag[1];
     if (tag[0] === "url") url = tag[1];
+    if (tag[0] === "imeta") imeta_url = tag.find((_) => _.includes("url"));
+    if (tag[0] === "imeta") imeta_image = tag.find((_) => _.includes("image"));
     if (tag[0] === "title") title = tag[1];
     if ((tag[0] === "thumb" || tag[0] === "image") && tag[1]) image = tag[1];
   }
+
+  if (imeta_url) url = imeta_url.split(" ")[1];
+  if (imeta_image) image = imeta_image.split(" ")[1];
 
   return {
     id: video.id,

@@ -405,7 +405,7 @@ export default function WriteNote({
                     className="btn btn-normal"
                     onClick={() => setShowWarningBox(false)}
                   >
-                    {t("")}
+                    {t("AB4BSCe")}
                   </button>
                 </div>
               </div>

@@ -54,6 +54,7 @@ export default function ZapTip({
             let lnbc = decoded.sections.find(
               (section) => section.name === "amount"
             );
+
             setLnbcAmount(lnbc);
             return;
           } catch (err) {
@@ -61,9 +62,11 @@ export default function ZapTip({
             return;
           }
         }
+
         let url = decodeUrlOrAddress(recipientLNURL);
         if (!url) return;
         const data = await axios.get(url);
+
         setCallback(data.data.callback);
       } catch (err) {
         console.error(err);
