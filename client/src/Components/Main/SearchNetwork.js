@@ -81,7 +81,6 @@ export default function SearchNetwork({ exit }) {
         return tempData
           .filter((event, index, tempData) => {
             if (
-              event.nip05 &&
               tempData.findIndex(
                 (event_) => event_.pubkey === event.pubkey && !event.kind
               ) === index &&
@@ -103,7 +102,6 @@ export default function SearchNetwork({ exit }) {
       ? nostrAuthors
           .filter((user) => {
             if (
-              user.nip05 &&
               ((typeof user.display_name === "string" &&
                 user.display_name
                   ?.toLowerCase()
