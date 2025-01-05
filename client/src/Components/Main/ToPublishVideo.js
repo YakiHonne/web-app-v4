@@ -72,6 +72,12 @@ export default function ToPublishVideo({
       setIsLoading(true);
       let tags = [
         ["d", nanoid()],
+        [
+          "imeta",
+          `url ${videoURL}`,
+          `image ${thumbnailUrl}`,
+          videoMetadata ? `m ${videoMetadata.type}` : "m video/mp4",
+        ],
         ["url", videoURL],
         ["title", videoTitle],
         ["summary", videoDesc],

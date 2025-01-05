@@ -30,6 +30,7 @@ import { NDKUser } from "@nostr-dev-kit/ndk";
 import HistorySection from "../../Components/Main/HistorySection";
 import { useTranslation } from "react-i18next";
 import { getNoteTree } from "../../Helpers/Helpers";
+import { decode } from "light-bolt11-decoder";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function Note() {
@@ -238,6 +239,7 @@ export default function Note() {
     }
     setIsNoteTranslating(false);
   };
+
   return (
     <>
       {usersList && (
@@ -303,10 +305,7 @@ export default function Note() {
                           className="btn btn-normal btn-gray"
                           style={{ padding: "0 1rem" }}
                         >
-                          <div
-                            className="arrow arrow-back"
-                          
-                          ></div>
+                          <div className="arrow arrow-back"></div>
                         </button>
                       </div>
                     </div>
@@ -415,15 +414,11 @@ export default function Note() {
                             }`}
                             style={{ columnGap: "8px" }}
                           >
-                            <div
-                              className="comment-24"
-                              // data-tooltip="Comments"
-                            ></div>
+                            <div className="comment-24"></div>
                             <div>
                               <NumberShrink
                                 value={postActions.replies.replies.length}
                               />
-                              {/* <NumberShrink value={netCommentsCount} /> */}
                             </div>
                           </div>
                           <div
@@ -432,17 +427,6 @@ export default function Note() {
                             }`}
                             style={{ columnGap: "8px" }}
                           >
-                            {/* <div
-                              className={"icon-tooltip"}
-                              data-tooltip="React"
-                              onClick={reactToNote}
-                            >
-                              <div
-                                className={
-                                  isLiked ? "heart-bold-24" : "heart-24"
-                                }
-                              ></div>
-                            </div> */}
                             <Like
                               isLiked={isLiked}
                               event={note}
@@ -468,7 +452,6 @@ export default function Note() {
                               <NumberShrink
                                 value={postActions.likes.likes.length}
                               />
-                              {/* <NumberShrink value={reactions.length} /> */}
                             </div>
                           </div>
                           <div
