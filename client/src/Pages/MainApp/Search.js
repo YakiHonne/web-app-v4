@@ -137,7 +137,6 @@ export default function Search() {
         return tempData
           .filter((event, index, tempData) => {
             if (
-              event.nip05 &&
               tempData.findIndex(
                 (event_) => event_.pubkey === event.pubkey && !event.kind
               ) === index &&
@@ -159,7 +158,6 @@ export default function Search() {
       ? nostrAuthors
           .filter((user) => {
             if (
-              user.nip05 &&
               ((typeof user.display_name === "string" &&
                 user.display_name
                   ?.toLowerCase()
@@ -419,11 +417,17 @@ export default function Search() {
                           />
                         );
                     }
-                    if ([1].includes(item.kind) && !userMutedList.includes(item.pubkey))
+                    if (
+                      [1].includes(item.kind) &&
+                      !userMutedList.includes(item.pubkey)
+                    )
                       return (
                         <KindOne key={item.id} event={item} border={true} />
                       );
-                    if ([30023, 34235].includes(item.kind) && !userMutedList.includes(item.pubkey))
+                    if (
+                      [30023, 34235].includes(item.kind) &&
+                      !userMutedList.includes(item.pubkey)
+                    )
                       return <RepEventPreviewCard key={item.id} item={item} />;
                   })}
                   {isLoading && (

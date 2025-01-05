@@ -33,7 +33,6 @@ export default function MentionSuggestions({
           let tempData = [...prev, ...data.data];
           return tempData.filter((user, index, tempData) => {
             if (
-              user.nip05 &&
               tempData.findIndex(
                 (event_) => event_.pubkey === user.pubkey && !user.kind
               ) === index &&
@@ -52,7 +51,6 @@ export default function MentionSuggestions({
       const filteredUsers = mention
         ? nostrAuthors.filter((user) => {
             if (
-              user.nip05 &&
               ((typeof user.display_name === "string" &&
                 user.display_name
                   ?.toLowerCase()
