@@ -971,7 +971,9 @@ const englishTranslation = {
   A0sXNyM: "We got ya!",
   A9WT6DE: "Coming soon",
   AirKalq: "Heads up!",
-  ASGtOLO: "Are you sure you want to continue? This will clear your current edits.",
+  ASGtOLO:
+    "Are you sure you want to continue? This will clear your current edits.",
+  AYlOMYB: "Expires on {{date}}",
 };
 
 export default englishTranslation;
@@ -985,7 +987,6 @@ export default englishTranslation;
 
 // console.log(JSON.stringify(reorderObjectByValues(englishTranslation), null, 2));
 
-// AYlOMYB: "",
 // AOybB9U: "",
 // AozzmTY: "",
 // AnWFKlu: "",

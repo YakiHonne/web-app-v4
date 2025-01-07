@@ -18,6 +18,7 @@ import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import KindOne from "../../Components/Main/KindOne";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import { useTranslation } from "react-i18next";
+import bannedList from "../../Content/BannedList";
 
 const getKeyword = (location) => {
   let keyword = new URLSearchParams(location.search).get("keyword");
@@ -137,6 +138,7 @@ export default function Search() {
         return tempData
           .filter((event, index, tempData) => {
             if (
+              !bannedList.includes(event.pubkey) &&
               tempData.findIndex(
                 (event_) => event_.pubkey === event.pubkey && !event.kind
               ) === index &&
@@ -158,6 +160,7 @@ export default function Search() {
       ? nostrAuthors
           .filter((user) => {
             if (
+              !bannedList.includes(user.pubkey) &&
               ((typeof user.display_name === "string" &&
                 user.display_name
                   ?.toLowerCase()

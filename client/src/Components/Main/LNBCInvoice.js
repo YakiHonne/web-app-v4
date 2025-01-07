@@ -46,10 +46,12 @@ export default function LNBCInvoice({ lnbc }) {
       <div style={{ minWidth: "50%" }}>
         <p className="gray-c">{t("AvEHTiP")}</p>
         <div className="fx-centered fx-start-h">
-            <div className="bolt-bold-24"></div>
+          <div className="bolt-bold-24"></div>
           <h3>{amount} Sats</h3>
         </div>
-        <p className="gray-c">{convertDate(new Date(expiry))}</p>
+        <p className="gray-c">
+          {t("AYlOMYB", { date: convertDate(new Date(expiry)) })}
+        </p>
       </div>
       <ZapTip
         recipientLNURL={lnbc}

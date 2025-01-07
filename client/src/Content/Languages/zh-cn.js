@@ -924,6 +924,7 @@ const chineseTranslation = {
   AirKalq: "小心！",
   ASGtOLO: "您确定要继续吗？这将清除您当前的编辑。",
   A9WT6DE: "即将推出",
+  AYlOMYB: "到期日 {{date}}",
 };
 export default chineseTranslation;
 // const reorderObjectByValues = (obj) => {
