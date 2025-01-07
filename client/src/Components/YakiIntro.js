@@ -190,10 +190,8 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- Yakihonne is now multilingual! Enjoy the app in English and Chinese, with more languages coming soon, including Spanish, Portuguese, Thai, Arabic, Japanese, and Italian.
-- Added support for translating notes and articles into the app's selected language.
-- Copy-paste images to upload seamlessly across the app.
-- Resolved issues with secure DMs when logging in using a private key.
+- Added language support for Spanish, Portuguese, Thai, Japanese, and Italian.
+- Enabled support for processing invoice payments in notes.
 - General bug fixes and improvements.
 `}</p>
           </div>
