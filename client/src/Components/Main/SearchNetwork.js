@@ -12,6 +12,7 @@ import { getParsedRepEvent } from "../../Helpers/Encryptions";
 import SearchUserCard from "./SearchUserCard";
 import SearchContentCard from "./SearchContentCard";
 import { useTranslation } from "react-i18next";
+import bannedList from "../../Content/BannedList";
 
 export default function SearchNetwork({ exit }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
@@ -81,6 +82,7 @@ export default function SearchNetwork({ exit }) {
         return tempData
           .filter((event, index, tempData) => {
             if (
+              !bannedList.includes(event.pubkey) &&
               tempData.findIndex(
                 (event_) => event_.pubkey === event.pubkey && !event.kind
               ) === index &&
@@ -102,6 +104,7 @@ export default function SearchNetwork({ exit }) {
       ? nostrAuthors
           .filter((user) => {
             if (
+              !bannedList.includes(user.pubkey) &&
               ((typeof user.display_name === "string" &&
                 user.display_name
                   ?.toLowerCase()
@@ -123,7 +126,11 @@ export default function SearchNetwork({ exit }) {
               return user;
           })
           .slice(0, 25)
-      : Array.from(nostrAuthors.slice(0, 25));
+      : Array.from(
+          nostrAuthors
+            .filter((_) => !bannedList.includes(_.pubkey))
+            .slice(0, 25)
+        );
 
     setResults(filteredUsers);
     getUsersFromCache();

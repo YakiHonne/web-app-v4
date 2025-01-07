@@ -13,7 +13,7 @@ import {
 } from "../../Helpers/Encryptions";
 import { useParams } from "react-router-dom";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
-import { nip19 } from "nostr-tools";
+import { kinds, nip19 } from "nostr-tools";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ZapTip from "../../Components/Main/ZapTip";
@@ -292,6 +292,7 @@ const UserMetadata = ({ refreshUser }) => {
         let id = user_id.replaceAll(",", "").replaceAll(":", "");
         let pubkey = nip19.decode(id);
         setID(pubkey.data.pubkey || pubkey.data);
+        setIsNip05Verified(false)
       } catch (err) {
         console.log(err);
       }
@@ -324,7 +325,22 @@ const UserMetadata = ({ refreshUser }) => {
             followings: userStats_.follows_count,
             followers: userStats_.followers_count,
           });
-        dispatch(setFollowersCountSL(userStats_.followers_count));
+
+        if (userStats_.followers_count === 0) {
+          try {
+            let fCount = await axios.get(
+              "https://api.nostr.band/v0/stats/profile/" + id
+            );
+            fCount = fCount.data.stats[id].followers_pubkey_count;
+            setUserStats({
+              followings: userStats_.follows_count,
+              followers: fCount,
+            });
+            dispatch(setFollowersCountSL(fCount));
+          } catch (err) {
+            dispatch(setFollowersCountSL(0));
+          }
+        } else dispatch(setFollowersCountSL(userStats_.followers_count));
         setIsLoaded(true);
       }
       let p = new NDKUser({ pubkey: id });
@@ -1073,12 +1089,25 @@ const UserFollowers = ({ id, followersCount }) => {
     const fetchData = async () => {
       if (!isLoading) setIsLoading(true);
       let userFollowers = await getUserFollowers(id);
-      userFollowers = userFollowers
-        .filter((_) => _.kind === 0)
-        .map((_) => {
+      if (userFollowers) {
+        userFollowers = userFollowers
+          .filter((_) => _.kind === 0)
+          .map((_) => {
+            return getuserMetadata(_);
+          });
+        setFollowers(userFollowers);
+      } else {
+        let data = await getSubData([{ kinds: [3], "#p": [id] }]);
+
+        let users = await getSubData([
+          { kinds: [0], authors: [...new Set(data.pubkeys)] },
+        ]);
+
+        userFollowers = users.data.map((_) => {
           return getuserMetadata(_);
         });
-      setFollowers(userFollowers);
+        setFollowers(userFollowers);
+      }
     };
     if (showPeople) fetchData();
   }, [showPeople]);

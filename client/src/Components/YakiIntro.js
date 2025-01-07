@@ -182,7 +182,7 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated Dec 31, 2024
+                  Last updated Jan 07, 2025
                 </p>
               </div>
               <p className="orange-c p-medium">

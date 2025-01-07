@@ -146,6 +146,7 @@ export const getUserFollowers = async (pubkey) => {
       ]),
       requestId
     );
+    if (data[0] === "error") return false;
     return data;
   } catch (err) {
     console.log(err);
@@ -163,6 +164,7 @@ export const getUserStats = async (pubkey) => {
       ]),
       requestId
     );
+
     return data;
   } catch (err) {
     console.log(err);
@@ -245,7 +247,7 @@ export const getTrendingNotes1h = async () => {
         "REQ",
         requestId,
         {
-          cache: ["scored", { selector: "trending_1h"}],
+          cache: ["scored", { selector: "trending_1h" }],
         },
       ]),
       requestId

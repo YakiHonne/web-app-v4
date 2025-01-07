@@ -29,19 +29,31 @@ const supportedLanguage = [
     display_name: "Español",
     value: "es",
     left_el: <div className="flag-es"></div>,
-    disabled: true,
+    disabled: false,
   },
   {
     display_name: "Português",
     value: "pt",
     left_el: <div className="flag-pt"></div>,
-    disabled: true,
+    disabled: false,
+  },
+  {
+    display_name: "Italiano",
+    value: "it",
+    left_el: <div className="flag-it"></div>,
+    disabled: false,
   },
   {
     display_name: "แบบไทย",
     value: "th",
     left_el: <div className="flag-th"></div>,
-    disabled: true,
+    disabled: false,
+  },
+  {
+    display_name: "日本語",
+    value: "ja",
+    left_el: <div className="flag-ja"></div>,
+    disabled: false,
   },
   {
     display_name: "العربية",
@@ -49,21 +61,9 @@ const supportedLanguage = [
     left_el: <div className="flag-ar"></div>,
     disabled: true,
   },
-  {
-    display_name: "日本語",
-    value: "ja",
-    left_el: <div className="flag-ja"></div>,
-    disabled: true,
-  },
-  {
-    display_name: "Italiano",
-    value: "it",
-    left_el: <div className="flag-it"></div>,
-    disabled: true,
-  },
 ];
 
-const supportedLanguageKeys = ["en", "zh"];
+const supportedLanguageKeys = ["en", "zh", "es", "it", "pt", "th", "ja"];
 // const supportedLanguageKeys = ["en", "es", "zh", "pt", "ja", "th", "ar"];
 
 i18n
