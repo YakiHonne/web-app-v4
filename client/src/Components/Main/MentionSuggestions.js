@@ -5,9 +5,10 @@ import LoadingDots from "../LoadingDots";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { saveFetchedUsers } from "../../Helpers/DB";
-import { isHex } from "../../Helpers/Helpers";
+import { isHex, sortByKeyword } from "../../Helpers/Helpers";
 import SearchUserCard from "./SearchUserCard";
 import { useTranslation } from "react-i18next";
+import bannedList from "../../Content/BannedList";
 
 export default function MentionSuggestions({
   mention,
@@ -31,8 +32,9 @@ export default function MentionSuggestions({
         saveFetchedUsers(data.data);
         setUsers((prev) => {
           let tempData = [...prev, ...data.data];
-          return tempData.filter((user, index, tempData) => {
+          tempData = tempData.filter((user, index, tempData) => {
             if (
+              !bannedList.includes(user.pubkey) &&
               tempData.findIndex(
                 (event_) => event_.pubkey === user.pubkey && !user.kind
               ) === index &&
@@ -40,6 +42,7 @@ export default function MentionSuggestions({
             )
               return user;
           });
+          return sortByKeyword(tempData, mention).slice(0, 30);
         });
         setIsLoading(false);
       } catch (err) {
@@ -49,26 +52,30 @@ export default function MentionSuggestions({
     };
     const searchForUser = () => {
       const filteredUsers = mention
-        ? nostrAuthors.filter((user) => {
-            if (
-              ((typeof user.display_name === "string" &&
-                user.display_name
-                  ?.toLowerCase()
-                  .includes(mention?.toLowerCase())) ||
-                (typeof user.name === "string" &&
-                  user.name?.toLowerCase().includes(mention?.toLowerCase())) ||
-                (typeof user.lud06 === "string" &&
-                  user.lud06?.toLowerCase().includes(mention?.toLowerCase())) ||
-                (typeof user.nip05 === "string" &&
-                  user.nip05
+        ? sortByKeyword(
+            nostrAuthors.filter((user) => {
+              if (
+                !bannedList.includes(user.pubkey) &&
+                ((typeof user.display_name === "string" &&
+                  user.display_name
                     ?.toLowerCase()
-                    .includes(mention?.toLowerCase()))) &&
-              isHex(user.pubkey) &&
-              typeof user.about === "string"
-            )
-              return user;
-          })
-        : Array.from(nostrAuthors.slice(0, 100));
+                    .includes(mention?.toLowerCase())) ||
+                  (typeof user.name === "string" &&
+                    user.name
+                      ?.toLowerCase()
+                      .includes(mention?.toLowerCase())) ||
+                  (typeof user.nip05 === "string" &&
+                    user.nip05
+                      ?.toLowerCase()
+                      .includes(mention?.toLowerCase()))) &&
+                isHex(user.pubkey) &&
+                typeof user.about === "string"
+              )
+                return user;
+            }),
+            mention
+          ).slice(0, 30)
+        : Array.from(nostrAuthors.slice(0, 30));
       setUsers(filteredUsers);
       getUsersFromCache();
     };
@@ -96,7 +103,6 @@ export default function MentionSuggestions({
       return false;
     }
   };
-  console.dir(users, { depth: null });
 
   if (users === false) return;
 

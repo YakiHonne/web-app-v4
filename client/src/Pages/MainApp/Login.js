@@ -196,12 +196,11 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
         },
       ];
       let wallet = updateWallets(extWallet, keys.pub);
-      console.log(wallet);
+      
       if (wallet.length > 0) dispatch(setUserKeys(keys));
 
       // }
       setIsLoading(false);
-
       customHistory.back();
       return;
     } catch (err) {

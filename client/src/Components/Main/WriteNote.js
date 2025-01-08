@@ -533,7 +533,6 @@ export default function WriteNote({
                 </div>
                 <UploadFile
                   setImageURL={handleAddImage}
-                  setFileMetadata={() => null}
                   setIsUploadsLoading={() => null}
                 />
                 <Emojis setEmoji={(data) => handleInsertTextInPosition(data)} />

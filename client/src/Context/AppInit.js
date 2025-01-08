@@ -168,12 +168,10 @@ export default function AppInit() {
       previousMutedList.current = mutedlist;
       dispatch(setUserMutedList(mutedlist.mutedlist));
       if (mutedlist.mutedlist) {
-        for(let p of mutedlist.mutedlist) 
-        ndkInstance.mutedIds.set([p], ["p"]) 
+        for (let p of mutedlist.mutedlist) ndkInstance.mutedIds.set([p], ["p"]);
         // ndkInstance.mutedIds = new Map([
         //   mutedlist.mutedlist.map((p) => [p, "p"]),
         // ]);
-        
       }
     }
     if (
@@ -296,6 +294,7 @@ export default function AppInit() {
       let tempMutedList;
       let tempRelays;
       let tempBookmarks = [];
+      let tempAuthMetadata = false;
       let eose = false;
       subscription = ndkInstance.subscribe(
         [
@@ -465,6 +464,7 @@ export default function AppInit() {
           ) {
             lastUserMetadataTimestamp = event.created_at;
             let parsedEvent = getParsedAuthor(event);
+            tempAuthMetadata = true;
             dispatch(setUserMetadata(parsedEvent));
             addConnectedAccounts(parsedEvent, userKeys);
           }
@@ -481,6 +481,11 @@ export default function AppInit() {
         saveMutedlist(tempMutedList, userKeys.pub, lastMutedTimestamp);
         saveRelays(tempRelays, userKeys.pub, lastRelaysTimestamp);
         saveBookmarks(tempBookmarks, userKeys.pub);
+        if (!(tempAuthMetadata && lastUserMetadataTimestamp)) {
+          let emptyMetadata = getEmptyuserMetadata(userKeys.pub);
+          dispatch(setUserMetadata(emptyMetadata));
+          addConnectedAccounts(emptyMetadata, userKeys);
+        }
         eose = true;
         dispatch(setInitDMS(false));
       });

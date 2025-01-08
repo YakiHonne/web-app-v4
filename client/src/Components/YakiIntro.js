@@ -190,8 +190,8 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- Added language support for Spanish, Portuguese, Thai, Japanese, and Italian.
-- Enabled support for processing invoice payments in notes.
+- Added support for uploading multiple images or videos in notes, comments, and messages.
+- Refined the search mechanism for better accuracy and performance.
 - General bug fixes and improvements.
 `}</p>
           </div>

@@ -12,7 +12,7 @@ export default function UploadFile({
   small = false,
   setImageURL,
   setIsUploadsLoading = () => null,
-  setFileMetadata = () => null,
+  setFileMetadata = null,
 }) {
   const userKeys = useSelector((state) => state.userKeys);
   const dispatch = useDispatch();
@@ -21,10 +21,15 @@ export default function UploadFile({
   const [pastedImgURL, setPastedImgURL] = useState(false);
   const [pastedImgFile, setPastedImgFile] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [filesCount, setFilesCount] = useState(1);
+  const [currentCount, setCurrentCount] = useState(0);
 
   const Upload = async (e) => {
-    let file = e.target.files[0];
-    if (!file && (!userKeys.sec || !userKeys.ext)) {
+    let files = e.target.files;
+    let index = 0;
+    setFilesCount(files.length);
+    let images = []
+    if (!files && (!userKeys.sec || !userKeys.ext)) {
       dispatch(
         setToast({
           type: 2,
@@ -33,14 +38,19 @@ export default function UploadFile({
       );
       return;
     }
-    setFileMetadata(file);
-    setIsLoading(true);
-    setIsUploadsLoading(true);
-    let url = await FileUpload(file, "nostr.build", userKeys, setProgress);
-    if (url) setImageURL(url);
-    setIsLoading(false);
-    setIsUploadsLoading(false);
-    setProgress(0)
+    for (let file of files) {
+      setCurrentCount(index);
+      setIsLoading(true);
+      setIsUploadsLoading(true);
+      let url = await FileUpload(file, "nostr.build", userKeys, setProgress);
+      if (url) images.push(url);
+      if (setFileMetadata) setFileMetadata(file);
+      setIsLoading(false);
+      setIsUploadsLoading(false);
+      setProgress(0);
+      index += 1;
+    }
+    setImageURL(images.join(" "));
   };
 
   useEffect(() => {
@@ -131,6 +141,7 @@ export default function UploadFile({
           type="file"
           name="file-upload"
           id="file-upload"
+          multiple={setFileMetadata ? false : true}
           style={{
             position: "absolute",
             left: 0,
@@ -145,11 +156,37 @@ export default function UploadFile({
         {isLoading ? (
           small ? (
             // <div style={{ scale: ".6" }}>
-              <ProgressCirc percentage={progress} size={18} width={3}/>
-              // {/* <LoadingDots /> */}
-            // </div>
+            <ProgressCirc
+              percentage={progress}
+              size={18}
+              width={3}
+              innerComp={
+                filesCount > 1 ? (
+                  <span className="p-small gray-c">
+                    {currentCount}/{filesCount}
+                  </span>
+                ) : (
+                  <></>
+                )
+              }
+            />
           ) : (
-            <ProgressCirc percentage={progress} size={22} width={3}/>
+            // {/* <LoadingDots /> */}
+            // </div>
+            <ProgressCirc
+              percentage={progress}
+              size={22}
+              width={3}
+              innerComp={
+                filesCount > 1 ? (
+                  <span className="p-small gray-c">
+                    {currentCount}/{filesCount}
+                  </span>
+                ) : (
+                  <></>
+                )
+              }
+            />
             // <LoadingDots />
           )
         ) : (
