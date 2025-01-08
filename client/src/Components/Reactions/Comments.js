@@ -315,7 +315,6 @@ export default function Comments({
                 round={false}
                 small={false}
                 setImageURL={handleAddImage}
-                setFileMetadata={() => null}
                 setIsUploadsLoading={() => null}
               />
               <Emojis setEmoji={(data) => handleInsertTextInPosition(data)} />

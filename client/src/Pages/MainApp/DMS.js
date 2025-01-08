@@ -885,7 +885,7 @@ const ConversationBox = ({ convo, back }) => {
       >
         <div className="fx-centered">
           <div className="round-icon desk-hide" onClick={back}>
-            <div className="arrow arrow-back" ></div>
+            <div className="arrow arrow-back"></div>
           </div>
           <UserProfilePicNOSTR
             img={convo.picture}
@@ -1211,7 +1211,6 @@ const ConversationBox = ({ convo, back }) => {
                 round={false}
                 setImageURL={(data) => setMessage(`${message} ${data}`)}
                 setIsUploadsLoading={() => null}
-                setFileMetadata={() => null}
               />
             </div>
           </div>

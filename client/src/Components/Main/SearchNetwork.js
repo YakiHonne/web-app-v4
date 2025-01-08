@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { compactContent, getLinkFromAddr, isHex } from "../../Helpers/Helpers";
+import {
+  compactContent,
+  getLinkFromAddr,
+  isHex,
+  sortByKeyword,
+} from "../../Helpers/Helpers";
 import { customHistory } from "../../Helpers/History";
 import { useSelector } from "react-redux";
 import axios from "axios";
@@ -79,18 +84,17 @@ export default function SearchNetwork({ exit }) {
       saveFetchedUsers(data.data);
       setResults((prev) => {
         let tempData = [...prev, ...data.data];
-        return tempData
-          .filter((event, index, tempData) => {
-            if (
-              !bannedList.includes(event.pubkey) &&
-              tempData.findIndex(
-                (event_) => event_.pubkey === event.pubkey && !event.kind
-              ) === index &&
-              isHex(event.pubkey)
-            )
-              return event;
-          })
-          .slice(0, 20);
+        tempData = tempData.filter((event, index, tempData) => {
+          if (
+            !bannedList.includes(event.pubkey) &&
+            tempData.findIndex(
+              (event_) => event_.pubkey === event.pubkey && !event.kind
+            ) === index &&
+            isHex(event.pubkey)
+          )
+            return event;
+        });
+        return sortByKeyword(tempData, searchKeyword).slice(0, 30);
       });
       setIsLoading(false);
     } catch (err) {
@@ -101,8 +105,8 @@ export default function SearchNetwork({ exit }) {
 
   const searchForUser = () => {
     const filteredUsers = searchKeyword
-      ? nostrAuthors
-          .filter((user) => {
+      ? sortByKeyword(
+          nostrAuthors.filter((user) => {
             if (
               !bannedList.includes(user.pubkey) &&
               ((typeof user.display_name === "string" &&
@@ -113,10 +117,6 @@ export default function SearchNetwork({ exit }) {
                   user.name
                     ?.toLowerCase()
                     .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.lud06 === "string" &&
-                  user.lud06
-                    ?.toLowerCase()
-                    .includes(searchKeyword?.toLowerCase())) ||
                 (typeof user.nip05 === "string" &&
                   user.nip05
                     ?.toLowerCase()
@@ -124,12 +124,13 @@ export default function SearchNetwork({ exit }) {
               isHex(user.pubkey)
             )
               return user;
-          })
-          .slice(0, 25)
+          }),
+          searchKeyword
+        ).slice(0, 25)
       : Array.from(
           nostrAuthors
             .filter((_) => !bannedList.includes(_.pubkey))
-            .slice(0, 25)
+            .slice(0, 30)
         );
 
     setResults(filteredUsers);

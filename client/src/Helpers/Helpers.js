@@ -277,7 +277,7 @@ const getNoteTree = async (note, minimal = false) => {
       });
       finalTree.push(<Fragment key={key}>{finalOutput} </Fragment>);
     } else if (el.startsWith("lnbc") && el.length > 30) {
-      finalTree.push(<LNBCInvoice lnbc={el} key={key}/>);
+      finalTree.push(<LNBCInvoice lnbc={el} key={key} />);
     } else if (el.startsWith("#")) {
       const match = el.match(/(#+)([\w-+]+)/);
 
@@ -1556,6 +1556,104 @@ const copyText = (value, message, event) => {
   );
 };
 
+function getLevenshteinDistance(a, b) {
+  const lenA = a.length;
+  const lenB = b.length;
+
+  if (lenA === 0) return lenB;
+  if (lenB === 0) return lenA;
+
+  const matrix = Array.from({ length: lenA + 1 }, (_, i) =>
+    Array(lenB + 1).fill(0)
+  );
+
+  for (let i = 0; i <= lenA; i++) matrix[i][0] = i;
+  for (let j = 0; j <= lenB; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= lenA; i++) {
+    for (let j = 1; j <= lenB; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return matrix[lenA][lenB];
+}
+
+function sortByKeyword(array, keyword) {
+  console.log(
+    keyword,
+    array.map((_) => {
+      return {
+        name: _.display_name || _.name,
+        score: getLevenshteinDistance(
+          _.display_name.toLowerCase() || _.name.toLowerCase(),
+          keyword.toLowerCase()
+        ),
+      };
+    })
+  );
+
+  return array.sort((a, b) => {
+    const aHasNip05 = a.nip05 ? 1 : 0;
+    const bHasNip05 = b.nip05 ? 1 : 0;
+
+    const nameA = a.display_name.toLowerCase() || a.name.toLowerCase();
+    const nameB = b.display_name.toLowerCase() || b.name.toLowerCase();
+
+    const aKeywordPriority = nameA
+      .toLowerCase()
+      .startsWith(keyword.toLowerCase())
+      ? 2
+      : nameA.toLowerCase().includes(keyword.toLowerCase())
+      ? 1
+      : 0;
+    const bKeywordPriority = nameB
+      .toLowerCase()
+      .startsWith(keyword.toLowerCase())
+      ? 2
+      : nameB.toLowerCase().includes(keyword.toLowerCase())
+      ? 1
+      : 0;
+
+    const scoreA = getLevenshteinDistance(nameA, keyword.toLowerCase());
+    const scoreB = getLevenshteinDistance(nameB, keyword.toLowerCase());
+
+    const aScore = 0 + aKeywordPriority + aHasNip05;
+    const bScore = 0 + bKeywordPriority + bHasNip05;
+
+    if (aScore !== bScore) return bScore - aScore;
+    if (aHasNip05 !== bHasNip05) return bHasNip05 - aHasNip05;
+    return scoreB - scoreA;
+  });
+
+  // return array.sort((a, b) => {
+  //   // if (!a.nip05 && b.nip05) return 1;
+  //   // if (a.nip05 && !b.nip05) return -1;
+
+  //   const distanceA = getLevenshteinDistance(
+  //     a.display_name.toLowerCase() || a.name.toLowerCase(),
+  //     keyword.toLowerCase()
+  //   );
+  //   const distanceB = getLevenshteinDistance(
+  //     b.display_name.toLowerCase() || b.name.toLowerCase(),
+  //     keyword.toLowerCase()
+  //   );
+
+  //   return distanceA - distanceB;
+  // });
+  // return array.sort((a, b) => {
+  //   const distanceA = getLevenshteinDistance(a.display_name || b.name, keyword);
+  //   const distanceB = getLevenshteinDistance(b.display_name || b.name, keyword);
+  //   return distanceA - distanceB; // Sort by ascending distance
+  // });
+}
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -1600,4 +1698,5 @@ export {
   handleAppDirection,
   getContentTranslationConfig,
   updateContentTranslationConfig,
+  sortByKeyword,
 };

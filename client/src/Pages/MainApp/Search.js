@@ -4,7 +4,7 @@ import ArrowUp from "../../Components/ArrowUp";
 import { Helmet } from "react-helmet";
 import { useDispatch, useSelector } from "react-redux";
 import { nip19 } from "nostr-tools";
-import { getLinkFromAddr, isHex } from "../../Helpers/Helpers";
+import { getLinkFromAddr, isHex, sortByKeyword } from "../../Helpers/Helpers";
 import { getParsedNote, getParsedRepEvent } from "../../Helpers/Encryptions";
 import { getSubData } from "../../Helpers/Controlers";
 import { customHistory } from "../../Helpers/History";
@@ -135,18 +135,18 @@ export default function Search() {
       saveFetchedUsers(data.data);
       setResults((prev) => {
         let tempData = [...prev, ...data.data];
-        return tempData
-          .filter((event, index, tempData) => {
-            if (
-              !bannedList.includes(event.pubkey) &&
-              tempData.findIndex(
-                (event_) => event_.pubkey === event.pubkey && !event.kind
-              ) === index &&
-              isHex(event.pubkey)
-            )
-              return event;
-          })
-          .slice(0, 20);
+        tempData = tempData.filter((event, index, tempData) => {
+          if (
+            !bannedList.includes(event.pubkey) &&
+            tempData.findIndex(
+              (event_) => event_.pubkey === event.pubkey && !event.kind
+            ) === index &&
+            isHex(event.pubkey)
+          )
+            return event;
+        });
+
+        return sortByKeyword(tempData, searchKeyword).slice(0, 30);
       });
       setIsLoading(false);
     } catch (err) {
@@ -157,8 +157,8 @@ export default function Search() {
 
   const searchForUser = () => {
     const filteredUsers = searchKeyword
-      ? nostrAuthors
-          .filter((user) => {
+      ? sortByKeyword(
+          nostrAuthors.filter((user) => {
             if (
               !bannedList.includes(user.pubkey) &&
               ((typeof user.display_name === "string" &&
@@ -169,10 +169,6 @@ export default function Search() {
                   user.name
                     ?.toLowerCase()
                     .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.lud06 === "string" &&
-                  user.lud06
-                    ?.toLowerCase()
-                    .includes(searchKeyword?.toLowerCase())) ||
                 (typeof user.nip05 === "string" &&
                   user.nip05
                     ?.toLowerCase()
@@ -180,9 +176,10 @@ export default function Search() {
               isHex(user.pubkey)
             )
               return user;
-          })
-          .slice(0, 25)
-      : Array.from(nostrAuthors.slice(0, 25));
+          }),
+          searchKeyword
+        ).slice(0, 30)
+      : Array.from(nostrAuthors.slice(0, 30));
 
     setResults(filteredUsers);
     getUsersFromCache();

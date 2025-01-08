@@ -1112,7 +1112,7 @@ const SmartWidgetBuilder = ({
                   <div
                     style={{
                       position: "absolute",
-                     
+
                       top: "110%",
                       border: "none",
                       maxWidth: "400px",
@@ -2394,7 +2394,6 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           <UploadFile
             round={true}
             setImageURL={(url) => handleMetadata("url", url)}
-            setFileMetadata={() => null}
             setIsUploadsLoading={() => null}
           />
         </div>
@@ -2424,7 +2423,6 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           <UploadFile
             round={true}
             setImageURL={(url) => handleMetadata("url", url)}
-            setFileMetadata={() => null}
             setIsUploadsLoading={() => null}
           />
         </div>
