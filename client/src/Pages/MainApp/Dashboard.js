@@ -215,17 +215,24 @@ export default function Dashboard() {
   );
   const tabs = [t("AJDdA3h"), t("AepwLlB"), t("AqwEL0G"), t("AvcFYqP")];
 
+  const getNostrBandStats = async (pubkey) => {
+    try {
+      let stats = await Promise.race([
+        axios.get(`https://api.nostr.band/v0/stats/profile/${pubkey}`),
+        sleepTimer(),
+      ]);
+      return stats
+    } catch (err) {
+      return false
+    }
+  };
+
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
         let [userProfile, sats, popularNotes, userContent] = await Promise.all([
           getUserStats(userKeys.pub),
-          Promise.race([
-            axios.get(
-              `https://api.nostr.band/v0/stats/profile/${userKeys.pub}`
-            ),
-            sleepTimer(),
-          ]),
+          getNostrBandStats(userKeys.pub),
           getPopularNotes(userKeys.pub),
           getSubData([
             {
@@ -239,7 +246,6 @@ export default function Dashboard() {
         userProfile = JSON.parse(
           userProfile.find((event) => event.kind === 10000105).content
         );
-
         let zaps_sent = sats
           ? sats.data.stats[userKeys.pub].zaps_sent
           : { count: 0, msats: 0 };
@@ -648,7 +654,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
         </div>
         <div className="fit-container fx-scattered  box-pad-v box-pad-h">
           <h3 className="p-caps">
-            { ["articles", "drafts"].includes(contentFrom) && t("AesMg52")}
+            {["articles", "drafts"].includes(contentFrom) && t("AesMg52")}
             {contentFrom === "widgets" && t("A2mdxcf")}
             {contentFrom === "videos" && t("AStkKfQ")}
             {contentFrom === "curations" && t("AVysZ1s")}
