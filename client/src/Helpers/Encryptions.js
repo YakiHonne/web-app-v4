@@ -5,8 +5,9 @@ import * as secp from "@noble/secp256k1";
 import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
-import { getNoteTree } from "./Helpers";
+import { getAppLang, getKeys, getNoteTree } from "./Helpers";
 import { t } from "i18next";
+import axiosInstance from "./HTTP_Client";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -290,8 +291,24 @@ const detectDirection = (text) => {
   return "LTR";
 };
 
+const enableTranslation = async (text) => {
+  try {
+    const userLang = getAppLang();
+    const userKeys = getKeys();
+    let lang = await axiosInstance.post("/api/v1/translate/detect", { text });
+    lang = lang.data;
+    if (!userKeys) return false;
+    if (lang === userLang) return false;
+    return true;
+  } catch (err) {
+    console.log(err);
+    return true;
+  }
+};
+
 const getParsedNote = async (event) => {
   try {
+    // let isTransEnabled = true
     let isQuote = event.tags.find((tag) => tag[0] === "q");
     let checkForLabel = event.tags.find((tag) => tag[0] === "l");
     let isComment = event.tags.find(
@@ -608,5 +625,6 @@ export {
   getParsedNote,
   sortEvents,
   timeAgo,
-  detectDirection
+  detectDirection,
+  enableTranslation
 };

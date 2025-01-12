@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { nip19 } from "nostr-tools";
-import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
+import {
+  enableTranslation,
+  getEmptyuserMetadata,
+} from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
@@ -38,7 +41,6 @@ export default function NotesComment({
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
-  const isPublishing = useSelector((state) => state.isPublishing);
   const userMutedList = useSelector((state) => state.userMutedList);
 
   const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
@@ -50,7 +52,7 @@ export default function NotesComment({
   const [isNoteTranslating, setIsNoteTranslating] = useState("");
   const [translatedNote, setTranslatedNote] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
-
+  const [isTransEnabled, setIsTransEnabled] = useState(false);
   const isLikedByAuthor = useMemo(() => {
     return postActions.likes.likes.find(
       (item) => item.pubkey === rootNotePubkey
@@ -113,11 +115,13 @@ export default function NotesComment({
     fetchData();
   }, [nostrAuthors]);
   useEffect(() => {
-    if (!isPublishing) {
-      setIsLoading(false);
-      setToggleComment(false);
-    }
-  }, [isPublishing]);
+    const detectLang = async () => {
+      let isEnabled = await enableTranslation(event.content);
+
+      setIsTransEnabled(isEnabled);
+    };
+    detectLang();
+  }, []);
 
   const muteUnmute = async () => {
     try {
@@ -272,7 +276,9 @@ export default function NotesComment({
           </p>
         </div>
         <div
-          className={`fx-centered fx-col fit-container note-indent-2 ${hasReplies ? "reply-side-border-2" : ""}`}
+          className={`fx-centered fx-col fit-container note-indent-2 ${
+            hasReplies ? "reply-side-border-2" : ""
+          }`}
           style={{
             // marginLeft: "1rem",
             // marginLeft: ".39rem",
@@ -285,25 +291,24 @@ export default function NotesComment({
           <div className="fit-container pointer" onClick={onClick}>
             {showTranslation ? translatedNote : event.note_tree}
           </div>
-          <div
-            className="fit-container"
-            style={{ paddingTop: ".5rem" }}
-          >
-            {!isNoteTranslating && !showTranslation && (
-              <p className="btn-text-gray pointer" onClick={translateNote}>
-                {t("AdHV2qJ")}
-              </p>
-            )}
-            {!isNoteTranslating && showTranslation && (
-              <p
-                className="btn-text-gray pointer"
-                onClick={() => setShowTranslation(false)}
-              >
-                {t("AE08Wte")}
-              </p>
-            )}
-            {isNoteTranslating && <LoadingDots />}
-          </div>
+          {isTransEnabled && (
+            <div className="fit-container" style={{ paddingTop: ".5rem" }}>
+              {!isNoteTranslating && !showTranslation && (
+                <p className="btn-text-gray pointer" onClick={translateNote}>
+                  {t("AdHV2qJ")}
+                </p>
+              )}
+              {!isNoteTranslating && showTranslation && (
+                <p
+                  className="btn-text-gray pointer"
+                  onClick={() => setShowTranslation(false)}
+                >
+                  {t("AE08Wte")}
+                </p>
+              )}
+              {isNoteTranslating && <LoadingDots />}
+            </div>
+          )}
           {!noReactions && (
             <div className="fx-scattered fit-container">
               <div className="fx-centered" style={{ columnGap: "16px" }}>
