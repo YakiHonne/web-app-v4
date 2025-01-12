@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { nip19 } from "nostr-tools";
-import { getEmptyuserMetadata, getParsedNote } from "../../Helpers/Encryptions";
+import {
+  enableTranslation,
+  getEmptyuserMetadata,
+  getParsedNote,
+} from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
@@ -30,7 +34,6 @@ import { NDKUser } from "@nostr-dev-kit/ndk";
 import HistorySection from "../../Components/Main/HistorySection";
 import { useTranslation } from "react-i18next";
 import { getNoteTree } from "../../Helpers/Helpers";
-import { decode } from "light-bolt11-decoder";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function Note() {
@@ -52,6 +55,7 @@ export default function Note() {
   const [isNoteTranslating, setIsNoteTranslating] = useState("");
   const [translatedNote, setTranslatedNote] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
+  const [isTransEnabled, setIsTransEnabled] = useState(false);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -95,6 +99,15 @@ export default function Note() {
     };
     return checkProfile();
   }, [userMutedList, author]);
+
+  useEffect(() => {
+    const detectLang = async () => {
+      let isEnabled = await enableTranslation(note.content);
+
+      setIsTransEnabled(isEnabled);
+    };
+    if (note) detectLang();
+  }, [note]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -381,28 +394,30 @@ export default function Note() {
                       <div className="fit-container box-pad-h-m">
                         {showTranslation ? translatedNote : note.note_tree}
                       </div>
-                      <div
-                        className="fit-container box-pad-h-m"
-                        style={{ paddingTop: ".5rem" }}
-                      >
-                        {!isNoteTranslating && !showTranslation && (
-                          <p
-                            className="btn-text-gray pointer"
-                            onClick={translateNote}
-                          >
-                            {t("AdHV2qJ")}
-                          </p>
-                        )}
-                        {!isNoteTranslating && showTranslation && (
-                          <p
-                            className="btn-text-gray pointer"
-                            onClick={() => setShowTranslation(false)}
-                          >
-                            {t("AE08Wte")}
-                          </p>
-                        )}
-                        {isNoteTranslating && <LoadingDots />}
-                      </div>
+                      {isTransEnabled && (
+                        <div
+                          className="fit-container box-pad-h-m"
+                          style={{ paddingTop: ".5rem" }}
+                        >
+                          {!isNoteTranslating && !showTranslation && (
+                            <p
+                              className="btn-text-gray pointer"
+                              onClick={translateNote}
+                            >
+                              {t("AdHV2qJ")}
+                            </p>
+                          )}
+                          {!isNoteTranslating && showTranslation && (
+                            <p
+                              className="btn-text-gray pointer"
+                              onClick={() => setShowTranslation(false)}
+                            >
+                              {t("AE08Wte")}
+                            </p>
+                          )}
+                          {isNoteTranslating && <LoadingDots />}
+                        </div>
+                      )}
                       <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
                         <div
                           className="fx-centered"

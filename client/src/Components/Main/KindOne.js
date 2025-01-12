@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
+import {
+  enableTranslation,
+  getBech32,
+  getEmptyuserMetadata,
+} from "../../Helpers/Encryptions";
 import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
@@ -48,6 +52,7 @@ export default function KindOne({
   const [isNoteTranslating, setIsNoteTranslating] = useState("");
   const [translatedNote, setTranslatedNote] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
+  const [isTransEnabled, setIsTransEnabled] = useState(false);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -107,11 +112,13 @@ export default function KindOne({
   }, [nostrAuthors]);
 
   useEffect(() => {
-    if (!isPublishing) {
-      setIsLoading(false);
-      setToggleComment(false);
-    }
-  }, [isPublishing]);
+    const detectLang = async () => {
+      let isEnabled = await enableTranslation(event.content);
+
+      setIsTransEnabled(isEnabled);
+    };
+    detectLang();
+  }, []);
 
   const onClick = (e) => {
     e.stopPropagation();
@@ -297,25 +304,27 @@ export default function KindOne({
               </div>
             </div>
           </div>
-          <div
-            className="fit-container note-indent"
-            style={{ paddingTop: ".5rem" }}
-          >
-            {!isNoteTranslating && !showTranslation && (
-              <p className="btn-text-gray" onClick={translateNote}>
-                {t("AdHV2qJ")}
-              </p>
-            )}
-            {!isNoteTranslating && showTranslation && (
-              <p
-                className="btn-text-gray"
-                onClick={() => setShowTranslation(false)}
-              >
-                {t("AE08Wte")}
-              </p>
-            )}
-            {isNoteTranslating && <LoadingDots />}
-          </div>
+          {isTransEnabled && (
+            <div
+              className="fit-container note-indent"
+              style={{ paddingTop: ".5rem" }}
+            >
+              {!isNoteTranslating && !showTranslation && (
+                <p className="btn-text-gray" onClick={translateNote}>
+                  {t("AdHV2qJ")}
+                </p>
+              )}
+              {!isNoteTranslating && showTranslation && (
+                <p
+                  className="btn-text-gray"
+                  onClick={() => setShowTranslation(false)}
+                >
+                  {t("AE08Wte")}
+                </p>
+              )}
+              {isNoteTranslating && <LoadingDots />}
+            </div>
+          )}
           {reactions && (
             <div
               className="fx-scattered fit-container note-indent"

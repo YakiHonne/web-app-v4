@@ -292,7 +292,7 @@ const UserMetadata = ({ refreshUser }) => {
         let id = user_id.replaceAll(",", "").replaceAll(":", "");
         let pubkey = nip19.decode(id);
         setID(pubkey.data.pubkey || pubkey.data);
-        setIsNip05Verified(false)
+        setIsNip05Verified(false);
       } catch (err) {
         console.log(err);
       }
@@ -1103,9 +1103,14 @@ const UserFollowers = ({ id, followersCount }) => {
           { kinds: [0], authors: [...new Set(data.pubkeys)] },
         ]);
 
-        userFollowers = users.data.map((_) => {
-          return getuserMetadata(_);
-        });
+        userFollowers = users.data
+          .filter((user, index, arr) => {
+            if (arr.findIndex((_) => _.pubkey === user.pubkey) === index)
+              return user;
+          })
+          .map((_) => {
+            return getuserMetadata(_);
+          });
         setFollowers(userFollowers);
       }
     };

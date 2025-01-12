@@ -14,6 +14,7 @@ import {
   minimizeKey,
   getParsedAuthor,
   detectDirection,
+  enableTranslation,
 } from "../../Helpers/Encryptions";
 import {
   copyText,
@@ -73,6 +74,7 @@ export default function Article() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [isContentTranslating, setIsContentTranslating] = useState(false);
   const { postActions } = useRepEventStats(post.aTag, post.pubkey);
+  const [isTransEnabled, setIsTransEnabled] = useState(false);
   const containerRef = useRef(null);
 
   const isLiked = useMemo(() => {
@@ -232,6 +234,15 @@ export default function Article() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const detectLang = async () => {
+      let isEnabled = await enableTranslation(post.content);
+
+      setIsTransEnabled(isEnabled);
+    };
+    if (post) detectLang();
+  }, [post]);
+
   const translateArticle = async () => {
     setIsContentTranslating(true);
     if (translatedContent) {
@@ -263,7 +274,7 @@ export default function Article() {
         setTranslatedTitle(res.res.split("ABCAF")[0]);
         setTranslatedDescription(res.res.split("ABCAF")[1]);
         setTranslatedContent(res.res.split("ABCAF")[2]);
-        setTranslatedDir(detectDirection(res.res.split("ABCAF")[2]))
+        setTranslatedDir(detectDirection(res.res.split("ABCAF")[2]));
         setShowTranslation(true);
       }
       setIsContentTranslating(false);
@@ -375,9 +386,6 @@ export default function Article() {
                                       author.name ||
                                       minimizeKey(post.pubkey),
                                   })}
-                                  {/* {author.display_name ||
-                                    author.name ||
-                                    minimizeKey(post.pubkey)} */}
                                 </p>
                               </div>
                               <p className="gray-c p-medium">&#8226;</p>
@@ -505,7 +513,10 @@ export default function Article() {
                         </div>
                       </div>
                       {post.description && (
-                        <div className="fit-container " dir={showTranslation ? translatedDir : post.dir}>
+                        <div
+                          className="fit-container "
+                          dir={showTranslation ? translatedDir : post.dir}
+                        >
                           {showTranslation
                             ? translatedDescription
                             : post.description}
@@ -552,7 +563,10 @@ export default function Article() {
                         ></div>
                       </div>
                     )}
-                    <div className="article fit-container" dir={showTranslation ? translatedDir : post.dir}>
+                    <div
+                      className="article fit-container"
+                      dir={showTranslation ? translatedDir : post.dir}
+                    >
                       <MarkdownPreview
                         wrapperElement={{
                           "data-color-mode":
@@ -704,53 +718,54 @@ export default function Article() {
                   borderTop: "1px solid var(--very-dim-gray)",
                 }}
               >
-                <div
-                  style={{ position: "relative" }}
-                  className="slide-up fx-centered fit-container"
-                >
-                  {!isContentTranslating && !showTranslation && (
-                    <button
-                      className="btn btn-normal slide-up"
-                      style={{
-                        position: "absolute",
-                        top: "-70px",
-                        borderRadius: "45px",
-                        minWidth: "max-content",
-                      }}
-                      onClick={translateArticle}
-                    >
-                      {t("AdHV2qJ")}
-                    </button>
-                  )}
-                  {!isContentTranslating && showTranslation && (
-                    <button
-                      className="btn btn-red slide-up"
-                      style={{
-                        position: "absolute",
-                        top: "-70px",
-                        borderRadius: "45px",
-                        minWidth: "max-content",
-                        
-                      }}
-                      onClick={() => setShowTranslation(false)}
-                    >
-                      {t("AE08Wte")}
-                    </button>
-                  )}
-                  {isContentTranslating && (
-                    <button
-                      className="btn btn-normal slide-up"
-                      style={{
-                        position: "absolute",
-                        top: "-70px",
-                        borderRadius: "45px",
-                        minWidth: "max-content",
-                      }}
-                    >
-                      <LoadingDots />
-                    </button>
-                  )}
-                </div>
+                {isTransEnabled && (
+                  <div
+                    style={{ position: "relative" }}
+                    className="slide-up fx-centered fit-container"
+                  >
+                    {!isContentTranslating && !showTranslation && (
+                      <button
+                        className="btn btn-normal slide-up"
+                        style={{
+                          position: "absolute",
+                          top: "-70px",
+                          borderRadius: "45px",
+                          minWidth: "max-content",
+                        }}
+                        onClick={translateArticle}
+                      >
+                        {t("AdHV2qJ")}
+                      </button>
+                    )}
+                    {!isContentTranslating && showTranslation && (
+                      <button
+                        className="btn btn-red slide-up"
+                        style={{
+                          position: "absolute",
+                          top: "-70px",
+                          borderRadius: "45px",
+                          minWidth: "max-content",
+                        }}
+                        onClick={() => setShowTranslation(false)}
+                      >
+                        {t("AE08Wte")}
+                      </button>
+                    )}
+                    {isContentTranslating && (
+                      <button
+                        className="btn btn-normal slide-up"
+                        style={{
+                          position: "absolute",
+                          top: "-70px",
+                          borderRadius: "45px",
+                          minWidth: "max-content",
+                        }}
+                      >
+                        <LoadingDots />
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="main-middle fx-even">
                   <div className="fx-centered  pointer">
                     <div

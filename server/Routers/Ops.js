@@ -4,11 +4,17 @@ const { utils } = require("noble-secp256k1");
 const router = express.Router();
 const topics = require("../DB/Topics");
 const OpenAI = require("openai");
+const langdetect = require("langdetect");
 const UncensoredNotes = require("../Models/UncensoredNotes");
 const UNRatings = require("../Models/UNRatings");
 const SealedNotes = require("../Models/SealedNotes");
 const UserLevels = require("../Models/UserLevels");
-const { auth_user, user_login, user_tokenizing, auth_data } = require("../Helpers/Auth");
+const {
+  auth_user,
+  user_login,
+  user_tokenizing,
+  auth_data,
+} = require("../Helpers/Auth");
 const { actions_keys, levels, tiers } = require("../DB/LevelsActions");
 const MongoStore = require("connect-mongo");
 const Users = require("../Models/Users");
@@ -452,6 +458,17 @@ router.get("/api/v1/user-impact", async (req, res) => {
   }
 });
 
+router.post("/api/v1/translate/detect", auth_data, async (req, res) => {
+  try {
+    let { text } = req.body;
+    if (!text) return res.status(403).send({ message: "No text was provided" });
+    const lang = langdetect.detectOne(text);
+    res.send(lang);
+  } catch (err) {
+    console.log(err);
+    res.send({ status: 500, res: "" });
+  }
+});
 router.post("/api/v1/translate", auth_data, async (req, res) => {
   try {
     let { service, lang, text } = req.body;
