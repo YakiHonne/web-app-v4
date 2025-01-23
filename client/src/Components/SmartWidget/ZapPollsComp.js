@@ -13,7 +13,7 @@ import {
   shortenKey,
 } from "../../Helpers/Encryptions";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
+import UserProfilePic from "../Main/UserProfilePic";
 import QRCode from "react-qr-code";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import { webln } from "@getalby/sdk";
@@ -423,6 +423,7 @@ export default function ZapPollsComp({
                     zIndex: 2,
                     position: "relative",
                   }}
+                  className="p-one-line"
                 >
                   {option}
                 </p>
@@ -804,7 +805,7 @@ const Cashier = ({
         </div>
         <div className="fx-centered box-marg-s">
           <div className="fx-centered fx-col">
-            <UserProfilePicNOSTR size={54} mainAccountUser={true} />
+            <UserProfilePic size={54} mainAccountUser={true} />
             <p className="gray-c p-medium">{userMetadata.name}</p>
           </div>
           <div style={{ position: "relative", width: "30%" }}>
@@ -823,7 +824,7 @@ const Cashier = ({
             )}
           </div>
           <div className="fx-centered fx-col">
-            <UserProfilePicNOSTR
+            <UserProfilePic
               size={54}
               img={recipientInfo.img || recipientInfo.picture}
               mainAccountUser={false}

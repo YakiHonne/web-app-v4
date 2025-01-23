@@ -6,7 +6,7 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 
 
-export default function ToDeletePostNOSTR({
+export default function ToDeletePost({
   exit,
   exitAndRefresh,
   post_id,

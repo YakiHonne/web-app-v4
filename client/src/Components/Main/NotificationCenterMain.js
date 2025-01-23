@@ -4,7 +4,7 @@ import {
   getZapper,
   removeEventsDuplicants,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import Date_ from "../Date_";
 import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
@@ -16,24 +16,18 @@ import {
 } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { nip19 } from "nostr-tools";
-import { useNavigate } from "react-router-dom";
-import { compactContent, straightUp } from "../../Helpers/Helpers";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  compactContent,
+  getCustomSettings,
+  getNoteTree,
+  straightUp,
+} from "../../Helpers/Helpers";
 import { eventKinds } from "../../Content/Extra";
 import LoadingLogo from "../LoadingLogo";
 import { customHistory } from "../../Helpers/History";
 import { t } from "i18next";
 import { useTranslation } from "react-i18next";
-
-const types = {
-  mention: "mentioned you in a",
-  quotes: "quoted",
-  media: "published a",
-  comments: "replied to",
-  comments_on: "commented on",
-  reactions: "reacted",
-  zaps: "zapped",
-  reposts: "reposted",
-};
 
 const eventIcons = {
   paid_notes: "not-paid-notes",
@@ -87,9 +81,9 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
         let label_1 = t(eventKind ? "AmKIbHq" : "AMukTAR", {
           name: username,
         });
-        let label_2 = compactContent(event.content);
+        let label_2 = event.content;
         return {
-          type: "followings",
+          type: "following",
           label_1,
           label_2,
           icon: eventIcons.paid_notes,
@@ -106,7 +100,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
             : t(eventKind ? "AnMEe4G" : "AAm18zd", {
                 name: username,
               });
-        let label_2 = compactContent(event.content);
+        let label_2 = event.content;
 
         return {
           type: "replies",
@@ -131,7 +125,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
           eventPubkey === pubkey
             ? t(`Az3sitJ_${eventKind}`, { name: username })
             : t(`AxGCCW4_${eventKind}`, { name: username });
-        let label_2 = compactContent(event.content);
+        let label_2 = event.content;
         let url = eventPubkey
           ? getRepEventsLink(eventPubkey, eventKind, eventIdentifier)
           : `/notes/${nip19.noteEncode(isRoot[1])}`;
@@ -154,7 +148,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
             : t("ACmLZt3", {
                 name: username,
               });
-        let label_2 = compactContent(event.content);
+        let label_2 = event.content;
 
         return {
           type: "quotes",
@@ -165,9 +159,9 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
           url: `/notes/${nip19.noteEncode(event.id)}`,
         };
       }
- 
+
       let label_1 = t("AtWXTcu", { name: username });
-      let label_2 = compactContent(event.content);
+      let label_2 = event.content;
 
       return {
         type: "mentions",
@@ -190,7 +184,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
       let label_2 = content;
 
       return {
-        type: self ? "mentions" : "followings",
+        type: self ? "mentions" : "following",
         label_1,
         label_2,
         icon: eventIcons[eventKinds[event.kind]],
@@ -223,7 +217,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
               name: username,
               reaction,
             });
-      let label_2 = compactContent(content);
+      let label_2 = content;
       let url = eventPubkey
         ? getRepEventsLink(eventPubkey, eventKind, eventIdentifier)
         : `/notes/${nip19.noteEncode(ev[1])}`;
@@ -245,7 +239,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
         innerEvent && innerEvent.pubkey === pubkey
           ? t("AtLiZSD", { name: username })
           : t("Avp7edv", { name: username });
-      let label_2 = compactContent(innerEvent.content);
+      let label_2 = innerEvent.content;
 
       return {
         type: "reposts",
@@ -275,7 +269,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
       let amount =
         event.amount || event.tags.find((tag) => tag[0] === "amount");
 
-      let message = compactContent(event.content);
+      let message = event.content;
 
       return {
         type: "zaps",
@@ -303,6 +297,23 @@ export default function NotificationCenterMain() {
   const [contentFrom, setContentFrom] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
   const notificationsRef = useRef(null);
+  const notificationSettings = (() => {
+    let settings =
+      getCustomSettings().notification || getCustomSettings("").notification;
+    let mentions = settings.find((_) => _.tab === "mentions")?.isHidden;
+    let zaps = settings.find((_) => _.tab === "zaps")?.isHidden;
+    let reactions = settings.find((_) => _.tab === "reactions")?.isHidden;
+    let reposts = settings.find((_) => _.tab === "reposts")?.isHidden;
+    let following = settings.find((_) => _.tab === "following")?.isHidden;
+
+    return {
+      mentions,
+      zaps,
+      reactions,
+      reposts,
+      following,
+    };
+  })();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -315,52 +326,12 @@ export default function NotificationCenterMain() {
       userMutedList = userMutedList ? userMutedList.mutedlist : [];
       let tempAuth = [];
       let tempEvents = [];
-
+      let filter = getFilter(userFollowings);
       let eose = false;
-      const sub = ndkInstance.subscribe(
-        [
-          {
-            kinds: [30023, 30004, 34235, 30031],
-            authors: userFollowings,
-            limit: 20,
-          },
-          {
-            kinds: [1],
-            authors: userFollowings,
-            "#l": ["FLASH NEWS"],
-            limit: 20,
-          },
-          {
-            kinds: [7],
-            "#p": [userKeys.pub],
-            limit: 20,
-          },
-          {
-            kinds: [6],
-            "#p": [userKeys.pub],
-            limit: 20,
-          },
-          {
-            kinds: [30023, 30004, 34235, 30031],
-            "#p": [userKeys.pub],
-            limit: 20,
-          },
-          {
-            kinds: [9735],
-            "#p": [userKeys.pub],
-            limit: 20,
-          },
-          {
-            kinds: [1],
-            "#p": [userKeys.pub],
-            limit: 20,
-          },
-        ],
-        {
-          cacheUsage: "CACHE_FIRST",
-          groupable: false,
-        }
-      );
+      const sub = ndkInstance.subscribe(filter, {
+        cacheUsage: "CACHE_FIRST",
+        groupable: false,
+      });
 
       sub.on("event", (event) => {
         if (!userMutedList.includes(event.pubkey)) {
@@ -529,6 +500,57 @@ export default function NotificationCenterMain() {
     straightUp();
   };
 
+  const getFilter = (fList) => {
+    let filter = [];
+    let { mentions, zaps, reactions, reposts, following } =
+      notificationSettings;
+
+    if (!mentions) {
+      filter.push({
+        kinds: [30023, 30004, 34235, 30031],
+        "#p": [userKeys.pub],
+        limit: 20,
+      });
+      filter.push({
+        kinds: [1],
+        "#p": [userKeys.pub],
+        limit: 20,
+      });
+    }
+    if (!zaps)
+      filter.push({
+        kinds: [9735],
+        "#p": [userKeys.pub],
+        limit: 20,
+      });
+    if (!reactions)
+      filter.push({
+        kinds: [7],
+        "#p": [userKeys.pub],
+        limit: 20,
+      });
+    if (!reposts)
+      filter.push({
+        kinds: [6],
+        "#p": [userKeys.pub],
+        limit: 20,
+      });
+    if (!following) {
+      filter.push({
+        kinds: [30023, 30004, 34235, 30031],
+        authors: fList,
+        limit: 20,
+      });
+      filter.push({
+        kinds: [1],
+        authors: fList,
+        "#l": ["FLASH NEWS"],
+        limit: 20,
+      });
+    }
+    return filter;
+  };
+
   return (
     <>
       {newNotifications.length > 0 && (
@@ -561,8 +583,11 @@ export default function NotificationCenterMain() {
             padding: 0,
           }}
         >
-          <div className="fit-container box-pad-h box-pad-v-m">
+          <div className="fit-container fx-scattered box-pad-h box-pad-v-m">
             <h3>{t("ASSFfFZ")}</h3>
+            <Link to={"/settings"} state={{ tab: "customization" }}>
+              <div className="setting-24"></div>
+            </Link>
           </div>
           <div className="fit-container box-pad-h fx-even">
             <div
@@ -602,13 +627,12 @@ export default function NotificationCenterMain() {
             >
               Zaps
             </div>
-
             <div
               className={`list-item-b fx-centered fx-shrink ${
-                contentFrom === "followings" ? "selected-list-item-b" : ""
+                contentFrom === "following" ? "selected-list-item-b" : ""
               }`}
               style={{ padding: " .5rem 1rem" }}
-              onClick={() => switchContentSource("followings")}
+              onClick={() => switchContentSource("following")}
             >
               {t("A9TqNxQ")}
             </div>
@@ -637,6 +661,11 @@ export default function NotificationCenterMain() {
             })}
           </div>
         )}
+        {notificationSettings[
+          ["mentions", "replies"].includes(contentFrom)
+            ? "mentions"
+            : contentFrom
+        ] && <ActivateNotification />}
         {isLoading && (
           <div className="fx-centered fit-container" style={{ height: "70vh" }}>
             <LoadingLogo size={96} />
@@ -698,7 +727,7 @@ const Notification = ({ event, filterByType = false }) => {
         }}
       >
         <div style={{ position: "relative" }}>
-          <UserProfilePicNOSTR
+          <UserProfilePic
             size={48}
             mainAccountUser={false}
             user_id={user.pubkey}
@@ -732,10 +761,54 @@ const Notification = ({ event, filterByType = false }) => {
                 />
               </p>
               <p className="p-four-lines">{type?.label_1} </p>
-              <p className="gray-c p-four-lines">{type?.label_2}</p>
+              <p
+                className="gray-c p-four-lines poll-content-box"
+                style={{ "--p-color": "var(--gray)" }}
+              >
+                <MinimalNoteView note={type?.label_2} />
+              </p>
+              {/* <p className="gray-c p-four-lines">{type?.label_2}</p> */}
             </div>
           </div>
         </div>
       </div>
     );
+};
+
+const ActivateNotification = () => {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="fit-container fx-centered box-pad-v fx-col"
+      style={{ height: "30vh" }}
+    >
+      <h4>{t("AzhKxMs")}</h4>
+      <p className="gray-c p-centered" style={{ maxWidth: "400px" }}>
+        {t("Aioqvbi")}
+      </p>
+      <Link to={"/settings"} state={{ tab: "customization" }}>
+        <button className="btn btn-normal btn-small">{t("ABtsLBp")}</button>
+      </Link>
+    </div>
+  );
+};
+
+const MinimalNoteView = ({ note }) => {
+  const [noteTree, setNoteTree] = useState(false);
+
+  useEffect(() => {
+    const parseNote = async () => {
+      try {
+
+        let pNote = await getNoteTree(note, true, true, 100);
+        
+        setNoteTree(pNote);
+      } catch(err) {
+        console.log(err)
+        
+      }
+    };
+    if (note) parseNote();
+  }, [note]);
+  return <>{noteTree || compactContent(note)}</>;
 };

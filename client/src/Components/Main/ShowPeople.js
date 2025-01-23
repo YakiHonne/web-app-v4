@@ -7,7 +7,7 @@ import {
 } from "../../Helpers/Encryptions";
 import LoadingScreen from "../LoadingScreen";
 import Follow from "./Follow";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import ShortenKey from "./ShortenKey";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
@@ -155,7 +155,7 @@ export default function ShowPeople({ exit, list, type = "following" }) {
                     className="fx-centered fx-start-v"
                     style={{ columnGap: "24px" }}
                   >
-                    <UserProfilePicNOSTR
+                    <UserProfilePic
                       size={48}
                       img={item.picture}
                       user_id={item.pubkey}

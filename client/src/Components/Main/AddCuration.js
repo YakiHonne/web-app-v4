@@ -6,7 +6,7 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import UploadFile from "../UploadFile";
 import { useTranslation } from "react-i18next";
 
-export default function AddCurationNOSTR({
+export default function AddCuration({
   curation,
   exit,
   relaysToPublish,

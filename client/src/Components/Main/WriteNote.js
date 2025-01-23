@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import UploadFile from "../UploadFile";
 import LoadingDots from "../LoadingDots";
 import BrowseSmartWidgets from "./BrowseSmartWidgets";
@@ -473,7 +473,7 @@ export default function WriteNote({
         ref={ref}
       >
         <div>
-          <UserProfilePicNOSTR
+          <UserProfilePic
             size={34}
             mainAccountUser={true}
             allowClick={false}

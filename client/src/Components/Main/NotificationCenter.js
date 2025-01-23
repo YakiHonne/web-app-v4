@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import NumberShrink from "../NumberShrink";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
+import { getCustomSettings } from "../../Helpers/Helpers";
 
 export default function NotificationCenter({
   icon = false,
@@ -39,54 +40,10 @@ export default function NotificationCenter({
       userMutedList = userMutedList ? userMutedList.mutedlist : [];
       const lastEventCreatedAt = await getNotificationLastEventTS(userKeys.pub);
       let created_at = lastEventCreatedAt + 1 || 0;
-
+      let filter = getFilter(userFollowings, lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined)
       let events = 0;
       const sub = ndkInstance.subscribe(
-        [
-          {
-            kinds: [30023, 30004, 34235, 30031],
-            authors: userFollowings,
-            limit: 100,
-            since: lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined,
-          },
-          {
-            kinds: [1],
-            authors: userFollowings,
-            "#l": ["FLASH NEWS"],
-            limit: 100,
-            since: lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined,
-          },
-          {
-            kinds: [7],
-            "#p": [userKeys.pub],
-            limit: 100,
-            since: lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined,
-          },
-          {
-            kinds: [6],
-            "#p": [userKeys.pub],
-            limit: 100,
-            since: lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined,
-          },
-          {
-            kinds: [30023, 30004, 34235, 30031],
-            "#p": [userKeys.pub],
-            limit: 100,
-            since: lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined,
-          },
-          {
-            kinds: [9735],
-            "#p": [userKeys.pub],
-            limit: 100,
-            since: lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined,
-          },
-          {
-            kinds: [1],
-            "#p": [userKeys.pub],
-            limit: 100,
-            since: lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined,
-          },
-        ],
+        filter,
         {
           cacheUsage: "CACHE_FIRST",
           groupable: false,
@@ -132,6 +89,69 @@ export default function NotificationCenter({
       setNotifications(0);
     }
   }, [userKeys]);
+
+  const getFilter = (fList, since) => {
+    let settings =
+      getCustomSettings().notification || getCustomSettings("").notification;
+    let filter = [];
+    let mentions = settings.find((_) => _.tab === "mentions")?.isHidden;
+    let zaps = settings.find((_) => _.tab === "zaps")?.isHidden;
+    let reactions = settings.find((_) => _.tab === "reactions")?.isHidden;
+    let reposts = settings.find((_) => _.tab === "reposts")?.isHidden;
+    let following = settings.find((_) => _.tab === "following")?.isHidden;
+
+    if (!mentions) {
+      filter.push({
+        kinds: [30023, 30004, 34235, 30031],
+        "#p": [userKeys.pub],
+        limit: 20,
+        since
+      });
+      filter.push({
+        kinds: [1],
+        "#p": [userKeys.pub],
+        limit: 20,
+        since
+      });
+    }
+    if (!zaps)
+      filter.push({
+        kinds: [9735],
+        "#p": [userKeys.pub],
+        limit: 20,
+        since
+      });
+    if (!reactions)
+      filter.push({
+        kinds: [7],
+        "#p": [userKeys.pub],
+        limit: 20,
+        since
+      });
+    if (!reposts)
+      filter.push({
+        kinds: [6],
+        "#p": [userKeys.pub],
+        limit: 20,
+        since
+      });
+    if (!following) {
+      filter.push({
+        kinds: [30023, 30004, 34235, 30031],
+        authors: fList,
+        limit: 20,
+        since
+      });
+      filter.push({
+        kinds: [1],
+        authors: fList,
+        "#l": ["FLASH NEWS"],
+        limit: 20,
+        since
+      });
+    }
+    return filter
+  };
 
   const handleOnClick = () => {
     let localStorageKey = `new-notification-${userKeys.pub}`;

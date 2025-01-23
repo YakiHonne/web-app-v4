@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import ArrowUp from "../../Components/ArrowUp";
 import axios from "axios";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import Date_ from "../../Components/Date_";
 import { Link } from "react-router-dom";
 import { getClaimingData } from "../../Helpers/Encryptions";
@@ -193,7 +193,7 @@ export default function UncensoredNotes() {
       </Helmet>
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <ArrowUp />
             <div
@@ -496,7 +496,7 @@ const FlashNewsCard = ({ data, refreshFlashNews }) => {
       }}
     >
       <div>
-        <UserProfilePicNOSTR
+        <UserProfilePic
           img={data.author.picture}
           size={38}
           user_id={data.author.pubkey}

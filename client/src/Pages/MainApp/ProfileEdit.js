@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
 import Date_ from "../../Components/Date_";
@@ -171,7 +171,7 @@ export default function ProfileEdit() {
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main
               className={`main-page-nostr-container ${
                 isLoading || isImageUploading ? "flash" : ""

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import { Helmet } from "react-helmet";
 import {
   SimplePool,
@@ -11,7 +11,7 @@ import {
 } from "nostr-tools";
 import { bytesTohex, getBech32 } from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import Date_ from "../../Components/Date_";
 import { useRef } from "react";
 import LoadingDots from "../../Components/LoadingDots";
@@ -23,10 +23,11 @@ import { getUser, updateYakiChestStats } from "../../Helpers/Controlers";
 import { useDispatch, useSelector } from "react-redux";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
-import { checkCurrentConvo } from "../../Helpers/DB";
+import { checkAllConvo, checkCurrentConvo } from "../../Helpers/DB";
 import Emojis from "../../Components/Emojis";
 import Gifs from "../../Components/Gifs";
 import { useTranslation } from "react-i18next";
+import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 
 export default function DMS() {
   const userKeys = useSelector((state) => state.userKeys);
@@ -199,6 +200,15 @@ export default function DMS() {
     checkCurrentConvo(tempEvent, userKeys.pub);
   };
 
+  const handleReadAll = () => {
+    let unreadChatroom = userChatrooms
+      .filter((_) => !_.checked)
+      .map((_) => {
+        return { ..._, checked: true };
+      });
+    if (unreadChatroom.length) checkAllConvo(unreadChatroom, userKeys.pub);
+  };
+
   if (!userKeys)
     return (
       <div>
@@ -225,7 +235,7 @@ export default function DMS() {
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main
               className="main-page-nostr-container"
               style={{ padding: 0, overflow: "hidden" }}
@@ -263,7 +273,7 @@ export default function DMS() {
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main
               className="main-page-nostr-container"
               style={{ padding: 0, overflow: "hidden" }}
@@ -301,7 +311,7 @@ export default function DMS() {
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main
               className="main-page-nostr-container"
               style={{ padding: 0, overflow: "hidden" }}
@@ -339,7 +349,7 @@ export default function DMS() {
         style={{ columnGap: 0, overflow: "hidden" }}
       >
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main
             className="main-page-nostr-container"
             style={{ padding: 0, overflow: "hidden" }}
@@ -372,6 +382,13 @@ export default function DMS() {
                     <div onClick={() => setInitConv(true)}>
                       <div className="env-edit-24"></div>
                     </div>
+                    <OptionsDropdown
+                      options={[
+                        <div className="pointer" onClick={handleReadAll}>
+                          <p>{t("A0qY0bf")}</p>
+                        </div>,
+                      ]}
+                    />
                   </div>
                 </div>
                 {showSearch && (
@@ -488,7 +505,7 @@ export default function DMS() {
                           >
                             <div className="fx-centered">
                               <div>
-                                <UserProfilePicNOSTR
+                                <UserProfilePic
                                   img={convo.picture}
                                   size={40}
                                   user_id={convo.pubkey}
@@ -552,7 +569,7 @@ export default function DMS() {
                         >
                           <div className="fx-centered">
                             <div>
-                              <UserProfilePicNOSTR
+                              <UserProfilePic
                                 img={convo.picture}
                                 size={40}
                                 user_id={convo.pubkey}
@@ -887,7 +904,7 @@ const ConversationBox = ({ convo, back }) => {
           <div className="round-icon desk-hide" onClick={back}>
             <div className="arrow arrow-back"></div>
           </div>
-          <UserProfilePicNOSTR
+          <UserProfilePic
             img={convo.picture}
             size={40}
             user_id={convo.pubkey}

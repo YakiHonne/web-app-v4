@@ -4,7 +4,7 @@ import {
   enableTranslation,
   getEmptyuserMetadata,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
 import BookmarkEvent from "./BookmarkEvent";
@@ -186,8 +186,39 @@ export default function NotesComment({
       setIsNoteTranslating(false);
       return;
     }
-    let res = await translate(event.content);
-    if (res.status === 500) {
+    try {
+      if (event.isCollapsedNote) {
+        customHistory.push(`/notes/${event.nEvent}`, {
+          triggerTranslation: true,
+        });
+        return;
+      }
+      let res = await translate(event.content);
+      if (res.status === 500) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AZ5VQXL"),
+          })
+        );
+      }
+      if (res.status === 400) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AJeHuH1"),
+          })
+        );
+      }
+      if (res.status === 200) {
+        let noteTree = await getNoteTree(res.res);
+        setTranslatedNote(noteTree);
+        setShowTranslation(true);
+      }
+      setIsNoteTranslating(false);
+    } catch (err) {
+      setShowTranslation(false);
+      setIsNoteTranslating(false);
       dispatch(
         setToast({
           type: 2,
@@ -195,20 +226,6 @@ export default function NotesComment({
         })
       );
     }
-    if (res.status === 400) {
-      dispatch(
-        setToast({
-          type: 2,
-          desc: t("AJeHuH1"),
-        })
-      );
-    }
-    if (res.status === 200) {
-      let noteTree = await getNoteTree(res.res);
-      setTranslatedNote(noteTree);
-      setShowTranslation(true);
-    }
-    setIsNoteTranslating(false);
   };
 
   return (
@@ -247,7 +264,7 @@ export default function NotesComment({
       >
         <div className="fit-container fx-scattered">
           <div className="fx-centered fx-start-h ">
-            <UserProfilePicNOSTR
+            <UserProfilePic
               size={isHistory ? 40 : 30}
               mainAccountUser={false}
               user_id={user.pubkey}
@@ -291,6 +308,15 @@ export default function NotesComment({
           <div className="fit-container pointer" onClick={onClick}>
             {showTranslation ? translatedNote : event.note_tree}
           </div>
+          {event.isCollapsedNote && (
+            <div
+              className="fit-container fx-centered fx-start-h pointer"
+              style={{ paddingTop: ".5rem" }}
+              onClick={onClick}
+            >
+              <p className="c1-c">... {t("AnWFKlu")}</p>
+            </div>
+          )}
           {isTransEnabled && (
             <div className="fit-container" style={{ paddingTop: ".5rem" }}>
               {!isNoteTranslating && !showTranslation && (
@@ -313,7 +339,7 @@ export default function NotesComment({
             <div className="fx-scattered fit-container">
               <div className="fx-centered" style={{ columnGap: "16px" }}>
                 <div className="fx-centered">
-                  <div className="icon-tooltip" data-tooltip={"ADHdLfJ"}>
+                  <div className="icon-tooltip" data-tooltip={t("ADHdLfJ")}>
                     <div
                       className="comment-24"
                       onClick={() => setToggleComment(!toggleComment)}

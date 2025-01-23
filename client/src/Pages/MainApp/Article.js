@@ -5,7 +5,7 @@ import MarkdownPreview from "@uiw/react-markdown-preview";
 import katex from "katex";
 import "katex/dist/katex.css";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import {
   checkForLUDS,
   convertDate,
@@ -23,7 +23,7 @@ import {
   shuffleArray,
 } from "../../Helpers/Helpers";
 import LoadingScreen from "../../Components/LoadingScreen";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import Date_ from "../../Components/Date_";
 import Follow from "../../Components/Main/Follow";
 import ZapTip from "../../Components/Main/ZapTip";
@@ -334,7 +334,7 @@ export default function Article() {
       {}
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <ArrowUp />
             <div
@@ -370,7 +370,7 @@ export default function Article() {
                           }}
                         >
                           <div className="fx-centered">
-                            <UserProfilePicNOSTR
+                            <UserProfilePic
                               size={20}
                               img={author.picture}
                               mainAccountUser={false}
@@ -413,7 +413,7 @@ export default function Article() {
                         }}
                       >
                         <div className="fx-centered">
-                          <UserProfilePicNOSTR
+                          <UserProfilePic
                             size={48}
                             img={author.picture}
                             mainAccountUser={false}

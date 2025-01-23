@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DtoLToggleButton from "../DtoLToggleButton";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
-import { minimizeKey } from "../../Helpers/Encryptions";
+import UserProfilePic from "./UserProfilePic";
+import { getBech32, minimizeKey } from "../../Helpers/Encryptions";
 import { useMemo } from "react";
 import NotificationCenter from "./NotificationCenter";
 import { useEffect } from "react";
@@ -25,7 +25,7 @@ import { customHistory } from "../../Helpers/History";
 import YakiMobileappSidebar from "../YakiMobileappSidebar";
 import { useTranslation } from "react-i18next";
 
-export default function SidebarNOSTR() {
+export default function Sidebar() {
   const { t } = useTranslation();
   const userMetadata = useSelector((state) => state.userMetadata);
   const userKeys = useSelector((state) => state.userKeys);
@@ -237,6 +237,29 @@ export default function SidebarNOSTR() {
                 >
                   <div
                     className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
+                      isPage("/users/" + getBech32("npub", userKeys.pub))
+                        ? "active-link"
+                        : "inactive-link"
+                    }`}
+                    onClick={() => {
+                      customHistory.push(
+                        "/users/" + getBech32("npub", userKeys.pub)
+                      );
+                    }}
+                  >
+                    <div className="fx-centered">
+                      <div
+                        className={
+                          isPage("/users/" + getBech32("npub", userKeys.pub))
+                            ? "user-bold-24"
+                            : "user-24"
+                        }
+                      ></div>
+                      <div className="link-label">{t("AyBBPWE")}</div>
+                    </div>
+                  </div>
+                  <div
+                    className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
                       isPage("/dashboard") ? "active-link" : "inactive-link"
                     }`}
                     onClick={() => {
@@ -316,14 +339,14 @@ export default function SidebarNOSTR() {
                     }}
                   >
                     <div className="mb-hide" style={{ pointerEvents: "none" }}>
-                      <UserProfilePicNOSTR
+                      <UserProfilePic
                         size={40}
                         mainAccountUser={true}
                         allowClick={false}
                       />
                     </div>
                     <div className="mb-show" style={{ pointerEvents: "none" }}>
-                      <UserProfilePicNOSTR
+                      <UserProfilePic
                         size={40}
                         mainAccountUser={true}
                         allowClick={false}
@@ -481,7 +504,7 @@ export default function SidebarNOSTR() {
                             >
                               <div className="fx-centered">
                                 <div style={{ pointerEvents: "none" }}>
-                                  <UserProfilePicNOSTR
+                                  <UserProfilePic
                                     size={32}
                                     mainAccountUser={false}
                                     img={account.picture}
@@ -610,7 +633,7 @@ const AccountSwitching = ({ exit }) => {
       <div className="fx-centered fx-col">
         <div className="fx-centered popout">
           <div style={{ borderRadius: "var(--border-r-50)" }}>
-            <UserProfilePicNOSTR
+            <UserProfilePic
               size={200}
               mainAccountUser={true}
               allowClick={false}

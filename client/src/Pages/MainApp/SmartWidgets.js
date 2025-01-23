@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { nip19 } from "nostr-tools";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import { getNoteTree } from "../../Helpers/Helpers";
 import ArrowUp from "../../Components/ArrowUp";
 import {
   getEmptyuserMetadata,
   getParsedRepEvent,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import LoadingDots from "../../Components/LoadingDots";
 import { Link } from "react-router-dom";
 import Footer from "../../Components/Footer";
@@ -223,7 +223,7 @@ export default function SmartWidgets() {
       <div className="fit-container fx-centered">
         <ArrowUp />
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <div
               className="fx-centered fit-container fx-start-h fx-start-v"
@@ -377,7 +377,7 @@ const NoteCard = ({ note }) => {
 const AuthorPreview = ({ author, size = "big" }) => {
   return (
     <div className="fx-centered fx-start-h ">
-      <UserProfilePicNOSTR
+      <UserProfilePic
         size={size === "big" ? 40 : 30}
         mainAccountUser={false}
         user_id={author.pubkey}

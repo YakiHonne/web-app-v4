@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { nip19 } from "nostr-tools";
 import { getAuthPubkeyFromNip05 } from "../Helpers/Helpers";
 import QRCode from "react-qr-code";
-import UserProfilePicNOSTR from "./Main/UserProfilePicNOSTR";
+import UserProfilePic from "./Main/UserProfilePic";
 import { useToPng } from "@hugocxl/react-to-image";
 import axios from "axios";
 import { getBech32 } from "../Helpers/Encryptions";
@@ -440,7 +440,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
             </div>
             <div style={{ height: "50px" }}></div>
             <div className="fx-centered fx-start-h box-pad-h-m box-pad-v-s ">
-              <UserProfilePicNOSTR
+              <UserProfilePic
                 mainAccountUser={false}
                 size={24}
                 img={ppBase64}
@@ -532,7 +532,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 transform: "translateX(-50%)",
               }}
             >
-              <UserProfilePicNOSTR
+              <UserProfilePic
                 mainAccountUser={false}
                 size={98}
                 img={ppBase64}
@@ -724,7 +724,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
               style={{ height: "50px" }}
             >
               <div className="fx-centered">
-                <UserProfilePicNOSTR
+                <UserProfilePic
                   mainAccountUser={false}
                   size={24}
                   img={ppBase64}

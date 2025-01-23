@@ -230,6 +230,18 @@ export const checkCurrentConvo = async (convo, pubkey) => {
     console.log(err);
   }
 };
+export const checkAllConvo = async (convos, pubkey) => {
+  try {
+    const chatroomKeys = convos.map((ibx) => `${ibx.pubkey},${pubkey}`);
+    await Dexie.ignoreTransaction(async () => {
+      await db.transaction("rw", db.chatrooms, async () => {
+        await db.chatrooms.bulkPut(convos, chatroomKeys);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export const saveFollowings = async (event, pubkey, lastTimestamp) => {
   if (!event && lastTimestamp) return;

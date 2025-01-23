@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import QRCode from "react-qr-code";
 import { getBech32, shortenKey } from "../../Helpers/Encryptions";
 import { useTranslation } from "react-i18next";
@@ -35,7 +35,7 @@ export default function QRSharing({ user, exit }) {
           <div></div>
         </div>
         <div className="fx-centered fx-col">
-          <UserProfilePicNOSTR
+          <UserProfilePic
             user_id={user?.pubkey}
             mainAccountUser={false}
             size={100}

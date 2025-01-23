@@ -33,8 +33,8 @@ const SatsToUSD = ({ sats, isHidden }) => {
   return (
     <div>
       {usdValue !== null ? (
-        <p>
-          ~ ${!isHidden ? usdValue.toFixed(2) : "*****"}{" "}
+        <p className="p-medium">
+          ~${!isHidden ? usdValue.toFixed(2) : "***"}{" "}
           <span className="gray-c p-medium">USD</span>
         </p>
       ) : (

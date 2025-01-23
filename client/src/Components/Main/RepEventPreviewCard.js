@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import Date_ from "../Date_";
 import BookmarkEvent from "./BookmarkEvent";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
@@ -268,7 +268,7 @@ const AuthorPreview = ({ author, item }) => {
 
   return (
     <div className="fx-centered fx-start-h ">
-      <UserProfilePicNOSTR
+      <UserProfilePic
         size={40}
         mainAccountUser={false}
         user_id={author.pubkey}
@@ -286,7 +286,7 @@ const AuthorPreview = ({ author, item }) => {
 const AuthorPreviewMinimal = ({ author, item }) => {
   return (
     <div className="fx-centered fx-start-h ">
-      <UserProfilePicNOSTR
+      <UserProfilePic
         size={16}
         mainAccountUser={false}
         user_id={author.pubkey}

@@ -18,7 +18,6 @@ export { ndkInstance };
 export const addExplicitRelays = (relayList) => {
   try {
     if (!Array.isArray(relayList)) return;
-
     let tempRelayList = relayList.filter(
       (relay) => !ndkInstance.explicitRelayUrls.includes(`${relay}`)
     );

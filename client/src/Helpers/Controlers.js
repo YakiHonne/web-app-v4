@@ -202,7 +202,13 @@ const yakiChestDisconnect = async () => {
 };
 
 const logoutAllAccounts = async () => {
-  localStorage.clear();
+  let ignore = ["app-lang", "yaki-wallets", "i18nextLng", "chsettings"];
+  Object.keys(localStorage).forEach((key) => {
+    if (!ignore.includes(key)) {
+      localStorage.removeItem(key);
+    }
+  });
+  // localStorage.clear();
   store.dispatch(setUserBalance("N/A"));
   store.dispatch(setUserKeys(false));
   store.dispatch(setUserMetadata(false));

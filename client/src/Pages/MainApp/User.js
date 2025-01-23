@@ -12,10 +12,10 @@ import {
   getuserMetadata,
 } from "../../Helpers/Encryptions";
 import { useParams } from "react-router-dom";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import { kinds, nip19 } from "nostr-tools";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import ZapTip from "../../Components/Main/ZapTip";
 import Follow from "../../Components/Main/Follow";
 import ShowPeople from "../../Components/Main/ShowPeople";
@@ -44,6 +44,7 @@ import LoadingLogo from "../../Components/LoadingLogo";
 import QRSharing from "./QRSharing";
 import WidgetCard from "../../Components/Main/WidgetCard";
 import { useTranslation } from "react-i18next";
+import Carousel from "../../Components/Main/Carousel";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -178,7 +179,7 @@ export default function User() {
         </Helmet>
         <div className="fit-container fx-centered">
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main className="main-page-nostr-container">
               <ArrowUp />
               <div
@@ -232,6 +233,8 @@ const UserMetadata = ({ refreshUser }) => {
   const [showUserImpact, setShowUserImpact] = useState(false);
   const [initConv, setInitConv] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [showMetadataCarousel, setShowMetadataCarousel] = useState(false);
+  const [selectedItemInCarousel, setSelectedItemInCarousel] = useState(0);
 
   const isMuted = useMemo(() => {
     let checkProfile = () => {
@@ -422,6 +425,21 @@ const UserMetadata = ({ refreshUser }) => {
     }
   };
 
+  const handleCarouselItems = (index) => {
+    if(!isLoaded) return
+    let temArray = [];
+    if (user.banner) temArray.push(user.banner);
+    if (user.picture) temArray.push(user.picture);
+
+    if (index === 1 && temArray.length < 2) {
+      setSelectedItemInCarousel(0);
+      setShowMetadataCarousel(temArray);
+      return;
+    }
+    setShowMetadataCarousel(temArray);
+    setSelectedItemInCarousel(index);
+  };
+
   return (
     <>
       {showPeople === "following" && (
@@ -452,12 +470,22 @@ const UserMetadata = ({ refreshUser }) => {
           userImpact={userImpact}
         />
       )}
+      {showMetadataCarousel && (
+        <Carousel
+          selectedImage={selectedItemInCarousel}
+          imgs={showMetadataCarousel}
+          back={() => {
+            setSelectedItemInCarousel(0);
+            setShowMetadataCarousel(false);
+          }}
+        />
+      )}
       <div className="fit-container">
         <div
           className="fit-container fx-centered fx-start-h fx-end-v fx-start-v box-pad-h-s box-pad-v-s bg-img cover-bg"
           style={{
             position: "relative",
-            height: "250px",
+            height:user?.banner ? "250px" : "150px",
           }}
         >
           <div
@@ -473,7 +501,9 @@ const UserMetadata = ({ refreshUser }) => {
               zIndex: 0,
               borderTopLeftRadius: "0",
               borderTopRightRadius: "0",
+              cursor:user?.banner ? "zoom-in" : "default"
             }}
+            onClick={() =>handleCarouselItems(0)}
           ></div>
           <div
             className="fx-centered fx-col fx-start-v fit-container"
@@ -484,7 +514,12 @@ const UserMetadata = ({ refreshUser }) => {
                 className="fx-centered fx-end-v fit-container"
                 style={{ columnGap: "16px" }}
               >
-                <UserPP size={128} src={user?.picture} user_id={user?.pubkey} />
+                <UserPP
+                  size={128}
+                  src={user?.picture}
+                  user_id={user?.pubkey}
+                  setSelectedItemInCarousel={handleCarouselItems}
+                />
                 <div className="fit-container fx-scattered fx-end-h box-marg-s">
                   <div className="fx-centered">
                     <div>
@@ -790,7 +825,7 @@ const UserFeed = ({ user }) => {
 
     subscription.on("event", async (event) => {
       if ([1, 6].includes(event.kind)) {
-        let event_ = await getParsedNote(event);
+        let event_ = await getParsedNote(event, true);
         if (event_) {
           if (event.kind === 6) {
             eventsPubkeys.push(event_.relatedEvent.pubkey);
@@ -1232,7 +1267,7 @@ const UserImpact = ({ user, exit, userImpact }) => {
           <div></div>
         </div>
         <div className="fx-centered fx-col">
-          <UserProfilePicNOSTR
+          <UserProfilePic
             user_id={user?.pubkey}
             mainAccountUser={false}
             size={100}
@@ -1274,8 +1309,7 @@ const UserImpact = ({ user, exit, userImpact }) => {
   );
 };
 
-const UserPP = ({ src, size, user_id }) => {
-  const [resize, setResize] = useState(false);
+const UserPP = ({ src, size, user_id, setSelectedItemInCarousel }) => {
   if (!src) {
     return (
       <div
@@ -1302,73 +1336,128 @@ const UserPP = ({ src, size, user_id }) => {
     );
   }
   return (
-    <>
-      {resize && (
-        <div
-          className="fixed-container box-pad-h box-pad-v fx-centered "
-          onClick={(e) => {
-            e.stopPropagation();
-            setResize(false);
-          }}
-          style={{ zIndex: 2000 }}
-        >
-          <div
-            style={{
-              position: "relative",
-              // maxWidth: "800px",
-              // maxHeight: "80vh",
-              width: "min(100%, 600px)",
-            }}
-          >
-            <div
-              className="close"
-              onClick={(e) => {
-                e.stopPropagation();
-                setResize(false);
-              }}
-            >
-              <div></div>
-            </div>
-            <img
-              className="sc-s-18"
-              width={"100%"}
-              style={{
-                objectFit: "contain",
-                maxHeight: "60vh",
-                backgroundColor: "transparent",
-              }}
-              src={src}
-              alt="el"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      )}
-      <img
-        onClick={(e) => {
-          e.stopPropagation();
-          setResize(true);
-        }}
-        className="sc-s-18 settings-profile-pic"
-        style={{
-          cursor: "zoom-in",
-          aspectRatio: "1/1",
-          objectFit: "cover",
-          minWidth: `${size}px`,
-          minHeight: `${size}px`,
-          maxWidth: `${size}px`,
-          maxHeight: `${size}px`,
-          border: "6px solid var(--white)",
-          borderRadius: "var(--border-r-50)",
-          position: "relative",
-          overflow: "hidden",
-          borderRadius: "var(--border-r-50)",
-        }}
-        width={"100%"}
-        src={src}
-        alt="el"
-        loading="lazy"
-      />
-    </>
+    <img
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedItemInCarousel(1);
+      }}
+      className="sc-s-18 settings-profile-pic"
+      style={{
+        cursor: "zoom-in",
+        aspectRatio: "1/1",
+        objectFit: "cover",
+        minWidth: `${size}px`,
+        minHeight: `${size}px`,
+        maxWidth: `${size}px`,
+        maxHeight: `${size}px`,
+        border: "6px solid var(--white)",
+        borderRadius: "var(--border-r-50)",
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: "var(--border-r-50)",
+      }}
+      width={"100%"}
+      src={src}
+      alt="el"
+      loading="lazy"
+    />
   );
 };
+// const UserPP = ({ src, size, user_id }) => {
+//   const [resize, setResize] = useState(false);
+//   if (!src) {
+//     return (
+//       <div
+//         style={{
+//           border: "6px solid var(--white)",
+//           borderRadius: "var(--border-r-50)",
+//           position: "relative",
+//           overflow: "hidden",
+//           minWidth: `${size}px`,
+//           minHeight: `${size}px`,
+//           maxWidth: `${size}px`,
+//           maxHeight: `${size}px`,
+//         }}
+//         className="settings-profile-pic"
+//       >
+//         <Avatar
+//           size={size}
+//           name={user_id}
+//           variant="marble"
+//           square
+//           colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
+//         />
+//       </div>
+//     );
+//   }
+//   return (
+//     <>
+//       {resize && (
+//         <div
+//           className="fixed-container box-pad-h box-pad-v fx-centered "
+//           onClick={(e) => {
+//             e.stopPropagation();
+//             setResize(false);
+//           }}
+//           style={{ zIndex: 2000 }}
+//         >
+//           <div
+//             style={{
+//               position: "relative",
+//               // maxWidth: "800px",
+//               // maxHeight: "80vh",
+//               width: "min(100%, 600px)",
+//             }}
+//           >
+//             <div
+//               className="close"
+//               onClick={(e) => {
+//                 e.stopPropagation();
+//                 setResize(false);
+//               }}
+//             >
+//               <div></div>
+//             </div>
+//             <img
+//               className="sc-s-18"
+//               width={"100%"}
+//               style={{
+//                 objectFit: "contain",
+//                 maxHeight: "60vh",
+//                 backgroundColor: "transparent",
+//               }}
+//               src={src}
+//               alt="el"
+//               loading="lazy"
+//             />
+//           </div>
+//         </div>
+//       )}
+//       <img
+//         onClick={(e) => {
+//           e.stopPropagation();
+//           setResize(true);
+//         }}
+//         className="sc-s-18 settings-profile-pic"
+//         style={{
+//           cursor: "zoom-in",
+//           aspectRatio: "1/1",
+//           objectFit: "cover",
+//           minWidth: `${size}px`,
+//           minHeight: `${size}px`,
+//           maxWidth: `${size}px`,
+//           maxHeight: `${size}px`,
+//           border: "6px solid var(--white)",
+//           borderRadius: "var(--border-r-50)",
+//           position: "relative",
+//           overflow: "hidden",
+//           borderRadius: "var(--border-r-50)",
+//         }}
+//         width={"100%"}
+//         src={src}
+//         alt="el"
+//         loading="lazy"
+//       />
+//     </>
+//   );
+// };

@@ -4,7 +4,7 @@ import Lottie from "lottie-react";
 import { Helmet } from "react-helmet";
 import { nanoid } from "nanoid";
 import PagePlaceholder from "../../Components/PagePlaceholder";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import UploadFile from "../../Components/UploadFile";
 import ZapPollsComp from "../../Components/SmartWidget/ZapPollsComp";
 import AddPoll from "../../Components/Main/AddPoll";
@@ -38,6 +38,7 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
+import PostAsNote from "../../Components/Main/PostAsNote";
 
 const getTypeMetada = (type, isDarkMode) => {
   let text_color = isDarkMode === "0" ? "#ffffff" : "#1C1B1F";
@@ -261,7 +262,7 @@ export default function NostrSmartWidget() {
       </Helmet>
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <div className="fx-centered fit-container fx-start-h fx-start-v">
               <div className="box-pad-h-m fit-container">
@@ -2325,7 +2326,9 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
         let event = metadata.metadata.content
           ? JSON.parse(metadata.metadata.content)
           : false;
-        id = nip19.decode(metadata.metadata.nevent).data.id;
+        id = metadata.metadata.nevent
+          ? nip19.decode(metadata.metadata.nevent).data.id
+          : false;
 
         if (event && id === event.id) return;
       } catch (err) {
@@ -2340,7 +2343,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
 
       sub.on("event", async (event) => {
         try {
-          handleMetadata("content", JSON.stringify(event));
+          handleMetadata("content", JSON.stringify(event.rawEvent()));
         } catch (err) {
           console.log(err);
         }

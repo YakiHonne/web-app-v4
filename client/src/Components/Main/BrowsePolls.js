@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { nip19 } from "nostr-tools";
 import { getBech32 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import MinimalZapPollPreview from "./MinimalZapPollPreview";
 import LoadingDots from "../LoadingDots";
 import { useSelector } from "react-redux";
@@ -240,7 +240,7 @@ const AuthorPreview = ({ pubkey }) => {
   }, [nostrAuthors]);
   return (
     <div className="fx-centered fx-start-h ">
-      <UserProfilePicNOSTR
+      <UserProfilePic
         size={40}
         mainAccountUser={false}
         user_id={author.pubkey}

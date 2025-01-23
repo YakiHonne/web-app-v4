@@ -12,9 +12,9 @@ import {
   removeDuplicants,
 } from "../../Helpers/Encryptions";
 import { copyText, getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import Date_ from "../../Components/Date_";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import LoadingScreen from "../../Components/LoadingScreen";
 import LoadingDots from "../../Components/LoadingDots";
 import ZapTip from "../../Components/Main/ZapTip";
@@ -289,7 +289,7 @@ export default function Curation() {
         </Helmet>
         <div className="fit-container fx-centered">
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main className="main-page-nostr-container">
               <div
                 className="fit-container fx-centered fx-start-v"
@@ -318,7 +318,7 @@ export default function Curation() {
                         }}
                       >
                         <div className="fx-centered">
-                          <UserProfilePicNOSTR
+                          <UserProfilePic
                             size={48}
                             img={curationAuthor.picture}
                             mainAccountUser={false}

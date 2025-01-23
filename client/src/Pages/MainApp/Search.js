@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import ArrowUp from "../../Components/ArrowUp";
 import { Helmet } from "react-helmet";
 import { useDispatch, useSelector } from "react-redux";
@@ -212,7 +212,7 @@ export default function Search() {
     let content_ = await Promise.all(
       content.data.map(async (event) => {
         if (event.kind === 1) {
-          let parsedNote = await getParsedNote(event);
+          let parsedNote = await getParsedNote(event, true);
           return parsedNote;
         } else {
           return getParsedRepEvent(event);
@@ -292,7 +292,7 @@ export default function Search() {
       </Helmet>
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main
             className="main-page-nostr-container"
             onClick={(e) => {

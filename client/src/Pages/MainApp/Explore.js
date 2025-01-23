@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useRef, useState } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import ArrowUp from "../../Components/ArrowUp";
 import { Helmet } from "react-helmet";
 import { SelectTabs } from "../../Components/Main/SelectTabs";
@@ -103,7 +103,7 @@ export default function Explore() {
 
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <ArrowUp />
             <div

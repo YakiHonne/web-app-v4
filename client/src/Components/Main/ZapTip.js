@@ -6,7 +6,7 @@ import {
   shortenKey,
 } from "../../Helpers/Encryptions";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import QRCode from "react-qr-code";
 import relaysOnPlatform from "../../Content/Relays";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
@@ -526,7 +526,7 @@ const Cashier = ({
         </div>
         <div className="fx-centered box-marg-s">
           <div className="fx-centered fx-col">
-            <UserProfilePicNOSTR size={54} mainAccountUser={true} />
+            <UserProfilePic size={54} mainAccountUser={true} />
             <p className="gray-c p-medium">{userMetadata.name}</p>
           </div>
           {recipientPubkey && (
@@ -547,7 +547,7 @@ const Cashier = ({
                 )}
               </div>
               <div className="fx-centered fx-col">
-                <UserProfilePicNOSTR
+                <UserProfilePic
                   size={54}
                   img={recipientInfo.img || recipientInfo.picture}
                   mainAccountUser={false}

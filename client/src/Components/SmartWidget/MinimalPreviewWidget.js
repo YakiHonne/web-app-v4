@@ -8,18 +8,27 @@ export default function MinimalPreviewWidget({ widget }) {
   return (
     <>
       {showFullWidget && (
-        <FullWidget widget={widget} exit={() => setShowFullWidget(false)} />
+        <FullWidget
+          widget={widget}
+          exit={(e) => {
+            e.stopPropagation();
+            setShowFullWidget(false);
+          }}
+        />
       )}
       <div className="fit-container fx-scattered sc-s-18 box-pad-h-m box-pad-v-m">
         <div className="fx-centered fx-col fx-start-h fx-start-v">
-          <p>{widget?.title}</p>
+          <p>{widget?.title || t("AMvUjqZ")}</p>
           {widget.description && (
             <p className="gray-c p-medium p-two-lines">{widget.description}</p>
           )}
         </div>
         <button
           className="btn btn-normal btn-small"
-          onClick={() => setShowFullWidget(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowFullWidget(true);
+          }}
         >
           {t("AYO6i7Y")}
         </button>
