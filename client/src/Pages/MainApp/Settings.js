@@ -41,6 +41,7 @@ import {
   translationServices,
   translationServicesEndpoints,
 } from "../../Content/TranslationServices";
+import AddMaciPolls from "../../Components/Main/AddMaciPolls";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -640,6 +641,7 @@ export default function Settings() {
                           </Link>
                         </div>
                       </div>
+                      <AddMaciPolls />
                       <div
                         className="fit-container fx-centered fx-col"
                         style={{ gap: 0 }}
