@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import Sidebar from "../../Components/Main/Sidebar";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import { shortenKey } from "../../Helpers/Encryptions";
 import ToUpdateRelay from "../../Components/Main/ToUpdateRelay";
@@ -15,6 +15,7 @@ import {
   getAppLang,
   getContentTranslationConfig,
   getCustomSettings,
+  getDefaultSettings,
   getMediaUploader,
   getSelectedServer,
   getWallets,
@@ -32,7 +33,6 @@ import { Link, useLocation } from "react-router-dom";
 import DtoLToggleButton from "../../Components/DtoLToggleButton";
 import ZapTip from "../../Components/Main/ZapTip";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { nip19 } from "nostr-tools";
 import Select from "../../Components/Main/Select";
 import { useTranslation } from "react-i18next";
 import i18next from "i18next";
@@ -79,6 +79,13 @@ export default function Settings() {
     widgets: t("AM4vyRX"),
     highlights: t("AWj53bb"),
   };
+  const notificationDN = {
+    mentions: `${t("A8Da0of")} / ${t("AENEcn9")}`,
+    reactions: t("Alz0E9Y"),
+    reposts: t("Aai65RJ"),
+    zaps: "Zaps",
+    following: t("A9TqNxQ"),
+  };
 
   const transServicesPlans = [
     {
@@ -105,11 +112,19 @@ export default function Settings() {
   const [interestSuggestion, setInterestSuggestion] = useState(
     localStorage.getItem("hsuggest3")
   );
+  const [collapsedNote, setCollapsedNote] = useState(
+    getCustomSettings().collapsedNote === undefined
+      ? true
+      : getCustomSettings().collapsedNote
+  );
   const [userHoverPreview, setUserHoverPreview] = useState(
     getCustomSettings().userHoverPreview
   );
   const [contentList, setContentList] = useState(
     getCustomSettings().contentList
+  );
+  const [notification, setNotification] = useState(
+    getCustomSettings().notification || getDefaultSettings("").notification
   );
   const [legacyDM, setLegacyDM] = useState(localStorage.getItem("legacy-dm"));
 
@@ -153,6 +168,15 @@ export default function Settings() {
       setSelectedMediaServer(getSelectedServer());
     } else setWallets([]);
   }, [userKeys]);
+
+  useEffect(() => {
+    if (state && state.tab === "customization") {
+      const target = document.querySelector(".main-page-nostr-container");
+      if (target) {
+        target.scrollTop = target.scrollHeight;
+      }
+    }
+  }, [state]);
 
   useEffect(() => {
     setTempUserRelays(userAllRelays);
@@ -348,12 +372,36 @@ export default function Settings() {
       setInterestSuggestion(dateNow);
     }
   };
+  const handleCollapedNote = () => {
+    if (collapsedNote) {
+      setCollapsedNote(false);
+      updateCustomSettings({
+        pubkey: userKeys.pub,
+        collapsedNote: false,
+        userHoverPreview,
+        notification,
+        contentList,
+      });
+    }
+    if (!collapsedNote) {
+      setCollapsedNote(true);
+      updateCustomSettings({
+        pubkey: userKeys.pub,
+        collapsedNote: true,
+        userHoverPreview,
+        notification,
+        contentList,
+      });
+    }
+  };
   const handleUserHoverPreview = () => {
     if (userHoverPreview) {
       setUserHoverPreview(false);
       updateCustomSettings({
         pubkey: userKeys.pub,
         userHoverPreview: false,
+        collapsedNote,
+        notification,
         contentList,
       });
     }
@@ -362,6 +410,8 @@ export default function Settings() {
       updateCustomSettings({
         pubkey: userKeys.pub,
         userHoverPreview: true,
+        collapsedNote,
+        notification,
         contentList,
       });
     }
@@ -376,9 +426,32 @@ export default function Settings() {
       pubkey: userKeys.pub,
       userHoverPreview,
       contentList: tempArr,
+      collapsedNote,
+      notification,
     });
   };
 
+  const handleNotification = (index, status) => {
+    let tempArr = structuredClone(notification);
+    tempArr[index].isHidden = status;
+    if (!tempArr.find((item) => !item.isHidden)) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("AHfFgQL"),
+        })
+      );
+      return;
+    }
+    setNotification(tempArr);
+    updateCustomSettings({
+      pubkey: userKeys.pub,
+      userHoverPreview,
+      contentList,
+      collapsedNote,
+      notification: tempArr,
+    });
+  };
   const handleHideContentList = (index, status) => {
     let tempArr = structuredClone(contentList);
     tempArr[index].isHidden = status;
@@ -396,6 +469,8 @@ export default function Settings() {
       pubkey: userKeys.pub,
       userHoverPreview,
       contentList: tempArr,
+      collapsedNote,
+      notification,
     });
   };
 
@@ -458,8 +533,8 @@ export default function Settings() {
       i18next.changeLanguage(value);
       localStorage.setItem("app-lang", value);
       handleAppDirection(value);
-      console.log(selectedTransService)
-      setTransServicePlan(!transServicePlan)
+      console.log(selectedTransService);
+      setTransServicePlan(!transServicePlan);
     } else {
       dispatch(
         setToast({
@@ -535,7 +610,7 @@ export default function Settings() {
         </Helmet>
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main className={`main-page-nostr-container `}>
               <div className="fx-centered fit-container  fx-start-v ">
                 <div className="main-middle">
@@ -549,12 +624,10 @@ export default function Settings() {
                           borderTop: "1px solid var(--very-dim-gray)",
                         }}
                       >
-                        <UserProfilePicNOSTR mainAccountUser={true} size={64} />
+                        <UserProfilePic mainAccountUser={true} size={64} />
                         <div className="fx-centered">
                           <Link
-                            to={`/users/${nip19.nprofileEncode({
-                              pubkey: userKeys.pub,
-                            })}`}
+                            to={`/users/${getBech32("npub", userKeys.pub)}`}
                           >
                             <button className="btn btn-normal">
                               {t("ACgjh46")}
@@ -1259,6 +1332,19 @@ export default function Settings() {
                                 <p className="gray-c">{t("Amm6e0Z")}</p>
                               </div>
                               <div className="fx-scattered fit-container">
+                                <p>{t("AozzmTY")}</p>
+                                <div
+                                  className={`toggle ${
+                                    !collapsedNote ? "toggle-dim-gray" : ""
+                                  } ${
+                                    collapsedNote
+                                      ? "toggle-c1"
+                                      : "toggle-dim-gray"
+                                  }`}
+                                  onClick={handleCollapedNote}
+                                ></div>
+                              </div>
+                              <div className="fx-scattered fit-container">
                                 <p>{t("AFVPHti")}</p>
                                 <div
                                   className={`toggle ${
@@ -1335,7 +1421,6 @@ export default function Settings() {
                                 ></div>
                               </div>
                               <hr />
-
                               <div
                                 className="fx-scattered fit-container fx-col fx-start-v"
                                 style={{ gap: 0 }}
@@ -1355,7 +1440,6 @@ export default function Settings() {
                                           }}
                                           className="box-pad-v-m fit-container fx-centered fx-start-h fx-start-v fx-col"
                                         >
-                                          {console.log(contentList)}
                                           {contentList.map((item, index) => {
                                             return (
                                               <Draggable
@@ -1424,6 +1508,43 @@ export default function Settings() {
                                       )}
                                     </Droppable>
                                   </DragDropContext>
+                                </div>
+                              </div>
+                              <hr />
+                              <div className="fx-scattered fit-container fx-col fx-start-v">
+                                <p className="gray-c">{t("ASSFfFZ")}</p>
+                                <div className="fit-container fx-centered fx-col">
+                                  {notification.map((item, index) => {
+                                    return (
+                                      <Fragment key={index}>
+                                        <div className="fx-scattered fit-container">
+                                          <p className="p-maj">
+                                            {notificationDN[item.tab]}
+                                          </p>
+                                          <div className="fx-centered">
+                                            <div
+                                              className={`toggle ${
+                                                item.isHidden
+                                                  ? "toggle-dim-gray"
+                                                  : ""
+                                              } ${
+                                                !item.isHidden
+                                                  ? "toggle-c1"
+                                                  : "toggle-dim-gray"
+                                              }`}
+                                              onClick={() =>
+                                                handleNotification(
+                                                  index,
+                                                  !item.isHidden
+                                                )
+                                              }
+                                            ></div>
+                                          </div>
+                                        </div>
+                                        <hr />
+                                      </Fragment>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>
@@ -1772,7 +1893,11 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
             <div
               className="fx-scattered fit-container"
               onClick={() => {
-                addRelay("wss://" + searchedRelay.replace("wss://", ""));
+                addRelay(
+                  searchedRelay.includes("ws://")
+                    ? searchedRelay
+                    : "wss://" + searchedRelay.replace("wss://", "")
+                );
                 setSearchedRelay("");
               }}
             >
@@ -1857,7 +1982,7 @@ const RelaysInfo = ({ url, exit }) => {
                   )}
                   {!relayInfo.owner && <p>N/A</p>}
                   {relayInfo.owner && (
-                    <UserProfilePicNOSTR
+                    <UserProfilePic
                       img={relayInfo.owner.picture}
                       size={24}
                       mainAccountUser={false}
@@ -1931,7 +2056,7 @@ const RelayImage = ({ url, size = 24 }) => {
         className={`p-bold p-caps ${size > 24 ? "p-big" : ""}`}
         style={{ position: "relative", zIndex: 1 }}
       >
-        {url.split(".")[1].charAt(0)}
+        {url.split(".")[1]?.charAt(0)}
       </p>
     </div>
   );

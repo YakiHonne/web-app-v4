@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUserBalance } from "../../Store/Slides/UserData";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
+import NumberShrink from "../NumberShrink";
 
 export default function UserBalance() {
   const { t } = useTranslation();
@@ -153,12 +154,16 @@ export default function UserBalance() {
       }}
     >
       <div
-        className="fx-centered fx-col fit-container fx-start-v "
+        className="fx-centered  fit-container fx-start-h "
         style={{ rowGap: 0 }}
       >
         <div className="fx-centered">
-          {!isHidden && <h3>{userBalance}</h3>}
-          {isHidden && <h3>*****</h3>}
+          {!isHidden && (
+            <h4>
+              <NumberShrink value={userBalance} />
+            </h4>
+          )}
+          {isHidden && <h4>***</h4>}
           <div className="sats-24"></div>
         </div>
 

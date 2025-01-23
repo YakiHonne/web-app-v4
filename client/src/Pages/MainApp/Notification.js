@@ -1,6 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import ArrowUp from "../../Components/ArrowUp";
 import NotificationCenterMain from "../../Components/Main/NotificationCenterMain";
 import { useSelector } from "react-redux";
@@ -32,7 +32,7 @@ export default function Notification() {
       </Helmet>
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main
             className="main-page-nostr-container"
             onClick={(e) => {

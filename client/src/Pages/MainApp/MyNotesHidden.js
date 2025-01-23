@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import { useState } from "react";
 import { useEffect } from "react";
-import ToDeletePostNOSTR from "../../Components/Main/ToDeletePostNOSTR";
+import ToDeletePost from "../../Components/Main/ToDeletePost";
 import LoadingDots from "../../Components/LoadingDots";
 import { Helmet } from "react-helmet";
 import {
@@ -85,7 +85,7 @@ export default function MyNotesHidden() {
   return (
     <>
       {postToDelete && (
-        <ToDeletePostNOSTR
+        <ToDeletePost
           exit={() => initDeletedPost(false)}
           exitAndRefresh={() => initDeletedPost(true)}
           post_id={postToDelete.id}
@@ -115,7 +115,7 @@ export default function MyNotesHidden() {
         <div className="fit-container fx-centered">
           <div className="main-container">
             <div className="fit-container fx-centered">
-              <SidebarNOSTR />
+              <Sidebar />
               <main
                 className={`main-page-nostr-container`}
                 onClick={(e) => {

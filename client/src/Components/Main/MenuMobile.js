@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ShortenKey from "./ShortenKey";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import { getBech32, minimizeKey } from "../../Helpers/Encryptions";
 import { nip19 } from "nostr-tools";
 import relaysOnPlatform from "../../Content/Relays";
@@ -115,7 +115,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           className="fx-centered fx-start-h box-pad-v fit-container"
           style={{ columnGap: "16px" }}
         >
-          <UserProfilePicNOSTR
+          <UserProfilePic
             size={32}
             mainAccountUser={true}
             allowClick={true}
@@ -244,10 +244,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
                 onClick={() => {
                   customHistory.push(
-                    `/users/${nip19.nprofileEncode({
-                      pubkey: userKeys.pub,
-                      relays: relaysOnPlatform,
-                    })}`
+                    `/users/${getBech32("npub", userKeys.pub)}`
                   );
                   dismiss();
                 }}
@@ -317,7 +314,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                   >
                     <div className="fx-centered">
                       <div style={{ pointerEvents: "none" }}>
-                        <UserProfilePicNOSTR
+                        <UserProfilePic
                           size={32}
                           mainAccountUser={false}
                           img={account.picture}

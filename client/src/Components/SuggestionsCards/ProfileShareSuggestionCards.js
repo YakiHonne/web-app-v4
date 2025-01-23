@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import bg from "../../media/images/leaves-bg.svg";
 import bg2 from "../../media/images/dots-bg.png";
-import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
+import UserProfilePic from "../Main/UserProfilePic";
 import QRSharing from "../../Pages/MainApp/QRSharing";
 import { useTranslation } from "react-i18next";
 
@@ -43,7 +43,7 @@ export default function ProfileShareSuggestionCards() {
             className="box-pad-h box-pad-v fx-centered fx-col"
             style={{ position: "relative", zIndex: 3 }}
           >
-            <UserProfilePicNOSTR mainAccountUser={true} size={94} />
+            <UserProfilePic mainAccountUser={true} size={94} />
             <h4 className="box-pad-v-s">
               @{userMetadata.display_name || userMetadata.name}
             </h4>

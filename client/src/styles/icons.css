@@ -386,7 +386,9 @@
 .flag-th,
 .flag-th-24,
 .flag-it,
-.flag-it-24 {
+.flag-it-24,
+.user-bold,
+.user-bold-24 {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -739,7 +741,9 @@
     .emoji,
     .emoji-24,
     .translate,
-    .translate-24 {
+    .translate-24,
+    .user-bold,
+    .user-bold-24 {
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -953,7 +957,8 @@
 .flag-ja,
 .flag-zh,
 .flag-th,
-.flag-it {
+.flag-it,
+.user-bold {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1156,7 +1161,8 @@
 .flag-ja-24,
 .flag-zh-24,
 .flag-th-24,
-.flag-it-24 {
+.flag-it-24,
+.user-bold-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1170,6 +1176,11 @@
 .bunny-icon {
     min-width: 8rem;
     min-height: 8rem;
+}
+
+.user-bold,
+.user-bold-24 {
+    background-image: url('../media/icons/user-bold.svg');
 }
 
 .flag-it,

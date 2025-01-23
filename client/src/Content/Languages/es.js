@@ -982,6 +982,18 @@ const spanishTranslation = {
   ASGtOLO: "¿Estás seguro de que quieres continuar? ",
   A9WT6DE: "Muy pronto",
   AYlOMYB: "Expira el {{date}}",
+  AozzmTY: "Nota colapsada",
+  AnWFKlu: "Ver más",
+  AzhKxMs: "¡Las notificaciones están deshabilitadas!",
+  Aioqvbi:
+    "Las notificaciones están deshabilitadas para este tipo, puede habilitarlas en la configuración de notificaciones.",
+  AcdxgMi: "Rever",
+  A0qY0bf: "Leer todo",
+  AhQtS0K: "El nombre de usuario es obligatorio",
+  AgrHddv: "Se toma el nombre de usuario",
+  AshEtUl:
+    "Asegúrese de guardar de forma segura su frase de conexión de NWC, ya que no podemos ayudarlo a recuperar billeteras perdidas.",
+  AcFjmGe: "Tipo no compatible",
 };
 
 export default spanishTranslation;

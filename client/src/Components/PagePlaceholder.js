@@ -14,6 +14,7 @@ import HeroYakiChest from "../media/images/trophy.png";
 import HeroWallet from "../media/images/wallet.png";
 import HeroWidgets from "../media/images/widgets.png";
 import HeroWidgetsDraft from "../media/images/draft.png";
+import HeroUnsupported from "../media/images/unsupported.png";
 import { Link } from "react-router-dom";
 import LoginWithAPI from "./Main/LoginWithAPI";
 import AddWallet from "./Main/AddWallet";
@@ -27,6 +28,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
   const { t } = useTranslation();
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [showAddWallet, setShowAddWallet] = useState(false);
+
   if (page === "404")
     return (
       <div className="fit-container">
@@ -351,6 +353,24 @@ export default function PagePlaceholder({ page, onClick = null }) {
             <button className="btn btn-normal" onClick={onClick}>
               {t("AxgWICf")}
             </button>
+          </div>
+        </div>
+      </>
+    );
+  if (page === "unsupported")
+    return (
+      <>
+        <div className="fit-container">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroUnsupported})`,
+                width: "500px",
+                height: "280px",
+              }}
+            ></div>
+            <h4>{t("AcFjmGe")}</h4>
           </div>
         </div>
       </>

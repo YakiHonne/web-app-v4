@@ -10,7 +10,7 @@ import "./styles/custom.css";
 import "./styles/mobile.css";
 
 import ToastMessages from "./Components/ToastMessages";
-import NavbarNOSTR from "./Components/Main/NavbarNOSTR";
+import Navbar from "./Components/Main/Navbar";
 import UserFirsLogin from "./Components/UserFirsLogin";
 import routes from "./Routes";
 
@@ -19,7 +19,7 @@ export default function App() {
     <>
       <ToastMessages />
       <UserFirsLogin />
-      <NavbarNOSTR />
+      <Navbar />
       <Routes>
         {routes.map(({ path, element }, index) => (
           <Route key={index} path={path} element={element} />

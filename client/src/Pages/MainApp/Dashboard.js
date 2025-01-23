@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useReducer, useState } from "react";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import { SelectTabs } from "../../Components/Main/SelectTabs";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import { useDispatch, useSelector } from "react-redux";
 import Date_ from "../../Components/Date_";
 import { getPopularNotes, getUserStats } from "../../Helpers/WSInstance";
@@ -32,7 +32,7 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useLocation, useNavigate } from "react-router-dom";
 import useRepEventStats from "../../Hooks/useRepEventStats";
 import Select from "../../Components/Main/Select";
-import AddCurationNOSTR from "../../Components/Main/AddCurationNOSTR";
+import AddCuration from "../../Components/Main/AddCuration";
 import { Link } from "react-router-dom";
 import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import AddBookmark from "../../Components/Main/AddBookMark";
@@ -326,7 +326,7 @@ export default function Dashboard() {
 
         <div className="fit-container fx-centered">
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main className="main-page-nostr-container">
               <div
                 className="fx-centered fit-container fx-start-h fx-start-v"
@@ -572,7 +572,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
         />
       )}
       {showCurationCreator && (
-        <AddCurationNOSTR
+        <AddCuration
           exit={() => {
             setShowCurationCreator(false);
             setEditEvent(false);
@@ -979,7 +979,7 @@ const HomeTab = ({
         />
       )}
       {showCurationCreator && (
-        <AddCurationNOSTR
+        <AddCuration
           exit={handleUpdateEvent}
           curation={editEvent ? editEvent : null}
           tags={editEvent.tags}
@@ -1021,7 +1021,7 @@ const HomeTab = ({
                     borderRadius: "22px",
                   }}
                 >
-                  <UserProfilePicNOSTR mainAccountUser={true} size={110} />
+                  <UserProfilePic mainAccountUser={true} size={110} />
                 </div>
                 <div className="fx-centered fx-col">
                   <h4>{userMetadata.display_name || userMetadata.name}</h4>

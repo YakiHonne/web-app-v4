@@ -7,7 +7,7 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { InitEvent } from "../../Helpers/Controlers";
 import { useTranslation } from "react-i18next";
 
-export default function ToPublishDraftsNOSTR({
+export default function ToPublishDrafts({
   postContent = "",
   postTitle = "",
   edit = false,

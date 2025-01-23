@@ -8,8 +8,8 @@ import {
 } from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import NumberShrink from "../../Components/NumberShrink";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import { Link } from "react-router-dom";
@@ -248,7 +248,7 @@ export default function Video() {
 
         <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main className="main-page-nostr-container">
               <ArrowUp />
 
@@ -281,7 +281,7 @@ export default function Video() {
                         </div>
                         <div className="fx-scattered fit-container box-pad-v-m">
                           <div className="fx-centered">
-                            <UserProfilePicNOSTR
+                            <UserProfilePic
                               img={author.picture}
                               size={24}
                               user_id={author.pubkey}
@@ -633,7 +633,7 @@ const AuthorPreviewExtra = ({ authorPubkey }) => {
 
   return (
     <div className="fx-centered fx-start-h">
-      <UserProfilePicNOSTR
+      <UserProfilePic
         size={16}
         img={authorData.picture}
         mainAccountUser={false}

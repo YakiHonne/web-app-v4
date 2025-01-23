@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
+import UserProfilePic from "../Main/UserProfilePic";
 import OptionsDropdown from "../Main/OptionsDropdown";
 import Slider from "../Slider";
 import { NDKUser } from "@nostr-dev-kit/ndk";
@@ -150,7 +150,7 @@ const NoteCard = ({ event }) => {
     >
       <div className="fit-container fx-scattered">
         <div className="fx-centered" style={{ gap: "3px" }}>
-          <UserProfilePicNOSTR
+          <UserProfilePic
             size={24}
             mainAccountUser={false}
             user_id={user.pubkey}

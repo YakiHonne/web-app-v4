@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import MenuMobile from "./MenuMobile";
 import { useSelector } from "react-redux";
 import { redirectToLogin } from "../../Helpers/Helpers";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import SearchNetwork from "./SearchNetwork";
 
-export default function NavbarNOSTR() {
+export default function Navbar() {
   const userKeys = useSelector((state) => state.userKeys);
   const [showSearchMobile, setShowSearchMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -65,7 +65,7 @@ export default function NavbarNOSTR() {
             onClick={() => setShowMobileMenu(!showMobileMenu)}
           >
             {userKeys ? (
-              <UserProfilePicNOSTR
+              <UserProfilePic
                 allowClick={false}
                 mainAccountUser={true}
                 allowPropagation={true}

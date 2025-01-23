@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
+import UserProfilePic from "../Main/UserProfilePic";
 import { useDispatch, useSelector } from "react-redux";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
@@ -262,7 +262,7 @@ export default function Comments({
         style={{ overflow: "visible", zIndex: "10", position: "relative" }}
         ref={ref}
       >
-        <UserProfilePicNOSTR
+        <UserProfilePic
           size={48}
           mainAccountUser={true}
           allowClick={false}

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { webln } from "@getalby/sdk";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import axios from "axios";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import * as secp from "@noble/secp256k1";
@@ -17,7 +17,7 @@ import {
   shortenKey,
 } from "../../Helpers/Encryptions";
 import relaysOnPlatform from "../../Content/Relays";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import Date_ from "../../Components/Date_";
 import QRCode from "react-qr-code";
 import LoadingDots from "../../Components/LoadingDots";
@@ -387,7 +387,7 @@ export default function Wallet() {
         </Helmet>
         <div className="fit-container fx-centered">
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main className="main-page-nostr-container">
               <ArrowUp />
               <div className="fx-centered fit-container  fx-start-v">
@@ -697,7 +697,7 @@ export default function Wallet() {
                                       <div className="fit-container fx-scattered">
                                         <div className="fx-centered fx-start-h">
                                           <div style={{ position: "relative" }}>
-                                            <UserProfilePicNOSTR
+                                            <UserProfilePic
                                               mainAccountUser={false}
                                               user_id={author.pubkey}
                                               size={48}
@@ -860,7 +860,7 @@ export default function Wallet() {
                                                     position: "relative",
                                                   }}
                                                 >
-                                                  <UserProfilePicNOSTR
+                                                  <UserProfilePic
                                                     mainAccountUser={false}
                                                     size={48}
                                                     user_id={isZap.pubkey}
@@ -1059,7 +1059,7 @@ export default function Wallet() {
                                                       position: "relative",
                                                     }}
                                                   >
-                                                    <UserProfilePicNOSTR
+                                                    <UserProfilePic
                                                       mainAccountUser={false}
                                                       size={48}
                                                       user_id={isZap.pubkey}
@@ -1795,9 +1795,10 @@ const DeletionPopUp = ({ exit, handleDelete, wallet }) => {
           style={{ borderStyle: "dashed" }}
           onClick={() => copyKey(t("A6Pj02S"), wallet.data)}
         >
-          <p>{shortenKey(wallet.data, 20)}</p>
+          <p>{shortenKey(wallet.data, 40)}</p>
           <div className="copy-24"></div>
         </div>
+        <p className="c1-c p-medium p-centered box-pad-h-m">{t("AshEtUl")}</p>
         <div className="fx-centered fit-container">
           <button className="fx btn btn-gst-red" onClick={handleDelete}>
             {t("Almq94P")}

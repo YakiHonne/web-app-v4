@@ -6,7 +6,7 @@ import React, {
   Fragment,
 } from "react";
 import { useSelector } from "react-redux";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import {
   getParsedNote,
   getParsedRepEvent,
@@ -25,7 +25,7 @@ import Slider from "../../Components/Slider";
 import SmallButtonDropDown from "../../Components/Main/SmallButtonDropDown";
 import HomeCarouselContentSuggestions from "../../Components/Main/HomeCarouselContentSuggestions";
 import { getHighlights, getTrending } from "../../Helpers/WSInstance";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
 import InterestSuggestions from "../../Content/InterestSuggestions";
 
@@ -33,6 +33,7 @@ import {
   getCustomSettings,
   getDefaultSettings,
   getKeys,
+  getLinkPreview,
   straightUp,
 } from "../../Helpers/Helpers";
 import LoadingLogo from "../../Components/LoadingLogo";
@@ -263,7 +264,7 @@ export default function Home() {
         </Helmet>
         <div className="fit-container fx-centered">
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main
               className="main-page-nostr-container"
               onClick={(e) => {
@@ -366,10 +367,7 @@ export default function Home() {
                           }}
                           onClick={() => setShowWriteNote(true)}
                         >
-                          <UserProfilePicNOSTR
-                            size={40}
-                            mainAccountUser={true}
-                          />
+                          <UserProfilePic size={40} mainAccountUser={true} />
                           <div className="sc-s-18 box-pad-h-s box-pad-v-s fit-container">
                             <p className="gray-c p-big">{t("AGAXMQ3")}</p>
                           </div>
@@ -529,7 +527,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       let pubkeys = [...new Set(notes_.map((event) => event.pubkey))];
       saveUsers(pubkeys);
       notes_ = await Promise.all(
-        notes_.map(async (event) => await getParsedNote(event))
+        notes_.map(async (event) => await getParsedNote(event, true))
       );
       dispatchNotes({ type: "trending", note: notes_ });
       setIsLoading(false);
@@ -547,7 +545,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       let pubkeys = [...new Set(notes_.map((event) => event.pubkey))];
       saveUsers(pubkeys);
       notes_ = await Promise.all(
-        notes_.map(async (event) => await getParsedNote(event))
+        notes_.map(async (event) => await getParsedNote(event, true))
       );
       dispatchNotes({ type: "highlights", note: notes_ });
       setIsLoading(false);
@@ -618,7 +616,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
 
       subscription.on("event", async (event) => {
         eventsPubkeys.push(event.pubkey);
-        let event_ = await getParsedNote(event);
+        let event_ = await getParsedNote(event, true);
         if (event_) fallBackEvents.push(event_);
         if (event_ && event.created_at > dateChecker) {
           if (notesContentFrom !== "recent-with-replies") {

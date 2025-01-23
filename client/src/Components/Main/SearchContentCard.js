@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import { getUser } from "../../Helpers/Controlers";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import Date_ from "../Date_";
 import { Link } from "react-router-dom";
 import DynamicIndicator from "../DynamicIndicator";
@@ -44,7 +44,7 @@ export default function SearchContentCard({ event, exit, userProfile = true }) {
           exit();
         }}
       >
-        <UserProfilePicNOSTR
+        <UserProfilePic
           img={user.picture || ""}
           size={48}
           allowClick={false}
@@ -114,7 +114,7 @@ export default function SearchContentCard({ event, exit, userProfile = true }) {
               aspectRatio: "1/1",
             }}
           >
-            <UserProfilePicNOSTR
+            <UserProfilePic
               img={user.picture || ""}
               size={20}
               allowClick={false}

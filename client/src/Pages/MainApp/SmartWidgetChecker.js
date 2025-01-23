@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import { Helmet } from "react-helmet";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
@@ -361,7 +361,7 @@ export default function SmartWidgetChecker() {
       </Helmet>
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <div className="fx-centered fit-container fx-start-h fx-start-v">
               <div className="box-pad-h-m fit-container">

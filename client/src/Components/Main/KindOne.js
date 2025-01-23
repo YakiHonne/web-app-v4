@@ -4,7 +4,7 @@ import {
   getBech32,
   getEmptyuserMetadata,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
 import BookmarkEvent from "./BookmarkEvent";
@@ -128,7 +128,9 @@ export default function KindOne({
       return;
     }
     if (isSelected) return null;
-    customHistory.push(`/notes/${event.nEvent}`);
+    customHistory.push(`/notes/${event.nEvent}`, {
+      triggerTranslation: translatedNote ? true : false,
+    });
   };
 
   const redirect = (e) => {
@@ -181,6 +183,12 @@ export default function KindOne({
       return;
     }
     try {
+      if (event.isCollapsedNote) {
+        customHistory.push(`/notes/${event.nEvent}`, {
+          triggerTranslation: true,
+        });
+        return;
+      }
       let res = await translate(event.content);
       if (res.status === 500) {
         dispatch(
@@ -257,7 +265,7 @@ export default function KindOne({
         >
           <div className="fit-container fx-centered fx-start-h fx-start-v">
             <div>
-              <UserProfilePicNOSTR
+              <UserProfilePic
                 size={40}
                 mainAccountUser={false}
                 user_id={user.pubkey}
@@ -304,6 +312,15 @@ export default function KindOne({
               </div>
             </div>
           </div>
+          {event.isCollapsedNote && (
+            <div
+              className="fit-container note-indent fx-centered fx-start-h pointer"
+              style={{ paddingTop: ".5rem" }}
+              onClick={onClick}
+            >
+              <p className="c1-c">... {t("AnWFKlu")}</p>
+            </div>
+          )}
           {isTransEnabled && (
             <div
               className="fit-container note-indent"

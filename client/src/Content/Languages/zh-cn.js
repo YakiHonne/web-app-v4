@@ -925,6 +925,16 @@ const chineseTranslation = {
   ASGtOLO: "您确定要继续吗？这将清除您当前的编辑。",
   A9WT6DE: "即将推出",
   AYlOMYB: "到期日 {{date}}",
+  AozzmTY: "长帖子自动折叠",
+  AnWFKlu: "展开",
+  AzhKxMs: "通知已关闭",
+  Aioqvbi: "您可前往通知设置重新开启此类提醒。",
+  AcdxgMi: "再试一次",
+  A0qY0bf: "全标已读",
+  AhQtS0K: "用户名为必填项",
+  AgrHddv: "用户名已被注册",
+  AshEtUl: "请确保 NWC 连接短语已安全备份，丢失后将无法恢复。",
+  AcFjmGe: "暂不支持此类型",
 };
 export default chineseTranslation;
 // const reorderObjectByValues = (obj) => {

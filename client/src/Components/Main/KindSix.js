@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import KindOne from "../../Components/Main/KindOne";
 import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
@@ -32,7 +32,7 @@ export default function KindSix({ event }) {
           event.created_at * 1000
         ).toLocaleTimeString()}`}
       >
-        <UserProfilePicNOSTR
+        <UserProfilePic
           size={20}
           mainAccountUser={false}
           

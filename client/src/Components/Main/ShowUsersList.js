@@ -7,7 +7,7 @@ import {
 } from "../../Helpers/Encryptions";
 import LoadingScreen from "../LoadingScreen";
 import Follow from "./Follow";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import ShortenKey from "./ShortenKey";
 import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
@@ -179,7 +179,7 @@ export default function ShowUsersList({ exit, list, title, extras }) {
                       className="fx-centered fx-start-v"
                       style={{ columnGap: "24px" }}
                     >
-                      <UserProfilePicNOSTR
+                      <UserProfilePic
                         size={48}
                         img={item.picture}
                         user_id={item.pubkey}

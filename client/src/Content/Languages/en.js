@@ -897,7 +897,7 @@ const englishTranslation = {
   ACmLZt3: "{{name}} quoted a note you were mentioned in",
   AtWXTcu: "{{name}} mentioned you in a note",
   AtLiZSD: "{{name}} reposted your note",
-  Avp7edv: "{{name}} a note you were mentioned in",
+  Avp7edv: "{{name}} reposted a note you were mentioned in",
   Az3sitJ_1: "{{name}} commented on your note",
   Az3sitJ_30023: "{{name}} commented on your article",
   Az3sitJ_30004: "{{name}} commented on your curation",
@@ -974,6 +974,18 @@ const englishTranslation = {
   ASGtOLO:
     "Are you sure you want to continue? This will clear your current edits.",
   AYlOMYB: "Expires on {{date}}",
+  AozzmTY: "Collapsed note",
+  AnWFKlu: "See more",
+  AzhKxMs: "Notifications are disabled!",
+  Aioqvbi:
+    "Notifications are disabled for this type, you can enable it in the notifications settings.",
+  AcdxgMi: "Retry",
+  A0qY0bf: "Read all",
+  AhQtS0K: "Username is required",
+  AgrHddv: "Username is taken",
+  AshEtUl:
+    "Please ensure you securely save your NWC connection phrase, as we cannot assist with recovering lost wallets.",
+  AcFjmGe: "Unsupported kind",
 };
 
 export default englishTranslation;
@@ -987,17 +999,6 @@ export default englishTranslation;
 
 // console.log(JSON.stringify(reorderObjectByValues(englishTranslation), null, 2));
 
-// AOybB9U: "",
-// AozzmTY: "",
-// AnWFKlu: "",
-// AzhKxMs: "",
-// Aioqvbi: "",
-// AcdxgMi: "",
-// A0qY0bf: "",
-// AhQtS0K: "",
-// AgrHddv: "",
-// AshEtUl: "",
-// AcFjmGe: "",
 // APjAPzs: "",
 // AfVdphT: "",
 // A7YVOVL: "",

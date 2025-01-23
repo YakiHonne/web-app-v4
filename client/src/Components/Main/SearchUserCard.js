@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import { Link } from "react-router-dom";
 
 export default function SearchUserCard({ user, url, exit }) {
@@ -29,7 +29,7 @@ export default function SearchUserCard({ user, url, exit }) {
     return (
       <div className="fx-scattered fit-container pointer search-bar-post">
         <div className="fx-centered">
-          <UserProfilePicNOSTR
+          <UserProfilePic
             img={user.picture || ""}
             size={36}
             allowClick={false}
@@ -63,7 +63,7 @@ export default function SearchUserCard({ user, url, exit }) {
       }}
     >
       <div className="fx-centered">
-        <UserProfilePicNOSTR
+        <UserProfilePic
           img={user.picture || ""}
           size={36}
           allowClick={false}

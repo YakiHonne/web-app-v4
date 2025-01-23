@@ -988,6 +988,17 @@ const japaneseTranslation = {
   ASGtOLO: "続行しますか？これにより現在の編集内容がクリアされます。",
   A9WT6DE: "近日公開",
   AYlOMYB: "{{date}} に期限切れになります",
+  AozzmTY: "折りたたまれたメモ",
+  AnWFKlu: "もっと見る",
+  AzhKxMs: "通知が無効になっています!",
+  Aioqvbi: "このタイプの通知は無効になっています。通知設定で有効にできます。",
+  AcdxgMi: "リトライ",
+  A0qY0bf: "すべて読む",
+  AhQtS0K: "ユーザー名は必須です",
+  AgrHddv: "ユーザー名が取得されました",
+  AshEtUl:
+    "紛失したウォレットの回復はサポートできないため、NWC 接続フレーズを安全に保存してください。",
+  AcFjmGe: "サポートされていない種類",
 };
 
 export default japaneseTranslation;

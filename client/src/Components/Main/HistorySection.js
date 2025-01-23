@@ -15,7 +15,7 @@ const traceEventPath = async (id, all, mainEventID, tagKind) => {
     const event = all.find((comment) => comment.id === currentId);
     if (!event) break;
 
-    let parsedEvent = await getParsedNote(event);
+    let parsedEvent = await getParsedNote(event, true);
 
     path.unshift(parsedEvent);
     const parentRoot = event.tags.find(
@@ -32,7 +32,7 @@ const traceEventPath = async (id, all, mainEventID, tagKind) => {
   if (tagKind === "e") {
     let mainEvent = all.find((comment) => comment.id === mainEventID);
     if (mainEvent) {
-      let parsedEvent = await getParsedNote(mainEvent);
+      let parsedEvent = await getParsedNote(mainEvent, true);
       path.unshift(parsedEvent);
     }
   }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { nip19 } from "nostr-tools";
 import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import { Link } from "react-router-dom";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 
@@ -55,11 +55,7 @@ export default function NProfilePreviewer({
       }`}
     >
       <div className="fx-centered" style={{ columnGap: "12px" }}>
-        <UserProfilePicNOSTR
-          img={author.picture}
-          size={40}
-          user_id={pubkey}
-        />
+        <UserProfilePic img={author.picture} size={40} user_id={pubkey} />
         <div>
           <p style={{ margin: 0 }}>{author.display_name}</p>
           <p style={{ margin: 0 }} className="p-medium gray-c">
@@ -68,7 +64,7 @@ export default function NProfilePreviewer({
         </div>
       </div>
       {!close && showSharing && (
-        <Link to={`/users/${nip19.nprofileEncode({ pubkey })}`} target="_blank">
+        <Link to={`/users/${getBech32("npub", pubkey)}`} target="_blank">
           <div className="share-icon-24"></div>
         </Link>
       )}

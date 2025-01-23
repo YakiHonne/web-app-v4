@@ -22,7 +22,7 @@ const getSuggestions = (custom) => {
   );
 };
 
-export default function ToPublishNOSTR({
+export default function ToPublish({
   postId = "",
   postKind,
   postContent = "",

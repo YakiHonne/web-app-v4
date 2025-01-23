@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import ArrowUp from "../../Components/ArrowUp";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import ProgressBar from "../../Components/ProgressBar";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import { chartActionKeys } from "../../Content/ActionKeys";
 import ProgressCirc from "../../Components/ProgressCirc";
 import PagePlaceholder from "../../Components/PagePlaceholder";
@@ -227,7 +227,7 @@ export default function UserLevels() {
       {showPointsDesc && <PointsDesc exit={() => setShowPointsDesc(false)} />}
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <ArrowUp />
           <main className={`main-page-nostr-container`}>
             <div className="fit-container fx-centered fx-start-h">
@@ -260,7 +260,7 @@ export default function UserLevels() {
                               }}
                             >
                               <div>
-                                <UserProfilePicNOSTR
+                                <UserProfilePic
                                   size={100}
                                   mainAccountUser={true}
                                   allowClick={false}

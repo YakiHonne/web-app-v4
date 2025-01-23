@@ -1,5 +1,5 @@
 // import React, { useEffect, useRef, useState } from "react";
-// import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+// import Sidebar from "../../Components/Main/Sidebar";
 // import {
 //   useEditor,
 //   EditorContent,
@@ -21,7 +21,7 @@
 //       <div>
 //         <div className="fit-container fx-centered">
 //           <div className="main-container">
-//             <SidebarNOSTR />
+//             <Sidebar />
 //             <main
 //               className="main-page-nostr-container"
 //               style={{ overflow: "visible" }}
@@ -124,7 +124,7 @@
 // }
 
 // import React, { useEffect, useRef, useState } from "react";
-// import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+// import Sidebar from "../../Components/Main/Sidebar";
 // import { Color } from '@tiptap/extension-color'
 // import ListItem from '@tiptap/extension-list-item'
 // import TextStyle from '@tiptap/extension-text-style'
@@ -360,7 +360,7 @@
 
 //         <div className="fit-container fx-centered">
 //           <div className="main-container">
-//             <SidebarNOSTR />
+//             <Sidebar />
 //             <main
 //               className="main-page-nostr-container"
 //               style={{ overflow: "visible" }}
@@ -383,7 +383,7 @@
 // }
 
 import React, { useEffect } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import MDEditor, {
   commands,
   bold,
@@ -402,11 +402,11 @@ import MDEditor, {
 } from "@uiw/react-md-editor";
 import { useState } from "react";
 import PagePlaceholder from "../../Components/PagePlaceholder";
-import ToPublishNOSTR from "../../Components/Main/ToPublishNOSTR";
+import ToPublish from "../../Components/Main/ToPublish";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import ToPublishDraftsNOSTR from "../../Components/Main/ToPublishDraftsNOSTR";
+import ToPublishDrafts from "../../Components/Main/ToPublishDrafts";
 import katex from "katex";
 import "katex/dist/katex.css";
 import axiosInstance from "../../Helpers/HTTP_Client";
@@ -416,7 +416,7 @@ import {
   getComponent,
   updateArticleDraft,
 } from "../../Helpers/Helpers";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import LoadingDots from "../../Components/LoadingDots";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
@@ -595,7 +595,7 @@ export default function WritingArticle() {
   return (
     <>
       {showPublishingScreen && (
-        <ToPublishNOSTR
+        <ToPublish
           warning={triggerHTMLWarning}
           exit={() => setShowPublishingScreen(false)}
           postContent={content}
@@ -611,7 +611,7 @@ export default function WritingArticle() {
         />
       )}
       {showPublishingDraftScreen && (
-        <ToPublishDraftsNOSTR
+        <ToPublishDrafts
           warning={triggerHTMLWarning}
           exit={() => setShowPublishingDraftScreen(false)}
           postContent={content}
@@ -671,7 +671,7 @@ export default function WritingArticle() {
             className="main-container"
             style={{ width: !userKeys ? "unset" : "min(100%, 1700px)" }}
           >
-            {!userKeys && <SidebarNOSTR />}
+            {!userKeys && <Sidebar />}
             <main
               className="main-page-nostr-container fit-container"
               style={{ overflow: "visible" }}
@@ -798,7 +798,7 @@ export default function WritingArticle() {
                                     {t("AgGi8rh")}
                                   </button>
                                 </div>
-                                <UserProfilePicNOSTR
+                                <UserProfilePic
                                   size={40}
                                   mainAccountUser={true}
                                   allowClick={false}
@@ -1326,7 +1326,7 @@ const ChatGPTConvo = () => {
                   </div>
                   {msg.user && (
                     <div className="fx-centered box-pad-v-s">
-                      <UserProfilePicNOSTR mainAccountUser={true} size={32} />
+                      <UserProfilePic mainAccountUser={true} size={32} />
                     </div>
                   )}
                 </div>

@@ -21,7 +21,7 @@ import Date_ from "./Date_";
 import ProgressCirc from "./ProgressCirc";
 import { useTranslation } from "react-i18next";
 
-const PUBLISHING_TIMEOUT = 4000;
+const PUBLISHING_TIMEOUT = 3000;
 
 const action_key_from_kind = {
   3: "follow_yaki",
@@ -482,7 +482,7 @@ export default function Publishing() {
           style={{ zIndex: 200000 }}
         >
           <div
-            className="fx-centered fx-start-h box-pad-v fx-col slide-up box-pad-h sc-s-18"
+            className="fx-centered fx-start-h box-pad-v fx-col slide-up box-pad-h sc-s-18 bg-sp"
             style={{
               width: "700px",
               minHeight: "50vh",
@@ -507,21 +507,21 @@ export default function Publishing() {
               <p className="gray-c">{t("Ao1TlO5")}</p>
             </div>
             <div className="fit-container fx-scattered">
-              <div className="fx-centered fx sc-s-18 box-pad-h box-pad-v fx-col">
+              <div className="fx-centered fx sc-s-18 bg-sp box-pad-h box-pad-v fx-col">
                 <div className="fx-centered">
                   <div className="total-events-24"></div>
                   <h4>{publishedEvents.length}</h4>
                 </div>
                 <p className="gray-c">Events</p>
               </div>
-              <div className="fx-centered fx sc-s-18 box-pad-h box-pad-v fx-col">
+              <div className="fx-centered fx sc-s-18 bg-sp box-pad-h box-pad-v fx-col">
                 <div className="fx-centered">
                   <div className="succeeded-events-24"></div>
                   <h4>{succeededEvents}</h4>
                 </div>
                 <p className="gray-c">{t("ATJXba6")}</p>
               </div>
-              <div className="fx-centered fx sc-s-18 box-pad-h box-pad-v fx-col">
+              <div className="fx-centered fx sc-s-18 bg-sp box-pad-h box-pad-v fx-col">
                 <div className="fx-centered">
                   <div className="failed-events-24"></div>
                   <h4>{failedEvents}</h4>
@@ -555,7 +555,7 @@ export default function Publishing() {
                     return (
                       <div
                         key={event.id}
-                        className="fit-container sc-s-18 box-pad-h-m box-pad-v-m"
+                        className="fit-container sc-s-18 bg-sp box-pad-h-m box-pad-v-m"
                       >
                         <div
                           className="fit-container fx-scattered pointer"
@@ -611,22 +611,6 @@ export default function Publishing() {
                                 </div>
                               );
                             })}
-                            {event.isFinished &&
-                              failed.length > 0 &&
-                              userMetadata.pubkey === event.ndkEvent.pubkey && (
-                                <button
-                                  className="btn btn-normal"
-                                  onClick={() =>
-                                    retry(
-                                      event.ndkEvent,
-                                      failed,
-                                      event.originalIndex
-                                    )
-                                  }
-                                >
-                                  {t("AqDABUy")}
-                                </button>
-                              )}
                           </div>
                         )}
                         <div className="fit-container fx-centered fx-start-h">
@@ -639,6 +623,22 @@ export default function Publishing() {
                               {failed.length} {t("AOxW08J")}
                             </p>
                           )}
+                          {event.isFinished &&
+                            failed.length > 0 &&
+                            userMetadata.pubkey === event.ndkEvent.pubkey && (
+                              <button
+                                className="btn btn-normal btn-small"
+                                onClick={() =>
+                                  retry(
+                                    event.ndkEvent,
+                                    failed,
+                                    event.originalIndex
+                                  )
+                                }
+                              >
+                                {t("AcdxgMi")}
+                              </button>
+                            )}
                         </div>
                       </div>
                     );
@@ -683,7 +683,10 @@ export default function Publishing() {
       </div>
       <div
         className="sc-s-18 fit-container fx-centered box-marg-s pointer option link-label"
-        style={{ backgroundColor: "transparent" }}
+        style={{
+          backgroundColor: "transparent",
+          border: failedEvents > 0 ? "1px solid var(--red-main)" : "",
+        }}
         onClick={() => setShowDetails(true)}
       >
         <div
@@ -705,7 +708,9 @@ export default function Publishing() {
             </div>
             <div className="fx-centered">
               <div className="failed-events-24"></div>
-              <p className="gray-c">{failedEvents}</p>
+              <p className={failedEvents > 0 ? "red-c" : "gray-c"}>
+                {failedEvents}
+              </p>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import UserProfilePicNOSTR from "../Main/UserProfilePicNOSTR";
+import UserProfilePic from "../Main/UserProfilePic";
 import Follow from "../Main/Follow";
 import OptionsDropdown from "../Main/OptionsDropdown";
 import Slider from "../Slider";
@@ -86,7 +86,7 @@ const UserCard = ({ user }) => {
       key={user.pubkey}
     >
       <div className="fx-centered fx-col">
-        <UserProfilePicNOSTR
+        <UserProfilePic
           mainAccountUser={false}
           img={user.picture}
           size={84}

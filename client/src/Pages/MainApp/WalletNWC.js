@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import { webln } from "@getalby/sdk";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingDots from "../../Components/LoadingDots";
@@ -93,7 +93,7 @@ export default function WalletNWC() {
     <div>
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <div className="fx-centered fit-container fx-start-h fx-start-v ">
               <div

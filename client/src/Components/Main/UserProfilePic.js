@@ -4,7 +4,11 @@ import relaysOnPlatform from "../../Content/Relays";
 import Avatar from "boring-avatars";
 import Follow from "./Follow";
 import InitiConvo from "./InitConvo";
-import { checkForLUDS, getuserMetadata } from "../../Helpers/Encryptions";
+import {
+  checkForLUDS,
+  getBech32,
+  getuserMetadata,
+} from "../../Helpers/Encryptions";
 import ZapTip from "./ZapTip";
 import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
@@ -16,7 +20,7 @@ import NumberShrink from "../NumberShrink";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import { useTranslation } from "react-i18next";
 
-export default function UserProfilePicNOSTR({
+export default function UserProfilePic({
   user_id,
   size,
   img,
@@ -51,12 +55,11 @@ export default function UserProfilePicNOSTR({
     try {
       if (!allowPropagation) e.stopPropagation();
       if (allowClick) {
-        let url = nip19.nprofileEncode({
-          pubkey: mainAccountUser ? userMetadata.pubkey : user_id,
-          relays: relaysOnPlatform,
-        });
-
-        customHistory.push(`/users/${url}`);
+        let pubkey = getBech32(
+          "npub",
+          mainAccountUser ? userMetadata.pubkey : user_id
+        );
+        customHistory.push(`/users/${pubkey}`);
       }
       return null;
     } catch {
@@ -187,7 +190,7 @@ export default function UserProfilePicNOSTR({
           <div
             style={{
               position: "absolute",
-            
+
               top: "calc(100% + 2px)",
               width: "350px",
               zIndex: 200,
@@ -199,7 +202,7 @@ export default function UserProfilePicNOSTR({
           >
             <div className="fit-container fx-scattered">
               <div className="fx-centered">
-                <UserProfilePicNOSTR user_id={user_id} size={64} img={img} />
+                <UserProfilePic user_id={user_id} size={64} img={img} />
               </div>
             </div>
             <div className="fx-centered">
@@ -300,7 +303,7 @@ const DisplayMutualFollows = ({ users }) => {
                 borderRadius: "50%",
               }}
             >
-              <UserProfilePicNOSTR
+              <UserProfilePic
                 user_id={user?.pubkey}
                 size={24}
                 mainAccountUser={false}
@@ -312,7 +315,6 @@ const DisplayMutualFollows = ({ users }) => {
       </div>
       {users.length > 3 && (
         <p className="gray-c" style={{ transform: "translateX(-35px)" }}>
-          
           {t("ALJ9RPE", { count: users.length - 3 })}
         </p>
       )}

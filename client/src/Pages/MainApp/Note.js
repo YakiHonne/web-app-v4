@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { nip19 } from "nostr-tools";
 import {
   enableTranslation,
@@ -8,8 +8,8 @@ import {
 } from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import NumberShrink from "../../Components/NumberShrink";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
@@ -34,6 +34,7 @@ import { NDKUser } from "@nostr-dev-kit/ndk";
 import HistorySection from "../../Components/Main/HistorySection";
 import { useTranslation } from "react-i18next";
 import { getNoteTree } from "../../Helpers/Helpers";
+import PagePlaceholder from "../../Components/PagePlaceholder";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function Note() {
@@ -45,6 +46,7 @@ export default function Note() {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
 
   const { nevent } = useParams();
+  const { state } = useLocation();
 
   const [note, setNote] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +58,7 @@ export default function Note() {
   const [translatedNote, setTranslatedNote] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
   const [isTransEnabled, setIsTransEnabled] = useState(false);
+  const [unsupportedKind, setUnsupportedKind] = useState(false);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -107,6 +110,10 @@ export default function Note() {
       setIsTransEnabled(isEnabled);
     };
     if (note) detectLang();
+    if (state) {
+      let { triggerTranslation } = state;
+      if (triggerTranslation) translateNote();
+    }
   }, [note]);
 
   useEffect(() => {
@@ -139,7 +146,7 @@ export default function Note() {
     let isEvent = false;
     const id = nip19.decode(nevent)?.data.id || nip19.decode(nevent)?.data;
 
-    let subscription = ndkInstance.subscribe([{ kinds: [1], ids: [id] }], {
+    let subscription = ndkInstance.subscribe([{ ids: [id] }], {
       cacheUsage: "ONLY_RELAY",
       subId: "note-req",
       groupable: false,
@@ -148,6 +155,12 @@ export default function Note() {
     });
 
     subscription.on("event", async (event) => {
+      if (event.kind !== 1) {
+        setUnsupportedKind(true);
+        setIsLoading(false);
+        subscription.stop();
+        return;
+      }
       isEvent = true;
       let isNotRoot =
         event.tags.length === 0
@@ -158,7 +171,8 @@ export default function Note() {
           ? false
           : event.tags.find((tag) => tag.length > 3 && tag[3] === "reply");
 
-      let tempNote = await getParsedNote(event);
+      let tempNote = await getParsedNote(event, false);
+
       if (tempNote) {
         saveUsers([event.pubkey]);
         setNote({
@@ -299,7 +313,7 @@ export default function Note() {
         )}
         <div className="fit-container fx-centered">
           <div className="main-container">
-            <SidebarNOSTR />
+            <Sidebar />
             <main className="main-page-nostr-container">
               <ArrowUp />
 
@@ -360,7 +374,7 @@ export default function Note() {
                     >
                       <div className="fit-container fx-scattered fx-start-v">
                         <div className="fx-centered fit-container fx-start-h box-pad-h-m box-marg-s">
-                          <UserProfilePicNOSTR
+                          <UserProfilePic
                             img={author.picture}
                             size={64}
                             mainAccountUser={false}
@@ -394,6 +408,7 @@ export default function Note() {
                       <div className="fit-container box-pad-h-m">
                         {showTranslation ? translatedNote : note.note_tree}
                       </div>
+
                       {isTransEnabled && (
                         <div
                           className="fit-container box-pad-h-m"
@@ -630,7 +645,7 @@ export default function Note() {
                     <LoadingDots />
                   </div>
                 )}
-                {!note && !isLoading && (
+                {!note && !isLoading && !unsupportedKind && (
                   <div
                     className="fit-container fx-centered fx-col"
                     style={{ height: "100vh" }}
@@ -644,6 +659,7 @@ export default function Note() {
                     </Link>
                   </div>
                 )}
+                {unsupportedKind && <PagePlaceholder page={"unsupported"}/> }
               </div>
             </main>
           </div>

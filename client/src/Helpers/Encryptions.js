@@ -5,7 +5,7 @@ import * as secp from "@noble/secp256k1";
 import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
-import { getAppLang, getKeys, getNoteTree } from "./Helpers";
+import { getAppLang, getCustomSettings, getKeys, getNoteTree } from "./Helpers";
 import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
 
@@ -306,9 +306,15 @@ const enableTranslation = async (text) => {
   }
 };
 
-const getParsedNote = async (event) => {
+const getParsedNote = async (event, isCollapsedNote = false) => {
   try {
-    // let isTransEnabled = true
+    let isNoteLong = event.content.split(" ").length > 150;
+    let isCollapsedNoteEnabled = getCustomSettings().collapsedNote;
+    isCollapsedNoteEnabled =
+      isCollapsedNoteEnabled === undefined ? true : isCollapsedNoteEnabled;
+    let isCollapsedNote_ =
+      isCollapsedNoteEnabled && isCollapsedNote && isNoteLong;
+
     let isQuote = event.tags.find((tag) => tag[0] === "q");
     let checkForLabel = event.tags.find((tag) => tag[0] === "l");
     let isComment = event.tags.find(
@@ -317,10 +323,7 @@ const getParsedNote = async (event) => {
     let isReply = event.tags.find(
       (tag) => tag.length > 0 && tag[3] === "reply"
     );
-    // let isComment = event.tags.find((tag) => tag[0] === "e" || tag[0] === "a");
-
     let isFlashNews = false;
-
     if (checkForLabel && ["UNCENSORED NOTE"].includes(checkForLabel[1]))
       return false;
     if (checkForLabel && ["FLASH NEWS"].includes(checkForLabel[1])) {
@@ -340,7 +343,11 @@ const getParsedNote = async (event) => {
       : [];
 
     if (event.kind === 1) {
-      let note_tree = await getNoteTree(event.content);
+      let note_tree = await getNoteTree(
+        event.content,
+        undefined,
+        isCollapsedNote_
+      );
 
       return {
         ...rawEvent,
@@ -350,13 +357,15 @@ const getParsedNote = async (event) => {
           isQuote && !event.content.includes("nostr:nevent") ? isQuote[1] : "",
         isComment: isReply ? isReply[1] : isComment ? isComment[1] : false,
         isFlashNews,
+        isCollapsedNote: isCollapsedNote_,
         nEvent,
         seenOn,
       };
     }
+
     if (event.kind === 6) {
       if (!event.content) return;
-      let relatedEvent = await getParsedNote(JSON.parse(event.content));
+      let relatedEvent = await getParsedNote(JSON.parse(event.content), true);
       if (!relatedEvent) return false;
       return {
         ...rawEvent,
@@ -364,6 +373,7 @@ const getParsedNote = async (event) => {
         relatedEvent,
       };
     }
+    return false;
   } catch (err) {
     console.log(err);
     return false;
@@ -626,5 +636,5 @@ export {
   sortEvents,
   timeAgo,
   detectDirection,
-  enableTranslation
+  enableTranslation,
 };

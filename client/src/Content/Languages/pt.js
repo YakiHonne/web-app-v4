@@ -982,5 +982,17 @@ const portTranslation = {
   ASGtOLO: "Tem certeza de que deseja continuar? ",
   A9WT6DE: "Em breve",
   AYlOMYB: "Expira em {{date}}",
+  AozzmTY: "Nota recolhida",
+  AnWFKlu: "Veja mais",
+  AzhKxMs: "As notificações estão desativadas!",
+  Aioqvbi:
+    "As notificações estão desabilitadas para este tipo, você pode habilitá-las nas configurações de notificações.",
+  AcdxgMi: "Tentar novamente",
+  A0qY0bf: "Leia tudo",
+  AhQtS0K: "O nome de usuário é obrigatório",
+  AgrHddv: "O nome de usuário está em uso",
+  AshEtUl:
+    "Certifique-se de salvar sua frase de conexão NWC com segurança, pois não podemos ajudar na recuperação de carteiras perdidas.",
+  AcFjmGe: "Tipo não compatível",
 };
 export default portTranslation;

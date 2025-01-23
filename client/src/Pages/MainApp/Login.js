@@ -17,7 +17,7 @@ import { setToast } from "../../Store/Slides/Publishers";
 import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
 import { useNavigate } from "react-router-dom";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import InterestSuggestions from "../../Content/InterestSuggestions";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveUsers } from "../../Helpers/DB";
@@ -196,7 +196,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
         },
       ];
       let wallet = updateWallets(extWallet, keys.pub);
-      
+
       if (wallet.length > 0) dispatch(setUserKeys(keys));
 
       // }
@@ -254,7 +254,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
         <div className="fit-container  box-pad-v-m fx-scattered">
           <div className="fx-centered pointer">
             <div className="round-icon-small">
-              <div className="arrow arrow-back" ></div>{" "}
+              <div className="arrow arrow-back"></div>{" "}
             </div>
             <p className="gray-c" onClick={() => customHistory.back()}>
               {isNewAccount ? t("AB4BSCe") : t("AVCdQku")}
@@ -286,6 +286,9 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
   const [step, setStep] = useState(1);
   const [selectedInterest, setSelectedInteres] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState([]);
+  const [showErrorMessage, setShowMessageError] = useState(false);
+  const [showEmptyUNMessage, setShowMessageEmtpyUN] = useState(false);
+  const [userName, setUserName] = useState("");
 
   const handleNextSteps = () => {
     if (step == 1) {
@@ -352,8 +355,15 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
   };
   const handleCreateWallet = async () => {
     try {
+      if (isCreatingWalletLoading) return;
+      if (!userName) {
+        setShowMessageEmtpyUN(true);
+        return;
+      }
       setIsCreatingWalletLoading(true);
-      let url = await axios.post("https://wallet.yakihonne.com/api/wallets");
+      let url = await axios.post("https://wallet.yakihonne.com/api/wallets", {
+        username: userName?.toLowerCase(),
+      });
 
       setNWCURL(url.data.connectionSecret);
       setNWCAddr(url.data.lightningAddress);
@@ -361,12 +371,15 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
     } catch (err) {
       console.log(err);
       setIsCreatingWalletLoading(false);
-      dispatch(
-        setToast({
-          type: 3,
-          desc: t("AQ12OQz"),
-        })
-      );
+      if (err.response.status) {
+        setShowMessageError(true);
+      } else
+        dispatch(
+          setToast({
+            type: 3,
+            desc: t("AQ12OQz"),
+          })
+        );
     }
   };
 
@@ -529,6 +542,13 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
     }
   };
 
+  const handleInputField = (e) => {
+    let value = e.target.value;
+    if (showErrorMessage) setShowMessageError(false);
+    if (showEmptyUNMessage) setShowMessageEmtpyUN(false);
+    setUserName(value);
+  };
+
   return (
     <>
       <div
@@ -645,7 +665,10 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                 className="if ifs-full "
                 placeholder={t("At0Sp8H")}
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setUserName(e.target.value);
+                  setName(e.target.value);
+                }}
               />
               <textarea
                 className="txt-area if ifs-full "
@@ -766,13 +789,46 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                 isCreated={NWCURL}
               />
               {!NWCURL && (
-                <button
-                  className="btn btn-normal slide-up"
-                  onClick={handleCreateWallet}
-                  disabled={isCreatingWalletLoading}
-                >
-                  {isCreatingWalletLoading ? <LoadingDots /> : t("AvjCl1G")}
-                </button>
+                <div className="fit-container fit-container fx-centered fx-col slide-up">
+                  <div className="fit-container fx-centered">
+                    <input
+                      type="text"
+                      className="ifs-full if"
+                      placeholder={t("ALCpv2S")}
+                      value={userName}
+                      onChange={handleInputField}
+                      style={{
+                        borderColor:
+                          showErrorMessage || showEmptyUNMessage
+                            ? "var(--red-main)"
+                            : "",
+                      }}
+                    />
+                    <p
+                      className="gray-c p-big"
+                      style={{ minWidth: "max-content" }}
+                    >
+                      @wallet.yakihonne.com
+                    </p>
+                  </div>
+                  {showErrorMessage && (
+                    <div className="fit-container box-pad-h-m">
+                      <p className="red-c p-medium">{t("AgrHddv")}</p>
+                    </div>
+                  )}
+                  {showEmptyUNMessage && (
+                    <div className="fit-container box-pad-h-m">
+                      <p className="red-c p-medium">{t("AhQtS0K")}</p>
+                    </div>
+                  )}
+                  <button
+                    className="btn btn-normal btn-full"
+                    onClick={handleCreateWallet}
+                    disabled={isCreatingWalletLoading}
+                  >
+                    {isCreatingWalletLoading ? <LoadingDots /> : t("AvjCl1G")}
+                  </button>
+                </div>
               )}
               {NWCURL && (
                 <div className="fx-centered sc-s-18 box-pad-h-s box-pad-v-s">
@@ -992,7 +1048,7 @@ const ProfilePreview = ({ pubkeys }) => {
   return (
     <div style={{ position: "relative", minWidth: "32px", minHeight: "32px" }}>
       <div style={{ position: "absolute", left: 0, bottom: "0" }}>
-        <UserProfilePicNOSTR
+        <UserProfilePic
           user_id={pubkeys[0]}
           mainAccountUser={false}
           img={images[0] || ""}
@@ -1000,7 +1056,7 @@ const ProfilePreview = ({ pubkeys }) => {
         />
       </div>
       <div style={{ position: "absolute", left: "16px", top: "10px" }}>
-        <UserProfilePicNOSTR
+        <UserProfilePic
           user_id={pubkeys[1]}
           mainAccountUser={false}
           img={images[1] || ""}
@@ -1008,7 +1064,7 @@ const ProfilePreview = ({ pubkeys }) => {
         />
       </div>
       <div style={{ position: "absolute", left: "16px", bottom: "-4px" }}>
-        <UserProfilePicNOSTR
+        <UserProfilePic
           user_id={pubkeys[2]}
           mainAccountUser={false}
           img={images[2] || ""}
@@ -1114,7 +1170,7 @@ const Suggestions = ({ index, selectedInterests, handleSelectInterests }) => {
           return (
             <div className="fit-container fx-scattered" key={index_}>
               <div className="fx-centered">
-                <UserProfilePicNOSTR
+                <UserProfilePic
                   user_id={pubkey}
                   mainAccountUser={false}
                   img={author.picture}

@@ -182,7 +182,7 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated Jan 08, 2025
+                  Last updated Jan 23, 2025
                 </p>
               </div>
               <p className="orange-c p-medium">
@@ -190,9 +190,12 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- Added support for uploading multiple images or videos in notes, comments, and messages.
-- Refined the search mechanism for better accuracy and performance.
-- General bug fixes and improvements.
+- Yakihonne wallet name customization for newly created wallets.
+- Option to toggle between collapsed or expanded notes in the feed for a personalized experience.
+- Notification preferences can now be managed directly from the settings page.
+- Quick access to your profile with the newly added profile button.
+- Native poll rendering and voting functionality within notes.
+- Bug fixes and performance optimizations for improved reliability.
 `}</p>
           </div>
           {content.map((card, index) => {

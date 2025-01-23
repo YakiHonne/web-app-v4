@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import WriteNote from "./WriteNote";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import PostAsNote from "./PostAsNote";
+import { customHistory } from "../../Helpers/History";
 
 export default function PostNoteWithWidget({ widget, exit, onlyNext = true }) {
   const [next, setNext] = useState(onlyNext);
@@ -39,7 +41,11 @@ export default function PostNoteWithWidget({ widget, exit, onlyNext = true }) {
         </div>
         {next && (
           <>
-            <WriteNote widget={widget} />
+            <PostAsNote
+              exit={() => customHistory.push("/smart-widgets")}
+              content={""}
+              linkedEvent={widget}
+            />
           </>
         )}
         {!next && (

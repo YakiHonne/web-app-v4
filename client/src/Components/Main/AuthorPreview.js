@@ -1,9 +1,9 @@
 import React from "react";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 export default function AuthorPreview({ author, size = "big" }) {
   return (
     <div className="fx-centered fx-start-h ">
-      <UserProfilePicNOSTR
+      <UserProfilePic
         size={size === "big" ? 40 : 30}
         mainAccountUser={false}
         user_id={author.pubkey}

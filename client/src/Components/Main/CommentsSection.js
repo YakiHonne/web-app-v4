@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { getSubData } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveUsers } from "../../Helpers/DB";
-import UserProfilePicNOSTR from "./UserProfilePicNOSTR";
+import UserProfilePic from "./UserProfilePic";
 import Comments from "../Reactions/Comments";
 import LoadingLogo from "../LoadingLogo";
 import { Link } from "react-router-dom";
@@ -28,7 +28,7 @@ const filterRepliesComments = async (all, id) => {
       )
     ) {
       let [note_tree, replies] = await Promise.all([
-        getParsedNote(comment),
+        getParsedNote(comment, true),
         countReplies(comment.id, all),
       ]);
       temp.push({
@@ -57,7 +57,7 @@ const filterRootComments = async (all) => {
         isReply[1] === isRoot[1])
     ) {
       let [note_tree, replies] = await Promise.all([
-        getParsedNote(comment),
+        getParsedNote(comment, true),
         countReplies(comment.id, all),
       ]);
       temp.push({
@@ -78,7 +78,7 @@ const countReplies = async (id, all) => {
     );
     if (ev) {
       let nestedReplies = await countReplies(comment.id, all);
-      let _ = await getParsedNote(comment);
+      let _ = await getParsedNote(comment, true);
       replies.push({
         ..._,
         replies: nestedReplies,
@@ -217,7 +217,7 @@ export default function CommentsSection({
               }}
               onClick={() => setShowWriteNote(true)}
             >
-              <UserProfilePicNOSTR size={40} mainAccountUser={true} />
+              <UserProfilePic size={40} mainAccountUser={true} />
               <div className="sc-s-18 box-pad-h-m box-pad-v-s fit-container">
                 <p className="gray-c">
                   {/* Comment on {author.display_name || author.name}'s {kind} */}

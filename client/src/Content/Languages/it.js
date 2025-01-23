@@ -992,6 +992,18 @@ const italianTranslation = {
     "Sei sicuro di voler continuare? Questo cancellerà le modifiche correnti.",
   A9WT6DE: "Prossimamente",
   AYlOMYB: "Scade il {{date}}",
+  AozzmTY: "Nota colapsada",
+  AnWFKlu: "Vedere di più",
+  AzhKxMs: "Le notifiche sono disabilitate!",
+  Aioqvbi:
+    "Le notifiche sono disabilitate per questo tipo, puoi abilitarle nelle impostazioni delle notifiche.",
+  AcdxgMi: "Riprova",
+  A0qY0bf: "Leggi tutto",
+  AhQtS0K: "Il nome utente è obbligatorio",
+  AgrHddv: "Il nome utente è preso",
+  AshEtUl:
+    "Assicurati di salvare in modo sicuro la tua frase di connessione NWC, poiché non possiamo aiutarti a recuperare i portafogli persi.",
+  AcFjmGe: "Tipo non supportato",
 };
 
 export default italianTranslation;

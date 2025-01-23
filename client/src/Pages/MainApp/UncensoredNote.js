@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
-import SidebarNOSTR from "../../Components/Main/SidebarNOSTR";
+import Sidebar from "../../Components/Main/Sidebar";
 import ArrowUp from "../../Components/ArrowUp";
 import axios from "axios";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import UN from "../../Components/Main/UN";
 import Date_ from "../../Components/Date_";
 import { Link, useParams } from "react-router-dom";
@@ -229,7 +229,7 @@ export default function UNEvent() {
       </Helmet>
       <div className="fit-container fx-centered">
         <div className="main-container">
-          <SidebarNOSTR />
+          <Sidebar />
           <main className="main-page-nostr-container">
             <ArrowUp />
             <div className="fit-container fx-centered fx-start-v fx-start-h">
@@ -253,7 +253,7 @@ export default function UNEvent() {
                     style={{ columnGap: "10px" }}
                   >
                     <div>
-                      <UserProfilePicNOSTR
+                      <UserProfilePic
                         img={flashNews.author.picture}
                         size={38}
                         user_id={flashNews.author.pubkey}
@@ -317,7 +317,7 @@ export default function UNEvent() {
                                   className="fx-centered fx-start-h"
                                   style={{ columnGap: "16px" }}
                                 >
-                                  <UserProfilePicNOSTR
+                                  <UserProfilePic
                                     mainAccountUser={true}
                                     size={38}
                                   />

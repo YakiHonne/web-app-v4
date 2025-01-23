@@ -8,7 +8,6 @@ import {
 } from "../../Helpers/Encryptions";
 import { nip19 } from "nostr-tools";
 import { Link } from "react-router-dom";
-import { getNoteTree } from "../../Helpers/Helpers";
 import KindOne from "./KindOne";
 import LoadingDots from "../LoadingDots";
 import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
@@ -16,6 +15,8 @@ import WidgetCard from "./WidgetCard";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import LinkRepEventPreview from "./LinkRepEventPreview";
+import ZapPollsComp from "../SmartWidget/ZapPollsComp";
 
 export default function Nip19Parsing({ addr, minimal = false }) {
   const [event, setEvent] = useState(false);
@@ -66,14 +67,14 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           authors: [pubkey],
         });
         let hex = getHex(addr_.replace(",", "").replace(".", ""));
-        let url_ = `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
+        let url_ = `/users/${getBech32("npub", hex)}`;
         setUrl(url_);
       }
 
       if (addr_.startsWith("nevent") || addr_.startsWith("note")) {
         let data = nip19.decode(addr_);
         filter.push({
-          kinds: [1],
+          // kinds: [1],
           ids: [data.data.id || data.data],
         });
       }
@@ -106,9 +107,14 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         });
       }
       if (event.kind === 1) {
-        let parsedEvent = await getParsedNote(event);
+        let parsedEvent = await getParsedNote(event, true);
 
         setEvent(parsedEvent);
+        setIsLoading(false);
+      }
+      if (event.kind === 6969) {
+
+        setEvent(event.rawEvent());
         setIsLoading(false);
       }
 
@@ -125,16 +131,15 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         setIsLoading(false);
       }
       if ([30004, 30005, 30023, 34235].includes(event.kind)) {
-        let titleTag = event.tags.find((tag) => tag[0] === "title");
-        let title = "";
-        if (titleTag) title = titleTag[1];
+        let parsedContent = getParsedRepEvent(event);
+        let title = parsedContent.title;
         if (!title) {
           if ([30004, 30005].includes(event.kind)) title = t("A1lshru");
           if ([30023].includes(event.kind)) title = t("Aqw9gzk");
           if ([34235].includes(event.kind)) title = t("A3vFdLd");
         }
         setEvent({
-          kind: event.kind,
+          ...parsedContent,
           title,
         });
       }
@@ -161,9 +166,14 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       <>
         {!minimal && (
           <>
-            {event && (
+            {event?.kind === 1 && (
               <div className="fit-container" style={{ paddingTop: ".5rem" }}>
                 <KindOne event={event} reactions={false} />
+              </div>
+            )}
+            {event?.kind === 6969 && (
+              <div className="fit-container" style={{ paddingTop: ".5rem" }}>
+                <ZapPollsComp event={event}/>
               </div>
             )}
             {isLoading && !event && (
@@ -237,24 +247,30 @@ export default function Nip19Parsing({ addr, minimal = false }) {
   if (event.kind === 30031)
     return (
       <div className="fit-container box-pad-v-s">
-        {!minimal && (
+        {/* {!minimal && (
           <WidgetCard widget={event} deleteWidget={null} options={false} />
-          // <PreviewWidget widget={event.metadata} pubkey={event.pubkey} />
-        )}
-        {minimal && <MinimalPreviewWidget widget={event} />}
+        
+        )} */}
+        <MinimalPreviewWidget widget={event} />
+        {/* {minimal && <MinimalPreviewWidget widget={event} />} */}
       </div>
     );
 
   if ([30004, 30005, 30023, 34235].includes(event.kind))
     return (
-      <Link
-        to={url}
-        className="btn-text-gray"
-        target={"_blank"}
-        onClick={(e) => e.stopPropagation()}
-        style={{ color: "var(--orange-main)" }}
-      >
-        {event.title}
-      </Link>
+      <div className="fit-container" style={{ margin: ".5rem 0" }}>
+        {!minimal && <LinkRepEventPreview event={event} allowClick={true} />}
+        {minimal && (
+          <Link
+            to={url}
+            className="btn-text-gray"
+            target={"_blank"}
+            onClick={(e) => e.stopPropagation()}
+            style={{ color: "var(--orange-main)" }}
+          >
+            @{event.title}
+          </Link>
+        )}
+      </div>
     );
 }

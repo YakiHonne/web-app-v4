@@ -4,7 +4,7 @@ import {
   getEmptyuserMetadata,
   getParsedRepEvent,
 } from "../../Helpers/Encryptions";
-import UserProfilePicNOSTR from "../../Components/Main/UserProfilePicNOSTR";
+import UserProfilePic from "../../Components/Main/UserProfilePic";
 import LoadingDots from "../../Components/LoadingDots";
 import PreviewWidget from "../SmartWidget/PreviewWidget";
 import { useSelector } from "react-redux";
@@ -300,7 +300,7 @@ const WidgetCard = ({ setWidget, widget }) => {
 const AuthorPreview = ({ author }) => {
   return (
     <div className="fx-centered fx-start-h ">
-      <UserProfilePicNOSTR
+      <UserProfilePic
         size={40}
         mainAccountUser={false}
         user_id={author.pubkey}

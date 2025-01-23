@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getParsedRepEvent } from "../../Helpers/Encryptions";
-import AddCurationNOSTR from "./AddCurationNOSTR";
+import AddCuration from "./AddCuration";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import { useDispatch, useSelector } from "react-redux";
 import { ndkInstance } from "../../Helpers/NDKInstance";
@@ -104,7 +104,7 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
   return (
     <>
       {showAddCuration && (
-        <AddCurationNOSTR
+        <AddCuration
           exit={() => setShowAddCuration(false)}
           mandatoryKind={kind}
         />

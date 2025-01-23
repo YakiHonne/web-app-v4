@@ -2,6 +2,7 @@ import { finalizeEvent, nip19, nip44 } from "nostr-tools";
 import {
   decryptEventData,
   encodeBase64URL,
+  getBech32,
   getHex,
   removeObjDuplicants,
 } from "./Encryptions";
@@ -10,7 +11,6 @@ import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import React, { Fragment } from "react";
-import Carousel from "../Components/Main/Carousel";
 import Nip19Parsing from "../Components/Main/Nip19Parsing";
 import { store } from "../Store/Store";
 import { setToast } from "../Store/Slides/Publishers";
@@ -21,6 +21,9 @@ import MediaUploaderServer from "../Content/MediaUploaderServer";
 import { t } from "i18next";
 import { supportedLanguageKeys } from "../Context/I18N";
 import LNBCInvoice from "../Components/Main/LNBCInvoice";
+import axiosInstance from "./HTTP_Client";
+import LinkPreview from "../Components/Main/LinkPreview";
+import Gallery from "../Components/Main/Gallery";
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
@@ -122,15 +125,22 @@ const isImageUrlSync = (url) => {
   }
 };
 
-const getNoteTree = async (note, minimal = false) => {
+const getNoteTree = async (
+  note,
+  minimal = false,
+  isCollapsedNote = false,
+  wordsCount = 150
+) => {
   if (!note) return "";
+
   let tree = note
     .split(/(\n)/)
     .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
     .filter(Boolean);
-  let finalTree = [];
 
-  for (let i = 0; i < tree.length; i++) {
+  let finalTree = [];
+  let maxChar = isCollapsedNote ? wordsCount : tree.length;
+  for (let i = 0; i < maxChar; i++) {
     const el = tree[i];
     const key = `${el}-${i}`;
     if (el === "\n") {
@@ -213,17 +223,7 @@ const getNoteTree = async (note, minimal = false) => {
           } else {
             finalTree.push(
               <Fragment key={key}>
-                <a
-                  style={{
-                    wordBreak: "break-word",
-                    color: "var(--orange-main)",
-                  }}
-                  href={el}
-                  className="btn-text-gray"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {el}
-                </a>{" "}
+                <LinkPreview url={el} />
               </Fragment>
             );
           }
@@ -242,27 +242,27 @@ const getNoteTree = async (note, minimal = false) => {
           </Fragment>
         );
     } else if (
-      (el.includes("nostr:") ||
-        el.includes("naddr") ||
-        el.includes("https://yakihonne.com/smart-widget-checker?naddr=") ||
-        el.includes("nprofile") ||
-        el.includes("npub") ||
-        el.includes("nevent")) &&
-      el.length > 30
+      (el?.includes("nostr:") ||
+        el?.includes("naddr") ||
+        el?.includes("https://yakihonne.com/smart-widget-checker?naddr=") ||
+        el?.includes("nprofile") ||
+        el?.includes("npub") ||
+        el?.includes("nevent")) &&
+      el?.length > 30
     ) {
       const nip19add = el
         .replace("https://yakihonne.com/smart-widget-checker?naddr=", "")
         .replace("nostr:", "");
 
-      const parts = nip19add.split(/([@.,?!\s:])/);
+      const parts = nip19add.split(/([@.,?!\s:()’"'])/);
 
       const finalOutput = parts.map((part, index) => {
         if (
-          part.startsWith("npub1") ||
-          part.startsWith("nprofile1") ||
-          part.startsWith("nevent") ||
-          part.startsWith("naddr") ||
-          part.startsWith("note1")
+          part?.startsWith("npub1") ||
+          part?.startsWith("nprofile1") ||
+          part?.startsWith("nevent") ||
+          part?.startsWith("naddr") ||
+          part?.startsWith("note1")
         ) {
           const cleanedPart = part.replace(/[@.,?!]/g, "");
 
@@ -276,9 +276,9 @@ const getNoteTree = async (note, minimal = false) => {
         return part;
       });
       finalTree.push(<Fragment key={key}>{finalOutput} </Fragment>);
-    } else if (el.startsWith("lnbc") && el.length > 30) {
+    } else if (el?.startsWith("lnbc") && el.length > 30) {
       finalTree.push(<LNBCInvoice lnbc={el} key={key} />);
-    } else if (el.startsWith("#")) {
+    } else if (el?.startsWith("#")) {
       const match = el.match(/(#+)([\w-+]+)/);
 
       if (match) {
@@ -340,7 +340,7 @@ const getLinkFromAddr = (addr_) => {
     }
     if (addr.startsWith("npub")) {
       let hex = getHex(addr.replace(",", "").replace(".", ""));
-      return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
+      return `/users/${getBech32("npub", hex)}`;
     }
     if (addr.startsWith("nevent")) {
       let data = nip19.decode(addr);
@@ -357,6 +357,24 @@ const getLinkFromAddr = (addr_) => {
     return addr;
   } catch (err) {
     return addr_;
+  }
+};
+const getLinkPreview = async (url) => {
+  try {
+    const metadata = await Promise.race([
+      axiosInstance.get("/api/v1/link-preview?url=" + encodeURIComponent(url)),
+      sleepTimer(2000),
+    ]);
+    if (metadata)
+      return {
+        ...metadata.data,
+        imagePP: getImagePlaceholder(),
+        domain: url.split("/")[2],
+      };
+    return false;
+  } catch (err) {
+    console.log(err);
+    return false;
   }
 };
 
@@ -580,16 +598,16 @@ function mergeConsecutivePElements(arr) {
 }
 
 function createImageGrid(images) {
-  if (images.length === 1)
-    return (
-      <div className="image-grid" key={Math.random()}>
-        {images.map((image, index) =>
-          React.cloneElement(image, { key: index })
-        )}
-      </div>
-    );
+  // if (images.length === 1)
+  //   return (
+  //     <div className="image-grid" key={Math.random()}>
+  //       {images.map((image, index) =>
+  //         React.cloneElement(image, { key: index })
+  //       )}
+  //     </div>
+  //   );
   let images_ = images.map((image) => image.props.src);
-  return <Carousel imgs={images_} />;
+  return <Gallery imgs={images_} />;
 }
 
 const getAuthPubkeyFromNip05 = async (nip05Addr) => {
@@ -1242,6 +1260,7 @@ const getDefaultSettings = (pubkey) => {
   return {
     pubkey,
     userHoverPreview: true,
+    collapsedNote: true,
     contentList: [
       { tab: "recent", isHidden: false },
       { tab: "recent-with-replies", isHidden: false },
@@ -1249,6 +1268,13 @@ const getDefaultSettings = (pubkey) => {
       { tab: "highlights", isHidden: false },
       { tab: "paid", isHidden: false },
       { tab: "widgets", isHidden: false },
+    ],
+    notification: [
+      { tab: "mentions", isHidden: false },
+      { tab: "reactions", isHidden: false },
+      { tab: "reposts", isHidden: false },
+      { tab: "zaps", isHidden: false },
+      { tab: "following", isHidden: false },
     ],
   };
 };
@@ -1586,51 +1612,40 @@ function getLevenshteinDistance(a, b) {
 }
 
 function sortByKeyword(array, keyword) {
-  console.log(
-    keyword,
-    array.map((_) => {
-      return {
-        name: _.display_name || _.name,
-        score: getLevenshteinDistance(
-          _.display_name.toLowerCase() || _.name.toLowerCase(),
-          keyword.toLowerCase()
-        ),
-      };
-    })
-  );
+  return array
+    .filter((_) => _.display_name || _.name)
+    .sort((a, b) => {
+      const aHasNip05 = a.nip05 ? 1 : 0;
+      const bHasNip05 = b.nip05 ? 1 : 0;
 
-  return array.sort((a, b) => {
-    const aHasNip05 = a.nip05 ? 1 : 0;
-    const bHasNip05 = b.nip05 ? 1 : 0;
+      const nameA = a.display_name?.toLowerCase() || a.name?.toLowerCase();
+      const nameB = b.display_name?.toLowerCase() || b.name?.toLowerCase();
 
-    const nameA = a.display_name.toLowerCase() || a.name.toLowerCase();
-    const nameB = b.display_name.toLowerCase() || b.name.toLowerCase();
+      const aKeywordPriority = nameA
+        .toLowerCase()
+        .startsWith(keyword.toLowerCase())
+        ? 2
+        : nameA.toLowerCase().includes(keyword.toLowerCase())
+        ? 1
+        : 0;
+      const bKeywordPriority = nameB
+        .toLowerCase()
+        .startsWith(keyword.toLowerCase())
+        ? 2
+        : nameB.toLowerCase().includes(keyword.toLowerCase())
+        ? 1
+        : 0;
 
-    const aKeywordPriority = nameA
-      .toLowerCase()
-      .startsWith(keyword.toLowerCase())
-      ? 2
-      : nameA.toLowerCase().includes(keyword.toLowerCase())
-      ? 1
-      : 0;
-    const bKeywordPriority = nameB
-      .toLowerCase()
-      .startsWith(keyword.toLowerCase())
-      ? 2
-      : nameB.toLowerCase().includes(keyword.toLowerCase())
-      ? 1
-      : 0;
+      const scoreA = getLevenshteinDistance(nameA, keyword.toLowerCase());
+      const scoreB = getLevenshteinDistance(nameB, keyword.toLowerCase());
 
-    const scoreA = getLevenshteinDistance(nameA, keyword.toLowerCase());
-    const scoreB = getLevenshteinDistance(nameB, keyword.toLowerCase());
+      const aScore = 0 + aKeywordPriority + aHasNip05;
+      const bScore = 0 + bKeywordPriority + bHasNip05;
 
-    const aScore = 0 + aKeywordPriority + aHasNip05;
-    const bScore = 0 + bKeywordPriority + bHasNip05;
-
-    if (aScore !== bScore) return bScore - aScore;
-    if (aHasNip05 !== bHasNip05) return bHasNip05 - aHasNip05;
-    return scoreB - scoreA;
-  });
+      if (aScore !== bScore) return bScore - aScore;
+      if (aHasNip05 !== bHasNip05) return bHasNip05 - aHasNip05;
+      return scoreB - scoreA;
+    });
 
   // return array.sort((a, b) => {
   //   // if (!a.nip05 && b.nip05) return 1;
@@ -1699,4 +1714,5 @@ export {
   getContentTranslationConfig,
   updateContentTranslationConfig,
   sortByKeyword,
+  getLinkPreview,
 };

@@ -9,6 +9,7 @@ const UncensoredNotes = require("../Models/UncensoredNotes");
 const UNRatings = require("../Models/UNRatings");
 const SealedNotes = require("../Models/SealedNotes");
 const UserLevels = require("../Models/UserLevels");
+
 const {
   auth_user,
   user_login,
@@ -17,6 +18,14 @@ const {
 } = require("../Helpers/Auth");
 const { actions_keys, levels, tiers } = require("../DB/LevelsActions");
 const MongoStore = require("connect-mongo");
+const got = require("got");
+const metascraper = require("metascraper")([
+  require("metascraper-url")(),
+  require("metascraper-title")(),
+  require("metascraper-description")(),
+  require("metascraper-image")(),
+]);
+
 const Users = require("../Models/Users");
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -469,6 +478,7 @@ router.post("/api/v1/translate/detect", auth_data, async (req, res) => {
     res.send({ status: 500, res: "" });
   }
 });
+
 router.post("/api/v1/translate", auth_data, async (req, res) => {
   try {
     let { service, lang, text } = req.body;
@@ -505,6 +515,65 @@ router.post("/api/v1/translate", auth_data, async (req, res) => {
     res.send({ status: 500, res: "" });
   }
 });
+
+router.get("/api/v1/link-preview", auth_data, async (req, res) => {
+  try {
+    const { url } = req.query;
+    const { body: html, url: finalUrl } = await got(url);
+    const metadata = await metascraper({ html, url: finalUrl });
+    res.json(metadata);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Metadata not found" });
+  }
+});
+
+// router.get("/api/v1/video-url", auth_data, async (req, res) => {
+//   try {
+//     const { url } = req.query;
+//     const info = await ytdl.getInfo(url);
+
+//     const formats = ytdl.filterFormats(info.formats, "videoandaudio");
+
+//     const bestFormat = formats.find(
+//       (format) => format.hasAudio && format.hasVideo
+//     );
+
+//     if (bestFormat) {
+//       return res.json({ url: bestFormat.url });
+//     }
+//     res.status(500).send({ message: "url not found" });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).send({ message: "url not found" });
+//   }
+// });
+// router.get("/api/v1/video-url", auth_data, async (req, res) => {
+//   try {
+//     const { url } = req.query;
+//     const info = await youtubedl(url, {
+//       dumpSingleJson: true,
+//       noCheckCertificates: true,
+//       noWarnings: true,
+//       preferFreeFormats: true,
+//       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
+//     });
+
+//     let videoURL = info.formats
+//       .filter(
+//         (format) => format.vcodec !== "none" && format.acodec !== "none"
+//       ) // You can adjust for other formats
+//       .reduce((a, b) => (a.height > b.height ? a : b)); // Pick the best video quality
+
+//     if (videoURL) {
+//       return res.json({ url: videoURL.url });
+//     }
+//     res.status(500).send({ message: "url not found" });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).send({ message: "url not found" });
+//   }
+// });
 
 const actionToUpdate = (
   action_key,
@@ -885,6 +954,7 @@ const updateUserImpact = async (action_key, userLevels, pubkey) => {
     );
   }
 };
+
 const dlTranslate = async (text, service, lang, specialContent) => {
   try {
     let path = service.plan
@@ -917,45 +987,7 @@ const dlTranslate = async (text, service, lang, specialContent) => {
     };
   }
 };
-// const dlTranslate = async (text, service, lang, specialContent) => {
-//   try {
-//     let path = service.plan
-//       ? translationServicesEndpoints.dl.pro
-//       : translationServicesEndpoints.dl.free;
-//     let apikey = service.plan ? service.proApikey : service.freeApikey;
-//     if (!apikey) {
-//       return {
-//         status: 400,
-//         res: "",
-//       };
-//     }
-//     console.log(apikey);
-//     let data = await axios.post(
-//       path,
-//       {
-//         text: [text],
-//         target_lang: lang,
-//       },
-//       {
-//         headers: {
-//           Authorization: `DeepL-Auth-key ${apikey}`,
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
-//     return {
-//       status: 200,
-//       res: revertContent(data.data.translations[0].text, specialContent),
-//     };
-//   } catch (err) {
-//     console.log(err);
-//     return {
-//       status:
-//         err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
-//       res: "",
-//     };
-//   }
-// };
+
 const ltTranslate = async (text, service, lang, specialContent) => {
   try {
     let path = service.plan
@@ -996,6 +1028,7 @@ const ltTranslate = async (text, service, lang, specialContent) => {
     };
   }
 };
+
 const nwTranslate = async (text, service, lang, specialContent) => {
   try {
     let path = translationServicesEndpoints.nw.pro;
@@ -1065,6 +1098,7 @@ const extractRawContent = (text) => {
     specialContent,
   };
 };
+
 const revertContent = (rawContent, specialContent, lang) => {
   let raw = rawContent;
 
