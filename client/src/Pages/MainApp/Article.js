@@ -74,7 +74,7 @@ export default function Article() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [isContentTranslating, setIsContentTranslating] = useState(false);
   const { postActions } = useRepEventStats(post.aTag, post.pubkey);
-  const [isTransEnabled, setIsTransEnabled] = useState(false);
+  const [isTransEnabled, setIsTransEnabled] = useState(true);
   const containerRef = useRef(null);
 
   const isLiked = useMemo(() => {
@@ -234,14 +234,14 @@ export default function Article() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const detectLang = async () => {
-      let isEnabled = await enableTranslation(post.content);
+  // useEffect(() => {
+  //   const detectLang = async () => {
+  //     let isEnabled = await enableTranslation(post.content);
 
-      setIsTransEnabled(isEnabled);
-    };
-    if (post) detectLang();
-  }, [post]);
+  //     setIsTransEnabled(isEnabled);
+  //   };
+  //   if (post) detectLang();
+  // }, [post]);
 
   const translateArticle = async () => {
     setIsContentTranslating(true);

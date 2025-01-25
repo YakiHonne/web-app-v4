@@ -52,7 +52,7 @@ export default function KindOne({
   const [isNoteTranslating, setIsNoteTranslating] = useState("");
   const [translatedNote, setTranslatedNote] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
-  const [isTransEnabled, setIsTransEnabled] = useState(false);
+  const [isTransEnabled, setIsTransEnabled] = useState(true);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -111,14 +111,14 @@ export default function KindOne({
     fetchData();
   }, [nostrAuthors]);
 
-  useEffect(() => {
-    const detectLang = async () => {
-      let isEnabled = await enableTranslation(event.content);
+  // useEffect(() => {
+  //   const detectLang = async () => {
+  //     let isEnabled = await enableTranslation(event.content);
 
-      setIsTransEnabled(isEnabled);
-    };
-    detectLang();
-  }, []);
+  //     setIsTransEnabled(isEnabled);
+  //   };
+  //   detectLang();
+  // }, []);
 
   const onClick = (e) => {
     e.stopPropagation();
