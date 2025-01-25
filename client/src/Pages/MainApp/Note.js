@@ -57,7 +57,7 @@ export default function Note() {
   const [isNoteTranslating, setIsNoteTranslating] = useState("");
   const [translatedNote, setTranslatedNote] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
-  const [isTransEnabled, setIsTransEnabled] = useState(false);
+  const [isTransEnabled, setIsTransEnabled] = useState(true);
   const [unsupportedKind, setUnsupportedKind] = useState(false);
 
   const isLiked = useMemo(() => {
@@ -104,12 +104,12 @@ export default function Note() {
   }, [userMutedList, author]);
 
   useEffect(() => {
-    const detectLang = async () => {
-      let isEnabled = await enableTranslation(note.content);
+    // const detectLang = async () => {
+    //   let isEnabled = await enableTranslation(note.content);
 
-      setIsTransEnabled(isEnabled);
-    };
-    if (note) detectLang();
+    //   setIsTransEnabled(isEnabled);
+    // };
+    // if (note) detectLang();
     if (state) {
       let { triggerTranslation } = state;
       if (triggerTranslation) translateNote();
