@@ -52,7 +52,7 @@ export default function NotesComment({
   const [isNoteTranslating, setIsNoteTranslating] = useState("");
   const [translatedNote, setTranslatedNote] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
-  const [isTransEnabled, setIsTransEnabled] = useState(false);
+  const [isTransEnabled, setIsTransEnabled] = useState(true);
   const isLikedByAuthor = useMemo(() => {
     return postActions.likes.likes.find(
       (item) => item.pubkey === rootNotePubkey
@@ -114,14 +114,14 @@ export default function NotesComment({
     };
     fetchData();
   }, [nostrAuthors]);
-  useEffect(() => {
-    const detectLang = async () => {
-      let isEnabled = await enableTranslation(event.content);
+  // useEffect(() => {
+  //   const detectLang = async () => {
+  //     let isEnabled = await enableTranslation(event.content);
 
-      setIsTransEnabled(isEnabled);
-    };
-    detectLang();
-  }, []);
+  //     setIsTransEnabled(isEnabled);
+  //   };
+  //   detectLang();
+  // }, []);
 
   const muteUnmute = async () => {
     try {
