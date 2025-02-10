@@ -24,6 +24,7 @@ import LNBCInvoice from "../Components/Main/LNBCInvoice";
 import axiosInstance from "./HTTP_Client";
 import LinkPreview from "../Components/Main/LinkPreview";
 import Gallery from "../Components/Main/Gallery";
+import MACIPollPreview from "../Components/Main/MACIPollPreview";
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
@@ -147,7 +148,8 @@ const getNoteTree = async (
       finalTree.push(<br key={key} />);
     } else if (
       /(https?:\/\/)/i.test(el) &&
-      !el.includes("https://yakihonne.com/smart-widget-checker?naddr=")
+      !el.includes("https://yakihonne.com/smart-widget-checker?naddr=") &&
+      !el.includes("https://vota.dorafactory.org/round/")
     ) {
       const isURLVid = isVid(el);
       if (!minimal) {
@@ -223,7 +225,7 @@ const getNoteTree = async (
           } else {
             finalTree.push(
               <Fragment key={key}>
-                <LinkPreview url={el} />
+                <LinkPreview url={el} />{" "}
               </Fragment>
             );
           }
@@ -241,12 +243,15 @@ const getNoteTree = async (
             </a>{" "}
           </Fragment>
         );
+    } else if (el.includes("https://vota.dorafactory.org/round/")) {
+      finalTree.push(<MACIPollPreview url={el} key={key} />);
     } else if (
       (el?.includes("nostr:") ||
         el?.includes("naddr") ||
         el?.includes("https://yakihonne.com/smart-widget-checker?naddr=") ||
         el?.includes("nprofile") ||
         el?.includes("npub") ||
+        el?.includes("note1") ||
         el?.includes("nevent")) &&
       el?.length > 30
     ) {
@@ -1032,6 +1037,16 @@ const getWallets = () => {
     return [];
   }
 };
+const getAllWallets = () => {
+  let wallets = localStorage.getItem("yaki-wallets");
+  if (!wallets) return [];
+  try {
+    wallets = JSON.parse(wallets);
+    return wallets;
+  } catch (err) {
+    return [];
+  }
+};
 
 const getNoteDraft = (eventKey) => {
   let nostkeys = getKeys();
@@ -1715,4 +1730,5 @@ export {
   updateContentTranslationConfig,
   sortByKeyword,
   getLinkPreview,
+  getAllWallets,
 };

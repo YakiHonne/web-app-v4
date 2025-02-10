@@ -7,7 +7,7 @@ export default function PostAsNote({ exit , content = "", linkedEvent}) {
     <div className="fixed-container fx-centered box-pad-h">
       <div
         style={{ width: "min(100%, 600px)", overflow: "visible" }}
-        className="sc-s-18 box-pad-h-s box-pad-v-s"
+        className="sc-s-18"
       >
         <WriteNote border={false} exit={exit} content={content} linkedEvent={linkedEvent}/>
       </div>

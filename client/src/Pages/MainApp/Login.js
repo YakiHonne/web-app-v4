@@ -5,6 +5,7 @@ import { getUser, getUserFromNOSTR } from "../../Helpers/Controlers";
 import { setUserKeys } from "../../Store/Slides/UserData";
 import {
   bytesTohex,
+  downloadAsFile,
   getEmptyuserMetadata,
   getHex,
 } from "../../Helpers/Encryptions";
@@ -289,6 +290,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
   const [showErrorMessage, setShowMessageError] = useState(false);
   const [showEmptyUNMessage, setShowMessageEmtpyUN] = useState(false);
   const [userName, setUserName] = useState("");
+  const [enableWalletLinking, setEnablingWalletLinking] = useState(true);
 
   const handleNextSteps = () => {
     if (step == 1) {
@@ -367,6 +369,21 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
 
       setNWCURL(url.data.connectionSecret);
       setNWCAddr(url.data.lightningAddress);
+      let toSave = [
+        `Address: ${url.data.lightningAddress}`,
+        `NWC secret: ${url.data.connectionSecret}`,
+      ];
+      downloadAsFile(
+        toSave.join("\n"),
+        "text/plain",
+        `${url.data.lightningAddress}-NWC.txt`
+      );
+      dispatch(
+        setToast({
+          type: 3,
+          desc: t("AIzBCBb"),
+        })
+      );
       setIsCreatingWalletLoading(false);
     } catch (err) {
       console.log(err);
@@ -416,7 +433,17 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
       }
 
       dispatch(setUserKeys(userKeys));
-
+      let toSave = [
+        `Private key: ${userKeys.sec}`,
+        `Public key: ${userKeys.pub}`,
+      ];
+      downloadAsFile(
+        toSave.join("\n"),
+        "text/plain",
+        `account-credentials.txt`
+      );
+      dispatch(setToast({ type: 3, desc: t("AdoWp0E") }));
+      
       let signer = new NDKPrivateKeySigner(userKeys.sec);
       ndkInstance.signer = signer;
 
@@ -437,6 +464,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
         };
         updateWallets([nwcNode], userKeys.pub);
       }
+
       customHistory.back();
     } catch (err) {
       console.log(err);
@@ -461,7 +489,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
       metadata.about = about;
       metadata.picture = profilePicture || "";
       metadata.banner = bannerPicture || "";
-      if (NWAddr) metadata.lud16 = NWAddr;
+      if (NWAddr && enableWalletLinking) metadata.lud16 = NWAddr;
       ndkEvent.kind = 0;
       ndkEvent.content = JSON.stringify(metadata);
 
@@ -836,6 +864,24 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                   {NWAddr}
                 </div>
               )}
+              {NWCURL && (
+                <>
+                  <label className=" fx-centered" htmlFor="wallet-checkbox">
+                    <input
+                      type="checkbox"
+                      value={enableWalletLinking}
+                      onChange={() =>
+                        setEnablingWalletLinking(!enableWalletLinking)
+                      }
+                      checked={enableWalletLinking}
+                      name="wallet-checkbox"
+                      id="wallet-checkbox"
+                    />
+                    {t("AoR0AIr")}
+                  </label>
+                  <p className="p-centered gray-c">{t("Ag7XtTn")}</p>
+                </>
+              )}
             </div>
           </>
         )}
@@ -970,10 +1016,6 @@ const InitiProfile = () => {
       style={{ height: "500px" }}
     >
       <LoadingLogo size={200} />
-      {/* <div style={{ width: "300px" }}>
-        <Lottie animationData={loading} loop={true} />
-      </div> */}
-      {/* <h4 className="gray-c">Initializing profile...</h4> */}
     </div>
   );
 };
@@ -984,7 +1026,6 @@ const MobileAd = () => {
     <div className="login-screen-heros fit-container fx-centered  box-pad-v fit-height">
       <div
         className="carousel-card-desc box-pad-h box-pad-v fit-container sc-s fx-even fx-stretch"
-        // style={{ maxHeight: "100vh" }}
         style={{
           padding: "2rem 1rem",
         }}
@@ -1225,95 +1266,3 @@ const WalletIllustration = ({ isCreated, isLoading }) => {
     </div>
   );
 };
-
-// const SignUpDataToCopy = ({ wallet }) => {
-//   const dispatch = useDispatch();
-//   const copyKey = (keyType, key) => {
-//     navigator.clipboard.writeText(key);
-//     dispatch(
-//       setToast({
-//         type: 1,
-//         desc: `${keyType} key was copied! 👏`,
-//       })
-//     );
-//   };
-
-//   return (
-//     <div className="fit-container fx-col fx-centered  box-pad-h box-pad-v-m fx-start-v box-marg-s">
-//       <div className="fit-container fx-centered fx-start-h">
-//         <p className="c1-c p-big">Keys</p>
-//         <div className="info-tt-24"></div>
-//       </div>
-
-//       <div
-//         className="fx-scattered if pointer dashed-onH fit-container"
-//         style={{ borderStyle: "dashed" }}
-//         onClick={() => (userKeys.sec ? copyKey("Private", nsec) : null)}
-//       >
-//         <div>
-//           <p className="gray-c p-medium p-left fit-container">
-//             Your secret key
-//           </p>
-//           <p>
-//             {userKeys.sec ? (
-//               shortenKey(nsec, 8)
-//             ) : (
-//               <span className="italic-txt gray-c">
-//                 {userKeys.ext
-//                   ? "check your extension settings"
-//                   : "No secret key is provided"}
-//               </span>
-//             )}
-//           </p>
-//         </div>
-//         {userKeys.sec && <div className="copy-24"></div>}
-//       </div>
-
-//       {!wallet && (
-//         <>
-//           <div className="fit-container fx-centered fx-start-h">
-//             <p className="c1-c p-big">Wallet</p>
-//             <div className="info-tt-24"></div>
-//           </div>
-//           <div
-//             className="fx-scattered if pointer dashed-onH fit-container"
-//             style={{ borderStyle: "dashed" }}
-//             onClick={() => (userKeys.sec ? copyKey("Private", nsec) : null)}
-//           >
-//             <div>
-//               <p className="gray-c p-medium p-left fit-container">
-//                 Your Lightning address
-//               </p>
-//               <p>
-//                 {userKeys.sec ? (
-//                   shortenKey(nsec, 8)
-//                 ) : (
-//                   <span className="italic-txt gray-c">
-//                     {userKeys.ext
-//                       ? "check your extension settings"
-//                       : "No secret key is provided"}
-//                   </span>
-//                 )}
-//               </p>
-//             </div>
-//             {userKeys.sec && <div className="copy-24"></div>}
-//           </div>
-//           <div
-//             className="fx-scattered if pointer dashed-onH fit-container"
-//             style={{ borderStyle: "dashed" }}
-//             onClick={() => copyKey("Public", npub)}
-//           >
-//             <div>
-//               <p className="gray-c p-medium p-left fit-container">
-//                 Your NWC URL
-//               </p>
-//               <p>{shortenKey(npub, 8)}</p>
-//             </div>
-
-//             <div className="copy-24"></div>
-//           </div>
-//         </>
-//       )}
-//     </div>
-//   );
-// };

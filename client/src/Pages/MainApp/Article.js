@@ -294,10 +294,10 @@ export default function Article() {
   return (
     <div>
       <Helmet>
-        <title>Yakihonne | {post.title}</title>
-        <meta name="description" content={post.description} />
-        <meta property="og:description" content={post.description} />
-        <meta property="og:image" content={post.image} />
+        <title>Yakihonne | {post?.title || "N/A"}</title>
+        <meta name="description" content={post?.description || "N/A"} />
+        <meta property="og:description" content={post?.description || "N/A"} />
+        <meta property="og:image" content={post?.image || "N/A"} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="700" />
         <meta
@@ -310,10 +310,10 @@ export default function Article() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
-        <meta property="og:title" content={post.title} />
-        <meta property="twitter:title" content={post.title} />
-        <meta property="twitter:description" content={post.description} />
-        <meta property="twitter:image" content={post.image} />
+        <meta property="og:title" content={post?.title || "N/A"} />
+        <meta property="twitter:title" content={post?.title || "N/A"} />
+        <meta property="twitter:description" content={post?.description || "N/A"} />
+        <meta property="twitter:image" content={post?.image || "N/A"} />
       </Helmet>
 
       {usersList && (

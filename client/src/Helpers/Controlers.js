@@ -1,6 +1,7 @@
 import NDK, { getRelayListForUsers } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "./NDKInstance";
 import {
+  downloadAsFile,
   getEmptyuserMetadata,
   getuserMetadata,
   removeEventsDuplicants,
@@ -203,6 +204,7 @@ const yakiChestDisconnect = async () => {
 
 const logoutAllAccounts = async () => {
   let ignore = ["app-lang", "yaki-wallets", "i18nextLng", "chsettings"];
+  downloadAllKeys();
   Object.keys(localStorage).forEach((key) => {
     if (!ignore.includes(key)) {
       localStorage.removeItem(key);
@@ -214,6 +216,31 @@ const logoutAllAccounts = async () => {
   store.dispatch(setUserMetadata(false));
   clearDB();
   yakiChestDisconnect();
+};
+
+const downloadAllKeys = () => {
+  let accounts = localStorage.getItem("yaki-accounts") || [];
+  accounts = Array.isArray(accounts) ? [] : JSON.parse(accounts);
+  accounts = accounts.filter((account) => account?.userKeys?.sec);
+  let toSave = accounts
+    .map((account) => {
+      return [
+        `Account username: ${account.display_name || account.name}`,
+        `Private key: ${account?.userKeys?.sec}`,
+        `Public key: ${account?.userKeys?.pub}`,
+      ];
+    })
+    .map((_, index, arr) => {
+      return [
+        ..._,
+        index === arr.length - 1
+          ? ""
+          : "------------------------------------------------------",
+        " ",
+      ];
+    })
+    .flat();
+  downloadAsFile(toSave.join("\n"), "text/plain", `accounts-credentials.txt`);
 };
 
 const handleSwitchAccount = (account) => {
@@ -235,6 +262,19 @@ const userLogout = async (pubkey) => {
     (account) => account.userKeys.pub === pubkey
   );
   if (accountIndex !== -1) {
+    let isSec = accounts[accountIndex]?.userKeys?.sec ? true : false;
+    console.log(accounts[accountIndex]?.userKeys?.sec);
+    if (isSec) {
+      let toSave = [
+        `Private key: ${accounts[accountIndex]?.userKeys?.sec}`,
+        `Public key: ${accounts[accountIndex]?.userKeys?.pub}`,
+      ];
+      downloadAsFile(
+        toSave.join("\n"),
+        "text/plain",
+        `account-credentials.txt`
+      );
+    }
     accounts.splice(accountIndex, 1);
     localStorage.setItem("yaki-accounts", JSON.stringify(accounts));
     if (accounts.length > 0) handleSwitchAccount(accounts[0]);

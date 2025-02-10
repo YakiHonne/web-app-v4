@@ -1,0 +1,47 @@
+import { MaciClient } from "@dorafactory/maci-sdk";
+import React, { useEffect, useState } from "react";
+import { parsedMaciPoll } from "../../Helpers/Encryptions";
+import MACIPollsComp from "../SmartWidget/MACIPollsComp";
+import LinkPreview from "./LinkPreview";
+
+export default function MACIPollPreview({ url }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [round, setRound] = useState(false);
+
+  useEffect(() => {
+    getRound();
+  }, []);
+
+  const getRound = async () => {
+    try {
+      let roundId = url.replace("https://vota.dorafactory.org/round/", "");
+      if (!roundId.startsWith("dora")) return;
+      setIsLoading(true);
+      const client = new MaciClient({
+        network: process.env.REACT_APP_NETWORK,
+      });
+      let poll = await client.getRoundById(roundId);
+      let parsedPoll = parsedMaciPoll(poll.data.round);
+      setRound(parsedPoll);
+      setIsLoading(false);
+    } catch (err) {
+      console.log(err);
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading)
+    return (
+      <div
+        className={`fit-container sc-s-18 fx-centered fx-start-h fx-stretch skeleton-container`}
+        style={{ height: "100px" }}
+      ></div>
+    );
+  if (!round && !isLoading) return <LinkPreview url={url} />;
+
+  return (
+    <div>
+      <MACIPollsComp poll={round} />
+    </div>
+  );
+}

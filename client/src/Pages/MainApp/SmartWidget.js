@@ -7,7 +7,7 @@ import PagePlaceholder from "../../Components/PagePlaceholder";
 import Sidebar from "../../Components/Main/Sidebar";
 import UploadFile from "../../Components/UploadFile";
 import ZapPollsComp from "../../Components/SmartWidget/ZapPollsComp";
-import AddPoll from "../../Components/Main/AddPoll";
+import AddZapPoll from "../../Components/Main/AddZapPoll";
 import relaysOnPlatform from "../../Content/Relays";
 import {
   filterRelays,
@@ -15,7 +15,7 @@ import {
   getParsedRepEvent,
   timeAgo,
 } from "../../Helpers/Encryptions";
-import BrowsePolls from "../../Components/Main/BrowsePolls";
+import BrowseZapPolls from "../../Components/Main/BrowseZapPolls";
 import widget from "../../media/JSONs/widgets.json";
 import PreviewContainer from "../../Components/SmartWidget/PreviewContainer";
 import VideoComp from "../../Components/SmartWidget/VideoComp";
@@ -2747,7 +2747,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
     return (
       <>
         {showBrowsePolls && (
-          <BrowsePolls
+          <BrowseZapPolls
             exit={() => setShowBrowsePolls(false)}
             setNevent={(data) => {
               handleMetadata("nevent", data);
@@ -2756,7 +2756,7 @@ const CustomizeComponent = ({ metadata, handleComponentMetadata }) => {
           />
         )}
         {showAddPoll && (
-          <AddPoll
+          <AddZapPoll
             exit={() => setShowAddPoll(false)}
             setNevent={(data) => {
               handleMetadata("nevent", data);

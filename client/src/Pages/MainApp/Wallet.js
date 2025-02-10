@@ -46,6 +46,7 @@ export default function Wallet() {
   const { t } = useTranslation();
   const [transactions, setTransactions] = useState([]);
   const [walletTransactions, setWalletTransactions] = useState([]);
+  const [selectWalletToLink, setSelectWalletToLink] = useState(false);
   const [displayMessage, setDisplayMessage] = useState(false);
   const [ops, setOps] = useState("");
   const [wallets, setWallets] = useState(getWallets());
@@ -327,14 +328,14 @@ export default function Wallet() {
     );
   };
 
-  const linkWallet = async (walletAddr) => {
-    if (!walletAddr.includes("@")) {
+  const linkWallet = async () => {
+    if (!selectWalletToLink.includes("@")) {
       walletWarning();
       return;
     }
     let content = { ...userMetadata };
-    content.lud16 = walletAddr;
-    content.lud06 = encodeLud06(walletAddr);
+    content.lud16 = selectWalletToLink;
+    content.lud06 = encodeLud06(selectWalletToLink);
 
     dispatch(
       setToPublish({
@@ -345,6 +346,7 @@ export default function Wallet() {
         allRelays: [],
       })
     );
+    setSelectWalletToLink(false)
   };
 
   const walletWarning = () => {
@@ -371,6 +373,7 @@ export default function Wallet() {
           wallet={showDeletionPopup}
         />
       )}
+      {selectWalletToLink && <LinkWallet exit={() => setSelectWalletToLink(false)} handleLinkWallet={linkWallet}/>}
       <div>
         <Helmet>
           <title>Yakihonne | Wallet</title>
@@ -503,7 +506,7 @@ export default function Wallet() {
                                               <div
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  linkWallet(wallet.entitle);
+                                                  setSelectWalletToLink(wallet.entitle);
                                                 }}
                                               >
                                                 {t("AmQVpu4")}
@@ -598,7 +601,7 @@ export default function Wallet() {
                                 !profileHasWallet.isWalletLinked && (
                                   <>{t("AHKiPjO")}</>
                                 )}
-                              {t("AHTCsEO")}
+                              {" "}{t("AHTCsEO")}
                             </div>
                           )}
                         {isLoading && (
@@ -1802,6 +1805,40 @@ const DeletionPopUp = ({ exit, handleDelete, wallet }) => {
         <div className="fx-centered fit-container">
           <button className="fx btn btn-gst-red" onClick={handleDelete}>
             {t("Almq94P")}
+          </button>
+          <button className="fx btn btn-red" onClick={exit}>
+            {t("AB4BSCe")}
+          </button>
+        </div>
+      </section>
+    </section>
+  );
+};
+const LinkWallet = ({ exit, handleLinkWallet }) => {
+  const { t } = useTranslation();
+
+  return (
+    <section className="fixed-container fx-centered box-pad-h">
+      <section
+        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
+        style={{ width: "450px" }}
+      >
+        <div
+          className="fx-centered box-marg-s"
+          style={{
+            minWidth: "54px",
+            minHeight: "54px",
+            borderRadius: "var(--border-r-50)",
+            backgroundColor: "var(--red-main)",
+          }}
+        >
+          <div className="warning"></div>
+        </div>
+        <h3 className="p-centered">{t("AmQVpu4")}</h3>
+        <p className="p-centered gray-c box-pad-v-m">{t("AIgKsNh")}</p>
+        <div className="fx-centered fit-container">
+          <button className="fx btn btn-gst-red" onClick={handleLinkWallet}>
+            {t("AmQVpu4")}
           </button>
           <button className="fx btn btn-red" onClick={exit}>
             {t("AB4BSCe")}

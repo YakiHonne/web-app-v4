@@ -467,7 +467,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
 
       let authors = tempUserFollowings;
       filter = [
-        { authors, kinds: [1, 6], limit: 10, until: notesLastEventTime },
+        { authors, kinds: [1, 6], limit:50, until: notesLastEventTime },
       ];
       return {
         filter,
@@ -478,7 +478,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         {
           kinds: [1],
           "#l": ["smart-widget"],
-          limit: 10,
+          limit:50,
           until: notesLastEventTime,
         },
       ];
@@ -491,7 +491,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         {
           kinds: [1],
           "#l": ["FLASH NEWS"],
-          limit: 10,
+          limit:50,
           until: notesLastEventTime,
         },
       ];
@@ -504,7 +504,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         {
           kinds: [1],
           "#t": [notesContentFrom],
-          limit: 10,
+          limit:50,
           until: notesLastEventTime,
         },
       ];

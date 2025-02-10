@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 import { useTranslation } from "react-i18next";
+import { downloadAsFile } from "../../Helpers/Encryptions";
 
 export default function AddYakiWallet({ refresh }) {
   const dispatch = useDispatch();
@@ -30,6 +31,21 @@ export default function AddYakiWallet({ refresh }) {
       let url = await axios.post("https://wallet.yakihonne.com/api/wallets", {
         username: userName?.toLowerCase(),
       });
+      let toSave = [
+        `Address: ${url.data.lightningAddress}`,
+        `NWC secret: ${url.data.connectionSecret}`,
+      ];
+      downloadAsFile(
+        toSave.join("\n"),
+        "text/plain",
+        `${url.data.lightningAddress}-NWC.txt`
+      );
+      dispatch(
+        setToast({
+          type: 3,
+          desc: t("AIzBCBb"),
+        })
+      );
       setIsLoading(false);
       let wallet = {
         secret: url.data.connectionSecret,

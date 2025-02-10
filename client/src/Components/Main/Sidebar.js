@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import DtoLToggleButton from "../DtoLToggleButton";
 import UserProfilePic from "./UserProfilePic";
-import { getBech32, minimizeKey } from "../../Helpers/Encryptions";
+import {
+  downloadAsFile,
+  getBech32,
+  minimizeKey,
+} from "../../Helpers/Encryptions";
 import { useMemo } from "react";
 import NotificationCenter from "./NotificationCenter";
 import { useEffect } from "react";
@@ -12,8 +16,13 @@ import LoginWithAPI from "./LoginWithAPI";
 import WriteNew from "./WriteNew";
 import UserBalance from "./UserBalance";
 import NumberShrink from "../NumberShrink";
-import { getConnectedAccounts, redirectToLogin } from "../../Helpers/Helpers";
-import { useSelector } from "react-redux";
+import {
+  getAllWallets,
+  getConnectedAccounts,
+  getWallets,
+  redirectToLogin,
+} from "../../Helpers/Helpers";
+import { useDispatch, useSelector } from "react-redux";
 import {
   handleSwitchAccount,
   logoutAllAccounts,
@@ -24,9 +33,11 @@ import SearchSidebar from "./SearchSidebar";
 import { customHistory } from "../../Helpers/History";
 import YakiMobileappSidebar from "../YakiMobileappSidebar";
 import { useTranslation } from "react-i18next";
+import { setToast } from "../../Store/Slides/Publishers";
 
 export default function Sidebar() {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const userMetadata = useSelector((state) => state.userMetadata);
   const userKeys = useSelector((state) => state.userKeys);
   const userChatrooms = useSelector((state) => state.userChatrooms);
@@ -36,6 +47,7 @@ export default function Sidebar() {
     (state) => state.updatedActionFromYakiChest
   );
 
+  const [showConfirmationBox, setShowConfirmationBox] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMyContent, setShowMyContent] = useState(false);
   const [showWritingOptions, setShowWritingOptions] = useState(false);
@@ -116,13 +128,112 @@ export default function Sidebar() {
     };
   }, [mediaRef]);
 
+  const singleLogout = () => {
+    let wallets = getWallets();
+    let isNWC = wallets.find((_) => _.kind !== 1);
+
+    if (isNWC) {
+      setShowConfirmationBox(1);
+      return;
+    }
+    setShowSettings(false);
+    userLogout(userKeys.pub);
+  };
+  const multiLogout = () => {
+    let wallets = getAllWallets();
+    let isNWCs = wallets.find((_) => _.wallets.find((_) => _.kind !== 1));
+
+    if (isNWCs) {
+      setShowConfirmationBox(2);
+      return;
+    }
+    setShowSettings(false);
+    logoutAllAccounts();
+  };
+
+  const handleLogout = () => {
+    if (showConfirmationBox === 1) {
+      let wallets = getWallets();
+      let NWCs = wallets.filter((_) => _.kind !== 1);
+      let toSave = [
+        `Wallets for: ${getBech32("npub", userKeys.pub)}`,
+        "-",
+        ...NWCs.map((_, index) => {
+          return [
+            `Address: ${_.entitle}`,
+            `NWC secret: ${_.data}`,
+            index === NWCs.length - 1 ? "" : "----",
+          ];
+        }),
+      ].flat();
+      downloadAsFile(
+        toSave.join("\n"),
+        "text/plain",
+        `NWCs-${userKeys.pub}.txt`
+      );
+      dispatch(
+        setToast({
+          type: 3,
+          desc: t("AIzBCBb"),
+        })
+      );
+      setShowSettings(false);
+      userLogout(userKeys.pub);
+    }
+    if (showConfirmationBox === 2) {
+      let wallets = getAllWallets();
+      wallets = wallets.filter((_) => _.wallets.find((_) => _.kind !== 1));
+      let NWCs = wallets.map((_) => {
+        return { ..._, wallets: _.wallets.filter((_) => _.kind !== 1) };
+      });
+      let toSave = NWCs.map((wallet) => {
+        return [
+          `Wallets for: ${getBech32("npub", wallet.pubkey)}`,
+          "-",
+          ...wallet.wallets.map((_, index, arr) => {
+            return [
+              `Address: ${_.entitle}`,
+              `NWC secret: ${_.data}`,
+              index === arr.length - 1 ? "" : "----",
+            ];
+          }),
+        ].flat();
+      })
+        .map((_, index, arr) => {
+          return [
+            ..._,
+            index === arr.length - 1
+              ? ""
+              : "------------------------------------------------------",
+            " ",
+          ];
+        })
+        .flat();
+      downloadAsFile(toSave.join("\n"), "text/plain", `NWCs-wallets.txt`);
+      dispatch(
+        setToast({
+          type: 3,
+          desc: t("AVUlnek"),
+        })
+      );
+      setShowSettings(false);
+      logoutAllAccounts();
+    }
+    setShowConfirmationBox(false);
+  };
+
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
       {isAccountSwitching && (
         <AccountSwitching exit={() => setIsAccountSwitching(false)} />
       )}
-
+      {showConfirmationBox && (
+        <ConfirmmationBox
+          exit={() => setShowConfirmationBox(false)}
+          handleOnClick={handleLogout}
+        />
+      )}
       <div
         className="fx-scattered fx-end-v nostr-sidebar box-pad-v-m fx-col "
         style={{
@@ -460,10 +571,7 @@ export default function Sidebar() {
                       </div>
                       <div
                         className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-m nostr-navbar-link"
-                        onClick={() => {
-                          setShowSettings(false);
-                          userLogout(userKeys.pub);
-                        }}
+                        onClick={singleLogout}
                         style={{ padding: ".75rem 1rem" }}
                       >
                         <div className="logout"></div>
@@ -579,10 +687,7 @@ export default function Sidebar() {
                     </div>
                     <div
                       className="fit-container fx-centered fx-start-h box-pad-h-s box-pad-v-s"
-                      onClick={() => {
-                        setShowSettings(false);
-                        logoutAllAccounts();
-                      }}
+                      onClick={multiLogout}
                     >
                       <div
                         className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-s sc-s-18"
@@ -647,5 +752,45 @@ const AccountSwitching = ({ exit }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const ConfirmmationBox = ({ exit, handleOnClick }) => {
+  const { t } = useTranslation();
+
+  return (
+    <section className="fixed-container fx-centered box-pad-h">
+      <section
+        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
+        style={{ width: "450px" }}
+      >
+        <div
+          className="fx-centered box-marg-s"
+          style={{
+            minWidth: "54px",
+            minHeight: "54px",
+            borderRadius: "var(--border-r-50)",
+            backgroundColor: "var(--orange-main)",
+          }}
+        >
+          <div className="warning"></div>
+        </div>
+        <h3 className="p-centered">{t("AirKalq")}</h3>
+        <p className="p-centered gray-c box-pad-v-m">{t("Ac9JSPk")}</p>
+        <div className="fx-centered fit-container">
+          <button
+            className="fx btn btn-gst fx-centered"
+            style={{ minWidth: "max-content" }}
+            onClick={handleOnClick}
+          >
+            {t("AHmZKVA")}
+            <div className="download-file"></div>
+          </button>
+          <button className="fx btn btn-red" onClick={exit}>
+            {t("AB4BSCe")}
+          </button>
+        </div>
+      </section>
+    </section>
   );
 };

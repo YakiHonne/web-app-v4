@@ -267,6 +267,46 @@ const getParsedRepEvent = (event) => {
   }
 };
 
+const parsedMaciPoll = (poll) => {
+  try {
+    let voteOptionMap = JSON.parse(poll.voteOptionMap);
+    let results = JSON.parse(poll.results);
+
+    let votingEnd = Math.floor(parseInt(poll.votingEnd) / 1000000);
+    let votingStart = Math.floor(parseInt(poll.votingStart) / 1000000);
+    let totalBond =
+      poll.totalBond === "0"
+        ? 0
+        : parseInt(poll.totalBond.slice(0, -14)) / 10000;
+
+    const votes = results.map((r) => ({
+      v: Number(r.slice(0, -24)),
+      v2: Number(r.slice(-24)),
+    }));
+    const totalVotes = votes.reduce(
+      (s, c) => ({ v: s.v + c.v, v2: s.v2 + c.v2 }),
+      { v: 0, v2: 0 }
+    );
+    const resultsList = votes.map((v) => ({
+      v: parseFloat(((v.v / (totalVotes.v || 1)) * 100).toFixed(1)),
+      v2: parseFloat(((v.v2 / (totalVotes.v2 || 1)) * 100).toFixed(1)),
+    }));
+
+    return {
+      ...poll,
+      voteOptionMap,
+      results,
+      resultsList,
+      votingEnd,
+      votingStart,
+      totalBond,
+    };
+  } catch (err) {
+    console.log(err);
+    return { ...poll, voteOptionMap: [], results: [], resultsList: [] };
+  }
+};
+
 const detectDirection = (text) => {
   const rtlCharRegExp =
     /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
@@ -385,6 +425,7 @@ const decodeBolt11 = (address) => {
   let amount = decoded.sections.find((item) => item.name === "amount");
   return (amount?.value || 0) / 1000;
 };
+
 const getBolt11 = (event) => {
   if (!event) return "";
   for (let tag of event.tags) {
@@ -416,11 +457,12 @@ const checkForLUDS = (lud06, lud16) => {
     : lud06;
 };
 
-const convertDate = (toConvert) => {
+const convertDate = (toConvert, time = false) => {
+  let timeConfig = time ? { hour: "numeric", minute: "numeric" } : {};
   return t("A3fEQj5", {
     val: toConvert,
     formatParams: {
-      val: { year: "numeric", month: "short", day: "numeric" },
+      val: { year: "numeric", month: "short", day: "numeric", ...timeConfig },
     },
   });
 };
@@ -602,6 +644,24 @@ const encodeBase64URL = (string) => {
     .replace(/=+$/, "");
 };
 
+const downloadAsFile = (text, type = "application/json", name) => {
+  const jsonString = type === "application/json" ? JSON.stringify(text, null, 2) : text
+
+  const blob = new Blob([jsonString], { type });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = name;
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+};
+
 export {
   getBech32,
   shortenKey,
@@ -637,4 +697,6 @@ export {
   timeAgo,
   detectDirection,
   enableTranslation,
+  parsedMaciPoll,
+  downloadAsFile,
 };

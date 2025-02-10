@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getLinkPreview } from "../../Helpers/Helpers";
-import { customHistory } from "../../Helpers/History";
-import { getImagePlaceholder } from "../../Content/NostrPPPlaceholder";
 
 export default function LinkPreview({ url }) {
   const { t } = useTranslation();

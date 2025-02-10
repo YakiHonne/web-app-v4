@@ -641,7 +641,6 @@ export default function Settings() {
                           </Link>
                         </div>
                       </div>
-                      <AddMaciPolls />
                       <div
                         className="fit-container fx-centered fx-col"
                         style={{ gap: 0 }}

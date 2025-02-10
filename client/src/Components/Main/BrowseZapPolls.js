@@ -10,7 +10,7 @@ import { getUser } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
 
-export default function BrowsePolls({ setNevent, exit }) {
+export default function BrowseZapPolls({ setNevent, exit }) {
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
 
@@ -134,7 +134,7 @@ export default function BrowsePolls({ setNevent, exit }) {
       }}
     >
       <div
-        className="fit-height overlay-container fx-centered fx-start-v fx-start-h fx-col"
+        className="fit-height overlay-container fx-centered fx-start-v fx-start-h fx-col bg-sp"
         style={{
           width: "min(100%,700px)",
           overflow: "scroll",
@@ -171,7 +171,7 @@ export default function BrowsePolls({ setNevent, exit }) {
             myPolls.map((poll) => {
               return (
                 <div
-                  className="fit-container box-pad-h-m box-pad-v sc-s-18 fx-centered fx-col"
+                  className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col"
                   key={poll.id}
                 >
                   <div className="fit-container fx-scattered">
