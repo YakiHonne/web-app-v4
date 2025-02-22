@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import LoadingDots from "../LoadingDots";
 import { useTranslation } from "react-i18next";
-import { MaciClient } from "@dorafactory/maci-sdk";
+import { MaciClient } from "@dorafactory/maci-sdk/browser";
 import MACIPollsComp from "../SmartWidget/MACIPollsComp";
 import { parsedMaciPoll } from "../../Helpers/Encryptions";
 
@@ -15,7 +15,7 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
   const status = {
     tallying: (
       <div
-        className="sticker sticker-normal sticker-c1"
+        className="sticker sticker-normal sticker-gray-black"
         style={{ minWidth: "max-content" }}
       >
         {t("Aw1EitS")}
@@ -23,15 +23,15 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
     ),
     created: (
       <div
-        className="sticker sticker-normal sticker-gray-black"
+        className="sticker sticker-normal sticker-c1 "
         style={{ minWidth: "max-content" }}
       >
-        {t("ACPvBzE")}
+        {t("ANBowSq")}
       </div>
     ),
     ended: (
       <div
-        className="sticker sticker-normal sticker-gray-black"
+        className="sticker sticker-normal sticker-red"
         style={{ minWidth: "max-content" }}
       >
         {t("Azctwg8")}
@@ -39,7 +39,7 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
     ),
     closed: (
       <div
-        className="sticker sticker-normal sticker-gray-black"
+        className="sticker sticker-normal sticker-red"
         style={{ minWidth: "max-content" }}
       >
         {t("AVhtVJY")}
@@ -54,7 +54,6 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
       </div>
     ),
   };
-
   useEffect(() => {
     getRounds();
   }, [cursor]);
@@ -65,7 +64,7 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
       const client = new MaciClient({
         network: process.env.REACT_APP_NETWORK,
       });
-      
+
       let poll = await client.getRounds(cursor, 10);
       setHasNextPage(poll.data.rounds.pageInfo);
       setRounds((prev) => [
@@ -136,15 +135,21 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
                 key={round.id}
               >
                 <div className="fit-container fx-scattered fx-start-v">
-                  <h4>{round.roundTitle}</h4>
-                  <div className="fx-centered">
+                  <div className="fx-centered fx-col fx-start-v">
                     {status[round.status.toLowerCase()]}
+                    <h4>{round.roundTitle}</h4>
+                  </div>
+                  <div className="fx-centered">
                     <div
                       className="round-icon-small round-icon-tooltip"
                       data-tooltip={t("Afcj438")}
                       onClick={() =>
                         setPollAddr(
-                          `https://vota.dorafactory.org/round/${round.id}`
+                          `https://vota${
+                            process.env.REACT_APP_NETWORK === "testnet"
+                              ? "-test"
+                              : ""
+                          }.dorafactory.org/round/${round.id}`
                         )
                       }
                     >

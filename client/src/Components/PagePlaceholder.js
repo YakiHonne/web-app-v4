@@ -1,11 +1,7 @@
 import React, { useState } from "react";
-import HeroTopics from "../media/images/topics-hero.png";
-import HeroTopics2 from "../media/images/topics-hero-2.png";
 import Hero404 from "../media/images/404-hero.png";
 import HeroNostrNotConnected from "../media/images/nostr-not-connected.png";
 import HeroNostrunauthorized from "../media/images/nostr-unauthorized.png";
-import HeroNostrNoPosts from "../media/images/posts-hero.png";
-import HeroNostrNoNews from "../media/images/news-hero.png";
 import HeroNostrNoUN from "../media/images/un-hero.png";
 import HeroNostrunauthorizedMessages from "../media/images/unauthorized-messages.png";
 import HeroDMS from "../media/images/DMS.png";
@@ -15,7 +11,7 @@ import HeroWallet from "../media/images/wallet.png";
 import HeroWidgets from "../media/images/widgets.png";
 import HeroWidgetsDraft from "../media/images/draft.png";
 import HeroUnsupported from "../media/images/unsupported.png";
-import { Link } from "react-router-dom";
+import HeroMutedUser from "../media/images/muted-user.png";
 import LoginWithAPI from "./Main/LoginWithAPI";
 import AddWallet from "./Main/AddWallet";
 import { useSelector } from "react-redux";
@@ -352,6 +348,30 @@ export default function PagePlaceholder({ page, onClick = null }) {
             </p>
             <button className="btn btn-normal" onClick={onClick}>
               {t("AxgWICf")}
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  if (page === "muted-user")
+    return (
+      <>
+        <div className="fit-container">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroMutedUser})`,
+                width: "500px",
+                height: "280px",
+              }}
+            ></div>
+            <h4>{t("AineCS4")}</h4>
+            <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
+              {t("Ao4Segq")}
+            </p>
+            <button className="btn btn-normal" onClick={onClick}>
+              {t("AKELUbQ")}
             </button>
           </div>
         </div>

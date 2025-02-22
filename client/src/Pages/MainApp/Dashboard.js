@@ -300,6 +300,7 @@ export default function Dashboard() {
           exit={() => setPostToNote(false)}
           content={typeof postToNote === "string" ? postToNote : ""}
           linkedEvent={typeof postToNote !== "string" ? postToNote : ""}
+          triggerCP={state?.triggerCP ? state.triggerCP : false}
         />
       )}
       <div>

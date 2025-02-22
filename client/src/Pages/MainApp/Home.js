@@ -44,6 +44,7 @@ import DonationBoxSuggestionCards from "../../Components/SuggestionsCards/Donati
 import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/ProfileShareSuggestionCards";
 import PostAsNote from "../../Components/Main/PostAsNote";
 import { useTranslation } from "react-i18next";
+import bannedList from "../../Content/BannedList";
 const SUGGESTED_TAGS_VALUE = "_sggtedtags_";
 
 const getContentList = () => {
@@ -467,7 +468,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
 
       let authors = tempUserFollowings;
       filter = [
-        { authors, kinds: [1, 6], limit:50, until: notesLastEventTime },
+        { authors, kinds: [1, 6], limit: 50, until: notesLastEventTime },
       ];
       return {
         filter,
@@ -478,7 +479,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         {
           kinds: [1],
           "#l": ["smart-widget"],
-          limit:50,
+          limit: 50,
           until: notesLastEventTime,
         },
       ];
@@ -491,7 +492,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         {
           kinds: [1],
           "#l": ["FLASH NEWS"],
-          limit:50,
+          limit: 50,
           until: notesLastEventTime,
         },
       ];
@@ -504,7 +505,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         {
           kinds: [1],
           "#t": [notesContentFrom],
-          limit:50,
+          limit: 50,
           until: notesLastEventTime,
         },
       ];
@@ -717,10 +718,12 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
     <div className="fx-centered  fx-wrap fit-container" style={{ gap: 0 }}>
       {notes[smallButtonDropDownOptions.includes(from) ? from : "tags"].map(
         (note, index) => {
-          if (!userMutedList.includes(note.pubkey)) {
+          if (![...userMutedList, ...bannedList].includes(note.pubkey)) {
             if (
               note.kind === 6 &&
-              !userMutedList.includes(note.relatedEvent.pubkey)
+              ![...userMutedList, ...bannedList].includes(
+                note.relatedEvent.pubkey
+              )
             )
               return (
                 <Fragment key={note.id}>

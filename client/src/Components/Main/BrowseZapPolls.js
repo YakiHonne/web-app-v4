@@ -19,7 +19,7 @@ export default function BrowseZapPolls({ setNevent, exit }) {
   const [comPolls, setComPolls] = useState([]);
   const [myPollsLE, setMyPollsLE] = useState(undefined);
   const [comPollsLE, setComPollsLE] = useState(undefined);
-  const [selectedOption, setSelectedOption] = useState("self");
+  const [selectedOption, setSelectedOption] = useState("com");
   const [isLoading, setIsLoading] = useState(false);
   const [sub, setSub] = useState(false);
 
@@ -148,19 +148,19 @@ export default function BrowseZapPolls({ setNevent, exit }) {
         >
           <div
             className={`list-item fx-centered fx ${
-              selectedOption === "self" ? "selected-list-item" : ""
-            }`}
-            onClick={() => handleContentSource("self")}
-          >
-            <p>{t("AQyoumZ")}</p>
-          </div>
-          <div
-            className={`list-item fx-centered fx ${
               selectedOption === "com" ? "selected-list-item" : ""
             }`}
             onClick={() => handleContentSource("com")}
           >
             <p>{t("ADAU7C1")}</p>
+          </div>
+          <div
+            className={`list-item fx-centered fx ${
+              selectedOption === "self" ? "selected-list-item" : ""
+            }`}
+            onClick={() => handleContentSource("self")}
+          >
+            <p>{t("AQyoumZ")}</p>
           </div>
           <div className="close" style={{ position: "static" }} onClick={exit}>
             <div></div>
@@ -188,6 +188,15 @@ export default function BrowseZapPolls({ setNevent, exit }) {
                 </div>
               );
             })}
+          {selectedOption === "self" && myPolls.length === 0 && !isLoading && (
+            <div
+              className="fx-centered fit-container fx-col"
+              style={{ height: "400px" }}
+            >
+              <h4>{t("Axpo9Sw")}</h4>
+              <p className="gray-c p-centered">{t("A4w03gs")}</p>
+            </div>
+          )}
           {selectedOption === "com" &&
             comPolls.map((poll) => {
               return (

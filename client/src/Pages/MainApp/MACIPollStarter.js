@@ -52,13 +52,17 @@ export default function MACIPollStarter() {
                 onClick={() =>
                   copyKey(
                     t("AfnTOQk"),
-                    `https://vota.dorafactory.org/round/${pollAddr}`
+                    `https://vota${
+                      process.env.REACT_APP_NETWORK === "testnet" ? "-test" : ""
+                    }.dorafactory.org/round/${pollAddr}`
                   )
                 }
               >
                 <p>
                   {shortenKey(
-                    `https://vota.dorafactory.org/round/${pollAddr}`,
+                    `https://vota${
+                      process.env.REACT_APP_NETWORK === "testnet" ? "-test" : ""
+                    }.dorafactory.org/round/${pollAddr}`,
                     40
                   )}
                 </p>

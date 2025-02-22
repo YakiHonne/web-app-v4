@@ -24,6 +24,7 @@ import { setToast } from "../../Store/Slides/Publishers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "../Main/LoginSignup";
 
 export default function ZapPollsComp({
   event,
@@ -52,6 +53,7 @@ export default function ZapPollsComp({
   const [callback, setCallback] = useState(false);
   const [author, setAuthor] = useState(false);
   const [showCashier, setShowCashier] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -249,12 +251,7 @@ export default function ZapPollsComp({
 
   const handleShowCashier = (option) => {
     if (!userKeys || (userKeys && !(userKeys?.sec || userKeys?.ext))) {
-      dispatch(
-        setToast({
-          type: 3,
-          desc: t("A9L57eW"),
-        })
-      );
+      setIsLogin(true);
       return;
     }
     if (!callback) {
@@ -331,7 +328,7 @@ export default function ZapPollsComp({
           isVoted={isVoted}
         />
       )}
-
+      {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       <div className="fit-container fx-centered fx-col">
         <div
           className="fit-container poll-content-box"
@@ -615,7 +612,7 @@ const Cashier = ({
             since: Math.floor(Date.now() / 1000 - 10),
           },
         ],
-        { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
+        { groupable: false, cacheUsage: "CACHE_FIRST" }
       );
 
       sub.on("event", (event) => {

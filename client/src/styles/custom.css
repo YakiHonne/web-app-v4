@@ -283,13 +283,14 @@ main {
     left: 0;
     top: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100svh;
     /* background-color: var(--white); */
     background: var(--white-high-transparent);
     /* backdrop-filter: blur(8px); */
     z-index: 2000;
     opacity: 0;
     animation: fadeout .3s ease-in-out forwards;
+
 }
 
 .fixed-container section {
@@ -732,8 +733,8 @@ main {
 
 .toast-message {
     position: fixed;
-    bottom: 32px;
-    left: 32px;
+    top: 32px;
+    right: 32px;
     z-index: 1000000;
     min-width: 300px;
     max-width: 300px;
@@ -1935,7 +1936,7 @@ main {
     position: sticky;
     top: 0;
     background-color: var(--white);
-    z-index: 100;
+    z-index: 1;
     padding: 1rem 0;
 }
 

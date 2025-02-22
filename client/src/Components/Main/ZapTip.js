@@ -24,6 +24,7 @@ import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "./LoginSignup";
 
 export default function ZapTip({
   recipientLNURL,
@@ -42,6 +43,7 @@ export default function ZapTip({
   const [callback, setCallback] = useState(false);
   const [showCashier, setCashier] = useState(false);
   const [lnbcAmount, setLnbcAmount] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -157,10 +159,11 @@ export default function ZapTip({
   if (!senderPubkey)
     return (
       <>
+        {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
         {onlyIcon && (
           <div
             className={smallIcon ? "bolt" : "bolt-24"}
-            onClick={() => redirectToLogin(true)}
+            onClick={() => setIsLogin(true)}
           ></div>
         )}
         {!onlyIcon && (
@@ -168,7 +171,7 @@ export default function ZapTip({
             className={`${
               smallIcon ? "round-icon-small" : "round-icon"
             }  round-icon-tooltip`}
-            onClick={() => redirectToLogin(true)}
+            onClick={() => setIsLogin(true)}
             data-tooltip="Zap"
           >
             <div className={smallIcon ? "lightning" : "lightning-24"}></div>

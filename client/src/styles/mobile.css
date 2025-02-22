@@ -180,9 +180,9 @@
 }
 
 @media only screen and (max-width: 930px) {
-  html {
+  /* html {
     font-size: 14px;
-  }
+  } */
 
   .author-info-post-p, .un-banners {
     display: none;
@@ -268,9 +268,9 @@
 
 @media only screen and (max-width: 800px) {
 
-  html {
+  /* html {
     font-size: 12px;
-  }
+  } */
 
   .carousel .carousel-arrows {
     display: flex;

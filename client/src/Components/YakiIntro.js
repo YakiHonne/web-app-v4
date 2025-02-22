@@ -72,7 +72,6 @@ export default function YakiIntro() {
         {/* <button className="btn btn-gst" style={{backgroundColor: "var(--orange-side)", boxShadow: "0 4px 25px  var(--orange-side)"}}>Mobile app</button> */}
         {!swipe && (
           <div className="slide-right" onClick={() => setSwipe(!swipe)}>
-            {/* <div className="bunny-icon"></div> */}
             <div className="info-24"></div>
           </div>
         )}
@@ -182,7 +181,7 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated Jan 23, 2025
+                  Last updated Feb 22, 2025
                 </p>
               </div>
               <p className="orange-c p-medium">
@@ -190,11 +189,11 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- Yakihonne wallet name customization for newly created wallets.
-- Option to toggle between collapsed or expanded notes in the feed for a personalized experience.
-- Notification preferences can now be managed directly from the settings page.
-- Quick access to your profile with the newly added profile button.
-- Native poll rendering and voting functionality within notes.
+- Zap polls can now be added directly from the list or created instantly within notes and comments.
+- Muting users is now more reliable.
+- Users can download and export their NWC secret for wallets.
+- Wallets and account credentials are automatically saved upon signup and logout.
+- Faster login and signup when interacting with Yakihonne while logged out.
 - Bug fixes and performance optimizations for improved reliability.
 `}</p>
           </div>

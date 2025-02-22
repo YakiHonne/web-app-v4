@@ -62,7 +62,7 @@ export default function Login() {
       >
         <div className="box-marg-s">
           {isLogin && <h3 className="slide-up">{t("AITU9z0")}</h3>}
-          {!isLogin && <h3 className="slide-down">{t("AHAtW4X")}</h3>}
+          {!isLogin && <h3 className="slide-down">{t("AHXrr4Y")}</h3>}
         </div>
         {isLogin && (
           <LoginScreen
@@ -376,13 +376,9 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
       downloadAsFile(
         toSave.join("\n"),
         "text/plain",
-        `${url.data.lightningAddress}-NWC.txt`
-      );
-      dispatch(
-        setToast({
-          type: 3,
-          desc: t("AIzBCBb"),
-        })
+        `${url.data.lightningAddress}-NWC.txt`,
+        t("AIzBCBb"),
+        false
       );
       setIsCreatingWalletLoading(false);
     } catch (err) {
@@ -440,9 +436,10 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
       downloadAsFile(
         toSave.join("\n"),
         "text/plain",
-        `account-credentials.txt`
+        `account-credentials.txt`,
+        t("AdoWp0E"),
+        false
       );
-      dispatch(setToast({ type: 3, desc: t("AdoWp0E") }));
       
       let signer = new NDKPrivateKeySigner(userKeys.sec);
       ndkInstance.signer = signer;
@@ -943,7 +940,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                 <div className="round-icon">
                   <div className="key-icon-24"></div>
                 </div>
-                <p className="gray-c">
+                <p className="c1-c">
                   {NWAddr && t("AZfj4DI")}
                   {!NWAddr && t("AxGSiUc")}
                 </p>

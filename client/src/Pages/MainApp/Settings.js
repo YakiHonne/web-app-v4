@@ -3,7 +3,11 @@ import Sidebar from "../../Components/Main/Sidebar";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
-import { getBech32, getEmptyuserMetadata } from "../../Helpers/Encryptions";
+import {
+  downloadAsFile,
+  getBech32,
+  getEmptyuserMetadata,
+} from "../../Helpers/Encryptions";
 import { shortenKey } from "../../Helpers/Encryptions";
 import ToUpdateRelay from "../../Components/Main/ToUpdateRelay";
 import axios from "axios";
@@ -42,6 +46,8 @@ import {
   translationServicesEndpoints,
 } from "../../Content/TranslationServices";
 import AddMaciPolls from "../../Components/Main/AddMaciPolls";
+import OptionsDropdown from "../../Components/Main/OptionsDropdown";
+import LoginSignup from "../../Components/Main/LoginSignup";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -568,6 +574,33 @@ export default function Settings() {
     );
   };
 
+  const exportKeys = () => {
+    let keys = {
+      sec: userKeys.sec ? getBech32("nsec", userKeys.sec) : "N/A",
+      pub: getBech32("npub", userKeys.pub),
+    };
+    let toSave = [
+      "Account credentials",
+      `Private key: ${keys.sec}`,
+      `Public key: ${keys.pub}`,
+    ];
+
+    downloadAsFile(
+      toSave.join("\n"),
+      "text/plain",
+      "account-credentials.txt",
+      t("AdoWp0E")
+    );
+  };
+  const exportWallet = (nwc, addr) => {
+    downloadAsFile(
+      `wallet secret: ${nwc}`,
+      "text/plain",
+      `NWC-for-${addr}.txt`,
+      t("AVUlnek")
+    );
+  };
+
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
@@ -718,6 +751,17 @@ export default function Settings() {
                                   {shortenKey(getBech32("npub", userKeys.pub))}
                                 </p>
                                 <div className="copy-24"></div>
+                              </div>
+                              <div
+                                className="fit-container fx-end-h"
+                                onClick={exportKeys}
+                              >
+                                <div className="fx-centered">
+                                  <p className="btn-text-gray">
+                                    {t("ADv1bgl")}
+                                  </p>
+                                  <div className="export"></div>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -1209,7 +1253,7 @@ export default function Settings() {
                               {wallets.map((wallet) => {
                                 return (
                                   <div
-                                    className="sc-s-18 box-pad-h-m box-pad-v-m fx-scattered fit-container"
+                                    className="sc-s-18 bg-sp box-pad-h-s box-pad-v-s fx-scattered fit-container"
                                     key={wallet.id}
                                     style={{ overflow: "visible" }}
                                   >
@@ -1224,7 +1268,7 @@ export default function Settings() {
                                         {wallet.kind === 3 && (
                                           <div className="nwc-logo-24"></div>
                                         )}
-                                        <div className="fx-centered fx-col fx-start-h fx-start-v">
+                                        <div className="fx-centered fx-col">
                                           <div className="fx-centered">
                                             <p>{wallet.entitle}</p>
                                             {wallet.active && (
@@ -1240,7 +1284,7 @@ export default function Settings() {
                                               ></div>
                                             )}
                                           </div>
-                                          <div className="fx-centered">
+                                          {/* <div className="fx-centered">
                                             {wallet.kind === 3 && (
                                               <div
                                                 className="sticker sticker-gray-black fx-centered"
@@ -1269,7 +1313,7 @@ export default function Settings() {
                                                 <div className="copy"></div>
                                               </div>
                                             )}
-                                          </div>
+                                          </div> */}
                                         </div>
                                       </div>
                                       <div className="fx-centered"></div>
@@ -1296,6 +1340,46 @@ export default function Settings() {
                                         >
                                           <p className="red-c">&minus;</p>
                                         </div>
+                                      )}
+                                      {wallet.kind !== 1 && (
+                                        <OptionsDropdown
+                                          options={[
+                                            wallet.kind === 3 && (
+                                              <div
+                                                onClick={() =>
+                                                  copyKey(
+                                                    t("A6Pj02S"),
+                                                    wallet.data
+                                                  )
+                                                }
+                                              >
+                                                {t("Aoq0uKa")}
+                                              </div>
+                                            ),
+                                            wallet.kind !== 1 && (
+                                              <div
+                                                onClick={() =>
+                                                  copyKey(
+                                                    t("ALR84Tq"),
+                                                    wallet.entitle
+                                                  )
+                                                }
+                                              >
+                                                {t("ArCMp34")}
+                                              </div>
+                                            ),
+                                            <div
+                                              onClick={() =>
+                                                exportWallet(
+                                                  wallet.data,
+                                                  wallet.entitle
+                                                )
+                                              }
+                                            >
+                                              {t("A4A5psW")}
+                                            </div>,
+                                          ]}
+                                        />
                                       )}
                                     </div>
                                   </div>

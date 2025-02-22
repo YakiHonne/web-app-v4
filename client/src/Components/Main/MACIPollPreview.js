@@ -1,4 +1,4 @@
-import { MaciClient } from "@dorafactory/maci-sdk";
+import { MaciClient } from "@dorafactory/maci-sdk/browser";
 import React, { useEffect, useState } from "react";
 import { parsedMaciPoll } from "../../Helpers/Encryptions";
 import MACIPollsComp from "../SmartWidget/MACIPollsComp";
@@ -14,15 +14,20 @@ export default function MACIPollPreview({ url }) {
 
   const getRound = async () => {
     try {
-      let roundId = url.replace("https://vota.dorafactory.org/round/", "");
+      let roundId = url
+        .replace("https://vota.dorafactory.org/round/", "")
+        .replace("https://vota-test.dorafactory.org/round/", "");
+
       if (!roundId.startsWith("dora")) return;
       setIsLoading(true);
       const client = new MaciClient({
         network: process.env.REACT_APP_NETWORK,
       });
       let poll = await client.getRoundById(roundId);
-      let parsedPoll = parsedMaciPoll(poll.data.round);
-      setRound(parsedPoll);
+      if (poll.data) {
+        let parsedPoll = parsedMaciPoll(poll.data?.round);
+        setRound(parsedPoll);
+      }
       setIsLoading(false);
     } catch (err) {
       console.log(err);
@@ -41,7 +46,7 @@ export default function MACIPollPreview({ url }) {
 
   return (
     <div>
-      <MACIPollsComp poll={round} />
+      <MACIPollsComp poll={round} url={url} />
     </div>
   );
 }

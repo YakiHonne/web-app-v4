@@ -11,6 +11,7 @@ import LoadingLogo from "../LoadingLogo";
 import { Link } from "react-router-dom";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "./LoginSignup";
 
 const filterComments = (all, id, isRoot) => {
   if (isRoot) return filterRootComments(all);
@@ -118,6 +119,7 @@ export default function CommentsSection({
   const [isLoading, setIsLoading] = useState(false);
   const [showWriteNote, setShowWriteNote] = useState(leaveComment);
   const [netComments, setNetComments] = useState([]);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     let parsedCom = async () => {
@@ -203,104 +205,113 @@ export default function CommentsSection({
     };
   }, [isLoading]);
 
+  useEffect(() => {
+    setShowWriteNote(leaveComment);
+  }, [leaveComment]);
+
   return (
-    <div className="fit-container fx-centered fx-col box-marg-s">
-      {userKeys && (
-        <>
-          <hr />
-          {!showWriteNote && (
-            <div
-              className="fit-container fx-centered fx-start-h  box-pad-h-m box-pad-v-m pointer"
-              style={{
-                overflow: "visible",
-                // border: "1px solid var(--very-dim-gray)",
-              }}
-              onClick={() => setShowWriteNote(true)}
-            >
-              <UserProfilePic size={40} mainAccountUser={true} />
-              <div className="sc-s-18 box-pad-h-m box-pad-v-s fit-container">
-                <p className="gray-c">
-                  {/* Comment on {author.display_name || author.name}'s {kind} */}
-                  {t("AOmRQKF")}
-                </p>
+    <>
+      {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
+      <div className="fit-container fx-centered fx-col box-marg-s">
+        {userKeys && (
+          <>
+            <hr />
+            {!showWriteNote && (
+              <div
+                className="fit-container fx-centered fx-start-h  box-pad-h-m box-pad-v-m pointer"
+                style={{
+                  overflow: "visible",
+                  // border: "1px solid var(--very-dim-gray)",
+                }}
+                onClick={() => setShowWriteNote(true)}
+              >
+                <UserProfilePic size={40} mainAccountUser={true} />
+                <div className="sc-s-18 box-pad-h-m box-pad-v-s fit-container">
+                  <p className="gray-c">
+                    {/* Comment on {author.display_name || author.name}'s {kind} */}
+                    {t("AOmRQKF")}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          {showWriteNote && (
-            <div className="box-pad-v-m box-pad-h-m fit-container">
-              <Comments
-                exit={() => setShowWriteNote(false)}
-                noteTags={noteTags}
-                replyId={id}
-                replyPubkey={eventPubkey}
-                actions={postActions}
-                kind={kind}
-                tagKind={tagKind}
-              />
-            </div>
-          )}
-        </>
-      )}
-      {!userKeys && (
-        <>
-          <hr />
-          <div className="fit-container fx-centered box-pad-v fx-col slide-up">
-            <h4>{t("ASt0wnG")}</h4>
-            <p className="gray-c">{t("AAWFsjt")}</p>
-            <Link to={"/login"}>
-              <button className="btn btn-normal btn-small">
+            )}
+            {showWriteNote && (
+              <div className="box-pad-v-m box-pad-h-m fit-container">
+                <Comments
+                  exit={() => setShowWriteNote(false)}
+                  noteTags={noteTags}
+                  replyId={id}
+                  replyPubkey={eventPubkey}
+                  actions={postActions}
+                  kind={kind}
+                  tagKind={tagKind}
+                />
+              </div>
+            )}
+          </>
+        )}
+        {!userKeys && (
+          <>
+            <hr />
+            <div className="fit-container fx-centered box-pad-v fx-col slide-up">
+              <h4>{t("ASt0wnG")}</h4>
+              <p className="gray-c">{t("AAWFsjt")}</p>
+
+              <button
+                className="btn btn-normal btn-small"
+                onClick={() => setIsLogin(true)}
+              >
                 {t("AmOtzoL")}
               </button>
-            </Link>
-          </div>
-        </>
-      )}
-      <hr />
-      <div
-        className="fit-container fx-centered fx-col fx-start-h fx-start-v"
-        style={{ gap: 0 }}
-      >
-        {netComments.length == 0 && !isLoading && (
-          <div
-            className="fit-container fx-centered fx-col"
-            style={{ height: "20vh" }}
-          >
-            <h4>{t("ARe2fkn")}</h4>
-            <p className="p-centered gray-c">{t("AkLuU1q")}</p>
-            {/* <p className="p-centered gray-c">Nobody commented on this {kind}</p> */}
-            <div className="comment-24"></div>
-          </div>
+            </div>
+          </>
         )}
-        {isLoading && (
-          <div
-            style={{ height: "40vh" }}
-            className="fit-container box-pad-h-m fit-height fx-centered"
-          >
-            <LoadingLogo size={64} />
-            {/* <LoadingDots /> */}
-          </div>
-        )}
-        {netComments.length > 0 && (
-          <div
-            className="fit-container fx-centered fx-start-h box-pad-h-m"
-            style={{ paddingTop: "1rem" }}
-          >
-            <h4>{t("AENEcn9")}</h4>
-          </div>
-        )}
-        {netComments.map((comment, index) => {
-          return (
-            <Comment
-              comment={comment}
-              key={comment.id}
-              noteID={id}
-              eventPubkey={author.pubkey}
-              kind={"article"}
-            />
-          );
-        })}
+        <hr />
+        <div
+          className="fit-container fx-centered fx-col fx-start-h fx-start-v"
+          style={{ gap: 0 }}
+        >
+          {netComments.length == 0 && !isLoading && (
+            <div
+              className="fit-container fx-centered fx-col"
+              style={{ height: "20vh" }}
+            >
+              <h4>{t("ARe2fkn")}</h4>
+              <p className="p-centered gray-c">{t("AkLuU1q")}</p>
+              {/* <p className="p-centered gray-c">Nobody commented on this {kind}</p> */}
+              <div className="comment-24"></div>
+            </div>
+          )}
+          {isLoading && (
+            <div
+              style={{ height: "40vh" }}
+              className="fit-container box-pad-h-m fit-height fx-centered"
+            >
+              <LoadingLogo size={64} />
+              {/* <LoadingDots /> */}
+            </div>
+          )}
+          {netComments.length > 0 && (
+            <div
+              className="fit-container fx-centered fx-start-h box-pad-h-m"
+              style={{ paddingTop: "1rem" }}
+            >
+              <h4>{t("AENEcn9")}</h4>
+            </div>
+          )}
+          {netComments.map((comment, index) => {
+            return (
+              <Comment
+                comment={comment}
+                key={comment.id}
+                noteID={id}
+                eventPubkey={author.pubkey}
+                kind={"article"}
+              />
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -312,10 +323,43 @@ const Comment = ({
   index = 0,
 }) => {
   const { t } = useTranslation();
+  const userMutedList = useSelector((state) => state.userMutedList);
   let allRepliesCount = useMemo(() => {
     let count = comment.replies.length > 0 ? repliesCount(comment) : 0;
     return count == 0 || count >= 10 ? count : `0${count}`;
   }, []);
+
+  // if (userMutedList.includes(comment.pubkey) && !isReply) return <h1>hkjkh</h1>;
+  if (userMutedList.includes(comment.pubkey))
+    return (
+      <div
+        className={`fit-container ${isReplyBorder ? "reply-side-border" : ""}`}
+      >
+        <div className="fit-container fx-centered fx-start-h">
+          <div
+            className=" fx-centered fx-start-h box-pad-h pointer"
+            style={{
+              minWidth: `calc(100% - 2.5rem)`,
+              position: "relative",
+              paddingTop: "2rem",
+            }}
+          >
+            {isReply && (
+              <div
+                className="reply-tail"
+                style={{ left: isReplyBorder ? "-.0625rem" : 0 }}
+              ></div>
+            )}
+            <div
+              className="fx-centered box-pad-h-s box-pad-v-s sc-s-18"
+              style={{ padding: ".25rem .5rem" }}
+            >
+              <p className="red-c p-medium">{t("AgJ47NX")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   return (
     <div
       className={`fit-container ${isReplyBorder ? "reply-side-border" : ""}`}
@@ -334,7 +378,6 @@ const Comment = ({
             className="fx-col fit-container fx-centered"
             style={{
               width: `calc(100% - 2.5rem)`,
-
               gap: 0,
             }}
           >

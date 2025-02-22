@@ -1,41 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Select from "./Select";
 import {
   MaciCertSystemType,
   MaciCircuitType,
   MaciClient,
-  // } from "file:/Users/moos/Desktop/macipackage/maci-sdk/dist/index.js";
-} from "@dorafactory/maci-sdk";
-import { SigningStargateClient } from "@cosmjs/stargate";
-import { DORA_CONFIG } from "../../Content/MACI";
+} from "@dorafactory/maci-sdk/browser";
+
 import LoadingDots from "../LoadingDots";
+import { getKeplrSigner } from "../../Helpers/Encryptions";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setToast } from "../../Store/Slides/Publishers";
 
-const getKeplrSigner = async () => {
-  try {
-    const chainId = DORA_CONFIG[process.env.REACT_APP_NETWORK].chainId;
-    const rpc = DORA_CONFIG[process.env.REACT_APP_NETWORK].rpc;
-    await window.keplr.experimentalSuggestChain(
-      DORA_CONFIG[process.env.REACT_APP_NETWORK]
-    );
-
-    await window.keplr.enable(chainId);
-
-    const offlineSigner = window.getOfflineSigner(chainId);
-
-    const client = await SigningStargateClient.connectWithSigner(
-      rpc,
-      offlineSigner
-    );
-
-    return client.signer;
-  } catch (err) {
-    console.log(err);
-    return false;
-  }
-};
-
-export default function AddMaciPolls({ setPollAddr }) {
+export default function AddMaciPolls({ setPollAddr, exit }) {
   const { t } = useTranslation();
   const [pollType, setPollType] = useState(0);
 
@@ -70,15 +48,16 @@ export default function AddMaciPolls({ setPollAddr }) {
           setSelectedValue={setPollType}
         />
       </div> */}
-      <OracleMACIPoll setPollAddr={setPollAddr} />
+      <OracleMACIPoll setPollAddr={setPollAddr} exit={exit} />
       {/* {pollType === 1 && <MACIPoll setPollAddr={setPollAddr}/>} */}
     </div>
   );
 }
 
-const OracleMACIPoll = ({ setPollAddr }) => {
+const OracleMACIPoll = ({ setPollAddr, exit }) => {
   const { t } = useTranslation();
-  const [circuitType, setCircuitType] = useState("");
+  const [circuitType, setCircuitType] = useState("0");
+  const [ecosystemType, setEcosystemType] = useState("doravota");
   const [roundName, setRoundName] = useState("");
   const [roundDescription, setRoundDescription] = useState("");
   const [votersNumber, setVotersNumber] = useState("");
@@ -87,16 +66,30 @@ const OracleMACIPoll = ({ setPollAddr }) => {
   const [voteEnd, setVoteEnd] = useState("");
   const [options, setOptions] = useState([]);
   const [tempOption, setTempOption] = useState("");
+  const [snapshotHeight, setSnapshotHeight] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmationBox, setShowConfirmationBox] = useState(false);
   const [circuitEM, setCircuitEM] = useState(false);
+  const [ecosystemEM, setEcosystemEM] = useState(false);
   const [roundNameEM, setRoundNameEM] = useState(false);
   const [roundDescriptionEM, setRoundDescriptionEM] = useState(false);
   const [votersNumberEM, setVotersNumberEM] = useState(false);
   const [optionsNumberEM, setOptionsNumberEM] = useState(false);
+  const [gasFee, setGasFee] = useState("");
+  const [snapshotHeightEM, setSnapshotHeightEM] = useState(false);
   const [voteStartEM, setVoteStartEM] = useState(false);
   const [voteEndEM, setVoteEndEM] = useState(false);
   const [optionsEM, setOptionsEM] = useState(false);
+  const [ecosystemsInfo, setEcosystemsInfo] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const snapshotHeightInfo = useMemo(() => {
+    if (ecosystemType && ecosystemsInfo) {
+      return (
+        ecosystemsInfo.find((_) => _.name === ecosystemType)
+          ?.snapshotHeightInfo || { lowestHeight: 0, latestHeight: 0 }
+      );
+    } else return { lowestHeight: 0, latestHeight: 0 };
+  }, [ecosystemType, ecosystemsInfo]);
 
   const circuitTypes = [
     {
@@ -108,6 +101,30 @@ const OracleMACIPoll = ({ setPollAddr }) => {
       value: MaciCircuitType.QV,
     },
   ];
+  const ecosystemTypes = [
+    {
+      display_name: "Cosmos Hub",
+      value: "cosmoshub",
+    },
+    {
+      display_name: "Dora Vota",
+      value: "doravota",
+    },
+  ];
+
+  useEffect(() => {
+    const fetchEcosystemInfo = async () => {
+      try {
+        let data = await axios.get(
+          "https://vota-certificate-api.dorafactory.org/api/v1/list"
+        );
+        if (data) setEcosystemsInfo(data?.data?.ecosystems);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchEcosystemInfo();
+  }, []);
 
   const handleAddOption = () => {
     if (
@@ -133,15 +150,15 @@ const OracleMACIPoll = ({ setPollAddr }) => {
     tempArray.splice(index, 1);
     setOptions(tempArray);
   };
-  const handleMaxOptions = (e) => {
-    if (options.length > 0) {
-      setShowConfirmationBox(true);
-      return;
-    }
-    let value = parseInt(e.target.value);
-    setOptionsNumberEM(false);
-    setOptionsNumber(value);
-  };
+  // const handleMaxOptions = (e) => {
+  //   if (options.length > 0) {
+  //     setShowConfirmationBox(true);
+  //     return;
+  //   }
+  //   let value = parseInt(e.target.value);
+  //   setOptionsNumberEM(false);
+  //   setOptionsNumber(value);
+  // };
   const handleConfirmationBox = () => {
     setOptions([]);
     setOptionsNumber("");
@@ -157,36 +174,50 @@ const OracleMACIPoll = ({ setPollAddr }) => {
       const client = new MaciClient({
         network: process.env.REACT_APP_NETWORK,
       });
-      let signer = await getKeplrSigner();
+      let { signer } = await getKeplrSigner();
       let poll = await client.contract.createOracleMaciRound({
-        signer,
+        signer: signer,
         operatorPubkey: process.env.REACT_APP_OP_PUBKEY,
         startVoting: new Date(voteStart),
         endVoting: new Date(voteEnd),
         title: roundName,
         description: roundDescription,
-        maxVoter: `${votersNumber}`,
-        maxOption: `${optionsNumber}`,
         circuitType,
         link: "",
-        whitelistEcosystem: "cosmoshub",
-        whitelistSnapshotHeight: "0",
+        whitelistEcosystem: ecosystemType,
+        whitelistSnapshotHeight: snapshotHeight || "0",
         whitelistVotingPowerArgs: {
-          mode: "slope",
-          slope: "1000000",
-          threshold: "1000000",
+          mode: "threshold",
+          slope:
+            ecosystemType === "cosmoshub" ? "10000000" : "10000000000000000000",
+          threshold:
+            ecosystemType === "cosmoshub" ? "10000000" : "10000000000000000000",
         },
-        voteOptionMap: options,
+        voteOptionMap: [...options, tempOption].filter((_) => _),
       });
-      const oracleClient = await client.oracleMaciClient({
-        signer,
-        contractAddress: poll.contractAddress,
-      });
-      const response = await oracleClient.setVoteOptionsMap({
-        voteOptionMap: options,
-      });
+
+      setGasFee({ signer, pollID: poll.contractAddress });
+      // let amount = parseInt(gasFee)
+      // const oracleMaciClient = await client.oracleMaciClient({
+      //   signer,
+      //   contractAddress: poll.contractAddress,
+      // });
+      // amount = amount * 10 ** 18;
+      // await oracleMaciClient.bond(undefined, undefined, [
+      //   {
+      //     denom: "peaka",
+      //     amount: amount.toString(),
+      //   },
+      // ]);
+      // const oracleClient = await client.oracleMaciClient({
+      //   signer,
+      //   contractAddress: poll.contractAddress,
+      // });
+      // const response = await oracleClient.setVoteOptionsMap({
+      //   voteOptionMap: options,
+      // });
       setIsLoading(false);
-      setPollAddr(poll.contractAddress);
+      // setPollAddr(poll.contractAddress);
     } catch (err) {
       console.log(err);
       setIsLoading(false);
@@ -198,6 +229,10 @@ const OracleMACIPoll = ({ setPollAddr }) => {
       setCircuitEM(true);
       isValid = false;
     }
+    if (!ecosystemType) {
+      setEcosystemEM(true);
+      isValid = false;
+    }
     if (!roundName) {
       setRoundNameEM(true);
       isValid = false;
@@ -206,15 +241,7 @@ const OracleMACIPoll = ({ setPollAddr }) => {
       setRoundDescriptionEM(true);
       isValid = false;
     }
-    if (!votersNumber || votersNumber === 0) {
-      setVotersNumberEM(true);
-      isValid = false;
-    }
-    if (!optionsNumber || optionsNumber < 2) {
-      setOptionsNumberEM(true);
-      isValid = false;
-    }
-    if (options.length < 2) {
+    if (options.length < 2 && !tempOption) {
       setOptionsEM(true);
       isValid = false;
     }
@@ -232,134 +259,139 @@ const OracleMACIPoll = ({ setPollAddr }) => {
 
     return isValid;
   };
+
+  const handleSnapshotHeight = (e) => {
+    let value = parseInt(e.target.value) || "";
+    setSnapshotHeightEM(false);
+    setSnapshotHeight(value.toString());
+    if (!value) return;
+    if (
+      !(
+        value >= parseInt(snapshotHeightInfo.lowestHeight) &&
+        value <= parseInt(snapshotHeightInfo.latestHeight)
+      )
+    )
+      setSnapshotHeightEM(true);
+  };
+
   return (
     <>
+      {gasFee && (
+        <PollGasStation
+          poll={gasFee.pollID}
+          signer={gasFee.signer}
+          exit={() => setPollAddr(gasFee.pollID)}
+        />
+      )}
       {showConfirmationBox && (
         <ComfirmationBox
           exit={() => setShowConfirmationBox(false)}
           handleClick={handleConfirmationBox}
         />
       )}
-      <div className="fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-h-m box-pad-v-m slide-down">
-        <div className="fit-container fx-centered box-marg-s">
-          <h4>{t("AXDHAmt")}</h4>
-        </div>
-        <Select
-          options={circuitTypes}
-          value={circuitType}
-          setSelectedValue={(data) => {
-            setCircuitEM(false);
-            setCircuitType(data);
-          }}
-          defaultLabel={t("AbLoljD")}
-          fullWidth={true}
-        />
-        {circuitEM && <ErrorMessage message={t("AwRPoxv")} />}
-        <input
-          type="text"
-          placeholder={t("AIGU9F2")}
-          className="if ifs-full"
-          value={roundName}
-          onChange={(e) => {
-            setRoundNameEM(false);
-            setRoundName(e.target.value);
-          }}
-        />
-        {roundNameEM && <ErrorMessage message={t("ADkLtbf")} />}
-        <textarea
-          placeholder={t("AM6TPts")}
-          className="txt-area ifs-full"
-          value={roundDescription}
-          onChange={(e) => {
-            setRoundDescriptionEM(false);
-            setRoundDescription(e.target.value);
-          }}
-        />
-        {roundDescriptionEM && <ErrorMessage message={t("AlDNugm")} />}
-        <div className="fit-container fx-centered fx-start-v">
-          <div className="fx fx-centered fx-col fx-start-v">
-            <input
-              type="number"
-              placeholder={t("AtRlqtz")}
-              className="if ifs-full"
-              min={1}
-              value={votersNumber}
-              onChange={(e) => {
-                setVotersNumberEM(false);
-                setVotersNumber(e.target.value);
-              }}
-            />
-            {votersNumberEM && <ErrorMessage message={t("AfvFebE")} />}
+      {!gasFee && (
+        <div
+          className="fx-centered fx-col fx-start-h fx-start-v fit-container box-pad-h-m box-pad-v-m slide-down"
+          style={{ position: "relative" }}
+        >
+          {exit && (
+            <div className="close" onClick={exit}>
+              <div></div>
+            </div>
+          )}
+          <div className="fit-container fx-centered box-marg-s fx-col">
+            <h4>{t("AXDHAmt")}</h4>
+            <div className="fx-centered">
+              <p className="gray-c">
+                ({t("ANM6MSY", { ecosystem: ecosystemType?.toUpperCase() })})
+              </p>
+              {/* <MACIPollSteps /> */}
+            </div>
           </div>
-          <div className="fx fx-centered fx-col fx-start-v">
-            <input
-              type="number"
-              placeholder={t("AVwREZa")}
-              className="if ifs-full"
-              min={2}
-              value={optionsNumber}
-              onChange={handleMaxOptions}
-            />
-            {optionsNumberEM && <ErrorMessage message={t("AwoTkrF")} />}
+          <div className="fit-container sc-s-18 box-pad-v-s box-pad-h-m">
+            <p className="c1-c">{t("A9Mca7S")}</p>
+            <ul>
+              <li>{t("Ab39qCG")}</li>
+              <li>{t("A13Btcr")}</li>
+              <li>{t("AZa1vyS")}</li>
+              <li>{t("AroLe58")}</li>
+            </ul>
           </div>
-        </div>
-        <p className="gray-c">{t("A9tbS18")}</p>
-        <input
-          type="datetime-local"
-          className="if ifs-full pointer"
-          placeholder={t("ATAnXen")}
-          min={new Date().toISOString()}
-          value={voteStart}
-          onChange={(e) => {
-            setVoteStartEM(false);
-            setVoteStart(e.target.value);
-          }}
-        />
-        {voteStartEM && <ErrorMessage message={t("ALpO7FU")} />}
-        <p className="gray-c">{t("Ad8yNh4")}</p>
-        <input
-          type="datetime-local"
-          className="if ifs-full pointer"
-          placeholder={t("ATAnXen")}
-          min={new Date().toISOString()}
-          value={voteEnd}
-          onChange={(e) => {
-            setVoteEndEM(false);
-            setVoteEnd(e.target.value);
-          }}
-        />
-        {voteEndEM && <ErrorMessage message={t("A2wt07D")} />}
-        <p className="gray-c">{t("A5DDopE")}</p>
-        {!optionsNumber && <p>-</p>}
-        <div className="fit-container fx-centered fx-col fx-start-v">
-          {options.map((option, index) => {
-            return (
-              <div className="fit-container fx-centered" key={index}>
-                <input
-                  type="text"
-                  className="if ifs-full"
-                  placeholder={t("AI4ia0I")}
-                  value={option}
-                  onChange={(e) => handleEditOption(e.target.value, index)}
-                />
-                <div
-                  className="round-icon round-icon-tooltip"
-                  data-tooltip={t("Almq94P")}
-                  onClick={() => handleDeleteOption(index)}
-                >
-                  <div className="trash"></div>
+          <input
+            type="text"
+            placeholder={t("AIGU9F2")}
+            className="if ifs-full"
+            value={roundName}
+            onChange={(e) => {
+              setRoundNameEM(false);
+              setRoundName(e.target.value);
+            }}
+          />
+          {roundNameEM && <ErrorMessage message={t("ADkLtbf")} />}
+          <textarea
+            placeholder={t("AM6TPts")}
+            className="txt-area ifs-full"
+            value={roundDescription}
+            onChange={(e) => {
+              setRoundDescriptionEM(false);
+              setRoundDescription(e.target.value);
+            }}
+          />
+          {roundDescriptionEM && <ErrorMessage message={t("AlDNugm")} />}
+          <p className="gray-c">{t("A9tbS18")}</p>
+          <input
+            type="datetime-local"
+            className="if ifs-full pointer"
+            placeholder={t("ATAnXen")}
+            min={new Date().toISOString()}
+            value={voteStart}
+            onChange={(e) => {
+              setVoteStartEM(false);
+              setVoteStart(e.target.value);
+            }}
+          />
+          {voteStartEM && <ErrorMessage message={t("ALpO7FU")} />}
+          <p className="gray-c">{t("Ad8yNh4")}</p>
+          <input
+            type="datetime-local"
+            className="if ifs-full pointer"
+            placeholder={t("ATAnXen")}
+            min={new Date().toISOString()}
+            value={voteEnd}
+            onChange={(e) => {
+              setVoteEndEM(false);
+              setVoteEnd(e.target.value);
+            }}
+          />
+          {voteEndEM && <ErrorMessage message={t("A2wt07D")} />}
+          <p className="gray-c">{t("A5DDopE")}</p>
+          {!optionsNumber && <p>-</p>}
+          <div className="fit-container fx-centered fx-col fx-start-v">
+            {options.map((option, index) => {
+              return (
+                <div className="fit-container fx-centered" key={index}>
+                  <input
+                    type="text"
+                    className="if ifs-full"
+                    placeholder={t("AI4ia0I")}
+                    value={option}
+                    onChange={(e) => handleEditOption(e.target.value, index)}
+                  />
+                  <div
+                    className="round-icon round-icon-tooltip"
+                    data-tooltip={t("Almq94P")}
+                    onClick={() => handleDeleteOption(index)}
+                  >
+                    <div className="trash"></div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-          {options.length < optionsNumber && (
+              );
+            })}
+
             <div className="fit-container fx-scattered">
               <input
                 type="text"
-                className={`if ifs-full ${
-                  optionsNumber > 0 ? "" : "if-disabled"
-                }`}
-                disabled={!(optionsNumber > 0)}
+                className={`if ifs-full`}
                 placeholder={t("AI4ia0I")}
                 value={tempOption}
                 onChange={(e) => setTempOption(e.target.value)}
@@ -374,23 +406,230 @@ const OracleMACIPoll = ({ setPollAddr }) => {
                 <div className="plus-sign" style={{ cursor: "unset" }}></div>
               </div>
             </div>
-          )}
-          {optionsEM && <ErrorMessage message={t("AXgvwkq")} />}
-        </div>
-        <div className="fit-container">
-          <button
-            className="btn btn-normal btn-full"
-            disabled={isLoading}
-            onClick={deployPoll}
+
+            {optionsEM && <ErrorMessage message={t("AXgvwkq")} />}
+          </div>
+          <div
+            className="fit-container fx-centered pointer"
+            onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
           >
-            {isLoading ? <LoadingDots /> : t("A2fvUtP")}
-          </button>
+            <p className="btn-text-gray">{t("ApXyTFX")}</p>
+            <div
+              className="arrow"
+              style={{ rotate: showAdvancedOptions ? "180deg" : "0deg" }}
+            ></div>
+          </div>
+          {showAdvancedOptions && (
+            <div className="fit-container fx-centered fx-col slide-down">
+              <Select
+                options={ecosystemTypes}
+                value={ecosystemType}
+                setSelectedValue={(data) => {
+                  setEcosystemEM(false);
+                  setEcosystemType(data);
+                }}
+                defaultLabel={t("APi769z")}
+                fullWidth={true}
+              />
+              {ecosystemEM && <ErrorMessage message={t("ATGTz9Q")} />}
+              <input
+                type="number"
+                placeholder={t("AnMoqCK")}
+                className={`if ifs-full ${!ecosystemType ? "if-disabled" : ""}`}
+                min={0}
+                value={snapshotHeight}
+                onChange={handleSnapshotHeight}
+                disabled={!ecosystemType}
+              />
+              {snapshotHeightEM && (
+                <ErrorMessage
+                  message={t("AeyQzqu", {
+                    lAmount: snapshotHeightInfo.lowestHeight
+                      .toString()
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    hAmount: snapshotHeightInfo.latestHeight
+                      .toString()
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                  })}
+                />
+              )}
+            </div>
+          )}
+          <div className="fit-container">
+            <button
+              className="btn btn-normal btn-full"
+              disabled={isLoading}
+              onClick={deployPoll}
+            >
+              {isLoading ? <LoadingDots /> : t("A2fvUtP")}
+            </button>
+          </div>
+          <p className="gray-c p-centered box-pad-h">{t("ATKheVa")}</p>
         </div>
-        <p className="gray-c p-centered box-pad-h">{t("ATKheVa")}</p>
-      </div>
+      )}
     </>
   );
 };
+
+const MACIPollSteps = () => {
+  const { t } = useTranslation();
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    const handleOffClick = (e) => {
+      e.stopPropagation();
+      if (listRef.current && !listRef.current.contains(e.target))
+        setShowTooltip(false);
+    };
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [listRef]);
+  return (
+    <div style={{ position: "relative" }} ref={listRef}>
+      <div
+        className="info"
+        style={{ minWidth: "18px", minHeight: "18px" }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowTooltip(!showTooltip);
+        }}
+      ></div>
+      {showTooltip && (
+        <div
+          className="sc-s-18 box-pad-v-m box-pad-h-m"
+          style={{
+            width: "300px",
+            position: "absolute",
+            right: 0,
+            top: "100%",
+          }}
+        >
+          <p className="gray-c">{t("A9Mca7S")}</p>
+          <ul>
+            <li>{t("AuMrZaK")}</li>
+            <li>{t("Ab39qCG")}</li>
+            <li>{t("AZa1vyS")}</li>
+            <li>
+              <a
+                href="https://research.dorahacks.io/2022/04/30/light-weight-maci-anonymization/"
+                target="_blank"
+                className="c1-c fx-centered fx-start-h"
+              >
+                {t("ASifSKs")}
+                <div
+                  className="share-icon"
+                  style={{ minHeight: "12px", minHeight: "12px" }}
+                ></div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PollGasStation = ({ poll, signer, exit }) => {
+  const dispatch = useDispatch();
+  const { t } = useTranslation();
+  const [gasFee, setGasFee] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errMsg, setErrMsg] = useState(false);
+
+  const addGasFees = async () => {
+    try {
+      setIsLoading(true);
+      let amount = parseInt(gasFee) || 0;
+      if (amount < 8) {
+        setIsLoading(false);
+        setErrMsg(true);
+        return;
+      }
+
+      const client = new MaciClient({
+        network: process.env.REACT_APP_NETWORK,
+      });
+
+      const oracleMaciClient = await client.oracleMaciClient({
+        signer,
+        contractAddress: poll,
+      });
+      amount = amount * 10 ** 18;
+      await oracleMaciClient.bond(undefined, undefined, [
+        {
+          denom: "peaka",
+          amount: amount.toString(),
+        },
+      ]);
+      setIsLoading(false);
+      dispatch(
+        setToast({
+          type: 1,
+          desc: t("AHpLjVd"),
+        })
+      );
+      exit();
+    } catch (err) {
+      console.log(err);
+      setIsLoading(false);
+      dispatch(
+        setToast({
+          type: 3,
+          desc: t("Acr4Slu"),
+        })
+      );
+    }
+  };
+
+  return (
+    <div
+      className="fixed-container fx-centered box-pad-h"
+      style={{ zIndex: 1000000 }}
+    >
+      <div className="fixed-container fx-centered box-pad-h">
+        <div
+          className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
+          style={{
+            width: "min(100%, 450px)",
+            height: "auto",
+            position: "relative",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="fit-container fx-centered fx-col">
+            <h4>{t("A6rbQWS")}</h4>
+            <p className="gray-c p-centered box-pad-h">{t("AmWSJ4C")}</p>
+            <input
+              type="number"
+              placeholder={`${t("AcDgXKI")}`}
+              value={gasFee}
+              onChange={(e) => {
+                setErrMsg(false);
+                setGasFee(e.target.value);
+              }}
+              style={{ borderColor: errMsg ? "var(--red-main)" : "" }}
+              className="if ifs-full"
+            />
+            {errMsg && <ErrorMessage message={t("A8OlKXj")} />}
+            <button className="btn btn-normal btn-full" onClick={addGasFees}>
+              {isLoading ? <LoadingDots /> : t("AKU6Qm4")}
+            </button>
+            <p>{t("Ax46s4g")}</p>
+            <button className="btn btn-gst btn-full" onClick={exit}>
+              {isLoading ? <LoadingDots /> : t("AuhJ2Uy")}
+            </button>
+            <p className="c1-c p-medium">{t("ALNQpDw")}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MACIPoll = ({ setPollAddr }) => {
   const { t } = useTranslation();
   const [circuitType, setCircuitType] = useState("");
@@ -678,8 +917,8 @@ const AMACIPoll = ({ setPollAddr }) => {
         operator: process.env.REACT_APP_OP_PUBKEY,
         startVoting: new Date(voteStart),
         endVoting: new Date(voteEnd),
-        title: roundName,
-        description: roundDescription,
+        title: roundName?.trim(),
+        description: roundDescription?.trim(),
         maxVoter: votersNumber,
         maxOption: optionsNumber,
         voiceCreditAmount: vcNumber,

@@ -163,7 +163,7 @@ export default function AddZapPoll({ exit, setNevent }) {
         <div className="close" onClick={exit}>
           <div></div>
         </div>
-        <h4 className="box-marg-s">{t("A4gfpc6")}</h4>
+        <h4 className="box-marg-s">{t("A91LHJy")}</h4>
         <textarea
           className="txt-area fit-container"
           onChange={handleChange}

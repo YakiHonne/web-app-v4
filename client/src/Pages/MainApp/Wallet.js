@@ -9,6 +9,7 @@ import * as secp from "@noble/secp256k1";
 import SatsToUSD from "../../Components/Main/SatsToUSD";
 import {
   decodeUrlOrAddress,
+  downloadAsFile,
   encodeLud06,
   getBech32,
   getEmptyuserMetadata,
@@ -346,7 +347,7 @@ export default function Wallet() {
         allRelays: [],
       })
     );
-    setSelectWalletToLink(false)
+    setSelectWalletToLink(false);
   };
 
   const walletWarning = () => {
@@ -355,6 +356,15 @@ export default function Wallet() {
         type: 3,
         desc: t("A4R0ICw"),
       })
+    );
+  };
+
+  const exportWallet = (nwc, addr) => {
+    downloadAsFile(
+      `wallet secret: ${nwc}`,
+      "text/plain",
+      `NWC-for-${addr}.txt`,
+      t("AVUlnek")
     );
   };
 
@@ -373,7 +383,12 @@ export default function Wallet() {
           wallet={showDeletionPopup}
         />
       )}
-      {selectWalletToLink && <LinkWallet exit={() => setSelectWalletToLink(false)} handleLinkWallet={linkWallet}/>}
+      {selectWalletToLink && (
+        <LinkWallet
+          exit={() => setSelectWalletToLink(false)}
+          handleLinkWallet={linkWallet}
+        />
+      )}
       <div>
         <Helmet>
           <title>Yakihonne | Wallet</title>
@@ -444,7 +459,7 @@ export default function Wallet() {
                                   width: "400px",
                                   backgroundColor: "var(--c1-side)",
                                   position: "absolute",
-                                 
+
                                   top: "calc(100% + 5px)",
                                   rowGap: 0,
                                   overflow: "visible",
@@ -506,7 +521,9 @@ export default function Wallet() {
                                               <div
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  setSelectWalletToLink(wallet.entitle);
+                                                  setSelectWalletToLink(
+                                                    wallet.entitle
+                                                  );
                                                 }}
                                               >
                                                 {t("AmQVpu4")}
@@ -533,6 +550,17 @@ export default function Wallet() {
                                               }}
                                             >
                                               {t("A6ntZLW")}
+                                            </div>,
+                                            <div
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                exportWallet(
+                                                  wallet.data,
+                                                  wallet.entitle
+                                                );
+                                              }}
+                                            >
+                                              {t("A4A5psW")}
                                             </div>,
                                             <div
                                               onClick={(e) => {
@@ -600,8 +628,8 @@ export default function Wallet() {
                               {profileHasWallet.hasWallet &&
                                 !profileHasWallet.isWalletLinked && (
                                   <>{t("AHKiPjO")}</>
-                                )}
-                              {" "}{t("AHTCsEO")}
+                                )}{" "}
+                              {t("AHTCsEO")}
                             </div>
                           )}
                         {isLoading && (

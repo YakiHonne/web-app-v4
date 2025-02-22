@@ -22,6 +22,7 @@ import InterestSuggestionsCards from "../../Components/SuggestionsCards/Interest
 import DonationBoxSuggestionCards from "../../Components/SuggestionsCards/DonationBoxSuggestionCards";
 import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/ProfileShareSuggestionCards";
 import { useTranslation } from "react-i18next";
+import bannedList from "../../Content/BannedList";
 
 const MixEvents = (articles, curations, videos) => {
   const interleavedArray = [];
@@ -437,14 +438,15 @@ const ExploreFeed = ({
   return (
     <div className="fit-container fx-centered fx-col " style={{ gap: 0 }}>
       {content.map((item, index) => {
-        return (
-          <Fragment key={item.id}>
-            <div className="fit-container fx-centered">
-              <RepEventPreviewCard item={item} />
-            </div>
-            {getContentCard(index)}
-          </Fragment>
-        );
+        if (!bannedList.includes(item.pubkey))
+          return (
+            <Fragment key={item.id}>
+              <div className="fit-container fx-centered">
+                <RepEventPreviewCard item={item} />
+              </div>
+              {getContentCard(index)}
+            </Fragment>
+          );
       })}
       {content.length === 0 && !isLoading && (
         <div

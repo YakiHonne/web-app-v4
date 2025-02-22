@@ -149,7 +149,8 @@ const getNoteTree = async (
     } else if (
       /(https?:\/\/)/i.test(el) &&
       !el.includes("https://yakihonne.com/smart-widget-checker?naddr=") &&
-      !el.includes("https://vota.dorafactory.org/round/")
+      !el.includes("https://vota.dorafactory.org/round/") && 
+      !el.includes("https://vota-test.dorafactory.org/round/")
     ) {
       const isURLVid = isVid(el);
       if (!minimal) {
@@ -243,7 +244,10 @@ const getNoteTree = async (
             </a>{" "}
           </Fragment>
         );
-    } else if (el.includes("https://vota.dorafactory.org/round/")) {
+    } else if (
+      el?.includes("https://vota.dorafactory.org/round/") ||
+      el?.includes("https://vota-test.dorafactory.org/round/")
+    ) {
       finalTree.push(<MACIPollPreview url={el} key={key} />);
     } else if (
       (el?.includes("nostr:") ||

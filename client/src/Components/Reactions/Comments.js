@@ -18,6 +18,8 @@ import Gifs from "../Gifs";
 import Emojis from "../Emojis";
 import NotePreview from "../Main/NotePreview";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "../Main/LoginSignup";
+import AddPolls from "../Main/AddPolls";
 
 export default function Comments({
   noteTags = false,
@@ -38,6 +40,7 @@ export default function Comments({
   const [imgsSet, setImgsSet] = useState([]);
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [showGIFs, setShowGIFs] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
   const [mention, setMention] = useState("");
   const textareaRef = useRef(null);
   const ref = useRef(null);
@@ -209,13 +212,19 @@ export default function Comments({
 
   if (!userKeys)
     return (
-      <div className="fit-container fx-centered box-pad-v fx-col slide-up">
-        <h4>{t("ASt0wnG")}</h4>
-        <p className="gray-c">{t("AAWFsjt")}</p>
-        <Link to={"/login"}>
-          <button className="btn btn-normal btn-small">{t("AmOtzoL")}</button>
-        </Link>
-      </div>
+      <>
+        {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
+        <div className="fit-container fx-centered box-pad-v fx-col slide-up">
+          <h4>{t("ASt0wnG")}</h4>
+          <p className="gray-c">{t("AAWFsjt")}</p>
+          <button
+            className="btn btn-normal btn-small"
+            onClick={() => setIsLogin(true)}
+          >
+            {t("AmOtzoL")}
+          </button>
+        </div>
+      </>
     );
   return (
     <>
@@ -257,16 +266,12 @@ export default function Comments({
         </div>
       )}
       <div
-        className="fit-container fx-centered fx-start-v slide-up sc-s-18 box-pad-h-m box-pad-v-m"
+        className="fit-container fx-centered fx-start-v sc-s-18 box-pad-h-m box-pad-v-m"
         // style={{ paddingTop: ".5rem" }}
         style={{ overflow: "visible", zIndex: "10", position: "relative" }}
         ref={ref}
       >
-        <UserProfilePic
-          size={48}
-          mainAccountUser={true}
-          allowClick={false}
-        />
+        <UserProfilePic size={48} mainAccountUser={true} allowClick={false} />
         <div
           className="fit-container fx-centered fx-wrap"
           style={{ maxWidth: "calc(100% - 48px)" }}
@@ -342,6 +347,7 @@ export default function Comments({
                   />
                 )}
               </div>
+              <AddPolls setPollAddr={handleInsertTextInPosition} />
             </div>
             <div className="fx-centered fit-container fx-end-h">
               <button

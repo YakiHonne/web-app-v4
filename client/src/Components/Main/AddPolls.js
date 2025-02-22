@@ -5,10 +5,10 @@ import BrowseMaciPolls from "./BrowseMaciPolls";
 import { useTranslation } from "react-i18next";
 import AddMaciPolls from "./AddMaciPolls";
 
-export default function AddPolls({ setPollAddr }) {
+export default function AddPolls({ setPollAddr, triggerCP = false }) {
   const { t } = useTranslation();
   const [options, setOptions] = useState(false);
-  const [showCreatePoll, setShowCreatePoll] = useState(false);
+  const [showCreatePoll, setShowCreatePoll] = useState(triggerCP);
   const [showNavigatePolls, setShowNavigatePolls] = useState(false);
   const optionsRef = useRef(null);
 
@@ -26,8 +26,18 @@ export default function AddPolls({ setPollAddr }) {
 
   return (
     <>
-      {showCreatePoll && (
+      {showCreatePoll && window.keplr && (
         <CreatePoll
+          exit={() => setShowCreatePoll(false)}
+          switchCategory={() => {
+            setShowCreatePoll(false);
+            setShowNavigatePolls(true);
+          }}
+          setPollAddr={setPollAddr}
+        />
+      )}
+      {showCreatePoll && !window.keplr && (
+        <CreatePollNK
           exit={() => setShowCreatePoll(false)}
           setPollAddr={setPollAddr}
         />
@@ -35,6 +45,10 @@ export default function AddPolls({ setPollAddr }) {
       {showNavigatePolls && (
         <NavigatePolls
           exit={() => setShowNavigatePolls(false)}
+          switchCategory={() => {
+            setShowCreatePoll(true);
+            setShowNavigatePolls(false);
+          }}
           setPollAddr={setPollAddr}
         />
       )}
@@ -58,7 +72,7 @@ export default function AddPolls({ setPollAddr }) {
               onClick={() => setShowCreatePoll(true)}
               className="fit-container"
             >
-              {t("A4gfpc6")}
+              {t("A91LHJy")}
             </p>
             <p
               onClick={() => setShowNavigatePolls(true)}
@@ -72,7 +86,7 @@ export default function AddPolls({ setPollAddr }) {
           className="polls"
           onClick={(e) => {
             e.stopPropagation();
-            setOptions(!options);
+            setShowCreatePoll(true);
           }}
         ></div>
       </div>
@@ -80,25 +94,100 @@ export default function AddPolls({ setPollAddr }) {
   );
 }
 
-const CreatePoll = ({ exit, setPollAddr }) => {
-  const [selectedPollType, setSelectedPollType] = useState(
-    !window.keplr ? 1 : false
-  );
+const CreatePollNK = ({ exit, setPollAddr }) => {
+  const { t } = useTranslation();
+  const [selectedPollType, setSelectedPollType] = useState(false);
   return (
     <div className="fixed-container box-pad-h fx-centered">
       <div
         style={{ width: "min(100%, 500px)", position: "relative" }}
         className=""
       >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
         {!selectedPollType && (
-          <PollTypes setSelectedPollType={setSelectedPollType} />
+          <div className="close" onClick={exit}>
+            <div></div>
+          </div>
+        )}
+        {!selectedPollType && (
+          <div
+            style={{ width: "min(100%, 500px)" }}
+            className="box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col slide-up"
+          >
+            <div className="fx-centered fit-container box-marg-s">
+              <h4>{t("AhAwwFJ")}</h4>
+            </div>
+            <div className="fx-centered fit-container fx-stretch">
+              <div
+                className="fx option fx-centered fx-col  box-pad-v pointer"
+                style={{
+                  borderRadius: "var(--border-r-18)",
+                  border: "1px solid var(--pale-gray)",
+                }}
+                onClick={() => setSelectedPollType(1)}
+              >
+                <div className="plus-sign-24"></div>
+                <p>{t("A91LHJy")}</p>
+              </div>
+              <div
+                className="fx option fx-centered fx-col  box-pad-v pointer"
+                style={{
+                  borderRadius: "var(--border-r-18)",
+                  border: "1px solid var(--pale-gray)",
+                }}
+                onClick={() => setSelectedPollType(2)}
+              >
+                <div className="polls-24"></div>
+                <p>{t("ADNeql1")}</p>
+              </div>
+            </div>
+          </div>
         )}
         {selectedPollType === 1 && (
           <AddZapPoll
-            exit={exit}
+            exit={() => setSelectedPollType(false)}
+            setNevent={(data) => {
+              setPollAddr(data);
+              exit();
+            }}
+          />
+        )}
+        {selectedPollType === 2 && (
+          <BrowseZapPolls
+            exit={() => setSelectedPollType(false)}
+            setNevent={(data) => {
+              setPollAddr(data);
+              exit();
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const CreatePoll = ({ exit, setPollAddr, switchCategory }) => {
+  const [selectedPollType, setSelectedPollType] = useState(false);
+  return (
+    <div className="fixed-container box-pad-h fx-centered">
+      <div
+        style={{ width: "min(100%, 500px)", position: "relative" }}
+        className=""
+      >
+        {!selectedPollType && (
+          <div className="close" onClick={exit}>
+            <div></div>
+          </div>
+        )}
+        {!selectedPollType && (
+          <PollTypes
+            setSelectedPollType={setSelectedPollType}
+            category={1}
+            switchCategory={switchCategory}
+          />
+        )}
+        {selectedPollType === 1 && (
+          <AddZapPoll
+            exit={() => setSelectedPollType(false)}
             setNevent={(data) => {
               setPollAddr(data);
               exit();
@@ -107,9 +196,13 @@ const CreatePoll = ({ exit, setPollAddr }) => {
         )}
         {selectedPollType === 2 && (
           <AddMaciPolls
-            // exit={exit}
+            exit={() => setSelectedPollType(false)}
             setPollAddr={(data) => {
-              setPollAddr(`https://vota.dorafactory.org/round/${data}`);
+              setPollAddr(
+                `https://vota${
+                  process.env.REACT_APP_NETWORK === "testnet" ? "-test" : ""
+                }.dorafactory.org/round/${data}`
+              );
               exit();
             }}
           />
@@ -118,25 +211,29 @@ const CreatePoll = ({ exit, setPollAddr }) => {
     </div>
   );
 };
-const NavigatePolls = ({ exit, setPollAddr }) => {
-  const [selectedPollType, setSelectedPollType] = useState(
-    !window.keplr ? 1 : false
-  );
+const NavigatePolls = ({ exit, setPollAddr, switchCategory }) => {
+  const [selectedPollType, setSelectedPollType] = useState(false);
   return (
     <div className="fixed-container box-pad-h fx-centered">
       <div
         style={{ width: "min(100%, 500px)", position: "relative" }}
         className=""
       >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
         {!selectedPollType && (
-          <PollTypes setSelectedPollType={setSelectedPollType} />
+          <div className="close" onClick={exit}>
+            <div></div>
+          </div>
+        )}
+        {!selectedPollType && (
+          <PollTypes
+            setSelectedPollType={setSelectedPollType}
+            category={2}
+            switchCategory={switchCategory}
+          />
         )}
         {selectedPollType === 1 && (
           <BrowseZapPolls
-            exit={exit}
+            exit={() => setSelectedPollType(false)}
             setNevent={(data) => {
               setPollAddr(data);
               exit();
@@ -145,7 +242,7 @@ const NavigatePolls = ({ exit, setPollAddr }) => {
         )}
         {selectedPollType === 2 && (
           <BrowseMaciPolls
-            exit={exit}
+            exit={() => setSelectedPollType(false)}
             setPollAddr={(data) => {
               setPollAddr(data);
               exit();
@@ -157,15 +254,15 @@ const NavigatePolls = ({ exit, setPollAddr }) => {
   );
 };
 
-const PollTypes = ({ setSelectedPollType }) => {
+const PollTypes = ({ setSelectedPollType, category = 1, switchCategory }) => {
   const { t } = useTranslation();
   return (
     <div
       style={{ width: "min(100%, 500px)" }}
-      className="box-pad-h box-pad-v sc-s-18 bg-sp fx-centered fx-col"
+      className="box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col slide-up"
     >
       <div className="fx-centered fit-container box-marg-s">
-        <h4>{t("APjAPzs")}</h4>
+        <h4>{category === 1 ? t("A91LHJy") : t("ADNeql1")}</h4>
       </div>
       <div className="fx-centered fit-container fx-stretch">
         <div
@@ -194,6 +291,18 @@ const PollTypes = ({ setSelectedPollType }) => {
           </div>
         </div>
       </div>
+      <button
+        className="btn btn-gray btn-full fx-centered"
+        onClick={() => switchCategory(category === 1 ? 2 : 1)}
+      >
+        {category === 2 && (
+          <div className="arrow" style={{ rotate: "90deg" }}></div>
+        )}
+        {category === 1 ? t("ADNeql1") : t("A91LHJy")}
+        {category === 1 && (
+          <div className="arrow" style={{ rotate: "-90deg" }}></div>
+        )}
+      </button>
     </div>
   );
 };

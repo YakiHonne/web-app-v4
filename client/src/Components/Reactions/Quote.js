@@ -4,11 +4,15 @@ import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import WriteNote from "../Main/WriteNote";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import LoginSignup from "../Main/LoginSignup";
 
 export default function Quote({ isQuoted, event, actions }) {
   const { t } = useTranslation();
+  const userKeys = useSelector(state => state.userKeys)
   const [eventID, setEventID] = useState(false);
   const [showQuoteBox, setShowQuoteBox] = useState(false);
+const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     const updateDb = async () => {
@@ -42,10 +46,11 @@ export default function Quote({ isQuoted, event, actions }) {
           </div>
         </div>
       )}
+      {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       <div
         className={"icon-tooltip"}
         data-tooltip={t("A5XLJln")}
-        onClick={() => setShowQuoteBox(true)}
+        onClick={() => userKeys ? setShowQuoteBox(true) : setIsLogin(true)}
       >
         <div
           className={isQuoted ? "quote-bold-24 pointer" : "quote-24 pointer"}

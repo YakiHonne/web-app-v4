@@ -32,6 +32,7 @@ export default function WriteNote({
   content,
   linkedEvent,
   isQuote = false,
+  triggerCP = false
 }) {
   const navigateTo = useNavigate();
   const dispatch = useDispatch();
@@ -566,7 +567,7 @@ export default function WriteNote({
                 <div onClick={() => setShowSmartWidgets(true)}>
                   <div className="smart-widget-24"></div>
                 </div>
-                <AddPolls setPollAddr={handleInsertTextInPosition}/>
+                <AddPolls setPollAddr={handleInsertTextInPosition} triggerCP={triggerCP}/>
               </div>
               <div className="fx-centered">
                 {exit && (

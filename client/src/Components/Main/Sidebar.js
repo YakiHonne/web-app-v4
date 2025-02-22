@@ -169,13 +169,8 @@ export default function Sidebar() {
       downloadAsFile(
         toSave.join("\n"),
         "text/plain",
-        `NWCs-${userKeys.pub}.txt`
-      );
-      dispatch(
-        setToast({
-          type: 3,
-          desc: t("AIzBCBb"),
-        })
+        `NWCs-${userKeys.pub}.txt`,
+        t("AIzBCBb")
       );
       setShowSettings(false);
       userLogout(userKeys.pub);
@@ -209,12 +204,11 @@ export default function Sidebar() {
           ];
         })
         .flat();
-      downloadAsFile(toSave.join("\n"), "text/plain", `NWCs-wallets.txt`);
-      dispatch(
-        setToast({
-          type: 3,
-          desc: t("AVUlnek"),
-        })
+      downloadAsFile(
+        toSave.join("\n"),
+        "text/plain",
+        `NWCs-wallets.txt`,
+        t("AVUlnek")
       );
       setShowSettings(false);
       logoutAllAccounts();
@@ -784,7 +778,7 @@ const ConfirmmationBox = ({ exit, handleOnClick }) => {
             onClick={handleOnClick}
           >
             {t("AHmZKVA")}
-            <div className="download-file"></div>
+            <div className="export"></div>
           </button>
           <button className="fx btn btn-red" onClick={exit}>
             {t("AB4BSCe")}

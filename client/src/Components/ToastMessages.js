@@ -38,7 +38,7 @@ export default function ToastMessages() {
   if (type === 1)
     return (
       <div
-        className={`toast-message warning-toast fx-scattered slide-up-down`}
+        className={`toast-message success-toast fx-scattered slide-up-down`}
         style={{ animationDuration: "4s" }}
       >
         <div className="fx-centered">

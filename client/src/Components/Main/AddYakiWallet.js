@@ -38,13 +38,9 @@ export default function AddYakiWallet({ refresh }) {
       downloadAsFile(
         toSave.join("\n"),
         "text/plain",
-        `${url.data.lightningAddress}-NWC.txt`
-      );
-      dispatch(
-        setToast({
-          type: 3,
-          desc: t("AIzBCBb"),
-        })
+        `${url.data.lightningAddress}-NWC.txt`,
+        t("AIzBCBb"),
+        false
       );
       setIsLoading(false);
       let wallet = {

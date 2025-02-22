@@ -8,6 +8,11 @@ import CryptoJS from "crypto-js";
 import { getAppLang, getCustomSettings, getKeys, getNoteTree } from "./Helpers";
 import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
+import { SigningStargateClient } from "@cosmjs/stargate";
+import { DORA_CONFIG } from "../Content/MACI";
+import { MaciClient } from "@dorafactory/maci-sdk/browser";
+import { store } from "../Store/Store";
+import { setToast } from "../Store/Slides/Publishers";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -269,6 +274,11 @@ const getParsedRepEvent = (event) => {
 
 const parsedMaciPoll = (poll) => {
   try {
+    if (!poll)
+      return { ...poll, voteOptionMap: [], results: [], resultsList: [] };
+    const client = new MaciClient({
+      network: process.env.REACT_APP_NETWORK,
+    });
     let voteOptionMap = JSON.parse(poll.voteOptionMap);
     let results = JSON.parse(poll.results);
 
@@ -292,8 +302,16 @@ const parsedMaciPoll = (poll) => {
       v2: parseFloat(((v.v2 / (totalVotes.v2 || 1)) * 100).toFixed(1)),
     }));
 
+    const status = client.maci.parseRoundStatus(
+      Number(poll.votingStart),
+      Number(poll.votingEnd),
+      poll.status,
+      new Date()
+    );
+
     return {
       ...poll,
+      status,
       voteOptionMap,
       results,
       resultsList,
@@ -644,8 +662,18 @@ const encodeBase64URL = (string) => {
     .replace(/=+$/, "");
 };
 
-const downloadAsFile = (text, type = "application/json", name) => {
-  const jsonString = type === "application/json" ? JSON.stringify(text, null, 2) : text
+const downloadAsFile = (
+  text,
+  type = "application/json",
+  name,
+  message = false,
+  allowMobile = true
+) => {
+  let isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
+  if (isTouchScreen && !allowMobile) return;
+
+  const jsonString =
+    type === "application/json" ? JSON.stringify(text, null, 2) : text;
 
   const blob = new Blob([jsonString], { type });
 
@@ -660,6 +688,39 @@ const downloadAsFile = (text, type = "application/json", name) => {
   link.click();
 
   document.body.removeChild(link);
+
+  if (message)
+    store.dispatch(
+      setToast({
+        type: 1,
+        desc: message,
+      })
+    );
+};
+
+const getKeplrSigner = async () => {
+  try {
+    const chainId = DORA_CONFIG[process.env.REACT_APP_NETWORK].chainId;
+    const rpc = DORA_CONFIG[process.env.REACT_APP_NETWORK].rpc;
+    await window.keplr.experimentalSuggestChain(
+      DORA_CONFIG[process.env.REACT_APP_NETWORK]
+    );
+
+    await window.keplr.enable(chainId);
+
+    const offlineSigner = window.getOfflineSigner(chainId);
+
+    const client = await SigningStargateClient.connectWithSigner(
+      rpc,
+      offlineSigner
+    );
+    let address = await offlineSigner.getAccounts();
+    if (address.length === 0) return false;
+    return { signer: client.signer, address: address[0].address };
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
 };
 
 export {
@@ -699,4 +760,5 @@ export {
   enableTranslation,
   parsedMaciPoll,
   downloadAsFile,
+  getKeplrSigner,
 };
