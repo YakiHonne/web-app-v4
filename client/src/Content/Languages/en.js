@@ -1089,31 +1089,30 @@ const englishTranslation = {
   AI81KFU: "Please stake here",
   Axpo9Sw: "No zap polls",
   A4w03gs: "Your published zap polls will be shown here",
-
-  "A8OlKXj": "A minimum of 8 DORA for each voter",
-  "AuhJ2Uy": "Add this later",
-  "ALNQpDw": "Round > View details > Gas station",
-  "AT1E8mx": "(remaining balance)",
-  "A9Mca7S": "Tips",
-  "AtgjyCM": "Select a voting option from the list below.",
-  "A5d11WZ": "Only one voice credit is required to vote.",
-  "AIIHmli": "You can submit multiple times.",
-  "A3cQKRh": "Only the last submission will be valid.",
-  "ASifSKs": "Learn more about MACI.",
-  "AoAc0KV":
+  A8OlKXj: "A minimum of 8 DORA for each voter",
+  AuhJ2Uy: "Add this later",
+  ALNQpDw: "Round > View details > Gas station",
+  AT1E8mx: "(remaining balance)",
+  A9Mca7S: "Tips",
+  AtgjyCM: "Select a voting option from the list below.",
+  A5d11WZ: "Only one voice credit is required to vote.",
+  AIIHmli: "You can submit multiple times.",
+  A3cQKRh: "Only the last submission will be valid.",
+  ASifSKs: "Learn more about MACI.",
+  AoAc0KV:
     "This round's gas fees are below {{amount}} DORA, this prevents voting. Please wait for the creator to add more gas.",
-  "AuMrZaK": "Create a MACI round.",
-  "Ab39qCG":
+  AuMrZaK: "Create a MACI round.",
+  Ab39qCG:
     "Fund the round with gas fees (8 DORA per voter) to cover signup and voting.",
-  "AZa1vyS": "Choose an option to vote or resubmit your vote.",
-  "AmWSJ4C":
+  AZa1vyS: "Choose an option to vote or resubmit your vote.",
+  AmWSJ4C:
     "Add the required gas fees, otherwise, voting will be disabled (8 DORA per voter)",
-  "AbhKhNW": "Unable to signup and vote",
-  "A128KIp": "Unable to vote",
-  "ALfmcyA":
+  AbhKhNW: "Unable to signup and vote",
+  A128KIp: "Unable to vote",
+  ALfmcyA:
     "This round's gas fees are below 6 DORA, this prevents signup and voting. Please wait for the creator to add more gas.",
-  "A13Btcr": "Each signup consumes 6 DORA, each vote consumes 2 DORA",
-  "AroLe58": "Each revote consumes an additional of 2 DORA",
+  A13Btcr: "Each signup consumes 6 DORA, each vote consumes 2 DORA",
+  AroLe58: "Each revote consumes an additional of 2 DORA",
 };
 
 export default englishTranslation;
