@@ -4,14 +4,17 @@ import { useSelector } from "react-redux";
 import { redirectToLogin } from "../../Helpers/Helpers";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "./LoginSignup";
 
 export default function WriteNew({ exit }) {
+  const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
   const [redirectLinks, setRedirectLinks] = useState(false);
-  const { t } = useTranslation();
+  const [isLogin, setIsLogin] = useState(false);
 
   return (
     <>
+      {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       {redirectLinks && (
         <RedictingLinks
           exit={() => {
@@ -27,7 +30,7 @@ export default function WriteNew({ exit }) {
         style={{ padding: 0 }}
         onClick={() =>
           !(userKeys.ext || userKeys.sec)
-            ? redirectToLogin()
+            ? setIsLogin(true)
             : setRedirectLinks(true)
         }
       >
@@ -133,6 +136,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
             state={{ tabNumber: 1, filter: "videos", init: true }}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
             style={{
+              width: "48%",
               padding: "2rem",
               backgroundColor: "transparent",
             }}
@@ -142,6 +146,27 @@ const RedictingLinks = ({ exit, internalExit }) => {
               style={{ width: "32px", height: "32px" }}
             ></div>
             <div>{t("AVdmifm")}</div>
+          </Link>
+          <Link
+            to="/dashboard"
+            state={{
+              tabNumber: 1,
+              filter: "notes",
+              init: true,
+              triggerCP: true,
+            }}
+            className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
+            style={{
+              width: "48%",
+              padding: "2rem",
+              backgroundColor: "transparent",
+            }}
+          >
+            <div
+              className="polls-24"
+              style={{ width: "32px", height: "32px" }}
+            ></div>
+            <div>{t("A91LHJy")}</div>
           </Link>
         </div>
       </div>

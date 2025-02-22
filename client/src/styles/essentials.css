@@ -343,7 +343,7 @@ hr:last-child {
 
 .sticker-red {
     background: var(--red-main);
-    color: var(--white);
+    color: white;
 }
 
 .sticker-c1-pale {
@@ -395,7 +395,7 @@ hr:last-child {
 
 .sticker-green {
     background: var(--green-main);
-    color: var(--white);
+    color: white;
 }
 
 .sticker-click:active {

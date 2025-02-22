@@ -865,6 +865,7 @@ export default function WritingArticle() {
                                     },
                                     buttonProps: {
                                       "aria-label": "LTR",
+                                      title: "LTR",
                                     },
                                   }),
                                   commands.group([], {
@@ -901,7 +902,8 @@ export default function WritingArticle() {
                                       setSelectedTab(1);
                                     },
                                     buttonProps: {
-                                      "aria-label": "LTR",
+                                      "aria-label": "RTL",
+                                      title: "RTL",
                                     },
                                   }),
                                   divider,
@@ -923,6 +925,7 @@ export default function WritingArticle() {
                                       groupName: "title",
                                       buttonProps: {
                                         "aria-label": "Insert title",
+                                        title: "Insert title",
                                       },
                                     }
                                   ),
@@ -980,7 +983,8 @@ export default function WritingArticle() {
                                       api.replaceSelection(modifyText);
                                     },
                                     buttonProps: {
-                                      "aria-label": "Insert title",
+                                      "aria-label": "Insert function",
+                                      title: "Insert function",
                                     },
                                   }),
                                   comment,
@@ -1037,7 +1041,8 @@ export default function WritingArticle() {
                                       );
                                     },
                                     buttonProps: {
-                                      "aria-label": "Insert title",
+                                      "aria-label": "Insert image",
+                                      title: "Insert image",
                                     },
                                   }),
                                   commands.group([], {
@@ -1089,13 +1094,28 @@ export default function WritingArticle() {
                                     ),
                                     execute: async (state, api) => {
                                       let file = await execute();
-                                      if (file)
+                                      if (
+                                        file &&
+                                        /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp|tiff))/i.test(
+                                          file
+                                        )
+                                      )
                                         api.replaceSelection(
                                           `![image](${file})`
                                         );
+                                      else if (
+                                        /(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(
+                                          file
+                                        )
+                                      )
+                                        api.replaceSelection(
+                                          `<video src="${file}" controls></video>`
+                                        );
+                                      else api.replaceSelection(file);
                                     },
                                     buttonProps: {
-                                      "aria-label": "Insert title",
+                                      "aria-label": "Upload image",
+                                      title: "Upload image",
                                     },
                                   }),
                                   unorderedListCommand,

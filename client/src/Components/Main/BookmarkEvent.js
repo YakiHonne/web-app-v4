@@ -3,6 +3,7 @@ import LoginWithNostr from "./LoginWithNostr";
 import BookmarksPicker from "./BookmarksPicker";
 import { useSelector } from "react-redux";
 import { redirectToLogin } from "../../Helpers/Helpers";
+import LoginSignup from "./LoginSignup";
 
 export default function BookmarkEvent({
   pubkey = "",
@@ -16,12 +17,13 @@ export default function BookmarkEvent({
   const userKeys = useSelector((state) => state.userKeys);
   const userBookmarks = useSelector((state) => state.userBookmarks);
   const [showBookmarksPicker, setShowBookmarksPicker] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
   const itemTypes = {
     a: `${kind}:${pubkey}:${d}`,
     e: pubkey,
     t: extraData,
   };
-  
+
   const isBookmarked = useMemo(() => {
     return userKeys
       ? userBookmarks.find((bookmark) =>
@@ -43,11 +45,11 @@ export default function BookmarkEvent({
           extraData={extraData}
         />
       )}
-
+      {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       <div
         className="fx-scattered  pointer"
         onClick={() =>
-          !userKeys ? redirectToLogin() : setShowBookmarksPicker(true)
+          !userKeys ? setIsLogin(true) : setShowBookmarksPicker(true)
         }
       >
         {label && <p>{label}</p>}

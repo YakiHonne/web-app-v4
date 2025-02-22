@@ -6,7 +6,7 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
 
-export default function AddPoll({ exit, setNevent }) {
+export default function AddZapPoll({ exit, setNevent }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
@@ -153,7 +153,7 @@ export default function AddPoll({ exit, setNevent }) {
   return (
     <div className="fixed-container box-pad-h fx-centered">
       <div
-        className="sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-col"
+        className="sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-col bg-sp"
         style={{
           width: "min(100%, 500px)",
           position: "relative",
@@ -163,7 +163,7 @@ export default function AddPoll({ exit, setNevent }) {
         <div className="close" onClick={exit}>
           <div></div>
         </div>
-        <h4 className="box-marg-s">{t("A4gfpc6")}</h4>
+        <h4 className="box-marg-s">{t("A91LHJy")}</h4>
         <textarea
           className="txt-area fit-container"
           onChange={handleChange}

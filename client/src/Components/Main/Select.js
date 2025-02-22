@@ -7,6 +7,7 @@ export default function Select({
   setSelectedValue,
   defaultLabel = "-- Options --",
   revert = false,
+  fullWidth = false
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const selectedValue = useMemo(() => {
@@ -26,7 +27,7 @@ export default function Select({
 
   return (
     <div
-      style={{ position: "relative", width: "fit-content" }}
+      style={{ position: "relative", width: fullWidth ? "100%" : "fit-content" }}
       className="fit-container"
       ref={optionsRef}
     >
@@ -49,7 +50,7 @@ export default function Select({
             top: revert ? 0 : "110%",
             transform: revert ? "translateY(calc(-100% - 5px))" : "none",
             // border: "none",
-            minWidth: "200px",
+            minWidth: fullWidth ? "100%" :"200px",
             width: "max-content",
             zIndex: 1000,
             rowGap: "0",

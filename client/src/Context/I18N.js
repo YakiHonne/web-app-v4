@@ -44,7 +44,7 @@ const supportedLanguage = [
     disabled: false,
   },
   {
-    display_name: "แบบไทย",
+    display_name: "ไทย",
     value: "th",
     left_el: <div className="flag-th"></div>,
     disabled: false,

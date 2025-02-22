@@ -252,6 +252,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
     }
 
     if (event.kind === 9734) {
+      console.log(relatedEvent)
       let isE = event.tags.find((tag) => tag[0] === "e");
       let isA = event.tags.find((tag) => tag[0] === "a");
       let ev = isA || isE;
@@ -279,7 +280,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
             : t(`AdiWL4V_${eventKind}`, { name: username, amount }),
         label_2: message ? `: ${message}` : "",
         icon: eventIcons.zaps,
-        id: false,
+        id: isE ? isE[1] : false,
         url,
       };
     }
@@ -719,7 +720,7 @@ const Notification = ({ event, filterByType = false }) => {
   if ((filterByType && filterByType.includes(type.type)) || !filterByType)
     return (
       <div
-        className="fit-container fx-centered fx-start-v fx-start-h box-pad-v-m box-pad-h option pointer"
+        className="fit-container fx-centered fx-start-v fx-start-h box-pad-v-m box-pad-h  pointer"
         onClick={handleOnClick}
         style={{
           borderTop: "1px solid  var(--c1-side)",
@@ -799,13 +800,11 @@ const MinimalNoteView = ({ note }) => {
   useEffect(() => {
     const parseNote = async () => {
       try {
+        let pNote = await getNoteTree(note, true, true, 50);
 
-        let pNote = await getNoteTree(note, true, true, 100);
-        
         setNoteTree(pNote);
-      } catch(err) {
-        console.log(err)
-        
+      } catch (err) {
+        console.log(err);
       }
     };
     if (note) parseNote();

@@ -33,11 +33,13 @@ import Notification from "./Pages/MainApp/Notification";
 import Explore from "./Pages/MainApp/Explore";
 import Dashboard from "./Pages/MainApp/Dashboard";
 import Search from "./Pages/MainApp/Search";
+import MACIPollStarter from "./Pages/MainApp/MACIPollStarter";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
   { path: "/:nevent", element: <FourOFour /> },
   { path: "/search", element: <Search /> },
+  { path: "/m/maci-poll", element: <MACIPollStarter /> },
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/dashboard", element: <Dashboard /> },

@@ -388,7 +388,10 @@
 .flag-it,
 .flag-it-24,
 .user-bold,
-.user-bold-24 {
+.user-bold-24,
+.export,
+.export-24,
+.keplr-icon {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -451,7 +454,6 @@
     .twitter-logo,
     .video,
     .env,
-
     .info-flag,
     .success,
     .weechat-logo,
@@ -743,7 +745,9 @@
     .translate,
     .translate-24,
     .user-bold,
-    .user-bold-24 {
+    .user-bold-24,
+    .export,
+    .export-24 {
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -958,7 +962,8 @@
 .flag-zh,
 .flag-th,
 .flag-it,
-.user-bold {
+.user-bold,
+.export {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1162,7 +1167,8 @@
 .flag-zh-24,
 .flag-th-24,
 .flag-it-24,
-.user-bold-24 {
+.user-bold-24,
+.export-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1178,6 +1184,16 @@
     min-height: 8rem;
 }
 
+.keplr-icon {
+    background-image: url('../media/icons/keplr-logo.svg');
+    min-width: 48px;
+    min-height: 48px;
+}
+
+.export,
+.export-24 {
+    background-image: url('../media/icons/export.svg');
+}
 .user-bold,
 .user-bold-24 {
     background-image: url('../media/icons/user-bold.svg');

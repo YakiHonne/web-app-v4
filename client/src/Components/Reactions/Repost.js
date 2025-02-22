@@ -5,6 +5,7 @@ import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
 import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "../Main/LoginSignup";
 
 export default function Repost({ isReposted, event, actions }) {
   const dispatch = useDispatch();
@@ -12,6 +13,7 @@ export default function Repost({ isReposted, event, actions }) {
   const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
   const [eventID, setEventID] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     const updateDb = async () => {
@@ -41,6 +43,7 @@ export default function Repost({ isReposted, event, actions }) {
     if (isLoading) return;
     try {
       if (!userKeys) {
+        setIsLogin(true)
         return false;
       }
       if (isReposted) {
@@ -91,14 +94,17 @@ export default function Repost({ isReposted, event, actions }) {
   };
 
   return (
-    <div
-      className={"icon-tooltip"}
-      data-tooltip={t("AUvmzyU")}
-      onClick={reactToNote}
-    >
+    <>
+    {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       <div
-        className={isReposted ? "switch-arrows-bold-24" : "switch-arrows-24"}
-      ></div>
-    </div>
+        className={"icon-tooltip"}
+        data-tooltip={t("AUvmzyU")}
+        onClick={reactToNote}
+      >
+        <div
+          className={isReposted ? "switch-arrows-bold-24" : "switch-arrows-24"}
+        ></div>
+      </div>
+    </>
   );
 }

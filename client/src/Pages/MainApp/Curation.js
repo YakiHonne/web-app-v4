@@ -22,7 +22,7 @@ import ShowUsersList from "../../Components/Main/ShowUsersList";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import CheckNOSTRClient from "../../Components/Main/CheckNOSTRClient";
 import { useDispatch, useSelector } from "react-redux";
-import { setToast } from "../../Store/Slides/Publishers";
+import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
@@ -40,13 +40,17 @@ import { customHistory } from "../../Helpers/History";
 import Backbar from "../../Components/Main/Backbar";
 import DynamicIndicator from "../../Components/DynamicIndicator";
 import { useTranslation } from "react-i18next";
+import PagePlaceholder from "../../Components/PagePlaceholder";
+import bannedList from "../../Content/BannedList";
 
 export default function Curation() {
+  const { id, CurationKind, AuthNip05, ArtIdentifier } = useParams();
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
-  const { t } = useTranslation();
-  const { id, CurationKind, AuthNip05, ArtIdentifier } = useParams();
+  const userMutedList = useSelector((state) => state.userMutedList);
+
   const [isLoaded, setIsLoaded] = useState(false);
   const [isArtsLoaded, setIsArtsLoaded] = useState(false);
   const [curation, setCuration] = useState(false);
@@ -74,12 +78,25 @@ export default function Curation() {
       : false;
   }, [postActions, userKeys]);
 
+  const isMuted = useMemo(() => {
+    let checkProfile = () => {
+      if (!Array.isArray(userMutedList)) return false;
+      let index = userMutedList.findIndex((item) => item === curation?.pubkey);
+      if (index === -1) {
+        return false;
+      }
+      return { index };
+    };
+    return checkProfile();
+  }, [userMutedList, curation]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         let naddrData = await checkURL();
 
         let _curation = { created_at: 0 };
+        if (bannedList.includes(naddrData.pubkey)) customHistory.push("/");
         saveUsers([naddrData.pubkey]);
         let sub = ndkInstance.subscribe(
           [
@@ -250,6 +267,30 @@ export default function Curation() {
     return tempArray.filter((item) => item);
   };
 
+  const muteUnmute = async () => {
+    try {
+      if (!Array.isArray(userMutedList)) return;
+      let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
+      if (isMuted) {
+        tempTags.splice(isMuted.index, 1);
+      } else {
+        tempTags.push(["p", curation.pubkey]);
+      }
+
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 10000,
+          content: "",
+          tags: tempTags,
+          allRelays: [],
+        })
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
@@ -295,235 +336,245 @@ export default function Curation() {
                 className="fit-container fx-centered fx-start-v"
                 style={{ minHeight: "100vh" }}
               >
-                <div className="fit-container fx-centered fx-start-v fx-col box-pad-h-m main-middle">
-                  {showCommentsSection && (
-                    <RepEventCommentsSection
-                      id={curation.aTag}
-                      author={curationAuthor}
-                      eventPubkey={curation.pubkey}
-                      leaveComment={showCommentsSection.comment}
-                      exit={() => setShowCommentsSections(false)}
-                      kind={curation.kind}
-                      event={curation}
-                    />
-                  )}
-                  {!showCommentsSection && (
-                    <>
-                      <Backbar />
-                      <div
-                        className="fx-scattered fit-container box-pad-v"
-                        style={{
-                          paddingTop: 0,
-                          borderBottom: "1px solid var(--very-dim-gray)",
-                        }}
-                      >
-                        <div className="fx-centered">
-                          <UserProfilePic
-                            size={48}
-                            img={curationAuthor.picture}
-                            mainAccountUser={false}
-                            user_id={curationAuthor.pubkey}
-                            allowClick={true}
-                          />
-                          <div className="fx-centered fx-col fx-start-v">
-                            <div>
-                              <p className="gray-c">{t("AVG3Uga")}</p>
-                              <p className="p-big p-caps">
-                                {curationAuthor.display_name ||
-                                  curationAuthor.name ||
-                                  minimizeKey(curation.pubkey)}
-                              </p>
+                {isMuted && (
+                  <PagePlaceholder page={"muted-user"} onClick={muteUnmute} />
+                )}
+                {!isMuted && (
+                  <div className="fit-container fx-centered fx-start-v fx-col box-pad-h-m main-middle">
+                    {showCommentsSection && (
+                      <RepEventCommentsSection
+                        id={curation.aTag}
+                        author={curationAuthor}
+                        eventPubkey={curation.pubkey}
+                        leaveComment={showCommentsSection.comment}
+                        exit={() => setShowCommentsSections(false)}
+                        kind={curation.kind}
+                        event={curation}
+                      />
+                    )}
+                    {!showCommentsSection && (
+                      <>
+                        <Backbar />
+                        <div
+                          className="fx-scattered fit-container box-pad-v"
+                          style={{
+                            paddingTop: 0,
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                          }}
+                        >
+                          <div className="fx-centered">
+                            <UserProfilePic
+                              size={48}
+                              img={curationAuthor.picture}
+                              mainAccountUser={false}
+                              user_id={curationAuthor.pubkey}
+                              allowClick={true}
+                            />
+                            <div className="fx-centered fx-col fx-start-v">
+                              <div>
+                                <p className="gray-c">{t("AVG3Uga")}</p>
+                                <p className="p-big p-caps">
+                                  {curationAuthor.display_name ||
+                                    curationAuthor.name ||
+                                    minimizeKey(curation.pubkey)}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="fx-centered">
-                          <Follow
-                            toFollowKey={curationAuthor.pubkey}
-                            toFollowName={curationAuthor.name}
-                            bulk={false}
-                            bulkList={[]}
-                          />
-                          <ZapTip
-                            recipientLNURL={checkForLUDS(
-                              curationAuthor.lud06,
-                              curationAuthor.lud16
-                            )}
-                            recipientPubkey={curationAuthor.pubkey}
-                            senderPubkey={userKeys.pub}
-                            recipientInfo={{
-                              name: curationAuthor.name,
-                              img: curationAuthor.picture,
-                            }}
-                            aTag={curation.aTag}
-                            forContent={curation.title}
-                          />
+                          <div className="fx-centered">
+                            <Follow
+                              toFollowKey={curationAuthor.pubkey}
+                              toFollowName={curationAuthor.name}
+                              bulk={false}
+                              bulkList={[]}
+                            />
+                            <ZapTip
+                              recipientLNURL={checkForLUDS(
+                                curationAuthor.lud06,
+                                curationAuthor.lud16
+                              )}
+                              recipientPubkey={curationAuthor.pubkey}
+                              senderPubkey={userKeys.pub}
+                              recipientInfo={{
+                                name: curationAuthor.name,
+                                img: curationAuthor.picture,
+                              }}
+                              aTag={curation.aTag}
+                              forContent={curation.title}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div
-                        className="fit-container fx-scattered fx-start-v fx-col box-pad-v-m"
-                        style={{ columnGap: "10px" }}
-                        dir="auto"
-                      >
-                        <h3 dir="auto">{curation.title}</h3>
                         <div
-                          className="fx-centered fit-container fx-start-h"
-                          style={{ minWidth: "max-content" }}
+                          className="fit-container fx-scattered fx-start-v fx-col box-pad-v-m"
+                          style={{ columnGap: "10px" }}
+                          dir="auto"
                         >
-                          <p className="gray-c">
-                            {t("AHhPGax", {
-                              date: convertDate(
-                                new Date(curation.published_at * 1000)
-                              ),
-                            })}
-                          </p>
-                          <span
-                            className="orange-c p-one-line"
-                            style={{ maxWidth: "200px" }}
+                          <h3 dir="auto">{curation.title}</h3>
+                          <div
+                            className="fx-centered fit-container fx-start-h"
+                            style={{ minWidth: "max-content" }}
                           >
-                            <CheckNOSTRClient client={curation.client} />
-                          </span>
-                          <p className="gray-c p-medium">&#8226;</p>
-                          <div className="fx-start-h fx-centered">
-                            <p
-                              className="gray-c pointer round-icon-tooltip"
-                              data-tooltip={t("AOsxQxu", {
-                                cdate: convertDate(
-                                  curation.published_at * 1000
+                            <p className="gray-c">
+                              {t("AHhPGax", {
+                                date: convertDate(
+                                  new Date(curation.published_at * 1000)
                                 ),
-                                edate: convertDate(curation.created_at * 1000),
                               })}
-                            >
-                              <Date_
-                                toConvert={new Date(curation.created_at * 1000)}
-                              />
                             </p>
-                          </div>
-                        </div>
-                        {curation.description && (
-                          <div className="fit-container ">
-                            {curation.description}
-                          </div>
-                        )}
-                      </div>
-                      {curation.image && (
-                        <div className="box-marg-s fit-container">
-                          <div
-                            className="sc-s-18 bg-img cover-bg fit-container"
-                            style={{
-                              backgroundImage: `url(${curation.image})`,
-                              backgroundColor: "var(--very-dim-gray)",
-                              height: "auto",
-                              aspectRatio: "20/9",
-                            }}
-                          ></div>
-                        </div>
-                      )}
-                      <div className="fx-centered fx-start-v fx-col fit-container ">
-                        {!articlesOnCuration.length && !isArtsLoaded && (
-                          <div
-                            className="fx-centered fit-container"
-                            style={{ height: "20vh" }}
-                          >
-                            <p className="gray-c p-medium">{t("AKvHyxG")}</p>
-                            <LoadingDots />
-                          </div>
-                        )}
-                        {articlesOnCuration.length > 0 && isArtsLoaded && (
-                          <div className="fit-container box-marg-s fx-start-h fx-centered">
-                            <h4>
-                              {t("A04okTg", {
-                                count: articlesOnCuration.length,
-                              })}
-                            </h4>
-                          </div>
-                        )}
-                        <div
-                          className="fit-container fx-scattered"
-                          style={{
-                            borderTop:
-                              articlesOnCuration.length > 0
-                                ? "1px solid var(--very-dim-gray)"
-                                : "",
-                          }}
-                        >
-                          {articlesOnCuration.length > 0 && (
-                            <div
-                              className="fx-centered fit-container fx-start-h fx-wrap"
-                              style={{ gap: 0 }}
+                            <span
+                              className="orange-c p-one-line"
+                              style={{ maxWidth: "200px" }}
                             >
-                              {articlesOnCuration.map((item, index) => {
-                                return (
-                                  <RepEventPreviewCard
-                                    item={item}
-                                    key={item.id}
-                                  />
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {articlesOnCuration.length === 0 && isArtsLoaded && (
-                            <div className="fx-centered fx-col">
-                              <p className="gray-c box-pad-v-s">
-                                {t("AghKyAt")}
+                              <CheckNOSTRClient client={curation.client} />
+                            </span>
+                            <p className="gray-c p-medium">&#8226;</p>
+                            <div className="fx-start-h fx-centered">
+                              <p
+                                className="gray-c pointer round-icon-tooltip"
+                                data-tooltip={t("AOsxQxu", {
+                                  cdate: convertDate(
+                                    curation.published_at * 1000
+                                  ),
+                                  edate: convertDate(
+                                    curation.created_at * 1000
+                                  ),
+                                })}
+                              >
+                                <Date_
+                                  toConvert={
+                                    new Date(curation.created_at * 1000)
+                                  }
+                                />
                               </p>
                             </div>
+                          </div>
+                          {curation.description && (
+                            <div className="fit-container ">
+                              {curation.description}
+                            </div>
                           )}
                         </div>
-                      </div>
-                      {morePosts.length > 0 && (
-                        <div
-                          className="fit-container box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                          style={{
-                            rowGap: "24px",
-                            border: "none",
-                          }}
-                        >
-                          <h4>{t("Aag9u1h")}</h4>
-                          <div className="fit-container fx-centered fx-wrap">
-                            {morePosts.map((curation_) => {
-                              if (
-                                curation_.id !== curation.id &&
-                                curation_.items.length > 0
-                              )
-                                return (
-                                  <Link
-                                    key={curation_.id}
-                                    className="fit-container fx-centered fx-start-h"
-                                    to={`/curations/${curation_.naddr}`}
-                                    target="_blank"
-                                  >
-                                    <div
-                                      style={{
-                                        minWidth: "48px",
-                                        aspectRatio: "1/1",
-                                        borderRadius: "var(--border-r-6)",
-                                        backgroundImage: `url(${curation_.image})`,
-                                        backgroundColor: "black",
-                                        position: "relative",
-                                      }}
-                                      className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
-                                    ></div>
-                                    <div>
-                                      <p className=" p-two-lines">
-                                        {curation_.title || t("AMvUjqZ")}
-                                      </p>
-                                      <p className="p-small gray-c">
-                                        <DynamicIndicator item={curation_} />
-                                      </p>
-                                    </div>
-                                  </Link>
-                                );
-                            })}
+                        {curation.image && (
+                          <div className="box-marg-s fit-container">
+                            <div
+                              className="sc-s-18 bg-img cover-bg fit-container"
+                              style={{
+                                backgroundImage: `url(${curation.image})`,
+                                backgroundColor: "var(--very-dim-gray)",
+                                height: "auto",
+                                aspectRatio: "20/9",
+                              }}
+                            ></div>
+                          </div>
+                        )}
+                        <div className="fx-centered fx-start-v fx-col fit-container ">
+                          {!articlesOnCuration.length && !isArtsLoaded && (
+                            <div
+                              className="fx-centered fit-container"
+                              style={{ height: "20vh" }}
+                            >
+                              <p className="gray-c p-medium">{t("AKvHyxG")}</p>
+                              <LoadingDots />
+                            </div>
+                          )}
+                          {articlesOnCuration.length > 0 && isArtsLoaded && (
+                            <div className="fit-container box-marg-s fx-start-h fx-centered">
+                              <h4>
+                                {t("A04okTg", {
+                                  count: articlesOnCuration.length,
+                                })}
+                              </h4>
+                            </div>
+                          )}
+                          <div
+                            className="fit-container fx-scattered"
+                            style={{
+                              borderTop:
+                                articlesOnCuration.length > 0
+                                  ? "1px solid var(--very-dim-gray)"
+                                  : "",
+                            }}
+                          >
+                            {articlesOnCuration.length > 0 && (
+                              <div
+                                className="fx-centered fit-container fx-start-h fx-wrap"
+                                style={{ gap: 0 }}
+                              >
+                                {articlesOnCuration.map((item, index) => {
+                                  return (
+                                    <RepEventPreviewCard
+                                      item={item}
+                                      key={item.id}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {articlesOnCuration.length === 0 &&
+                              isArtsLoaded && (
+                                <div className="fx-centered fx-col">
+                                  <p className="gray-c box-pad-v-s">
+                                    {t("AghKyAt")}
+                                  </p>
+                                </div>
+                              )}
                           </div>
                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                        {morePosts.length > 0 && (
+                          <div
+                            className="fit-container box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                            style={{
+                              rowGap: "24px",
+                              border: "none",
+                            }}
+                          >
+                            <h4>{t("Aag9u1h")}</h4>
+                            <div className="fit-container fx-centered fx-wrap">
+                              {morePosts.map((curation_) => {
+                                if (
+                                  curation_.id !== curation.id &&
+                                  curation_.items.length > 0
+                                )
+                                  return (
+                                    <Link
+                                      key={curation_.id}
+                                      className="fit-container fx-centered fx-start-h"
+                                      to={`/curations/${curation_.naddr}`}
+                                      target="_blank"
+                                    >
+                                      <div
+                                        style={{
+                                          minWidth: "48px",
+                                          aspectRatio: "1/1",
+                                          borderRadius: "var(--border-r-6)",
+                                          backgroundImage: `url(${curation_.image})`,
+                                          backgroundColor: "black",
+                                          position: "relative",
+                                        }}
+                                        className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
+                                      ></div>
+                                      <div>
+                                        <p className=" p-two-lines">
+                                          {curation_.title || t("AMvUjqZ")}
+                                        </p>
+                                        <p className="p-small gray-c">
+                                          <DynamicIndicator item={curation_} />
+                                        </p>
+                                      </div>
+                                    </Link>
+                                  );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-              {!showCommentsSection && (
+              {!showCommentsSection && !isMuted && (
                 <div
                   className="fit-container sticky-to-fixed fx-centered"
                   style={{
@@ -664,6 +715,13 @@ export default function Curation() {
                             likes: postActions.likes.likes.length,
                           }}
                         />,
+                        <div onClick={muteUnmute} className="pointer">
+                          {isMuted ? (
+                            <p className="red-c">{t("AKELUbQ")}</p>
+                          ) : (
+                            <p className="red-c">{t("AGMxuQ0")}</p>
+                          )}
+                        </div>,
                       ]}
                       displayAbove={true}
                     />

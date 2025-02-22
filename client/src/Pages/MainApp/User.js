@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useReducer } from "react";
-import Date_ from "../../Components/Date_";
 import {
   checkForLUDS,
-  decodeBolt11,
   getBech32,
-  getBolt11,
-  getEmptyuserMetadata,
   getParsedAuthor,
   getParsedNote,
   getParsedRepEvent,
@@ -13,7 +9,7 @@ import {
 } from "../../Helpers/Encryptions";
 import { useParams } from "react-router-dom";
 import Sidebar from "../../Components/Main/Sidebar";
-import { kinds, nip19 } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import ZapTip from "../../Components/Main/ZapTip";
@@ -45,6 +41,8 @@ import QRSharing from "./QRSharing";
 import WidgetCard from "../../Components/Main/WidgetCard";
 import { useTranslation } from "react-i18next";
 import Carousel from "../../Components/Main/Carousel";
+import PagePlaceholder from "../../Components/PagePlaceholder";
+import bannedList from "../../Content/BannedList";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -307,7 +305,7 @@ const UserMetadata = ({ refreshUser }) => {
   const getMetadata = async () => {
     try {
       setFollowings([]);
-
+      if (bannedList.includes(id)) customHistory.push("/");
       let cachedUser = getUser(id);
       if (cachedUser) {
         setUser(cachedUser);
@@ -426,7 +424,7 @@ const UserMetadata = ({ refreshUser }) => {
   };
 
   const handleCarouselItems = (index) => {
-    if(!isLoaded) return
+    if (!isLoaded) return;
     let temArray = [];
     if (user.banner) temArray.push(user.banner);
     if (user.picture) temArray.push(user.picture);
@@ -440,6 +438,8 @@ const UserMetadata = ({ refreshUser }) => {
     setSelectedItemInCarousel(index);
   };
 
+  if (isMuted)
+    return <PagePlaceholder page={"muted-user"} onClick={muteUnmute} />;
   return (
     <>
       {showPeople === "following" && (
@@ -485,7 +485,7 @@ const UserMetadata = ({ refreshUser }) => {
           className="fit-container fx-centered fx-start-h fx-end-v fx-start-v box-pad-h-s box-pad-v-s bg-img cover-bg"
           style={{
             position: "relative",
-            height:user?.banner ? "250px" : "150px",
+            height: user?.banner ? "250px" : "150px",
           }}
         >
           <div
@@ -501,9 +501,9 @@ const UserMetadata = ({ refreshUser }) => {
               zIndex: 0,
               borderTopLeftRadius: "0",
               borderTopRightRadius: "0",
-              cursor:user?.banner ? "zoom-in" : "default"
+              cursor: user?.banner ? "zoom-in" : "default",
             }}
-            onClick={() =>handleCarouselItems(0)}
+            onClick={() => handleCarouselItems(0)}
           ></div>
           <div
             className="fx-centered fx-col fx-start-v fit-container"
@@ -733,6 +733,19 @@ const UserFeed = ({ user }) => {
   const [contentFrom, setContentFrom] = useState("notes");
   const [lastEventTime, setLastEventTime] = useState(undefined);
   const [notesSub, setNotesSub] = useState(false);
+  const userMutedList = useSelector((state) => state.userMutedList);
+
+  const isMuted = useMemo(() => {
+    let checkProfile = () => {
+      if (!Array.isArray(userMutedList)) return false;
+      let index = userMutedList.findIndex((item) => item === user?.pubkey);
+      if (index === -1) {
+        return false;
+      }
+      return { index };
+    };
+    return checkProfile();
+  }, [userMutedList, user]);
 
   useEffect(() => {
     const getID = async () => {
@@ -878,6 +891,7 @@ const UserFeed = ({ user }) => {
     setContentFrom(type);
   };
 
+  if (isMuted) return;
   return (
     <div className="fx-centered  fx-wrap fit-container" style={{ gap: 0 }}>
       <div

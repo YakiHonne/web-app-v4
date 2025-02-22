@@ -21,6 +21,7 @@ export default function Navbar() {
       "/login",
       "/points-system",
       "/write-article",
+      "/m/maci-poll",
     ].includes(window.location.pathname)
   )
     return;

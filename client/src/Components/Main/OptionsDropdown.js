@@ -56,7 +56,6 @@ export default function OptionsDropdown({
         <div
           style={{
             position: "absolute",
-            
             [displayAbove ? "bottom" : "top"]: "110%",
             backgroundColor: "var(--dim-gray)",
             border: "none",

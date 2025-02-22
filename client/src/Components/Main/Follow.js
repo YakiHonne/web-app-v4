@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { redirectToLogin } from "../../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "./LoginSignup";
 
 const FOLLOWING = <div className="user-followed-w-24"></div>;
 const FOLLOW = <div className="user-to-follow-24"></div>;
@@ -73,6 +74,7 @@ const FollowText = ({
   const userRelays = useSelector((state) => state.userRelays);
   const [isLoading, setIsLoading] = useState(false);
   const [tags, setTags] = useState([]);
+  const [isLogin, setIsLogin] = useState(false);
   const { t } = useTranslation();
 
   const FOLLOWING_ = t("ASi0a0d");
@@ -147,12 +149,13 @@ const FollowText = ({
   if (!userMetadata)
     return (
       <>
+        {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
         <button
           className={`btn btn-normal  ${size === "small" ? "btn-small" : ""} ${
             full ? "btn-full" : ""
           }`}
           disabled={isLoading}
-          onClick={() => redirectToLogin()}
+          onClick={() => setIsLogin(true)}
         >
           {FOLLOW_}
         </button>
@@ -231,6 +234,7 @@ const FollowIcon = ({
   const isPublishing = useSelector((state) => state.isPublishing);
   const [isLoading, setIsLoading] = useState(false);
   const [tags, setTags] = useState([]);
+  const [isLogin, setIsLogin] = useState(false);
   const { t } = useTranslation();
 
   const FOLLOWING_ = t("ASi0a0d");
@@ -304,12 +308,13 @@ const FollowIcon = ({
   if (!userMetadata)
     return (
       <>
+      {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
         <div
           className={`round-icon round-icon-tooltip btn-gst  ${
             size === "small" ? "round-icon-small" : ""
           }`}
           disabled={isLoading}
-          onClick={() => redirectToLogin()}
+          onClick={() => setIsLogin(true)}
           data-tooltip={t("A7xXZ7B")}
         >
           {FOLLOW}

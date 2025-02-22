@@ -399,7 +399,7 @@ export const clearDB = () => {
   try {
     if (db) {
       db.tables.forEach((table) => {
-        if (!["users"].includes(table.name))
+        if (!["users", "eventStats", "notificationLastEventTS", "clients"].includes(table.name))
           table.clear().then(() => {
             console.log(`${table.name} cleared`);
           });

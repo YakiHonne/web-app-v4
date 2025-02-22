@@ -5,6 +5,7 @@ import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
 import { saveEventStats } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import LoginSignup from "../Main/LoginSignup";
 
 export default function Like({ isLiked, event, actions, tagKind = "e" }) {
   const dispatch = useDispatch();
@@ -12,6 +13,7 @@ export default function Like({ isLiked, event, actions, tagKind = "e" }) {
   const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
   const [eventID, setEventID] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     const updateDb = async () => {
@@ -36,6 +38,7 @@ export default function Like({ isLiked, event, actions, tagKind = "e" }) {
     if (isLoading) return;
     try {
       if (!userKeys) {
+        setIsLogin(true);
         return false;
       }
       if (isLiked) {
@@ -89,12 +92,15 @@ export default function Like({ isLiked, event, actions, tagKind = "e" }) {
   };
 
   return (
-    <div
-      className={"icon-tooltip"}
-      data-tooltip={t("AJW1vH9")}
-      onClick={reactToNote}
-    >
-      <div className={isLiked ? "heart-bold-24" : "heart-24"}></div>
-    </div>
+    <>
+      {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
+      <div
+        className={"icon-tooltip"}
+        data-tooltip={t("AJW1vH9")}
+        onClick={reactToNote}
+      >
+        <div className={isLiked ? "heart-bold-24" : "heart-24"}></div>
+      </div>
+    </>
   );
 }

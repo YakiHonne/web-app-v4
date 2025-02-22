@@ -8,6 +8,11 @@ import CryptoJS from "crypto-js";
 import { getAppLang, getCustomSettings, getKeys, getNoteTree } from "./Helpers";
 import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
+import { SigningStargateClient } from "@cosmjs/stargate";
+import { DORA_CONFIG } from "../Content/MACI";
+import { MaciClient } from "@dorafactory/maci-sdk/browser";
+import { store } from "../Store/Store";
+import { setToast } from "../Store/Slides/Publishers";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -267,6 +272,59 @@ const getParsedRepEvent = (event) => {
   }
 };
 
+const parsedMaciPoll = (poll) => {
+  try {
+    if (!poll)
+      return { ...poll, voteOptionMap: [], results: [], resultsList: [] };
+    const client = new MaciClient({
+      network: process.env.REACT_APP_NETWORK,
+    });
+    let voteOptionMap = JSON.parse(poll.voteOptionMap);
+    let results = JSON.parse(poll.results);
+
+    let votingEnd = Math.floor(parseInt(poll.votingEnd) / 1000000);
+    let votingStart = Math.floor(parseInt(poll.votingStart) / 1000000);
+    let totalBond =
+      poll.totalBond === "0"
+        ? 0
+        : parseInt(poll.totalBond.slice(0, -14)) / 10000;
+
+    const votes = results.map((r) => ({
+      v: Number(r.slice(0, -24)),
+      v2: Number(r.slice(-24)),
+    }));
+    const totalVotes = votes.reduce(
+      (s, c) => ({ v: s.v + c.v, v2: s.v2 + c.v2 }),
+      { v: 0, v2: 0 }
+    );
+    const resultsList = votes.map((v) => ({
+      v: parseFloat(((v.v / (totalVotes.v || 1)) * 100).toFixed(1)),
+      v2: parseFloat(((v.v2 / (totalVotes.v2 || 1)) * 100).toFixed(1)),
+    }));
+
+    const status = client.maci.parseRoundStatus(
+      Number(poll.votingStart),
+      Number(poll.votingEnd),
+      poll.status,
+      new Date()
+    );
+
+    return {
+      ...poll,
+      status,
+      voteOptionMap,
+      results,
+      resultsList,
+      votingEnd,
+      votingStart,
+      totalBond,
+    };
+  } catch (err) {
+    console.log(err);
+    return { ...poll, voteOptionMap: [], results: [], resultsList: [] };
+  }
+};
+
 const detectDirection = (text) => {
   const rtlCharRegExp =
     /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
@@ -385,6 +443,7 @@ const decodeBolt11 = (address) => {
   let amount = decoded.sections.find((item) => item.name === "amount");
   return (amount?.value || 0) / 1000;
 };
+
 const getBolt11 = (event) => {
   if (!event) return "";
   for (let tag of event.tags) {
@@ -416,11 +475,12 @@ const checkForLUDS = (lud06, lud16) => {
     : lud06;
 };
 
-const convertDate = (toConvert) => {
+const convertDate = (toConvert, time = false) => {
+  let timeConfig = time ? { hour: "numeric", minute: "numeric" } : {};
   return t("A3fEQj5", {
     val: toConvert,
     formatParams: {
-      val: { year: "numeric", month: "short", day: "numeric" },
+      val: { year: "numeric", month: "short", day: "numeric", ...timeConfig },
     },
   });
 };
@@ -602,6 +662,67 @@ const encodeBase64URL = (string) => {
     .replace(/=+$/, "");
 };
 
+const downloadAsFile = (
+  text,
+  type = "application/json",
+  name,
+  message = false,
+  allowMobile = true
+) => {
+  let isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
+  if (isTouchScreen && !allowMobile) return;
+
+  const jsonString =
+    type === "application/json" ? JSON.stringify(text, null, 2) : text;
+
+  const blob = new Blob([jsonString], { type });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = name;
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+
+  if (message)
+    store.dispatch(
+      setToast({
+        type: 1,
+        desc: message,
+      })
+    );
+};
+
+const getKeplrSigner = async () => {
+  try {
+    const chainId = DORA_CONFIG[process.env.REACT_APP_NETWORK].chainId;
+    const rpc = DORA_CONFIG[process.env.REACT_APP_NETWORK].rpc;
+    await window.keplr.experimentalSuggestChain(
+      DORA_CONFIG[process.env.REACT_APP_NETWORK]
+    );
+
+    await window.keplr.enable(chainId);
+
+    const offlineSigner = window.getOfflineSigner(chainId);
+
+    const client = await SigningStargateClient.connectWithSigner(
+      rpc,
+      offlineSigner
+    );
+    let address = await offlineSigner.getAccounts();
+    if (address.length === 0) return false;
+    return { signer: client.signer, address: address[0].address };
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
 export {
   getBech32,
   shortenKey,
@@ -637,4 +758,7 @@ export {
   timeAgo,
   detectDirection,
   enableTranslation,
+  parsedMaciPoll,
+  downloadAsFile,
+  getKeplrSigner,
 };

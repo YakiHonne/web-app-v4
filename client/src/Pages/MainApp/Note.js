@@ -35,6 +35,7 @@ import HistorySection from "../../Components/Main/HistorySection";
 import { useTranslation } from "react-i18next";
 import { getNoteTree } from "../../Helpers/Helpers";
 import PagePlaceholder from "../../Components/PagePlaceholder";
+import bannedList from "../../Content/BannedList";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function Note() {
@@ -59,6 +60,7 @@ export default function Note() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [isTransEnabled, setIsTransEnabled] = useState(true);
   const [unsupportedKind, setUnsupportedKind] = useState(false);
+  const [openComment, setOpenComment] = useState(false);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -145,7 +147,7 @@ export default function Note() {
     setIsNoteTranslating(false);
     let isEvent = false;
     const id = nip19.decode(nevent)?.data.id || nip19.decode(nevent)?.data;
-
+    
     let subscription = ndkInstance.subscribe([{ ids: [id] }], {
       cacheUsage: "ONLY_RELAY",
       subId: "note-req",
@@ -155,6 +157,7 @@ export default function Note() {
     });
 
     subscription.on("event", async (event) => {
+      if(bannedList.includes(event.pubkey)) customHistory.push("/")
       if (event.kind !== 1) {
         setUnsupportedKind(true);
         setIsLoading(false);
@@ -317,350 +320,357 @@ export default function Note() {
             <main className="main-page-nostr-container">
               <ArrowUp />
 
-              <div
-                className="fx-centered fit-container fx-col fx-start-h"
-                style={{ gap: 0 }}
-              >
-                {note && (
-                  <div className="main-middle">
-                    <div
-                      className="fx-centered fit-container fx-start-h box-pad-v-m sticky"
-                      onClick={() => customHistory.back()}
-                    >
-                      <div className="box-pad-h-m">
-                        <button
-                          className="btn btn-normal btn-gray"
-                          style={{ padding: "0 1rem" }}
-                        >
-                          <div className="arrow arrow-back"></div>
-                        </button>
-                      </div>
-                    </div>
-                    {note && !note.isRoot && (
-                      <>
-                        <div
-                          className="fit-container box-pad-h box-pad-v-m box-marg-s fx-centered pointer sticky"
-                          style={{
-                            borderTop: "1px solid var(--very-dim-gray)",
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                          }}
-                          onClick={() => setShowHistory(!showHistory)}
-                        >
-                          <div className="fx-centered">
-                            <p>
-                              {showHistory && t("ApSnq9V")}
-                              {!showHistory && t("AUScjxu")}
-                            </p>
-                            <div
-                              className="arrow-12"
-                              style={{
-                                rotate: !showHistory ? "0deg" : "180deg",
-                              }}
-                            ></div>
-                          </div>
+              {!isMuted && (
+                <div
+                  className="fx-centered fit-container fx-col fx-start-h"
+                  style={{ gap: 0 }}
+                >
+                  {note && (
+                    <div className="main-middle">
+                      <div
+                        className="fx-centered fit-container fx-start-h box-pad-v-m sticky"
+                        onClick={() => customHistory.back()}
+                      >
+                        <div className="box-pad-h-m">
+                          <button
+                            className="btn btn-normal btn-gray"
+                            style={{ padding: "0 1rem" }}
+                          >
+                            <div className="arrow arrow-back"></div>
+                          </button>
                         </div>
-                        <HistorySection
-                          id={note.rootData[1]}
-                          tagKind={note.rootData[0]}
-                          isRoot={!note.isReply}
-                          targetedEventID={note.id}
-                          showHistory={showHistory}
-                        />
-                      </>
-                    )}
-                    <div
-                      className="fit-container fx-centered fx-col fx-start-v"
-                      style={{ paddingBottom: "3rem", gap: 0 }}
-                    >
-                      <div className="fit-container fx-scattered fx-start-v">
-                        <div className="fx-centered fit-container fx-start-h box-pad-h-m box-marg-s">
-                          <UserProfilePic
-                            img={author.picture}
-                            size={64}
-                            mainAccountUser={false}
-                            user_id={note.pubkey}
-                          />
-                          <div className="box-pad-h-m fx-centered fx-col fx-start-v">
+                      </div>
+                      {note && !note.isRoot && (
+                        <>
+                          <div
+                            className="fit-container box-pad-h box-pad-v-m box-marg-s fx-centered pointer sticky"
+                            style={{
+                              borderTop: "1px solid var(--very-dim-gray)",
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                            }}
+                            onClick={() => setShowHistory(!showHistory)}
+                          >
                             <div className="fx-centered">
-                              <h4>{author.display_name || author.name}</h4>
-                              {isNip05Verified && (
-                                <div className="checkmark-c1-24"></div>
-                              )}
+                              <p>
+                                {showHistory && t("ApSnq9V")}
+                                {!showHistory && t("AUScjxu")}
+                              </p>
+                              <div
+                                className="arrow-12"
+                                style={{
+                                  rotate: !showHistory ? "0deg" : "180deg",
+                                }}
+                              ></div>
                             </div>
-                            <p className="gray-c">
-                              <Date_
-                                toConvert={new Date(note.created_at * 1000)}
-                                time={true}
-                              />
-                            </p>
                           </div>
+                          <HistorySection
+                            id={note.rootData[1]}
+                            tagKind={note.rootData[0]}
+                            isRoot={!note.isReply}
+                            targetedEventID={note.id}
+                            showHistory={showHistory}
+                          />
+                        </>
+                      )}
+                      <div
+                        className="fit-container fx-centered fx-col fx-start-v"
+                        style={{ paddingBottom: "3rem", gap: 0 }}
+                      >
+                        <div className="fit-container fx-scattered fx-start-v">
+                          <div className="fx-centered fit-container fx-start-h box-pad-h-m box-marg-s">
+                            <UserProfilePic
+                              img={author.picture}
+                              size={64}
+                              mainAccountUser={false}
+                              user_id={note.pubkey}
+                            />
+                            <div className="box-pad-h-m fx-centered fx-col fx-start-v">
+                              <div className="fx-centered">
+                                <h4>{author.display_name || author.name}</h4>
+                                {isNip05Verified && (
+                                  <div className="checkmark-c1-24"></div>
+                                )}
+                              </div>
+                              <p className="gray-c">
+                                <Date_
+                                  toConvert={new Date(note.created_at * 1000)}
+                                  time={true}
+                                />
+                              </p>
+                            </div>
+                          </div>
+
+                          {note.isFlashNews && (
+                            <div
+                              className="sticker sticker-c1"
+                              style={{ minWidth: "max-content" }}
+                            >
+                              {t("AAg9D6c")}
+                            </div>
+                          )}
+                        </div>
+                        <div className="fit-container box-pad-h-m">
+                          {showTranslation ? translatedNote : note.note_tree}
                         </div>
 
-                        {note.isFlashNews && (
+                        {isTransEnabled && (
                           <div
-                            className="sticker sticker-c1"
-                            style={{ minWidth: "max-content" }}
+                            className="fit-container box-pad-h-m"
+                            style={{ paddingTop: ".5rem" }}
                           >
-                            {t("AAg9D6c")}
+                            {!isNoteTranslating && !showTranslation && (
+                              <p
+                                className="btn-text-gray pointer"
+                                onClick={translateNote}
+                              >
+                                {t("AdHV2qJ")}
+                              </p>
+                            )}
+                            {!isNoteTranslating && showTranslation && (
+                              <p
+                                className="btn-text-gray pointer"
+                                onClick={() => setShowTranslation(false)}
+                              >
+                                {t("AE08Wte")}
+                              </p>
+                            )}
+                            {isNoteTranslating && <LoadingDots />}
                           </div>
                         )}
-                      </div>
-                      <div className="fit-container box-pad-h-m">
-                        {showTranslation ? translatedNote : note.note_tree}
-                      </div>
-
-                      {isTransEnabled && (
-                        <div
-                          className="fit-container box-pad-h-m"
-                          style={{ paddingTop: ".5rem" }}
-                        >
-                          {!isNoteTranslating && !showTranslation && (
-                            <p
-                              className="btn-text-gray pointer"
-                              onClick={translateNote}
-                            >
-                              {t("AdHV2qJ")}
-                            </p>
-                          )}
-                          {!isNoteTranslating && showTranslation && (
-                            <p
-                              className="btn-text-gray pointer"
-                              onClick={() => setShowTranslation(false)}
-                            >
-                              {t("AE08Wte")}
-                            </p>
-                          )}
-                          {isNoteTranslating && <LoadingDots />}
-                        </div>
-                      )}
-                      <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
-                        <div
-                          className="fx-centered"
-                          style={{ columnGap: "20px" }}
-                        >
-                          <div
-                            className={`fx-centered pointer ${
-                              isLoading ? "flash" : ""
-                            }`}
-                            style={{ columnGap: "8px" }}
-                          >
-                            <div className="comment-24"></div>
-                            <div>
-                              <NumberShrink
-                                value={postActions.replies.replies.length}
-                              />
-                            </div>
-                          </div>
-                          <div
-                            className={`fx-centered pointer ${
-                              isLoading ? "flash" : ""
-                            }`}
-                            style={{ columnGap: "8px" }}
-                          >
-                            <Like
-                              isLiked={isLiked}
-                              event={note}
-                              actions={postActions}
-                            />
-                            <div
-                              className={`icon-tooltip ${
-                                isLiked ? "orange-c" : ""
-                              }`}
-                              data-tooltip={t("Alz0E9Y")}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                postActions.likes.likes.length > 0 &&
-                                  setUsersList({
-                                    title: t("Alz0E9Y"),
-                                    list: postActions.likes.likes.map(
-                                      (item) => item.pubkey
-                                    ),
-                                    extras: [],
-                                  });
-                              }}
-                            >
-                              <NumberShrink
-                                value={postActions.likes.likes.length}
-                              />
-                            </div>
-                          </div>
-                          <div
-                            className={`fx-centered pointer ${
-                              isLoading ? "flash" : ""
-                            }`}
-                            style={{ columnGap: "8px" }}
-                          >
-                            <Repost
-                              isReposted={isReposted}
-                              event={note}
-                              actions={postActions}
-                            />
-                            <div
-                              className={`icon-tooltip ${
-                                isReposted ? "orange-c" : ""
-                              }`}
-                              data-tooltip={t("Aai65RJ")}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                postActions.reposts.reposts.length > 0 &&
-                                  setUsersList({
-                                    title: t("Aai65RJ"),
-                                    list: postActions.reposts.reposts.map(
-                                      (item) => item.pubkey
-                                    ),
-                                    extras: [],
-                                  });
-                              }}
-                            >
-                              <NumberShrink
-                                value={postActions.reposts.reposts.length}
-                              />
-                            </div>
-                          </div>
-                          <div
-                            className={`fx-centered pointer ${
-                              isLoading ? "flash" : ""
-                            }`}
-                            style={{ columnGap: "8px" }}
-                          >
-                            <Quote
-                              isQuoted={isQuoted}
-                              event={note}
-                              actions={postActions}
-                            />
-                            <div
-                              className={`icon-tooltip ${
-                                isQuoted ? "orange-c" : ""
-                              }`}
-                              data-tooltip={t("AWmDftG")}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                postActions.quotes.quotes.length > 0 &&
-                                  setUsersList({
-                                    title: t("AWmDftG"),
-                                    list: postActions.quotes.quotes.map(
-                                      (item) => item.pubkey
-                                    ),
-                                    extras: [],
-                                  });
-                              }}
-                            >
-                              <NumberShrink
-                                value={postActions.quotes.quotes.length}
-                              />
-                            </div>
-                          </div>
+                        <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
                           <div
                             className="fx-centered"
-                            style={{ columnGap: "8px" }}
+                            style={{ columnGap: "20px" }}
                           >
                             <div
-                              className="icon-tooltip"
-                              data-tooltip="Tip note"
+                              className={`fx-centered pointer ${
+                                isLoading ? "flash" : ""
+                              }`}
+                              style={{ columnGap: "8px" }}
+                              onClick={() => setOpenComment(!openComment)}
                             >
-                              <Zap
-                                user={author}
-                                event={note}
-                                actions={postActions}
-                                isZapped={isZapped}
-                              />
+                              <div className="comment-24"></div>
+                              <div>
+                                <NumberShrink
+                                  value={postActions.replies.replies.length}
+                                />
+                              </div>
                             </div>
                             <div
-                              data-tooltip={t("AO0OqWT")}
-                              className={`pointer icon-tooltip ${
-                                isZapped ? "orange-c" : ""
+                              className={`fx-centered pointer ${
+                                isLoading ? "flash" : ""
                               }`}
-                              onClick={() =>
-                                postActions.zaps.total > 0 &&
-                                setUsersList({
-                                  title: t("AVDZ5cJ"),
-                                  list: postActions.zaps.zaps.map(
-                                    (item) => item.pubkey
-                                  ),
-                                  extras: postActions.zaps.zaps,
-                                })
-                              }
+                              style={{ columnGap: "8px" }}
                             >
-                              <NumberShrink value={postActions.zaps.total} />
+                              <Like
+                                isLiked={isLiked}
+                                event={note}
+                                actions={postActions}
+                              />
+                              <div
+                                className={`icon-tooltip ${
+                                  isLiked ? "orange-c" : ""
+                                }`}
+                                data-tooltip={t("Alz0E9Y")}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  postActions.likes.likes.length > 0 &&
+                                    setUsersList({
+                                      title: t("Alz0E9Y"),
+                                      list: postActions.likes.likes.map(
+                                        (item) => item.pubkey
+                                      ),
+                                      extras: [],
+                                    });
+                                }}
+                              >
+                                <NumberShrink
+                                  value={postActions.likes.likes.length}
+                                />
+                              </div>
+                            </div>
+                            <div
+                              className={`fx-centered pointer ${
+                                isLoading ? "flash" : ""
+                              }`}
+                              style={{ columnGap: "8px" }}
+                            >
+                              <Repost
+                                isReposted={isReposted}
+                                event={note}
+                                actions={postActions}
+                              />
+                              <div
+                                className={`icon-tooltip ${
+                                  isReposted ? "orange-c" : ""
+                                }`}
+                                data-tooltip={t("Aai65RJ")}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  postActions.reposts.reposts.length > 0 &&
+                                    setUsersList({
+                                      title: t("Aai65RJ"),
+                                      list: postActions.reposts.reposts.map(
+                                        (item) => item.pubkey
+                                      ),
+                                      extras: [],
+                                    });
+                                }}
+                              >
+                                <NumberShrink
+                                  value={postActions.reposts.reposts.length}
+                                />
+                              </div>
+                            </div>
+                            <div
+                              className={`fx-centered pointer ${
+                                isLoading ? "flash" : ""
+                              }`}
+                              style={{ columnGap: "8px" }}
+                            >
+                              <Quote
+                                isQuoted={isQuoted}
+                                event={note}
+                                actions={postActions}
+                              />
+                              <div
+                                className={`icon-tooltip ${
+                                  isQuoted ? "orange-c" : ""
+                                }`}
+                                data-tooltip={t("AWmDftG")}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  postActions.quotes.quotes.length > 0 &&
+                                    setUsersList({
+                                      title: t("AWmDftG"),
+                                      list: postActions.quotes.quotes.map(
+                                        (item) => item.pubkey
+                                      ),
+                                      extras: [],
+                                    });
+                                }}
+                              >
+                                <NumberShrink
+                                  value={postActions.quotes.quotes.length}
+                                />
+                              </div>
+                            </div>
+                            <div
+                              className="fx-centered"
+                              style={{ columnGap: "8px" }}
+                            >
+                              <div
+                                className="icon-tooltip"
+                                data-tooltip="Tip note"
+                              >
+                                <Zap
+                                  user={author}
+                                  event={note}
+                                  actions={postActions}
+                                  isZapped={isZapped}
+                                />
+                              </div>
+                              <div
+                                data-tooltip={t("AO0OqWT")}
+                                className={`pointer icon-tooltip ${
+                                  isZapped ? "orange-c" : ""
+                                }`}
+                                onClick={() =>
+                                  postActions.zaps.total > 0 &&
+                                  setUsersList({
+                                    title: t("AVDZ5cJ"),
+                                    list: postActions.zaps.zaps.map(
+                                      (item) => item.pubkey
+                                    ),
+                                    extras: postActions.zaps.zaps,
+                                  })
+                                }
+                              >
+                                <NumberShrink value={postActions.zaps.total} />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <OptionsDropdown
-                          options={[
-                            <div onClick={copyID} className="pointer">
-                              <p>{t("AYFAFKs")}</p>
-                            </div>,
-                            userKeys && userKeys.pub !== note.pubkey && (
-                              <>
-                                <BookmarkEvent
-                                  label={t("Ar5VgpT")}
-                                  pubkey={note.id}
-                                  kind={"1"}
-                                  itemType="e"
+                          <OptionsDropdown
+                            options={[
+                              <div onClick={copyID} className="pointer">
+                                <p>{t("AYFAFKs")}</p>
+                              </div>,
+                              userKeys && userKeys.pub !== note.pubkey && (
+                                <>
+                                  <BookmarkEvent
+                                    label={t("Ar5VgpT")}
+                                    pubkey={note.id}
+                                    kind={"1"}
+                                    itemType="e"
+                                  />
+                                </>
+                              ),
+                              <div className="fit-container fx-centered fx-start-h pointer">
+                                <ShareLink
+                                  label={t("A1IsKJ0")}
+                                  path={`/notes/${note.nEvent}`}
+                                  title={author.display_name || author.name}
+                                  description={note.content}
+                                  kind={1}
+                                  shareImgData={{
+                                    post: note,
+                                    author,
+                                    label: t("Az5ftet"),
+                                  }}
                                 />
-                              </>
-                            ),
-                            <div className="fit-container fx-centered fx-start-h pointer">
-                              <ShareLink
-                                label={t("A1IsKJ0")}
-                                path={`/notes/${note.nEvent}`}
-                                title={author.display_name || author.name}
-                                description={note.content}
-                                kind={1}
-                                shareImgData={{
-                                  post: note,
-                                  author,
-                                  label: t("Az5ftet"),
-                                }}
-                              />
-                            </div>,
-                            <div onClick={muteUnmute} className="pointer">
-                              {isMuted ? (
-                                <p className="red-c">{t("AKELUbQ")}</p>
-                              ) : (
-                                <p className="red-c">{t("AGMxuQ0")}</p>
-                              )}
-                            </div>,
-                          ]}
+                              </div>,
+                              <div onClick={muteUnmute} className="pointer">
+                                {isMuted ? (
+                                  <p className="red-c">{t("AKELUbQ")}</p>
+                                ) : (
+                                  <p className="red-c">{t("AGMxuQ0")}</p>
+                                )}
+                              </div>,
+                            ]}
+                          />
+                        </div>
+                        <CommentsSection
+                          noteTags={note.tags}
+                          id={note.id}
+                          eventPubkey={note.pubkey}
+                          nEvent={nevent}
+                          postActions={postActions}
+                          author={author}
+                          isRoot={note.isRoot}
+                          rootData={note.rootData}
+                          leaveComment={openComment}
                         />
                       </div>
-                      <CommentsSection
-                        noteTags={note.tags}
-                        id={note.id}
-                        eventPubkey={note.pubkey}
-                        nEvent={nevent}
-                        postActions={postActions}
-                        author={author}
-                        isRoot={note.isRoot}
-                        rootData={note.rootData}
-                      />
                     </div>
-                  </div>
-                )}
-                {isLoading && (
-                  <div
-                    style={{ height: "100vh" }}
-                    className="fit-container box-pad-h-m fx-centered"
-                  >
-                    <LoadingDots />
-                  </div>
-                )}
-                {!note && !isLoading && !unsupportedKind && (
-                  <div
-                    className="fit-container fx-centered fx-col"
-                    style={{ height: "100vh" }}
-                  >
-                    <h4>{t("AAbA1Xn")}</h4>
-                    <p className="gray-c p-centered">{t("Agge1Vg")}</p>
-                    <Link to="/">
-                      <button className="btn btn-normal btn-small">
-                        {t("AWroZQj")}
-                      </button>
-                    </Link>
-                  </div>
-                )}
-                {unsupportedKind && <PagePlaceholder page={"unsupported"}/> }
-              </div>
+                  )}
+                  {isLoading && (
+                    <div
+                      style={{ height: "100vh" }}
+                      className="fit-container box-pad-h-m fx-centered"
+                    >
+                      <LoadingDots />
+                    </div>
+                  )}
+                  {!note && !isLoading && !unsupportedKind && (
+                    <div
+                      className="fit-container fx-centered fx-col"
+                      style={{ height: "100vh" }}
+                    >
+                      <h4>{t("AAbA1Xn")}</h4>
+                      <p className="gray-c p-centered">{t("Agge1Vg")}</p>
+                      <Link to="/">
+                        <button className="btn btn-normal btn-small">
+                          {t("AWroZQj")}
+                        </button>
+                      </Link>
+                    </div>
+                  )}
+                  {unsupportedKind && <PagePlaceholder page={"unsupported"} />}
+                </div>
+              )}
+              {isMuted && (
+                <PagePlaceholder page={"muted-user"} onClick={muteUnmute} />
+              )}
             </main>
           </div>
         </div>

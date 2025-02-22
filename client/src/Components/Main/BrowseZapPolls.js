@@ -10,7 +10,7 @@ import { getUser } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
 
-export default function BrowsePolls({ setNevent, exit }) {
+export default function BrowseZapPolls({ setNevent, exit }) {
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
 
@@ -19,7 +19,7 @@ export default function BrowsePolls({ setNevent, exit }) {
   const [comPolls, setComPolls] = useState([]);
   const [myPollsLE, setMyPollsLE] = useState(undefined);
   const [comPollsLE, setComPollsLE] = useState(undefined);
-  const [selectedOption, setSelectedOption] = useState("self");
+  const [selectedOption, setSelectedOption] = useState("com");
   const [isLoading, setIsLoading] = useState(false);
   const [sub, setSub] = useState(false);
 
@@ -134,7 +134,7 @@ export default function BrowsePolls({ setNevent, exit }) {
       }}
     >
       <div
-        className="fit-height overlay-container fx-centered fx-start-v fx-start-h fx-col"
+        className="fit-height overlay-container fx-centered fx-start-v fx-start-h fx-col bg-sp"
         style={{
           width: "min(100%,700px)",
           overflow: "scroll",
@@ -148,19 +148,19 @@ export default function BrowsePolls({ setNevent, exit }) {
         >
           <div
             className={`list-item fx-centered fx ${
-              selectedOption === "self" ? "selected-list-item" : ""
-            }`}
-            onClick={() => handleContentSource("self")}
-          >
-            <p>{t("AQyoumZ")}</p>
-          </div>
-          <div
-            className={`list-item fx-centered fx ${
               selectedOption === "com" ? "selected-list-item" : ""
             }`}
             onClick={() => handleContentSource("com")}
           >
             <p>{t("ADAU7C1")}</p>
+          </div>
+          <div
+            className={`list-item fx-centered fx ${
+              selectedOption === "self" ? "selected-list-item" : ""
+            }`}
+            onClick={() => handleContentSource("self")}
+          >
+            <p>{t("AQyoumZ")}</p>
           </div>
           <div className="close" style={{ position: "static" }} onClick={exit}>
             <div></div>
@@ -171,7 +171,7 @@ export default function BrowsePolls({ setNevent, exit }) {
             myPolls.map((poll) => {
               return (
                 <div
-                  className="fit-container box-pad-h-m box-pad-v sc-s-18 fx-centered fx-col"
+                  className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-col"
                   key={poll.id}
                 >
                   <div className="fit-container fx-scattered">
@@ -188,6 +188,15 @@ export default function BrowsePolls({ setNevent, exit }) {
                 </div>
               );
             })}
+          {selectedOption === "self" && myPolls.length === 0 && !isLoading && (
+            <div
+              className="fx-centered fit-container fx-col"
+              style={{ height: "400px" }}
+            >
+              <h4>{t("Axpo9Sw")}</h4>
+              <p className="gray-c p-centered">{t("A4w03gs")}</p>
+            </div>
+          )}
           {selectedOption === "com" &&
             comPolls.map((poll) => {
               return (

@@ -22,6 +22,7 @@ import Gifs from "../Gifs";
 import Emojis from "../Emojis";
 import NotePreview from "./NotePreview";
 import { useTranslation } from "react-i18next";
+import AddPolls from "./AddPolls";
 
 export default function WriteNote({
   widget,
@@ -31,6 +32,7 @@ export default function WriteNote({
   content,
   linkedEvent,
   isQuote = false,
+  triggerCP = false
 }) {
   const navigateTo = useNavigate();
   const dispatch = useDispatch();
@@ -459,7 +461,7 @@ export default function WriteNote({
         </div>
       )}
       <div
-        className="fit-container fx-centered fx-start-v fx-stretch sc-s-18 box-pad-h-m box-pad-v-m"
+        className="fit-container fx-centered fx-start-v fx-stretch sc-s-18 box-pad-h-m box-pad-v-m bg-sp"
         style={{
           overflow: "visible",
           maxHeight: "90vh",
@@ -541,7 +543,7 @@ export default function WriteNote({
                     className="p-small box-pad-v-s box-pad-h-s pointer fx-centered"
                     style={{
                       padding: ".125rem .25rem",
-                      border: "1px solid var(--gray)",
+                      border: "1.5px solid var(--gray)",
                       borderRadius: "6px",
                       backgroundColor: showGIFs
                         ? "var(--black)"
@@ -565,6 +567,7 @@ export default function WriteNote({
                 <div onClick={() => setShowSmartWidgets(true)}>
                   <div className="smart-widget-24"></div>
                 </div>
+                <AddPolls setPollAddr={handleInsertTextInPosition} triggerCP={triggerCP}/>
               </div>
               <div className="fx-centered">
                 {exit && (
