@@ -32,7 +32,7 @@ export default function HomeCarouselContentSuggestions({ content }) {
   return (
     <div className="fit-container box-marg-s">
       <div className="fit-container fx-scattered box-pad-v-s ">
-        <p className="gray-c box-pad-h-m">{t("Suggestions")}</p>
+        <p className="gray-c box-pad-h-m">{t("AoO5zem")}</p>
         {userKeys && (
           <OptionsDropdown
             options={[
