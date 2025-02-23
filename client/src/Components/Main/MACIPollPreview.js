@@ -9,7 +9,7 @@ export default function MACIPollPreview({ url }) {
   const [round, setRound] = useState(false);
 
   useEffect(() => {
-    getRound();
+    if (window.keplr) getRound();
   }, []);
 
   const getRound = async () => {
@@ -35,6 +35,7 @@ export default function MACIPollPreview({ url }) {
     }
   };
 
+  if (!window.keplr) return <LinkPreview url={url} />;
   if (isLoading)
     return (
       <div
@@ -43,7 +44,6 @@ export default function MACIPollPreview({ url }) {
       ></div>
     );
   if (!round && !isLoading) return <LinkPreview url={url} />;
-
   return (
     <div>
       <MACIPollsComp poll={round} url={url} />

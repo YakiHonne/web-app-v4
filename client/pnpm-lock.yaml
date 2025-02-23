@@ -38,8 +38,8 @@ importers:
         specifier: ^0.0.3
         version: 0.0.3
       '@dorafactory/maci-sdk':
-        specifier: ^0.0.13
-        version: 0.0.13(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
+        specifier: ^0.0.20
+        version: 0.0.20(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@getalby/sdk':
         specifier: ^3.6.0
         version: 3.9.0(typescript@5.7.3)
@@ -1232,8 +1232,8 @@ packages:
     resolution: {integrity: sha512-ACQef7T0fj+tHT0tKV8iUOS1z4hCAqFYaPddM7Mvr3JQ3DbZpF4dZilyDkysKqRPdqwAwgPjWDyrgxXcDMeSsw==}
     engines: {node: '>=12.0.0'}
 
-  '@dorafactory/maci-sdk@0.0.13':
-    resolution: {integrity: sha512-qEJa9EMXi3r3ualAWkZSSeSYWgOVZM5wxixbFR+zGyVGCtJPhridNTbVx8o23ZeWPme4kYMhowf1DPNUm/PKJA==}
+  '@dorafactory/maci-sdk@0.0.20':
+    resolution: {integrity: sha512-kBW0hDn1TgEElNux9IbDqAPj44/GOZRLzNpzEkuXkwMprwZMSsutZDKk6bilYj/9NaqZnkgk1nQS50M4xC1+MQ==}
     engines: {node: '>=18'}
 
   '@emotion/is-prop-valid@1.3.1':
@@ -10724,7 +10724,7 @@ snapshots:
       ffjavascript: 0.1.0
       web3-utils: 1.10.4
 
-  '@dorafactory/maci-sdk@0.0.13(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)':
+  '@dorafactory/maci-sdk@0.0.20(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@cosmjs/amino': 0.32.4
       '@cosmjs/cosmwasm-stargate': 0.32.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
