@@ -1150,7 +1150,7 @@ main {
 /* .w-md-editor-text *, .w-md-editor-preview * {
     font-family: 'DM sans', sans-serif !important;
 } */
-.w-md-editor-text *, .wmde-markdown-color pre code, .w-md-editor-text-input, .w-md-editor-text {
+.w-md-editor-text *, .wmde-markdown-color pre code, .w-md-editor-text .w-md-editor-text-input, .w-md-editor-text {
     /* font-family: 'DM sans', sans-serif !important;
     font-size: var(--16) !important;
     font-weight: 300 !important; */

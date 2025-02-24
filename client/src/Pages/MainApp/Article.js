@@ -20,6 +20,7 @@ import {
   getAuthPubkeyFromNip05,
   getComponent,
   shuffleArray,
+  straightUp,
 } from "../../Helpers/Helpers";
 import LoadingScreen from "../../Components/LoadingScreen";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
@@ -122,7 +123,7 @@ export default function Article() {
       }
     };
     checkURL();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -160,6 +161,7 @@ export default function Article() {
     const fetchData = async () => {
       try {
         if (bannedList.includes(naddrData.pubkey)) customHistory.push("/");
+        straightUp()
         let tempAuth = false;
         let tempArt = false;
         let lastCreatedAtInUser = 0;
@@ -558,12 +560,12 @@ export default function Article() {
                               : post.description}
                           </div>
                         )}
-                        {post.items?.length > 0 && (
+                        {post.tTags?.length > 0 && (
                           <div
                             className="fx-centered fx-start-h fx-wrap"
                             style={{ marginLeft: 0 }}
                           >
-                            {post.items?.map((tag, index) => {
+                            {post.tTags?.map((tag, index) => {
                               return (
                                 <Link
                                   key={`${tag}-${index}`}

@@ -96,7 +96,7 @@ const isVid = (url) => {
 const isImageUrl = async (url) => {
   try {
     return new Promise((resolve, reject) => {
-      if (/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url))
+      if (url.startsWith("data:image") || /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url))
         resolve({ type: "image" });
       if (/(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(url))
         resolve({ type: "video" });
@@ -147,7 +147,7 @@ const getNoteTree = async (
     if (el === "\n") {
       finalTree.push(<br key={key} />);
     } else if (
-      /(https?:\/\/)/i.test(el) &&
+      (/(https?:\/\/)/i.test(el) || el.startsWith("data:image")) &&
       !el.includes("https://yakihonne.com/smart-widget-checker?naddr=") &&
       !el.includes("https://vota.dorafactory.org/round/") && 
       !el.includes("https://vota-test.dorafactory.org/round/")
@@ -1468,7 +1468,6 @@ const extractNip19 = (note) => {
       processedNote.push(word);
       continue;
     }
-
     let decoded = decodeNip19(word);
     if (decoded) {
       tags.push(decoded.tag);
@@ -1481,7 +1480,6 @@ const extractNip19 = (note) => {
       processedNote.push(word);
     }
   }
-
   return {
     tags: removeObjDuplicants(tags),
     content: processedNote.join(""),

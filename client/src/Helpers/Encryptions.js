@@ -211,6 +211,7 @@ const getParsedRepEvent = (event) => {
       d: "",
       client: "",
       items: [],
+      tTags: [],
       seenOn: event.onRelays
         ? [...new Set(event.onRelays.map((relay) => relay.url))]
         : [],
@@ -249,6 +250,11 @@ const getParsedRepEvent = (event) => {
         tag[0] === "t"
       ) {
         content.items.push(tag[1]);
+      }
+      if (
+        tag[0] === "t"
+      ) {
+        content.tTags.push(tag[1]);
       }
     }
     content.naddr = content.d
