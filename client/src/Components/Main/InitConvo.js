@@ -102,7 +102,6 @@ export default function InitiConvo({ exit, receiver = false }) {
         sender_event,
         receiver_event
       );
-      console.log("first");
       if (response) {
         let action_key =
           selectedPerson ===
