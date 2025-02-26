@@ -16,7 +16,7 @@ import { updateYakiChestStats } from "../../Helpers/Controlers";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { NDKEvent } from "@nostr-dev-kit/ndk";
+import { NDKEvent, NDKRelay, NDKRelaySet } from "@nostr-dev-kit/ndk";
 import { useTranslation } from "react-i18next";
 
 export default function InitiConvo({ exit, receiver = false }) {
@@ -102,7 +102,7 @@ export default function InitiConvo({ exit, receiver = false }) {
         sender_event,
         receiver_event
       );
-
+      console.log("first");
       if (response) {
         let action_key =
           selectedPerson ===
@@ -213,7 +213,14 @@ export default function InitiConvo({ exit, receiver = false }) {
     try {
       let ev1 = new NDKEvent(ndkInstance, event1);
       let ev2 = new NDKEvent(ndkInstance, event2);
-      let [res1, res2] = await Promise.race([ev1.publish(), ev2.publish()]);
+      const ndkRelays = relays.map((_) => {
+        return new NDKRelay(_, undefined, ndkInstance);
+      });
+      const ndkRelaysSet = new NDKRelaySet(ndkRelays, ndkInstance);
+      let [res1, res2] = await Promise.race([
+        ev1.publish(ndkRelaysSet),
+        ev2.publish(ndkRelaysSet),
+      ]);
 
       dispatch(
         setToast({

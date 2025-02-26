@@ -365,7 +365,6 @@ const Cashier = ({
           ],
           { groupable: false, cacheUsage: "ONLY_RELAY" }
         );
-
         sub.on("event", (event) => {
           setReceivedEvent(event.rawEvent());
           setConfirmation("confirmed");
