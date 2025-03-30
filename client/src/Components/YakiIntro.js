@@ -192,6 +192,7 @@ const Banner = ({ exit }) => {
 - Custom reactions are here! Choose your preferred emoji to react to notes and other content.
 - Improved profile organization with notes and replies now displayed separately.
 - Enhanced DM filtering by time, allowing you to view only recent messages or browse further back.
+- Adding the ability to zap notes directly from the notifications center.
 - Manual cache clearing from settings to optimize web app performance.
 - Resolved issue preventing users from removing custom media uploader servers.
 - Expanded export data, including more relevant details in credential and wallet files.
