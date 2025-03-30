@@ -15,6 +15,7 @@ export default function AddYakiWallet({ refresh }) {
   const [showMore, setShowMore] = useState(false);
   const [showErrorMessage, setShowMessageError] = useState(false);
   const [showEmptyUNMessage, setShowMessageEmtpyUN] = useState(false);
+  const [showInvalidMessage, setShowInvalidMessage] = useState(false);
   const [userName, setUserName] = useState(
     userMetadata?.display_name || userMetadata?.name || ""
   );
@@ -22,7 +23,7 @@ export default function AddYakiWallet({ refresh }) {
   const handleCreateWallet = async (e) => {
     try {
       e.stopPropagation();
-      if (isLoading) return;
+      if (isLoading || showInvalidMessage) return;
       if (!userName) {
         setShowMessageEmtpyUN(true);
         return;
@@ -32,7 +33,8 @@ export default function AddYakiWallet({ refresh }) {
         username: userName?.toLowerCase(),
       });
       let toSave = [
-        `Address: ${url.data.lightningAddress}`,
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---"`Address: ${url.data.lightningAddress}`,
         `NWC secret: ${url.data.connectionSecret}`,
       ];
       downloadAsFile(
@@ -91,8 +93,11 @@ export default function AddYakiWallet({ refresh }) {
 
   const handleInputField = (e) => {
     let value = e.target.value;
+    let isValid = /^[a-zA-Z0-9]+$/.test(value);
     if (showErrorMessage) setShowMessageError(false);
     if (showEmptyUNMessage) setShowMessageEmtpyUN(false);
+    if (!value || (isValid && showInvalidMessage)) setShowInvalidMessage(false);
+    if (value && !isValid && !showInvalidMessage) setShowInvalidMessage(true);
     setUserName(value);
   };
 
@@ -116,13 +121,11 @@ export default function AddYakiWallet({ refresh }) {
             className="yaki-logomark"
             style={{ width: "48px", height: "48px" }}
           ></div>
-          {/* {!isLoading && ( */}
+
           <div>
             <p>{t("AXj1AXD")}</p>
             <p className="gray-c p-medium">{t("AzefMgD")}</p>
           </div>
-          {/* )} */}
-          {/* {isLoading && <LoadingDots />} */}
         </div>
         <div className="box-pad-h-s">
           <div
@@ -143,7 +146,7 @@ export default function AddYakiWallet({ refresh }) {
               onChange={handleInputField}
               style={{
                 borderColor:
-                  showErrorMessage || showEmptyUNMessage
+                  showErrorMessage || showEmptyUNMessage || showInvalidMessage
                     ? "var(--red-main)"
                     : "",
               }}
@@ -160,6 +163,11 @@ export default function AddYakiWallet({ refresh }) {
           {showEmptyUNMessage && (
             <div className="fit-container box-pad-h-m">
               <p className="red-c p-medium">{t("AhQtS0K")}</p>
+            </div>
+          )}
+          {showInvalidMessage && (
+            <div className="fit-container box-pad-h-m">
+              <p className="red-c p-medium">{t("AqSxggD")}</p>
             </div>
           )}
           <button

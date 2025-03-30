@@ -15,7 +15,6 @@ import { webln } from "@getalby/sdk";
 import { decode } from "light-bolt11-decoder";
 import {
   getWallets,
-  redirectToLogin,
   updateWallets,
 } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
@@ -227,7 +226,6 @@ export default function ZapTip({
 const Cashier = ({
   recipientLNURL,
   recipientPubkey,
-  senderPubkey,
   callback,
   recipientInfo,
   aTag,

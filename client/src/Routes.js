@@ -34,6 +34,10 @@ import Explore from "./Pages/MainApp/Explore";
 import Dashboard from "./Pages/MainApp/Dashboard";
 import Search from "./Pages/MainApp/Search";
 import MACIPollStarter from "./Pages/MainApp/MACIPollStarter";
+import SmartWidgetsV2 from "./Pages/MainApp/SmartWidgetsV2";
+import SmartWidgetV2 from "./Pages/MainApp/SmartWidgetV2";
+import SmartWidgetCheckerV2 from "./Pages/MainApp/SmartWidgetCheckerV2";
+import SWhome from "./Pages/MainApp/SWhome";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
@@ -48,9 +52,13 @@ const routes = [
   { path: "/curations/:id", element: <Curation /> },
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },
   { path: "/write-article", element: <Writing /> },
-  { path: "/smart-widget-builder", element: <SmartWidget /> },
-  { path: "/smart-widgets", element: <SmartWidgets /> },
-  { path: "/smart-widget-checker", element: <SmartWidgetChecker /> },
+  // { path: "/smart-widget-builder", element: <SmartWidget /> },
+  { path: "/smart-widget-builder", element: <SmartWidgetV2 /> },
+  // { path: "/smart-widgets", element: <SmartWidgets /> },
+  { path: "/smart-widgets", element: <SWhome /> },
+  { path: "/smart-widgets-v2", element: <SmartWidgetsV2 /> },
+  { path: "/smart-widget-checker", element: <SmartWidgetCheckerV2 /> },
+  // { path: "/smart-widget-checker", element: <SmartWidgetChecker /> },
   { path: "/settings", element: <Settings /> },
   { path: "/settings/profile", element: <ProfileEdit /> },
   { path: "/article/:id", element: <Article /> },

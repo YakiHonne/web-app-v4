@@ -300,6 +300,7 @@ export default function Curation() {
           title={usersList.title}
           list={usersList.list}
           extras={usersList.extras}
+          extrasType={usersList.extrasType}
         />
       )}
 
@@ -625,7 +626,8 @@ export default function Curation() {
                               list: postActions.likes.likes.map(
                                 (item) => item.pubkey
                               ),
-                              extras: [],
+                              extras: postActions.likes.likes,
+                              extrasType: "reaction",
                             });
                         }}
                       >

@@ -1,7 +1,13 @@
-import NDK, { getRelayListForUsers } from "@nostr-dev-kit/ndk";
+import NDK, {
+  getRelayListForUsers,
+  NDKEvent,
+  NDKRelay,
+  NDKRelaySet,
+} from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "./NDKInstance";
 import {
   downloadAsFile,
+  getBech32,
   getEmptyuserMetadata,
   getuserMetadata,
   removeEventsDuplicants,
@@ -31,6 +37,7 @@ import {
 import { finalizeEvent } from "nostr-tools";
 import { translationServicesEndpoints } from "../Content/TranslationServices";
 import axios from "axios";
+import relaysOnPlatform from "../Content/Relays";
 
 const ConnectNDK = async (relays) => {
   try {
@@ -226,8 +233,12 @@ const downloadAllKeys = () => {
     .map((account) => {
       return [
         `Account username: ${account.display_name || account.name}`,
-        `Private key: ${account?.userKeys?.sec}`,
-        `Public key: ${account?.userKeys?.pub}`,
+        `Private key: ${
+          account?.userKeys?.sec
+            ? getBech32("nsec", account?.userKeys?.sec)
+            : ""
+        }`,
+        `Public key: ${getBech32("npub", account?.userKeys?.pub)}`,
       ];
     })
     .map((_, index, arr) => {
@@ -240,7 +251,15 @@ const downloadAllKeys = () => {
       ];
     })
     .flat();
-  downloadAsFile(toSave.join("\n"), "text/plain", `accounts-credentials.txt`);
+  downloadAsFile(
+    [
+      "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+      "---",
+      ...toSave,
+    ].join("\n"),
+    "text/plain",
+    `accounts-credentials.txt`
+  );
 };
 
 const handleSwitchAccount = (account) => {
@@ -263,11 +282,19 @@ const userLogout = async (pubkey) => {
   );
   if (accountIndex !== -1) {
     let isSec = accounts[accountIndex]?.userKeys?.sec ? true : false;
-    console.log(accounts[accountIndex]?.userKeys?.sec);
     if (isSec) {
       let toSave = [
-        `Private key: ${accounts[accountIndex]?.userKeys?.sec}`,
-        `Public key: ${accounts[accountIndex]?.userKeys?.pub}`,
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---",
+        `Private key: ${
+          accounts[accountIndex]?.userKeys?.sec
+            ? getBech32("nsec", accounts[accountIndex]?.userKeys?.sec)
+            : ""
+        }`,
+        `Public key: ${getBech32(
+          "npub",
+          accounts[accountIndex]?.userKeys?.pub
+        )}`,
       ];
       downloadAsFile(
         toSave.join("\n"),
@@ -472,6 +499,14 @@ const getEventStatAfterEOSE = (
       { id: reaction.id, pubkey: reaction.pubkey, amount: extra },
     ]);
     stats[kind].total = stats[kind].total + extra;
+  } else if (reaction.kind === 7) {
+    let content = !reaction.content.includes(":")
+      ? reaction.content
+      : reaction.tags.find((tag) => `:${tag[1]}:` === reaction.content)[2] ||
+        "+";
+    stats[kind][kind] = removeObjDuplicants(stats[kind][kind], [
+      { id: reaction.id, pubkey: reaction.pubkey, content },
+    ]);
   } else
     stats[kind][kind] = removeObjDuplicants(stats[kind][kind], [
       { id: reaction.id, pubkey: reaction.pubkey },
@@ -677,6 +712,31 @@ const revertContent = (rawContent, specialContent) => {
   return raw;
 };
 
+const publishEvent = async (event, relays = relaysOnPlatform) => {
+  return new Promise((resolve) => {
+    let ev = new NDKEvent(ndkInstance, event);
+    const ndkRelays = relays.map((_) => {
+      return new NDKRelay(_, undefined, ndkInstance);
+    });
+    const ndkRelaysSet = new NDKRelaySet(ndkRelays, ndkInstance);
+    ev.publish(ndkRelaysSet);
+
+    let sub = ndkInstance.subscribe([{ ids: [event.id] }], {
+      cacheUsage: "CACHE_FIRST",
+    });
+
+    sub.on("event", () => {
+      sub.stop();
+      console.log("first")
+      resolve(true);
+    });
+    let timer = setTimeout(() => {
+      clearTimeout(timer);
+      resolve(false);
+    }, 3000);
+  });
+};
+
 export {
   ConnectNDK,
   aggregateUsers,
@@ -697,4 +757,5 @@ export {
   InitEvent,
   getEventStatAfterEOSE,
   translate,
+  publishEvent
 };

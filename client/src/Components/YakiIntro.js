@@ -181,7 +181,7 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated Feb 22, 2025
+                  Last updated March 30, 2025
                 </p>
               </div>
               <p className="orange-c p-medium">
@@ -189,12 +189,13 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <p>{`
-- Zap polls can now be added directly from the list or created instantly within notes and comments.
-- Muting users is now more reliable.
-- Users can download and export their NWC secret for wallets.
-- Wallets and account credentials are automatically saved upon signup and logout.
-- Faster login and signup when interacting with Yakihonne while logged out.
-- Bug fixes and performance optimizations for improved reliability.
+- Custom reactions are here! Choose your preferred emoji to react to notes and other content.
+- Improved profile organization with notes and replies now displayed separately.
+- Enhanced DM filtering by time, allowing you to view only recent messages or browse further back.
+- Manual cache clearing from settings to optimize web app performance.
+- Resolved issue preventing users from removing custom media uploader servers.
+- Expanded export data, including more relevant details in credential and wallet files.
+- General bug fixes and performance improvements.
 `}</p>
           </div>
           {content.map((card, index) => {

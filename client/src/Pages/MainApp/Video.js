@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import LoadingScreen from "../../Components/LoadingScreen";
 import { nip19 } from "nostr-tools";
 import {
@@ -254,6 +254,7 @@ export default function Video() {
           title={usersList.title}
           list={usersList.list}
           extras={usersList.extras}
+          extrasType={usersList.extrasType}
         />
       )}
       {showAddArticleToCuration && (
@@ -518,7 +519,8 @@ export default function Video() {
                               list: postActions.likes.likes.map(
                                 (item) => item.pubkey
                               ),
-                              extras: [],
+                              extras: postActions.likes.likes,
+                              extrasType: "reaction",
                             });
                         }}
                       >

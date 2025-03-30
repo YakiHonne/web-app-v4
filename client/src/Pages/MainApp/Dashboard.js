@@ -13,6 +13,7 @@ import { getSubData } from "../../Helpers/Controlers";
 import {
   convertDate,
   getParsedRepEvent,
+  getParsedSW,
   sortEvents,
   timeAgo,
 } from "../../Helpers/Encryptions";
@@ -144,7 +145,7 @@ const getLocalDrafts = () => {
   try {
     const artDraft = getArticleDraft();
     const noteDraft = getNoteDraft("root");
-    let smartWidgetDraft = localStorage.getItem("sw-current-workspace");
+    let smartWidgetDraft = localStorage.getItem("swv2-cdraft");
     try {
       smartWidgetDraft = smartWidgetDraft
         ? JSON.parse(smartWidgetDraft)
@@ -157,13 +158,14 @@ const getLocalDrafts = () => {
       noteDraft: noteDraft
         ? { kind: 11, content: noteDraft, created_at: false }
         : false,
-      smartWidgetDraft: smartWidgetDraft
-        ? {
-            kind: 300311,
-            content: smartWidgetDraft,
-            created_at: smartWidgetDraft.last_updated,
-          }
-        : false,
+      smartWidgetDraft: false,
+      // smartWidgetDraft: smartWidgetDraft
+      //   ? {
+      //       kind: 300331,
+      //       content: smartWidgetDraft,
+      //       created_at: smartWidgetDraft.created_at,
+      //     }
+      //   : false,
       artDraft: artDraft.default
         ? false
         : {
@@ -221,9 +223,9 @@ export default function Dashboard() {
         axios.get(`https://api.nostr.band/v0/stats/profile/${pubkey}`),
         sleepTimer(),
       ]);
-      return stats
+      return stats;
     } catch (err) {
-      return false
+      return false;
     }
   };
 
@@ -431,6 +433,9 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
           if (event.kind === 1) {
             return event;
           }
+          if ([30033].includes(event.kind)) {
+            return getParsedSW(event);
+          }
           return getParsedRepEvent(event);
         });
         dispatchEvents({ type: contentFrom, events: parsedEvents });
@@ -449,8 +454,11 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
     let subscription = ndkInstance.subscribe([{ ...filter, since }]);
     subscription.on("event", (event) => {
       let tempEvent = { ...event.rawEvent() };
-      if (![1, 6].includes(event.kind)) {
+      if (![1, 6, 30033].includes(event.kind)) {
         tempEvent = getParsedRepEvent(event.rawEvent());
+      }
+      if ([30033].includes(event.kind)) {
+        tempEvent = getParsedSW(event.rawEvent());
       }
       dispatchEvents({ type: contentFrom, events: [tempEvent] });
     });
@@ -499,7 +507,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
     if (contentFrom === "drafts") filter.kinds = [30024];
     if (contentFrom === "curations") filter.kinds = [30004, 30005];
     if (contentFrom === "videos") filter.kinds = [34235];
-    if (contentFrom === "widgets") filter.kinds = [30031];
+    if (contentFrom === "widgets") filter.kinds = [30033];
     if (contentFrom === "notes") filter.kinds = [1, 6];
     return filter;
   };
@@ -644,14 +652,14 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
           >
             {t("AStkKfQ")}
           </div>
-          <div
+          {/* <div
             className={`list-item-b fx-centered fx-shrink ${
               contentFrom === "widgets" ? "selected-list-item-b" : ""
             }`}
             onClick={() => switchContentType("widgets")}
           >
             {t("A2mdxcf")}
-          </div>
+          </div> */}
         </div>
         <div className="fit-container fx-scattered  box-pad-v box-pad-h">
           <h3 className="p-caps">
@@ -1256,13 +1264,13 @@ const ContentCard = ({
   return (
     <>
       {[1, 6].includes(event.kind) && <NoteCard event={event} />}
-      {[11, 300311].includes(event.kind) && (
+      {[11, 300331].includes(event.kind) && (
         <DraftCardOthers event={event} setPostToNote={setPostToNote} />
       )}
       {event.kind === 30024 && (
         <DraftCard event={event} setDeleteEvent={setDeleteEvent} />
       )}
-      {[30004, 30005, 30023, 34235, 30031].includes(event.kind) && (
+      {[30004, 30005, 30023, 34235, 30033].includes(event.kind) && (
         <RepCard
           event={event}
           setDeleteEvent={setDeleteEvent}
@@ -1376,7 +1384,7 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
       setPostToNote("");
       return;
     }
-    if (event.kind === 300311) {
+    if (event.kind === 300331) {
       customHistory.push("/smart-widget-builder");
     }
   };
@@ -1391,8 +1399,8 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
     30005: t("Ac6UnVb"),
     34235: t("AVdmifm"),
     34236: t("AVdmifm"),
-    300311: t("AkvXmyz"),
-    30031: t("AkvXmyz"),
+    300331: t("AkvXmyz"),
+    30033: t("AkvXmyz"),
   };
   return (
     <div
@@ -1408,7 +1416,21 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
       <div className="fx-centered fx-start-v">
         <div className="round-icon">
           {event.kind === 11 && <div className="note-24"></div>}
-          {event.kind === 300311 && <div className="smart-widget-24"></div>}
+          {event.kind === 300331 && !event.content.image && (
+            <div className="smart-widget-24"></div>
+          )}
+
+          {event.kind === 300331 && event.content.image && (
+            <img
+              src={event.content.image}
+              className="sc-s fx-centered"
+              style={{
+                width: "45px",
+                height: "45px",
+                objectFit: "cover",
+              }}
+            />
+          )}
         </div>
 
         <div className="fx-centered fx-col fx-start-h fx-start-v">
@@ -1426,10 +1448,9 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
           </div>
           <p className="p-two-lines">
             {event.kind === 11 && <>{compactContent(event.content)}</>}
-            {event.kind === 300311 && (
+            {event.kind === 300331 && (
               <>
-                <span className="c1-c">{event.content.components.length}</span>{" "}
-                {t("A7Mh9O6")}
+                <span>{t("AkvXmyz")}</span>
               </>
             )}
           </p>
@@ -1466,7 +1487,7 @@ const RepCard = ({
     );
   };
   const getOptions = () => {
-    if (event.kind === 30031) {
+    if (event.kind === 30033) {
       return [
         <div
           className="fit-container"
@@ -1488,7 +1509,7 @@ const RepCard = ({
           to={"/smart-widget-builder"}
           state={{
             ops: "clone",
-            metadata: { ...{ metadata: JSON.parse(event.content), ...event } },
+            metadata: { ...event },
           }}
         >
           <p>{t("AyWVBDx")}</p>
@@ -1506,7 +1527,7 @@ const RepCard = ({
             state={{
               ops: "edit",
               metadata: {
-                ...{ metadata: JSON.parse(event.content), ...event },
+                ...event,
               },
             }}
           >
@@ -1625,8 +1646,8 @@ const RepCard = ({
     30005: t("Ac6UnVb"),
     34235: t("AVdmifm"),
     34236: t("AVdmifm"),
-    300311: t("AkvXmyz"),
-    30031: t("AkvXmyz"),
+    300331: t("AkvXmyz"),
+    30033: t("AkvXmyz"),
   };
 
   return (
@@ -1651,7 +1672,7 @@ const RepCard = ({
             )}
             {[30023].includes(event.kind) && <div className="posts-24"></div>}
             {[34235].includes(event.kind) && <div className="play-24"></div>}
-            {[30031].includes(event.kind) && (
+            {[30033].includes(event.kind) && (
               <div className="smart-widget-24"></div>
             )}
           </div>
@@ -1714,7 +1735,7 @@ const NoteCard = ({ event }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const userMetadata = useSelector((state) => state.userMetadata);
-  const isRepost = event.kind === 6 ? JSON.parse(event.content) : event;
+  const isRepost = event.kind === 6 ? event : event;
   const { postActions } = useNoteStats(isRepost.id, isRepost.pubkey);
   const isFlashNews = isRepost.tags.find(
     (tag) => tag[0] === "l" && tag[1] === "FLASH NEWS"
@@ -2576,67 +2597,6 @@ const ManageInterest = ({ exit }) => {
                       )}
                     </Draggable>
                   );
-                  // return (
-                  //   <div
-                  //     className="fx-scattered  sc-s-18 box-pad-h-m box-pad-v-m fit-container"
-                  //     style={{
-                  //       overflow: "visible",
-                  //       backgroundColor: item.toDelete
-                  //         ? "var(--red-side)"
-                  //         : "transparent",
-                  //       borderBottom: "1px solid var(--very-dim-gray)",
-                  //       gap: 0,
-                  //     }}
-                  //     key={index}
-                  //   >
-                  //     <div className="fx-centered">
-                  //       <div
-                  //         style={{
-                  //           minWidth: `38px`,
-                  //           aspectRatio: "1/1",
-                  //           position: "relative",
-                  //         }}
-                  //         className="sc-s-18 fx-centered"
-                  //       >
-                  //         <div
-                  //           style={{
-                  //             position: "absolute",
-                  //             left: 0,
-                  //             top: 0,
-                  //             zIndex: 2,
-                  //             backgroundImage: `url(${item.icon})`,
-                  //           }}
-                  //           className="bg-img cover-bg  fit-container fit-height"
-                  //         ></div>
-                  //         <p
-                  //           className={"p-bold p-caps p-big"}
-                  //           style={{ position: "relative", zIndex: 1 }}
-                  //         >
-                  //           {item.item.charAt(0)}
-                  //         </p>
-                  //       </div>
-                  //       <p className="p-caps">{item.item}</p>
-                  //     </div>
-                  //     <div>
-                  //       {!item.toDelete && (
-                  //         <div
-                  //           onClick={() => handleItemInList(false, index)}
-                  //           className="round-icon-small"
-                  //         >
-                  //           <div className="trash"></div>
-                  //         </div>
-                  //       )}
-                  //       {item.toDelete && (
-                  //         <div
-                  //           onClick={() => handleItemInList(true, index)}
-                  //           className="round-icon-small"
-                  //         >
-                  //           <div className="undo"></div>
-                  //         </div>
-                  //       )}
-                  //     </div>
-                  //   </div>
-                  // );
                 })}
                 {provided.placeholder}
               </div>
@@ -2644,8 +2604,6 @@ const ManageInterest = ({ exit }) => {
           </Droppable>
         </DragDropContext>
       </div>
-
-      {/* <p className="p-big p-bold">Suggestions</p> */}
       <InterestSuggestionsCards
         list={interests.map((_) => _.item)}
         addItemToList={handleItemsFromSuggestion}

@@ -223,6 +223,12 @@ importers:
       remark-parse:
         specifier: ^10.0.1
         version: 10.0.2
+      smart-widget-handler:
+        specifier: ^1.0.27
+        version: 1.0.27
+      smart-widget-previewer:
+        specifier: ^1.0.18
+        version: 1.0.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       unified:
         specifier: ^10.1.2
         version: 10.1.2
@@ -8196,6 +8202,15 @@ packages:
   slash@4.0.0:
     resolution: {integrity: sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==}
     engines: {node: '>=12'}
+
+  smart-widget-handler@1.0.27:
+    resolution: {integrity: sha512-VMIEDH0fXhs8XE67UxkjLIOBpR7NZpKdqEibiVHI9Vch15Y3xE7OtZ0vpS8VZkLWxyC2WvFtmLGJG18pkh3QkQ==}
+
+  smart-widget-previewer@1.0.18:
+    resolution: {integrity: sha512-sJbxFp+SmrCvKxv6uEcGVQQ3W93vDH198l9LcJvvc6+suyCb5bUtOCpNUBuF3n00R8Qn5/IZK8c85uP1a2EGlg==}
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
 
   snapdragon-node@2.1.1:
     resolution: {integrity: sha512-O27l4xaMYt/RSQ5TR3vpWCAB5Kb/czIcqUFOM/C4fYcLnbZUc1PkjTAMjof2pBWaSTwOUd6qUHcFGVGj7aIwnw==}
@@ -19720,6 +19735,16 @@ snapshots:
   slash@3.0.0: {}
 
   slash@4.0.0: {}
+
+  smart-widget-handler@1.0.27: {}
+
+  smart-widget-previewer@1.0.18(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      axios: 1.7.9
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - debug
 
   snapdragon-node@2.1.1:
     dependencies:

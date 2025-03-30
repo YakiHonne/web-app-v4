@@ -28,6 +28,8 @@ import LoadingLogo from "../LoadingLogo";
 import { customHistory } from "../../Helpers/History";
 import { t } from "i18next";
 import { useTranslation } from "react-i18next";
+import Zap from "../Reactions/Zap";
+import useNoteStats from "../../Hooks/useNoteStats";
 
 const eventIcons = {
   paid_notes: "not-paid-notes",
@@ -252,7 +254,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
     }
 
     if (event.kind === 9734) {
-      console.log(relatedEvent)
+      console.log(relatedEvent);
       let isE = event.tags.find((tag) => tag[0] === "e");
       let isA = event.tags.find((tag) => tag[0] === "a");
       let ev = isA || isE;
@@ -684,6 +686,7 @@ const Notification = ({ event, filterByType = false }) => {
     return getUser(event.pubkey) || getEmptyuserMetadata(event.pubkey);
   }, [nostrAuthors]);
   const [relatedEvent, setRelatedEvent] = useState(false);
+  const { postActions } = useNoteStats(event?.id, event?.pubkey);
 
   let type = useMemo(() => {
     return checkEventType(
@@ -753,15 +756,24 @@ const Notification = ({ event, filterByType = false }) => {
           className="fit-container fx-centered fx-start-h fx-start-v"
           style={{ width: "calc(100% - 32px)" }}
         >
-          <div className="fx-centered">
-            <div>
-              <p className="gray-c">
-                <Date_
-                  toConvert={new Date(event.created_at * 1000)}
-                  time={true}
-                />
-              </p>
-              <p className="p-four-lines">{type?.label_1} </p>
+          <div className="fx-centered fit-container">
+            <div className="fit-container">
+              <div className="fit-container fx-scattered">
+                <div>
+                  <p className="gray-c">
+                    <Date_
+                      toConvert={new Date(event.created_at * 1000)}
+                      time={true}
+                    />
+                  </p>
+                  <p className="p-four-lines">{type?.label_1} </p>
+                </div>
+                {event.kind === 1 && (
+                  <div onClick={(e) => e.stopPropagation()} className="round-icon-small round-icon-tooltip" data-tooltip={t("AtGAGPY")}>
+                    <Zap user={user} event={event} actions={postActions} />
+                  </div>
+                )}
+              </div>
               <p
                 className="gray-c p-four-lines poll-content-box"
                 style={{ "--p-color": "var(--gray)" }}

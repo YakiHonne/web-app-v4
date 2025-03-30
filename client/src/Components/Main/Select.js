@@ -7,7 +7,7 @@ export default function Select({
   setSelectedValue,
   defaultLabel = "-- Options --",
   revert = false,
-  fullWidth = false
+  fullWidth = false,
 }) {
   const [showOptions, setShowOptions] = useState(false);
   const selectedValue = useMemo(() => {
@@ -27,7 +27,10 @@ export default function Select({
 
   return (
     <div
-      style={{ position: "relative", width: fullWidth ? "100%" : "fit-content" }}
+      style={{
+        position: "relative",
+        width: fullWidth ? "100%" : "fit-content",
+      }}
       className="fit-container"
       ref={optionsRef}
     >
@@ -46,11 +49,11 @@ export default function Select({
         <div
           style={{
             position: "absolute",
-        
+
             top: revert ? 0 : "110%",
             transform: revert ? "translateY(calc(-100% - 5px))" : "none",
             // border: "none",
-            minWidth: fullWidth ? "100%" :"200px",
+            minWidth: fullWidth ? "100%" : "200px",
             width: "max-content",
             zIndex: 1000,
             rowGap: "0",
@@ -61,14 +64,14 @@ export default function Select({
             return (
               <div
                 key={index}
-                className="option-no-scale fit-container fx-scattered fx-start-h sc-s-18 pointer box-pad-h-m"
+                className={`option-no-scale fit-container fx-scattered ${option?.left_el ? "fx-start-h" : ""} sc-s-18 pointer box-pad-h-m`}
                 style={{
                   border: "none",
                   overflow: "visible",
                   borderRadius: 0,
                   padding: ".25rem 1rem",
                   cursor: option.disabled ? "not-allowed" : "pointer",
-                  opacity: option.disabled ? .5 : 1
+                  opacity: option.disabled ? 0.5 : 1,
                 }}
                 onClick={() => {
                   setSelectedValue(option?.value);
@@ -85,6 +88,7 @@ export default function Select({
                 >
                   {option?.display_name}
                 </div>
+                {option?.right_el && option?.right_el}
               </div>
             );
           })}

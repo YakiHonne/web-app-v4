@@ -361,7 +361,11 @@ export default function Wallet() {
 
   const exportWallet = (nwc, addr) => {
     downloadAsFile(
-      `wallet secret: ${nwc}`,
+      [
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---",
+        `wallet secret: ${nwc}`,
+      ].join("\n"),
       "text/plain",
       `NWC-for-${addr}.txt`,
       t("AVUlnek")
@@ -529,17 +533,19 @@ export default function Wallet() {
                                                 {t("AmQVpu4")}
                                               </div>
                                             ),
-                                            <div
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                copyKey(
-                                                  t("ALR84Tq"),
-                                                  selectedWallet.entitle
-                                                );
-                                              }}
-                                            >
-                                              {t("ApO1nbv")}
-                                            </div>,
+                                            wallet.entitle.includes("@") && (
+                                              <div
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  copyKey(
+                                                    t("ALR84Tq"),
+                                                    selectedWallet.entitle
+                                                  );
+                                                }}
+                                              >
+                                                {t("ApO1nbv")}
+                                              </div>
+                                            ),
                                             <div
                                               onClick={(e) => {
                                                 e.stopPropagation();
@@ -598,22 +604,23 @@ export default function Wallet() {
                               <p className="gray-c">Sats</p>
                             </div>
                             <SatsToUSD sats={userBalance} />
-                            {selectedWallet.kind !== 1 && (
-                              <div
-                                className="btn btn-gray btn-small fx-centered"
-                                onClick={() =>
-                                  selectedWallet.entitle.includes("@")
-                                    ? copyKey(
-                                        t("ALR84Tq"),
-                                        selectedWallet.entitle
-                                      )
-                                    : walletWarning()
-                                }
-                              >
-                                {selectedWallet.entitle}
-                                <div className="copy"></div>
-                              </div>
-                            )}
+                            {selectedWallet.kind !== 1 &&
+                              selectedWallet.entitle.includes("@") && (
+                                <div
+                                  className="btn btn-gray btn-small fx-centered"
+                                  onClick={() =>
+                                    selectedWallet.entitle.includes("@")
+                                      ? copyKey(
+                                          t("ALR84Tq"),
+                                          selectedWallet.entitle
+                                        )
+                                      : walletWarning()
+                                  }
+                                >
+                                  {selectedWallet.entitle}
+                                  <div className="copy"></div>
+                                </div>
+                              )}
                           </div>
                         )}
                         {!isLoading &&

@@ -29,6 +29,7 @@ export default function MinimalPreviewWidget({ widget }) {
             e.stopPropagation();
             setShowFullWidget(true);
           }}
+          style={{minWidth: "max-content"}}
         >
           {t("AYO6i7Y")}
         </button>

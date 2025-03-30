@@ -45,7 +45,8 @@
 // //   res.sendFile(path.resolve(__dirname, "build", "index.html"));
 // // });
 // app.listen(PORT);
-
+require("./instrument.js");
+const Sentry = require("@sentry/node");
 const express = require("express");
 const app = express();
 const path = require("path");
@@ -65,6 +66,7 @@ mongoose.connection.on("error", console.error.bind(console, "Error"));
 mongoose.connection.on("open", () => {
   console.log("Connection is established");
 });
+
 app.use(express.json());
 app.use(fileupload());
 app.use(
@@ -87,6 +89,7 @@ app.use(
 app.use("/", UploadFiles);
 app.use("/", NIP05);
 app.use("/", Ops);
+Sentry.setupExpressErrorHandler(app);
 
 app.use(
   // require("prerender-node").set(

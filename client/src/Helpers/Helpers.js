@@ -96,7 +96,10 @@ const isVid = (url) => {
 const isImageUrl = async (url) => {
   try {
     return new Promise((resolve, reject) => {
-      if (url.startsWith("data:image") || /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url))
+      if (
+        url.startsWith("data:image") ||
+        /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url)
+      )
         resolve({ type: "image" });
       if (/(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(url))
         resolve({ type: "video" });
@@ -149,7 +152,7 @@ const getNoteTree = async (
     } else if (
       (/(https?:\/\/)/i.test(el) || el.startsWith("data:image")) &&
       !el.includes("https://yakihonne.com/smart-widget-checker?naddr=") &&
-      !el.includes("https://vota.dorafactory.org/round/") && 
+      !el.includes("https://vota.dorafactory.org/round/") &&
       !el.includes("https://vota-test.dorafactory.org/round/")
     ) {
       const isURLVid = isVid(el);
@@ -341,7 +344,7 @@ const getLinkFromAddr = (addr_) => {
       if ([30004, 30005].includes(data.data.kind)) return `/curations/${addr}`;
       if (data.data.kind === 34235 || data.data.kind === 34236)
         return `/videos/${addr}`;
-      if (data.data.kind === 30031)
+      if (data.data.kind === 30033)
         return `/smart-widget-checker?naddr=${addr}`;
     }
     if (addr.startsWith("nprofile")) {
@@ -353,10 +356,11 @@ const getLinkFromAddr = (addr_) => {
     }
     if (addr.startsWith("nevent")) {
       let data = nip19.decode(addr);
-      return `/notes/${nip19.neventEncode({
-        author: data.data.author,
-        id: data.data.id,
-      })}`;
+      return `/notes/${nip19.noteEncode(data.data.id)}`;
+      // return `/notes/${nip19.neventEncode({
+      //   author: data.data.author,
+      //   id: data.data.id,
+      // })}`;
     }
     if (addr.startsWith("note")) {
       let data = nip19.decode(addr);
@@ -1028,6 +1032,27 @@ const updateMediaUploader = (data, selected) => {
     localStorage.removeItem("media-uploader");
   }
 };
+const replaceMediaUploader = (data, selected) => {
+  let userKeys = getKeys();
+  let servers = localStorage.getItem("media-uploader");
+  if (!userKeys) return;
+  try {
+    servers = servers ? JSON.parse(servers) : [];
+    let pubkey = userKeys?.pub;
+    let servers_index = servers.findIndex((_) => _?.pubkey === pubkey);
+    if (servers_index !== -1) {
+      if (data) servers[servers_index].servers = data;
+      servers[servers_index].selected = selected;
+    }
+    if (servers_index === -1) {
+      servers.push({ pubkey, servers: data ? [data] : [], selected });
+    }
+    localStorage.setItem("media-uploader", JSON.stringify(servers));
+  } catch (err) {
+    console.log(err);
+    localStorage.removeItem("media-uploader");
+  }
+};
 
 const getWallets = () => {
   let nostkeys = getKeys();
@@ -1686,6 +1711,167 @@ function sortByKeyword(array, keyword) {
   // });
 }
 
+const verifyEvent = (event) => {
+  if (!event) {
+    console.error("No event to parse");
+    return false;
+  }
+  const { pubkey, kind, tags, content, id } = event;
+  if (!(kind && tags && pubkey && id)) {
+    console.error("Invalid event structure");
+    return false;
+  }
+
+  if (kind !== 30033) {
+    console.log("Event is not a smart widget");
+    return false;
+  }
+  let identifier = "";
+  let type = "basic";
+  let icon = "";
+  let image = "";
+  let input = "";
+  let buttons = [];
+
+  for (let tag of tags) {
+    if (tag[0] === "d") identifier = tag[1];
+    if (tag[0] === "l") type = tag[1];
+    if (tag[0] === "icon") icon = tag[1];
+    if (tag[0] === "image") image = tag[1];
+    if (tag[0] === "input") input = tag[1];
+    if (tag[0] === "button") {
+      let button_ = {
+        label: tag[1] || "",
+        type: tag[2] || "",
+        url: tag[3] || "",
+        type_status: ["redirect", "post", "app", "zap", "nostr"].includes(
+          tag[2] || ""
+        ),
+        url_status: isURLValid(tag[3] || "", tag[2] || ""),
+      };
+      buttons.push(button_);
+    }
+  }
+  let aTag = `${kind}:${pubkey}:${identifier}`;
+
+  return {
+    id,
+    type,
+    icon,
+    content: content || "N/A",
+    pubkey,
+    kind,
+    image,
+    image_status: isURLValid(image, "redirect"),
+    input,
+    buttons,
+    identifier,
+    aTag,
+  };
+};
+
+export const isURLValid = (url, type) => {
+  let emailAddrRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!(url && type)) return false;
+  if (
+    (!type || ["redirect", "post", "app"].includes(type)) &&
+    !(
+      url.startsWith("https://") ||
+      url.startsWith("http://") ||
+      url.startsWith("data:image/")
+    )
+  )
+    return false;
+  if (
+    type === "nostr" &&
+    !(
+      url.startsWith("nostr:") ||
+      url.startsWith("npub") ||
+      url.startsWith("nprofile") ||
+      url.startsWith("note1") ||
+      url.startsWith("nevent") ||
+      url.startsWith("naddr")
+    )
+  )
+    return false;
+  if (
+    type === "zap" &&
+    !(
+      emailAddrRegex.test(url) ||
+      (url.startsWith("lnurl") && url.length > 32) ||
+      (url.startsWith("lnbc") && url.length > 32)
+    )
+  )
+    return false;
+
+  return {
+    status: true,
+  };
+};
+
+const base64ToFile = (base64String, fileName = "image.jpg") => {
+  const [prefix, data] = base64String.split(",");
+  const mimeType = prefix.match(/:(.*?);/)[1] || "image/jpeg";
+
+  const byteString = atob(data);
+  const byteNumbers = new Uint8Array(byteString.length);
+
+  for (let i = 0; i < byteString.length; i++) {
+    byteNumbers[i] = byteString.charCodeAt(i);
+  }
+
+  const blob = new Blob([byteNumbers], { type: mimeType });
+
+  const file = new File([blob], `${Date.now()}.png`, { type: mimeType });
+
+  return file;
+};
+
+const getStorageEstimate = async () => {
+  try {
+    if (!navigator.storage || !navigator.storage.estimate) {
+      throw new Error("Storage Quota API not supported");
+    }
+
+    const estimate = await navigator.storage.estimate();
+    const usedStorage = estimate.usage;
+
+    return Math.floor(usedStorage / 1000000);
+  } catch (error) {
+    console.error("Error getting storage estimate:", error);
+    return null;
+  }
+};
+
+const makeReadableNumber = (number) => {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+const assignClientTag = (tags) => {
+  return [
+    [
+      "client",
+      "Yakihonne",
+      "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+    ],
+    ...tags,
+  ];
+};
+
+const extractRootDomain = (url) => {
+  try {
+    let hostname = new URL(url).hostname;
+    let parts = hostname.split(".");
+
+    if (parts.length > 2) {
+      return parts[parts.length - 2];
+    }
+    return parts[0];
+  } catch (error) {
+    return url;
+  }
+};
+
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -1733,4 +1919,11 @@ export {
   sortByKeyword,
   getLinkPreview,
   getAllWallets,
+  verifyEvent,
+  base64ToFile,
+  replaceMediaUploader,
+  getStorageEstimate,
+  makeReadableNumber,
+  assignClientTag,
+  extractRootDomain,
 };

@@ -6,6 +6,7 @@ import { setUserKeys } from "../../Store/Slides/UserData";
 import {
   bytesTohex,
   downloadAsFile,
+  getBech32,
   getEmptyuserMetadata,
   getHex,
 } from "../../Helpers/Encryptions";
@@ -289,6 +290,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
   const [selectedInterests, setSelectedInterests] = useState([]);
   const [showErrorMessage, setShowMessageError] = useState(false);
   const [showEmptyUNMessage, setShowMessageEmtpyUN] = useState(false);
+    const [showInvalidMessage, setShowInvalidMessage] = useState(false);
   const [userName, setUserName] = useState("");
   const [enableWalletLinking, setEnablingWalletLinking] = useState(true);
 
@@ -357,7 +359,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
   };
   const handleCreateWallet = async () => {
     try {
-      if (isCreatingWalletLoading) return;
+      if (isCreatingWalletLoading || showInvalidMessage) return;
       if (!userName) {
         setShowMessageEmtpyUN(true);
         return;
@@ -370,6 +372,8 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
       setNWCURL(url.data.connectionSecret);
       setNWCAddr(url.data.lightningAddress);
       let toSave = [
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---",
         `Address: ${url.data.lightningAddress}`,
         `NWC secret: ${url.data.connectionSecret}`,
       ];
@@ -430,8 +434,10 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
 
       dispatch(setUserKeys(userKeys));
       let toSave = [
-        `Private key: ${userKeys.sec}`,
-        `Public key: ${userKeys.pub}`,
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---",
+        `Private key: ${getBech32("nsec", userKeys.sec)}`,
+        `Public key: ${getBech32("npub", userKeys.pub)}`,
       ];
       downloadAsFile(
         toSave.join("\n"),
@@ -440,7 +446,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
         t("AdoWp0E"),
         false
       );
-      
+
       let signer = new NDKPrivateKeySigner(userKeys.sec);
       ndkInstance.signer = signer;
 
@@ -569,8 +575,11 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
 
   const handleInputField = (e) => {
     let value = e.target.value;
+    let isValid = /^[a-zA-Z0-9]+$/.test(value);
     if (showErrorMessage) setShowMessageError(false);
     if (showEmptyUNMessage) setShowMessageEmtpyUN(false);
+    if (!value || (isValid && showInvalidMessage)) setShowInvalidMessage(false);
+    if (value && !isValid && !showInvalidMessage) setShowInvalidMessage(true);
     setUserName(value);
   };
 
@@ -824,7 +833,9 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                       onChange={handleInputField}
                       style={{
                         borderColor:
-                          showErrorMessage || showEmptyUNMessage
+                          showErrorMessage ||
+                          showEmptyUNMessage ||
+                          showInvalidMessage
                             ? "var(--red-main)"
                             : "",
                       }}
@@ -844,6 +855,11 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
                   {showEmptyUNMessage && (
                     <div className="fit-container box-pad-h-m">
                       <p className="red-c p-medium">{t("AhQtS0K")}</p>
+                    </div>
+                  )}
+                  {showInvalidMessage && (
+                    <div className="fit-container box-pad-h-m">
+                      <p className="red-c p-medium">{t("AqSxggD")}</p>
                     </div>
                   )}
                   <button

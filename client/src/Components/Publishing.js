@@ -432,8 +432,8 @@ export default function Publishing() {
   const getKind7FromTags = (content, tags) => {
     let l = tags.find((tag) => tag[0] === "l");
     if (!l) {
-      if (content === "+") return 7;
       if (content === "-") return 77;
+      return 7;
     }
 
     if (l[1] === "UNCENSORED NOTE RATING") return 777;

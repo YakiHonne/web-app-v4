@@ -114,12 +114,16 @@ export default function CommentsSection({
   rootData,
 }) {
   const userKeys = useSelector((state) => state.userKeys);
+  const userMutedList = useSelector((state) => state.userMutedList);
   const { t } = useTranslation();
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showWriteNote, setShowWriteNote] = useState(leaveComment);
   const [netComments, setNetComments] = useState([]);
   const [isLogin, setIsLogin] = useState(false);
+  const isCommentsMuted = useMemo(() => {
+    return !netComments.find((_) => !userMutedList.includes(_.pubkey));
+  }, [netComments, userMutedList]);
 
   useEffect(() => {
     let parsedCom = async () => {
@@ -270,27 +274,15 @@ export default function CommentsSection({
           className="fit-container fx-centered fx-col fx-start-h fx-start-v"
           style={{ gap: 0 }}
         >
-          {netComments.length == 0 && !isLoading && (
-            <div
-              className="fit-container fx-centered fx-col"
-              style={{ height: "20vh" }}
-            >
-              <h4>{t("ARe2fkn")}</h4>
-              <p className="p-centered gray-c">{t("AkLuU1q")}</p>
-              {/* <p className="p-centered gray-c">Nobody commented on this {kind}</p> */}
-              <div className="comment-24"></div>
-            </div>
-          )}
           {isLoading && (
             <div
               style={{ height: "40vh" }}
               className="fit-container box-pad-h-m fit-height fx-centered"
             >
               <LoadingLogo size={64} />
-              {/* <LoadingDots /> */}
             </div>
           )}
-          {netComments.length > 0 && (
+          {netComments.length > 0 && !isCommentsMuted && (
             <div
               className="fit-container fx-centered fx-start-h box-pad-h-m"
               style={{ paddingTop: "1rem" }}
@@ -309,6 +301,26 @@ export default function CommentsSection({
               />
             );
           })}
+          {(netComments.length == 0 || isCommentsMuted) && !isLoading && (
+            <div
+              className="fit-container fx-centered fx-col"
+              style={{ height: "20vh" }}
+            >
+              <div
+                className="yaki-logomark"
+                style={{ minWidth: "48px", minHeight: "48px", opacity: 0.5 }}
+              ></div>
+              <p className="p-centered gray-c">{t("A84Nx8y")}</p>
+            </div>
+            // <div
+            //   className="fit-container fx-centered fx-col"
+            //   style={{ height: "20vh" }}
+            // >
+            //   <h4>{t("ARe2fkn")}</h4>
+            //   <p className="p-centered gray-c">{t("AkLuU1q")}</p>
+            //   <div className="comment-24"></div>
+            // </div>
+          )}
         </div>
       </div>
     </>
@@ -329,6 +341,7 @@ const Comment = ({
     return count == 0 || count >= 10 ? count : `0${count}`;
   }, []);
 
+  if (userMutedList.includes(comment.pubkey)) return;
   // if (userMutedList.includes(comment.pubkey) && !isReply) return <h1>hkjkh</h1>;
   if (userMutedList.includes(comment.pubkey))
     return (
