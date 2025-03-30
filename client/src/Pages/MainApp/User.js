@@ -1103,7 +1103,7 @@ const UserFeed = ({ user }) => {
           )}
         </div>
       )}
-      {contentFrom === "smart-widget" && (
+      {/* {contentFrom === "smart-widget" && (
         <div className="fit-container fx-centered fx-col">
           {events[contentFrom].length === 0 && !isLoading && (
             <div
@@ -1139,7 +1139,7 @@ const UserFeed = ({ user }) => {
             </>
           )}
         </div>
-      )}
+      )} */}
       {isLoading && (
         <div
           className="fit-container box-pad-v fx-centered fx-col"
