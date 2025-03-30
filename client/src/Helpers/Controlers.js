@@ -496,7 +496,12 @@ const getEventStatAfterEOSE = (
   let stats = { ...oldStats };
   if (reaction.kind === 9734) {
     stats[kind][kind] = removeObjDuplicants(stats[kind][kind], [
-      { id: reaction.id, pubkey: reaction.pubkey, amount: extra },
+      {
+        id: reaction.id,
+        pubkey: reaction.pubkey,
+        amount: extra.amount,
+        content: extra.content,
+      },
     ]);
     stats[kind].total = stats[kind].total + extra;
   } else if (reaction.kind === 7) {
@@ -727,7 +732,7 @@ const publishEvent = async (event, relays = relaysOnPlatform) => {
 
     sub.on("event", () => {
       sub.stop();
-      console.log("first")
+      console.log("first");
       resolve(true);
     });
     let timer = setTimeout(() => {
@@ -757,5 +762,5 @@ export {
   InitEvent,
   getEventStatAfterEOSE,
   translate,
-  publishEvent
+  publishEvent,
 };
