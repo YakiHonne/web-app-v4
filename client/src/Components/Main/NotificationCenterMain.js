@@ -110,7 +110,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
           label_2,
           icon: eventIcons.replies_comments,
           id: isReply[1],
-          url: `/notes/${nip19.noteEncode(isReply[1])}`,
+          url: `/notes/${nip19.noteEncode(event.id)}`,
         };
       }
       if (isRoot) {
@@ -254,7 +254,6 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
     }
 
     if (event.kind === 9734) {
-      console.log(relatedEvent);
       let isE = event.tags.find((tag) => tag[0] === "e");
       let isA = event.tags.find((tag) => tag[0] === "a");
       let ev = isA || isE;
