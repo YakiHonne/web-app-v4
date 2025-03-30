@@ -140,7 +140,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           if ([30023].includes(event.kind)) title = t("Aqw9gzk");
           if ([34235].includes(event.kind)) title = t("A3vFdLd");
         }
-        
+
         setEvent({
           ...parsedContent,
           title,
@@ -279,15 +279,16 @@ export default function Nip19Parsing({ addr, minimal = false }) {
   if (event.kind === 30033)
     return (
       <div className="fit-container box-pad-v-s">
-        <WidgetCardV2
+        {/* <WidgetCardV2
           widget={{
             ...event,
             metadata: getParsedSW(event),
             author: getEmptyuserMetadata(event.pubkey),
           }}
           header={false}
-        />
+        /> */}
         {/* <SWCard widget={event} /> */}
+        <p>{addr}</p>
       </div>
     );
 
