@@ -1,5 +1,6 @@
 import React from "react";
 import UserProfilePic from "./UserProfilePic";
+
 export default function AuthorPreview({ author, size = "big" }) {
   return (
     <div className="fx-centered fx-start-h ">

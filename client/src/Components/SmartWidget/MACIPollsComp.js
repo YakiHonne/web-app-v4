@@ -9,7 +9,7 @@ import {
 import { MaciClient } from "@dorafactory/maci-sdk/browser";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
-import { sleepTimer } from "../../Helpers/Helpers";
+import { makeReadableNumber, sleepTimer } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 import { Link } from "react-router-dom";
 import LoginSignup from "../Main/LoginSignup";
@@ -763,9 +763,7 @@ const PollDetails = ({ poll, exit }) => {
             </p>
             <p>
               {t("AguX9lA", {
-                count: poll.blockHeight
-                  .toString()
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                count: makeReadableNumber(poll.blockHeight),
               })}
             </p>
           </div>

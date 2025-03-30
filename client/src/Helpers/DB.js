@@ -152,10 +152,6 @@ export const getUserDDB = async (pubkey) => {
 export const getUsers = async () => {
   if (db) {
     try {
-      // if (!db.isOpen()) {
-      //   await db.open();
-      // }
-
       let users = await db.table("users").toArray();
 
       return users;
@@ -399,7 +395,14 @@ export const clearDB = () => {
   try {
     if (db) {
       db.tables.forEach((table) => {
-        if (!["users", "eventStats", "notificationLastEventTS", "clients"].includes(table.name))
+        if (
+          ![
+            "users",
+            "eventStats",
+            "notificationLastEventTS",
+            "clients",
+          ].includes(table.name)
+        )
           table.clear().then(() => {
             console.log(`${table.name} cleared`);
           });
@@ -407,6 +410,25 @@ export const clearDB = () => {
     }
   } catch (err) {
     console.log(err);
+  }
+};
+export const clearDBCache = async () => {
+  try {
+    if (db) {
+      db.tables.forEach(async (table) => {
+        if (["users", "eventStats"].includes(table.name)) await table.clear();
+      });
+    }
+    if (ndkdb) {
+      await Dexie.delete(ndkdb.name)
+      // ndkdb.tables.forEach(async (table) => {
+      //   await table.clear();
+      // });
+    }
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
   }
 };
 
@@ -519,17 +541,3 @@ export const saveNotificationLastEventTS = async (pubkey, timstamp) => {
     console.log(err);
   }
 };
-
-// db.open().then(() => {
-//     // Access all tables in the database
-//     db.tables.forEach(table => {
-//         console.log("Table name:", table.name);
-//         table.toArray().then(records => {
-//             console.log(records.keys())
-//             console.log(`Records from ${table.name}:`, records);
-//         });
-//     });
-// }).catch(error => {
-//     console.error("Failed to open the database:", error);
-// });
-// db.version(3).stores({ chatrooms: "" });

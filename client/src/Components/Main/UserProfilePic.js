@@ -43,7 +43,7 @@ export default function UserProfilePic({
   const [isNip05Verified, setIsNip05Verified] = useState(false);
 
   useEffect(() => {
-    if (user_id && nostrAuthors.length > 0) {
+    if (user_id && nostrAuthors.length > 0 && !img) {
       let auth = getUser(user_id);
       if (auth) {
         setFetchedImg(auth.picture);

@@ -25,9 +25,7 @@ import {
   getUsers,
   saveBookmarks,
   saveChatrooms,
-  saveFetchedUsers,
   saveFollowings,
-  savefollowingsRelays,
   saveMutedlist,
   saveNostrClients,
   saveRelays,
@@ -41,9 +39,7 @@ import {
   userLogout,
 } from "../Helpers/Controlers";
 import {
-  setImportantFlashNews,
   setInitDMS,
-  setRecentTags,
   setTrendingUsers,
 } from "../Store/Slides/Extras";
 import { addExplicitRelays, ndkInstance } from "../Helpers/NDKInstance";
@@ -62,7 +58,6 @@ import {
 } from "../Helpers/Encryptions";
 import axiosInstance from "../Helpers/HTTP_Client";
 import { setIsYakiChestLoaded } from "../Store/Slides/YakiChest";
-import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
 import {
   NDKNip07Signer,
@@ -169,9 +164,6 @@ export default function AppInit() {
       dispatch(setUserMutedList(mutedlist.mutedlist));
       if (mutedlist.mutedlist) {
         for (let p of mutedlist.mutedlist) ndkInstance.mutedIds.set([p], ["p"]);
-        // ndkInstance.mutedIds = new Map([
-        //   mutedlist.mutedlist.map((p) => [p, "p"]),
-        // ]);
       }
     }
     if (
@@ -246,7 +238,6 @@ export default function AppInit() {
       }
       ndkInstance.relayAuthDefaultPolicy = NDKRelayAuthPolicies.signIn({
         ndk: ndkInstance,
-        // signer,
       });
     };
     if (userKeys) {
@@ -280,12 +271,6 @@ export default function AppInit() {
       let lastMutedTimestamp = MUTEDLIST?.last_timestamp || undefined;
       let lastUserMetadataTimestamp =
         getMetadataFromCachedAccounts(userKeys.pub).created_at || undefined;
-      // let lastBookmarksTimestamp =
-      //   BOOKMARKS.length > 0
-      //     ? BOOKMARKS.sort(
-      //         (conv_1, conv_2) => conv_2.created_at - conv_1.created_at
-      //       )[0].created_at
-      //     : undefined;
       dispatch(setInitDMS(true));
       let tempInbox = [];
       let tempAuthors = [];
@@ -350,9 +335,6 @@ export default function AppInit() {
           {
             kinds: [30003],
             authors: [userKeys.pub],
-            // since: lastBookmarksTimestamp
-            //   ? lastBookmarksTimestamp + 1
-            //   : lastBookmarksTimestamp,
           },
           {
             kinds: [0],
@@ -362,7 +344,6 @@ export default function AppInit() {
               : lastUserMetadataTimestamp,
           },
         ],
-        // { cacheUsage: "ONLY_RELAY", subId: "user-essentials" }
         {
           cacheUsage: "CACHE_FIRST",
           groupable: false,
@@ -508,7 +489,7 @@ export default function AppInit() {
           dispatch(setIsYakiChestLoaded(false));
           return;
         }
-        let { user_stats, platform_standards } = data.data;
+        let { user_stats } = data.data;
         updateYakiChestStats(user_stats);
         dispatch(setIsYakiChestLoaded(true));
       } catch (err) {
@@ -527,59 +508,15 @@ export default function AppInit() {
     }
   }, [followings]);
 
-  const getFlashNews = async () => {
-    try {
-      let API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
-      let data = await axios.get(
-        API_BASE_URL + "/api/v1/mb/flashnews/important"
-      );
-
-      dispatch(setImportantFlashNews(data.data));
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   const getTrendingProfiles = async () => {
     try {
-      // let nostrBandProfiles = await axios.get(
-      //   "https://api.nostr.band/v0/trending/profiles"
-      // );
-      // let profiles = nostrBandProfiles.data.profiles
-      //   ? nostrBandProfiles.data.profiles
-      //       .filter((profile) => profile.profile)
-      //       .map((profile) => {
-      //         return getParsedAuthor(profile.profile);
-      //       })
-      //   : [];
-      // saveFetchedUsers(profiles);
-      // dispatch(setTrendingUsers(profiles.slice(0, 6)));
       let users = await getTrendingUsers24h();
       dispatch(setTrendingUsers(users));
     } catch (err) {
       console.log(err);
     }
   };
-  const getRecentTags = async () => {
-    try {
-      let nostrBandNotes = await axios.get(
-        "https://api.nostr.band/v0/trending/notes"
-      );
 
-      let tags = nostrBandNotes.data.notes
-        ? nostrBandNotes.data.notes
-            .map((note) =>
-              note.event.tags
-                .filter((tag) => tag[0] === "t")
-                .map((tag) => tag[1].toLowerCase())
-            )
-            .flat()
-        : [];
-      dispatch(setRecentTags([...new Set(tags)]));
-    } catch (err) {
-      console.log(err);
-    }
-  };
   const getMetadataFromCachedAccounts = (pubkey) => {
     let accounts = getConnectedAccounts();
     let account = accounts.find((account) => account.pubkey === pubkey);

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import UserProfilePic from "../Main/UserProfilePic";
+import ActionTools from "../Main/ActionTools";
 import { useDispatch, useSelector } from "react-redux";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { getEventStatAfterEOSE, InitEvent } from "../../Helpers/Controlers";
@@ -307,7 +308,7 @@ export default function Comments({
           </div>
           <div className="fit-container fx-scattered">
             <div className="fx-centered" style={{ gap: "12px" }}>
-              <div
+              {/* <div
                 className="p-big pointer"
                 onClick={() => {
                   handleInsertTextInPosition("@");
@@ -315,7 +316,7 @@ export default function Comments({
                 }}
               >
                 @
-              </div>
+              </div> */}
               <UploadFile
                 round={false}
                 small={false}
@@ -347,6 +348,9 @@ export default function Comments({
                   />
                 )}
               </div>
+              {/* <ActionTools
+                setData={(data) => handleInsertTextInPosition(data)}
+              /> */}
               <AddPolls setPollAddr={handleInsertTextInPosition} />
             </div>
             <div className="fx-centered fit-container fx-end-h">

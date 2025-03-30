@@ -38,17 +38,29 @@ import { getUserFollowers, getUserStats } from "../../Helpers/WSInstance";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
 import QRSharing from "./QRSharing";
-import WidgetCard from "../../Components/Main/WidgetCard";
+import WidgetCard from "../../Components/Main/WidgetCardV2";
 import { useTranslation } from "react-i18next";
 import Carousel from "../../Components/Main/Carousel";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
+import NotesFromPeopleYouFollow from "../../Components/Main/NotesFromPeopleYouFollow";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 const eventsReducer = (notes, action) => {
   switch (action.type) {
     case "notes": {
+      let nextState = { ...notes };
+      let tempArr = [...nextState[action.type], ...action.note];
+      let sortedNotes = tempArr
+        .filter((note, index, tempArr) => {
+          if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
+        })
+        .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
+      nextState[action.type] = sortedNotes;
+      return nextState;
+    }
+    case "replies": {
       let nextState = { ...notes };
       let tempArr = [...nextState[action.type], ...action.note];
       let sortedNotes = tempArr
@@ -126,6 +138,7 @@ const eventsReducer = (notes, action) => {
 
 const eventsInitialState = {
   notes: [],
+  replies: [],
   articles: [],
   flashnews: [],
   curations: [],
@@ -770,6 +783,7 @@ const UserFeed = ({ user }) => {
   const getNotesFilter = () => {
     let kinds = {
       notes: [1, 6],
+      replies: [1],
       flashnews: [1],
       articles: [30023],
       videos: [34235, 34236],
@@ -840,10 +854,14 @@ const UserFeed = ({ user }) => {
       if ([1, 6].includes(event.kind)) {
         let event_ = await getParsedNote(event, true);
         if (event_) {
-          if (event.kind === 6) {
-            eventsPubkeys.push(event_.relatedEvent.pubkey);
+          if (contentFrom === "replies" && event_.isComment && event_.isQuote === "") {
+            events_.push(event_);
+          } else if (contentFrom === "notes" && !event_.isComment) {
+            if (event.kind === 6) {
+              eventsPubkeys.push(event_.relatedEvent.pubkey);
+            }
+            events_.push(event_);
           }
-          events_.push(event_);
         }
       }
       if ([30023, 30004].includes(event.kind)) {
@@ -861,7 +879,6 @@ const UserFeed = ({ user }) => {
       }
       if ([34235, 34236].includes(event.kind)) {
         let event_ = getParsedRepEvent(event);
-        console.log(event_);
         events_.push(event_);
       }
     });
@@ -916,6 +933,14 @@ const UserFeed = ({ user }) => {
         </div>
         <div
           className={`list-item-b fx-centered fx-shrink ${
+            contentFrom === "replies" ? "selected-list-item-b" : ""
+          }`}
+          onClick={() => switchContentType("replies")}
+        >
+          {t("AENEcn9")}
+        </div>
+        <div
+          className={`list-item-b fx-centered fx-shrink ${
             contentFrom === "articles" ? "selected-list-item-b" : ""
           }`}
           onClick={() => switchContentType("articles")}
@@ -938,16 +963,17 @@ const UserFeed = ({ user }) => {
         >
           {t("AStkKfQ")}
         </div>
-        <div
+        {/* <div
           className={`list-item-b fx-centered fx-shrink ${
             contentFrom === "smart-widget" ? "selected-list-item-b" : ""
           }`}
           onClick={() => switchContentType("smart-widget")}
         >
           {t("A2mdxcf")}
-        </div>
+        </div> */}
       </div>
-      {contentFrom === "notes" && (
+      {/* <NotesFromPeopleYouFollow /> */}
+      {["notes", "replies"].includes(contentFrom) && (
         <div className="fit-container fx-centered fx-col">
           {events[contentFrom].length > 0 && (
             <>

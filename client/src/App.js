@@ -13,6 +13,7 @@ import ToastMessages from "./Components/ToastMessages";
 import Navbar from "./Components/Main/Navbar";
 import UserFirsLogin from "./Components/UserFirsLogin";
 import routes from "./Routes";
+import WarningBar from "./Components/WarningBar";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
       <ToastMessages />
       <UserFirsLogin />
       <Navbar />
+      <WarningBar />
       <Routes>
         {routes.map(({ path, element }, index) => (
           <Route key={index} path={path} element={element} />

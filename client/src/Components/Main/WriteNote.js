@@ -23,6 +23,8 @@ import Emojis from "../Emojis";
 import NotePreview from "./NotePreview";
 import { useTranslation } from "react-i18next";
 import AddPolls from "./AddPolls";
+import ActionTools from "./ActionTools";
+import BrowseSmartWidgetsV2 from "./BrowseSmartWidgetsV2";
 
 export default function WriteNote({
   widget,
@@ -32,7 +34,7 @@ export default function WriteNote({
   content,
   linkedEvent,
   isQuote = false,
-  triggerCP = false
+  triggerCP = false,
 }) {
   const navigateTo = useNavigate();
   const dispatch = useDispatch();
@@ -299,14 +301,10 @@ export default function WriteNote({
   const handleAddWidget = (data) => {
     if (note)
       setNote(
-        note +
-          " " +
-          `https://yakihonne.com/smart-widget-checker?naddr=${data.naddr} `
+        note + " " + `https://yakihonne.com/smart-widget-checker?naddr=${data} `
       );
     if (!note)
-      setNote(
-        `https://yakihonne.com/smart-widget-checker?naddr=${data.naddr} `
-      );
+      setNote(`https://yakihonne.com/smart-widget-checker?naddr=${data} `);
     setWidgetsSet((prev) => [...prev, data]);
     setShowSmartWidgets(false);
   };
@@ -417,7 +415,7 @@ export default function WriteNote({
       )}
 
       {showSmartWidgets && (
-        <BrowseSmartWidgets
+        <BrowseSmartWidgetsV2
           exit={() => setShowSmartWidgets(false)}
           setWidget={handleAddWidget}
         />
@@ -475,11 +473,7 @@ export default function WriteNote({
         ref={ref}
       >
         <div>
-          <UserProfilePic
-            size={34}
-            mainAccountUser={true}
-            allowClick={false}
-          />
+          <UserProfilePic size={34} mainAccountUser={true} allowClick={false} />
         </div>
         <div
           className="fit-container fx-scattered fx-col fx-wrap fit-height"
@@ -524,7 +518,7 @@ export default function WriteNote({
           >
             <div className="fit-container fx-scattered">
               <div className="fx-centered" style={{ gap: "12px" }}>
-                <div
+                {/* <div
                   className="p-big pointer"
                   onClick={() => {
                     handleInsertTextInPosition("@");
@@ -532,7 +526,7 @@ export default function WriteNote({
                   }}
                 >
                   @
-                </div>
+                </div> */}
                 <UploadFile
                   setImageURL={handleAddImage}
                   setIsUploadsLoading={() => null}
@@ -564,9 +558,12 @@ export default function WriteNote({
                     />
                   )}
                 </div>
-                <div onClick={() => setShowSmartWidgets(true)}>
+                {/* <div onClick={() => setShowSmartWidgets(true)}>
                   <div className="smart-widget-24"></div>
-                </div>
+                </div> */}
+                {/* <ActionTools
+                  setData={(data) => handleInsertTextInPosition(data)}
+                /> */}
                 <AddPolls setPollAddr={handleInsertTextInPosition} triggerCP={triggerCP}/>
               </div>
               <div className="fx-centered">

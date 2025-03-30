@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { bytesTohex, downloadAsFile, getHex } from "../../Helpers/Encryptions";
+import {
+  bytesTohex,
+  downloadAsFile,
+  getBech32,
+  getHex,
+} from "../../Helpers/Encryptions";
 import * as secp from "@noble/secp256k1";
 import profilePlaceholder from "../../media/images/profile-avatar.png";
 import { generateSecretKey, getPublicKey } from "nostr-tools";
@@ -286,13 +291,14 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingWalletLoading, setIsCreatingWalletLoading] = useState(false);
   const [showErrorMessage, setShowMessageError] = useState(false);
+  const [showInvalidMessage, setShowInvalidMessage] = useState(false);
   const [showEmptyUNMessage, setShowMessageEmtpyUN] = useState(false);
   const [userName, setUserName] = useState("");
   const [enableWalletLinking, setEnablingWalletLinking] = useState(true);
 
   const handleCreateWallet = async () => {
     try {
-      if (isCreatingWalletLoading) return;
+      if (isCreatingWalletLoading || showInvalidMessage) return;
       if (!userName) {
         setShowMessageEmtpyUN(true);
         return false;
@@ -373,8 +379,9 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
 
       dispatch(setUserKeys(userKeys));
       let toSave = [
-        `Private key: ${userKeys.sec}`,
-        `Public key: ${userKeys.pub}`,
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---"`Private key: ${getBech32("nsec", userKeys.sec)}`,
+        `Public key: ${getBech32("npub", userKeys.pub)}`,
       ];
       downloadAsFile(
         [...toSave, ...isWalletCreated?.toSave].join("\n"),
@@ -460,8 +467,11 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
 
   const handleInputField = (e) => {
     let value = e.target.value;
+    let isValid = /^[a-zA-Z0-9]+$/.test(value);
     if (showErrorMessage) setShowMessageError(false);
     if (showEmptyUNMessage) setShowMessageEmtpyUN(false);
+    if (!value || (isValid && showInvalidMessage)) setShowInvalidMessage(false);
+    if (value && !isValid && !showInvalidMessage) setShowInvalidMessage(true);
     setUserName(value);
   };
 
@@ -636,7 +646,9 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
                   onChange={handleInputField}
                   style={{
                     borderColor:
-                      showErrorMessage || showEmptyUNMessage
+                      showErrorMessage ||
+                      showEmptyUNMessage ||
+                      showInvalidMessage
                         ? "var(--red-main)"
                         : "",
                   }}
@@ -654,6 +666,11 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
               {showEmptyUNMessage && (
                 <div className="fit-container box-pad-h-m">
                   <p className="red-c p-medium">{t("AhQtS0K")}</p>
+                </div>
+              )}
+              {showInvalidMessage && (
+                <div className="fit-container box-pad-h-m">
+                  <p className="red-c p-medium">{t("AqSxggD")}</p>
                 </div>
               )}
             </div>

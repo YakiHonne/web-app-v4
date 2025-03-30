@@ -11,7 +11,7 @@ import {
 } from "../../Helpers/Encryptions";
 import Date_ from "../../Components/Date_";
 import { validateWidgetValues } from "../../Helpers/Helpers";
-import WidgetCard from "../../Components/Main/WidgetCard";
+import WidgetCard from "../../Components/Main/WidgetCardV2";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
@@ -56,11 +56,6 @@ export default function SmartWidgetChecker() {
     if (type === "image") {
       let checkKey = ["url", "aspect_ratio"].includes(key);
       let checkValue = validateWidgetValues(value, key);
-      //   let checkValue = ["url", "aspect_ratio"].includes(key)
-      //     ? validateWidgetValues(value, key)
-      //       ? true
-      //       : false
-      //     : true;
       let message = t("A1FzpC8");
       let icon = "checkmark-tt";
 
@@ -180,7 +175,6 @@ export default function SmartWidgetChecker() {
       message,
     };
   };
-
   const checkContainer = (key, value) => {
     let checkKey = ["layout", "division"].includes(key);
     let checkValue = validateWidgetValues(value, key);
@@ -201,6 +195,7 @@ export default function SmartWidgetChecker() {
       message,
     };
   };
+  
   const checkWidget = (key, value) => {
     let checkKey = ["border_color", "background_color"].includes(key);
     let checkValue = validateWidgetValues(value, key);
@@ -417,10 +412,7 @@ export default function SmartWidgetChecker() {
                     {!widget && <PagePlaceholder page={"widgets"} />}
                     {widget && (
                       <WidgetCard widget={widget} deleteWidget={null} />
-                      // <PreviewWidget
-                      //   widget={widget.metadata}
-                      //   pubkey={widget.pubkey}
-                      // />
+                    
                     )}
                   </div>
                   <div
@@ -454,8 +446,7 @@ export default function SmartWidgetChecker() {
                             data-tooltip={t("ATB2h6T")}
                           >
                             <div
-                              className="arrow arrow-back"
-                             
+                              className="arrow arrow-back" 
                             ></div>
                           </div>
                           <h4>{t("AYmIvXo")}</h4>

@@ -253,6 +253,7 @@ export default function KindOne({
             title={usersList.title}
             list={usersList.list}
             extras={usersList.extras}
+            extrasType={usersList?.extrasType}
           />
         )}
         <div
@@ -381,7 +382,8 @@ export default function KindOne({
                           list: postActions.likes.likes.map(
                             (item) => item.pubkey
                           ),
-                          extras: [],
+                          extras: postActions.likes.likes,
+                          extrasType: "reaction",
                         });
                     }}
                   >
@@ -440,7 +442,7 @@ export default function KindOne({
                   </div>
                 </div>
                 <div className="fx-centered">
-                  <div className="icon-tooltip" data-tooltip="Tip note">
+                  <div className="icon-tooltip" data-tooltip={t("AtGAGPY")}>
                     <Zap
                       user={user}
                       event={event}
@@ -472,7 +474,7 @@ export default function KindOne({
                   <div onClick={copyID} className="pointer">
                     <p>{t("AYFAFKs")}</p>
                   </div>,
-                  userKeys && userKeys.pub !== event.pubkey && (
+                  userKeys && (
                     <>
                       <BookmarkEvent
                         label={t("Ar5VgpT")}

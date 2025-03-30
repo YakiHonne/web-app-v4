@@ -74,6 +74,8 @@
 		"rehype-raw": "^6.1.1",
 		"remark-gfm": "^3.0.1",
 		"remark-parse": "^10.0.1",
+		"smart-widget-previewer": "^1.0.18",
+		"smart-widget-handler": "^1.0.27",
 		"unified": "^10.1.2",
 		"url": "^0.11.4",
 		"use-react-screenshot": "^4.0.0",

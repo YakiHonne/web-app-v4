@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import EmojiImg from "./EmojiImg";
 
 const getBulkListStats = (list) => {
   let toFollow = list.filter((item) => item.to_follow).length;
@@ -21,7 +22,13 @@ const getBulkListStats = (list) => {
   return { toFollow, toUnfollow };
 };
 
-export default function ShowUsersList({ exit, list, title, extras }) {
+export default function ShowUsersList({
+  exit,
+  list,
+  title,
+  extras,
+  extrasType = "zap",
+}) {
   const dispatch = useDispatch();
   const userFollowings = useSelector((state) => state.userFollowings);
   const userRelays = useSelector((state) => state.userRelays);
@@ -76,7 +83,11 @@ export default function ShowUsersList({ exit, list, title, extras }) {
         item.pubkey === pubkey ? (total += item.amount) : (total = total),
       0
     );
-    return sats;
+    return Math.floor(sats);
+  };
+  const getReactions = (pubkey) => {
+    let reaction = extras.find((_) => _.pubkey === pubkey)?.content || "+";
+    return reaction;
   };
 
   const followUnfollow = async () => {
@@ -161,7 +172,7 @@ export default function ShowUsersList({ exit, list, title, extras }) {
                   key={item.pubkey + item.name}
                 >
                   <div className="fx-centered fx-start-v">
-                    {extras.length > 0 && (
+                    {extras.length > 0 && extrasType === "zap" && (
                       <div
                         className="fx-centered  round-icon"
                         style={{ gap: "6px", border: "none" }}
@@ -173,6 +184,14 @@ export default function ShowUsersList({ exit, list, title, extras }) {
                         <span className="c1-c p-bold">
                           <NumberShrink value={getZaps(item.pubkey)} />
                         </span>
+                      </div>
+                    )}
+                    {extras.length > 0 && extrasType === "reaction" && (
+                      <div
+                        className="fx-centered  round-icon"
+                        style={{ gap: "6px", border: "none" }}
+                      >
+                        <EmojiImg content={getReactions(item.pubkey)} />
                       </div>
                     )}
                     <div

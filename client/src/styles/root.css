@@ -50,6 +50,7 @@
     --white-high-transparent: #ffffffa8;
     --black: #000000;
     --black-transparent: #0000009e;
+    --black-high-transparent: #000000a8;
     --dark-gray: #202020;
     --gray: #909090;
     --pale-gray: #E5E5E5;
@@ -122,6 +123,7 @@
         --white-high-transparent: #0000007b;
         --black: #d8d8d8;
         --black-transparent: #0000009e;
+        --black-high-transparent: #ffffff04;
         --dark-gray: #E5E5E5;
         --gray: #909090;
         --pale-gray: #343434;

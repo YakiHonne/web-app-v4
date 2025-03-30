@@ -22,8 +22,11 @@ import {
   getDefaultSettings,
   getMediaUploader,
   getSelectedServer,
+  getStorageEstimate,
   getWallets,
   handleAppDirection,
+  makeReadableNumber,
+  replaceMediaUploader,
   updateContentTranslationConfig,
   updateCustomSettings,
   updateMediaUploader,
@@ -48,6 +51,13 @@ import {
 import AddMaciPolls from "../../Components/Main/AddMaciPolls";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import LoginSignup from "../../Components/Main/LoginSignup";
+import MediaUploaderServer from "../../Content/MediaUploaderServer";
+import {
+  clearDBCache,
+  db,
+  getDexieDatabaseSize,
+  ndkdb,
+} from "../../Helpers/DB";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -135,6 +145,8 @@ export default function Settings() {
   );
   const [legacyDM, setLegacyDM] = useState(localStorage.getItem("legacy-dm"));
 
+  const [cacheSize, setCacheSize] = useState(0);
+  const [isCacheClearing, setIsCacheClearing] = useState(false);
   const [showYakiChest, setShowYakiChest] = useState(false);
   const [wallets, setWallets] = useState(getWallets());
   const [showAddWallet, setShowAddWallet] = useState(false);
@@ -157,7 +169,12 @@ export default function Settings() {
         setAllRelays(data.data);
       } catch {}
     };
+    const dbSize = async () => {
+      let size = await getStorageEstimate();
+      setCacheSize(size);
+    };
     fetchData();
+    dbSize();
   }, []);
 
   useEffect(() => {
@@ -171,7 +188,7 @@ export default function Settings() {
   useEffect(() => {
     if (userKeys) {
       handleAddWallet();
-      setMediaUploader(getMediaUploader());
+      setMediaUploader(getMediaUploader(handleRemoveServer));
       setSelectedMediaServer(getSelectedServer());
     } else setWallets([]);
   }, [userKeys]);
@@ -519,6 +536,20 @@ export default function Settings() {
     }
   };
 
+  const handleRemoveServer = (server) => {
+    let tempServersURLs = MediaUploaderServer.map((s) => s[1]);
+    let tempArray = mediaUploader
+      .filter((s) => s.value !== server && !tempServersURLs.includes(s.value))
+      .map((_) => [_.display_name, _.value]);
+    replaceMediaUploader(
+      tempArray,
+      selectedMediaServer === server
+        ? mediaUploader[0].value
+        : selectedMediaServer
+    );
+    setMediaUploader(getMediaUploader());
+  };
+
   const handleSwitchMediaServer = (server) => {
     setSelectedMediaServer(server);
     updateMediaUploader(undefined, server);
@@ -580,6 +611,8 @@ export default function Settings() {
       pub: getBech32("npub", userKeys.pub),
     };
     let toSave = [
+      "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+      "---",
       "Account credentials",
       `Private key: ${keys.sec}`,
       `Public key: ${keys.pub}`,
@@ -592,13 +625,58 @@ export default function Settings() {
       t("AdoWp0E")
     );
   };
+
   const exportWallet = (nwc, addr) => {
     downloadAsFile(
-      `wallet secret: ${nwc}`,
+      [
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---",
+        `wallet secret: ${nwc}`,
+      ].join("\n"),
       "text/plain",
       `NWC-for-${addr}.txt`,
       t("AVUlnek")
     );
+  };
+
+  const getMediaUploaderFinalList = () => {
+    let tempServersURLs = MediaUploaderServer.map((s) => s[1]);
+
+    let tempArray = mediaUploader.map((s) => {
+      return {
+        ...s,
+        right_el: !tempServersURLs.includes(s.value) ? (
+          <div
+            className="round-icon-small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveServer(s.value);
+            }}
+          >
+            <p className="red-c">&minus;</p>
+          </div>
+        ) : null,
+      };
+    });
+    return tempArray;
+  };
+
+  const clearAppCache = async () => {
+    try {
+      if (isCacheClearing) return false;
+      setIsCacheClearing(true);
+      let status = await clearDBCache();
+      if (status) {
+        localStorage.removeItem("warning-bar-closed");
+        dispatch(setToast({ type: 1, desc: t("A0GMVeT") }));
+        window.location.reload();
+      } else dispatch(setToast({ type: 2, desc: t("Acr4Slu") }));
+      setIsCacheClearing(false);
+    } catch (err) {
+      console.log(err);
+      setIsCacheClearing(false);
+      dispatch(setToast({ type: 2, desc: t("Acr4Slu") }));
+    }
   };
 
   return (
@@ -972,7 +1050,6 @@ export default function Settings() {
                             </>
                           )}
                         </div>
-
                         <div
                           className="fit-container fx-scattered fx-col pointer"
                           style={{
@@ -1123,7 +1200,7 @@ export default function Settings() {
                                 {customServer === false && (
                                   <div className="fx-centered">
                                     <Select
-                                      options={mediaUploader}
+                                      options={getMediaUploaderFinalList()}
                                       value={selectedMediaServer}
                                       setSelectedValue={handleSwitchMediaServer}
                                     />
@@ -1388,7 +1465,6 @@ export default function Settings() {
                             </div>
                           )}
                         </div>
-
                         <div
                           className="fit-container fx-scattered fx-col pointer"
                           style={{
@@ -1645,6 +1721,59 @@ export default function Settings() {
                           <div
                             className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
                             onClick={() =>
+                              selectedTab === "cache"
+                                ? setSelectedTab("")
+                                : setSelectedTab("cache")
+                            }
+                          >
+                            <div className="fx-centered fx-start-h">
+                              <div className="cache-24"></div>
+                              <p>{t("AZEJWnf")}</p>
+                            </div>
+                            <div className="arrow"></div>
+                          </div>
+                          {selectedTab === "cache" && (
+                            <div className="fit-container fx-col fx-centered box-pad-h-m box-pad-v-m">
+                              <div className="fx-scattered fit-container">
+                                <p>{t("AfcEwqC")}</p>
+                                <p
+                                  className={
+                                    cacheSize > 4000 ? "red-c" : "gray-c"
+                                  }
+                                >
+                                  {cacheSize > 4000 ? (
+                                    <span className="p-medium">
+                                      {" "}
+                                      ({t("AhfkjK3")}){" "}
+                                    </span>
+                                  ) : (
+                                    ""
+                                  )}
+                                  {makeReadableNumber(cacheSize)} MB{" "}
+                                </p>
+                              </div>
+                              <div className="fx-centered fit-container fx-end-h">
+                                <button
+                                  className="btn btn-small btn-normal"
+                                  onClick={clearAppCache}
+                                  disabled={isCacheClearing}
+                                >
+                                  {isCacheClearing ? <LoadingDots /> : t("AWj8yOR")}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="fit-container fx-scattered fx-col pointer"
+                          style={{
+                            borderBottom: "1px solid var(--very-dim-gray)",
+                            gap: 0,
+                          }}
+                        >
+                          <div
+                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                            onClick={() =>
                               selectedTab === "theme"
                                 ? setSelectedTab("")
                                 : setSelectedTab("theme")
@@ -1745,6 +1874,17 @@ export default function Settings() {
                                 data-tooltip={t("AheSXrs")}
                               >
                                 <div className="env"></div>
+                              </div>
+                            </a>
+                            <a
+                              href="https://github.com/orgs/YakiHonne/repositories"
+                              target="_blank"
+                            >
+                              <div
+                                className="round-icon round-icon-tooltip"
+                                data-tooltip={"Github repos"}
+                              >
+                                <div className="github-logo"></div>
                               </div>
                             </a>
                           </div>

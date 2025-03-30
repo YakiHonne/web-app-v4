@@ -82,7 +82,11 @@ const useNoteStats = (noteID, notePubkey) => {
           if (event.kind === 7) {
             if (!kind7Since || kind7Since < event.created_at)
               kind7Since = event.created_at;
-            kind7.push({ id: event.id, pubkey: event.pubkey });
+            let content = !event.content.includes(":")
+              ? event.content
+              : (event.tags.find((tag) => `:${tag[1]}:` === event.content) || [])[2] ||
+                "+";
+            kind7.push({ id: event.id, pubkey: event.pubkey, content });
           }
           if (event.kind === 6) {
             if (!kind6Since || kind6Since < event.created_at)

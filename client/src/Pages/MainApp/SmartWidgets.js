@@ -13,7 +13,7 @@ import LoadingDots from "../../Components/LoadingDots";
 import { Link } from "react-router-dom";
 import Footer from "../../Components/Footer";
 import ToDeleteGeneral from "../../Components/Main/ToDeleteGeneral";
-import WidgetCard from "../../Components/Main/WidgetCard";
+import WidgetCard from "../../Components/Main/WidgetCardV2";
 import { useSelector } from "react-redux";
 import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";

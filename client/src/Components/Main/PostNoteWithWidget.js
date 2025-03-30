@@ -43,8 +43,7 @@ export default function PostNoteWithWidget({ widget, exit, onlyNext = true }) {
           <>
             <PostAsNote
               exit={() => customHistory.push("/smart-widgets")}
-              content={""}
-              linkedEvent={widget}
+              content={widget}
             />
           </>
         )}

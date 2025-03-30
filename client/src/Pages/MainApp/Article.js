@@ -356,6 +356,7 @@ export default function Article() {
           title={usersList.title}
           list={usersList.list}
           extras={usersList.extras}
+          extrasType={usersList.extrasType}
         />
       )}
       {showAddArticleToCuration && (
@@ -851,7 +852,8 @@ export default function Article() {
                             list: postActions.likes.likes.map(
                               (item) => item.pubkey
                             ),
-                            extras: [],
+                            extras: postActions.likes.likes,
+                            extrasType: "reaction",
                           });
                       }}
                     >

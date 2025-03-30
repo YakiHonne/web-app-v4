@@ -5,18 +5,21 @@ import {
   getHex,
   getParsedNote,
   getParsedRepEvent,
+  getParsedSW,
 } from "../../Helpers/Encryptions";
 import { nip19 } from "nostr-tools";
 import { Link } from "react-router-dom";
 import KindOne from "./KindOne";
 import LoadingDots from "../LoadingDots";
 import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
-import WidgetCard from "./WidgetCard";
+import WidgetCard from "./WidgetCardV2";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
 import LinkRepEventPreview from "./LinkRepEventPreview";
 import ZapPollsComp from "../SmartWidget/ZapPollsComp";
+import SWCard from "./SWCard";
+import WidgetCardV2 from "./WidgetCardV2";
 
 export default function Nip19Parsing({ addr, minimal = false }) {
   const [event, setEvent] = useState(false);
@@ -112,8 +115,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         setEvent(parsedEvent);
         setIsLoading(false);
       }
-      if (event.kind === 6969) {
-
+      if ([6969, 30033].includes(event.kind)) {
         setEvent(event.rawEvent());
         setIsLoading(false);
       }
@@ -138,6 +140,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           if ([30023].includes(event.kind)) title = t("Aqw9gzk");
           if ([34235].includes(event.kind)) title = t("A3vFdLd");
         }
+        
         setEvent({
           ...parsedContent,
           title,
@@ -173,7 +176,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
             )}
             {event?.kind === 6969 && (
               <div className="fit-container" style={{ paddingTop: ".5rem" }}>
-                <ZapPollsComp event={event}/>
+                <ZapPollsComp event={event} />
               </div>
             )}
             {isLoading && !event && (
@@ -197,6 +200,24 @@ export default function Nip19Parsing({ addr, minimal = false }) {
                 className="fit-container box-pad-h-m box-pad-v-m sc-s-18 fx-centered"
               >
                 <p className="p-medium gray-c">{t("AQeXcer")}</p>
+              </div>
+            )}
+            {[30004, 30005, 30023, 34235].includes(event.kind) && (
+              <div className="fit-container" style={{ margin: ".5rem 0" }}>
+                {!minimal && (
+                  <LinkRepEventPreview event={event} allowClick={true} />
+                )}
+                {minimal && (
+                  <Link
+                    to={url}
+                    className="btn-text-gray"
+                    target={"_blank"}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ color: "var(--orange-main)" }}
+                  >
+                    @{event.title}
+                  </Link>
+                )}
               </div>
             )}
           </>
@@ -253,6 +274,20 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         )} */}
         <MinimalPreviewWidget widget={event} />
         {/* {minimal && <MinimalPreviewWidget widget={event} />} */}
+      </div>
+    );
+  if (event.kind === 30033)
+    return (
+      <div className="fit-container box-pad-v-s">
+        <WidgetCardV2
+          widget={{
+            ...event,
+            metadata: getParsedSW(event),
+            author: getEmptyuserMetadata(event.pubkey),
+          }}
+          header={false}
+        />
+        {/* <SWCard widget={event} /> */}
       </div>
     );
 

@@ -156,7 +156,8 @@ export default function Sidebar() {
       let wallets = getWallets();
       let NWCs = wallets.filter((_) => _.kind !== 1);
       let toSave = [
-        `Wallets for: ${getBech32("npub", userKeys.pub)}`,
+        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+        "---"`Wallets for: ${getBech32("npub", userKeys.pub)}`,
         "-",
         ...NWCs.map((_, index) => {
           return [
@@ -205,7 +206,11 @@ export default function Sidebar() {
         })
         .flat();
       downloadAsFile(
-        toSave.join("\n"),
+        [
+          "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+          "---",
+          ...toSave,
+        ].join("\n"),
         "text/plain",
         `NWCs-wallets.txt`,
         t("AVUlnek")

@@ -192,6 +192,53 @@ const getParsedAuthor = (data) => {
   return tempAuthor;
 };
 
+const getParsedSW = (event) => {
+  let id = event.id;
+  let title = event.content;
+  let pubkey = event.pubkey;
+  let image = "";
+  let input = "";
+  let d = "";
+  let type = "basic";
+  let icon = "";
+  let buttons = [];
+
+  for (let tag of event.tags) {
+    if (tag[0] === "d") d = tag[1];
+    if (tag[0] === "l") type = tag[1];
+    if (tag[0] === "icon") icon = tag[1];
+    if (tag[0] === "image") image = tag[1];
+    if (tag[0] === "input") input = tag[1];
+    if (tag[0] === "button")
+      buttons = [...buttons, { label: tag[1], type: tag[2], url: tag[3] }];
+  }
+
+  return {
+    id,
+    pubkey,
+    type,
+    icon,
+    tags: event.tags,
+    d,
+    naddr: nip19.naddrEncode({ pubkey, identifier: d, kind: event.kind }),
+    kind: event.kind,
+    title,
+    image,
+    input,
+    buttons,
+    components: input
+      ? [
+          { value: image, type: "image" },
+          { value: input, type: "input" },
+          { value: buttons, type: "button" },
+        ]
+      : [
+          { value: image, type: "image" },
+          { value: buttons, type: "button" },
+        ],
+  };
+};
+
 const getParsedRepEvent = (event) => {
   try {
     let content = {
@@ -202,7 +249,7 @@ const getParsedRepEvent = (event) => {
       created_at: event.created_at,
       tags: event.tags,
       author: getEmptyuserMetadata(event.pubkey),
-      title: [34235, 34236].includes(event.kind) ? event.content : "",
+      title: [34235, 34236, 30033].includes(event.kind) ? event.content : "",
       description: "",
       image: "",
       imagePP: getImagePlaceholder(),
@@ -251,9 +298,7 @@ const getParsedRepEvent = (event) => {
       ) {
         content.items.push(tag[1]);
       }
-      if (
-        tag[0] === "t"
-      ) {
+      if (tag[0] === "t") {
         content.tTags.push(tag[1]);
       }
     }
@@ -394,10 +439,11 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
       isFlashNews = true;
     }
 
-    let nEvent = nip19.neventEncode({
-      id: event.id,
-      author: event.pubkey,
-    });
+    let nEvent = nip19.noteEncode(event.id);
+    // let nEvent = nip19.neventEncode({
+    //   id: event.id,
+    //   author: event.pubkey,
+    // });
 
     let rawEvent =
       typeof event.rawEvent === "function" ? event.rawEvent() : event;
@@ -417,8 +463,8 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
         ...rawEvent,
         note_tree,
         stringifiedEvent,
-        isQuote:
-          isQuote && !event.content.includes("nostr:nevent") ? isQuote[1] : "",
+        isQuote: isQuote ? isQuote[1] : "",
+        // isQuote && !event.content.includes("nostr:nevent") ? isQuote[1] : "",
         isComment: isReply ? isReply[1] : isComment ? isComment[1] : false,
         isFlashNews,
         isCollapsedNote: isCollapsedNote_,
@@ -760,6 +806,7 @@ export {
   encodeBase64URL,
   getuserMetadata,
   getParsedNote,
+  getParsedSW,
   sortEvents,
   timeAgo,
   detectDirection,

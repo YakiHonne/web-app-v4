@@ -29,6 +29,27 @@ import Gifs from "../../Components/Gifs";
 import { useTranslation } from "react-i18next";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 
+const getFilterDMByTime = (type) => {
+  let filterType =
+    type !== undefined ? type : localStorage.getItem("filter-dm-by") || "0";
+  let currentTime = Math.floor(new Date().getTime() / 1000);
+  let month = currentTime - 2592000;
+  let threeMonths = currentTime - 7776000;
+  let sixMonths = currentTime - 15552000;
+  let year = currentTime - 31536000;
+
+  if (filterType == 0) return 0;
+  if (filterType == 1) return month;
+  if (filterType == 2) return threeMonths;
+  if (filterType == 3) return sixMonths;
+  if (filterType == 4) return year;
+};
+
+const getFilterDMType = () => {
+  let filterType = localStorage.getItem("filter-dm-by") || "0";
+  return filterType;
+};
+
 export default function DMS() {
   const userKeys = useSelector((state) => state.userKeys);
   const userChatrooms = useSelector((state) => state.userChatrooms);
@@ -45,6 +66,9 @@ export default function DMS() {
   const [contentType, setContentType] = useState("following");
   const [showSearch, setShowSearch] = useState("");
   const [initConv, setInitConv] = useState(false);
+  const [filterBytime, setFilterBytime] = useState(getFilterDMByTime());
+  const [filterByTimeType, setFilterByTimeType] = useState(getFilterDMType());
+
   const [msgsCount, setMsgsCount] = useState({
     followings: 0,
     known: 0,
@@ -52,6 +76,29 @@ export default function DMS() {
   });
 
   const [mbHide, setMbHide] = useState(true);
+
+  const filterByTimeTypes = [
+    {
+      display_name: t("AeVTLPz"),
+      value: "0",
+    },
+    {
+      display_name: t("ARlh8Zx"),
+      value: "1",
+    },
+    {
+      display_name: t("AjBLEFD"),
+      value: "2",
+    },
+    {
+      display_name: t("AIXtxrz"),
+      value: "3",
+    },
+    {
+      display_name: t("AVevC63"),
+      value: "4",
+    },
+  ];
 
   useEffect(() => {
     let followings = 0;
@@ -207,6 +254,12 @@ export default function DMS() {
         return { ..._, checked: true };
       });
     if (unreadChatroom.length) checkAllConvo(unreadChatroom, userKeys.pub);
+  };
+
+  const handleDMFilter = (type) => {
+    localStorage.setItem("filter-dm-by", type);
+    setFilterBytime(getFilterDMByTime(type));
+    setFilterByTimeType(type);
   };
 
   if (!userKeys)
@@ -387,6 +440,44 @@ export default function DMS() {
                         <div className="pointer" onClick={handleReadAll}>
                           <p>{t("A0qY0bf")}</p>
                         </div>,
+                        <div className="fit-container">
+                          <hr
+                            style={{
+                              borderColor: "#555555",
+                              width: "30px",
+                              marginBottom: ".5rem",
+                            }}
+                          />
+                          <p
+                            className="p-medium gray-c"
+                            style={{ marginBottom: ".25rem" }}
+                          >
+                            {t("ATpzz5G")}
+                          </p>
+                          <div className="fit-container">
+                            {filterByTimeTypes.map((type) => {
+                              return (
+                                <div
+                                  className="pointer fit-container fx-scattered"
+                                  onClick={() => handleDMFilter(type.value)}
+                                >
+                                  <span
+                                    className={
+                                      filterByTimeType == type.value
+                                        ? "green-c"
+                                        : ""
+                                    }
+                                  >
+                                    {type.display_name}
+                                  </span>
+                                  {filterByTimeType == type.value && (
+                                    <div className="check-24"></div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>,
                       ]}
                     />
                   </div>
@@ -488,7 +579,10 @@ export default function DMS() {
                 >
                   {!showSearch &&
                     sortedInbox.map((convo) => {
-                      if (convo.type === contentType)
+                      if (
+                        convo.type === contentType &&
+                        convo.last_message > filterBytime
+                      )
                         return (
                           <div
                             className="fit-container fx-scattered  box-pad-h option box-pad-v-s pointer slide-up"
@@ -865,7 +959,7 @@ const ConversationBox = ({ convo, back }) => {
   const getReply = (ID) => {
     let msg = convo.convo.find((conv) => conv.id === ID);
     if (!msg) return false;
-    return { content: msg.raw_content, self: msg.pubkey === userKeys.pub };
+    return { content: msg.content, self: msg.pubkey === userKeys.pub };
   };
 
   const handleLegacyDMs = () => {
@@ -1016,7 +1110,7 @@ const ConversationBox = ({ convo, back }) => {
                       maxWidth: "min(90%, 500px)",
                     }}
                   >
-                    <p className="p-one-line">{reply.content}</p>
+                    <div>{reply.content}</div>
                   </div>
                 </div>
               )}

@@ -109,15 +109,28 @@ const MobileDemo = ({ exit }) => {
                 </button>
               </a>
             </div>
-            <Link
-              to={"/yakihonne-mobile-app"}
-              className="fit-container"
-              target="_blank"
-            >
-              <button className="btn btn-normal btn-full">
-                {t("AArGqN7")}
-              </button>
-            </Link>
+            <div className="fit-container fx-centered">
+              <Link
+                to={"/yakihonne-mobile-app"}
+                className="fit-container"
+                target="_blank"
+              >
+                <button className="btn btn-normal btn-full">
+                  {t("AArGqN7")}
+                </button>
+              </Link>{" "}
+              <a
+                href="https://github.com/orgs/YakiHonne/repositories"
+                target="_blank"
+              >
+                <button
+                  className="btn btn-gray fx-centered"
+                  style={{ aspectRatio: "1/1", padding: "0" }}
+                >
+                  <div className="github-logo"></div>
+                </button>
+              </a>
+            </div>
           </div>
         </div>
       </div>

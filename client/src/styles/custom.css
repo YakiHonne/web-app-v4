@@ -534,6 +534,7 @@ main {
 .arrow-back {
     rotate: 90deg;
 }
+
 [dir="rtl"] .arrow-back {
     rotate: -90deg;
 }
@@ -2143,6 +2144,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-left: unset;
     border-right: 1px solid var(--dim-gray);
 }
+
 .reply-side-border-2 {
     margin-left: 1rem;
     border-left: 1px solid var(--dim-gray);
@@ -2173,4 +2175,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background-color: var(--white);
     z-index: 100;
     padding: 1rem 0;
+}
+
+.sw-search-box {
+    transition: .2s ease-in-out;
+    border: 1px solid transparent,
+}
+
+.sw-search-box:hover {
+    box-shadow: 0px 4px 10px var(--black-high-transparent);
+    border: 1px solid var(--dim-gray);
 }

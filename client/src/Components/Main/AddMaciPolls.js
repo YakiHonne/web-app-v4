@@ -12,6 +12,7 @@ import { getKeplrSigner } from "../../Helpers/Encryptions";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
+import { makeReadableNumber } from "../../Helpers/Helpers";
 
 export default function AddMaciPolls({ setPollAddr, exit }) {
   const { t } = useTranslation();
@@ -444,12 +445,12 @@ const OracleMACIPoll = ({ setPollAddr, exit }) => {
               {snapshotHeightEM && (
                 <ErrorMessage
                   message={t("AeyQzqu", {
-                    lAmount: snapshotHeightInfo.lowestHeight
-                      .toString()
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                    hAmount: snapshotHeightInfo.latestHeight
-                      .toString()
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    lAmount: makeReadableNumber(
+                      snapshotHeightInfo.lowestHeight
+                    ),
+                    hAmount: makeReadableNumber(
+                      snapshotHeightInfo.latestHeight
+                    ),
                   })}
                 />
               )}

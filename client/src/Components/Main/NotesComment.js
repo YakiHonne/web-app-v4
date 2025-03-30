@@ -249,6 +249,7 @@ export default function NotesComment({
           title={usersList.title}
           list={usersList.list}
           extras={usersList.extras}
+          extrasType={usersList.extrasType}
         />
       )}
       <div
@@ -323,7 +324,7 @@ export default function NotesComment({
             // borderLeft: hasReplies ? "1px solid var(--dim-gray)" : "",
           }}
         >
-          {isMuted && (
+          {/* {isMuted && (
             <div className="fit-container fx-centered fx-start-h">
               <div
                 className="fx-centered box-pad-h-s box-pad-v-s sc-s-18"
@@ -332,7 +333,7 @@ export default function NotesComment({
                 <p className="red-c p-medium">{t("AgJ47NX")}</p>
               </div>
             </div>
-          )}
+          )} */}
           {!isMuted && (
             <>
               <div className="fit-container pointer" onClick={onClick}>
@@ -401,7 +402,8 @@ export default function NotesComment({
                               list: postActions.likes.likes.map(
                                 (item) => item.pubkey
                               ),
-                              extras: [],
+                              extras: postActions.likes.likes,
+                              extrasType: "reaction",
                             });
                         }}
                       >
@@ -504,7 +506,7 @@ export default function NotesComment({
                       <div onClick={copyID} className="pointer">
                         <p>{t("AYFAFKs")}</p>
                       </div>,
-                      userKeys && userKeys.pub !== event.pubkey && (
+                      userKeys && (
                         <>
                           <BookmarkEvent
                             label={t("Ar5VgpT")}

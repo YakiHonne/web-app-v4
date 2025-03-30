@@ -516,17 +516,46 @@ router.post("/api/v1/translate", auth_data, async (req, res) => {
   }
 });
 
-router.get("/api/v1/link-preview", auth_data, async (req, res) => {
-  try {
-    const { url } = req.query;
-    const { body: html, url: finalUrl } = await got(url);
-    const metadata = await metascraper({ html, url: finalUrl });
-    res.json(metadata);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send({ message: "Metadata not found" });
-  }
-});
+// router.get("/api/v1/link-preview", auth_data, async (req, res) => {
+//   try {
+//     const { url } = req.query;
+//     if (!url) {
+//       return res.status(400).send({ message: "URL is required" });
+//     }
+
+//     // Fetch the HTML using axios
+//     const response = await axios.get(url, {
+//       headers: {
+//         "User-Agent":
+//           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+//         Accept:
+//           "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+//         "Accept-Language": "en-US,en;q=0.5",
+//         Referer: "https://www.google.com/", // Optional: mimic a referral
+//       },
+//       timeout: 10000, // 10 seconds timeout to avoid hanging
+//     });
+
+//     const html = response.data; // HTML content
+//     const finalUrl = response.request.res.responseUrl || url; //
+//     const metadata = await metascraper({ html, url: finalUrl });
+//     res.json(metadata);
+//   } catch (err) {
+//     // console.log(err);
+//     res.status(500).send({ message: "Metadata not found" });
+//   }
+// });
+// router.get("/api/v1/link-preview", auth_data, async (req, res) => {
+//   try {
+//     const { url } = req.query;
+//     const { body: html, url: finalUrl } = await got(url);
+//     const metadata = await metascraper({ html, url: finalUrl });
+//     res.json(metadata);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).send({ message: "Metadata not found" });
+//   }
+// });
 
 // router.get("/api/v1/video-url", auth_data, async (req, res) => {
 //   try {
