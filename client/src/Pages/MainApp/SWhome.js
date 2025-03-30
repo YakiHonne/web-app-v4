@@ -35,8 +35,8 @@ export default function SWhome() {
         <div className="main-container">
           <Sidebar />
           <main className="main-page-nostr-container">
-          <PagePlaceholder page={"maintenance"}/>
-            {/* <div
+          {/* <PagePlaceholder page={"maintenance"}/> */}
+            <div
               className="fx-centered fit-container fx-col box-pad-v"
               style={{ gap: 0, minHeight: "100vh" }}
             >
@@ -124,7 +124,7 @@ export default function SWhome() {
                   </div>
                 </div>
               </div>
-            </div> */}
+            </div>
           </main>
         </div>
       </div>

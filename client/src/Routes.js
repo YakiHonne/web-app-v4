@@ -38,6 +38,7 @@ import SmartWidgetsV2 from "./Pages/MainApp/SmartWidgetsV2";
 import SmartWidgetV2 from "./Pages/MainApp/SmartWidgetV2";
 import SmartWidgetCheckerV2 from "./Pages/MainApp/SmartWidgetCheckerV2";
 import SWhome from "./Pages/MainApp/SWhome";
+import Articles from "./Pages/MainApp/Articles";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
@@ -47,7 +48,7 @@ const routes = [
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/dashboard", element: <Dashboard /> },
-  { path: "/discover", element: <Explore /> },
+  { path: "/articles", element: <Articles /> },
   { path: "/notifications", element: <Notification /> },
   { path: "/curations/:id", element: <Curation /> },
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },
@@ -64,8 +65,8 @@ const routes = [
   { path: "/article/:id", element: <Article /> },
   { path: "/article/:AuthNip05/:ArtIdentifier", element: <Article /> },
   { path: "/users/:user_id", element: <User /> },
-  { path: "/verify-notes", element: <UN /> },
-  { path: "/verify-notes/:nevent", element: <UNEvent /> },
+  // { path: "/verify-notes", element: <UN /> },
+  // { path: "/verify-notes/:nevent", element: <UNEvent /> },
   { path: "/videos/:id", element: <Video /> },
   { path: "/videos/:AuthNip05/:VidIdentifier", element: <Video /> },
   { path: "/notes/:nevent", element: <Note /> },

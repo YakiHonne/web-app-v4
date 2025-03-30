@@ -36,6 +36,7 @@ import { useTranslation } from "react-i18next";
 import { getNoteTree } from "../../Helpers/Helpers";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
+import ZapAd from "../../Components/Main/ZapAd";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function Note() {
@@ -438,6 +439,7 @@ export default function Note() {
                             {isNoteTranslating && <LoadingDots />}
                           </div>
                         )}
+                        <ZapAd zappers={postActions.zaps.zaps} />
                         <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
                           <div
                             className="fx-centered"

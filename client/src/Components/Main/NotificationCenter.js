@@ -18,6 +18,7 @@ export default function NotificationCenter({
   icon = false,
   mobile = false,
   dismiss = false,
+  isCurrent = false,
 }) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -40,17 +41,17 @@ export default function NotificationCenter({
       userMutedList = userMutedList ? userMutedList.mutedlist : [];
       const lastEventCreatedAt = await getNotificationLastEventTS(userKeys.pub);
       let created_at = lastEventCreatedAt + 1 || 0;
-      let filter = getFilter(userFollowings, lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined)
-      let events = 0;
-      const sub = ndkInstance.subscribe(
-        filter,
-        {
-          cacheUsage: "CACHE_FIRST",
-          groupable: false,
-          skipValidation: true,
-          skipVerification: true,
-        }
+      let filter = getFilter(
+        userFollowings,
+        lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined
       );
+      let events = 0;
+      const sub = ndkInstance.subscribe(filter, {
+        cacheUsage: "CACHE_FIRST",
+        groupable: false,
+        skipValidation: true,
+        skipVerification: true,
+      });
 
       sub.on("event", (event) => {
         try {
@@ -105,13 +106,13 @@ export default function NotificationCenter({
         kinds: [30023, 30004, 34235, 30031],
         "#p": [userKeys.pub],
         limit: 20,
-        since
+        since,
       });
       filter.push({
         kinds: [1],
         "#p": [userKeys.pub],
         limit: 20,
-        since
+        since,
       });
     }
     if (!zaps)
@@ -119,38 +120,38 @@ export default function NotificationCenter({
         kinds: [9735],
         "#p": [userKeys.pub],
         limit: 20,
-        since
+        since,
       });
     if (!reactions)
       filter.push({
         kinds: [7],
         "#p": [userKeys.pub],
         limit: 20,
-        since
+        since,
       });
     if (!reposts)
       filter.push({
         kinds: [6],
         "#p": [userKeys.pub],
         limit: 20,
-        since
+        since,
       });
     if (!following) {
       filter.push({
         kinds: [30023, 30004, 34235, 30031],
         authors: fList,
         limit: 20,
-        since
+        since,
       });
       filter.push({
         kinds: [1],
         authors: fList,
         "#l": ["FLASH NEWS"],
         limit: 20,
-        since
+        since,
       });
     }
-    return filter
+    return filter;
   };
 
   const handleOnClick = () => {
@@ -166,13 +167,16 @@ export default function NotificationCenter({
         className={
           icon
             ? "round-icon"
-            : "pointer fit-container fx-scattered  box-pad-h-s box-pad-v-s inactive-link"
+            : `pointer fit-container fx-scattered  box-pad-h-s box-pad-v-s  ${
+                isCurrent ? "active-link" : "inactive-link"
+              }`
         }
         style={{ position: "relative" }}
         onClick={handleOnClick}
       >
         <div className="fx-centered">
-          <div className="ringbell-24"></div>
+          {!isCurrent && <div className="ringbell-24"></div>}
+          {isCurrent && <div className="ringbell-bold-24"></div>}
           {!icon && (
             <div className={`link-label ${mobile ? "p-big" : ""}`}>
               {t("ASSFfFZ")}

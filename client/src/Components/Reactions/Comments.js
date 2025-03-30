@@ -348,10 +348,10 @@ export default function Comments({
                   />
                 )}
               </div>
-              {/* <ActionTools
+              <ActionTools
                 setData={(data) => handleInsertTextInPosition(data)}
-              /> */}
-              <AddPolls setPollAddr={handleInsertTextInPosition} />
+              />
+              {/* <AddPolls setPollAddr={handleInsertTextInPosition} /> */}
             </div>
             <div className="fx-centered fit-container fx-end-h">
               <button

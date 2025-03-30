@@ -272,18 +272,16 @@ export default function Sidebar() {
 
               <div
                 onClick={() => {
-                  customHistory.push("/discover");
+                  customHistory.push("/articles");
                 }}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
-                  isPage("/discover") ? "active-link" : "inactive-link"
+                  isPage("/articles") ? "active-link" : "inactive-link"
                 }`}
               >
                 <div
-                  className={
-                    isPage("/discover") ? "discover-bold-24" : "discover-24"
-                  }
+                  className={isPage("/articles") ? "posts-bold-24" : "posts-24"}
                 ></div>
-                <div className="link-label">{t("ABSoIm9")}</div>
+                <div className="link-label">{t("AesMg52")}</div>
               </div>
               <div
                 onClick={() => {
@@ -302,7 +300,7 @@ export default function Sidebar() {
                 ></div>
                 <div className="link-label">{t("A2mdxcf")}</div>
               </div>
-              <div
+              {/* <div
                 onClick={() => customHistory.push("/verify-notes")}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                   isPage("/verify-notes") ? "active-link" : "inactive-link"
@@ -314,7 +312,7 @@ export default function Sidebar() {
                   }
                 ></div>
                 <div className="link-label">{t("AltGBkP")}</div>
-              </div>
+              </div> */}
               {!(showMedia || showMyContent || showWritingOptions) && (
                 <>
                   <div
@@ -334,7 +332,7 @@ export default function Sidebar() {
                     </div>
                     {isNewMsg && <div className="notification-dot"></div>}
                   </div>
-                  <NotificationCenter />
+                  <NotificationCenter isCurrent={isPage("/notifications")} />
                 </>
               )}
               <SearchSidebar />

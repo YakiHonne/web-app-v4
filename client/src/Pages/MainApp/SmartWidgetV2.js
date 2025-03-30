@@ -130,8 +130,8 @@ export default function SmartWidgetV2() {
         <div className="main-container">
           <Sidebar />
           <main className="main-page-nostr-container">
-            <PagePlaceholder page={"maintenance"}/>
-            {/* <div className="fx-centered fit-container fx-start-h fx-start-v">
+            {/* <PagePlaceholder page={"maintenance"}/> */}
+            <div className="fx-centered fit-container fx-start-h fx-start-v">
               <div className="box-pad-h-m fit-container">
                 {userKeys && (
                   <>
@@ -186,7 +186,7 @@ export default function SmartWidgetV2() {
                 )}
                 {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
               </div>
-            </div> */}
+            </div>
           </main>
         </div>
       </div>

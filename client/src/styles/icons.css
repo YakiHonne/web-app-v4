@@ -393,7 +393,11 @@
 .export-24,
 .keplr-icon,
 .github-logo,
-.github-logo-24 {
+.github-logo-24,
+.ringbell-bold,
+.ringbell-bold-24 ,
+.posts-bold,
+.posts-bold-24 {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -751,7 +755,11 @@
     .export,
     .export-24,
     .github-logo,
-    .github-logo-24 {
+    .github-logo-24,
+    .ringbell-bold,
+    .ringbell-bold-24 ,
+    .posts-bold,
+.posts-bold-24{
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -968,7 +976,9 @@
 .flag-it,
 .user-bold,
 .export,
-.github-logo {
+.github-logo,
+.ringbell-bold,
+.posts-bold {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1174,7 +1184,9 @@
 .flag-it-24,
 .user-bold-24,
 .export-24,
-.github-logo-24 {
+.github-logo-24,
+.ringbell-bold-24,
+.posts-bold-24{
     min-width: 20px;
     min-height: 20px;
 }
@@ -1196,10 +1208,19 @@
     min-height: 48px;
 }
 
+.posts-bold,
+.posts-bold-24 {
+    background-image: url('../media/icons/posts-bold.svg');
+}
+.ringbell-bold,
+.ringbell-bold-24 {
+    background-image: url('../media/icons/ringbell-bold.svg');
+}
 .github-logo,
 .github-logo-24 {
     background-image: url('../media/icons/github-logo.svg');
 }
+
 .export,
 .export-24 {
     background-image: url('../media/icons/export.svg');
