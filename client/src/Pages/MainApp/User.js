@@ -790,21 +790,11 @@ const UserFeed = ({ user }) => {
       curations: [30004],
       "smart-widget": [30031],
     };
-    if (contentFrom === "flashnews")
-      return [
-        {
-          kinds: kinds[contentFrom],
-          authors: [pubkey],
-          "#l": ["FLASH_NEWS"],
-          limit: 10,
-          until: lastEventTime,
-        },
-      ];
     return [
       {
         kinds: kinds[contentFrom],
         authors: [pubkey],
-        limit: 10,
+        limit: 50,
         until: lastEventTime,
       },
     ];
@@ -818,7 +808,7 @@ const UserFeed = ({ user }) => {
       if (!container) return;
       if (
         container.scrollHeight - container.scrollTop - 60 >
-        document.documentElement.offsetHeight
+        document.documentElement.offsetHeight && events[contentFrom].length > 4
       ) {
         return;
       }
