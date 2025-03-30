@@ -794,7 +794,7 @@ const UserFeed = ({ user }) => {
       {
         kinds: kinds[contentFrom],
         authors: [pubkey],
-        limit: 50,
+        limit: 100,
         until: lastEventTime,
       },
     ];
