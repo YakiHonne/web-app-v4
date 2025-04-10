@@ -174,7 +174,7 @@ const OracleMACIPoll = ({ setPollAddr, exit }) => {
       if (!isInputValid) return;
       setIsLoading(true);
       const client = new MaciClient({
-        network: 'mainnet',
+        network: process.env.REACT_APP_NETWORK,
       });
       let { signer } = await getKeplrSigner();
 
