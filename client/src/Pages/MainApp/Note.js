@@ -148,7 +148,7 @@ export default function Note() {
     setIsNoteTranslating(false);
     let isEvent = false;
     const id = nip19.decode(nevent)?.data.id || nip19.decode(nevent)?.data;
-    
+
     let subscription = ndkInstance.subscribe([{ ids: [id] }], {
       cacheUsage: "ONLY_RELAY",
       subId: "note-req",
@@ -158,7 +158,7 @@ export default function Note() {
     });
 
     subscription.on("event", async (event) => {
-      if(bannedList.includes(event.pubkey)) customHistory.push("/")
+      if (bannedList.includes(event.pubkey)) customHistory.push("/");
       if (event.kind !== 1) {
         setUnsupportedKind(true);
         setIsLoading(false);
@@ -246,8 +246,33 @@ export default function Note() {
       setIsNoteTranslating(false);
       return;
     }
-    let res = await translate(note.content);
-    if (res.status === 500) {
+    try {
+      let res = await translate(note.content);
+      if (res.status === 500) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AZ5VQXL"),
+          })
+        );
+      }
+      if (res.status === 400) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AJeHuH1"),
+          })
+        );
+      }
+      if (res.status === 200) {
+        let noteTree = await getNoteTree(res.res);
+        setTranslatedNote(noteTree);
+        setShowTranslation(true);
+      }
+      setIsNoteTranslating(false);
+    } catch (err) {
+      setShowTranslation(false);
+      setIsNoteTranslating(false);
       dispatch(
         setToast({
           type: 2,
@@ -255,20 +280,6 @@ export default function Note() {
         })
       );
     }
-    if (res.status === 400) {
-      dispatch(
-        setToast({
-          type: 2,
-          desc: t("AJeHuH1"),
-        })
-      );
-    }
-    if (res.status === 200) {
-      let noteTree = await getNoteTree(res.res);
-      setTranslatedNote(noteTree);
-      setShowTranslation(true);
-    }
-    setIsNoteTranslating(false);
   };
 
   return (
@@ -415,7 +426,7 @@ export default function Note() {
                           {showTranslation ? translatedNote : note.note_tree}
                         </div>
 
-                        {isTransEnabled && (
+                        {/* {isTransEnabled && (
                           <div
                             className="fit-container box-pad-h-m"
                             style={{ paddingTop: ".5rem" }}
@@ -438,8 +449,23 @@ export default function Note() {
                             )}
                             {isNoteTranslating && <LoadingDots />}
                           </div>
+                        )} */}
+                        {postActions?.zaps?.zaps?.length > 0 && (
+                          <div className="fit-container box-pad-h-m">
+                            <ZapAd
+                              zappers={postActions.zaps.zaps}
+                              onClick={() =>
+                                setUsersList({
+                                  title: t("AVDZ5cJ"),
+                                  list: postActions.zaps.zaps.map(
+                                    (item) => item.pubkey
+                                  ),
+                                  extras: postActions.zaps.zaps,
+                                })
+                              }
+                            />
+                          </div>
                         )}
-                        <ZapAd zappers={postActions.zaps.zaps} />
                         <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
                           <div
                             className="fx-centered"
@@ -594,44 +620,69 @@ export default function Note() {
                               </div>
                             </div>
                           </div>
-                          <OptionsDropdown
-                            options={[
-                              <div onClick={copyID} className="pointer">
-                                <p>{t("AYFAFKs")}</p>
-                              </div>,
-                              userKeys && userKeys.pub !== note.pubkey && (
-                                <>
-                                  <BookmarkEvent
-                                    label={t("Ar5VgpT")}
-                                    pubkey={note.id}
-                                    kind={"1"}
-                                    itemType="e"
-                                  />
-                                </>
-                              ),
-                              <div className="fit-container fx-centered fx-start-h pointer">
-                                <ShareLink
-                                  label={t("A1IsKJ0")}
-                                  path={`/notes/${note.nEvent}`}
-                                  title={author.display_name || author.name}
-                                  description={note.content}
-                                  kind={1}
-                                  shareImgData={{
-                                    post: note,
-                                    author,
-                                    label: t("Az5ftet"),
-                                  }}
-                                />
-                              </div>,
-                              <div onClick={muteUnmute} className="pointer">
-                                {isMuted ? (
-                                  <p className="red-c">{t("AKELUbQ")}</p>
-                                ) : (
-                                  <p className="red-c">{t("AGMxuQ0")}</p>
+                          <div className="fx-centered">
+                            {isTransEnabled && (
+                              <div className="fit-container">
+                                {!isNoteTranslating && !showTranslation && (
+                                  <div
+                                    className="icon-tooltip"
+                                    data-tooltip={t("AdHV2qJ")}
+                                    onClick={translateNote}
+                                  >
+                                    <div className="translate-24"></div>
+                                  </div>
                                 )}
-                              </div>,
-                            ]}
-                          />
+                                {!isNoteTranslating && showTranslation && (
+                                  <div
+                                    className="icon-tooltip"
+                                    data-tooltip={t("AE08Wte")}
+                                    onClick={() => setShowTranslation(false)}
+                                  >
+                                    <div className="translate-24"></div>
+                                  </div>
+                                )}
+                                {isNoteTranslating && <LoadingDots />}
+                              </div>
+                            )}
+                            <OptionsDropdown
+                              options={[
+                                <div onClick={copyID} className="pointer">
+                                  <p>{t("AYFAFKs")}</p>
+                                </div>,
+                                userKeys && userKeys.pub !== note.pubkey && (
+                                  <>
+                                    <BookmarkEvent
+                                      label={t("Ar5VgpT")}
+                                      pubkey={note.id}
+                                      kind={"1"}
+                                      itemType="e"
+                                    />
+                                  </>
+                                ),
+                                <div className="fit-container fx-centered fx-start-h pointer">
+                                  <ShareLink
+                                    label={t("A1IsKJ0")}
+                                    path={`/notes/${note.nEvent}`}
+                                    title={author.display_name || author.name}
+                                    description={note.content}
+                                    kind={1}
+                                    shareImgData={{
+                                      post: note,
+                                      author,
+                                      label: t("Az5ftet"),
+                                    }}
+                                  />
+                                </div>,
+                                <div onClick={muteUnmute} className="pointer">
+                                  {isMuted ? (
+                                    <p className="red-c">{t("AKELUbQ")}</p>
+                                  ) : (
+                                    <p className="red-c">{t("AGMxuQ0")}</p>
+                                  )}
+                                </div>,
+                              ]}
+                            />
+                          </div>
                         </div>
                         <CommentsSection
                           noteTags={note.tags}

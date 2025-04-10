@@ -1,11 +1,73 @@
-import React, { useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import Sidebar from "../../Components/Main/Sidebar";
 import PagePlaceholder from "../../Components/PagePlaceholder";
+import SWActionPreview from "../../Components/Main/SWActionPreview";
+import { useTranslation } from "react-i18next";
+import { getSubData } from "../../Helpers/Controlers";
+import { saveUsers } from "../../Helpers/DB";
+import { getEmptyuserMetadata, getParsedSW } from "../../Helpers/Encryptions";
+import LoadingDots from "../../Components/LoadingDots";
+import MiniApp from "../../Components/Main/MiniApp";
+import SWCard from "../../Components/Main/SWCard";
+import WidgetCardV2 from "../../Components/Main/WidgetCardV2";
+import { useSelector } from "react-redux";
+import LaunchSW from "./LaunchSW";
+import axiosInstance from "../../Helpers/HTTP_Client";
+import ChatBubble from "../../Components/ChatBubble";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
+import "highlight.js/styles/github-dark.css";
+import { copyText } from "../../Helpers/Helpers";
+import { nanoid } from "nanoid";
+import axios from "axios";
+import { Link } from "react-router-dom";
+
+const getSavedConversation = (pubkey) => {
+  let aiConversation = localStorage.getItem("aiConversation");
+  aiConversation = JSON.parse(aiConversation) || {};
+  let conversation = aiConversation[pubkey];
+  if (!conversation) return [];
+  return conversation;
+};
+
+const saveConversation = (pubkey, data) => {
+  const aiConversation = localStorage.getItem("aiConversation");
+  let conversation = JSON.parse(aiConversation) || {};
+  conversation[pubkey] = data;
+  localStorage.setItem("aiConversation", JSON.stringify(conversation));
+};
 
 export default function SWhome() {
   const [searchType, setSearchType] = useState(0);
-  const inputFieldRef = useRef(null);
+  // const [searchKeywordInput, setSearchKeywordInput] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  // const inputFieldRef = useRef(null);
+
+  // useEffect(() => {
+  //   if (inputFieldRef.current) {
+  //     inputFieldRef.current.style.height = "20px";
+  //     inputFieldRef.current.style.height = `${inputFieldRef.current.scrollHeight}px`;
+  //     inputFieldRef.current.scrollTop = inputFieldRef.current.scrollHeight;
+  //     inputFieldRef.current.focus();
+  //     // if (
+  //     //   inputFieldRef.current.scrollHeight > 50 &&
+  //     //   inputFieldRef.current.scrollHeight < 250
+  //     // )
+  //     //   setIfHeight(inputFieldRef.current.scrollHeight - 50);
+  //     // else setIfHeight(0);
+  //   }
+  // }, [searchKeywordInput]);
+
+  const handleSearch = (e, searchKeywordInput) => {
+    if (e) e.preventDefault();
+    if (searchKeywordInput.trim()) {
+      setSearchKeyword(searchKeywordInput.trim());
+    }
+  };
+
   return (
     <div>
       <Helmet>
@@ -34,100 +96,875 @@ export default function SWhome() {
       <div className="fit-container fx-centered">
         <div className="main-container">
           <Sidebar />
-          <main className="main-page-nostr-container">
-          {/* <PagePlaceholder page={"maintenance"}/> */}
+          <Main />
+          {/* <main className="main-page-nostr-container">
             <div
-              className="fx-centered fit-container fx-col box-pad-v"
+              className="fx-centered fit-container fx-start-h fx-col box-pad-v"
               style={{ gap: 0, minHeight: "100vh" }}
             >
-              <div className="box-pad-v fx-centered">
+              {searchType === 1 && (
                 <div
-                  className="smart-widget-24"
                   style={{
-                    minWidth: "44px",
-                    minHeight: "44px",
-                    animation: "1.5s infinite rotate",
+                    width: "min(100%, 600px)",
                   }}
-                ></div>
-                <h3>Smart Widgets</h3>
-              </div>
-              <div
-                className="sc-s box-pad-h-s box-pad-v-s fx-centered fx-col sw-search-box"
-                style={{
-                  width: "min(100%, 600px)",
-                }}
-                onClick={() => inputFieldRef?.current?.focus()}
-              >
-                <div className="fit-container">
-                  <input
-                    type="text"
-                    className="if ifs-full if-no-border"
-                    value={""}
-                    placeholder="Ask anything..."
-                    ref={inputFieldRef}
+                  className="fx-centered fx-col fx-start-v box-pad-h-m"
+                >
+                  <ChatWindow
+                    message={searchKeyword}
+                    setMessage={setSearchKeyword}
                   />
                 </div>
-                <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
-                  <div className="fx-centered">
-                    <div
-                      className="sc-s box-pad-h-m box-pad-v-s option pointer fx-centered"
-                      style={{
-                        backgroundColor: !searchType ? "var(--pale-gray)" : "",
-                      }}
-                      onClick={() => setSearchType(0)}
-                    >
-                      <div className="search"></div>
-                      Widget search
-                    </div>
-                    <div
-                      className="sc-s box-pad-h-m box-pad-v-s option pointer fx-centered"
-                      style={{
-                        backgroundColor: searchType ? "var(--pale-gray)" : "",
-                      }}
-                      onClick={() => setSearchType(1)}
-                    >
-                      <div className="ringbell"></div>
-                      Get inspired
+              )}
+              {searchType === 0 && (
+                <div className="box-pad-v fx-centered">
+                  <div
+                    className="smart-widget-24"
+                    style={{
+                      minWidth: "44px",
+                      minHeight: "44px",
+                      animation: "1.5s infinite rotate",
+                    }}
+                  ></div>
+                  <h3>Smart Widgets</h3>
+                </div>
+              )}
+
+              <InputField
+                handleSearch={handleSearch}
+                searchType={searchType}
+                setSearchType={setSearchType}
+                setSearchKeyword={setSearchKeyword}
+              />
+              {searchType === 0 && (
+                <>
+                  <div
+                    style={{
+                      width: "min(100%, 600px)",
+                    }}
+                    className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
+                  >
+                    <p className="gray-c">
+                      Try our different method of searching
+                    </p>
+                    <div className="fit-container fx-centered fx-stretch">
+                      <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
+                        <p className="gray-c">
+                          <span className="c1-c">Widget search </span>
+                          searching for published smart widgets and what people
+                          made
+                        </p>
+                      </div>
+                      <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-v">
+                        <p className="gray-c">
+                          <span className="c1-c">Get inspired </span>
+                          ask our AI to help you build your smart widget
+                        </p>
+                        <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
+                          <div className="github-logo"></div>
+                          Get started
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div
-                    className="round-icon"
-                    style={{ minWidth: "40px", minHeight: "40px" }}
+                    style={{
+                      width: "min(100%, 600px)",
+                    }}
+                    className="fx-centered fx-col fx-start-v box-pad-h-m"
                   >
-                    <div className="send"></div>
+                    {searchKeyword && (
+                      <div className="fit-container fx-scattered">
+                        <h4>
+                          <span className="gray-c">Searching for:</span>{" "}
+                          {searchKeyword}
+                        </h4>
+                        <div
+                          className="close"
+                          style={{ position: "static" }}
+                          onClick={() => setSearchKeyword("")}
+                        >
+                          <div></div>
+                        </div>
+                      </div>
+                    )}
+                    <SWSet external={searchKeyword} />
                   </div>
-                </div>
-              </div>
-              <div
-                style={{
-                  width: "min(100%, 600px)",
-                }}
-                className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
-              >
-                <p className="gray-c">Try our different method of searching</p>
-                <div className="fit-container fx-centered fx-stretch">
-                  <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
-                    <p className="gray-c">
-                      <span className="c1-c">Widget search </span>
-                      searching for published smart widgets and what people made
-                    </p>
-                  </div>
-                  <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-v">
-                    <p className="gray-c">
-                      <span className="c1-c">Get inspired </span>
-                      ask our AI to help you build your smart widget
-                    </p>
-                    <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
-                      <div className="github-logo"></div>
-                      Get started
-                    </div>
-                  </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
-          </main>
+          </main> */}
         </div>
       </div>
     </div>
   );
 }
+
+const Main = () => {
+  const [searchType, setSearchType] = useState(0);
+  const [status, setStatus] = useState(true);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const handleSearch = (e, searchKeywordInput) => {
+    if (e) e.preventDefault();
+    if (searchKeywordInput.trim()) {
+      setSearchKeyword(searchKeywordInput.trim());
+    }
+  };
+
+  return (
+    <main className="main-page-nostr-container">
+      {/* <PagePlaceholder page={"maintenance"}/> */}
+      <div
+        className="fx-centered fit-container fx-start-h fx-col box-pad-v"
+        style={{ gap: 0, minHeight: "100vh" }}
+      >
+        {searchType === 1 && (
+          <div
+            style={{
+              width: "min(100%, 600px)",
+            }}
+            className="fx-centered fx-col fx-start-v box-pad-h-m"
+          >
+            <ChatWindow
+              message={searchKeyword}
+              setMessage={setSearchKeyword}
+              setStatus={setStatus}
+            />
+          </div>
+        )}
+        {searchType === 0 && (
+          <div className="box-pad-v fx-centered">
+            <div
+              className="smart-widget-24"
+              style={{
+                minWidth: "44px",
+                minHeight: "44px",
+                animation: "1.5s infinite rotate",
+              }}
+            ></div>
+            <h3>Smart Widgets</h3>
+          </div>
+        )}
+
+        <InputField
+          handleSearch={handleSearch}
+          searchType={searchType}
+          setSearchType={setSearchType}
+          setSearchKeyword={setSearchKeyword}
+          status={status}
+        />
+        {searchType === 0 && (
+          <>
+            <div
+              style={{
+                width: "min(100%, 600px)",
+              }}
+              className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
+            >
+              <p className="gray-c">Try our different method of searching</p>
+              <div className="fit-container fx-centered fx-stretch">
+                <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
+                  <p className="gray-c">
+                    <span className="c1-c">Widget search </span>
+                    searching for published smart widgets and what people made
+                  </p>
+                </div>
+                <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-v">
+                  <p className="gray-c">
+                    <span className="c1-c">Get inspired </span>
+                    ask our AI to help you build your smart widget
+                  </p>
+                  <div className="fx-centered fit-container">
+                    <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
+                      <div className="github-logo"></div>
+                      Get started
+                    </div>
+                    <Link to={"/sw-playground"}>
+                      <div className="box-pad-h-s box-pad-v-s sc-s fx-centered bg-sp option pointer">
+                        Playground
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              style={{
+                width: "min(100%, 600px)",
+              }}
+              className="fx-centered fx-col fx-start-v box-pad-h-m"
+            >
+              {searchKeyword && (
+                <div className="fit-container fx-scattered">
+                  <h4>
+                    <span className="gray-c">Searching for:</span>{" "}
+                    {searchKeyword}
+                  </h4>
+                  <div
+                    className="close"
+                    style={{ position: "static" }}
+                    onClick={() => setSearchKeyword("")}
+                  >
+                    <div></div>
+                  </div>
+                </div>
+              )}
+              <SWSet external={searchKeyword} />
+            </div>
+          </>
+        )}
+      </div>
+    </main>
+  );
+};
+
+const SWSet = ({ external }) => {
+  const { t } = useTranslation();
+  const userSavedTools = useSelector((state) => state.userSavedTools);
+  const [actions, setActions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSW, setSelectedSW] = useState("");
+  const [lastEventTimestamp, setLastEventTimestamp] = useState(undefined);
+  const [isEnded, setEnded] = useState(false);
+  const [savedTools, setSavedTools] = useState([]);
+  const [searchedTools, setSearchedTools] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (userSavedTools.length === 0 && savedTools.length > 0) {
+        setSavedTools([]);
+        return;
+      }
+      let swIDs = userSavedTools.map((_) => _.split(":")[2]);
+      if (swIDs.length === 0) return;
+      const data = await getSubData([{ kinds: [30033], "#d": swIDs }]);
+      setSavedTools(data.data.map((_) => getParsedSW(_)));
+      saveUsers(data.pubkeys);
+    };
+    const fetchDataDVM = async () => {
+      try {
+        setIsLoading(true);
+        let data = await axiosInstance.post("/api/v1/dvm-query", {
+          message: external,
+        });
+        setSearchedTools(data.data.map((_) => getParsedSW(_)));
+        saveUsers(external.map((_) => _.pubkey));
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setIsLoading(false);
+      }
+    };
+    if (!external) fetchData();
+    if (external) fetchDataDVM();
+  }, [userSavedTools, external]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!isLoading) setIsLoading(true);
+      const data = await getSubData([
+        { kinds: [30033], limit: 4, until: lastEventTimestamp },
+      ]);
+      setActions((prev) => [...prev, ...data.data.map((_) => getParsedSW(_))]);
+      saveUsers(data.pubkeys);
+      setIsLoading(false);
+      if (data.data.length === 0) setEnded(true);
+    };
+
+    fetchData();
+  }, [lastEventTimestamp]);
+
+  const handleLastEventTS = () => {
+    setLastEventTimestamp(actions[actions.length - 1].created_at - 1);
+  };
+
+  const handleCbButton = (data) => {
+    if (data.type === "basic") setSelectedSW(data);
+  };
+
+  return (
+    <>
+      {selectedSW && (
+        <LaunchSW metadata={selectedSW} exit={() => setSelectedSW("")} />
+      )}
+      <div className="fit-container">
+        {((!external && actions.length > 0) ||
+          (external && searchedTools.length > 0)) && (
+          <p className="gray-c box-pad-v-s">{t("AQ3VGVk")}</p>
+        )}
+        <div className="fit-container fx-start-h fx-wrap fx-centered">
+          {!external &&
+            actions.map((sw) => {
+              return (
+                <div className="ifs-small" key={sw.id}>
+                  <SWActionPreview
+                    metadata={sw}
+                    setSelectSW={(data) => setSelectedSW(data)}
+                    cbButton={handleCbButton}
+                  />
+                </div>
+              );
+            })}
+          {external &&
+            searchedTools.map((sw) => {
+              return (
+                <div className="ifs-small" key={sw.id}>
+                  <SWActionPreview
+                    metadata={sw}
+                    setSelectSW={(data) => setSelectedSW(data)}
+                    cbButton={handleCbButton}
+                  />
+                </div>
+              );
+            })}
+          {!isLoading && !isEnded && !external && (
+            <div
+              className="fit-container fx-centered box-pad-v-m pointer btn-text-gray"
+              onClick={handleLastEventTS}
+            >
+              <p>{t("AnWFKlu")}</p>
+              <div className="arrow"></div>
+            </div>
+          )}
+          {isEnded && (
+            <div className="fit-container box-pad-v-m fx-centered">
+              <p className="gray-c">{t("AUrhqmn")}</p>
+            </div>
+          )}
+          {isLoading && (
+            <div
+              style={{ height: "50px" }}
+              className="fit-container fx-centered"
+            >
+              <LoadingDots />
+            </div>
+          )}
+        </div>
+        {((!external && actions.length === 0) ||
+          (external && searchedTools.length === 0)) &&
+          !isLoading && (
+            <div
+              className="fit-container fx-centered fx-col"
+              style={{ height: "150px" }}
+            >
+              <div
+                className="yaki-logomark"
+                style={{ minWidth: "48px", minHeight: "48px", opacity: 0.5 }}
+              ></div>
+              <p className="gray-c">No widgets were found</p>
+            </div>
+          )}
+      </div>
+    </>
+  );
+};
+
+const ChatWindow = ({ message, setMessage, setStatus }) => {
+  const userKeys = useSelector((state) => state.userKeys);
+  const [messages, setMessages] = useState(getSavedConversation(userKeys.pub));
+  const [loading, setLoading] = useState(false);
+  const [stopSnapping, setStopSnapping] = useState(false);
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (message) handleSend(message);
+    // if (stopSnapping > 1) setStopSnapping(0);
+  }, [message]);
+
+  useEffect(() => {
+    if (containerRef.current && !stopSnapping) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const atBottom =
+        Math.abs(
+          container.scrollHeight - container.scrollTop - container.clientHeight
+        ) <= 7;
+
+      if (!atBottom) {
+        setStopSnapping(true);
+      } else {
+        setStopSnapping(false);
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [containerRef]);
+
+  const handleSend = async (input) => {
+    if (!input.trim()) return;
+
+    const newMessages = [
+      ...messages,
+      { role: "user", content: input, created_at: Date.now() },
+    ];
+    setMessages(newMessages);
+    setMessage("");
+    setLoading(true);
+    setStatus(false);
+    try {
+      const res = await axios.post("https://yakiai.yakihonne.com/api/v1/ai", {
+        input,
+      });
+
+      const data = res.data.message.content;
+      saveConversation(userKeys.pub, [
+        ...newMessages,
+        { role: "assistant", content: data, created_at: Date.now() },
+      ]);
+      if (stopSnapping) setStopSnapping(false);
+      setLoading(false);
+      animateTyping(data, newMessages);
+    } catch (err) {
+      console.log(err);
+      setStatus(true);
+      setLoading(false);
+    }
+  };
+
+  const animateTyping = (text, history) => {
+    const words = text.split(" ");
+    let index = 0;
+    let current = "";
+
+    const typing = () => {
+      if (index < words.length) {
+        current += (index === 0 ? "" : " ") + words[index++];
+        setMessages([
+          ...history,
+          { role: "assistant", content: current, created_at: Date.now() },
+        ]);
+        setTimeout(typing, 30); // adjust speed here (e.g., 30ms per word)
+      } else {
+        setLoading(false);
+        setStatus(true);
+      }
+    };
+
+    typing();
+  };
+
+  const handleCopyelement = (id) => {
+    const codeRef = document.getElementById(id);
+    if (!codeRef) return;
+    const codeText = codeRef.innerText;
+    copyText(codeText, "Code is copied");
+  };
+
+  return (
+    <div className="chat-container">
+      <div className="messages" ref={containerRef}>
+        {messages.map((msg, i) => (
+          <div key={i} className={`message-${msg.role}`}>
+            <ReactMarkdown
+              children={msg.content}
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                code({ node, inline, className, children, ...props }) {
+                  const match = /language-(\w+)/.exec(className || "");
+                  const codeRef = nanoid();
+                  return !inline ? (
+                    <pre style={{ padding: "1rem 0" }}>
+                      <div
+                        className="sc-s-18 box-pad-v-s box-pad-h-m fit-container fx-scattered"
+                        style={{
+                          borderBottomRightRadius: 0,
+                          borderBottomLeftRadius: 0,
+                          position: "relative",
+                          top: "0px",
+                          position: "sticky",
+                          border: "none",
+                        }}
+                      >
+                        <p className="gray-c p-italic">
+                          {match?.length > 0 ? match[1] : ""}
+                        </p>
+                        <div
+                          className="copy pointer"
+                          onClick={() => {
+                            handleCopyelement(codeRef);
+                          }}
+                        ></div>
+                      </div>
+                      <code
+                        className={`hljs ${className}`}
+                        {...props}
+                        id={codeRef}
+                      >
+                        {children}
+                      </code>
+                    </pre>
+                  ) : (
+                    <code
+                      className="inline-code"
+                      {...props}
+                      style={{ margin: "1rem 0" }}
+                    >
+                      {children}
+                    </code>
+                  );
+                },
+              }}
+            />
+          </div>
+        ))}
+        {loading && (
+          <div
+            className="sc-s box-pad-h-m box-pad-v-m"
+            style={{ width: "60px", border: "none" }}
+          >
+            <LoadingDots />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+function InputField({
+  status = true,
+  handleSearch,
+  searchType,
+  setSearchType,
+  setSearchKeyword,
+}) {
+  const [searchKeywordInput, setSearchKeywordInput] = useState("");
+  const [showPromptType, setShowPromptType] = useState(false);
+  const [swType, setSwType] = useState("");
+  const [swParams, setSwParams] = useState([]);
+  const [swTags, setSwTags] = useState([]);
+  const inputFieldRef = useRef(null);
+
+  useEffect(() => {
+    if (inputFieldRef.current) {
+      inputFieldRef.current.style.height = "20px";
+      inputFieldRef.current.style.height = `${inputFieldRef.current.scrollHeight}px`;
+      inputFieldRef.current.scrollTop = inputFieldRef.current.scrollHeight;
+      inputFieldRef.current.focus();
+      const chatContainer = document.querySelector(".chat-container");
+      if (chatContainer) {
+        if (inputFieldRef.current.scrollHeight > 50)
+          chatContainer.style.height = `calc(80vh - ${Math.min(
+            inputFieldRef.current.scrollHeight - 50,
+            200
+          )}px)`;
+        else chatContainer.style.height = "80vh";
+      }
+    }
+  }, [searchKeywordInput]);
+
+  useEffect(() => {
+    if (status && inputFieldRef.current) inputFieldRef.current.focus();
+  }, [status]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (!e.shiftKey) {
+        e.preventDefault();
+        setSearchKeywordInput("");
+        handleSearch(e, searchKeywordInput);
+      }
+    }
+  };
+
+  const handleTyping = (e) => {
+    let value = e.target.value;
+    let tempValue = value;
+    setSearchKeywordInput(value);
+    // const textBeforeCursor = tempValue.slice(0, e.target.selectionStart);
+    // const parts = textBeforeCursor.split(/\s+/);
+    // const lastPart = parts[parts.length - 1] || "";
+
+    // if (lastPart.startsWith("/")) {
+    //   setShowPromptType(true);
+    //   if (["/tool", "/action", "/basic"].includes(lastPart))
+    //     setSwType(lastPart);
+    //   else setSwType("");
+    // } else setShowPromptType(false);
+
+    // if (lastPart.startsWith(":")) {
+    //   const list = [
+    //     "keywords()",
+    //     ":has_nostr_scheme:",
+    //     ":has_zap:",
+    //     ":has_redirect:",
+    //     ":has_post:",
+    //     ":has_input_field:",
+    //   ];
+    //   setSwParams((prev) => [...prev, list.includes(lastPart)]);
+    // }
+  };
+
+  const handleInsertTextInPosition = (keyword) => {
+    let cursorPosition = 0;
+    if (inputFieldRef.current) {
+      cursorPosition = inputFieldRef.current.selectionStart;
+    }
+
+    const textBeforeCursor = searchKeywordInput.slice(0, cursorPosition);
+    const textAfterCursor = searchKeywordInput.slice(cursorPosition);
+
+    let wordStart = textBeforeCursor.lastIndexOf(" ");
+    if (wordStart === -1) {
+      wordStart = 0;
+    } else {
+      wordStart += 1;
+    }
+    const textBeforeWord = searchKeywordInput.slice(0, wordStart);
+
+    const updatedText = `${textBeforeWord}${keyword} ${textAfterCursor}`;
+
+    if (searchKeywordInput) {
+      setSearchKeywordInput(updatedText);
+    } else {
+      setSearchKeywordInput(keyword);
+    }
+
+    const newCursorPosition = wordStart + keyword.length + 1;
+    if (keyword.startsWith("/")) {
+      setSwType(keyword);
+      setSwParams([]);
+    }
+    setTimeout(() => {
+      if (inputFieldRef.current) {
+        inputFieldRef.current.selectionStart =
+          inputFieldRef.current.selectionEnd = newCursorPosition;
+        inputFieldRef.current.focus();
+      }
+    }, 0);
+  };
+
+  return (
+    <div
+      className="sc-s box-pad-h-s box-pad-v-s fx-centered fx-col sw-search-box"
+      style={{
+        width: "min(100%, 600px)",
+        cursor: status ? "unset" : "not-allowed",
+        overflow: "visible",
+      }}
+      onClick={() => inputFieldRef?.current?.focus()}
+    >
+      <form
+        onSubmit={(e) => {
+          if (status) {
+            setSearchKeywordInput("");
+            handleSearch(e, searchKeywordInput);
+          }
+        }}
+        style={{ position: "relative" }}
+        className="fit-container"
+      >
+        <textarea
+          type="text"
+          className={`if ifs-full if-no-border ${status ? "" : "if-disabled"}`}
+          value={searchKeywordInput}
+          onChange={handleTyping}
+          placeholder={
+            searchType === 0
+              ? "Type keywords (ie: keyword1, keyword2..)"
+              : "Ask anything..."
+          }
+          ref={inputFieldRef}
+          onKeyDown={handleKeyDown}
+          disabled={!status}
+          style={{
+            padding: "1rem 0rem 1rem 1rem",
+            height: "20px",
+            maxHeight: "250px",
+            borderRadius: 0,
+          }}
+        />
+        {/* {showPromptType && (
+          <PromptForTypes
+            keyword={swType}
+            onClick={(data) => {
+              setShowPromptType(false);
+              handleInsertTextInPosition(data);
+            }}
+          />
+        )}
+        {swType && (
+          <PromptForKeywords
+            type={swType}
+            selectedKeywords={swParams}
+            onClick={(data) => {
+              setSwParams((prev) => [...prev, data]);
+              handleInsertTextInPosition(data);
+            }}
+          />
+        )} */}
+      </form>
+      <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
+        <div className="fx-centered">
+          <div
+            className={`sc-s box-pad-h-m box-pad-v-s ${
+              status ? "option pointer" : "if-disabled"
+            } fx-centered`}
+            style={{
+              backgroundColor: !searchType ? "var(--pale-gray)" : "",
+            }}
+            onClick={() => {
+              if (status) {
+                setSearchType(0);
+                setSearchKeyword("");
+              }
+            }}
+          >
+            <div className="search"></div>
+            Widget search
+          </div>
+          <div
+            className={`sc-s box-pad-h-m box-pad-v-s ${
+              status ? "option pointer" : "if-disabled"
+            } fx-centered`}
+            style={{
+              backgroundColor: searchType ? "var(--pale-gray)" : "",
+            }}
+            onClick={() => {
+              if (status) {
+                setSearchType(1);
+                setSearchKeyword("");
+              }
+            }}
+          >
+            <div className="ringbell"></div>
+            Get inspired
+          </div>
+        </div>
+        {status && (
+          <div
+            className="round-icon slide-up"
+            style={{ minWidth: "40px", minHeight: "40px" }}
+            onClick={() => {
+              if (status) {
+                setSearchKeywordInput("");
+                handleSearch(undefined, searchKeywordInput);
+              }
+            }}
+          >
+            <div className="send"></div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const PromptForTypes = ({ keyword, onClick }) => {
+  const list = [
+    {
+      display_name: "/tool",
+      icon: "",
+    },
+    {
+      display_name: "/action",
+      icon: "",
+    },
+    {
+      display_name: "/basic",
+      icon: "",
+    },
+  ];
+  const filteredList = list.filter((_) => _.display_name.includes(keyword));
+  if (filteredList.length === 0) return null;
+  return (
+    <div
+      className="fx-centered fx-col fx-start-v fx-start-h fit-container box-pad-h-s box-pad-v-s sc-s-18 slide-up"
+      style={{
+        position: "absolute",
+        top: "calc(100% + 5px)",
+        left: 0,
+        zIndex: "10",
+        gap: 0,
+      }}
+    >
+      <h5 className="box-pad-h-s box-pad-v-s c1-c">
+        Choose a smart widget type
+      </h5>
+      {filteredList.map((_, index) => {
+        return (
+          <div
+            key={index}
+            className="box-pad-h-s box-pad-v-s option pointer fit-container"
+            onClick={() => onClick(_.display_name)}
+          >
+            {_.display_name}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const PromptForKeywords = ({ type, selectedKeywords, onClick }) => {
+  const list = [
+    {
+      display_name: "keywords()",
+      icon: "",
+    },
+    {
+      display_name: ":has_nostr_scheme:",
+      icon: "",
+    },
+    {
+      display_name: ":has_zap:",
+      icon: "",
+    },
+    {
+      display_name: ":has_redirect:",
+      icon: "",
+    },
+    {
+      display_name: ":has_post:",
+      icon: "",
+    },
+    {
+      display_name: ":has_input_field:",
+      icon: "",
+    },
+  ];
+
+  const filteredList = list.filter((_) =>
+    ["/tool", "/action"].includes(type)
+      ? _.display_name === "keywords()"
+      : !selectedKeywords.includes(_.display_name)
+  );
+
+  if (filteredList.length === 0) return null;
+  return (
+    <div
+      className="fx-centered fx-col fx-start-v fx-start-h fit-container box-pad-h-s box-pad-v-s sc-s-18 slide-up"
+      style={{
+        position: "absolute",
+        top: "calc(100% + 5px)",
+        left: 0,
+        zIndex: "10",
+        gap: 0,
+      }}
+    >
+      <h5 className="box-pad-h-s box-pad-v-s c1-c">
+        Choose a smart widget keywords
+      </h5>
+      {filteredList.map((_, index) => {
+        return (
+          <div
+            key={index}
+            className="box-pad-h-s box-pad-v-s option pointer fit-container"
+            onClick={() => onClick(_.display_name)}
+          >
+            {_.display_name}
+          </div>
+        );
+      })}
+    </div>
+  );
+};

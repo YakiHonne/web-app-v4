@@ -59,10 +59,11 @@ export default function OptionsDropdown({
             [displayAbove ? "bottom" : "top"]: "110%",
             backgroundColor: "var(--dim-gray)",
             border: "none",
-            minWidth: "150px",
+            // minWidth: "100px",
             width: "max-content",
             zIndex: 1000,
             rowGap: "10px",
+            overflow: "visible"
           }}
           className="box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-col fx-start-v pointer drop-down"
         >

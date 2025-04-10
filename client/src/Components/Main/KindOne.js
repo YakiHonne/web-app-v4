@@ -323,7 +323,7 @@ export default function KindOne({
               <p className="c1-c">... {t("AnWFKlu")}</p>
             </div>
           )}
-          {isTransEnabled && (
+          {/* {isTransEnabled && (
             <div
               className="fit-container note-indent"
               style={{ paddingTop: ".5rem" }}
@@ -343,12 +343,21 @@ export default function KindOne({
               )}
               {isNoteTranslating && <LoadingDots />}
             </div>
-          )}
+          )} */}
           {reactions && (
             <>
               {postActions?.zaps?.zaps?.length > 0 && (
                 <div className="fit-container note-indent">
-                  <ZapAd zappers={postActions.zaps.zaps} />
+                  <ZapAd
+                    zappers={postActions.zaps.zaps}
+                    onClick={() =>
+                      setUsersList({
+                        title: t("AVDZ5cJ"),
+                        list: postActions.zaps.zaps.map((item) => item.pubkey),
+                        extras: postActions.zaps.zaps,
+                      })
+                    }
+                  />
                 </div>
               )}
 
@@ -485,54 +494,80 @@ export default function KindOne({
                     </div>
                   </div>
                 </div>
-                <OptionsDropdown
-                  options={[
-                    <div onClick={copyID} className="pointer">
-                      <p>{t("AYFAFKs")}</p>
-                    </div>,
-                    userKeys && (
-                      <>
-                        <BookmarkEvent
-                          label={t("Ar5VgpT")}
-                          pubkey={event.id}
-                          kind={"1"}
-                          itemType="e"
+                <div className="fx-centered">
+                  {isTransEnabled && (
+                    <div className="fit-container">
+                      {!isNoteTranslating && !showTranslation && (
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip={t("AdHV2qJ")}
+                          onClick={translateNote}
+                        >
+                          <div className="translate-24"></div>
+                        </div>
+                      )}
+                      {!isNoteTranslating && showTranslation && (
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip={t("AE08Wte")}
+                          onClick={() => setShowTranslation(false)}
+                        >
+                          <div className="translate-24"></div>
+                        </div>
+                      )}
+                      {isNoteTranslating && <LoadingDots />}
+                    </div>
+                  )}
+
+                  <OptionsDropdown
+                    options={[
+                      <div onClick={copyID} className="pointer">
+                        <p>{t("AYFAFKs")}</p>
+                      </div>,
+                      userKeys && (
+                        <>
+                          <BookmarkEvent
+                            label={t("Ar5VgpT")}
+                            pubkey={event.id}
+                            kind={"1"}
+                            itemType="e"
+                          />
+                        </>
+                      ),
+                      <div className="fit-container fx-centered fx-start-h pointer">
+                        <ShareLink
+                          label={t("A1IsKJ0")}
+                          path={`/notes/${event.nEvent}`}
+                          title={user.display_name || user.name}
+                          description={event.content}
+                          kind={1}
+                          shareImgData={{
+                            post: event,
+                            author: user,
+                            label: t("Az5ftet"),
+                          }}
                         />
-                      </>
-                    ),
-                    <div className="fit-container fx-centered fx-start-h pointer">
-                      <ShareLink
-                        label={t("A1IsKJ0")}
-                        path={`/notes/${event.nEvent}`}
-                        title={user.display_name || user.name}
-                        description={event.content}
-                        kind={1}
-                        shareImgData={{
-                          post: event,
-                          author: user,
-                          label: t("Az5ftet"),
-                        }}
-                      />
-                    </div>,
-                    event.pubkey !== userKeys.pub && (
-                      <div
-                        onClick={muteUnmute}
-                        className="fit-container fx-scattered pointer"
-                      >
-                        {isMuted ? (
-                          <p className="red-c">{t("AKELUbQ")}</p>
-                        ) : (
-                          <p className="red-c">{t("AGMxuQ0")}</p>
-                        )}
-                        {isMuted ? (
-                          <div className="unmute-24"></div>
-                        ) : (
-                          <div className="mute-24"></div>
-                        )}
-                      </div>
-                    ),
-                  ]}
-                />
+                      </div>,
+                      event.pubkey !== userKeys.pub && (
+                        <div
+                          onClick={muteUnmute}
+                          className="fit-container fx-scattered pointer"
+                        >
+                          {isMuted ? (
+                            <p className="red-c">{t("AKELUbQ")}</p>
+                          ) : (
+                            <p className="red-c">{t("AGMxuQ0")}</p>
+                          )}
+                          {isMuted ? (
+                            <div className="unmute-24"></div>
+                          ) : (
+                            <div className="mute-24"></div>
+                          )}
+                        </div>
+                      ),
+                    ]}
+                  />
+                </div>
               </div>
             </>
           )}

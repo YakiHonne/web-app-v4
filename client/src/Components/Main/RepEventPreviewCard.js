@@ -13,16 +13,24 @@ import DynamicIndicator from "../DynamicIndicator";
 import { customHistory } from "../../Helpers/History";
 import { copyText } from "../../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
+import { NDKUser } from "@nostr-dev-kit/ndk";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
   return list.find((people) => people[1] === toFollowKey) ? true : false;
 };
 
-const getURL = (item) => {
-  if (item.kind === 30023) return `/article/${item.naddr}`;
-  if ([30004, 30005].includes(item.kind)) return `/curations/${item.naddr}`;
-  if ([34235, 34236].includes(item.kind)) return `/videos/${item.naddr}`;
+const getURL = (item, isNip05Verified) => {
+  if (!isNip05Verified) {
+    if (item.kind === 30023) return `/article/${item.naddr}`;
+    if ([30004, 30005].includes(item.kind)) return `/curations/${item.naddr}`;
+    if ([34235, 34236].includes(item.kind)) return `/videos/${item.naddr}`;
+  }
+  if (item.kind === 30023) return `/article/${isNip05Verified}/${item.d}`;
+  if (item.kind === 30004) return `/curations/a/${isNip05Verified}/${item.d}`;
+  if (item.kind === 30005) return `/curations/v/${isNip05Verified}/${item.d}`;
+  if ([34235, 34236].includes(item.kind)) return `/videos/${isNip05Verified}/${item.d}`;
 };
 
 export default function RepEventPreviewCard({
@@ -37,12 +45,13 @@ export default function RepEventPreviewCard({
     getEmptyuserMetadata(item.pubkey)
   );
   const [showContent, setShowContent] = useState(!item.contentSensitive);
+  const [isNip05Verified, setIsNip05Verified] = useState(false);
   const isFollowing = useMemo(() => {
     return checkFollowing(userFollowings, item.pubkey);
   }, [userFollowings]);
   const url = useMemo(() => {
-    return getURL(item);
-  }, []);
+    return getURL(item, isNip05Verified);
+  }, [isNip05Verified]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +60,13 @@ export default function RepEventPreviewCard({
 
         if (auth) {
           setAuthorData(auth);
+          let ndkUser = new NDKUser({ pubkey: item.pubkey });
+          ndkUser.ndk = ndkInstance;
+          let checknip05 = auth.nip05
+            ? await ndkUser.validateNip05(auth.nip05)
+            : false;
+
+          if (checknip05) setIsNip05Verified(auth.nip05);
         }
         return;
       } catch (err) {
@@ -97,7 +113,11 @@ export default function RepEventPreviewCard({
             <div className="fit-container fx-centered fx-col fx-start-h fx-start-v">
               <div className="fx-scattered fit-container">
                 <div className="fx-centered box-pad-h-m">
-                  <AuthorPreviewMinimal author={authorData} item={item} />
+                  <AuthorPreviewMinimal
+                    author={authorData}
+                    item={item}
+                    isNip05Verified={isNip05Verified}
+                  />
                 </div>
               </div>
               <p className="p-two-lines box-pad-h-m">{item.title}</p>
@@ -141,7 +161,11 @@ export default function RepEventPreviewCard({
           <div className="fit-container">
             <div className="fx-scattered box-pad-v-m">
               <div className="fx-centered">
-                <AuthorPreview author={authorData} item={item} />
+                <AuthorPreview
+                  author={authorData}
+                  item={item}
+                  isNip05Verified={isNip05Verified}
+                />
                 {isFollowing && (
                   <div
                     className="round-icon-small round-icon-tooltip"
@@ -242,30 +266,7 @@ export default function RepEventPreviewCard({
   );
 }
 
-const AuthorPreview = ({ author, item }) => {
-  // const { t } = useTranslation();
-  // const getDynamicIndicator = () => {
-  //   let dynElem = "";
-  //   if (item.kind === 30023)
-  //     dynElem = t("ASlFfRX", {
-  //       min: Math.floor(item.content.split(" ").length / 200) || 1,
-  //     });
-  //   if (item.kind === 30004)
-  //     dynElem = t("AkamgHX", { count: item.items.length });
-  //   if (item.kind === 30005)
-  //     dynElem = t("APXDxmq", { count: item.items.length });
-  //   if (item.kind === 34235) dynElem = t("A8Ewal4");
-  //   return (
-  //     <p className="gray-c p-medium">
-  //       <Date_ toConvert={new Date(item.created_at * 1000)} /> &#x2022;{"  "}
-  //       <span className="orange-c">{dynElem}</span>
-  //     </p>
-  //   );
-  // };
-  // let dynamicIndicator = useMemo(() => {
-  //   return getDynamicIndicator();
-  // }, []);
-
+const AuthorPreview = ({ author, item, isNip05Verified }) => {
   return (
     <div className="fx-centered fx-start-h ">
       <UserProfilePic
@@ -273,17 +274,18 @@ const AuthorPreview = ({ author, item }) => {
         mainAccountUser={false}
         user_id={author.pubkey}
         img={author.picture}
-        // metadata={author}
       />
       <div>
-        <p className="p-bold">{author.display_name || author.name}</p>
+        <div className="fx-centered fx-start-h" style={{ gap: "3px" }}>
+          <p className="p-bold">{author.display_name || author.name}</p>
+          {isNip05Verified && <div className="checkmark-c1"></div>}
+        </div>
         <DynamicIndicator item={item} />
-        {/* {dynamicIndicator} */}
       </div>
     </div>
   );
 };
-const AuthorPreviewMinimal = ({ author, item }) => {
+const AuthorPreviewMinimal = ({ author, isNip05Verified }) => {
   return (
     <div className="fx-centered fx-start-h ">
       <UserProfilePic
@@ -291,12 +293,13 @@ const AuthorPreviewMinimal = ({ author, item }) => {
         mainAccountUser={false}
         user_id={author.pubkey}
         img={author.picture}
-        // metadata={author}
       />
-      <div>
+
+      <div className="fx-centered  fx-start-h" style={{ gap: "3px" }}>
         <p className="p-bold p-medium p-one-line">
           {author.display_name || author.name}
         </p>
+        {isNip05Verified && <div className="checkmark-c1"></div>}
       </div>
     </div>
   );

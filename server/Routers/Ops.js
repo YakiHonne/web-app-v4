@@ -25,12 +25,23 @@ const metascraper = require("metascraper")([
   require("metascraper-description")(),
   require("metascraper-image")(),
 ]);
-
+const relaysOnPlatform = [
+  "wss://nostr-01.yakihonne.com",
+  "wss://nostr-02.yakihonne.com",
+  "wss://relay.damus.io",
+  "wss://relay.nostr.band",
+];
 const Users = require("../Models/Users");
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
 const deepl = require("deepl-node");
+const {
+  useWebSocketImplementation,
+  nip44,
+  finalizeEvent,
+  SimplePool,
+} = require("nostr-tools");
 const translationServicesEndpoints = {
   dl: {
     free: "https://api-free.deepl.com/v2/translate",
@@ -66,6 +77,7 @@ const dms_intervals = {
   "dms-10": 1,
 };
 
+useWebSocketImplementation(require("ws"));
 router.get("/api/v1/yakihonne-topics", (req, res) => {
   res.send(topics);
 });
@@ -97,23 +109,39 @@ router.post("/api/v1/url-to-base64", async (req, res) => {
   }
 });
 
-router.post("/api/v1/gpt", async (req, res) => {
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant.",
-        },
-      ],
-      model: "gpt-3.5-turbo-16k-0613",
-    });
-    res.send(completion.choices[0]);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send(err);
-  }
-});
+let messages = [
+  {
+    role: "system",
+    content: "You are a helpful assistant.",
+  },
+];
+// router.post("/api/v1/ai", async (req, res) => {
+//   try {
+//     let userInput = req.body.input;
+//     if (!req.session.cachedMessages) req.session.cachedMessages = messages;
+//     req.session.cachedMessages.push({ role: "user", content: userInput });
+//     let tokenCount = req.session.cachedMessages.reduce(
+//       (count, msg) => count + msg.content.split(" ").length,
+//       0
+//     );
+
+//     if (tokenCount > 128000) {
+//       // Remove the oldest user message
+//       req.session.cachedMessages.splice(1, 1);
+//     }
+
+//     const completion = await openai.chat.completions.create({
+//       messages: req.session.cachedMessages,
+//       model: "ft:gpt-4o-mini-2024-07-18:yakihonne:sw:BIpMC2Ng",
+//       // model: "gpt-3.5-turbo-16k-0613",
+//     });
+
+//     res.send(completion.choices[0]);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).send(err);
+//   }
+// });
 
 router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
   try {
@@ -270,8 +298,6 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
     let action_key = req.body.action_key;
     let last_updated = Math.floor(new Date().getTime() / 1000);
     let pubkey = req.user.pubkey;
-    // let pubkey =
-    //   "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
 
     if (!action_key || typeof action_key !== "string")
       return res
@@ -281,53 +307,14 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       return res.status(403).send({ message: "unsupported action key" });
 
     let point_index = getPointsIndex(action_key);
-    // let point_index = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(
-    //   action_key
-    // )
-    //   ? zaps_intervals[action_key]
-    //   : 0;
     let action_details = getActionDetails(action_key, point_index);
-    // let action_details = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(
-    //   action_key
-    // )
-    //   ? { ...levels[action_key.split("-")[0]], point_index }
-    //   : { ...levels[action_key], point_index };
 
     action_key = getActionKey(action_key);
-    // action_key = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(action_key)
-    //   ? action_key.split("-")[0]
-    //   : action_key;
+
     let [userLevels, user] = await Promise.all([
       UserLevels.findOne({ pubkey }),
       Users.findOne({ pubkey }),
     ]);
-
-    // if (!userLevels) {
-    //   let new_action = {
-    //     action: action_key,
-    //     current_points: action_details.points[0],
-    //     count: action_details.count > 0 ? 1 : 0,
-    //     extra: {},
-    //     all_time_points: action_details.points[0],
-    //     last_updated,
-    //   };
-    //   let updated_user = await UserLevels.findOneAndUpdate(
-    //     { pubkey },
-    //     {
-    //       xp:
-    //         50 + (action_key === "new_account" ? 0 : action_details.points[0]),
-    //       $push: { actions: new_action },
-    //       last_updated,
-    //     },
-    //     { upsert: true, new: true }
-    //   );
-    //   return res.send({
-    //     user_stats: updated_user,
-    //     platform_standards: levels,
-    //     is_updated: true,
-    //     tiers,
-    //   });
-    // }
 
     let currentLevel = getCurrentLevel(userLevels.xp);
     let currentVolumeTier = tiers.find((tier) => {
@@ -418,12 +405,12 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
     res.status(500).send(err);
   }
 });
+
 router.get("/api/v1/yaki-chest/stats", auth_user, async (req, res) => {
   try {
     let last_updated = Math.floor(new Date().getTime() / 1000);
     let pubkey = req.user.pubkey;
-    // let pubkey =
-    //   "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
+
     let user_impact_last_updated = req.session.user_impact_last_updated;
     let current_time = Math.floor(new Date().getTime() / 1000);
     let userLevels = await UserLevels.findOne({ pubkey }).select("-_id");
@@ -510,6 +497,28 @@ router.post("/api/v1/translate", auth_data, async (req, res) => {
       );
       res.send(translatedContent);
     }
+  } catch (err) {
+    console.log(err);
+    res.send({ status: 500, res: "" });
+  }
+});
+
+router.post("/api/v1/dvm-query", auth_data, async (req, res) => {
+  try {
+    let message = req.body.message;
+    let type = req.body.type;
+    let { DVM_COMMUNICATOR_SEC, DVM_PUBKEY } = process.env;
+
+    if (!message) return res.send([]);
+    let eventId = getDVMJobRequest(
+      DVM_COMMUNICATOR_SEC,
+      DVM_PUBKEY,
+      type,
+      message
+    );
+    if (!eventId) return res.send([]);
+    let data = await getDVMJobResponse(eventId);
+    return res.send(data);
   } catch (err) {
     console.log(err);
     res.send({ status: 500, res: "" });
@@ -603,6 +612,93 @@ router.post("/api/v1/translate", auth_data, async (req, res) => {
 //     res.status(500).send({ message: "url not found" });
 //   }
 // });
+
+const getDVMJobRequest = (
+  DVM_COMMUNICATOR_SEC,
+  DVM_PUBKEY,
+  swType,
+  message
+) => {
+  try {
+    let metadata = [
+      ["i", message, "text"],
+      ["param", "max_results", "100"],
+    ];
+    if (swType) metadata.push(["param", "type", swType]);
+    let request_kind = 5302;
+    let request_content = nip44.v2.encrypt(
+      JSON.stringify(metadata),
+      nip44.v2.utils.getConversationKey(DVM_COMMUNICATOR_SEC, DVM_PUBKEY)
+    );
+    let request_tags = [
+      ["p", DVM_PUBKEY],
+      ["encrypted"],
+      [
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ],
+    ];
+    let request = {
+      created_at: Math.floor(Date.now() / 1000),
+      kind: request_kind,
+      tags: request_tags,
+      content: request_content,
+    };
+    let event = finalizeEvent(request, DVM_COMMUNICATOR_SEC);
+
+    let pool = new SimplePool();
+
+    Promise.all(pool.publish(relaysOnPlatform, event));
+    let eventId = event.id;
+    return eventId;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+const getDVMJobResponse = async (eventId) => {
+  if (!eventId) return [];
+  return new Promise((resolve) => {
+    try {
+      let timer = setTimeout(() => {
+        clearTimeout(timer);
+        resolve([]);
+      }, 10000);
+
+      let pool = new SimplePool();
+      let sub = pool.subscribeMany(
+        relaysOnPlatform,
+        [
+          {
+            kinds: [6302],
+            "#e": [eventId],
+          },
+        ],
+        {
+          onevent(event) {
+            clearTimeout(timer);
+            let decryptedData = nip44.v2.decrypt(
+              event.content,
+              nip44.v2.utils.getConversationKey(
+                process.env.DVM_COMMUNICATOR_SEC,
+                process.env.DVM_PUBKEY
+              )
+            );
+            let events = JSON.parse(decryptedData);
+            events = events.map((_) => JSON.parse(_[1]));
+            resolve(events);
+            sub.close();
+          },
+        }
+      );
+    } catch (err) {
+      console.log(err);
+      resolve([]);
+    }
+  });
+};
 
 const actionToUpdate = (
   action_key,

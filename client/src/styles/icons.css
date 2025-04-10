@@ -395,9 +395,11 @@
 .github-logo,
 .github-logo-24,
 .ringbell-bold,
-.ringbell-bold-24 ,
+.ringbell-bold-24,
 .posts-bold,
-.posts-bold-24 {
+.posts-bold-24,
+.switch-arrows-v2,
+.switch-arrows-v2-24 {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -757,9 +759,11 @@
     .github-logo,
     .github-logo-24,
     .ringbell-bold,
-    .ringbell-bold-24 ,
+    .ringbell-bold-24,
     .posts-bold,
-.posts-bold-24{
+    .posts-bold-24,
+    .switch-arrows-v2,
+    .switch-arrows-v2-24 {
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -978,7 +982,8 @@
 .export,
 .github-logo,
 .ringbell-bold,
-.posts-bold {
+.posts-bold,
+.switch-arrows-v2 {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1186,7 +1191,8 @@
 .export-24,
 .github-logo-24,
 .ringbell-bold-24,
-.posts-bold-24{
+.posts-bold-24 ,
+.switch-arrows-v2-24 {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1208,14 +1214,20 @@
     min-height: 48px;
 }
 
+.switch-arrows-v2,
+.switch-arrows-v2-24 {
+    background-image: url('../media/icons/switch-arrows-v2.svg');
+}
 .posts-bold,
 .posts-bold-24 {
     background-image: url('../media/icons/posts-bold.svg');
 }
+
 .ringbell-bold,
 .ringbell-bold-24 {
     background-image: url('../media/icons/ringbell-bold.svg');
 }
+
 .github-logo,
 .github-logo-24 {
     background-image: url('../media/icons/github-logo.svg');

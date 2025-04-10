@@ -51,10 +51,24 @@ export default function UserProfilePic({
     }
   }, [nostrAuthors]);
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     try {
       if (!allowPropagation) e.stopPropagation();
       if (allowClick) {
+        let auth = getUser(mainAccountUser ? userMetadata.pubkey : user_id);
+        if (auth) {
+          let ndkUser = new NDKUser({
+            pubkey: mainAccountUser ? userMetadata.pubkey : user_id,
+          });
+          ndkUser.ndk = ndkInstance;
+          let isVer = auth.nip05
+            ? await ndkUser.validateNip05(auth.nip05)
+            : false;
+          if (isVer) {
+            customHistory.push(`/users/${auth.nip05}`);
+            return;
+          }
+        }
         let pubkey = getBech32(
           "npub",
           mainAccountUser ? userMetadata.pubkey : user_id

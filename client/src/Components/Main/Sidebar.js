@@ -34,6 +34,8 @@ import { customHistory } from "../../Helpers/History";
 import YakiMobileappSidebar from "../YakiMobileappSidebar";
 import { useTranslation } from "react-i18next";
 import { setToast } from "../../Store/Slides/Publishers";
+import { NDKUser } from "@nostr-dev-kit/ndk";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function Sidebar() {
   const { t } = useTranslation();
@@ -221,6 +223,25 @@ export default function Sidebar() {
     setShowConfirmationBox(false);
   };
 
+  const handleProfileLink = async () => {
+    try {
+      let ndkUser = new NDKUser({
+        pubkey: userKeys.pub,
+      });
+      ndkUser.ndk = ndkInstance;
+      let isVer = userMetadata.nip05 ? await ndkUser.validateNip05(userMetadata.nip05) : false;
+      if (isVer) {
+        customHistory.push(`/users/${userMetadata.nip05}`);
+        return;
+      }
+
+      let pubkey = getBech32("npub", userKeys.pub);
+      customHistory.push(`/users/${pubkey}`);
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
@@ -345,20 +366,18 @@ export default function Sidebar() {
                 >
                   <div
                     className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                      isPage("/users/" + getBech32("npub", userKeys.pub))
+                      isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                      isPage("/users/" + userMetadata.nip05)
                         ? "active-link"
                         : "inactive-link"
                     }`}
-                    onClick={() => {
-                      customHistory.push(
-                        "/users/" + getBech32("npub", userKeys.pub)
-                      );
-                    }}
+                    onClick={handleProfileLink}
                   >
                     <div className="fx-centered">
                       <div
                         className={
-                          isPage("/users/" + getBech32("npub", userKeys.pub))
+                          isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                          isPage("/users/" + userMetadata.nip05)
                             ? "user-bold-24"
                             : "user-24"
                         }
@@ -397,9 +416,9 @@ export default function Sidebar() {
                   </div>
                 )}
               <div style={{ height: ".5rem" }}></div>
-              {window.location.pathname !== "/dashboard" && (
+              {/* {window.location.pathname !== "/dashboard" && ( */}
                 <WriteNew exit={() => null} />
-              )}
+              {/* )} */}
             </div>
             {(showMedia || showMyContent || showWritingOptions) && (
               <div className="fit-container fx-start-h fx-centered box-pad-h-s">

@@ -39,6 +39,8 @@ import SmartWidgetV2 from "./Pages/MainApp/SmartWidgetV2";
 import SmartWidgetCheckerV2 from "./Pages/MainApp/SmartWidgetCheckerV2";
 import SWhome from "./Pages/MainApp/SWhome";
 import Articles from "./Pages/MainApp/Articles";
+import SWV2 from "./Pages/MainApp/SWV2";
+import Playground from "./Pages/MainApp/Playground";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
@@ -54,11 +56,14 @@ const routes = [
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },
   { path: "/write-article", element: <Writing /> },
   // { path: "/smart-widget-builder", element: <SmartWidget /> },
+  { path: "/sw-playground", element: <Playground /> },
   { path: "/smart-widget-builder", element: <SmartWidgetV2 /> },
   // { path: "/smart-widgets", element: <SmartWidgets /> },
   { path: "/smart-widgets", element: <SWhome /> },
   { path: "/smart-widgets-v2", element: <SmartWidgetsV2 /> },
   { path: "/smart-widget-checker", element: <SmartWidgetCheckerV2 /> },
+  { path: "/smart-widget/:id", element: <SWV2 /> },
+  { path: "/smart-widget/:nip05/:identifier", element: <SWV2 /> },
   // { path: "/smart-widget-checker", element: <SmartWidgetChecker /> },
   { path: "/settings", element: <Settings /> },
   { path: "/settings/profile", element: <ProfileEdit /> },

@@ -7,7 +7,7 @@ import {
   getParsedRepEvent,
   getuserMetadata,
 } from "../../Helpers/Encryptions";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import Sidebar from "../../Components/Main/Sidebar";
 import { nip19 } from "nostr-tools";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
@@ -44,6 +44,7 @@ import Carousel from "../../Components/Main/Carousel";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
 import NotesFromPeopleYouFollow from "../../Components/Main/NotesFromPeopleYouFollow";
+import UserFollowers from "./UserFollowers";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -475,7 +476,7 @@ const UserMetadata = ({ refreshUser }) => {
         />
       )}
       {initConv && <InitiConvo exit={() => setInitConv(false)} receiver={id} />}
-      {showQR && <QRSharing user={user} exit={() => setShowQR(false)} />}
+      {showQR && <QRSharing user={user} exit={() => setShowQR(false)} isVerified={isNip05Verified} />}
       {showUserImpact && (
         <UserImpact
           user={user}
@@ -734,6 +735,7 @@ const UserMetadata = ({ refreshUser }) => {
 };
 
 const UserFeed = ({ user }) => {
+  const { state } = useLocation();
   const { user_id } = useParams();
   const [pubkey, setPubkey] = useState(decodeURL(user_id));
 
@@ -743,7 +745,7 @@ const UserFeed = ({ user }) => {
     eventsInitialState
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [contentFrom, setContentFrom] = useState("notes");
+  const [contentFrom, setContentFrom] = useState(state ? state.contentType : "notes");
   const [lastEventTime, setLastEventTime] = useState(undefined);
   const [notesSub, setNotesSub] = useState(false);
   const userMutedList = useSelector((state) => state.userMutedList);
@@ -808,7 +810,8 @@ const UserFeed = ({ user }) => {
       if (!container) return;
       if (
         container.scrollHeight - container.scrollTop - 60 >
-        document.documentElement.offsetHeight && events[contentFrom].length > 4
+          document.documentElement.offsetHeight &&
+        events[contentFrom].length > 4
       ) {
         return;
       }
@@ -844,7 +847,11 @@ const UserFeed = ({ user }) => {
       if ([1, 6].includes(event.kind)) {
         let event_ = await getParsedNote(event, true);
         if (event_) {
-          if (contentFrom === "replies" && event_.isComment && event_.isQuote === "") {
+          if (
+            contentFrom === "replies" &&
+            event_.isComment &&
+            event_.isQuote === ""
+          ) {
             events_.push(event_);
           } else if (contentFrom === "notes" && !event_.isComment) {
             if (event.kind === 6) {
@@ -1142,68 +1149,68 @@ const UserFeed = ({ user }) => {
   );
 };
 
-const UserFollowers = ({ id, followersCount }) => {
-  const { t } = useTranslation();
-  const [followers, setFollowers] = useState([]);
-  const [showPeople, setShowPeople] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+// const UserFollowers = ({ id, followersCount }) => {
+//   const { t } = useTranslation();
+//   const [followers, setFollowers] = useState([]);
+//   const [showPeople, setShowPeople] = useState(false);
+//   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) return;
+//   useEffect(() => {
+//     if (!id) return;
 
-    const fetchData = async () => {
-      if (!isLoading) setIsLoading(true);
-      let userFollowers = await getUserFollowers(id);
-      if (userFollowers) {
-        userFollowers = userFollowers
-          .filter((_) => _.kind === 0)
-          .map((_) => {
-            return getuserMetadata(_);
-          });
-        setFollowers(userFollowers);
-      } else {
-        let data = await getSubData([{ kinds: [3], "#p": [id] }]);
+//     const fetchData = async () => {
+//       if (!isLoading) setIsLoading(true);
+//       let userFollowers = await getUserFollowers(id);
+//       if (userFollowers) {
+//         userFollowers = userFollowers
+//           .filter((_) => _.kind === 0)
+//           .map((_) => {
+//             return getuserMetadata(_);
+//           });
+//         setFollowers(userFollowers);
+//       } else {
+//         let data = await getSubData([{ kinds: [3], "#p": [id] }]);
 
-        let users = await getSubData([
-          { kinds: [0], authors: [...new Set(data.pubkeys)] },
-        ]);
+//         let users = await getSubData([
+//           { kinds: [0], authors: [...new Set(data.pubkeys)] },
+//         ]);
 
-        userFollowers = users.data
-          .filter((user, index, arr) => {
-            if (arr.findIndex((_) => _.pubkey === user.pubkey) === index)
-              return user;
-          })
-          .map((_) => {
-            return getuserMetadata(_);
-          });
-        setFollowers(userFollowers);
-      }
-    };
-    if (showPeople) fetchData();
-  }, [showPeople]);
+//         userFollowers = users.data
+//           .filter((user, index, arr) => {
+//             if (arr.findIndex((_) => _.pubkey === user.pubkey) === index)
+//               return user;
+//           })
+//           .map((_) => {
+//             return getuserMetadata(_);
+//           });
+//         setFollowers(userFollowers);
+//       }
+//     };
+//     if (showPeople) fetchData();
+//   }, [showPeople]);
 
-  useEffect(() => {
-    setShowPeople(false);
-  }, [id]);
+//   useEffect(() => {
+//     setShowPeople(false);
+//   }, [id]);
 
-  return (
-    <>
-      {showPeople === "followers" && (
-        <ShowPeople
-          exit={() => setShowPeople(false)}
-          list={followers}
-          type={showPeople}
-        />
-      )}
-      <div className="pointer" onClick={() => setShowPeople("followers")}>
-        <p>
-          <NumberShrink value={followersCount} />{" "}
-          <span className="gray-c">{t("A6huCnT")}</span>
-        </p>
-      </div>
-    </>
-  );
-};
+//   return (
+//     <>
+//       {showPeople === "followers" && (
+//         <ShowPeople
+//           exit={() => setShowPeople(false)}
+//           list={followers}
+//           type={showPeople}
+//         />
+//       )}
+//       <div className="pointer" onClick={() => setShowPeople("followers")}>
+//         <p>
+//           <NumberShrink value={followersCount} />{" "}
+//           <span className="gray-c">{t("A6huCnT")}</span>
+//         </p>
+//       </div>
+//     </>
+//   );
+// };
 
 const WritingImpact = ({ writingImpact }) => {
   const { t } = useTranslation();

@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import relaysOnPlatform from "../../Content/Relays";
 import {
-  filterRelays,
+  getEmptyuserMetadata,
   getParsedAuthor,
-  getParsedRepEvent,
 } from "../../Helpers/Encryptions";
 import LoadingScreen from "../LoadingScreen";
 import Follow from "./Follow";
@@ -11,10 +9,10 @@ import UserProfilePic from "./UserProfilePic";
 import ShortenKey from "./ShortenKey";
 import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
-import { setToast, setToPublish } from "../../Store/Slides/Publishers";
-import { ndkInstance } from "../../Helpers/NDKInstance";
+import { setToPublish } from "../../Store/Slides/Publishers";
 import { useTranslation } from "react-i18next";
 import EmojiImg from "./EmojiImg";
+import { getSubData } from "../../Helpers/Controlers";
 
 const getBulkListStats = (list) => {
   let toFollow = list.filter((item) => item.to_follow).length;
@@ -45,31 +43,47 @@ export default function ShowUsersList({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let sub = ndkInstance.subscribe(
-          [{ kinds: [0], authors: [...new Set(list)] }],
-          {
-            closeOnEose: true,
-            cacheUsage: "CACHE_FIRST",
-            groupable: false,
-          }
+        let authorsPubkeys = [...new Set(list)];
+        let data = await getSubData([{ kinds: [0], authors: authorsPubkeys }]);
+        let returnedPubkeys = data.pubkeys;
+        let returnedData = data.data;
+        returnedData = data.data.sort(
+          (ev1, ev2) => ev2.created_at - ev1.created_at
         );
-        sub.on("event", (event) => {
-          setPeople((data) => {
-            let newF = [
-              ...data,
-              { ...getParsedAuthor(event), created_at: event.created_at },
-            ].sort((ev1, ev2) => ev2.created_at - ev1.created_at);
-            let netF = newF.filter((item, index, newF) => {
-              if (
-                newF.findIndex((_item) => item.pubkey === _item.pubkey) ===
-                index
-              )
-                return item;
-            });
-            return netF;
-          });
-          setIsLoaded(true);
+        returnedData = data.data.filter((item, index, arr) => {
+          if (arr.findIndex((_item) => item.pubkey === _item.pubkey) === index)
+            return item;
         });
+        let tempUsers = authorsPubkeys.map((_) => {
+          let zapperData =  getZaps(_) || {};
+          return returnedPubkeys.includes(_)
+            ? {
+                ...getParsedAuthor(returnedData.find((__) => __.pubkey === _)),
+                created_at: _.created_at,
+                zapContent: zapperData.content,
+                amount:
+                  extras.length > 0 && extrasType === "zap"
+                    ? zapperData.amount
+                    : 0,
+                reaction:
+                  extras.length > 0 && extrasType === "reaction"
+                    ? getReactions(_)
+                    : "",
+              }
+            : {
+                ...getEmptyuserMetadata(_),
+                created_at: 0,
+                zapContent: zapperData.content,
+                amount: zapperData.amount,
+                reaction:
+                  extras.length > 0 && extrasType === "reaction"
+                    ? getReactions(_)
+                    : "",
+              };
+        });
+        tempUsers = tempUsers.sort((a, b) => b.amount - a.amount);
+        setPeople(tempUsers);
+        setIsLoaded(true);
       } catch (err) {
         console.log(err);
       }
@@ -83,7 +97,10 @@ export default function ShowUsersList({
         item.pubkey === pubkey ? (total += item.amount) : (total = total),
       0
     );
-    return Math.floor(sats);
+    let content = extras
+      .filter((_) => _.pubkey === pubkey)
+      .find((_) => _.content);
+    return { amount: Math.floor(sats), content: content?.content || "" };
   };
   const getReactions = (pubkey) => {
     let reaction = extras.find((_) => _.pubkey === pubkey)?.content || "+";
@@ -182,7 +199,7 @@ export default function ShowUsersList({
                           style={{ minWidth: "16px", minHeight: "16px" }}
                         ></div>
                         <span className="c1-c p-bold">
-                          <NumberShrink value={getZaps(item.pubkey)} />
+                          <NumberShrink value={item.amount} />
                         </span>
                       </div>
                     )}
@@ -191,7 +208,7 @@ export default function ShowUsersList({
                         className="fx-centered  round-icon"
                         style={{ gap: "6px", border: "none" }}
                       >
-                        <EmojiImg content={getReactions(item.pubkey)} />
+                        <EmojiImg content={item.reaction} />
                       </div>
                     )}
                     <div
@@ -206,9 +223,27 @@ export default function ShowUsersList({
                       <div className="fx-centered fx-col fx-start-v">
                         <ShortenKey id={item.pubkeyhashed} />
                         <p>{item.name}</p>
-                        <p className="gray-c p-medium p-two-lines">
-                          {item.about}
-                        </p>
+                        {/* <p className="gray-c p-medium p-two-lines">
+                          {extras.length > 0 && extrasType === "zap"
+                            ? item.zapContent
+                            : item.about}
+                        </p> */}
+                        {extras.length > 0 && extrasType === "zap" ? (
+                          <>
+                            {item.zapContent && (
+                              <div
+                                className="sc-s box-pad-h-m box-pad-v-s"
+                                style={{ border: "none" }}
+                              >
+                                <p className="p-medium">{item.zapContent}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="gray-c p-medium p-two-lines">
+                            {item.about}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

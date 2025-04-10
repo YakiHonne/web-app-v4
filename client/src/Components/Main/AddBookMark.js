@@ -97,18 +97,18 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
       style={{ zIndex: "10001" }}
     >
       <section
-        className="fx-centered fx-col sc-s"
-        style={{ width: "600px", rowGap: 0 }}
+        className="fx-centered fx-col sc-s-18 bg-sp box-pad-v-m"
+        style={{ width: "500px", }}
       >
         <div className="close" onClick={exit}>
           <div></div>
         </div>
-        <div className="fit-container fx-centered box-pad-h box-pad-v">
+        <div className="fit-container fx-centered box-pad-h ">
           <h4>{bookmark ? <>{t("A9nS8Wz")}</> : <>{t("AvADsej")}</>}</h4>
         </div>
         {/* <hr /> */}
         <div className="fit-container fx-centered fx-col">
-          <div className="fx-centered fx-wrap fit-container box-pad-v box-pad-h">
+          <div className="fx-centered fx-wrap fit-container box-pad-h">
             <input
               type="text"
               className="if ifs-full"
@@ -126,9 +126,11 @@ export default function AddBookmark({ bookmark, exit, tags = [] }) {
             />
           </div>
         </div>
-        <hr />
-        <div className="box-pad-v-m">
-          <button className="btn btn-normal" onClick={handleShowRelaysPicker}>
+        <div className="fit-container box-pad-h">
+          <button
+            className="btn btn-normal btn-full"
+            onClick={handleShowRelaysPicker}
+          >
             {isLoading ? (
               <LoadingDots />
             ) : bookmark ? (

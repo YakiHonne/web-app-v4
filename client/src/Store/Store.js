@@ -14,6 +14,7 @@ import {
   SelectedWalletReducer,
   UserAllRelaysReducer,
   UserInterestListReducer,
+  UserSavedToolsReducer,
 } from "./Slides/UserData";
 import {
   UserFirstLoginYakiChestReducer,
@@ -51,6 +52,7 @@ export const store = configureStore({
     userMutedList: UserMutedListReducer,
     userBalance: UserBalanceReducer,
     userFirstLoginYakiChest: UserFirstLoginYakiChestReducer,
+    userSavedTools: UserSavedToolsReducer,
     isConnectedToYaki: IsConnectedToYakiReducer,
     yakiChestStats: YakiChestStatsReducer,
     isYakiChestLoaded: IsYakiChestLoadedReducer,

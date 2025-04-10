@@ -10,13 +10,13 @@ export default function Zap({ event, user, actions, isZapped }) {
 
   const reactToNote = async (event_) => {
     let zapper = getZapper(event_);
-    let sats = zapper.amount;
+    let amount = zapper.amount;
     let content = zapper.message;
     let stats = getEventStatAfterEOSE(
       zapper,
       "zaps",
       actions,
-      { sats, content },
+      { amount, content },
       event_.created_at
     );
     saveEventStats(event.aTag || event.id, stats);

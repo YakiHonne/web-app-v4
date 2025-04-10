@@ -503,7 +503,7 @@ const getEventStatAfterEOSE = (
         content: extra.content,
       },
     ]);
-    stats[kind].total = stats[kind].total + extra;
+    stats[kind].total = stats[kind].total + extra.amount;
   } else if (reaction.kind === 7) {
     let content = !reaction.content.includes(":")
       ? reaction.content

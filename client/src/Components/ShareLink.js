@@ -26,6 +26,9 @@ const getNostrLink = async (path) => {
     case "videos":
       kind = 34235;
       break;
+    case "smart-widget":
+      kind = 30033;
+      break;
   }
   if (kind !== 0) {
     let naddr = pathSplit[2];
