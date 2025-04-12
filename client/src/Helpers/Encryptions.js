@@ -764,15 +764,16 @@ const getKeplrSigner = async () => {
 
     await window.keplr.enable(chainId);
 
+    console.log("chainId",chainId)
     const offlineSigner = window.getOfflineSigner(chainId);
 
-    const client = await SigningStargateClient.connectWithSigner(
-      rpc,
-      offlineSigner
-    );
+    // const client = await SigningStargateClient.connectWithSigner(
+    //   rpc,
+    //   offlineSigner
+    // );
     let address = await offlineSigner.getAccounts();
-    if (address.length === 0) return false;
-    return { signer: client.signer, address: address[0].address };
+    // if (address.length === 0) return false;
+    return { signer: offlineSigner, address: address[0].address };
   } catch (err) {
     console.log(err);
     return false;

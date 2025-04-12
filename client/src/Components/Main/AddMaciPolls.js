@@ -6,6 +6,7 @@ import {
   MaciCircuitType,
   MaciClient,
 } from "@dorafactory/maci-sdk/browser";
+import { GasPrice, calculateFee } from '@cosmjs/stargate';
 
 import LoadingDots from "../LoadingDots";
 import { getKeplrSigner } from "../../Helpers/Encryptions";
@@ -176,7 +177,12 @@ const OracleMACIPoll = ({ setPollAddr, exit }) => {
         network: process.env.REACT_APP_NETWORK,
       });
       let { signer } = await getKeplrSigner();
-      let poll = await client.contract.createOracleMaciRound({
+
+    const gasPrice = GasPrice.fromString('100000000000peaka');
+    const fee = calculateFee(20000000, gasPrice);
+    console.log("oracleCodeId",client.oracleCodeId)
+    console.log("contract.oracleCodeId",client.contract.oracleCodeId)
+      let poll = await client.createOracleMaciRound({
         signer: signer,
         operatorPubkey: process.env.REACT_APP_OP_PUBKEY,
         startVoting: new Date(voteStart),
@@ -195,6 +201,7 @@ const OracleMACIPoll = ({ setPollAddr, exit }) => {
             ecosystemType === "cosmoshub" ? "10000000" : "10000000000000000000",
         },
         voteOptionMap: [...options, tempOption].filter((_) => _),
+        fee
       });
 
       setGasFee({ signer, pollID: poll.contractAddress });
@@ -913,7 +920,7 @@ const AMACIPoll = ({ setPollAddr }) => {
         network: process.env.REACT_APP_NETWORK,
       });
       let signer = await getKeplrSigner();
-      let poll = await client.contract.createOracleMaciRound.createAMaciRound({
+      let poll = await client.createAMaciRound({
         signer,
         operator: process.env.REACT_APP_OP_PUBKEY,
         startVoting: new Date(voteStart),
