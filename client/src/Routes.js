@@ -38,6 +38,10 @@ import SmartWidgetsV2 from "./Pages/MainApp/SmartWidgetsV2";
 import SmartWidgetV2 from "./Pages/MainApp/SmartWidgetV2";
 import SmartWidgetCheckerV2 from "./Pages/MainApp/SmartWidgetCheckerV2";
 import SWhome from "./Pages/MainApp/SWhome";
+import Articles from "./Pages/MainApp/Articles";
+import SWV2 from "./Pages/MainApp/SWV2";
+import Playground from "./Pages/MainApp/Playground";
+import Doc from "./Pages/SWGuide/Doc";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
@@ -47,25 +51,29 @@ const routes = [
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/dashboard", element: <Dashboard /> },
+  // { path: "/articles", element: <Articles /> },
   { path: "/discover", element: <Explore /> },
   { path: "/notifications", element: <Notification /> },
   { path: "/curations/:id", element: <Curation /> },
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },
   { path: "/write-article", element: <Writing /> },
   // { path: "/smart-widget-builder", element: <SmartWidget /> },
+  { path: "/sw-playground", element: <Playground /> },
   { path: "/smart-widget-builder", element: <SmartWidgetV2 /> },
   // { path: "/smart-widgets", element: <SmartWidgets /> },
   { path: "/smart-widgets", element: <SWhome /> },
   { path: "/smart-widgets-v2", element: <SmartWidgetsV2 /> },
   { path: "/smart-widget-checker", element: <SmartWidgetCheckerV2 /> },
+  { path: "/smart-widget/:id", element: <SWV2 /> },
+  { path: "/smart-widget/:nip05/:identifier", element: <SWV2 /> },
   // { path: "/smart-widget-checker", element: <SmartWidgetChecker /> },
   { path: "/settings", element: <Settings /> },
   { path: "/settings/profile", element: <ProfileEdit /> },
   { path: "/article/:id", element: <Article /> },
   { path: "/article/:AuthNip05/:ArtIdentifier", element: <Article /> },
   { path: "/users/:user_id", element: <User /> },
-  { path: "/verify-notes", element: <UN /> },
-  { path: "/verify-notes/:nevent", element: <UNEvent /> },
+  // { path: "/verify-notes", element: <UN /> },
+  // { path: "/verify-notes/:nevent", element: <UNEvent /> },
   { path: "/videos/:id", element: <Video /> },
   { path: "/videos/:AuthNip05/:VidIdentifier", element: <Video /> },
   { path: "/notes/:nevent", element: <Note /> },
@@ -82,6 +90,7 @@ const routes = [
   { path: "/terms", element: <Terms /> },
   { path: "/yaki-points", element: <UserLevels /> },
   { path: "/points-system", element: <YakiLevelingFeature /> },
+  { path: "/docs/sw/:keyword", element: <Doc /> },
 ];
 
 export default routes;

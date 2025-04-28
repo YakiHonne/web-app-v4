@@ -5,7 +5,7 @@ import {
   MaciCertSystemType,
   MaciCircuitType,
   MaciClient,
-} from "@dorafactory/maci-sdk/browser";
+} from "@dorafactory/maci-sdk";
 import { GasPrice, calculateFee } from '@cosmjs/stargate';
 
 import LoadingDots from "../LoadingDots";

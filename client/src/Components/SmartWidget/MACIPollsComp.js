@@ -6,13 +6,14 @@ import {
   getKeplrSigner,
   shortenKey,
 } from "../../Helpers/Encryptions";
-import { MaciClient } from "@dorafactory/maci-sdk/browser";
+import { genKeypair, MaciClient } from "@dorafactory/maci-sdk";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { makeReadableNumber, sleepTimer } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 import { Link } from "react-router-dom";
 import LoginSignup from "../Main/LoginSignup";
+import { DORA_CONFIG } from "../../Content/MACI";
 
 const getSelectedVoteOptionsFromCache = (pollId) => {
   let selectedVoteOptions = localStorage.getItem("selectedVoteOptions");
@@ -135,17 +136,6 @@ export default function MACIPollsComp({ poll, header = true, url = "" }) {
         />
       )}
       {showVotingProcess && header && (
-        // <MACIPollVote
-        //   poll={{ ...poll, roundBalance }}
-        //   exit={(e) => {
-        //     e.stopPropagation();
-        //     setShowVotingProcess(false);
-        //   }}
-        //   onVoteSuccess={(data) => {
-        //     setSelectedVoteOptions(data);
-        //     setShowVotingProcess(false);
-        //   }}
-        // />
         <InitMaciVote
           poll={{ ...poll, roundBalance }}
           exit={(e) => {
@@ -157,14 +147,6 @@ export default function MACIPollsComp({ poll, header = true, url = "" }) {
             setShowVotingProcess(false);
           }}
         />
-        // <MACIPollVote
-        //   poll={poll}
-        //   exit={() => setShowVotingProcess(false)}
-        //   onVoteSuccess={(data) => {
-        //     setSelectedVoteOptions(data);
-        //     setShowVotingProcess(false);
-        //   }}
-        // />
       )}
       <div
         className="fit-container fx-centered fx-col"
@@ -512,7 +494,7 @@ const PollDetails = ({ poll, exit }) => {
             <div className="fx-scattered fit-container box-pad-h-m">
               <h4>{poll.roundTitle}</h4>
               <div className="fx-centered">
-                {window.keplr &&
+                {/* {window.keplr &&
                   ["created", "ongoing"].includes(
                     poll.status.toLowerCase()
                   ) && (
@@ -524,7 +506,7 @@ const PollDetails = ({ poll, exit }) => {
                         <div className="plus-sign"></div> {t("A6rbQWS")}
                       </button>
                     </div>
-                  )}
+                  )} */}
                 <div
                   className="close"
                   style={{ position: "static" }}
@@ -920,6 +902,491 @@ const PollGasStation = ({ poll, exit }) => {
   );
 };
 
+// const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
+//   const dispatch = useDispatch();
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isVotingLoading, setIsVotingLoading] = useState(false);
+//   const [vcBalance, setVcBalance] = useState(0);
+//   const [selectedOptions, setSelectedOptions] = useState([]);
+//   const [ecosystem, setEcosystem] = useState("doravota");
+//   const [userConfig, setUserConfig] = useState(false);
+//   const [isGasStationForVote, setIsGasStationForVote] = useState(false);
+//   const vcBalanceConsumed = useMemo(() => {
+//     return selectedOptions.reduce(
+//       (acc, curr) =>
+//         acc + (poll.circuitName === "MACI-1p1v" ? curr.vc : curr.vc * curr.vc),
+//       0
+//     );
+//   }, [vcBalance, selectedOptions]);
+//   const { t } = useTranslation();
+
+//   useEffect(() => {
+//     const init = async () => {
+//       try {
+//         if (poll.roundBalance < 2) {
+//           setIsLoading(false);
+//           setIsGasStationForVote(true);
+//           return;
+//         }
+//         const client = new MaciClient({
+//           network: process.env.REACT_APP_NETWORK,
+//         });
+//         let { signer, address } = await getKeplrSigner();
+//         let vcBalance_ = false;
+//         const maciAccount = await getMaciAccount(client, signer, address);
+
+//         let stateIdx = await client.maci.getStateIdxByPubKey({
+//           contractAddress: poll.id,
+//           pubKey: maciAccount.pubKey,
+//         });
+
+//         if (stateIdx === -1) {
+//           if (poll.roundBalance < 6) {
+//             setIsLoading(false);
+//             return;
+//           }
+//           const oracleClient = await client.oracleMaciClient({
+//             signer: signer,
+//             contractAddress: poll.id,
+//           });
+//           const oracleConfig = await oracleClient.queryOracleWhitelistConfig();
+//           if (oracleConfig?.ecosystem) setEcosystem(oracleConfig.ecosystem);
+//           const certificate = await client.maci.requestOracleCertificate({
+//             signer,
+//             ecosystem: oracleConfig?.ecosystem || "doravota",
+//             address,
+//             contractAddress: poll.id,
+//           });
+//           vcBalance_ = await oracleClient.whiteBalanceOf({
+//             amount: certificate.amount,
+//             certificate: certificate.signature,
+//             sender: address,
+//           });
+
+//           if (vcBalance_ == 0) {
+//             setIsLoading(false);
+//             return;
+//           }
+
+//           let allowance = await client.maci.feegrantAllowance({
+//             address,
+//             contractAddress: poll.id,
+//           });
+//           allowance = allowance.spend_limit.length > 0 ? true : false;
+
+//           while (!allowance) {
+//             allowance = await client.maci.feegrantAllowance({
+//               address,
+//               contractAddress: poll.id,
+//             });
+//             allowance = allowance.spend_limit.length > 0 ? true : false;
+//             await sleepTimer(1000);
+//           }
+
+//           const signupResponse = await client.maci.signup({
+//             signer,
+//             address,
+//             maciAccount,
+//             contractAddress: poll.id,
+//             oracleCertificate: {
+//               amount: certificate.amount,
+//               signature: certificate.signature,
+//             },
+//             gasStation: true,
+//           });
+//           await sleepTimer(7000);
+//           stateIdx = await client.maci.getStateIdxByPubKey({
+//             contractAddress: poll.id,
+//             pubKey: maciAccount.pubKey,
+//           });
+//         }
+//         if (vcBalance_ === false)
+//           vcBalance_ = await client.maci.getVoiceCreditBalance({
+//             signer,
+//             contractAddress: poll.id,
+//             stateIdx,
+//           });
+//         let config = {
+//           client,
+//           signer,
+//           address,
+//           stateIdx,
+//           maciAccount,
+//         };
+//         setUserConfig(config);
+//         setVcBalance(parseInt(vcBalance_) > 0 ? 1 : 0);
+//         setIsLoading(false);
+//       } catch (err) {
+//         console.log(err);
+//         setIsLoading(false);
+//       }
+//     };
+//     init();
+//   }, []);
+
+//   const getMaciAccount = async (client, signer, address) => {
+//     try {
+//       const stringToBigInt = (ma) => {
+//         let tempMa = {
+//           // eslint-disable-next-line no-undef
+//           formatedPrivKey: BigInt(ma.formatedPrivKey),
+//           // eslint-disable-next-line no-undef
+//           privKey: BigInt(ma.privKey),
+//           // eslint-disable-next-line no-undef
+//           pubKey: [BigInt(ma.pubKey[0]), BigInt(ma.pubKey[1])],
+//         };
+//         return tempMa;
+//       };
+
+//       let maciAccount = localStorage.getItem(`maciAccount-${address}`);
+//       maciAccount = maciAccount
+//         ? stringToBigInt(JSON.parse(maciAccount))
+//         : await client.circom.genKeypairFromSign(signer, address);
+//       setMaciAccount(address, maciAccount);
+//       return maciAccount;
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+//   const setMaciAccount = (address, maciAccount) => {
+//     try {
+//       let tempMaciAccount = {
+//         formatedPrivKey: maciAccount.formatedPrivKey.toString(),
+//         privKey: maciAccount.privKey.toString(),
+//         pubKey: [
+//           maciAccount.pubKey[0].toString(),
+//           maciAccount.pubKey[1].toString(),
+//         ],
+//       };
+//       localStorage.setItem(
+//         `maciAccount-${address}`,
+//         JSON.stringify(tempMaciAccount)
+//       );
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+
+//   const handleSelectedOptions = (index, isSelected) => {
+//     setSelectedOptions(isSelected ? [] : [{ idx: index, vc: 1 }]);
+//   };
+
+//   const handleVC = (index, vc) => {
+//     let options = [...selectedOptions];
+//     let optionIndex = options.findIndex((_) => _.idx == index);
+//     options[optionIndex].vc = (vc && parseInt(vc)) || 0;
+//     setSelectedOptions(options);
+//   };
+
+//   const pollVote = async () => {
+//     if (
+//       vcBalanceConsumed === 0 ||
+//       vcBalanceConsumed > vcBalance ||
+//       vcBalance === 0
+//     )
+//       return;
+//     try {
+//       setIsVotingLoading(true);
+//       let rejectionCount = 0;
+//       let { client, signer, address, stateIdx, maciAccount } = userConfig;
+//       let gasStationEnable = await client.maci.queryRoundGasStation({
+//         contractAddress: poll.id,
+//       });
+
+//       while (!gasStationEnable) {
+//         if (rejectionCount > 5) {
+//           setIsVotingLoading(false);
+//           dispatch(
+//             setToast({
+//               type: 3,
+//               desc: t("AWgG7l1"),
+//             })
+//           );
+//           return;
+//         }
+//         await sleepTimer(1000);
+//         gasStationEnable = await client.maci.queryRoundGasStation({
+//           contractAddress: poll.id,
+//         });
+//         rejectionCount++;
+//       }
+
+//       const voteResponse = await client.maci.vote({
+//         signer,
+//         address,
+//         stateIdx,
+//         maciAccount,
+//         contractAddress: poll.id,
+//         selectedOptions: selectedOptions,
+//         operatorCoordPubKey: [
+//           // eslint-disable-next-line no-undef
+//           BigInt(poll.coordinatorPubkeyX),
+//           // eslint-disable-next-line no-undef
+//           BigInt(poll.coordinatorPubkeyY),
+//         ],
+//         gasStation: true,
+//       });
+//       dispatch(
+//         setToast({
+//           type: 1,
+//           desc: t("AxPscQU"),
+//         })
+//       );
+//       let chosenOptionsToSave = Object.fromEntries(
+//         selectedOptions
+//           .map((_) => {
+//             return {
+//               [_.idx]: _.vc,
+//             };
+//           })
+//           .flatMap(Object.entries)
+//       );
+//       setSelectedVoteOptionsToCache(poll.id, chosenOptionsToSave);
+//       onVoteSuccess && onVoteSuccess(chosenOptionsToSave);
+//       setIsVotingLoading(false);
+//     } catch (err) {
+//       console.log(err);
+//       dispatch(
+//         setToast({
+//           type: 3,
+//           desc: t("AybYQmE"),
+//         })
+//       );
+//       setIsVotingLoading(false);
+//     }
+//   };
+
+//   if (!isLoading && isGasStationForVote)
+//     return (
+//       <div className="fixed-container fx-centered box-pad-h">
+//         <div
+//           className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
+//           style={{
+//             width: "min(100%, 400px)",
+//             height: "auto",
+//             position: "relative",
+//           }}
+//           onClick={(e) => e.stopPropagation()}
+//         >
+//           <div className="close" onClick={exit}>
+//             <div></div>
+//           </div>
+//           <div className="fit-container fx-centered fx-col">
+//             <div
+//               className="info-tt-24"
+//               style={{ minWidth: "48px", minHeight: "48px" }}
+//             ></div>
+//             <h4>{t("A128KIp")}</h4>
+//             <p className="gray-c p-centered box-pad-h">
+//               {t("AoAc0KV", { amount: 2 })}
+//             </p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   if (!isLoading && vcBalance === 0 && poll.roundBalance < 6)
+//     return (
+//       <div className="fixed-container fx-centered box-pad-h">
+//         <div
+//           className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
+//           style={{
+//             width: "min(100%, 400px)",
+//             height: "auto",
+//             position: "relative",
+//           }}
+//           onClick={(e) => e.stopPropagation()}
+//         >
+//           <div className="close" onClick={exit}>
+//             <div></div>
+//           </div>
+//           <div className="fit-container fx-centered fx-col">
+//             <div
+//               className="info-tt-24"
+//               style={{ minWidth: "48px", minHeight: "48px" }}
+//             ></div>
+//             <h4>{t("AbhKhNW")}</h4>
+//             <p className="gray-c p-centered box-pad-h">{t("ALfmcyA")}</p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   return (
+//     <div
+//       className="fixed-container fx-centered box-pad-h"
+//       onClick={(e) => {
+//         e.stopPropagation();
+//         exit(e);
+//       }}
+//     >
+//       <div
+//         className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
+//         style={{
+//           minWidth: "min(100%, 500px)",
+//           height: isLoading ? "30vh" : "auto",
+//           position: "relative",
+//         }}
+//         onClick={(e) => e.stopPropagation()}
+//       >
+//         <div className="close" onClick={exit}>
+//           <div></div>
+//         </div>
+//         {isLoading && <LoadingDots />}
+//         {!isLoading && (
+//           <div
+//             className="fit-container fx-centered fx-start-v fx-col"
+//             style={{ gap: "16px" }}
+//           >
+//             <div className="fx-centered fx-col fx-start-v">
+//               <p className="gray-c">{t("A0BxU3E")}</p>
+//               <div className="fx-centered">
+//                 {vcBalance === 0 && selectedOptions.length === 0 && (
+//                   <h2 className="red-c">0</h2>
+//                 )}
+//                 {vcBalance !== 0 && (
+//                   <h2>
+//                     <span className="gray-c">{selectedOptions.length}</span>
+//                     /1
+//                   </h2>
+//                 )}
+//               </div>
+//               {vcBalance === 0 && selectedOptions.length === 0 && (
+//                 <div className="fx-centered">
+//                   <p className="gray-c p-medium">{t("AGRmJTe")}</p>
+//                   <a
+//                     target="_blank"
+//                     href={
+//                       ecosystem === "doravota"
+//                         ? "https://vota-explorer.dorafactory.org/doravota/staking/doravaloper1gerunjnh6umehq6zm0gphrc87u37veuv5y9dkw"
+//                         : "https://wallet.keplr.app/chains/cosmos-hub?modal=validator&chain=cosmoshub-4&validator_address=cosmosvaloper17w8wc8y2jg2fjnkfxfw8z7a84qtuvyrgd89hm4"
+//                     }
+//                     className="c1-c p-medium fx-centered"
+//                   >
+//                     {t("AI81KFU")}
+//                     <div
+//                       className="share-icon"
+//                       style={{ minWidth: "12px", minHeight: "12px" }}
+//                     ></div>
+//                   </a>
+//                 </div>
+//               )}
+//             </div>
+//             <div>
+//               <p className="c1-c">{t("A9Mca7S")}</p>
+//               <ul>
+//                 <li>{t("AtgjyCM")}</li>
+//                 <li>{t("A5d11WZ")}</li>
+//                 <li>{t("AIIHmli")}</li>
+//                 <li>{t("A3cQKRh")}</li>
+//                 <li>
+//                   <a
+//                     href="https://research.dorahacks.io/2022/04/30/light-weight-maci-anonymization/"
+//                     target="_blank"
+//                     className="c1-c fx-centered fx-start-h"
+//                   >
+//                     {t("ASifSKs")}
+//                     <div
+//                       className="share-icon"
+//                       style={{ minHeight: "12px", minHeight: "12px" }}
+//                     ></div>
+//                   </a>
+//                 </li>
+//               </ul>
+//             </div>
+
+//             <div
+//               className="fit-container fx-centered fx-col"
+//               style={
+//                 vcBalance === 0
+//                   ? {
+//                       opacity: 0.7,
+//                       cursor: "not-allowed",
+//                       pointerEvents: "none",
+//                     }
+//                   : {}
+//               }
+//             >
+//               <div className="fit-container fx-scattered">
+//                 <div style={{ width: "85%" }}>
+//                   <p className="gray-c p-medium">{t("A5DDopE")}</p>
+//                 </div>
+//                 {/* <div style={{ width: "15%" }}>
+//                   <p className="gray-c p-medium">{t("A0BxU3E")}</p>
+//                 </div> */}
+//               </div>
+//               {poll.voteOptionMap.map((option, index) => {
+//                 let isSelected = selectedOptions.find((_) => _.idx == index);
+//                 return (
+//                   <div
+//                     className={`box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-start-h fit-container pointer`}
+//                     style={{
+//                       position: "relative",
+//                       backgroundColor: isSelected ? "var(--orange-side)" : "",
+//                       borderColor: isSelected ? "var(--orange-main)" : "",
+//                     }}
+//                     key={index}
+//                     onClick={() => handleSelectedOptions(index, isSelected)}
+//                   >
+//                     <p>{option || "[OPTION]"}</p>
+//                     {/* <label
+//                       style={{
+//                         position: "relative",
+//                         borderColor: isSelected ? "var(--orange-main)" : "",
+//                       }}
+//                       className={`box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-start-h fit-container`}
+//                       htmlFor={`opt-${index}`}
+//                     >
+//                       <input
+//                         type="checkbox"
+//                         name={`opt-${index}`}
+//                         id={`opt-${index}`}
+//                         onChange={() => handleSelectedOptions(index)}
+//                       />
+//                       <p>{option || "[OPTION]"}</p>
+//                     </label> */}
+//                     {/* <div style={{ width: "15%" }}>
+//                       <input
+//                         type="number"
+//                         className={`if ifs-full ${
+//                           isSelected ? "" : "if-disabled"
+//                         }`}
+//                         placeholder="vc"
+//                         min={0}
+//                         style={{ height: "var(--40)" }}
+//                         onChange={(e) => handleVC(index, e.target.value)}
+//                         value={
+//                           isSelected
+//                             ? isSelected.vc.toString().replace(/^0+(\d)/, "$1")
+//                             : 0
+//                         }
+//                         disabled={!isSelected}
+//                       />
+//                     </div> */}
+//                   </div>
+//                 );
+//               })}
+//               <button
+//                 className={`btn btn-full ${
+//                   vcBalanceConsumed > 0 && vcBalanceConsumed <= vcBalance
+//                     ? "btn-normal"
+//                     : "btn-disabled"
+//                 }`}
+//                 onClick={pollVote}
+//                 disabled={
+//                   vcBalanceConsumed === 0 ||
+//                   vcBalanceConsumed > vcBalance ||
+//                   vcBalance === 0
+//                 }
+//               >
+//                 {isVotingLoading ? <LoadingDots /> : t("A0hPAcy")}
+//               </button>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
 const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
@@ -936,7 +1403,6 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
       0
     );
   }, [vcBalance, selectedOptions]);
-  const { t } = useTranslation();
 
   useEffect(() => {
     const init = async () => {
@@ -946,16 +1412,17 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
           setIsGasStationForVote(true);
           return;
         }
+        let { signer, address } = await getKeplrSigner();
         const client = new MaciClient({
           network: process.env.REACT_APP_NETWORK,
+          signer,
         });
-        let { signer, address } = await getKeplrSigner();
         let vcBalance_ = false;
-        const maciAccount = await getMaciAccount(client, signer, address);
+        const maciKeypair = await getMaciAccount(client, address);
 
-        let stateIdx = await client.maci.getStateIdxByPubKey({
+        let stateIdx = await client.getStateIdxByPubKey({
           contractAddress: poll.id,
-          pubKey: maciAccount.pubKey,
+          pubKey: maciKeypair.pubKey,
         });
 
         if (stateIdx === -1) {
@@ -963,7 +1430,8 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
             setIsLoading(false);
             return;
           }
-          const oracleClient = await client.contract.oracleMaciClient({
+
+          const oracleClient = await client.oracleMaciClient({
             signer: signer,
             contractAddress: poll.id,
           });
@@ -1001,10 +1469,10 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
             await sleepTimer(1000);
           }
 
-          const signupResponse = await client.maci.signup({
+          const signupResponse = await client.signup({
             signer,
             address,
-            maciAccount,
+            maciKeypair,
             contractAddress: poll.id,
             oracleCertificate: {
               amount: certificate.amount,
@@ -1012,12 +1480,14 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
             },
             gasStation: true,
           });
+
           await sleepTimer(7000);
           stateIdx = await client.maci.getStateIdxByPubKey({
             contractAddress: poll.id,
-            pubKey: maciAccount.pubKey,
+            pubKey: maciKeypair.pubKey,
           });
         }
+
         if (vcBalance_ === false)
           vcBalance_ = await client.maci.getVoiceCreditBalance({
             signer,
@@ -1029,7 +1499,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
           signer,
           address,
           stateIdx,
-          maciAccount,
+          maciKeypair,
         };
         setUserConfig(config);
         setVcBalance(parseInt(vcBalance_) > 0 ? 1 : 0);
@@ -1042,7 +1512,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
     init();
   }, []);
 
-  const getMaciAccount = async (client, signer, address) => {
+  const getMaciAccount = async (client, address) => {
     try {
       const stringToBigInt = (ma) => {
         let tempMa = {
@@ -1059,13 +1529,33 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
       let maciAccount = localStorage.getItem(`maciAccount-${address}`);
       maciAccount = maciAccount
         ? stringToBigInt(JSON.parse(maciAccount))
-        : await client.circom.genKeypairFromSign(signer, address);
+        : await createMaciAccount(address);
       setMaciAccount(address, maciAccount);
       return maciAccount;
     } catch (err) {
       console.log(err);
     }
   };
+
+  const createMaciAccount = async (address) => {
+    try {
+      const sig = await window.keplr.signArbitrary(
+        DORA_CONFIG[process.env.REACT_APP_NETWORK].chainId,
+        address,
+        "Generate_MACI_Private_Key"
+      );
+      let keypair = genKeypair(
+        // eslint-disable-next-line no-undef
+        BigInt("0x" + Buffer.from(sig.signature, "base64").toString("hex"))
+      );
+      console.log(keypair);
+      return keypair;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  };
+
   const setMaciAccount = (address, maciAccount) => {
     try {
       let tempMaciAccount = {
@@ -1089,13 +1579,6 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
     setSelectedOptions(isSelected ? [] : [{ idx: index, vc: 1 }]);
   };
 
-  const handleVC = (index, vc) => {
-    let options = [...selectedOptions];
-    let optionIndex = options.findIndex((_) => _.idx == index);
-    options[optionIndex].vc = (vc && parseInt(vc)) || 0;
-    setSelectedOptions(options);
-  };
-
   const pollVote = async () => {
     if (
       vcBalanceConsumed === 0 ||
@@ -1106,7 +1589,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
     try {
       setIsVotingLoading(true);
       let rejectionCount = 0;
-      let { client, signer, address, stateIdx, maciAccount } = userConfig;
+      let { client, signer, address, stateIdx, maciKeypair } = userConfig;
       let gasStationEnable = await client.maci.queryRoundGasStation({
         contractAddress: poll.id,
       });
@@ -1117,7 +1600,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
           dispatch(
             setToast({
               type: 3,
-              desc: t("AWgG7l1"),
+              desc: "Gas station was not enabled, please try again later",
             })
           );
           return;
@@ -1133,7 +1616,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
         signer,
         address,
         stateIdx,
-        maciAccount,
+        maciKeypair,
         contractAddress: poll.id,
         selectedOptions: selectedOptions,
         operatorCoordPubKey: [
@@ -1147,7 +1630,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
       dispatch(
         setToast({
           type: 1,
-          desc: t("AxPscQU"),
+          desc: "Your vote was cast successfully",
         })
       );
       let chosenOptionsToSave = Object.fromEntries(
@@ -1167,7 +1650,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
       dispatch(
         setToast({
           type: 3,
-          desc: t("AybYQmE"),
+          desc: "An error occurred while processing your vote, please try again later",
         })
       );
       setIsVotingLoading(false);
@@ -1194,9 +1677,9 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
               className="info-tt-24"
               style={{ minWidth: "48px", minHeight: "48px" }}
             ></div>
-            <h4>{t("A128KIp")}</h4>
+            <h4>Unable to vote</h4>
             <p className="gray-c p-centered box-pad-h">
-              {t("AoAc0KV", { amount: 2 })}
+              {`"This round's gas fees are below 2 DORA, this prevents voting. Please wait for the creator to add more gas.",`}
             </p>
           </div>
         </div>
@@ -1222,8 +1705,11 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
               className="info-tt-24"
               style={{ minWidth: "48px", minHeight: "48px" }}
             ></div>
-            <h4>{t("AbhKhNW")}</h4>
-            <p className="gray-c p-centered box-pad-h">{t("ALfmcyA")}</p>
+            <h4>Unable to signup and vote</h4>
+            <p className="gray-c p-centered box-pad-h">
+              This round's gas fees are below 6 DORA, this prevents signup and
+              voting. Please wait for the creator to add more gas.
+            </p>
           </div>
         </div>
       </div>
@@ -1255,7 +1741,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
             style={{ gap: "16px" }}
           >
             <div className="fx-centered fx-col fx-start-v">
-              <p className="gray-c">{t("A0BxU3E")}</p>
+              <p className="gray-c">Voice credit</p>
               <div className="fx-centered">
                 {vcBalance === 0 && selectedOptions.length === 0 && (
                   <h2 className="red-c">0</h2>
@@ -1269,7 +1755,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
               </div>
               {vcBalance === 0 && selectedOptions.length === 0 && (
                 <div className="fx-centered">
-                  <p className="gray-c p-medium">{t("AGRmJTe")}</p>
+                  <p className="gray-c p-medium">Low voice credit balance</p>
                   <a
                     target="_blank"
                     href={
@@ -1279,7 +1765,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
                     }
                     className="c1-c p-medium fx-centered"
                   >
-                    {t("AI81KFU")}
+                    Please stake here
                     <div
                       className="share-icon"
                       style={{ minWidth: "12px", minHeight: "12px" }}
@@ -1289,19 +1775,19 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
               )}
             </div>
             <div>
-              <p className="c1-c">{t("A9Mca7S")}</p>
+              <p className="c1-c">Tips</p>
               <ul>
-                <li>{t("AtgjyCM")}</li>
-                <li>{t("A5d11WZ")}</li>
-                <li>{t("AIIHmli")}</li>
-                <li>{t("A3cQKRh")}</li>
+                <li>Select a voting option from the list below.</li>
+                <li>Only one voice credit is required to vote.</li>
+                <li>You can submit multiple times.</li>
+                <li>Only the last submission will be valid.</li>
                 <li>
                   <a
                     href="https://research.dorahacks.io/2022/04/30/light-weight-maci-anonymization/"
                     target="_blank"
                     className="c1-c fx-centered fx-start-h"
                   >
-                    {t("ASifSKs")}
+                    Learn more about MACI
                     <div
                       className="share-icon"
                       style={{ minHeight: "12px", minHeight: "12px" }}
@@ -1325,11 +1811,8 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
             >
               <div className="fit-container fx-scattered">
                 <div style={{ width: "85%" }}>
-                  <p className="gray-c p-medium">{t("A5DDopE")}</p>
+                  <p className="gray-c p-medium">Options</p>
                 </div>
-                {/* <div style={{ width: "15%" }}>
-                  <p className="gray-c p-medium">{t("A0BxU3E")}</p>
-                </div> */}
               </div>
               {poll.voteOptionMap.map((option, index) => {
                 let isSelected = selectedOptions.find((_) => _.idx == index);
@@ -1345,40 +1828,6 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
                     onClick={() => handleSelectedOptions(index, isSelected)}
                   >
                     <p>{option || "[OPTION]"}</p>
-                    {/* <label
-                      style={{
-                        position: "relative",
-                        borderColor: isSelected ? "var(--orange-main)" : "",
-                      }}
-                      className={`box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-start-h fit-container`}
-                      htmlFor={`opt-${index}`}
-                    >
-                      <input
-                        type="checkbox"
-                        name={`opt-${index}`}
-                        id={`opt-${index}`}
-                        onChange={() => handleSelectedOptions(index)}
-                      />
-                      <p>{option || "[OPTION]"}</p>
-                    </label> */}
-                    {/* <div style={{ width: "15%" }}>
-                      <input
-                        type="number"
-                        className={`if ifs-full ${
-                          isSelected ? "" : "if-disabled"
-                        }`}
-                        placeholder="vc"
-                        min={0}
-                        style={{ height: "var(--40)" }}
-                        onChange={(e) => handleVC(index, e.target.value)}
-                        value={
-                          isSelected
-                            ? isSelected.vc.toString().replace(/^0+(\d)/, "$1")
-                            : 0
-                        }
-                        disabled={!isSelected}
-                      />
-                    </div> */}
                   </div>
                 );
               })}
@@ -1395,7 +1844,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
                   vcBalance === 0
                 }
               >
-                {isVotingLoading ? <LoadingDots /> : t("A0hPAcy")}
+                {isVotingLoading ? <LoadingDots /> : "Submit"}
               </button>
             </div>
           </div>

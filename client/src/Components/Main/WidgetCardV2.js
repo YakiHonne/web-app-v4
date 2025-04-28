@@ -3,9 +3,7 @@ import { nip19 } from "nostr-tools";
 import OptionsDropdown from "./OptionsDropdown";
 import LoadingDots from "../LoadingDots";
 import { Link } from "react-router-dom";
-import { Widget } from "smart-widget-previewer";
 import ShareLink from "../ShareLink";
-import PreviewWidget from "../SmartWidget/PreviewWidget";
 import AuthorPreview from "./AuthorPreview";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
@@ -20,6 +18,7 @@ import Date_ from "../Date_";
 import UserProfilePic from "./UserProfilePic";
 import { nanoid } from "nanoid";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { NDKUser } from "@nostr-dev-kit/ndk";
 
 export default function WidgetCardV2({
   widget,
@@ -27,6 +26,7 @@ export default function WidgetCardV2({
   options = true,
   addWidget = false,
   header = true,
+  authPreviewPosition = "bottom",
 }) {
   const dispatch = useDispatch();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
@@ -34,6 +34,7 @@ export default function WidgetCardV2({
   const [swMetadata, setSWMetadata] = useState(widget.metadata);
   const [authorData, setAuthorData] = useState(widget.author);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNIP05Verified, setIsNIP05Verified] = useState(false);
   const [postNoteWithWidgets, setPostNoteWithWidget] = useState(false);
   const [initPublish, setInitPublish] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -45,6 +46,14 @@ export default function WidgetCardV2({
         let auth = getUser(widget.author.pubkey);
 
         if (auth) {
+          let ndkUser = new NDKUser({
+            pubkey: auth.pubkey,
+          });
+          ndkUser.ndk = ndkInstance;
+          let isVer = auth.nip05
+            ? await ndkUser.validateNip05(auth.nip05)
+            : false;
+          if (isVer) setIsNIP05Verified(true);
           setAuthorData(auth);
         }
         return;
@@ -109,10 +118,10 @@ export default function WidgetCardV2({
         />
       )}
       <div
-        className={`fx-centered fx-col fit-container fx-start-h fx-start-v ${
+        className={`fx-centered fit-container fx-start-h fx-start-v ${
           header ? "box-pad-h-s box-pad-v-s sc-s-18 bg-sp" : ""
         }`}
-        style={{ overflow: "visible" }}
+        style={{ overflow: "visible", flexWrap:  authPreviewPosition === "bottom" ? "wrap" : "wrap-reverse", gap: "5px" }}
         onClick={(e) => e.stopPropagation()}
       >
         {header && (
@@ -147,7 +156,7 @@ export default function WidgetCardV2({
                         onClick={() =>
                           swMetadata.id === widget.id
                             ? setPostNoteWithWidget(
-                                `https://yakihonne.com/smart-widget-checker?naddr=${widget.metadata.naddr}`
+                                `https://yakihonne.com/smart-widget/${widget.metadata.naddr}`
                               )
                             : setInitPublish({
                                 publish: true,
@@ -214,7 +223,11 @@ export default function WidgetCardV2({
                     swMetadata.id === widget.id && (
                       <ShareLink
                         label={t("AGB5vpj")}
-                        path={`/smart-widget-checker?naddr=${widget.metadata.naddr}`}
+                        path={`/smart-widget/${
+                          isNIP05Verified
+                            ? `${authorData.nip05}/${widget.metadata.d}`
+                            : widget.metadata.naddr
+                        }`}
                         title={swMetadata.title || swMetadata.description}
                         description={swMetadata.description || swMetadata.title}
                       />
@@ -283,7 +296,7 @@ export default function WidgetCardV2({
                       className="fit-container"
                       onClick={() =>
                         setPostNoteWithWidget(
-                          `https://yakihonne.com/smart-widget-checker?naddr=${widget.metadata.naddr}`
+                          `https://yakihonne.com/smart-widget/${widget.metadata.naddr}`
                         )
                       }
                     >
@@ -341,7 +354,11 @@ export default function WidgetCardV2({
                     swMetadata.id === widget.id && (
                       <ShareLink
                         label={t("AGB5vpj")}
-                        path={`/smart-widget-checker?naddr=${widget.metadata.naddr}`}
+                        path={`/smart-widget/${
+                          isNIP05Verified
+                            ? `${authorData.nip05}/${widget.metadata.d}`
+                            : widget.metadata.naddr
+                        }`}
                         title={swMetadata.title || swMetadata.description}
                         description={swMetadata.description || swMetadata.title}
                       />
@@ -414,7 +431,7 @@ const PublishWidget = ({
         kind: event.kind,
         identifier: d,
       });
-      let url = `https://yakihonne.com/smart-widget-checker?naddr=${naddr}`;
+      let url = `https://yakihonne.com/smart-widget/${naddr}`;
       if (publishInNote) {
         setPostNoteWithWidget(url);
         return;

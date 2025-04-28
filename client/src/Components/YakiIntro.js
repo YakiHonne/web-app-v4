@@ -181,23 +181,32 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated March 30, 2025
+                  Last updated April 28, 2025
                 </p>
               </div>
               <p className="orange-c p-medium">
                 v{process.env.REACT_APP_APP_VERSION}
               </p>
             </div>
-            <p>{`
-- Custom reactions are here! Choose your preferred emoji to react to notes and other content.
-- Improved profile organization with notes and replies now displayed separately.
-- Enhanced DM filtering by time, allowing you to view only recent messages or browse further back.
-- Adding the ability to zap notes directly from the notifications center.
-- Manual cache clearing from settings to optimize web app performance.
-- Resolved issue preventing users from removing custom media uploader servers.
-- Expanded export data, including more relevant details in credential and wallet files.
-- General bug fixes and performance improvements.
-`}</p>
+            <div className="box-pad-v-s"></div>
+            <ul>
+              <li>Introducing Smart Widgets v2 – now dynamic and programmable. Learn more at <a href="https://yakihonne.com/docs/sw/intro" className="c1-c" target="_blank">Yaki Docs</a></li>
+              <li>New Tools Smart Widgets section in note creation for advanced content editing.</li>
+              <li>Curations, videos, and polls are now Tools Smart Widgets, enabling quick creation and seamless embedding in notes.</li>
+              <li>Zap advertisements added—top zappers can now appear below notes.</li>
+              <li>Note translation button has been relocated next to the note options for easier access.</li>
+              <li>Follower and following lists are now visible directly on the dashboard home page.</li>
+              <li>General improvements and bug fixes for a smoother experience.</li>
+            </ul>
+            {/* <p>{`
+- Introducing Smart Widgets v2 – now dynamic and programmable. Learn more at https://yakihonne.com/docs/sw/intro
+- New Tools Smart Widgets section in note creation for advanced content editing.
+- Curations, videos, and polls are now Tools Smart Widgets, enabling quick creation and seamless embedding in notes.
+- Zap advertisements added—top zappers can now appear below notes.
+- Note translation button has been relocated next to the note options for easier access.
+- Follower and following lists are now visible directly on the dashboard home page.
+- General improvements and bug fixes for a smoother experience.
+`}</p> */}
           </div>
           {content.map((card, index) => {
             return (

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import LoadingDots from "../LoadingDots";
 import { useTranslation } from "react-i18next";
-import { MaciClient } from "@dorafactory/maci-sdk/browser";
+import { MaciClient } from "@dorafactory/maci-sdk";
 import MACIPollsComp from "../SmartWidget/MACIPollsComp";
 import { parsedMaciPoll } from "../../Helpers/Encryptions";
 

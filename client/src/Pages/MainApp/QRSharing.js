@@ -6,7 +6,7 @@ import QRCode from "react-qr-code";
 import { getBech32, shortenKey } from "../../Helpers/Encryptions";
 import { useTranslation } from "react-i18next";
 
-export default function QRSharing({ user, exit }) {
+export default function QRSharing({ user, exit, isVerified }) {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState("pk");
@@ -88,15 +88,16 @@ export default function QRSharing({ user, exit }) {
             onClick={() =>
               copyKey(
                 t("AoTWbxS"),
-                `https://yakihonne.com/users/${getBech32("npub", user.pubkey)}`
+                `https://yakihonne.com/users/${
+                  isVerified ? user.nip05 : getBech32("npub", user.pubkey)
+                }`
               )
             }
           >
             <div className="link-24"></div>
-            <p className="p-one-line">{`https://yakihonne.com/users/${getBech32(
-              "npub",
-              user.pubkey
-            )}`}</p>
+            <p className="p-one-line">{`https://yakihonne.com/users/${
+              isVerified ? user.nip05 : getBech32("npub", user.pubkey)
+            }`}</p>
             <div className="copy-24"></div>
           </div>
           <div

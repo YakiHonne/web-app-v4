@@ -34,6 +34,8 @@ import { customHistory } from "../../Helpers/History";
 import YakiMobileappSidebar from "../YakiMobileappSidebar";
 import { useTranslation } from "react-i18next";
 import { setToast } from "../../Store/Slides/Publishers";
+import { NDKUser } from "@nostr-dev-kit/ndk";
+import { ndkInstance } from "../../Helpers/NDKInstance";
 
 export default function Sidebar() {
   const { t } = useTranslation();
@@ -157,7 +159,8 @@ export default function Sidebar() {
       let NWCs = wallets.filter((_) => _.kind !== 1);
       let toSave = [
         "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
-        "---"`Wallets for: ${getBech32("npub", userKeys.pub)}`,
+        "---",
+        `Wallets for: ${getBech32("npub", userKeys.pub)}`,
         "-",
         ...NWCs.map((_, index) => {
           return [
@@ -221,6 +224,25 @@ export default function Sidebar() {
     setShowConfirmationBox(false);
   };
 
+  const handleProfileLink = async () => {
+    try {
+      let ndkUser = new NDKUser({
+        pubkey: userKeys.pub,
+      });
+      ndkUser.ndk = ndkInstance;
+      let isVer = userMetadata.nip05 ? await ndkUser.validateNip05(userMetadata.nip05) : false;
+      if (isVer) {
+        customHistory.push(`/users/${userMetadata.nip05}`);
+        return;
+      }
+
+      let pubkey = getBech32("npub", userKeys.pub);
+      customHistory.push(`/users/${pubkey}`);
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
@@ -279,12 +301,23 @@ export default function Sidebar() {
                 }`}
               >
                 <div
-                  className={
-                    isPage("/discover") ? "discover-bold-24" : "discover-24"
-                  }
+                  className={isPage("/discover") ? "discover-bold-24" : "discover-24"}
                 ></div>
                 <div className="link-label">{t("ABSoIm9")}</div>
               </div>
+              {/* <div
+                onClick={() => {
+                  customHistory.push("/articles");
+                }}
+                className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                  isPage("/articles") ? "active-link" : "inactive-link"
+                }`}
+              >
+                <div
+                  className={isPage("/articles") ? "posts-bold-24" : "posts-24"}
+                ></div>
+                <div className="link-label">{t("AesMg52")}</div>
+              </div> */}
               <div
                 onClick={() => {
                   customHistory.push("/smart-widgets");
@@ -302,7 +335,7 @@ export default function Sidebar() {
                 ></div>
                 <div className="link-label">{t("A2mdxcf")}</div>
               </div>
-              <div
+              {/* <div
                 onClick={() => customHistory.push("/verify-notes")}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
                   isPage("/verify-notes") ? "active-link" : "inactive-link"
@@ -314,7 +347,7 @@ export default function Sidebar() {
                   }
                 ></div>
                 <div className="link-label">{t("AltGBkP")}</div>
-              </div>
+              </div> */}
               {!(showMedia || showMyContent || showWritingOptions) && (
                 <>
                   <div
@@ -334,7 +367,7 @@ export default function Sidebar() {
                     </div>
                     {isNewMsg && <div className="notification-dot"></div>}
                   </div>
-                  <NotificationCenter />
+                  <NotificationCenter isCurrent={isPage("/notifications")} />
                 </>
               )}
               <SearchSidebar />
@@ -347,20 +380,18 @@ export default function Sidebar() {
                 >
                   <div
                     className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                      isPage("/users/" + getBech32("npub", userKeys.pub))
+                      isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                      isPage("/users/" + userMetadata.nip05)
                         ? "active-link"
                         : "inactive-link"
                     }`}
-                    onClick={() => {
-                      customHistory.push(
-                        "/users/" + getBech32("npub", userKeys.pub)
-                      );
-                    }}
+                    onClick={handleProfileLink}
                   >
                     <div className="fx-centered">
                       <div
                         className={
-                          isPage("/users/" + getBech32("npub", userKeys.pub))
+                          isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                          isPage("/users/" + userMetadata.nip05)
                             ? "user-bold-24"
                             : "user-24"
                         }
@@ -399,9 +430,9 @@ export default function Sidebar() {
                   </div>
                 )}
               <div style={{ height: ".5rem" }}></div>
-              {window.location.pathname !== "/dashboard" && (
+              {/* {window.location.pathname !== "/dashboard" && ( */}
                 <WriteNew exit={() => null} />
-              )}
+              {/* )} */}
             </div>
             {(showMedia || showMyContent || showWritingOptions) && (
               <div className="fit-container fx-start-h fx-centered box-pad-h-s">

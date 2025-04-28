@@ -27,13 +27,13 @@ import { generateSecretKey, nip19 } from "nostr-tools";
 import NDK, { NDKEvent, NDKPrivateKeySigner } from "@nostr-dev-kit/ndk";
 import { Widget } from "smart-widget-previewer";
 import { getUser, InitEvent } from "../../Helpers/Controlers";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import PostNoteWithWidget from "../../Components/Main/PostNoteWithWidget";
 import { customHistory } from "../../Helpers/History";
 import axios from "axios";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import { saveUsers } from "../../Helpers/DB";
+import { addWidgetPathToUrl } from "../../Helpers/Helpers";
 const SWT_YAKIHONNE = "https://swt.yakihonne.com";
 
 const getLocalSWv2Drafts = () => {
@@ -130,8 +130,8 @@ export default function SmartWidgetV2() {
         <div className="main-container">
           <Sidebar />
           <main className="main-page-nostr-container">
-            <PagePlaceholder page={"maintenance"}/>
-            {/* <div className="fx-centered fit-container fx-start-h fx-start-v">
+            {/* <PagePlaceholder page={"maintenance"}/> */}
+            <div className="fx-centered fit-container fx-start-h fx-start-v">
               <div className="box-pad-h-m fit-container">
                 {userKeys && (
                   <>
@@ -186,7 +186,7 @@ export default function SmartWidgetV2() {
                 )}
                 {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
               </div>
-            </div> */}
+            </div>
           </main>
         </div>
       </div>
@@ -620,28 +620,6 @@ const SmartWidgetBuilder = ({ back, template, identifier }) => {
     back(current);
   };
 
-  const addWidgetPathToUrl = (url) => {
-    try {
-      const parsedUrl = new URL(url);
-
-      const widgetPath = "/.well-known/widget.json";
-      if (
-        parsedUrl.pathname === widgetPath ||
-        parsedUrl.pathname.endsWith(widgetPath)
-      ) {
-        return url;
-      }
-
-      const rootDomain = `${parsedUrl.protocol}//${parsedUrl.hostname}`;
-
-      const newUrl = `${rootDomain}${widgetPath}`;
-
-      return newUrl;
-    } catch (err) {
-      return false;
-    }
-  };
-
   const getApp = async (url_) => {
     try {
       let url = addWidgetPathToUrl(url_ || swMetadataUrl);
@@ -672,6 +650,12 @@ const SmartWidgetBuilder = ({ back, template, identifier }) => {
           tags
         )
       ) {
+        dispatch(
+          setToast({
+            type: 2,
+            desc: t("AOF2uGu"),
+          })
+        );
         return;
       }
       // setSwInput("");

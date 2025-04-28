@@ -148,9 +148,21 @@ export default function MenuMobile({ toggleLogin, exit }) {
             isPage("/discover") ? "active-link" : "inactive-link"
           }`}
         >
-          <div className="discover-24"></div>
+          <div className="posts-24"></div>
           <div className="p-big">{t("ABSoIm9")}</div>
         </div>
+        {/* <div
+          onClick={() => {
+            customHistory.push("/articles");
+            dismiss();
+          }}
+          className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
+            isPage("/articles") ? "active-link" : "inactive-link"
+          }`}
+        >
+          <div className="posts-24"></div>
+          <div className="p-big">{t("AesMg52")}</div>
+        </div> */}
 
         <div
           onClick={() => {
@@ -165,7 +177,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           <div className="p-big">{t("AkvXmyz")}</div>
         </div>
 
-        <div
+        {/* <div
           onClick={() => {
             customHistory.push("/verify-notes");
             dismiss();
@@ -176,7 +188,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
         >
           <div className="news-24"></div>
           <div className="p-big">{t("AltGBkP")}</div>
-        </div>
+        </div> */}
         <div
           onClick={() => {
             customHistory.push("/messages");

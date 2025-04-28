@@ -94,60 +94,62 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       subId: "nip19-parsing",
     });
     sub.on("event", async (event) => {
-      if (event.kind === 0) {
-        let content = JSON.parse(event.content);
-        setEvent({
-          kind: event.kind,
-          picture: content.picture || "",
-          name:
-            content.name ||
-            content.display_name ||
-            getBech32("npub", event.pubkey).substring(0, 10),
-          display_name:
-            content.display_name ||
-            content.name ||
-            getBech32("npub", event.pubkey).substring(0, 10),
-        });
-      }
-      if (event.kind === 1) {
-        let parsedEvent = await getParsedNote(event, true);
+      if (event.id) {
+        if (event.kind === 0) {
+          let content = JSON.parse(event.content);
+          setEvent({
+            kind: event.kind,
+            picture: content.picture || "",
+            name:
+              content.name ||
+              content.display_name ||
+              getBech32("npub", event.pubkey).substring(0, 10),
+            display_name:
+              content.display_name ||
+              content.name ||
+              getBech32("npub", event.pubkey).substring(0, 10),
+          });
+        }
+        if (event.kind === 1) {
+          let parsedEvent = await getParsedNote(event, true);
 
-        setEvent(parsedEvent);
-        setIsLoading(false);
-      }
-      if ([6969, 30033].includes(event.kind)) {
-        setEvent(event.rawEvent());
-        setIsLoading(false);
-      }
-
-      if (event.kind === 30031) {
-        let metadata = JSON.parse(event.content);
-        let parsedContent = getParsedRepEvent(event);
-        setEvent({
-          ...parsedContent,
-          metadata,
-          ...event,
-          author: getEmptyuserMetadata(event.pubkey),
-        });
-        saveUsers([event.pubkey]);
-        setIsLoading(false);
-      }
-      if ([30004, 30005, 30023, 34235].includes(event.kind)) {
-        let parsedContent = getParsedRepEvent(event);
-        let title = parsedContent.title;
-        if (!title) {
-          if ([30004, 30005].includes(event.kind)) title = t("A1lshru");
-          if ([30023].includes(event.kind)) title = t("Aqw9gzk");
-          if ([34235].includes(event.kind)) title = t("A3vFdLd");
+          setEvent(parsedEvent);
+          setIsLoading(false);
+        }
+        if ([6969, 30033].includes(event.kind)) {
+          setEvent(event.rawEvent());
+          setIsLoading(false);
         }
 
-        setEvent({
-          ...parsedContent,
-          title,
-        });
+        if (event.kind === 30031) {
+          let metadata = JSON.parse(event.content);
+          let parsedContent = getParsedRepEvent(event);
+          setEvent({
+            ...parsedContent,
+            metadata,
+            ...event,
+            author: getEmptyuserMetadata(event.pubkey),
+          });
+          saveUsers([event.pubkey]);
+          setIsLoading(false);
+        }
+        if ([30004, 30005, 30023, 34235].includes(event.kind)) {
+          let parsedContent = getParsedRepEvent(event);
+          let title = parsedContent.title;
+          if (!title) {
+            if ([30004, 30005].includes(event.kind)) title = t("A1lshru");
+            if ([30023].includes(event.kind)) title = t("Aqw9gzk");
+            if ([34235].includes(event.kind)) title = t("A3vFdLd");
+          }
+
+          setEvent({
+            ...parsedContent,
+            title,
+          });
+        }
+        setIsLoading(false);
+        sub.stop();
       }
-      setIsLoading(false);
-      sub.stop();
     });
 
     let timer = setTimeout(() => {
@@ -279,16 +281,15 @@ export default function Nip19Parsing({ addr, minimal = false }) {
   if (event.kind === 30033)
     return (
       <div className="fit-container box-pad-v-s">
-        {/* <WidgetCardV2
+        <WidgetCardV2
           widget={{
             ...event,
             metadata: getParsedSW(event),
             author: getEmptyuserMetadata(event.pubkey),
           }}
           header={false}
-        /> */}
+        />
         {/* <SWCard widget={event} /> */}
-        <p>{addr}</p>
       </div>
     );
 

@@ -98,7 +98,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
             ></div>
             <div>{t("AyYkCrS")}</div>
           </div>
-
+{/* 
           <Link
             to="/dashboard"
             state={{ tabNumber: 1, filter: "curations", init: true }}
@@ -114,13 +114,13 @@ const RedictingLinks = ({ exit, internalExit }) => {
               style={{ width: "32px", height: "32px" }}
             ></div>
             <div>{t("Ac6UnVb")}</div>
-          </Link>
+          </Link> */}
 
           <Link
             to={"/smart-widget-builder"}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
             style={{
-              width: "48%",
+              
               padding: "2rem",
               backgroundColor: "transparent",
             }}
@@ -131,7 +131,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
             ></div>
             <div style={{ width: "max-content" }}>{t("AkvXmyz")}</div>
           </Link>
-          <Link
+          {/* <Link
             to="/dashboard"
             state={{ tabNumber: 1, filter: "videos", init: true }}
             className={`pointer fit-container fx-centered fx-col box-pad-h-s box-pad-v-s option sc-s-18`}
@@ -167,7 +167,7 @@ const RedictingLinks = ({ exit, internalExit }) => {
               style={{ width: "32px", height: "32px" }}
             ></div>
             <div>{t("A91LHJy")}</div>
-          </Link>
+          </Link> */}
         </div>
       </div>
     </div>

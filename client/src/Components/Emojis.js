@@ -1,4 +1,4 @@
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { SkinTonePickerLocation } from "emoji-picker-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -34,6 +34,7 @@ export default function Emojis({ setEmoji, position = "left" }) {
           }}
         >
           <EmojiPicker
+          
             reactionsDefaultOpen={true}
             theme={isDarkMode ? "dark" : "light"}
             previewConfig={{ showPreview: false }}

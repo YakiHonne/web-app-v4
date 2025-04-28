@@ -197,10 +197,9 @@ export default function Home() {
         3
       );
       tags = tags.map((_) => [_.main_tag, ..._.sub_tags]).flat();
-
       let content = await getSubData(
-        [{ kinds: [30023], limit: 10, "#t": tags }],
-        200
+        [{ kinds: [30023], limit: 20, "#t": tags }],
+        400
       );
       if (content.data.length > 0) {
         let data = content.data

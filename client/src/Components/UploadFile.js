@@ -5,6 +5,7 @@ import { setToast } from "../Store/Slides/Publishers";
 import { FileUpload } from "../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
 import ProgressCirc from "./ProgressCirc";
+import { nanoid } from "nanoid";
 
 export default function UploadFile({
   kind = "audio/*,video/*,image/*",
@@ -14,6 +15,7 @@ export default function UploadFile({
   setIsUploadsLoading = () => null,
   setFileMetadata = null,
 }) {
+  const inputID = nanoid()
   const userKeys = useSelector((state) => state.userKeys);
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -130,7 +132,7 @@ export default function UploadFile({
         </div>
       )}
       <label
-        htmlFor="file-upload"
+          htmlFor={inputID}
         className={round ? (small ? "round-icon-small" : "round-icon") : ""}
         style={{
           position: "relative",
@@ -139,8 +141,8 @@ export default function UploadFile({
       >
         <input
           type="file"
-          name="file-upload"
-          id="file-upload"
+          name={inputID}
+          id={inputID}
           multiple={setFileMetadata ? false : true}
           style={{
             position: "absolute",

@@ -37,7 +37,7 @@ import AddCuration from "../../Components/Main/AddCuration";
 import { Link } from "react-router-dom";
 import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import AddBookmark from "../../Components/Main/AddBookMark";
-import { saveBookmarks } from "../../Helpers/DB";
+import { saveBookmarks, saveUsers } from "../../Helpers/DB";
 import ToDeleteGeneral from "../../Components/Main/ToDeleteGeneral";
 import PostAsNote from "../../Components/Main/PostAsNote";
 import AddVideo from "../../Components/Main/AddVideo";
@@ -49,6 +49,10 @@ import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { useTranslation } from "react-i18next";
+import ShowPeople from "../../Components/Main/ShowPeople";
+import UserFollowers from "./UserFollowers";
+import SWActionPreview from "../../Components/Main/SWActionPreview";
+import LaunchSW from "./LaunchSW";
 
 const eventsReducer = (notes, action) => {
   switch (action.type) {
@@ -158,14 +162,14 @@ const getLocalDrafts = () => {
       noteDraft: noteDraft
         ? { kind: 11, content: noteDraft, created_at: false }
         : false,
-      smartWidgetDraft: false,
-      // smartWidgetDraft: smartWidgetDraft
-      //   ? {
-      //       kind: 300331,
-      //       content: smartWidgetDraft,
-      //       created_at: smartWidgetDraft.created_at,
-      //     }
-      //   : false,
+      // smartWidgetDraft: false,
+      smartWidgetDraft: smartWidgetDraft
+        ? {
+            kind: 300331,
+            content: smartWidgetDraft,
+            created_at: smartWidgetDraft.created_at,
+          }
+        : false,
       artDraft: artDraft.default
         ? false
         : {
@@ -208,14 +212,18 @@ export default function Dashboard() {
   const userKeys = useSelector((state) => state.userKeys);
   const [selectedTab, setSelectedTab] = useState(state?.tabNumber || 0);
   const [userPreview, setUserPreview] = useState(false);
-  const [contentFilter, setContentFilter] = useState(
-    state?.filter || "articles"
-  );
+  const [contentFilter, setContentFilter] = useState(state?.filter || "notes");
   const [isLoading, setIsLoading] = useState(true);
   const [postToNote, setPostToNote] = useState(
     state?.filter === "notes" && state?.init ? "" : false
   );
-  const tabs = [t("AJDdA3h"), t("AepwLlB"), t("AqwEL0G"), t("AvcFYqP")];
+  const tabs = [
+    t("AJDdA3h"),
+    t("AepwLlB"),
+    t("A2mdxcf"),
+    t("AqwEL0G"),
+    t("AvcFYqP"),
+  ];
 
   const getNostrBandStats = async (pubkey) => {
     try {
@@ -228,6 +236,10 @@ export default function Dashboard() {
       return false;
     }
   };
+
+  useEffect(() => {
+    setPostToNote(state?.filter === "notes" && state?.init ? "" : false);
+  }, [state]);
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -367,8 +379,14 @@ export default function Dashboard() {
                         setPostToNote={setPostToNote}
                       />
                     )}
-                    {selectedTab === 2 && <Bookmarks />}
-                    {selectedTab === 3 && <Interests />}
+                    {selectedTab === 2 && (
+                      <Widgets
+                        setPostToNote={setPostToNote}
+                        localDraft={userPreview.localDraft}
+                      />
+                    )}
+                    {selectedTab === 3 && <Bookmarks />}
+                    {selectedTab === 4 && <Interests />}
                     <div style={{ padding: "3rem" }}></div>
                   </div>
                   <div
@@ -620,6 +638,14 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
         >
           <div
             className={`list-item-b fx-centered fx-shrink ${
+              contentFrom === "notes" ? "selected-list-item-b" : ""
+            }`}
+            onClick={() => switchContentType("notes")}
+          >
+            {t("AYIXG83")}
+          </div>
+          <div
+            className={`list-item-b fx-centered fx-shrink ${
               ["articles", "drafts"].includes(contentFrom)
                 ? "selected-list-item-b"
                 : ""
@@ -627,14 +653,6 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             onClick={() => switchContentType("articles")}
           >
             {t("AesMg52")}
-          </div>
-          <div
-            className={`list-item-b fx-centered fx-shrink ${
-              contentFrom === "notes" ? "selected-list-item-b" : ""
-            }`}
-            onClick={() => switchContentType("notes")}
-          >
-            {t("AYIXG83")}
           </div>
           <div
             className={`list-item-b fx-centered fx-shrink ${
@@ -680,9 +698,9 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
                 setSelectedValue={switchContentType}
               />
             )}
-            <button className="btn btn-normal" onClick={handleAddContent}>
+           {["articles", "drafts", "notes"].includes(contentFrom) &&  <button className="btn btn-normal" onClick={handleAddContent}>
               <div className="plus-sign"></div>
-            </button>
+            </button>}
           </div>
         </div>
         <div className="fit-container fx-centered fx-col fx-start-v box-pad-h">
@@ -758,6 +776,260 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
                 <LoadingLogo />
               </div>
             </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+const Widgets = ({ setPostToNote, localDraft }) => {
+  const userKeys = useSelector((state) => state.userKeys);
+  const userSavedTools = useSelector((state) => state.userSavedTools);
+  const { t } = useTranslation();
+  const contentFrom = "widgets";
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastEventTime, setLastEventTime] = useState(undefined);
+  const [deleteEvent, setDeleteEvent] = useState(false);
+  const [selectedSWSet, setSelectedSWSet] = useState(0);
+  const [savedTools, setSavedTools] = useState([]);
+  const [selectedSW, setSelectedSW] = useState("");
+
+  const [events, dispatchEvents] = useReducer(
+    eventsReducer,
+    eventsInitialState
+  );
+  const emptyContent = {
+    widgets: t("AvEJw6B"),
+    tools: t("AUexjHk"),
+  };
+
+  const SWSets = [
+    {
+      display_name: "My widgets",
+      value: 0,
+    },
+    {
+      display_name: "My saved tools",
+      value: 1,
+    },
+  ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (userSavedTools.length === 0 && savedTools.length > 0) {
+        setSavedTools([]);
+        return;
+      }
+      let swIDs = userSavedTools.map((_) => _.split(":")[2]);
+      if (swIDs.length === 0) return;
+      const data = await getSubData([{ kinds: [30033], "#d": swIDs }]);
+      setSavedTools(data.data.map((_) => getParsedSW(_)));
+      saveUsers(data.pubkeys);
+    };
+
+    fetchData();
+  }, [userSavedTools]);
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        if (!isLoading) setIsLoading(true);
+        let filter = getFilter();
+        let data = await getSubData([filter]);
+        let parsedEvents = data.data.map((event) => {
+          return getParsedSW(event);
+        });
+        dispatchEvents({ type: contentFrom, events: parsedEvents });
+        setIsLoading(false);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    if (userKeys) fetchHomeData();
+  }, [userKeys, lastEventTime]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    let filter = getFilter();
+    let since = Math.floor(Date.now() / 1000);
+    let subscription = ndkInstance.subscribe([{ ...filter, since }]);
+    subscription.on("event", (event) => {
+      let tempEvent = { ...event.rawEvent() };
+      tempEvent = getParsedSW(event.rawEvent());
+      dispatchEvents({ type: contentFrom, events: [tempEvent] });
+    });
+    return () => {
+      if (subscription) subscription.stop();
+    };
+  }, [isLoading]);
+
+  useEffect(() => {
+    dispatchEvents({ type: "remove-events" });
+    setLastEventTime(undefined);
+  }, [userKeys]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      let container = document.querySelector(".feed-container");
+
+      if (!container) return;
+      if (
+        container.scrollHeight - container.scrollTop - 60 >
+        document.documentElement.offsetHeight
+      ) {
+        return;
+      }
+      setLastEventTime(
+        events[contentFrom][events[contentFrom].length - 1]?.created_at ||
+          undefined
+      );
+    };
+    document
+      .querySelector(".feed-container")
+      ?.addEventListener("scroll", handleScroll);
+    return () =>
+      document
+        .querySelector(".feed-container")
+        ?.removeEventListener("scroll", handleScroll);
+  }, [isLoading]);
+
+  const getFilter = () => {
+    let filter = {
+      kinds: [30033],
+      limit: 20,
+      authors: [userKeys.pub],
+      until: lastEventTime,
+    };
+    return filter;
+  };
+
+  const handleEventDeletion = () => {
+    let tempArray = structuredClone(events[contentFrom]);
+    tempArray = tempArray.filter((event) => event.id !== deleteEvent.id);
+    dispatchEvents({
+      type: "remove-event",
+      toRemoveType: contentFrom,
+      events: tempArray,
+    });
+    setDeleteEvent(false);
+  };
+
+  const handleAddContent = () => {
+    customHistory.push("/smart-widget-builder");
+  };
+
+  return (
+    <>
+      {deleteEvent && (
+        <ToDeleteGeneral
+          eventId={deleteEvent.id}
+          title={deleteEvent.title}
+          kind={contentFrom}
+          refresh={handleEventDeletion}
+          cancel={() => setDeleteEvent(false)}
+          aTag={deleteEvent.aTag}
+        />
+      )}
+      {selectedSW && (
+        <LaunchSW metadata={selectedSW} exit={() => setSelectedSW("")} />
+      )}
+      <div className="fit-container">
+        <div className="fit-container fx-scattered  box-pad-v box-pad-h">
+          <h3 className="p-caps">{t("A2mdxcf")}</h3>
+          <div className="fx-centered">
+            <button className="btn btn-normal" onClick={handleAddContent}>
+              <div className="plus-sign"></div>
+            </button>
+          </div>
+        </div>
+        <div className="fit-container fx-centered fx-col fx-start-v box-pad-h">
+          {contentFrom === "widgets" && localDraft?.smartWidgetDraft && (
+            <div className="fit-container fx-centered fx-start-v fx-col">
+              <div className="fit-container fx-centered fx-col fx-start-v">
+                {localDraft?.smartWidgetDraft && (
+                  <>
+                    <p className="c1-c">{t("A7noclE")}</p>
+                    <ContentCard event={localDraft?.smartWidgetDraft} />
+                  </>
+                )}
+              </div>
+              {/* {events[contentFrom].length > 0 && <p>{t("AQG30hM")}</p>} */}
+            </div>
+          )}
+          <div className="fit-container fx-scattered">
+            <p>{t("AQG30hM")}</p>
+            <Select
+              options={SWSets}
+              value={selectedSWSet}
+              setSelectedValue={setSelectedSWSet}
+            />
+          </div>
+          {selectedSWSet === 0 && (
+            <>
+              {events[contentFrom].map((event) => {
+                return (
+                  <ContentCard
+                    event={event}
+                    key={event.id}
+                    setDeleteEvent={setDeleteEvent}
+                    setPostToNote={setPostToNote}
+                  />
+                );
+              })}
+              {!isLoading && events[contentFrom].length === 0 && (
+                <div
+                  className="fit-container fx-centered fx-col"
+                  style={{ height: "40vh" }}
+                >
+                  <h4>{emptyContent[contentFrom]}</h4>
+                  <p className="gray-c">{t("AcPmGuk")}</p>
+                </div>
+              )}
+              {isLoading && (
+                <div
+                  className="fit-container fx-centered"
+                  style={{ height: "40vh" }}
+                >
+                  <div className="fx-centered">
+                    <LoadingLogo />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          {selectedSWSet === 1 && (
+            <>
+              {savedTools.map((sw) => {
+                return (
+                  <div className="ifs-full" key={sw.id}>
+                    <SWActionPreview
+                      metadata={sw}
+                      setSelectSW={(data) => setSelectedSW(data)}
+                      cbButton={true}
+                      remove={true}
+                    />
+                  </div>
+                );
+              })}
+              {!isLoading && savedTools.length === 0 && (
+                <div
+                  className="fit-container fx-centered fx-col"
+                  style={{ height: "40vh" }}
+                >
+                  <h4>{emptyContent.tools}</h4>
+                  <p
+                    className="gray-c p-centered"
+                    style={{ maxWidth: "300px" }}
+                  >
+                    {t("ASl7AUI")}
+                  </p>
+                  <Link to={"/smart-widgets"}>
+                  <button className="btn btn-small btn-normal">{t("Aa15RS4")}</button>
+                  </Link>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -938,11 +1210,13 @@ const HomeTab = ({
   handleUpdate,
 }) => {
   const userMetadata = useSelector((state) => state.userMetadata);
+  const userFollowings = useSelector((state) => state.userFollowings);
   const { t } = useTranslation();
   const [deleteEvent, setDeleteEvent] = useState(false);
   const [addArtsToCur, setAddArtsToCur] = useState(false);
-  const [editEvent, setEditEvent] = useState(false);
   const [showCurationCreator, setShowCurationCreator] = useState(false);
+  const [editEvent, setEditEvent] = useState(false);
+  const [showPeople, setShowPeople] = useState(false);
 
   const handleEditItem = (event) => {
     if ([30004, 30005].includes(event.kind)) {
@@ -993,6 +1267,20 @@ const HomeTab = ({
           curation={editEvent ? editEvent : null}
           tags={editEvent.tags}
           relaysToPublish={[]}
+        />
+      )}
+      {showPeople === "followers" && (
+        <UserFollowers
+          id={userMetadata.pubkey}
+          exit={() => setShowPeople(false)}
+          expand={true}
+        />
+      )}
+      {showPeople === "following" && (
+        <ShowPeople
+          exit={() => setShowPeople(false)}
+          list={userFollowings}
+          type={"following"}
         />
       )}
       <div className="fit-container box-pad-v box-pad-h">
@@ -1058,8 +1346,9 @@ const HomeTab = ({
             >
               <div className="fit-container fx-centered fx">
                 <div
-                  className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
+                  className="sc-s-18 option pointer fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
                   style={{ backgroundColor: "transparent", gap: "16px" }}
+                  onClick={() => setShowPeople("following")}
                 >
                   <div
                     className="user-followed-24"
@@ -1071,8 +1360,9 @@ const HomeTab = ({
                   </div>
                 </div>
                 <div
-                  className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
+                  className="sc-s-18 option pointer fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
                   style={{ backgroundColor: "transparent", gap: "16px" }}
+                  onClick={() => setShowPeople("followers")}
                 >
                   <div
                     className="user-followed-24"
@@ -1085,9 +1375,11 @@ const HomeTab = ({
                 </div>
               </div>
               <div className="fit-container fx-centered fx">
-                <div
-                  className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
+                <Link
+                  className="fx sc-s-18 option pointer fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
                   style={{ backgroundColor: "transparent", gap: "16px" }}
+                  to={`/users/${nip19.npubEncode(userMetadata.pubkey)}`}
+                  state={{ contentType: "notes" }}
                 >
                   <div
                     className="note-24"
@@ -1097,10 +1389,12 @@ const HomeTab = ({
                     <h4>{data.userProfile?.note_count || 0}</h4>
                     <p className="gray-c">{t("AYIXG83")}</p>
                   </div>
-                </div>
-                <div
-                  className="fx sc-s-18 fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
+                </Link>
+                <Link
+                  className="fx sc-s-18 option pointer fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
                   style={{ backgroundColor: "transparent", gap: "16px" }}
+                  to={`/users/${nip19.npubEncode(userMetadata.pubkey)}`}
+                  state={{ contentType: "replies" }}
                 >
                   <div
                     className="comment-icon"
@@ -1110,7 +1404,7 @@ const HomeTab = ({
                     <h4>{data.userProfile?.reply_count || 0}</h4>
                     <p className="gray-c">{t("AENEcn9")}</p>
                   </div>
-                </div>
+                </Link>
               </div>
             </div>
           </div>

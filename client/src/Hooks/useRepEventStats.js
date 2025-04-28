@@ -73,6 +73,7 @@ const useRepEventStats = (aTag, aTagPubkey, supported = true) => {
               kind9735.push({
                 id: zapper.id,
                 pubkey: zapper.pubkey,
+                content: zapper.message,
                 amount: sats,
               });
               kind9735_ = kind9735_ + sats;

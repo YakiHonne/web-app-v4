@@ -8,6 +8,7 @@ import LoadingDots from "../LoadingDots";
 import MiniApp from "./MiniApp";
 import MiniTool from "./MiniTool";
 import UserProfilePic from "./UserProfilePic";
+import { useSelector } from "react-redux";
 
 export default function ActionTools({ setData }) {
   const [showActions, setShowActions] = useState(false);
@@ -29,9 +30,27 @@ export default function ActionTools({ setData }) {
 
 const Actions = ({ exit, setReturnedData }) => {
   const { t } = useTranslation();
+  const userSavedTools = useSelector((state) => state.userSavedTools);
   const [actions, setActions] = useState([]);
+  const [savedTools, setSavedTools] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMiniApp, setShowMiniApp] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (userSavedTools.length === 0 && savedTools.length > 0) {
+        setSavedTools([]);
+        return;
+      }
+      let swIDs = userSavedTools.map((_) => _.split(":")[2]);
+      if (swIDs.length === 0) return;
+      const data = await getSubData([{ kinds: [30033], "#d": swIDs }]);
+      setSavedTools(data.data.map((_) => getParsedSW(_)));
+      saveUsers(data.pubkeys);
+    };
+
+    fetchData();
+  }, [userSavedTools]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,7 +77,11 @@ const Actions = ({ exit, setReturnedData }) => {
         }}
       >
         <div
-          style={{ position: "relative", width: "min(100%, 600px)", minHeight: "60vh" }}
+          style={{
+            position: "relative",
+            width: "min(100%, 600px)",
+            minHeight: "60vh",
+          }}
           className="sc-s-18 bg-sp"
           onClick={(e) => {
             e.stopPropagation();
@@ -131,11 +154,11 @@ const Actions = ({ exit, setReturnedData }) => {
                   />
                 </div>
               </div>
-              {actions.length > 0 && (
-                <p className="gray-c box-pad-v-s">{t("AQ3VGVk")}</p>
+              {savedTools.length > 0 && (
+                <p className="gray-c box-pad-v-s">{t("A92h87b")}</p>
               )}
               <div className="fit-container fx-start-h fx-wrap fx-centered">
-                {actions.map((sw) => {
+                {savedTools.map((sw) => {
                   return (
                     <div className="ifs-small" key={sw.id}>
                       <SWActionPreview
@@ -144,6 +167,22 @@ const Actions = ({ exit, setReturnedData }) => {
                       />
                     </div>
                   );
+                })}
+              </div>
+              {actions.length > 0 && (
+                <p className="gray-c box-pad-v-s">{t("AQ3VGVk")}</p>
+              )}
+              <div className="fit-container fx-start-h fx-wrap fx-centered">
+                {actions.map((sw) => {
+                  if (!userSavedTools.includes(sw.aTag))
+                    return (
+                      <div className="ifs-small" key={sw.id}>
+                        <SWActionPreview
+                          metadata={sw}
+                          setSelectSW={(data) => setShowMiniApp(data)}
+                        />
+                      </div>
+                    );
                 })}
                 {isLoading && (
                   <div

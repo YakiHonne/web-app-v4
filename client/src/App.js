@@ -8,6 +8,7 @@ import "./styles/placeholder.css";
 import "./styles/essentials.css";
 import "./styles/custom.css";
 import "./styles/mobile.css";
+import "./styles/chatAI.css";
 
 import ToastMessages from "./Components/ToastMessages";
 import Navbar from "./Components/Main/Navbar";

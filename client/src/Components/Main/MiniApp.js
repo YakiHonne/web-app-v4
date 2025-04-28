@@ -30,7 +30,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
           if (userMetadata)
             SWHandler.host.sendContext(
               userMetadata,
-              "http://localhost:3400",
+              window.location.origin,
               url,
               iframeRef.current
             );
@@ -48,12 +48,19 @@ export default function MiniApp({ url, exit, setReturnedData }) {
               event.data.content,
               assignClientTag(event.data.tags)
             );
-            SWHandler.host.sendEvent(
-              signedEvent,
-              "success",
-              url,
-              iframeRef.current
-            );
+            if (signedEvent)
+              SWHandler.host.sendEvent(
+                signedEvent,
+                "success",
+                url,
+                iframeRef.current
+              );
+            else
+              SWHandler.host.sendError(
+                "Signing event failed",
+                url,
+                iframeRef.current
+              );
           } catch (err) {
             dispatch(
               setToast({
@@ -70,13 +77,21 @@ export default function MiniApp({ url, exit, setReturnedData }) {
               event.data.content,
               assignClientTag(event.data.tags)
             );
-            let publisedEvent = await publishEvent(signedEvent, userRelays);
-            SWHandler.host.sendEvent(
-              signedEvent,
-              publisedEvent ? "success" : "error",
-              url,
-              iframeRef.current
-            );
+            if (!signedEvent) {
+              SWHandler.host.sendError(
+                "Signing event failed",
+                url,
+                iframeRef.current
+              );
+            } else {
+              let publisedEvent = await publishEvent(signedEvent, userRelays);
+              SWHandler.host.sendEvent(
+                signedEvent,
+                publisedEvent ? "success" : "error",
+                url,
+                iframeRef.current
+              );
+            }
           } catch (err) {
             dispatch(
               setToast({
@@ -122,7 +137,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
         <section
           className="fx-centered fx-col"
           style={{
-            width: "400px",
+            width: "450px",
             borderRadius: "10px",
             overflow: "hidden",
             backgroundColor: "#343434",
@@ -171,7 +186,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
               ]}
             />
           </div>
-          <div className="fit-container">
+          <div className="fit-container fx-centered">
             <iframe
               ref={iframeRef}
               src={url}

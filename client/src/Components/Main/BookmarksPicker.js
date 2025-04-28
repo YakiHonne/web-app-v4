@@ -109,7 +109,7 @@ export default function BookmarksPicker({
       )}
       <div className="fixed-container fx-centered box-pad-h">
         <section
-          className="sc-s box-pad-h box-pad-v fx-centered"
+          className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
           style={{ width: "min(100%, 500px)", position: "relative" }}
         >
           <div className="close" onClick={exit}>
@@ -117,7 +117,6 @@ export default function BookmarksPicker({
           </div>
           <div className="fx-centered fx-col fit-container">
             <h4 className="box-marg-s">{t("AXMpXlH")}</h4>
-
             {userBookmarks.length === 0 && (
               <div className="fx-centered" style={{ marginBottom: "1rem" }}>
                 <p className="gray-c">{t("Aej5MOj")}</p>
@@ -128,7 +127,7 @@ export default function BookmarksPicker({
               return (
                 <div
                   key={bookmark.id}
-                  className={`fit-container fx-scattered box-pad-h-s box-pad-v-s sc-s fx-shrink pointer option`}
+                  className={`fit-container fx-scattered box-pad-h-s box-pad-v-s sc-s bg-sp fx-shrink pointer option`}
                   onClick={() => bookmarkArticle(status, bookmark)}
                 >
                   <div

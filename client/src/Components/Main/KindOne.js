@@ -28,6 +28,7 @@ import CommentsSection from "./CommentsSection";
 import { compactContent, getNoteTree } from "../../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
 import LoadingDots from "../LoadingDots";
+import ZapAd from "./ZapAd";
 
 export default function KindOne({
   event,
@@ -322,7 +323,7 @@ export default function KindOne({
               <p className="c1-c">... {t("AnWFKlu")}</p>
             </div>
           )}
-          {isTransEnabled && (
+          {/* {isTransEnabled && (
             <div
               className="fit-container note-indent"
               style={{ paddingTop: ".5rem" }}
@@ -342,182 +343,233 @@ export default function KindOne({
               )}
               {isNoteTranslating && <LoadingDots />}
             </div>
-          )}
+          )} */}
           {reactions && (
-            <div
-              className="fx-scattered fit-container note-indent"
-              style={{ paddingTop: "1rem" }}
-            >
-              <div className="fx-centered" style={{ columnGap: "1rem" }}>
-                <div className="fx-centered">
-                  <div className="icon-tooltip" data-tooltip={t("ADHdLfJ")}>
-                    <div
-                      className="comment-24"
-                      onClick={() => setToggleComment(!toggleComment)}
-                    ></div>
-                  </div>
-                  <div
-                    className="icon-tooltip"
-                    data-tooltip={t("AMBxvKP")}
+            <>
+              {postActions?.zaps?.zaps?.length > 0 && (
+                <div className="fit-container note-indent">
+                  <ZapAd
+                    zappers={postActions.zaps.zaps}
                     onClick={() =>
-                      postActions.replies.replies.length > 0
-                        ? setShowComments(true)
-                        : null
+                      setUsersList({
+                        title: t("AVDZ5cJ"),
+                        list: postActions.zaps.zaps.map((item) => item.pubkey),
+                        extras: postActions.zaps.zaps,
+                      })
                     }
-                    // onClick={redirect}
-                  >
-                    <p>{postActions.replies.replies.length}</p>
-                  </div>
-                </div>
-                <div className="fx-centered">
-                  <Like isLiked={isLiked} event={event} actions={postActions} />
-                  <div
-                    className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
-                    data-tooltip={t("Alz0E9Y")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      postActions.likes.likes.length > 0 &&
-                        setUsersList({
-                          title: t("Alz0E9Y"),
-                          list: postActions.likes.likes.map(
-                            (item) => item.pubkey
-                          ),
-                          extras: postActions.likes.likes,
-                          extrasType: "reaction",
-                        });
-                    }}
-                  >
-                    <NumberShrink value={postActions.likes.likes.length} />
-                  </div>
-                </div>
-                <div
-                  className={`fx-centered pointer ${isLoading ? "flash" : ""}`}
-                  style={{ columnGap: "8px" }}
-                >
-                  <Repost
-                    isReposted={isReposted}
-                    event={event}
-                    actions={postActions}
                   />
-                  <div
-                    className={`icon-tooltip ${isReposted ? "orange-c" : ""}`}
-                    data-tooltip={t("Aai65RJ")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      postActions.reposts.reposts.length > 0 &&
-                        setUsersList({
-                          title: t("Aai65RJ"),
-                          list: postActions.reposts.reposts.map(
-                            (item) => item.pubkey
-                          ),
-                          extras: [],
-                        });
-                    }}
-                  >
-                    <NumberShrink value={postActions.reposts.reposts.length} />
-                  </div>
                 </div>
-                <div className="fx-centered">
-                  <Quote
-                    isQuoted={isQuoted}
-                    event={event}
-                    actions={postActions}
-                  />
-                  <div
-                    className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
-                    data-tooltip={t("AWmDftG")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      postActions.quotes.quotes.length > 0 &&
-                        setUsersList({
-                          title: t("AWmDftG"),
-                          list: postActions.quotes.quotes.map(
-                            (item) => item.pubkey
-                          ),
-                          extras: [],
-                        });
-                    }}
-                  >
-                    <NumberShrink value={postActions.quotes.quotes.length} />
+              )}
+
+              <div
+                className="fx-scattered fit-container note-indent"
+                style={{ paddingTop: "1rem" }}
+              >
+                <div className="fx-centered" style={{ columnGap: "1rem" }}>
+                  <div className="fx-centered">
+                    <div className="icon-tooltip" data-tooltip={t("ADHdLfJ")}>
+                      <div
+                        className="comment-24"
+                        onClick={() => setToggleComment(!toggleComment)}
+                      ></div>
+                    </div>
+                    <div
+                      className="icon-tooltip"
+                      data-tooltip={t("AMBxvKP")}
+                      onClick={() =>
+                        postActions.replies.replies.length > 0
+                          ? setShowComments(true)
+                          : null
+                      }
+                      // onClick={redirect}
+                    >
+                      <p>{postActions.replies.replies.length}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="fx-centered">
-                  <div className="icon-tooltip" data-tooltip={t("AtGAGPY")}>
-                    <Zap
-                      user={user}
+                  <div className="fx-centered">
+                    <Like
+                      isLiked={isLiked}
                       event={event}
                       actions={postActions}
-                      isZapped={isZapped}
                     />
+                    <div
+                      className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
+                      data-tooltip={t("Alz0E9Y")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        postActions.likes.likes.length > 0 &&
+                          setUsersList({
+                            title: t("Alz0E9Y"),
+                            list: postActions.likes.likes.map(
+                              (item) => item.pubkey
+                            ),
+                            extras: postActions.likes.likes,
+                            extrasType: "reaction",
+                          });
+                      }}
+                    >
+                      <NumberShrink value={postActions.likes.likes.length} />
+                    </div>
                   </div>
                   <div
-                    className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
-                    data-tooltip={t("AVDZ5cJ")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      postActions.zaps.total > 0 &&
-                        setUsersList({
-                          title: t("AVDZ5cJ"),
-                          list: postActions.zaps.zaps.map(
-                            (item) => item.pubkey
-                          ),
-                          extras: postActions.zaps.zaps,
-                        });
-                    }}
+                    className={`fx-centered pointer ${
+                      isLoading ? "flash" : ""
+                    }`}
+                    style={{ columnGap: "8px" }}
                   >
-                    <NumberShrink value={postActions.zaps.total} />
+                    <Repost
+                      isReposted={isReposted}
+                      event={event}
+                      actions={postActions}
+                    />
+                    <div
+                      className={`icon-tooltip ${isReposted ? "orange-c" : ""}`}
+                      data-tooltip={t("Aai65RJ")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        postActions.reposts.reposts.length > 0 &&
+                          setUsersList({
+                            title: t("Aai65RJ"),
+                            list: postActions.reposts.reposts.map(
+                              (item) => item.pubkey
+                            ),
+                            extras: [],
+                          });
+                      }}
+                    >
+                      <NumberShrink
+                        value={postActions.reposts.reposts.length}
+                      />
+                    </div>
+                  </div>
+                  <div className="fx-centered">
+                    <Quote
+                      isQuoted={isQuoted}
+                      event={event}
+                      actions={postActions}
+                    />
+                    <div
+                      className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
+                      data-tooltip={t("AWmDftG")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        postActions.quotes.quotes.length > 0 &&
+                          setUsersList({
+                            title: t("AWmDftG"),
+                            list: postActions.quotes.quotes.map(
+                              (item) => item.pubkey
+                            ),
+                            extras: [],
+                          });
+                      }}
+                    >
+                      <NumberShrink value={postActions.quotes.quotes.length} />
+                    </div>
+                  </div>
+                  <div className="fx-centered">
+                    <div className="icon-tooltip" data-tooltip={t("AtGAGPY")}>
+                      <Zap
+                        user={user}
+                        event={event}
+                        actions={postActions}
+                        isZapped={isZapped}
+                      />
+                    </div>
+                    <div
+                      className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                      data-tooltip={t("AVDZ5cJ")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        postActions.zaps.total > 0 &&
+                          setUsersList({
+                            title: t("AVDZ5cJ"),
+                            list: postActions.zaps.zaps.map(
+                              (item) => item.pubkey
+                            ),
+                            extras: postActions.zaps.zaps,
+                          });
+                      }}
+                    >
+                      <NumberShrink value={postActions.zaps.total} />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <OptionsDropdown
-                options={[
-                  <div onClick={copyID} className="pointer">
-                    <p>{t("AYFAFKs")}</p>
-                  </div>,
-                  userKeys && (
-                    <>
-                      <BookmarkEvent
-                        label={t("Ar5VgpT")}
-                        pubkey={event.id}
-                        kind={"1"}
-                        itemType="e"
-                      />
-                    </>
-                  ),
-                  <div className="fit-container fx-centered fx-start-h pointer">
-                    <ShareLink
-                      label={t("A1IsKJ0")}
-                      path={`/notes/${event.nEvent}`}
-                      title={user.display_name || user.name}
-                      description={event.content}
-                      kind={1}
-                      shareImgData={{
-                        post: event,
-                        author: user,
-                        label: t("Az5ftet"),
-                      }}
-                    />
-                  </div>,
-                  event.pubkey !== userKeys.pub && (
-                    <div
-                      onClick={muteUnmute}
-                      className="fit-container fx-scattered pointer"
-                    >
-                      {isMuted ? (
-                        <p className="red-c">{t("AKELUbQ")}</p>
-                      ) : (
-                        <p className="red-c">{t("AGMxuQ0")}</p>
+                <div className="fx-centered">
+                  {isTransEnabled && (
+                    <div className="fit-container">
+                      {!isNoteTranslating && !showTranslation && (
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip={t("AdHV2qJ")}
+                          onClick={translateNote}
+                        >
+                          <div className="translate-24"></div>
+                        </div>
                       )}
-                      {isMuted ? (
-                        <div className="unmute-24"></div>
-                      ) : (
-                        <div className="mute-24"></div>
+                      {!isNoteTranslating && showTranslation && (
+                        <div
+                          className="icon-tooltip"
+                          data-tooltip={t("AE08Wte")}
+                          onClick={() => setShowTranslation(false)}
+                        >
+                          <div className="translate-24"></div>
+                        </div>
                       )}
+                      {isNoteTranslating && <LoadingDots />}
                     </div>
-                  ),
-                ]}
-              />
-            </div>
+                  )}
+
+                  <OptionsDropdown
+                    options={[
+                      <div onClick={copyID} className="pointer">
+                        <p>{t("AYFAFKs")}</p>
+                      </div>,
+                      userKeys && (
+                        <>
+                          <BookmarkEvent
+                            label={t("Ar5VgpT")}
+                            pubkey={event.id}
+                            kind={"1"}
+                            itemType="e"
+                          />
+                        </>
+                      ),
+                      <div className="fit-container fx-centered fx-start-h pointer">
+                        <ShareLink
+                          label={t("A1IsKJ0")}
+                          path={`/notes/${event.nEvent}`}
+                          title={user.display_name || user.name}
+                          description={event.content}
+                          kind={1}
+                          shareImgData={{
+                            post: event,
+                            author: user,
+                            label: t("Az5ftet"),
+                          }}
+                        />
+                      </div>,
+                      event.pubkey !== userKeys.pub && (
+                        <div
+                          onClick={muteUnmute}
+                          className="fit-container fx-scattered pointer"
+                        >
+                          {isMuted ? (
+                            <p className="red-c">{t("AKELUbQ")}</p>
+                          ) : (
+                            <p className="red-c">{t("AGMxuQ0")}</p>
+                          )}
+                          {isMuted ? (
+                            <div className="unmute-24"></div>
+                          ) : (
+                            <div className="mute-24"></div>
+                          )}
+                        </div>
+                      ),
+                    ]}
+                  />
+                </div>
+              </div>
+            </>
           )}
         </div>
         {toggleComment && (

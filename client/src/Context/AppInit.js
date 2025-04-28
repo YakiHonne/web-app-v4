@@ -12,6 +12,7 @@ import {
   setUserMetadata,
   setUserMutedList,
   setUserRelays,
+  setUserSavedTools,
 } from "../Store/Slides/UserData";
 import {
   getBookmarks,
@@ -38,10 +39,7 @@ import {
   updateYakiChestStats,
   userLogout,
 } from "../Helpers/Controlers";
-import {
-  setInitDMS,
-  setTrendingUsers,
-} from "../Store/Slides/Extras";
+import { setInitDMS, setTrendingUsers } from "../Store/Slides/Extras";
 import { addExplicitRelays, ndkInstance } from "../Helpers/NDKInstance";
 import {
   getConnectedAccounts,
@@ -65,6 +63,7 @@ import {
   NDKRelayAuthPolicies,
 } from "@nostr-dev-kit/ndk";
 import { getTrendingUsers24h } from "../Helpers/WSInstance";
+import { savedToolsIdentifier } from "../Content/Extras";
 
 export default function AppInit() {
   const dispatch = useDispatch();
@@ -170,7 +169,11 @@ export default function AppInit() {
       JSON.stringify(previousBookmarks.current) !== JSON.stringify(bookmarks)
     ) {
       previousBookmarks.current = bookmarks;
-      dispatch(setUserBookmarks(bookmarks));
+      let onlyRegular = bookmarks.filter((_) => _.d !== savedToolsIdentifier);
+      let onlySWST = bookmarks.find((_) => _.d === savedToolsIdentifier);
+      onlySWST = onlySWST ? onlySWST.items : [];
+      dispatch(setUserBookmarks(onlyRegular));
+      dispatch(setUserSavedTools(onlySWST));
     }
     if (JSON.stringify(previousUsers.current) !== JSON.stringify(users)) {
       previousUsers.current = users;

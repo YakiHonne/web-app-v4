@@ -138,6 +138,7 @@ const getNoteTree = async (
   if (!note) return "";
 
   let tree = note
+    .trim()
     .split(/(\n)/)
     .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
     .filter(Boolean);
@@ -252,6 +253,16 @@ const getNoteTree = async (
       el?.includes("https://vota-test.dorafactory.org/round/")
     ) {
       finalTree.push(<MACIPollPreview url={el} key={key} />);
+      // finalTree.push(
+      //   <iframe
+      //     key={key}
+      //     src={el}
+      //     allow="microphone; camera; clipboard-write 'src'"
+      //     sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
+      //     style={{ border: "none", aspectRatio: "10/16" }}
+      //     className="fit-container fit-height"
+      //   ></iframe>
+      // );
     } else if (
       (el?.includes("nostr:") ||
         el?.includes("naddr") ||
@@ -344,8 +355,7 @@ const getLinkFromAddr = (addr_) => {
       if ([30004, 30005].includes(data.data.kind)) return `/curations/${addr}`;
       if (data.data.kind === 34235 || data.data.kind === 34236)
         return `/videos/${addr}`;
-      if (data.data.kind === 30033)
-        return `/smart-widget-checker?naddr=${addr}`;
+      if (data.data.kind === 30033) return `/smart-widget/${addr}`;
     }
     if (addr.startsWith("nprofile")) {
       return `/users/${addr}`;
@@ -1871,7 +1881,27 @@ const extractRootDomain = (url) => {
     return url;
   }
 };
+const addWidgetPathToUrl = (url) => {
+  try {
+    const parsedUrl = new URL(url);
 
+    const widgetPath = "/.well-known/widget.json";
+    if (
+      parsedUrl.pathname === widgetPath ||
+      parsedUrl.pathname.endsWith(widgetPath)
+    ) {
+      return url;
+    }
+
+    const rootDomain = `${parsedUrl.protocol}//${parsedUrl.hostname}`;
+
+    const newUrl = `${rootDomain}${widgetPath}`;
+
+    return newUrl;
+  } catch (err) {
+    return false;
+  }
+};
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -1926,4 +1956,5 @@ export {
   makeReadableNumber,
   assignClientTag,
   extractRootDomain,
+  addWidgetPathToUrl,
 };

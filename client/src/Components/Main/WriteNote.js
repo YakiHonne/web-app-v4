@@ -561,10 +561,10 @@ export default function WriteNote({
                 {/* <div onClick={() => setShowSmartWidgets(true)}>
                   <div className="smart-widget-24"></div>
                 </div> */}
-                {/* <ActionTools
+                <ActionTools
                   setData={(data) => handleInsertTextInPosition(data)}
-                /> */}
-                <AddPolls setPollAddr={handleInsertTextInPosition} triggerCP={triggerCP}/>
+                />
+                {/* <AddPolls setPollAddr={handleInsertTextInPosition} triggerCP={triggerCP}/> */}
               </div>
               <div className="fx-centered">
                 {exit && (

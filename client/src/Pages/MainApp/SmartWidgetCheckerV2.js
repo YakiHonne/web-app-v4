@@ -49,12 +49,14 @@ export default function SmartWidgetCheckerV2() {
 
         sub.on("event", async (event) => {
           try {
-            if (event.created_at > event_created_at) {
-              event_created_at = event.created_at;
-              setWidget(event.rawEvent());
+            if (event.id) {
+              if (event.created_at > event_created_at) {
+                event_created_at = event.created_at;
+                setWidget(event.rawEvent());
 
-              sub.stop();
-              setIsLoading(false);
+                sub.stop();
+                setIsLoading(false);
+              }
             }
           } catch (err) {
             console.log(err);
@@ -114,8 +116,8 @@ export default function SmartWidgetCheckerV2() {
         <div className="main-container">
           <Sidebar />
           <main className="main-page-nostr-container">
-            <PagePlaceholder page={"maintenance"}/>
-            {/* <div className="fx-centered fit-container fx-start-h fx-start-v">
+            {/* <PagePlaceholder page={"maintenance"}/> */}
+            <div className="fx-centered fit-container fx-start-h fx-start-v">
               <div className="box-pad-h-m fit-container">
                 <div className="fit-container fx-centered fx-start-h fx-start-v">
                   <div
@@ -214,7 +216,7 @@ export default function SmartWidgetCheckerV2() {
                   </div>
                 </div>
               </div>
-            </div> */}
+            </div>
           </main>
         </div>
       </div>

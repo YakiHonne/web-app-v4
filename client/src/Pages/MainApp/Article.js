@@ -52,6 +52,7 @@ import LoadingDots from "../../Components/LoadingDots";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
+import ZapAd from "../../Components/Main/ZapAd";
 
 export default function Article() {
   const { t } = useTranslation();
@@ -123,7 +124,7 @@ export default function Article() {
       }
     };
     checkURL();
-  }, [id]);
+  }, [id, AuthNip05, ArtIdentifier]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -161,7 +162,7 @@ export default function Article() {
     const fetchData = async () => {
       try {
         if (bannedList.includes(naddrData.pubkey)) customHistory.push("/");
-        straightUp()
+        straightUp();
         let tempAuth = false;
         let tempArt = false;
         let lastCreatedAtInUser = 0;
@@ -773,7 +774,7 @@ export default function Article() {
                         className="btn btn-normal slide-up"
                         style={{
                           position: "absolute",
-                          top: "-70px",
+                          top: "-50px",
                           borderRadius: "45px",
                           minWidth: "max-content",
                         }}
@@ -787,7 +788,7 @@ export default function Article() {
                         className="btn btn-red slide-up"
                         style={{
                           position: "absolute",
-                          top: "-70px",
+                          top: "-50px",
                           borderRadius: "45px",
                           minWidth: "max-content",
                         }}
@@ -801,7 +802,7 @@ export default function Article() {
                         className="btn btn-normal slide-up"
                         style={{
                           position: "absolute",
-                          top: "-70px",
+                          top: "-50px",
                           borderRadius: "45px",
                           minWidth: "max-content",
                         }}
@@ -811,7 +812,24 @@ export default function Article() {
                     )}
                   </div>
                 )}
-                <div className="main-middle fx-even">
+                {postActions?.zaps?.zaps?.length > 0 && (
+                  <div className="main-middle">
+                    <ZapAd
+                      zappers={postActions.zaps.zaps}
+                      onClick={() =>
+                        setUsersList({
+                          title: t("AVDZ5cJ"),
+                          list: postActions.zaps.zaps.map(
+                            (item) => item.pubkey
+                          ),
+                          extras: postActions.zaps.zaps,
+                        })
+                      }
+                      margin={false}
+                    />
+                  </div>
+                )}
+                <div className="main-middle fx-scattered">
                   <div className="fx-centered  pointer">
                     <div
                       data-tooltip={t("ADHdLfJ")}

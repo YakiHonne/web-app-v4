@@ -51,14 +51,21 @@ export default function LinkRepEventPreview({ event, allowClick = true }) {
 
   const onClick = (e) => {
     e.stopPropagation();
-    if (allowClick) customHistory.push(url);
+    if (allowClick) {
+      if (isNip05Verified) {
+        let nip05Url = `/${url.split("/")[1]}/${user.nip05}/${event.d}`;
+        customHistory.push(nip05Url);
+      }
+      if (!isNip05Verified) {
+        customHistory.push(url);
+      }
+    }
   };
 
   if (event.kind === 1)
     return <KindOne event={event} reactions={false} minmal={true} />;
 
-  if (event.kind === 30031)
-    return <MinimalPreviewWidget widget={event} />;
+  if (event.kind === 30031) return <MinimalPreviewWidget widget={event} />;
   return (
     <div
       className={`fit-container sc-s-18 fx-centered fx-start-h fx-stretch ${

@@ -10,7 +10,7 @@ import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { DORA_CONFIG } from "../Content/MACI";
-import { MaciClient } from "@dorafactory/maci-sdk/browser";
+import { MaciClient } from "@dorafactory/maci-sdk";
 import { store } from "../Store/Store";
 import { setToast } from "../Store/Slides/Publishers";
 
@@ -215,7 +215,10 @@ const getParsedSW = (event) => {
 
   return {
     id,
+    created_at: event.created_at,
+    sig: event.sig,
     pubkey,
+    aTag: `30033:${event.pubkey}:${d}`,
     type,
     icon,
     tags: event.tags,
@@ -509,7 +512,8 @@ const getZapper = (event) => {
     let sats = decodeBolt11(getBolt11(event));
     for (let tag of event.tags) {
       if (tag[0] === "description") {
-        return { ...JSON.parse(tag[1]), amount: sats, message: event.content };
+        let tempEvent = JSON.parse(tag[1])
+        return { ...tempEvent, amount: sats, message: event.content || tempEvent.content};
       }
     }
     return "";

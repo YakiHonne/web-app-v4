@@ -42,6 +42,7 @@ import DynamicIndicator from "../../Components/DynamicIndicator";
 import { useTranslation } from "react-i18next";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
+import ZapAd from "../../Components/Main/ZapAd";
 
 export default function Curation() {
   const { id, CurationKind, AuthNip05, ArtIdentifier } = useParams();
@@ -577,13 +578,30 @@ export default function Curation() {
               </div>
               {!showCommentsSection && !isMuted && (
                 <div
-                  className="fit-container sticky-to-fixed fx-centered"
+                  className="fit-container fx-col sticky-to-fixed fx-centered"
                   style={{
                     bottom: 0,
                     borderTop: "1px solid var(--very-dim-gray)",
                   }}
                 >
-                  <div className="main-middle fx-even">
+                  {postActions?.zaps?.zaps?.length > 0 && (
+                    <div className="main-middle">
+                      <ZapAd
+                        zappers={postActions.zaps.zaps}
+                        onClick={() =>
+                          setUsersList({
+                            title: t("AVDZ5cJ"),
+                            list: postActions.zaps.zaps.map(
+                              (item) => item.pubkey
+                            ),
+                            extras: postActions.zaps.zaps,
+                          })
+                        }
+                        margin={false}
+                      />
+                    </div>
+                  )}
+                  <div className="main-middle fx-scattered">
                     <div className="fx-centered  pointer">
                       <div
                         data-tooltip={t("ADHdLfJ")}

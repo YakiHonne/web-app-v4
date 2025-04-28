@@ -327,7 +327,7 @@
 	animation: pulse-purple 2s infinite;
 }
 
-.pulse-orange {
+.orange-pulse {
 	background: rgba(255, 122, 33, .3);
 	box-shadow: 0 0 0 0 rgba(255, 122, 33, 1);
 	animation: pulse-orange 2s infinite;
