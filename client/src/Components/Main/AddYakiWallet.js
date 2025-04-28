@@ -34,7 +34,8 @@ export default function AddYakiWallet({ refresh }) {
       });
       let toSave = [
         "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
-        "---"`Address: ${url.data.lightningAddress}`,
+        "---",
+        `Address: ${url.data.lightningAddress}`,
         `NWC secret: ${url.data.connectionSecret}`,
       ];
       downloadAsFile(
@@ -77,8 +78,9 @@ export default function AddYakiWallet({ refresh }) {
       updateWallets([nwcNode]);
       refresh();
     } catch (err) {
+      console.log(err)
       setIsLoading(false);
-      if (err.response.status) {
+      if (err.response?.status) {
         setShowMessageError(true);
       } else {
         dispatch(

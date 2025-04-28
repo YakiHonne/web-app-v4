@@ -654,7 +654,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
           >
             {t("AesMg52")}
           </div>
-          {/* <div
+          <div
             className={`list-item-b fx-centered fx-shrink ${
               contentFrom === "curations" ? "selected-list-item-b" : ""
             }`}
@@ -669,7 +669,7 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
             onClick={() => switchContentType("videos")}
           >
             {t("AStkKfQ")}
-          </div> */}
+          </div>
           {/* <div
             className={`list-item-b fx-centered fx-shrink ${
               contentFrom === "widgets" ? "selected-list-item-b" : ""
@@ -698,9 +698,9 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
                 setSelectedValue={switchContentType}
               />
             )}
-            <button className="btn btn-normal" onClick={handleAddContent}>
+           {["articles", "drafts", "notes"].includes(contentFrom) &&  <button className="btn btn-normal" onClick={handleAddContent}>
               <div className="plus-sign"></div>
-            </button>
+            </button>}
           </div>
         </div>
         <div className="fit-container fx-centered fx-col fx-start-v box-pad-h">

@@ -688,7 +688,11 @@ const getDVMJobResponse = async (eventId) => {
             );
             let events = JSON.parse(decryptedData);
             events = events.map((_) => JSON.parse(_[1]));
-            resolve(events);
+            resolve(
+              events.filter((_, index, arr) => {
+                if (arr.findIndex((__) => __.id == _.id) === index) return _
+              })
+            );
             sub.close();
           },
         }

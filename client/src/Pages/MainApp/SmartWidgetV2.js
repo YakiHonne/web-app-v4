@@ -27,7 +27,6 @@ import { generateSecretKey, nip19 } from "nostr-tools";
 import NDK, { NDKEvent, NDKPrivateKeySigner } from "@nostr-dev-kit/ndk";
 import { Widget } from "smart-widget-previewer";
 import { getUser, InitEvent } from "../../Helpers/Controlers";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import PostNoteWithWidget from "../../Components/Main/PostNoteWithWidget";
 import { customHistory } from "../../Helpers/History";

@@ -364,7 +364,7 @@ export default function Wallet() {
       [
         "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
         "---",
-        `wallet secret: ${nwc}`,
+        `wallet secret: ${typeof nwc === "string" ? nwc : "N/A"}`,
       ].join("\n"),
       "text/plain",
       `NWC-for-${addr}.txt`,
@@ -539,24 +539,26 @@ export default function Wallet() {
                                                   e.stopPropagation();
                                                   copyKey(
                                                     t("ALR84Tq"),
-                                                    selectedWallet.entitle
+                                                    wallet.entitle
                                                   );
                                                 }}
                                               >
                                                 {t("ApO1nbv")}
                                               </div>
                                             ),
-                                            <div
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                copyKey(
-                                                  t("A6Pj02S"),
-                                                  selectedWallet.data
-                                                );
-                                              }}
-                                            >
-                                              {t("A6ntZLW")}
-                                            </div>,
+                                            wallet.kind === 3 && (
+                                              <div
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  copyKey(
+                                                    t("A6Pj02S"),
+                                                    wallet.data
+                                                  );
+                                                }}
+                                              >
+                                                {t("A6ntZLW")}
+                                              </div>
+                                            ),
                                             <div
                                               onClick={(e) => {
                                                 e.stopPropagation();

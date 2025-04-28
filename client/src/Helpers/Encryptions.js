@@ -10,7 +10,7 @@ import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { DORA_CONFIG } from "../Content/MACI";
-import { MaciClient } from "@dorafactory/maci-sdk/browser";
+import { MaciClient } from "@dorafactory/maci-sdk";
 import { store } from "../Store/Store";
 import { setToast } from "../Store/Slides/Publishers";
 

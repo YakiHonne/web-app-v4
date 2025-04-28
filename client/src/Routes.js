@@ -41,6 +41,7 @@ import SWhome from "./Pages/MainApp/SWhome";
 import Articles from "./Pages/MainApp/Articles";
 import SWV2 from "./Pages/MainApp/SWV2";
 import Playground from "./Pages/MainApp/Playground";
+import Doc from "./Pages/SWGuide/Doc";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
@@ -50,7 +51,8 @@ const routes = [
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/dashboard", element: <Dashboard /> },
-  { path: "/articles", element: <Articles /> },
+  // { path: "/articles", element: <Articles /> },
+  { path: "/discover", element: <Explore /> },
   { path: "/notifications", element: <Notification /> },
   { path: "/curations/:id", element: <Curation /> },
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },
@@ -88,6 +90,7 @@ const routes = [
   { path: "/terms", element: <Terms /> },
   { path: "/yaki-points", element: <UserLevels /> },
   { path: "/points-system", element: <YakiLevelingFeature /> },
+  { path: "/docs/sw/:keyword", element: <Doc /> },
 ];
 
 export default routes;

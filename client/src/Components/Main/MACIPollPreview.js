@@ -1,4 +1,4 @@
-import { MaciClient } from "@dorafactory/maci-sdk/browser";
+import { MaciClient } from "@dorafactory/maci-sdk";
 import React, { useEffect, useState } from "react";
 import { parsedMaciPoll } from "../../Helpers/Encryptions";
 import MACIPollsComp from "../SmartWidget/MACIPollsComp";
@@ -23,9 +23,9 @@ export default function MACIPollPreview({ url }) {
       const client = new MaciClient({
         network: process.env.REACT_APP_NETWORK,
       });
-      let poll = await client.getRoundById(roundId);
-      if (poll.data) {
-        let parsedPoll = parsedMaciPoll(poll.data?.round);
+      let poll = await client.getRoundInfo({ contractAddress: roundId });
+      if (poll) {
+        let parsedPoll = parsedMaciPoll(poll);
         setRound(parsedPoll);
       }
       setIsLoading(false);

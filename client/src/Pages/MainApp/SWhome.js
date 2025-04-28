@@ -1,20 +1,15 @@
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import Sidebar from "../../Components/Main/Sidebar";
-import PagePlaceholder from "../../Components/PagePlaceholder";
 import SWActionPreview from "../../Components/Main/SWActionPreview";
 import { useTranslation } from "react-i18next";
 import { getSubData } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
-import { getEmptyuserMetadata, getParsedSW } from "../../Helpers/Encryptions";
+import { getParsedSW } from "../../Helpers/Encryptions";
 import LoadingDots from "../../Components/LoadingDots";
-import MiniApp from "../../Components/Main/MiniApp";
-import SWCard from "../../Components/Main/SWCard";
-import WidgetCardV2 from "../../Components/Main/WidgetCardV2";
 import { useSelector } from "react-redux";
 import LaunchSW from "./LaunchSW";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import ChatBubble from "../../Components/ChatBubble";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -24,6 +19,8 @@ import { copyText } from "../../Helpers/Helpers";
 import { nanoid } from "nanoid";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { t } from "i18next";
+import PagePlaceholder from "../../Components/PagePlaceholder";
 
 const getSavedConversation = (pubkey) => {
   let aiConversation = localStorage.getItem("aiConversation");
@@ -41,33 +38,6 @@ const saveConversation = (pubkey, data) => {
 };
 
 export default function SWhome() {
-  const [searchType, setSearchType] = useState(0);
-  // const [searchKeywordInput, setSearchKeywordInput] = useState("");
-  const [searchKeyword, setSearchKeyword] = useState("");
-  // const inputFieldRef = useRef(null);
-
-  // useEffect(() => {
-  //   if (inputFieldRef.current) {
-  //     inputFieldRef.current.style.height = "20px";
-  //     inputFieldRef.current.style.height = `${inputFieldRef.current.scrollHeight}px`;
-  //     inputFieldRef.current.scrollTop = inputFieldRef.current.scrollHeight;
-  //     inputFieldRef.current.focus();
-  //     // if (
-  //     //   inputFieldRef.current.scrollHeight > 50 &&
-  //     //   inputFieldRef.current.scrollHeight < 250
-  //     // )
-  //     //   setIfHeight(inputFieldRef.current.scrollHeight - 50);
-  //     // else setIfHeight(0);
-  //   }
-  // }, [searchKeywordInput]);
-
-  const handleSearch = (e, searchKeywordInput) => {
-    if (e) e.preventDefault();
-    if (searchKeywordInput.trim()) {
-      setSearchKeyword(searchKeywordInput.trim());
-    }
-  };
-
   return (
     <div>
       <Helmet>
@@ -97,102 +67,6 @@ export default function SWhome() {
         <div className="main-container">
           <Sidebar />
           <Main />
-          {/* <main className="main-page-nostr-container">
-            <div
-              className="fx-centered fit-container fx-start-h fx-col box-pad-v"
-              style={{ gap: 0, minHeight: "100vh" }}
-            >
-              {searchType === 1 && (
-                <div
-                  style={{
-                    width: "min(100%, 600px)",
-                  }}
-                  className="fx-centered fx-col fx-start-v box-pad-h-m"
-                >
-                  <ChatWindow
-                    message={searchKeyword}
-                    setMessage={setSearchKeyword}
-                  />
-                </div>
-              )}
-              {searchType === 0 && (
-                <div className="box-pad-v fx-centered">
-                  <div
-                    className="smart-widget-24"
-                    style={{
-                      minWidth: "44px",
-                      minHeight: "44px",
-                      animation: "1.5s infinite rotate",
-                    }}
-                  ></div>
-                  <h3>Smart Widgets</h3>
-                </div>
-              )}
-
-              <InputField
-                handleSearch={handleSearch}
-                searchType={searchType}
-                setSearchType={setSearchType}
-                setSearchKeyword={setSearchKeyword}
-              />
-              {searchType === 0 && (
-                <>
-                  <div
-                    style={{
-                      width: "min(100%, 600px)",
-                    }}
-                    className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
-                  >
-                    <p className="gray-c">
-                      Try our different method of searching
-                    </p>
-                    <div className="fit-container fx-centered fx-stretch">
-                      <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
-                        <p className="gray-c">
-                          <span className="c1-c">Widget search </span>
-                          searching for published smart widgets and what people
-                          made
-                        </p>
-                      </div>
-                      <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-v">
-                        <p className="gray-c">
-                          <span className="c1-c">Get inspired </span>
-                          ask our AI to help you build your smart widget
-                        </p>
-                        <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
-                          <div className="github-logo"></div>
-                          Get started
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      width: "min(100%, 600px)",
-                    }}
-                    className="fx-centered fx-col fx-start-v box-pad-h-m"
-                  >
-                    {searchKeyword && (
-                      <div className="fit-container fx-scattered">
-                        <h4>
-                          <span className="gray-c">Searching for:</span>{" "}
-                          {searchKeyword}
-                        </h4>
-                        <div
-                          className="close"
-                          style={{ position: "static" }}
-                          onClick={() => setSearchKeyword("")}
-                        >
-                          <div></div>
-                        </div>
-                      </div>
-                    )}
-                    <SWSet external={searchKeyword} />
-                  </div>
-                </>
-              )}
-            </div>
-          </main> */}
         </div>
       </div>
     </div>
@@ -202,6 +76,7 @@ export default function SWhome() {
 const Main = () => {
   const [searchType, setSearchType] = useState(0);
   const [status, setStatus] = useState(true);
+  const [showTips, setShowtips] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
   const handleSearch = (e, searchKeywordInput) => {
     if (e) e.preventDefault();
@@ -210,9 +85,13 @@ const Main = () => {
     }
   };
 
+  useEffect(() => {
+    if (showTips && searchKeyword) setShowtips(!showTips);
+    if (!showTips && !searchKeyword) setShowtips(!showTips);
+  }, [searchKeyword]);
+
   return (
     <main className="main-page-nostr-container">
-      {/* <PagePlaceholder page={"maintenance"}/> */}
       <div
         className="fx-centered fit-container fx-start-h fx-col box-pad-v"
         style={{ gap: 0, minHeight: "100vh" }}
@@ -224,11 +103,12 @@ const Main = () => {
             }}
             className="fx-centered fx-col fx-start-v box-pad-h-m"
           >
-            <ChatWindow
+            {/* <ChatWindow
               message={searchKeyword}
               setMessage={setSearchKeyword}
               setStatus={setStatus}
-            />
+            /> */}
+            <PagePlaceholder page="ai" />
           </div>
         )}
         {searchType === 0 && (
@@ -241,10 +121,9 @@ const Main = () => {
                 animation: "1.5s infinite rotate",
               }}
             ></div>
-            <h3>Smart Widgets</h3>
+            <h3>{t("A2mdxcf")}</h3>
           </div>
         )}
-
         <InputField
           handleSearch={handleSearch}
           searchType={searchType}
@@ -260,32 +139,86 @@ const Main = () => {
               }}
               className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
             >
-              <p className="gray-c">Try our different method of searching</p>
-              <div className="fit-container fx-centered fx-stretch">
-                <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
-                  <p className="gray-c">
-                    <span className="c1-c">Widget search </span>
-                    searching for published smart widgets and what people made
-                  </p>
-                </div>
-                <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-v">
-                  <p className="gray-c">
-                    <span className="c1-c">Get inspired </span>
-                    ask our AI to help you build your smart widget
-                  </p>
-                  <div className="fx-centered fit-container">
-                    <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
-                      <div className="github-logo"></div>
-                      Get started
-                    </div>
-                    <Link to={"/sw-playground"}>
-                      <div className="box-pad-h-s box-pad-v-s sc-s fx-centered bg-sp option pointer">
-                        Playground
-                      </div>
-                    </Link>
-                  </div>
-                </div>
+              <div
+                className={`fit-container fx-scattered `}
+                style={{ transition: ".2s ease-in-out" }}
+                onClick={() => setShowtips(!showTips)}
+              >
+                <p className="p-big">{t("A9Mca7S")}</p>
+                <div
+                  className="plus-sign"
+                  style={{
+                    rotate: showTips ? "45deg" : "0deg",
+                    minWidth: "14px",
+                    minHeight: "14px",
+                  }}
+                ></div>
               </div>
+              {showTips && (
+                <>
+                  <div className="fx fx-centered fx-stretch">
+                    <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
+                      <p className="gray-c">
+                        <span className="c1-c">{t("AYZh36g")} </span>
+                        {t("AiCvw1P")}
+                      </p>
+                    </div>
+                    <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-h">
+                      <p className="gray-c">
+                        <span className="c1-c">{t("A6U9fNT")} </span>
+                        {t("AmK7zqi")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="fit-container fx-centered fx-stretch">
+                    <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx">
+                      {/* <div className="round-icon">
+                    <div className="posts-24"></div>
+                  </div> */}
+                      <div className="fx-centered fx-col fx-start-h fx-start-v">
+                        <p className="p-big p-bold">{t("Axeyl28")}</p>
+                        <p className="gray-c">{t("ASfQxuq")}</p>
+                        <Link to={"/sw-playground"} className="fit-container">
+                          <button className=" fx-centered btn-normal btn option pointer btn-full">
+                            {t("Axeyl28")}
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                    <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18  bg-sp fx">
+                      {/* <div className="round-icon">
+                    <div className="posts-24"></div>
+                  </div> */}
+                      <div className="fx-centered fx-col fx-start-h fx-start-v">
+                        <p className="p-big p-bold">{t("ADuxxCf")}</p>
+                        <p className="gray-c">{t("Afi8Kwg")}</p>
+                        <div className="fit-container fx-centered ">
+                          <Link
+                            to={
+                              "https://github.com/search?q=topic%3Asmart-widget+org%3AYakiHonne&type=Repositories"
+                            }
+                            target="_blank"
+                          >
+                            <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer fx">
+                              <div className="github-logo"></div>
+                              {t("AvcFvUD")}
+                            </div>
+                          </Link>
+                          <Link to={"/docs/sw/intro"}>
+                            <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
+                              <div className="posts"></div>
+                              {t("As9snfY")}
+                            </div>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              <div style={{ height: "7px" }}></div>
+              <hr />
+              <hr />
             </div>
             <div
               style={{
@@ -296,7 +229,7 @@ const Main = () => {
               {searchKeyword && (
                 <div className="fit-container fx-scattered">
                   <h4>
-                    <span className="gray-c">Searching for:</span>{" "}
+                    <span className="gray-c">{t("AWJ9AGo")}</span>{" "}
                     {searchKeyword}
                   </h4>
                   <div
@@ -343,6 +276,7 @@ const SWSet = ({ external }) => {
     const fetchDataDVM = async () => {
       try {
         setIsLoading(true);
+        if (searchedTools.length > 0) setSearchedTools([]);
         let data = await axiosInstance.post("/api/v1/dvm-query", {
           message: external,
         });
@@ -362,7 +296,7 @@ const SWSet = ({ external }) => {
     const fetchData = async () => {
       if (!isLoading) setIsLoading(true);
       const data = await getSubData([
-        { kinds: [30033], limit: 4, until: lastEventTimestamp },
+        { kinds: [30033], limit: 10, until: lastEventTimestamp },
       ]);
       setActions((prev) => [...prev, ...data.data.map((_) => getParsedSW(_))]);
       saveUsers(data.pubkeys);
@@ -432,7 +366,7 @@ const SWSet = ({ external }) => {
           )}
           {isLoading && (
             <div
-              style={{ height: "50px" }}
+              style={{ height: "150px" }}
               className="fit-container fx-centered"
             >
               <LoadingDots />
@@ -450,7 +384,7 @@ const SWSet = ({ external }) => {
                 className="yaki-logomark"
                 style={{ minWidth: "48px", minHeight: "48px", opacity: 0.5 }}
               ></div>
-              <p className="gray-c">No widgets were found</p>
+              <p className="gray-c">{t("ANA9vN0")}</p>
             </div>
           )}
       </div>
@@ -466,7 +400,6 @@ const ChatWindow = ({ message, setMessage, setStatus }) => {
   const containerRef = useRef(null);
   useEffect(() => {
     if (message) handleSend(message);
-    // if (stopSnapping > 1) setStopSnapping(0);
   }, [message]);
 
   useEffect(() => {
@@ -542,7 +475,7 @@ const ChatWindow = ({ message, setMessage, setStatus }) => {
           ...history,
           { role: "assistant", content: current, created_at: Date.now() },
         ]);
-        setTimeout(typing, 30); // adjust speed here (e.g., 30ms per word)
+        setTimeout(typing, 30);
       } else {
         setLoading(false);
         setStatus(true);
@@ -556,7 +489,7 @@ const ChatWindow = ({ message, setMessage, setStatus }) => {
     const codeRef = document.getElementById(id);
     if (!codeRef) return;
     const codeText = codeRef.innerText;
-    copyText(codeText, "Code is copied");
+    copyText(codeText, t("AwszVHZ"));
   };
 
   return (
@@ -638,10 +571,6 @@ function InputField({
   setSearchKeyword,
 }) {
   const [searchKeywordInput, setSearchKeywordInput] = useState("");
-  const [showPromptType, setShowPromptType] = useState(false);
-  const [swType, setSwType] = useState("");
-  const [swParams, setSwParams] = useState([]);
-  const [swTags, setSwTags] = useState([]);
   const inputFieldRef = useRef(null);
 
   useEffect(() => {
@@ -678,69 +607,7 @@ function InputField({
 
   const handleTyping = (e) => {
     let value = e.target.value;
-    let tempValue = value;
     setSearchKeywordInput(value);
-    // const textBeforeCursor = tempValue.slice(0, e.target.selectionStart);
-    // const parts = textBeforeCursor.split(/\s+/);
-    // const lastPart = parts[parts.length - 1] || "";
-
-    // if (lastPart.startsWith("/")) {
-    //   setShowPromptType(true);
-    //   if (["/tool", "/action", "/basic"].includes(lastPart))
-    //     setSwType(lastPart);
-    //   else setSwType("");
-    // } else setShowPromptType(false);
-
-    // if (lastPart.startsWith(":")) {
-    //   const list = [
-    //     "keywords()",
-    //     ":has_nostr_scheme:",
-    //     ":has_zap:",
-    //     ":has_redirect:",
-    //     ":has_post:",
-    //     ":has_input_field:",
-    //   ];
-    //   setSwParams((prev) => [...prev, list.includes(lastPart)]);
-    // }
-  };
-
-  const handleInsertTextInPosition = (keyword) => {
-    let cursorPosition = 0;
-    if (inputFieldRef.current) {
-      cursorPosition = inputFieldRef.current.selectionStart;
-    }
-
-    const textBeforeCursor = searchKeywordInput.slice(0, cursorPosition);
-    const textAfterCursor = searchKeywordInput.slice(cursorPosition);
-
-    let wordStart = textBeforeCursor.lastIndexOf(" ");
-    if (wordStart === -1) {
-      wordStart = 0;
-    } else {
-      wordStart += 1;
-    }
-    const textBeforeWord = searchKeywordInput.slice(0, wordStart);
-
-    const updatedText = `${textBeforeWord}${keyword} ${textAfterCursor}`;
-
-    if (searchKeywordInput) {
-      setSearchKeywordInput(updatedText);
-    } else {
-      setSearchKeywordInput(keyword);
-    }
-
-    const newCursorPosition = wordStart + keyword.length + 1;
-    if (keyword.startsWith("/")) {
-      setSwType(keyword);
-      setSwParams([]);
-    }
-    setTimeout(() => {
-      if (inputFieldRef.current) {
-        inputFieldRef.current.selectionStart =
-          inputFieldRef.current.selectionEnd = newCursorPosition;
-        inputFieldRef.current.focus();
-      }
-    }, 0);
   };
 
   return (
@@ -755,7 +622,7 @@ function InputField({
     >
       <form
         onSubmit={(e) => {
-          if (status) {
+          if (status && searchType !== 1) {
             setSearchKeywordInput("");
             handleSearch(e, searchKeywordInput);
           }
@@ -765,17 +632,15 @@ function InputField({
       >
         <textarea
           type="text"
-          className={`if ifs-full if-no-border ${status ? "" : "if-disabled"}`}
+          className={`if ifs-full if-no-border ${
+            status && searchType !== 1 ? "" : "if-disabled"
+          }`}
           value={searchKeywordInput}
           onChange={handleTyping}
-          placeholder={
-            searchType === 0
-              ? "Type keywords (ie: keyword1, keyword2..)"
-              : "Ask anything..."
-          }
+          placeholder={searchType === 0 ? t("A3IdSmf") : t("AmClLqP")}
           ref={inputFieldRef}
           onKeyDown={handleKeyDown}
-          disabled={!status}
+          disabled={!(status && searchType !== 1)}
           style={{
             padding: "1rem 0rem 1rem 1rem",
             height: "20px",
@@ -783,25 +648,6 @@ function InputField({
             borderRadius: 0,
           }}
         />
-        {/* {showPromptType && (
-          <PromptForTypes
-            keyword={swType}
-            onClick={(data) => {
-              setShowPromptType(false);
-              handleInsertTextInPosition(data);
-            }}
-          />
-        )}
-        {swType && (
-          <PromptForKeywords
-            type={swType}
-            selectedKeywords={swParams}
-            onClick={(data) => {
-              setSwParams((prev) => [...prev, data]);
-              handleInsertTextInPosition(data);
-            }}
-          />
-        )} */}
       </form>
       <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
         <div className="fx-centered">
@@ -816,11 +662,12 @@ function InputField({
               if (status) {
                 setSearchType(0);
                 setSearchKeyword("");
+                setSearchKeywordInput("");
               }
             }}
           >
             <div className="search"></div>
-            Widget search
+            {t("AYZh36g")}
           </div>
           <div
             className={`sc-s box-pad-h-m box-pad-v-s ${
@@ -833,11 +680,12 @@ function InputField({
               if (status) {
                 setSearchType(1);
                 setSearchKeyword("");
+                setSearchKeywordInput("");
               }
             }}
           >
             <div className="ringbell"></div>
-            Get inspired
+            {t("A6U9fNT")}
           </div>
         </div>
         {status && (
@@ -858,113 +706,3 @@ function InputField({
     </div>
   );
 }
-
-const PromptForTypes = ({ keyword, onClick }) => {
-  const list = [
-    {
-      display_name: "/tool",
-      icon: "",
-    },
-    {
-      display_name: "/action",
-      icon: "",
-    },
-    {
-      display_name: "/basic",
-      icon: "",
-    },
-  ];
-  const filteredList = list.filter((_) => _.display_name.includes(keyword));
-  if (filteredList.length === 0) return null;
-  return (
-    <div
-      className="fx-centered fx-col fx-start-v fx-start-h fit-container box-pad-h-s box-pad-v-s sc-s-18 slide-up"
-      style={{
-        position: "absolute",
-        top: "calc(100% + 5px)",
-        left: 0,
-        zIndex: "10",
-        gap: 0,
-      }}
-    >
-      <h5 className="box-pad-h-s box-pad-v-s c1-c">
-        Choose a smart widget type
-      </h5>
-      {filteredList.map((_, index) => {
-        return (
-          <div
-            key={index}
-            className="box-pad-h-s box-pad-v-s option pointer fit-container"
-            onClick={() => onClick(_.display_name)}
-          >
-            {_.display_name}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-const PromptForKeywords = ({ type, selectedKeywords, onClick }) => {
-  const list = [
-    {
-      display_name: "keywords()",
-      icon: "",
-    },
-    {
-      display_name: ":has_nostr_scheme:",
-      icon: "",
-    },
-    {
-      display_name: ":has_zap:",
-      icon: "",
-    },
-    {
-      display_name: ":has_redirect:",
-      icon: "",
-    },
-    {
-      display_name: ":has_post:",
-      icon: "",
-    },
-    {
-      display_name: ":has_input_field:",
-      icon: "",
-    },
-  ];
-
-  const filteredList = list.filter((_) =>
-    ["/tool", "/action"].includes(type)
-      ? _.display_name === "keywords()"
-      : !selectedKeywords.includes(_.display_name)
-  );
-
-  if (filteredList.length === 0) return null;
-  return (
-    <div
-      className="fx-centered fx-col fx-start-v fx-start-h fit-container box-pad-h-s box-pad-v-s sc-s-18 slide-up"
-      style={{
-        position: "absolute",
-        top: "calc(100% + 5px)",
-        left: 0,
-        zIndex: "10",
-        gap: 0,
-      }}
-    >
-      <h5 className="box-pad-h-s box-pad-v-s c1-c">
-        Choose a smart widget keywords
-      </h5>
-      {filteredList.map((_, index) => {
-        return (
-          <div
-            key={index}
-            className="box-pad-h-s box-pad-v-s option pointer fit-container"
-            onClick={() => onClick(_.display_name)}
-          >
-            {_.display_name}
-          </div>
-        );
-      })}
-    </div>
-  );
-};

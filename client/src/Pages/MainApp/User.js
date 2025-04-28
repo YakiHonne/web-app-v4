@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo, useRef, useReducer } from "react";
 import {
   checkForLUDS,
   getBech32,
+  getEmptyuserMetadata,
   getParsedAuthor,
   getParsedNote,
   getParsedRepEvent,
+  getParsedSW,
   getuserMetadata,
 } from "../../Helpers/Encryptions";
 import { useLocation, useParams } from "react-router-dom";
@@ -45,6 +47,7 @@ import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
 import NotesFromPeopleYouFollow from "../../Components/Main/NotesFromPeopleYouFollow";
 import UserFollowers from "./UserFollowers";
+import WidgetCardV2 from "../../Components/Main/WidgetCardV2";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -476,7 +479,13 @@ const UserMetadata = ({ refreshUser }) => {
         />
       )}
       {initConv && <InitiConvo exit={() => setInitConv(false)} receiver={id} />}
-      {showQR && <QRSharing user={user} exit={() => setShowQR(false)} isVerified={isNip05Verified} />}
+      {showQR && (
+        <QRSharing
+          user={user}
+          exit={() => setShowQR(false)}
+          isVerified={isNip05Verified}
+        />
+      )}
       {showUserImpact && (
         <UserImpact
           user={user}
@@ -668,7 +677,11 @@ const UserMetadata = ({ refreshUser }) => {
             <div className="fx-centered">
               <div className="fx-centered">
                 <div className="nip05-24"></div>{" "}
-                {user?.nip05 && <p>{user?.nip05}</p>}
+                {user?.nip05 && (
+                  <p className="p-one-line" style={{ minWidth: "max-content" }}>
+                    {user?.nip05}
+                  </p>
+                )}
                 {!user?.nip05 && <p>N/A</p>}
               </div>
 
@@ -683,6 +696,7 @@ const UserMetadata = ({ refreshUser }) => {
                         : `https://${user?.website}`
                     }
                     target="_blank"
+                    className="p-one-line"
                     style={{ textDecoration: user?.website ? "underline" : "" }}
                   >
                     {user?.website || "N/A"}
@@ -745,7 +759,9 @@ const UserFeed = ({ user }) => {
     eventsInitialState
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [contentFrom, setContentFrom] = useState(state ? state.contentType : "notes");
+  const [contentFrom, setContentFrom] = useState(
+    state ? state.contentType : "notes"
+  );
   const [lastEventTime, setLastEventTime] = useState(undefined);
   const [notesSub, setNotesSub] = useState(false);
   const userMutedList = useSelector((state) => state.userMutedList);
@@ -790,7 +806,7 @@ const UserFeed = ({ user }) => {
       articles: [30023],
       videos: [34235, 34236],
       curations: [30004],
-      "smart-widget": [30031],
+      "smart-widget": [30033],
     };
     return [
       {
@@ -865,11 +881,14 @@ const UserFeed = ({ user }) => {
         let event_ = getParsedRepEvent(event);
         events_.push(event_);
       }
-      if ([30031].includes(event.kind)) {
-        let event_ = getParsedRepEvent(event);
+      if ([30033].includes(event.kind) && event.id) {
+        let event_ = getParsedSW(event);
         try {
-          let metadata = JSON.parse(event.content);
-          events_.push({ ...event_, metadata });
+          events_.push({
+            ...event_,
+            metadata: event_,
+            author: getEmptyuserMetadata(event.pubkey),
+          });
         } catch (err) {
           console.log(err);
         }
@@ -946,6 +965,14 @@ const UserFeed = ({ user }) => {
         </div>
         <div
           className={`list-item-b fx-centered fx-shrink ${
+            contentFrom === "smart-widget" ? "selected-list-item-b" : ""
+          }`}
+          onClick={() => switchContentType("smart-widget")}
+        >
+          {t("A2mdxcf")}
+        </div>
+        <div
+          className={`list-item-b fx-centered fx-shrink ${
             contentFrom === "curations" ? "selected-list-item-b" : ""
           }`}
           onClick={() => switchContentType("curations")}
@@ -960,14 +987,6 @@ const UserFeed = ({ user }) => {
         >
           {t("AStkKfQ")}
         </div>
-        {/* <div
-          className={`list-item-b fx-centered fx-shrink ${
-            contentFrom === "smart-widget" ? "selected-list-item-b" : ""
-          }`}
-          onClick={() => switchContentType("smart-widget")}
-        >
-          {t("A2mdxcf")}
-        </div> */}
       </div>
       {/* <NotesFromPeopleYouFollow /> */}
       {["notes", "replies"].includes(contentFrom) && (
@@ -1100,7 +1119,7 @@ const UserFeed = ({ user }) => {
           )}
         </div>
       )}
-      {/* {contentFrom === "smart-widget" && (
+      {contentFrom === "smart-widget" && (
         <div className="fit-container fx-centered fx-col">
           {events[contentFrom].length === 0 && !isLoading && (
             <div
@@ -1124,7 +1143,7 @@ const UserFeed = ({ user }) => {
                 {events[contentFrom].map((widget) => {
                   return (
                     <div key={widget.id} className="fx-centered fit-container">
-                      <WidgetCard
+                      <WidgetCardV2
                         widget={widget}
                         key={widget.id}
                         deleteWidget={() => null}
@@ -1136,7 +1155,7 @@ const UserFeed = ({ user }) => {
             </>
           )}
         </div>
-      )} */}
+      )}
       {isLoading && (
         <div
           className="fit-container box-pad-v fx-centered fx-col"

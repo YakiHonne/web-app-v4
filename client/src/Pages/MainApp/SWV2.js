@@ -67,7 +67,7 @@ export default function SWV2() {
 
         sub.on("event", async (event) => {
           try {
-            if (event.created_at > event_created_at) {
+            if (event.created_at > event_created_at && event.id) {
               event_created_at = event.created_at;
               setWidget({
                 ...event.rawEvent(),
@@ -140,6 +140,7 @@ export default function SWV2() {
                     className={` ${!mbHide ? "mb-hide-800" : ""}`}
                   >
                     {!widget && <PagePlaceholder page={"widgets"} />}
+
                     {widget && <WidgetCardV2 widget={widget} />}
                   </div>
                   <div

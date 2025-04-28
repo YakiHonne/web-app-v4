@@ -32,6 +32,7 @@ export default function BookmarkEvent({
       : false;
   }, [userBookmarks, userKeys]);
 
+  console.log(showBookmarksPicker);
   return (
     <>
       {showBookmarksPicker && (
@@ -48,9 +49,10 @@ export default function BookmarkEvent({
       {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       <div
         className="fx-scattered  pointer"
-        onClick={() =>
-          !userKeys ? setIsLogin(true) : setShowBookmarksPicker(true)
-        }
+        onClick={(e) => {
+          e.stopPropagation();
+          !userKeys ? setIsLogin(true) : setShowBookmarksPicker(true);
+        }}
       >
         {label && <p>{label}</p>}
         {!label && (

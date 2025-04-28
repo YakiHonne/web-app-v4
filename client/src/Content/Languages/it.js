@@ -1206,6 +1206,34 @@ const italianTranslation = {
   AjBLEFD: "3 mesi",
   AIXtxrz: "6 mesi",
   AVevC63: "1 anno",
+  AzkTxuy: "Rimuovere",
+  A92h87b: "I miei strumenti salvati",
+  AUexjHk: "Non hai strumenti",
+  ASl7AUI:
+    "Scopri gli strumenti pubblicati per aiutarti con la creazione di contenuti",
+  Aa15RS4: "Aggiungi strumenti di widget",
+  ABcc1mr: "Prova il nostro diverso metodo di ricerca",
+  AYZh36g: "Ricerca del widget",
+  AiCvw1P:
+    "Alla ricerca di widget intelligenti pubblicati e cosa ha fatto le persone",
+  A6U9fNT: "Essere ispirato",
+  AmK7zqi:
+    "Chiedi al nostro AI di aiutarti a costruire il tuo widget intelligente",
+  Axeyl28: "Parco giochi",
+  AWJ9AGo: "Alla ricerca di:",
+  ANA9vN0: "Non sono stati trovati widget",
+  AwszVHZ: "Il codice viene copiato",
+  A3IdSmf: "Digita parole chiave (cioè: parola chiave1, parola chiave2 ..)",
+  AmClLqP: "Chiedi qualsiasi cosa ...",
+  As9snfY: "Documenti",
+  ASfQxuq: "Prova il tuo mini-app con test pratici e interattivi.",
+  ADuxxCf: "Controlla i documenti",
+  Afi8Kwg:
+    "Esplora i nostri repository o controlla i nostri documenti intelligenti.",
+  AvcFvUD: "Github Repos",
+  AE9O5YE: "Stiamo portando AI!",
+  AtQ0dJT:
+    "Stiamo realizzando un assistente di intelligenza artificiale per semplificare il tuo lavoro con widget programmabili e sviluppo mini-app: tieni d'occhio!",
 };
 
 export default italianTranslation;

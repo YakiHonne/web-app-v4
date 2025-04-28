@@ -40,6 +40,7 @@ export default function LaunchSW({ metadata, exit }) {
               author: getEmptyuserMetadata(metadata.pubkey),
             }}
             header={false}
+            authPreviewPosition="top"
           />
         </div>
       </div>

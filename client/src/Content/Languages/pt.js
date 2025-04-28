@@ -1193,5 +1193,32 @@ const portTranslation = {
   AjBLEFD: "3 meses",
   AIXtxrz: "6 meses",
   AVevC63: "1 ano",
+  AzkTxuy: "Remover",
+  A92h87b: "Minhas ferramentas salvas",
+  AUexjHk: "Você não tem ferramentas",
+  ASl7AUI:
+    "Discover ferramentas publicadas para ajudá -lo com sua criação de conteúdo",
+  Aa15RS4: "Adicione ferramentas de widget",
+  ABcc1mr: "Experimente nosso método diferente de pesquisa",
+  AYZh36g: "Pesquisa de widgets",
+  AiCvw1P:
+    "Procurando por widgets inteligentes publicados e o que as pessoas fizeram",
+  A6U9fNT: "Inspire -se",
+  AmK7zqi: "Peça à nossa IA para ajudá -lo a construir seu widget inteligente",
+  Axeyl28: "Playground",
+  AWJ9AGo: "Procurando por:",
+  ANA9vN0: "Nenhum widgets foi encontrado",
+  AwszVHZ: "O código é copiado",
+  A3IdSmf:
+    "Tipo Palavras -chave (ou seja: palavra -chave1, palavra -chave2 ..)",
+  AmClLqP: "Pergunte qualquer coisa ...",
+  As9snfY: "Documentos",
+  ASfQxuq: "Experimente seu mini-aplicativo com testes interativos e práticos.",
+  ADuxxCf: "Verifique os documentos",
+  Afi8Kwg: "Explore nossos repositórios ou verifique nossos Widgets Smart.",
+  AvcFvUD: "Reposições do Github",
+  AE9O5YE: "Estamos trazendo ai!",
+  AtQ0dJT:
+    "Estamos criando um assistente de IA para otimizar seu trabalho com widgets programáveis ​​e desenvolvimento de mini-aplicativos-mantenha-se de olho!",
 };
 export default portTranslation;

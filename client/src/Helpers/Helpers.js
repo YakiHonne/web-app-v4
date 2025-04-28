@@ -253,6 +253,16 @@ const getNoteTree = async (
       el?.includes("https://vota-test.dorafactory.org/round/")
     ) {
       finalTree.push(<MACIPollPreview url={el} key={key} />);
+      // finalTree.push(
+      //   <iframe
+      //     key={key}
+      //     src={el}
+      //     allow="microphone; camera; clipboard-write 'src'"
+      //     sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
+      //     style={{ border: "none", aspectRatio: "10/16" }}
+      //     className="fit-container fit-height"
+      //   ></iframe>
+      // );
     } else if (
       (el?.includes("nostr:") ||
         el?.includes("naddr") ||
@@ -345,8 +355,7 @@ const getLinkFromAddr = (addr_) => {
       if ([30004, 30005].includes(data.data.kind)) return `/curations/${addr}`;
       if (data.data.kind === 34235 || data.data.kind === 34236)
         return `/videos/${addr}`;
-      if (data.data.kind === 30033)
-        return `/smart-widget/${addr}`;
+      if (data.data.kind === 30033) return `/smart-widget/${addr}`;
     }
     if (addr.startsWith("nprofile")) {
       return `/users/${addr}`;
@@ -1947,5 +1956,5 @@ export {
   makeReadableNumber,
   assignClientTag,
   extractRootDomain,
-  addWidgetPathToUrl
+  addWidgetPathToUrl,
 };

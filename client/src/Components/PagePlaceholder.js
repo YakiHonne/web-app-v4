@@ -13,6 +13,7 @@ import HeroWidgetsDraft from "../media/images/draft.png";
 import HeroUnsupported from "../media/images/unsupported.png";
 import HeroMutedUser from "../media/images/muted-user.png";
 import HeroMaintenance from "../media/images/maintenance.png";
+import HeroAI from "../media/images/ai.png";
 import LoginWithAPI from "./Main/LoginWithAPI";
 import AddWallet from "./Main/AddWallet";
 import { useSelector } from "react-redux";
@@ -410,7 +411,30 @@ export default function PagePlaceholder({ page, onClick = null }) {
               }}
             ></div>
             <h4>{t("ACdkpXG")}</h4>
-            <p className="gray-c p-centered" style={{maxWidth: "500px"}}>{t("AmQnhHL")}</p>
+            <p className="gray-c p-centered" style={{ maxWidth: "500px" }}>
+              {t("AmQnhHL")}
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  if (page === "ai")
+    return (
+      <>
+        <div className="fit-container">
+          <div className="fx-centered fx-col" style={{ height: "80vh" }}>
+            <div
+              className="bg-img contained-bg"
+              style={{
+                backgroundImage: `url(${HeroAI})`,
+                width: "500px",
+                height: "280px",
+              }}
+            ></div>
+            <h4>{t("AE9O5YE")}</h4>
+            <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
+              {t("AtQ0dJT")}
+            </p>
           </div>
         </div>
       </>

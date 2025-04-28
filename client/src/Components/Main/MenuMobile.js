@@ -141,6 +141,18 @@ export default function MenuMobile({ toggleLogin, exit }) {
         </div>
         <div
           onClick={() => {
+            customHistory.push("/discover");
+            dismiss();
+          }}
+          className={`fx-scattered fit-container fx-start-h pointer box-pad-h-s box-pad-v-s ${
+            isPage("/discover") ? "active-link" : "inactive-link"
+          }`}
+        >
+          <div className="posts-24"></div>
+          <div className="p-big">{t("ABSoIm9")}</div>
+        </div>
+        {/* <div
+          onClick={() => {
             customHistory.push("/articles");
             dismiss();
           }}
@@ -150,7 +162,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
         >
           <div className="posts-24"></div>
           <div className="p-big">{t("AesMg52")}</div>
-        </div>
+        </div> */}
 
         <div
           onClick={() => {

@@ -26,6 +26,7 @@ export default function WidgetCardV2({
   options = true,
   addWidget = false,
   header = true,
+  authPreviewPosition = "bottom",
 }) {
   const dispatch = useDispatch();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
@@ -117,10 +118,10 @@ export default function WidgetCardV2({
         />
       )}
       <div
-        className={`fx-centered fx-col fit-container fx-start-h fx-start-v ${
+        className={`fx-centered fit-container fx-start-h fx-start-v ${
           header ? "box-pad-h-s box-pad-v-s sc-s-18 bg-sp" : ""
         }`}
-        style={{ overflow: "visible" }}
+        style={{ overflow: "visible", flexWrap:  authPreviewPosition === "bottom" ? "wrap" : "wrap-reverse", gap: "5px" }}
         onClick={(e) => e.stopPropagation()}
       >
         {header && (
@@ -332,7 +333,7 @@ export default function WidgetCardV2({
                     </Link>,
                     <Link
                       className="fit-container"
-                      to={`/smart-widget/${widget.metadata.naddr}`}
+                      to={`/smart-widget-checker?naddr=${widget.metadata.naddr}`}
                     >
                       <p>{t("AavUrQj")}</p>
                     </Link>,

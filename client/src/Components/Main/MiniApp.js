@@ -137,7 +137,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
         <section
           className="fx-centered fx-col"
           style={{
-            width: "400px",
+            width: "450px",
             borderRadius: "10px",
             overflow: "hidden",
             backgroundColor: "#343434",

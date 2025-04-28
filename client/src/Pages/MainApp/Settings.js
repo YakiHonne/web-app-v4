@@ -631,7 +631,7 @@ export default function Settings() {
       [
         "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
         "---",
-        `wallet secret: ${nwc}`,
+        `wallet secret: ${typeof nwc === "string" ? nwc : "N/A"}`,
       ].join("\n"),
       "text/plain",
       `NWC-for-${addr}.txt`,

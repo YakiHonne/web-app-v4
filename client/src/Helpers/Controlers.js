@@ -451,7 +451,7 @@ const getSubData = async (filter, timeout = 1000) => {
 
     sub.on("event", (event) => {
       pubkeys.push(event.pubkey);
-      events.push(event.rawEvent());
+     if(event.id) events.push(event.rawEvent());
       startTimer();
     });
 

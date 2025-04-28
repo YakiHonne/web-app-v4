@@ -1196,6 +1196,33 @@ const spanishTranslation = {
   AjBLEFD: "3 meses",
   AIXtxrz: "6 meses",
   AVevC63: "1 año",
+  AzkTxuy: "Eliminar",
+  A92h87b: "Mis herramientas guardadas",
+  AUexjHk: "No tienes herramientas",
+  ASl7AUI:
+    "Descubra herramientas publicadas para ayudarlo con su creación de contenido",
+  Aa15RS4: "Agregar herramientas de widget",
+  ABcc1mr: "Pruebe nuestro método diferente de búsqueda",
+  AYZh36g: "Búsqueda de widgets",
+  AiCvw1P: "Buscando widgets inteligentes publicados y lo que hizo la gente",
+  A6U9fNT: "Inspirarse",
+  AmK7zqi: "Pídale a nuestra IA que lo ayude a construir su widget inteligente",
+  Axeyl28: "Patio de juegos",
+  AWJ9AGo: "Buscando:",
+  ANA9vN0: "No se encontraron widgets",
+  AwszVHZ: "Se copia el código",
+  A3IdSmf:
+    "Escriba palabras clave (es decir: Palabra clave1, palabra clave2 ..)",
+  AmClLqP: "Pregunta cualquier cosa ...",
+  As9snfY: "Documento",
+  ASfQxuq: "Pruebe su mini-app con pruebas interactivas e interactivas.",
+  ADuxxCf: "Verifique los documentos",
+  Afi8Kwg:
+    "Explore nuestros reposos o consulte nuestros documentos de widgets inteligentes.",
+  AvcFvUD: "Repos de Github",
+  AE9O5YE: "¡Estamos trayendo IA!",
+  AtQ0dJT:
+    "Estamos creando un asistente de IA para racionalizar su trabajo con widgets programables y desarrollo de mini-APP, ¡manténgase atento!",
 };
 
 export default spanishTranslation;

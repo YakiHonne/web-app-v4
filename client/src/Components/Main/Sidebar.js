@@ -159,7 +159,8 @@ export default function Sidebar() {
       let NWCs = wallets.filter((_) => _.kind !== 1);
       let toSave = [
         "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
-        "---"`Wallets for: ${getBech32("npub", userKeys.pub)}`,
+        "---",
+        `Wallets for: ${getBech32("npub", userKeys.pub)}`,
         "-",
         ...NWCs.map((_, index) => {
           return [
@@ -293,6 +294,19 @@ export default function Sidebar() {
 
               <div
                 onClick={() => {
+                  customHistory.push("/discover");
+                }}
+                className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
+                  isPage("/discover") ? "active-link" : "inactive-link"
+                }`}
+              >
+                <div
+                  className={isPage("/discover") ? "discover-bold-24" : "discover-24"}
+                ></div>
+                <div className="link-label">{t("ABSoIm9")}</div>
+              </div>
+              {/* <div
+                onClick={() => {
                   customHistory.push("/articles");
                 }}
                 className={`pointer fit-container fx-start-h fx-centered box-pad-h-s box-pad-v-s ${
@@ -303,7 +317,7 @@ export default function Sidebar() {
                   className={isPage("/articles") ? "posts-bold-24" : "posts-24"}
                 ></div>
                 <div className="link-label">{t("AesMg52")}</div>
-              </div>
+              </div> */}
               <div
                 onClick={() => {
                   customHistory.push("/smart-widgets");

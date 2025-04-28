@@ -1,4 +1,4 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import MenuMobile from "./MenuMobile";
 import { useSelector } from "react-redux";
@@ -22,7 +22,7 @@ export default function Navbar() {
       "/points-system",
       "/write-article",
       "/m/maci-poll",
-    ].includes(window.location.pathname)
+    ].includes(window.location.pathname) || window.location.pathname.includes("/docs/sw")
   )
     return;
   return (

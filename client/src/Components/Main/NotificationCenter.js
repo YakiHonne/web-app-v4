@@ -55,7 +55,7 @@ export default function NotificationCenter({
 
       sub.on("event", (event) => {
         try {
-          if (!userMutedList.includes(event.pubkey)) {
+          if (!(userMutedList || []).includes(event.pubkey)) {
             let checkForLabel = event.tags.find((tag) => tag[0] === "l");
             let isUncensored = checkForLabel
               ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(

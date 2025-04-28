@@ -49,12 +49,14 @@ export default function SmartWidgetCheckerV2() {
 
         sub.on("event", async (event) => {
           try {
-            if (event.created_at > event_created_at) {
-              event_created_at = event.created_at;
-              setWidget(event.rawEvent());
+            if (event.id) {
+              if (event.created_at > event_created_at) {
+                event_created_at = event.created_at;
+                setWidget(event.rawEvent());
 
-              sub.stop();
-              setIsLoading(false);
+                sub.stop();
+                setIsLoading(false);
+              }
             }
           } catch (err) {
             console.log(err);

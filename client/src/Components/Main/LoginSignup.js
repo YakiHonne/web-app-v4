@@ -380,7 +380,8 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
       dispatch(setUserKeys(userKeys));
       let toSave = [
         "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
-        "---"`Private key: ${getBech32("nsec", userKeys.sec)}`,
+        "---",
+        `Private key: ${getBech32("nsec", userKeys.sec)}`,
         `Public key: ${getBech32("npub", userKeys.pub)}`,
       ];
       downloadAsFile(
