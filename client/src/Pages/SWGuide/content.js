@@ -468,7 +468,7 @@ For more complex widgets, you can:
 
 ## Quick tutorial
 
-<iframe style="aspect-ratio:16/9; width:100%; border-radius:10px" src="https://www.youtube.com/embed/mGwAJP8bGWo" title="Dawn of Persia - Rhythmic Ancient Persian Inspired Ambient Music" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe style="aspect-ratio:16/9; width:100%; border-radius:10px" src="https://www.youtube.com/embed/_37Dj5GxGj8" title="Dawn of Persia - Rhythmic Ancient Persian Inspired Ambient Music" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     `,
     subtitles: [
       {
@@ -522,6 +522,14 @@ For more complex widgets, you can:
       {
         title: "Notes",
         id: slugify("Notes", {
+          lower: true,
+          strict: true,
+        }),
+        subtitles: [],
+      },
+      {
+        title: "Quick tutorial",
+        id: slugify("Quick tutorial", {
           lower: true,
           strict: true,
         }),
@@ -802,6 +810,13 @@ This manifest serves two important purposes:
 - Data aggregators
 - Content recommendation engines
 - Information lookup services
+
+
+## Quick tutorials
+
+<iframe style="aspect-ratio:16/9; width:100%; border-radius:10px" src="https://www.youtube.com/embed/SS-5N-LVCPM" title="Dawn of Persia - Rhythmic Ancient Persian Inspired Ambient Music" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe style="aspect-ratio:16/9; width:100%; border-radius:10px" src="https://www.youtube.com/embed/4NfMqjkRKnQ" title="Dawn of Persia - Rhythmic Ancient Persian Inspired Ambient Music" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe style="aspect-ratio:16/9; width:100%; border-radius:10px" src="https://www.youtube.com/embed/VGCEEGfIo_I" title="Dawn of Persia - Rhythmic Ancient Persian Inspired Ambient Music" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     `,
     subtitles: [
       {
@@ -903,6 +918,11 @@ This manifest serves two important purposes:
       {
         title: "Common Use Cases",
         id: slugify("Common Use Cases", { lower: true, strict: true }),
+        subtitles: [],
+      },
+      {
+        title: "Quick tutorials",
+        id: slugify("Quick tutorials", { lower: true, strict: true }),
         subtitles: [],
       },
     ],
