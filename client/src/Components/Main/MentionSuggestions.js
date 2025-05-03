@@ -29,7 +29,8 @@ export default function MentionSuggestions({
         let data = await axios.get(
           `${API_BASE_URL}/api/v1/users/search/${mention}`
         );
-        saveFetchedUsers(data.data);
+
+        // saveFetchedUsers(data.data);
         setUsers((prev) => {
           let tempData = [...prev, ...data.data];
           tempData = tempData.filter((user, index, tempData) => {

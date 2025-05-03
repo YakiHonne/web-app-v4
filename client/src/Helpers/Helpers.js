@@ -642,7 +642,7 @@ const getAuthPubkeyFromNip05 = async (nip05Addr) => {
     const data = await axios.get(
       `https://${addressParts[1]}/.well-known/nostr.json?name=${addressParts[0]}`
     );
-    return data.data.names[addressParts[0]];
+    return data.data?.names ? data.data.names[addressParts[0]] : false;
   } catch (err) {
     console.error(err);
     return false;

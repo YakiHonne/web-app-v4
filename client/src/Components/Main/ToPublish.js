@@ -142,7 +142,7 @@ export default function ToPublish({
             } catch (err) {
               console.log(err);
               setIsLoading(false);
-              navigateTo("/dashboard", { state: { tabNumber: 1 } });
+              navigateTo("/dashboard", { state: { tabNumber: 1, filter: "articles" } });
               exit();
               return false;
             }
@@ -156,13 +156,13 @@ export default function ToPublish({
             })
           );
           setIsLoading(false);
-          navigateTo("/dashboard", { state: { tabNumber: 1 } });
+          navigateTo("/dashboard", { state: { tabNumber: 1, filter: "articles" } });
           exit();
         }, 5000);
         return;
       }
       removeArticleDraft();
-      navigateTo("/dashboard", { state: { tabNumber: 1 } });
+      navigateTo("/dashboard", { state: { tabNumber: 1, filter: "articles" } });
       exit();
       return;
     } catch (err) {
