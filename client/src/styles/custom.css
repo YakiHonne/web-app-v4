@@ -1140,6 +1140,7 @@ main {
 .w-md-editor {
     /* font-family: 'DM sans', sans-serif !important;
     font-weight: 300 !important; */
+    --md-editor-font-family: unset !important;
 
     box-shadow: none !important;
     border-radius: var(--border-r-18) !important;

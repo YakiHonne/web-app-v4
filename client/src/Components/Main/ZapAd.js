@@ -145,14 +145,14 @@ const HighestZapper = ({ data, onClick }) => {
                     <div
                       className="round-icon-small round-icon-tooltip"
                       data-tooltip={"Message"}
-                      style={{ borderColor: "var(--gray)" }}
+                      style={{ borderColor: "var(--gray)", border: "none" }}
                       onClick={() => setInitConv(true)}
                     >
                       <div className="env"></div>
                     </div>
                     <div
                       className="round-icon-small"
-                      style={{ borderColor: "var(--gray)" }}
+                      style={{ borderColor: "var(--gray)", border: "none" }}
                     >
                       <ZapTip
                         recipientLNURL={checkForLUDS(

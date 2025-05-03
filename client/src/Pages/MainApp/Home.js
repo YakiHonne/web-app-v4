@@ -615,6 +615,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       });
 
       subscription.on("event", async (event) => {
+        console.log(event.rawEvent())
         eventsPubkeys.push(event.pubkey);
         let event_ = await getParsedNote(event, true);
         if (event_) fallBackEvents.push(event_);
@@ -638,6 +639,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       subscription.on("close", () => {
         let tempEvents =
           events.length > 0 ? Array.from(events) : Array.from(fallBackEvents);
+          tempEvents = removeEventsDuplicants(tempEvents)
         // events = [];
         // fallBackEvents = [];
         if (smallButtonDropDownOptions.includes(notesContentFrom))

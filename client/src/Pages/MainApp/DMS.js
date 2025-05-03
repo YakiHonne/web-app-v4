@@ -1035,7 +1035,7 @@ const ConversationBox = ({ convo, back }) => {
           </div>
         )}
       </div>
-      {legacy && (
+      {/* {legacy && (
         <div
           className="fit-container"
           style={{ position: "relative", zIndex: 100 }}
@@ -1052,12 +1052,30 @@ const ConversationBox = ({ convo, back }) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
       <div
         className="fx-centered fx-start-h fx-col box-pad-h-m box-pad-v-m fit-container"
-        style={{ height: "calc(100% - 160px)", overflow: "auto" }}
+        style={{ height: "calc(100% - 160px)", overflow: "auto", paddingTop: 0 }}
         ref={convoContainerRef}
       >
+        {legacy && (
+          <div
+            className="fit-container"
+            style={{ position: "sticky", zIndex: 100, top: 0 }}
+          >
+            <div
+              className="fit-container"
+              // style={{ position: "absolute", left: 0, top: 0 }}
+            >
+              <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
+                <div className="info-tt-24"></div>
+                <div>
+                  <p className="c1-c p-medium">{t("AakbxOk")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {convo.convo.map((convo) => {
           let reply = convo.replyID ? getReply(convo.replyID) : false;
           return (
