@@ -665,7 +665,7 @@ const getDVMJobResponse = async (eventId) => {
       let timer = setTimeout(() => {
         clearTimeout(timer);
         resolve([]);
-      }, 10000);
+      }, 20000);
 
       let pool = new SimplePool();
       let sub = pool.subscribeMany(
@@ -678,6 +678,7 @@ const getDVMJobResponse = async (eventId) => {
         ],
         {
           onevent(event) {
+            console.log(event)
             clearTimeout(timer);
             let decryptedData = nip44.v2.decrypt(
               event.content,
