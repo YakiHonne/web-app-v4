@@ -678,7 +678,6 @@ const getDVMJobResponse = async (eventId) => {
         ],
         {
           onevent(event) {
-            console.log(event)
             clearTimeout(timer);
             let decryptedData = nip44.v2.decrypt(
               event.content,
