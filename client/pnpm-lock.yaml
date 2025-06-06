@@ -48,8 +48,8 @@ importers:
         specifier: ^1.7.1
         version: 1.7.1
       '@nostr-dev-kit/ndk':
-        specifier: ^2.10.0
-        version: 2.13.3(nostr-tools@2.12.0(typescript@5.8.3))
+        specifier: ^2.14.10
+        version: 2.14.10(nostr-tools@2.12.0(typescript@5.8.3))
       '@nostr-dev-kit/ndk-cache-dexie':
         specifier: ^2.5.1
         version: 2.6.1(typescript@5.8.3)
@@ -1622,8 +1622,8 @@ packages:
     peerDependencies:
       nostr-tools: ^2.7.1
 
-  '@nostr-dev-kit/ndk@2.13.3':
-    resolution: {integrity: sha512-9fDpf7ug1bysnnXp9rKon/IWla7AwKEREF0oWHCi1WKLjNqKMBvU5Xl0qY1v+4/cycWCTWBuPtTO6SGM9GMW/Q==}
+  '@nostr-dev-kit/ndk@2.14.10':
+    resolution: {integrity: sha512-u0aaHAd76RXziBH8kxnaizRU8OE2o98I9L4uAHCGD2H9NHBJQTYDAKFnie1WKjlutRGQx8fbaDKlFKIaE+qivQ==}
     engines: {node: '>=16'}
     peerDependencies:
       nostr-tools: ^2
@@ -10520,7 +10520,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@nostr-dev-kit/ndk@2.13.3(nostr-tools@2.12.0(typescript@5.8.3))':
+  '@nostr-dev-kit/ndk@2.14.10(nostr-tools@2.12.0(typescript@5.8.3))':
     dependencies:
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1

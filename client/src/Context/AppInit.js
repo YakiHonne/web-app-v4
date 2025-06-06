@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   setUserAllRelays,
+  setUserAppSettings,
   setUserBookmarks,
   setUserChatrooms,
   setUserFollowings,
@@ -31,10 +32,13 @@ import {
   saveNostrClients,
   saveRelays,
   saveInterests,
+  getAppSettings,
+  saveAppSettings,
 } from "../Helpers/DB";
 import {
   addConnectedAccounts,
   getNostrClients,
+  getSubData,
   saveRelaysListsForUsers,
   updateYakiChestStats,
   userLogout,
@@ -52,6 +56,8 @@ import {
   getEmptyuserMetadata,
   getParsedAuthor,
   getParsedRepEvent,
+  getWOTScoreForPubkey,
+  precomputeTrustingCounts,
   unwrapGiftWrap,
 } from "../Helpers/Encryptions";
 import axiosInstance from "../Helpers/HTTP_Client";
@@ -81,6 +87,11 @@ export default function AppInit() {
       async () => (userKeys ? await getRelays(userKeys.pub) : []),
       [userKeys]
     ) || [];
+  const appSettings =
+    useLiveQuery(
+      async () => (userKeys ? await getAppSettings(userKeys.pub) : []),
+      [userKeys]
+    ) || false;
   const followings =
     useLiveQuery(
       async () => (userKeys ? await getFollowings(userKeys.pub) : []),
@@ -110,6 +121,7 @@ export default function AppInit() {
 
   const previousChatrooms = useRef([]);
   const previousRelays = useRef([]);
+  const previousAppSettings = useRef(false);
   const previousInterests = useRef([]);
   const previousFollowings = useRef([]);
   const previousMutedList = useRef([]);
@@ -148,6 +160,27 @@ export default function AppInit() {
     ) {
       previousFollowings.current = followings;
       dispatch(setUserFollowings(followings?.followings || []));
+    }
+    if (
+      JSON.stringify(previousAppSettings.current) !==
+      JSON.stringify(appSettings)
+    ) {
+      previousAppSettings.current = appSettings;
+      let relaysFeedMiedxContent =
+        appSettings?.settings?.content_sources?.mixed_content?.relays?.list?.map(
+          (_) => _[0]
+        ) || [];
+      let relaysFeedNotes =
+        appSettings?.settings?.content_sources?.notes?.relays?.list?.map(
+          (_) => _[0]
+        ) || [];
+      let relaysFeed = [
+        ...new Set([...relaysFeedMiedxContent, ...relaysFeedNotes]),
+      ];
+      if (relaysFeed.length > 0) {
+        addExplicitRelays(relaysFeed);
+      }
+      dispatch(setUserAppSettings(appSettings || false));
     }
     if (
       JSON.stringify(previousInterests.current) !==
@@ -202,6 +235,7 @@ export default function AppInit() {
     users,
     bookmarks,
     interestsList,
+    appSettings,
   ]);
 
   useEffect(() => {
@@ -231,7 +265,7 @@ export default function AppInit() {
       }
       if (signer !== userKeys.pub) {
         if (userKeys.ext) {
-          const signer = new NDKNip07Signer();
+          const signer = new NDKNip07Signer(undefined, ndkInstance);
           ndkInstance.signer = signer;
         }
         if (userKeys.sec) {
@@ -239,6 +273,11 @@ export default function AppInit() {
           ndkInstance.signer = signer;
         }
       }
+      // ndkInstance.relayAuthDefaultPolicy = async (relay) => {
+      //   console.log(relay);
+      //   const signIn = NDKRelayAuthPolicies.signIn({ ndk: ndkInstance });
+      //   let ev = await signIn(relay);
+      // };
       ndkInstance.relayAuthDefaultPolicy = NDKRelayAuthPolicies.signIn({
         ndk: ndkInstance,
       });
@@ -253,14 +292,14 @@ export default function AppInit() {
   useEffect(() => {
     let subscription = null;
     const fetchData = async () => {
-      let [INBOX, RELAYS, FOLLOWINGS, MUTEDLIST, INTERESTSLIST] =
+      let [INBOX, RELAYS, FOLLOWINGS, MUTEDLIST, INTERESTSLIST, APPSETTINGS] =
         await Promise.all([
           getChatrooms(userKeys.pub),
           getRelays(userKeys.pub),
           getFollowings(userKeys.pub),
           getMutedlist(userKeys.pub),
-
           getInterestsList(userKeys.pub),
+          getAppSettings(userKeys.pub),
         ]);
       let lastMessageTimestamp =
         INBOX.length > 0
@@ -272,6 +311,7 @@ export default function AppInit() {
       let lastFollowingsTimestamp = FOLLOWINGS?.last_timestamp || undefined;
       let lastInterestsTimestamp = INTERESTSLIST?.last_timestamp || undefined;
       let lastMutedTimestamp = MUTEDLIST?.last_timestamp || undefined;
+      let lastAppSettingsTimestamp = APPSETTINGS?.last_timestamp || undefined;
       let lastUserMetadataTimestamp =
         getMetadataFromCachedAccounts(userKeys.pub).created_at || undefined;
       dispatch(setInitDMS(true));
@@ -281,6 +321,7 @@ export default function AppInit() {
       let tempUserInterests;
       let tempMutedList;
       let tempRelays;
+      let tempAppSettings;
       let tempBookmarks = [];
       let tempAuthMetadata = false;
       let eose = false;
@@ -334,6 +375,14 @@ export default function AppInit() {
             since: lastRelaysTimestamp
               ? lastRelaysTimestamp + 1
               : lastRelaysTimestamp,
+          },
+          {
+            kinds: [30078],
+            authors: [userKeys.pub],
+            "#d": ["YakihonneAppSettings"],
+            since: lastAppSettingsTimestamp
+              ? lastAppSettingsTimestamp + 1
+              : lastAppSettingsTimestamp,
           },
           {
             kinds: [30003],
@@ -405,9 +454,7 @@ export default function AppInit() {
                 peer,
                 replyID,
               };
-
               tempInbox.push(tempEvent);
-
               if (eose)
                 saveChatrooms(tempInbox, [unwrappedEvent.pubkey], userKeys.pub);
             }
@@ -430,6 +477,10 @@ export default function AppInit() {
         if (event.kind === 10002) {
           tempRelays = { ...event };
           if (eose) saveRelays(event, userKeys.pub);
+        }
+        if (event.kind === 30078) {
+          tempAppSettings = { ...event };
+          if (eose) saveAppSettings(tempAppSettings, userKeys.pub);
         }
         if (event.kind === 30003) {
           let parsedEvent = getParsedRepEvent(event);
@@ -464,6 +515,11 @@ export default function AppInit() {
         saveInterests(tempUserInterests, userKeys.pub, lastInterestsTimestamp);
         saveMutedlist(tempMutedList, userKeys.pub, lastMutedTimestamp);
         saveRelays(tempRelays, userKeys.pub, lastRelaysTimestamp);
+        saveAppSettings(
+          tempAppSettings,
+          userKeys.pub,
+          lastAppSettingsTimestamp
+        );
         saveBookmarks(tempBookmarks, userKeys.pub);
         if (!(tempAuthMetadata && lastUserMetadataTimestamp)) {
           let emptyMetadata = getEmptyuserMetadata(userKeys.pub);
@@ -474,6 +530,7 @@ export default function AppInit() {
         dispatch(setInitDMS(false));
       });
     };
+
     if (userKeys && (userKeys.ext || userKeys.sec)) {
       fetchData();
     }
@@ -506,8 +563,180 @@ export default function AppInit() {
   }, [userKeys, isConnectedToYaki]);
 
   useEffect(() => {
+    const buildWOTList = async () => {
+      let prevData = localStorage.getItem(`network_${userKeys.pub}`);
+      prevData = prevData
+        ? JSON.parse(prevData)
+        : {
+            last_updated: undefined,
+          };
+      if (
+        prevData.last_updated &&
+        followings?.followings?.last_timestamp == prevData.last_updated
+      )
+        return;
+      let followinglist = followings?.followings.slice(0, 500);
+      let batches = [];
+
+      for (let i = 0; i < followinglist.length; i += 120) {
+        batches.push({ bundled: followinglist.slice(i, i + 120) });
+      }
+      let networkData = [];
+      for (let b of batches) {
+        let d = await getSubData(
+          [
+            {
+              kinds: [3],
+              authors: b.bundled,
+            },
+          ],
+          200
+        );
+        networkData.push(d);
+      }
+      networkData = networkData.map((_) => _.data).flat();
+      // const networkData = await getSubData(
+      //   [
+      //     {
+      //       kinds: [3],
+      //       authors: followinglist,
+      //     },
+      //   ],
+      //   800
+      // );
+
+      if (networkData.length === 0) return;
+      let network = structuredClone(networkData);
+      network = followings?.followings.map((_) => {
+        return {
+          pubkey: _,
+          followings:
+            [
+              ...new Set(
+                network
+                  .find((__) => __.kind === 3 && __.pubkey === _)
+                  ?.tags.filter((tag) => tag[0] === "p")
+                  .map((tag) => tag[1])
+              ),
+            ] || [],
+          muted:
+            [
+              ...new Set(
+                network
+                  .find((__) => __.kind === 10000 && __.pubkey === _)
+                  ?.tags.filter((tag) => tag[0] === "p")
+                  .map((tag) => tag[1])
+              ),
+            ] || [],
+        };
+      });
+      const trustingCounts = precomputeTrustingCounts(network);
+      let allPubkeys = [...new Set(network.map((_) => _.followings).flat())];
+      let wotPubkeys = allPubkeys.filter(
+        (_) => getWOTScoreForPubkey(network, _, 5, trustingCounts).status
+      );
+      localStorage.setItem(
+        `network_${userKeys.pub}`,
+        JSON.stringify({
+          last_updated: followings?.followings.last_timestamp,
+          // network,
+          wotPubkeys,
+        })
+      );
+    };
+    const buildBackupWOTList = async () => {
+      let prevData = localStorage.getItem(`backup_wot`);
+      prevData = prevData
+        ? JSON.parse(prevData)
+        : {
+            last_updated: undefined,
+          };
+      const backupFollowings = await getSubData(
+        [
+          {
+            kinds: [3],
+            authors: [process.env.REACT_APP_YAKI_PUBKEY],
+            until: prevData.last_updated,
+          },
+        ],
+        800
+      );
+      if (backupFollowings.data.length === 0) return;
+      let followinglist = backupFollowings.data[0].tags
+        .filter((_) => _[0] === "p")
+        .map((_) => _[1]);
+      followinglist = followinglist.slice(0, 500);
+      let batches = [];
+
+      for (let i = 0; i < followinglist.length; i += 120) {
+        batches.push({ bundled: followinglist.slice(i, i + 120) });
+      }
+
+      let networkData = [];
+      for (let b of batches) {
+        let d = await getSubData(
+          [
+            {
+              kinds: [3],
+              authors: b.bundled,
+            },
+          ],
+          200
+        );
+        networkData.push(d);
+      }
+      networkData = networkData.map((_) => _.data).flat();
+      // const networkData = await getSubData(
+      //   [
+      //     {
+      //       kinds: [3],
+      //       authors: followinglist,
+      //     },
+      //   ],
+      //   800
+      // );
+
+      if (networkData.length === 0) return;
+      let network = structuredClone(networkData);
+      network = followinglist.map((_) => {
+        return {
+          pubkey: _,
+          followings:
+            [
+              ...new Set(
+                network
+                  .find((__) => __.kind === 3 && __.pubkey === _)
+                  ?.tags.filter((tag) => tag[0] === "p")
+                  .map((tag) => tag[1])
+              ),
+            ] || [],
+          muted: [],
+        };
+      });
+
+      const trustingCounts = precomputeTrustingCounts(network);
+
+      let allPubkeys = [...new Set(network.map((_) => _.followings).flat())];
+
+      let wotPubkeys = allPubkeys.filter(
+        (_) => getWOTScoreForPubkey(network, _, 5, trustingCounts).status
+      );
+
+      localStorage.setItem(
+        `backup_wot`,
+        JSON.stringify({
+          last_updated: backupFollowings.data[0].created_at + 1,
+          wotPubkeys,
+        })
+      );
+    };
     if (followings && followings?.followings?.length > 0) {
       saveRelaysListsForUsers(followings?.followings);
+    }
+    if (followings && followings?.followings?.length >= 5) {
+      buildWOTList();
+    } else if (followings && followings?.followings?.length < 5) {
+      buildBackupWOTList();
     }
   }, [followings]);
 

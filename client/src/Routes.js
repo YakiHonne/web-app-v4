@@ -42,17 +42,26 @@ import Articles from "./Pages/MainApp/Articles";
 import SWV2 from "./Pages/MainApp/SWV2";
 import Playground from "./Pages/MainApp/Playground";
 import Doc from "./Pages/SWGuide/Doc";
+import Explore_ from "./Pages/MainApp/Explore_";
+import Home_ from "./Pages/MainApp/Home_";
+import NoteSharedRelay from "./Pages/MainApp/NoteSharedRelay";
+import ExploreSharedRelay from "./Pages/MainApp/ExploreSharedRelay";
+import SWhome2 from "./Pages/MainApp/SWHome2";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
   { path: "/:nevent", element: <FourOFour /> },
   { path: "/search", element: <Search /> },
   { path: "/m/maci-poll", element: <MACIPollStarter /> },
-  { path: "/", element: <Home /> },
+  { path: "/", element: <Home_ /> },
+  // { path: "/", element: <Home /> },
+  { path: "/r/notes", element: <NoteSharedRelay /> },
+  { path: "/r/discover", element: <ExploreSharedRelay /> },
   { path: "/login", element: <Login /> },
   { path: "/dashboard", element: <Dashboard /> },
-  // { path: "/articles", element: <Articles /> },
-  { path: "/discover", element: <Explore /> },
+  { path: "/articles", element: <Articles /> },
+  { path: "/discover", element: <Explore_ /> },
+  // { path: "/discover", element: <Explore /> },
   { path: "/notifications", element: <Notification /> },
   { path: "/curations/:id", element: <Curation /> },
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },
@@ -62,6 +71,7 @@ const routes = [
   { path: "/smart-widget-builder", element: <SmartWidgetV2 /> },
   // { path: "/smart-widgets", element: <SmartWidgets /> },
   { path: "/smart-widgets", element: <SWhome /> },
+  { path: "/sw-ai", element: <SWhome2 /> },
   { path: "/smart-widgets-v2", element: <SmartWidgetsV2 /> },
   { path: "/smart-widget-checker", element: <SmartWidgetCheckerV2 /> },
   { path: "/smart-widget/:id", element: <SWV2 /> },

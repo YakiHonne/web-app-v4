@@ -46,6 +46,7 @@ export default function NotificationCenter({
         lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined
       );
       let events = 0;
+      let isNotified = false;
       const sub = ndkInstance.subscribe(filter, {
         cacheUsage: "CACHE_FIRST",
         groupable: false,
@@ -70,17 +71,24 @@ export default function NotificationCenter({
                 created_at = event.created_at;
                 saveNotificationLastEventTS(userKeys.pub, event.created_at);
               }
-              dispatch(
-                setToast({
-                  type: 1,
-                  desc: t("AtbtAF9"),
-                })
-              );
+              if (!isNotified) {
+                dispatch(
+                  setToast({
+                    type: 1,
+                    desc: t("AtbtAF9"),
+                  })
+                );
+                isNotified = true
+              }
             }
           }
         } catch (err) {
           console.log(err);
         }
+      });
+
+      sub.on("close", () => {
+        isNotified = false
       });
     };
 
@@ -185,7 +193,7 @@ export default function NotificationCenter({
         </div>
         {notifications !== 0 && (
           <div className="sticker sticker-small sticker-red link-label">
-            <NumberShrink value={notifications} />
+            {notifications > 99 ? `+99` : notifications}
           </div>
         )}
         {notifications !== 0 && (

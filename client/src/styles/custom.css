@@ -1640,6 +1640,8 @@ main {
 }
 
 .option:hover {
+    position: relative;
+    z-index: 10;
     background-color: var(--very-dim-gray);
     transform: scale(1.03);
 }

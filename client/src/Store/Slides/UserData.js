@@ -135,6 +135,15 @@ const userSavedToolsSlice = createSlice({
     },
   },
 });
+const userAppSettingsSlice = createSlice({
+  name: "userAppSettings",
+  initialState: false,
+  reducers: {
+    setUserAppSettings(state, action) {
+      return action.payload;
+    },
+  },
+});
 
 export const { setUserMetadata } = userMetadataSlice.actions;
 export const { setUserKeys } = userKeysSlice.actions;
@@ -151,6 +160,7 @@ export const { setUserFollowingsRelays } = userFollowingsRelaysSlice.actions;
 export const { setWallets } = walletsSlice.actions;
 export const { setSelectedWallet } = selectedWalletSlice.actions;
 export const { setUserSavedTools } = userSavedToolsSlice.actions;
+export const { setUserAppSettings } = userAppSettingsSlice.actions;
 
 export const UserMetadataReducer = userMetadataSlice.reducer;
 export const UserKeysReducer = userKeysSlice.reducer;
@@ -167,3 +177,4 @@ export const UserFollowingsRelaysReducer = userFollowingsRelaysSlice.reducer;
 export const WalletsReducer = walletsSlice.reducer;
 export const SelectedWalletReducer = selectedWalletSlice.reducer;
 export const UserSavedToolsReducer = userSavedToolsSlice.reducer;
+export const UserAppSettingsReducer = userAppSettingsSlice.reducer;

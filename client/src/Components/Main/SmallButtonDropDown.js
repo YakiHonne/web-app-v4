@@ -15,7 +15,7 @@ export default function SmallButtonDropDown({
     highlights: t("AWj53bb"),
     widgets: t("AM4vyRX"),
     recent: t("AiAJcg1"),
-    "recent-with-replies": t("AgF8nZU"),
+    "recent_with_replies": t("AgF8nZU"),
     paid: t("AAg9D6c"),
     trending: t("AqqxTe4"),
     explore: t("A9aq49d"),

@@ -21,12 +21,14 @@ import {
   getCustomSettings,
   getDefaultSettings,
   getMediaUploader,
+  getRepliesViewSettings,
   getSelectedServer,
   getStorageEstimate,
   getWallets,
   handleAppDirection,
   makeReadableNumber,
   replaceMediaUploader,
+  setRepliesViewSettings,
   updateContentTranslationConfig,
   updateCustomSettings,
   updateMediaUploader,
@@ -58,6 +60,9 @@ import {
   getDexieDatabaseSize,
   ndkdb,
 } from "../../Helpers/DB";
+import RelayImage from "../../Components/Main/RelayImage";
+import threadView from "../../media/images/thread-view.png";
+import boxView from "../../media/images/box-view.png";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -82,6 +87,9 @@ export default function Settings() {
   const [selectedMediaServer, setSelectedMediaServer] = useState(
     getSelectedServer() || mediaUploader[0].value
   );
+  const [selectedRepliesView, setSelectedRepliesView] = useState(
+    getRepliesViewSettings() ? "thread" : "box"
+  );
   const [selectedAppLang, setSelectedAppLang] = useState(getAppLang());
   const [selectedTransService, setSelectedTransService] = useState("dl");
   const [transServicePlan, setTransServicePlan] = useState(false);
@@ -90,7 +98,7 @@ export default function Settings() {
 
   const contentCategoriesDN = {
     recent: t("AiAJcg1"),
-    "recent-with-replies": t("AgF8nZU"),
+    recent_with_replies: t("AgF8nZU"),
     trending: t("AqqxTe4"),
     paid: t("AAg9D6c"),
     widgets: t("AM4vyRX"),
@@ -593,6 +601,10 @@ export default function Settings() {
     let transService = getContentTranslationConfig();
     if (!value) setTransServiceAPIKey(transService.freeApikey);
     if (value) setTransServiceAPIKey(transService.proApikey);
+  };
+  const handleRepliesView = (value) => {
+    setRepliesViewSettings(value);
+    setSelectedRepliesView(value);
   };
   const handleTransServicesAPIKey = (e) => {
     let value = e.target.value;
@@ -1505,6 +1517,49 @@ export default function Settings() {
                                   onClick={handleCollapedNote}
                                 ></div>
                               </div>
+                              <div className="fx-scattered fit-container fx-start-v fx-col">
+                                <p>{t("ADAM3FJ")}</p>
+                                <div className="fit-container fx-centered">
+                                  <div
+                                    className="fx fx-centered fx-col sc-s-18 bg-sp "
+                                    style={{
+                                      borderColor:
+                                        selectedRepliesView !== "box"
+                                          ? ""
+                                          : "var(--c1)",
+                                    }}
+                                    onClick={() => handleRepliesView("box")}
+                                  >
+                                    <img
+                                      src={boxView}
+                                      style={{ width: "100%" }}
+                                      alt=""
+                                    />
+                                    <p className="gray-c box-pad-v-s">
+                                      {t("ACz8zwo")}
+                                    </p>
+                                  </div>
+                                  <div
+                                    className="fx fx-centered fx-col sc-s-18 bg-sp "
+                                    style={{
+                                      borderColor:
+                                        selectedRepliesView !== "thread"
+                                          ? ""
+                                          : "var(--c1)",
+                                    }}
+                                    onClick={() => handleRepliesView("thread")}
+                                  >
+                                    <img
+                                      src={threadView}
+                                      style={{ width: "100%" }}
+                                      alt=""
+                                    />
+                                    <p className="gray-c box-pad-v-s">
+                                      {t("AlwU99D")}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                               <div className="fx-scattered fit-container">
                                 <p>{t("AFVPHti")}</p>
                                 <div
@@ -1582,7 +1637,7 @@ export default function Settings() {
                                 ></div>
                               </div>
                               <hr />
-                              <div
+                              {/* <div
                                 className="fx-scattered fit-container fx-col fx-start-v"
                                 style={{ gap: 0 }}
                               >
@@ -1671,7 +1726,7 @@ export default function Settings() {
                                   </DragDropContext>
                                 </div>
                               </div>
-                              <hr />
+                              <hr /> */}
                               <div className="fx-scattered fit-container fx-col fx-start-v">
                                 <p className="gray-c">{t("ASSFfFZ")}</p>
                                 <div className="fit-container fx-centered fx-col">
@@ -1758,7 +1813,11 @@ export default function Settings() {
                                   onClick={clearAppCache}
                                   disabled={isCacheClearing}
                                 >
-                                  {isCacheClearing ? <LoadingDots /> : t("AWj8yOR")}
+                                  {isCacheClearing ? (
+                                    <LoadingDots />
+                                  ) : (
+                                    t("AWj8yOR")
+                                  )}
                                 </button>
                               </div>
                             </div>
@@ -2223,7 +2282,7 @@ const RelaysInfo = ({ url, exit }) => {
               </div>
               <hr />
               <div className="fx-scattered fit-container">
-                <p>{t("Software")}</p>
+                <p>{t("AY2x8jS")}</p>
                 <p>{relayInfo.software.split("/")[4]}</p>
               </div>
               <hr />
@@ -2250,39 +2309,6 @@ const RelaysInfo = ({ url, exit }) => {
           </div>
         )}
       </div>
-    </div>
-  );
-};
-
-const RelayImage = ({ url, size = 24 }) => {
-  return (
-    <div
-      style={{
-        minWidth: `${size}px`,
-        aspectRatio: "1/1",
-        position: "relative",
-      }}
-      className="sc-s fx-centered"
-    >
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          zIndex: 2,
-          backgroundImage: `url(${url.replace(
-            "wss://",
-            "https://"
-          )}/favicon.ico)`,
-        }}
-        className="bg-img cover-bg  fit-container fit-height"
-      ></div>
-      <p
-        className={`p-bold p-caps ${size > 24 ? "p-big" : ""}`}
-        style={{ position: "relative", zIndex: 1 }}
-      >
-        {url.split(".")[1]?.charAt(0)}
-      </p>
     </div>
   );
 };

@@ -56,6 +56,7 @@ export default function Articles() {
   const [isLoading, setIsLoading] = useState(true);
   const extrasRef = useRef(null);
   const tabs = [t("AR9ctVs"), t("AesMg52"), t("AVysZ1s"), t("AStkKfQ")];
+  
   useEffect(() => {
     if (!extrasRef.current) return;
     const handleResize = () => {
@@ -218,7 +219,14 @@ const ExploreFeed = ({
         setLastEventsTimestamps(articles_[articles_.length - 1].created_at - 1);
 
       if (articles_.length === 0) setIsEndOfQuerying(true);
-
+      articles_ = articles_.map((event) => {
+        try {
+          let ev = JSON.parse(event.content);
+          return ev;
+        } catch (err) {
+          return false;
+        }
+      }).filter(e => e);
       setContent((prev) =>
         removeEventsDuplicants([
           ...prev,
@@ -291,12 +299,19 @@ const ExploreFeed = ({
         : undefined;
     return [
       {
-        kinds: [30023],
+        kinds: [16],
         limit: 20,
-        "#t": tag,
+        "#k": ["30023"],
         authors,
         until: lastEventsTimestamps,
       },
+      // {
+      //   kinds: [30023],
+      //   limit: 20,
+      //   "#t": tag,
+      //   authors,
+      //   until: lastEventsTimestamps,
+      // },
     ];
   };
 

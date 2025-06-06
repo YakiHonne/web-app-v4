@@ -363,6 +363,16 @@ const getUser = (pubkey) => {
   return nostrAuthors.find((item) => item.pubkey === pubkey);
 };
 
+const getUsersFromPubkeys = (pubkeys) => {
+  if (!pubkeys || pubkeys.length === 0) return [];
+  const store_ = store.getState();
+  const nostrAuthors = store_.nostrAuthors;
+
+  let users = nostrAuthors.filter((item) => pubkeys.includes(item.pubkey));
+
+  return users;
+};
+
 const saveRelaysListsForUsers = async (pubkeyList) => {
   try {
     let list = await getRelayListForUsers(pubkeyList, ndkInstance);
@@ -414,7 +424,9 @@ const handleReceivedEvents = (set, event) => {
   return set;
 };
 
-const getSubData = async (filter, timeout = 1000) => {
+const getSubData = async (filter, timeout = 1000, relayUrls = [], ndk = ndkInstance) => {
+  const userRelays = store.getState().userRelays;
+
   if (!filter || filter.length === 0) return { data: [], pubkeys: [] };
 
   return new Promise((resolve, reject) => {
@@ -430,11 +442,12 @@ const getSubData = async (filter, timeout = 1000) => {
       return temp;
     });
 
-    let sub = ndkInstance.subscribe(filter_, {
+    let sub = ndk.subscribe(filter_, {
       cacheUsage: "CACHE_FIRST",
       groupable: false,
       skipVerification: true,
       skipValidation: true,
+      relayUrls: relayUrls.length > 0 ? relayUrls : userRelays,
     });
     let timer;
 
@@ -451,7 +464,7 @@ const getSubData = async (filter, timeout = 1000) => {
 
     sub.on("event", (event) => {
       pubkeys.push(event.pubkey);
-     if(event.id) events.push(event.rawEvent());
+      if (event.id) events.push(event.rawEvent());
       startTimer();
     });
 
@@ -459,9 +472,15 @@ const getSubData = async (filter, timeout = 1000) => {
   });
 };
 
-const InitEvent = async (kind, content, tags, created_at) => {
+const InitEvent = async (
+  kind,
+  content,
+  tags,
+  created_at,
+  userKeys_ = false
+) => {
   try {
-    let userKeys = getKeys();
+    let userKeys = userKeys_ || getKeys();
     let temCreatedAt = created_at || Math.floor(Date.now() / 1000);
     let tempEvent = {
       created_at: temCreatedAt,
@@ -720,11 +739,11 @@ const revertContent = (rawContent, specialContent) => {
 const publishEvent = async (event, relays = relaysOnPlatform) => {
   return new Promise((resolve) => {
     let ev = new NDKEvent(ndkInstance, event);
-    const ndkRelays = relays.map((_) => {
-      return new NDKRelay(_, undefined, ndkInstance);
-    });
-    const ndkRelaysSet = new NDKRelaySet(ndkRelays, ndkInstance);
-    ev.publish(ndkRelaysSet);
+    // const ndkRelays = relays.map((_) => {
+    //   return new NDKRelay(_, undefined, ndkInstance);
+    // });
+    // const ndkRelaysSet = new NDKRelaySet(ndkRelays, ndkInstance);
+    ev.publish();
 
     let sub = ndkInstance.subscribe([{ ids: [event.id] }], {
       cacheUsage: "CACHE_FIRST",
@@ -732,13 +751,103 @@ const publishEvent = async (event, relays = relaysOnPlatform) => {
 
     sub.on("event", () => {
       sub.stop();
-      console.log("first");
       resolve(true);
     });
     let timer = setTimeout(() => {
       clearTimeout(timer);
       resolve(false);
     }, 3000);
+  });
+};
+
+const getDefaultFilter = (type = 1) => {
+  if (type === 1)
+    return {
+      default: true,
+      included_words: [],
+      excluded_words: ["test", "ignore"],
+      hide_sensitive: false,
+      thumbnail: true,
+      posted_by: [],
+      for_articles: {
+        min_words: 150,
+        media_only: false,
+      },
+      for_curations: {
+        type: "all",
+        min_items: 4,
+      },
+      for_videos: {
+        source: "all",
+      },
+    };
+  return {
+    default: true,
+    included_words: [],
+    excluded_words: ["test", "ignore", "porn", "sex", "ass", "boobs", "hentai", "nsfw"],
+    posted_by: [],
+    media_only: false,
+  };
+};
+
+const getDVMJobRequest = async (DVM_PUBKEY) => {
+  try {
+    let DVM_COMMUNICATOR_SEC = process.env.REACT_APP_DVM_COMMUNICATOR_SEC;
+    let request_kind = 5300;
+    let request_tags = [
+      ["p", DVM_PUBKEY],
+      ["relays", ...relaysOnPlatform],
+    ];
+    let request = {
+      created_at: Math.floor(Date.now() / 1000),
+      kind: request_kind,
+      tags: request_tags,
+      content: "",
+    };
+    let event = finalizeEvent(request, DVM_COMMUNICATOR_SEC);
+    await publishEvent(event);
+    let eventId = event.id;
+    return eventId;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+const getDVMJobResponse = async (eventId) => {
+  if (!eventId) return [];
+  return new Promise((resolve) => {
+    try {
+      let timer = setTimeout(() => {
+        clearTimeout(timer);
+        resolve([]);
+      }, 20000);
+
+      let sub = ndkInstance.subscribe(
+        [
+          {
+            kinds: [6300],
+            "#e": [eventId],
+          },
+        ],
+        {
+          cacheUsage: "CACHE_FIRST",
+          groupable: false,
+          skipVerification: true,
+          skipValidation: true,
+        }
+      );
+      sub.on("event", (event) => {
+        clearTimeout(timer);
+        let events = JSON.parse(event.content);
+        let eventsIds = events.map((_) => _[1]);
+        resolve([...new Set(eventsIds)]);
+        sub.stop();
+      });
+    } catch (err) {
+      console.log(err);
+      resolve([]);
+    }
   });
 };
 
@@ -754,6 +863,7 @@ export {
   updateYakiChestStats,
   initiFirstLoginStats,
   getUser,
+  getUsersFromPubkeys,
   saveRelaysListsForUsers,
   getRelayList,
   handleReceivedEvents,
@@ -763,4 +873,7 @@ export {
   getEventStatAfterEOSE,
   translate,
   publishEvent,
+  getDefaultFilter,
+  getDVMJobRequest,
+  getDVMJobResponse,
 };

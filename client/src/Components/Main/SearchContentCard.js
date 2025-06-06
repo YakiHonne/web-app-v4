@@ -9,7 +9,7 @@ import DynamicIndicator from "../DynamicIndicator";
 import { nip19 } from "nostr-tools";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { getLinkFromAddr } from "../../Helpers/Helpers";
+import { getLinkFromAddr, nEventEncode } from "../../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
 
 export default function SearchContentCard({ event, exit, userProfile = true }) {
@@ -38,7 +38,7 @@ export default function SearchContentCard({ event, exit, userProfile = true }) {
   if (event.kind === 1)
     return (
       <Link
-        to={`/notes/${nip19.noteEncode(event.id)}`}
+        to={`/notes/${nEventEncode(event.id)}`}
         className="fx-centered fx-start-h box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
         onClick={(e) => {
           exit();

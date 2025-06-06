@@ -276,7 +276,6 @@ export default function InitiConvo({ exit, receiver = false }) {
               pubkey={selectedPerson}
               margin={false}
               close={receiver ? false : true}
-              showSha
               onClose={() => setSelectedPerson("")}
             />
           )}

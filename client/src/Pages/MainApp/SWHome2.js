@@ -37,7 +37,7 @@ const saveConversation = (pubkey, data) => {
   localStorage.setItem("aiConversation", JSON.stringify(conversation));
 };
 
-export default function SWhome() {
+export default function SWhome2() {
   return (
     <div>
       <Helmet>
@@ -74,7 +74,7 @@ export default function SWhome() {
 }
 
 const Main = () => {
-  const [searchType, setSearchType] = useState(0);
+  const [searchType, setSearchType] = useState(1);
   const [status, setStatus] = useState(true);
   const [showTips, setShowtips] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -136,7 +136,6 @@ const Main = () => {
             <div
               style={{
                 width: "min(100%, 600px)",
-                paddingBottom:0
               }}
               className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
             >
@@ -145,7 +144,7 @@ const Main = () => {
                 style={{ transition: ".2s ease-in-out" }}
                 onClick={() => setShowtips(!showTips)}
               >
-                <p >{t("A9Mca7S")}</p>
+                <p className="p-big">{t("A9Mca7S")}</p>
                 <div
                   className="plus-sign"
                   style={{
@@ -259,7 +258,6 @@ const SWSet = ({ external }) => {
   const [selectedSW, setSelectedSW] = useState("");
   const [lastEventTimestamp, setLastEventTimestamp] = useState(undefined);
   const [isEnded, setEnded] = useState(false);
-  const [type, setType] = useState("tool");
   const [savedTools, setSavedTools] = useState([]);
   const [searchedTools, setSearchedTools] = useState([]);
 
@@ -298,21 +296,16 @@ const SWSet = ({ external }) => {
     const fetchData = async () => {
       if (!isLoading) setIsLoading(true);
       const data = await getSubData([
-        {
-          kinds: [30033],
-          limit: 10,
-          until: lastEventTimestamp,
-          "#l": type === "tool" ? ["tool", "action"] : ["basic"],
-        },
+        { kinds: [30033], limit: 10, until: lastEventTimestamp },
       ]);
       setActions((prev) => [...prev, ...data.data.map((_) => getParsedSW(_))]);
       saveUsers(data.pubkeys);
       setIsLoading(false);
-      if (data.data.length === 0 && actions.length > 0) setEnded(true);
+      if (data.data.length === 0) setEnded(true);
     };
 
     fetchData();
-  }, [lastEventTimestamp, type]);
+  }, [lastEventTimestamp]);
 
   const handleLastEventTS = () => {
     setLastEventTimestamp(actions[actions.length - 1].created_at - 1);
@@ -322,55 +315,17 @@ const SWSet = ({ external }) => {
     if (data.type === "basic") setSelectedSW(data);
   };
 
-  const switchContentType = (t) => {
-    setType(t);
-    setLastEventTimestamp(undefined);
-    setActions([]);
-    setEnded(false)
-  };
-
   return (
     <>
       {selectedSW && (
         <LaunchSW metadata={selectedSW} exit={() => setSelectedSW("")} />
       )}
       <div className="fit-container">
-        {/* {((!external && actions.length > 0) ||
+        {((!external && actions.length > 0) ||
           (external && searchedTools.length > 0)) && (
           <p className="gray-c box-pad-v-s">{t("AQ3VGVk")}</p>
-        )} */}
+        )}
         <div className="fit-container fx-start-h fx-wrap fx-centered">
-          {!external && (
-            <div
-              className="fit-container fx-centered fx-start-h sticky box-pad-h"
-              style={{
-                top: "-1px",
-                // padding: "1rem",
-                paddingTop: 0,
-                paddingBottom: 0,
-                columnGap: 0,
-                borderBottom: "1px solid var(--very-dim-gray)",
-                // borderTop: "1px solid var(--very-dim-gray)",
-              }}
-            >
-              <div
-                className={`list-item-b fx-centered fx-shrink ${
-                  type === "tool" ? "selected-list-item-b" : ""
-                }`}
-                onClick={() => switchContentType("tool")}
-              >
-                Tool widgets
-              </div>
-              <div
-                className={`list-item-b fx-centered fx-shrink ${
-                  type === "basic" ? "selected-list-item-b" : ""
-                }`}
-                onClick={() => switchContentType("basic")}
-              >
-                Basic widgets
-              </div>
-            </div>
-          )}
           {!external &&
             actions.map((sw) => {
               return (
@@ -695,54 +650,50 @@ function InputField({
         />
       </form>
       <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
-        <div className="fx-centered">
-          <Link
-            className={`sc-s box-pad-h-m box-pad-v-s ${
-              status ? "option pointer" : "if-disabled"
-            } fx-centered`}
-            style={{
-              backgroundColor: !searchType ? "var(--pale-gray)" : "",
-            }}
-            // onClick={() => {
-            //   if (status) {
-            //     setSearchType(0);
-            //     setSearchKeyword("");
-            //     setSearchKeywordInput("");
-            //   }
-            // }}
-            to={"/smart-widgets"}
-          >
-            <div className="search"></div>
-            {t("AYZh36g")}
-          </Link>
-          <Link
-            className={`sc-s box-pad-h-m box-pad-v-s ${
-              status ? "option pointer" : "if-disabled"
-            } fx-centered`}
-            style={{
-              backgroundColor: searchType ? "var(--pale-gray)" : "",
-            }}
-            // onClick={() => {
-            //   if (status) {
-            //     setSearchType(1);
-            //     setSearchKeyword("");
-            //     setSearchKeywordInput("");
-            //   }
-            // }}
-            to={"/sw-ai"}
-          >
-            <div className="ringbell"></div>
-            {t("A6U9fNT")}
-          </Link>
-        </div>
+          <div className="fx-centered">
+                <Link
+                  className={`sc-s box-pad-h-m box-pad-v-s ${
+                    status ? "option pointer" : "if-disabled"
+                  } fx-centered`}
+                  style={{
+                    backgroundColor: !searchType ? "var(--pale-gray)" : "",
+                  }}
+                  // onClick={() => {
+                  //   if (status) {
+                  //     setSearchType(0);
+                  //     setSearchKeyword("");
+                  //     setSearchKeywordInput("");
+                  //   }
+                  // }}
+                  to={"/smart-widgets"}
+                >
+                  <div className="search"></div>
+                  {t("AYZh36g")}
+                </Link>
+                <Link
+                  className={`sc-s box-pad-h-m box-pad-v-s ${
+                    status ? "option pointer" : "if-disabled"
+                  } fx-centered`}
+                  style={{
+                    backgroundColor: searchType ? "var(--pale-gray)" : "",
+                  }}
+                  // onClick={() => {
+                  //   if (status) {
+                  //     setSearchType(1);
+                  //     setSearchKeyword("");
+                  //     setSearchKeywordInput("");
+                  //   }
+                  // }}
+                  to={"/sw-ai"}
+                >
+                  <div className="ringbell"></div>
+                  {t("A6U9fNT")}
+                </Link>
+              </div>
         {status && (
           <div
             className="round-icon slide-up"
-            style={{
-              minWidth: "40px",
-              minHeight: "40px",
-              backgroundColor: "var(--c1)",
-            }}
+            style={{ minWidth: "40px", minHeight: "40px", backgroundColor: "var(--c1)" }}
             onClick={() => {
               if (status) {
                 setSearchKeywordInput("");

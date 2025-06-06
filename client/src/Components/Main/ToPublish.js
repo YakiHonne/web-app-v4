@@ -13,6 +13,7 @@ import { finalizeEvent } from "nostr-tools";
 import { extractNip19, removeArticleDraft } from "../../Helpers/Helpers";
 import UploadFile from "../UploadFile";
 import { useTranslation } from "react-i18next";
+import { InitEvent } from "../../Helpers/Controlers";
 
 const getSuggestions = (custom) => {
   if (!custom) return [];
@@ -34,9 +35,10 @@ export default function ToPublish({
   edit = false,
   exit,
   warning = false,
+  userKeys,
 }) {
   const dispatch = useDispatch();
-  const userKeys = useSelector((state) => state.userKeys);
+  // const userKeys = useSelector((state) => state.userKeys);
   const { t } = useTranslation();
   const navigateTo = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState(
@@ -110,20 +112,32 @@ export default function ToPublish({
         content: processedContent.content.replace(imageRegex, "!(image)[$&]"),
         tags: [...tags, ...processedContent.tags.filter((_) => _[0] !== "t")],
       };
-      if (userKeys.ext) {
-        try {
-          tempEvent = await window.nostr.signEvent(tempEvent);
-        } catch (err) {
-          console.log(err);
-          setIsLoading(false);
-          return false;
-        }
-      } else {
-        tempEvent = finalizeEvent(tempEvent, userKeys.sec);
+
+      let eventInitEx = await InitEvent(
+        tempEvent.kind,
+        tempEvent.postContent,
+        tempEvent.tags,
+        tempEvent.created_at,
+        userKeys
+      );
+      if (!eventInitEx) {
+        setIsLoading(false);
+        return;
       }
+      // if (userKeys.ext) {
+      //   try {
+      //     tempEvent = await window.nostr.signEvent(tempEvent);
+      //   } catch (err) {
+      //     console.log(err);
+      //     setIsLoading(false);
+      //     return false;
+      //   }
+      // } else {
+      //   tempEvent = finalizeEvent(tempEvent, userKeys.sec);
+      // }
       dispatch(
         setToPublish({
-          eventInitEx: tempEvent,
+          eventInitEx,
           allRelays: relaysToPublish,
         })
       );
@@ -136,27 +150,44 @@ export default function ToPublish({
             content: "A draft to delete",
             tags: [["e", postId]],
           };
-          if (userKeys.ext) {
-            try {
-              tempEvent = await window.nostr.signEvent(tempEvent);
-            } catch (err) {
-              console.log(err);
-              setIsLoading(false);
-              navigateTo("/dashboard", { state: { tabNumber: 1, filter: "articles" } });
-              exit();
-              return false;
-            }
-          } else {
-            tempEvent = finalizeEvent(tempEvent, userKeys.sec);
+          // if (userKeys.ext) {
+          //   try {
+          //     tempEvent = await window.nostr.signEvent(tempEvent);
+          //   } catch (err) {
+          //     console.log(err);
+          //     setIsLoading(false);
+          //     navigateTo("/dashboard", { state: { tabNumber: 1, filter: "articles" } });
+          //     exit();
+          //     return false;
+          //   }
+          // } else {
+          //   tempEvent = finalizeEvent(tempEvent, userKeys.sec);
+          // }
+          let eventInitEx = await InitEvent(
+            tempEvent.kind,
+            tempEvent.postContent,
+            tempEvent.tags,
+            tempEvent.created_at,
+            userKeys
+          );
+          if (!eventInitEx) {
+            navigateTo("/dashboard", {
+              state: { tabNumber: 1, filter: "articles" },
+            });
+            exit();
+            setIsLoading(false);
+            return;
           }
           dispatch(
             setToPublish({
-              eventInitEx: tempEvent,
+              eventInitEx,
               allRelays: relaysToPublish,
             })
           );
           setIsLoading(false);
-          navigateTo("/dashboard", { state: { tabNumber: 1, filter: "articles" } });
+          navigateTo("/dashboard", {
+            state: { tabNumber: 1, filter: "articles" },
+          });
           exit();
         }, 5000);
         return;

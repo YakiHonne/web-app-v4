@@ -173,7 +173,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           <>
             {event?.kind === 1 && (
               <div className="fit-container" style={{ paddingTop: ".5rem" }}>
-                <KindOne event={event} reactions={false} />
+                <KindOne event={event} reactions={false} minimal={true} />
               </div>
             )}
             {event?.kind === 6969 && (

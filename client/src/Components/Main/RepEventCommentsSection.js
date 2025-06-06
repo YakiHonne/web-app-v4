@@ -31,6 +31,7 @@ export default function RepEventCommentsSection({
         <div
           className="fx-centered fit-container fx-start-h box-pad-v-m sticky"
           onClick={exit}
+          style={{padding: "1rem"}}
         >
           <button
             className="btn btn-normal btn-gray"
@@ -40,7 +41,9 @@ export default function RepEventCommentsSection({
           </button>
           <p>{t("ATB2h6T")}</p>
         </div>
-        {event && <LinkRepEventPreview allowClick={false} event={event} />}
+        <div className="fit-container box-pad-h-m box-marg-s" >
+          {event && <LinkRepEventPreview allowClick={false} event={event} />}
+        </div>
         <CommentsSection
           leaveComment={leaveComment}
           id={id}

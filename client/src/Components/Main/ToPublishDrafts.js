@@ -13,6 +13,7 @@ export default function ToPublishDrafts({
   edit = false,
   exit,
   warning = false,
+  userKeys,
 }) {
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -28,15 +29,24 @@ export default function ToPublishDrafts({
           "Yakihonne",
           "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
         ],
-        ["published_at", `${Math.floor(Date.now()/1000)}`],
+        ["published_at", `${Math.floor(Date.now() / 1000)}`],
         ["d", edit || nanoid()],
         ["image", ""],
         ["title", postTitle],
         ["summary", ""],
       ];
 
-      let eventInitEx = await InitEvent(kind, postContent, tags);
-      if (!eventInitEx) return;
+      let eventInitEx = await InitEvent(
+        kind,
+        postContent,
+        tags,
+        undefined,
+        userKeys
+      );
+      if (!eventInitEx) {
+        setIsLoading(false);
+        return;
+      }
       dispatch(
         setToPublish({
           eventInitEx,
@@ -45,6 +55,7 @@ export default function ToPublishDrafts({
       );
       navigateTo("/dashboard", { state: { tabNumber: 1, filter: "drafts" } });
       exit();
+      setIsLoading(false);
       return;
     } catch (err) {
       dispatch(
@@ -53,6 +64,7 @@ export default function ToPublishDrafts({
           desc: t("Acr4Slu"),
         })
       );
+      setIsLoading(false);
     }
   };
 

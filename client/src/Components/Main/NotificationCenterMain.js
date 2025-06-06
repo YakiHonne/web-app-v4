@@ -21,6 +21,7 @@ import {
   compactContent,
   getCustomSettings,
   getNoteTree,
+  nEventEncode,
   straightUp,
 } from "../../Helpers/Helpers";
 import { eventKinds } from "../../Content/Extra";
@@ -90,7 +91,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
           label_2,
           icon: eventIcons.paid_notes,
           id: false,
-          url: `/notes/${nip19.noteEncode(event.id)}`,
+          url: `/notes/${nEventEncode(event.id)}`,
         };
       }
       if (isReply) {
@@ -110,7 +111,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
           label_2,
           icon: eventIcons.replies_comments,
           id: isReply[1],
-          url: `/notes/${nip19.noteEncode(event.id)}`,
+          url: `/notes/${nEventEncode(event.id)}`,
         };
       }
       if (isRoot) {
@@ -130,7 +131,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
         let label_2 = event.content;
         let url = eventPubkey
           ? getRepEventsLink(eventPubkey, eventKind, eventIdentifier)
-          : `/notes/${nip19.noteEncode(isRoot[1])}`;
+          : `/notes/${nEventEncode(isRoot[1])}`;
 
         return {
           type: "replies",
@@ -158,7 +159,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
           label_2,
           id: isQuote[1],
           icon: eventIcons.quotes,
-          url: `/notes/${nip19.noteEncode(event.id)}`,
+          url: `/notes/${nEventEncode(event.id)}`,
         };
       }
 
@@ -171,7 +172,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
         label_2,
         icon: eventIcons.mentions,
         id: false,
-        url: `/notes/${nip19.noteEncode(event.id)}`,
+        url: `/notes/${nEventEncode(event.id)}`,
       };
     }
 
@@ -222,7 +223,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
       let label_2 = content;
       let url = eventPubkey
         ? getRepEventsLink(eventPubkey, eventKind, eventIdentifier)
-        : `/notes/${nip19.noteEncode(ev[1])}`;
+        : `/notes/${nEventEncode(ev[1])}`;
 
       return {
         type: "reactions",
@@ -249,7 +250,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
         label_2,
         icon: eventIcons.reposts,
         id: false,
-        url: `/notes/${nip19.noteEncode(innerEvent.id)}`,
+        url: `/notes/${nEventEncode(innerEvent.id)}`,
       };
     }
 
@@ -265,7 +266,7 @@ const checkEventType = (event, pubkey, relatedEvent, username) => {
         let eventIdentifier = ev[0] === "a" ? ev[1].split(":")[2] : false;
         url = eventPubkey
           ? getRepEventsLink(eventPubkey, eventKind, eventIdentifier)
-          : `/notes/${nip19.noteEncode(ev[1])}`;
+          : `/notes/${nEventEncode(ev[1])}`;
       }
 
       let amount =

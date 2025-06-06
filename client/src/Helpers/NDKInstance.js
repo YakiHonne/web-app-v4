@@ -5,12 +5,11 @@ import bannedList from "../Content/BannedList";
 
 const ndkInstance = new NDK({
   explicitRelayUrls: relaysOnPlatform,
-  enableOutboxModel: true,
+  enableOutboxModel: true, 
   mutedIds: new Map([bannedList.map((p) => [p, "p"])]),
 });
 
-await ndkInstance.connect();
-
+await ndkInstance.connect(1000);
 ndkInstance.cacheAdapter = new NDKCacheAdapterDexie({ dbName: "ndk-store" });
 
 export { ndkInstance };

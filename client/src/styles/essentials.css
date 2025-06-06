@@ -805,7 +805,7 @@ label {
     font-family: 'DM sans', sans-serif;
     font-size: var(--16);
     padding: 0 var(--20);
-    height: var(--54);
+    height: var(--40);
     border-radius: var(--border-r-18);
     /* transition: .2s ease-in; */
 
@@ -1117,6 +1117,7 @@ a:hover {
     overflow: hidden;
     transition: .3s ease-in-out;
     cursor: pointer;
+    transform-origin: right;
     transform: scale(.75);
 }
 
@@ -1448,6 +1449,7 @@ a:hover {
     padding-right: 48px;
     padding-left: unset;
 }
+
 .note-indent-2 {
     padding-left: 1.5rem;
 }
@@ -1616,4 +1618,21 @@ textarea::placeholder, .if::placeholder {
     align-items: stretch;
     column-gap: 8px;
     width: 100%
+}
+
+@media (prefers-color-scheme: dark) {
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        position: relative;
+        transform: translateY(-25%);
+        filter: invert();
+        opacity: 1;
+        cursor: pointer;
+    }
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    position: relative;
+    transform: translateY(-25%);
+    opacity: 1;
+    cursor: pointer;
 }

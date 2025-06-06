@@ -23,6 +23,7 @@ import {
   getArticleDraft,
   getLinkFromAddr,
   getNoteDraft,
+  nEventEncode,
   sleepTimer,
   straightUp,
 } from "../../Helpers/Helpers";
@@ -806,11 +807,11 @@ const Widgets = ({ setPostToNote, localDraft }) => {
 
   const SWSets = [
     {
-      display_name: "My widgets",
+      display_name: t("ACuanyD"),
       value: 0,
     },
     {
-      display_name: "My saved tools",
+      display_name: t("AcD8ZPg"),
       value: 1,
     },
   ];
@@ -2038,7 +2039,7 @@ const NoteCard = ({ event }) => {
     : false;
   const copyID = (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(nip19.noteEncode(isRepost.id));
+    navigator.clipboard.writeText(nEventEncode(isRepost.id));
     dispatch(
       setToast({
         type: 1,
@@ -2056,7 +2057,7 @@ const NoteCard = ({ event }) => {
       }}
       onClick={(e) => {
         e.stopPropagation();
-        customHistory.push(`/notes/${nip19.noteEncode(isRepost.id)}`);
+        customHistory.push(`/notes/${nEventEncode(isRepost.id)}`);
       }}
     >
       <div className="fx-centered fx-start-v">
@@ -2107,7 +2108,7 @@ const NoteCard = ({ event }) => {
             <div className="fit-container fx-centered fx-start-h pointer">
               <ShareLink
                 label="Share note"
-                path={`/notes/${nip19.noteEncode(isRepost.id)}`}
+                path={`/notes/${nEventEncode(isRepost.id)}`}
                 title={userMetadata.display_name || userMetadata.name}
                 description={isRepost.content}
                 kind={1}

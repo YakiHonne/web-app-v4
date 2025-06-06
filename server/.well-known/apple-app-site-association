@@ -8,6 +8,8 @@
           "/",
           "/*",
           "/article/*",
+          "/r/note/*",
+          "/r/discover/*",
           "/notes/*",
           "/videos/*",
           "/users/*",
