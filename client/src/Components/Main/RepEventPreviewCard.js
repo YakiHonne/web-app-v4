@@ -15,6 +15,14 @@ import { copyText } from "../../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import useRepEventStats from "../../Hooks/useRepEventStats";
+import Like from "../Reactions/Like";
+import NumberShrink from "../NumberShrink";
+import Quote from "../Reactions/Quote";
+import Zap from "../Reactions/Zap";
+import ShowUsersList from "./ShowUsersList";
+import ZapAd from "./ZapAd";
+import RepEventCommentsSection from "./RepEventCommentsSection";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -30,7 +38,8 @@ const getURL = (item, isNip05Verified) => {
   if (item.kind === 30023) return `/article/${isNip05Verified}/${item.d}`;
   if (item.kind === 30004) return `/curations/a/${isNip05Verified}/${item.d}`;
   if (item.kind === 30005) return `/curations/v/${isNip05Verified}/${item.d}`;
-  if ([34235, 34236].includes(item.kind)) return `/videos/${isNip05Verified}/${item.d}`;
+  if ([34235, 34236].includes(item.kind))
+    return `/videos/${isNip05Verified}/${item.d}`;
 };
 
 export default function RepEventPreviewCard({
@@ -38,6 +47,7 @@ export default function RepEventPreviewCard({
   border = true,
   minimal = false,
 }) {
+  console.log(item)
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userFollowings = useSelector((state) => state.userFollowings);
   const { t } = useTranslation();
@@ -46,6 +56,7 @@ export default function RepEventPreviewCard({
   );
   const [showContent, setShowContent] = useState(!item.contentSensitive);
   const [isNip05Verified, setIsNip05Verified] = useState(false);
+
   const isFollowing = useMemo(() => {
     return checkFollowing(userFollowings, item.pubkey);
   }, [userFollowings]);
@@ -57,7 +68,6 @@ export default function RepEventPreviewCard({
     const fetchData = async () => {
       try {
         let auth = getUser(item.pubkey);
-
         if (auth) {
           setAuthorData(auth);
           let ndkUser = new NDKUser({ pubkey: item.pubkey });
@@ -155,7 +165,7 @@ export default function RepEventPreviewCard({
           </div>
         )}
         <div
-          className="fx-scattered fit-container"
+          className="fx-scattered fit-container fx-col"
           style={{ columnGap: "32px" }}
         >
           <div className="fit-container">
@@ -175,7 +185,7 @@ export default function RepEventPreviewCard({
                   </div>
                 )}
               </div>
-              <OptionsDropdown
+              {/* <OptionsDropdown
                 options={[
                   <div
                     onClick={(e) =>
@@ -212,7 +222,7 @@ export default function RepEventPreviewCard({
                     />
                   </div>,
                 ]}
-              />
+              /> */}
             </div>
             <Link
               to={url}
@@ -221,12 +231,13 @@ export default function RepEventPreviewCard({
             >
               <div style={{ width: "max(70%, 800px)" }} dir={item.dir}>
                 <div className="fx-scattered">
-                  <p className="p-two-lines p-big p-bold">{item.title}</p>
+                  <h4 className="p-three-lines" style={{fontSize: "24px", lineHeight: "130%"}}>{item.title}</h4>
+                  {/* <p className="p-two-lines p-big p-bold">{item.title}</p> */}
                 </div>
                 <div className="box-pad-v-s ">
                   <p className="p-three-lines gray-c fit-container">
                     {item.description || (
-                      <span className="p-italic p-medium ">{t("AtZrjns")}</span>
+                      <span className="p-italic ">{t("AtZrjns")}</span>
                     )}
                   </p>
                 </div>
@@ -236,8 +247,8 @@ export default function RepEventPreviewCard({
                 style={{
                   backgroundColor:
                     "linear-gradient(93deg, #880185 -6.44%, #FA4EFF 138.71%)",
-                  backgroundImage: `url(${item.image || item.imagePP})`,
-                  width: "max(30%,150px)",
+                  backgroundImage: `url(${item.image || authorData.picture || item.imagePP})`,
+                  width: "max(30%,200px)",
                   aspectRatio: "1/1",
                   border: "none",
                   position: "relative",
@@ -260,6 +271,7 @@ export default function RepEventPreviewCard({
               </div>
             </Link>
           </div>
+          <Reactions post={item} author={authorData} url={url} />
         </div>
       </div>
     </>
@@ -302,5 +314,221 @@ const AuthorPreviewMinimal = ({ author, isNip05Verified }) => {
         {isNip05Verified && <div className="checkmark-c1"></div>}
       </div>
     </div>
+  );
+};
+
+const Reactions = ({ post, author, url }) => {
+  const { t } = useTranslation();
+  const { postActions } = useRepEventStats(post.aTag, post.pubkey);
+  const userKeys = useSelector((state) => state.userKeys);
+  const [usersList, setUsersList] = useState(false);
+  const [showCommentsSection, setShowCommentsSections] = useState(false);
+
+  const isLiked = useMemo(() => {
+    return userKeys
+      ? postActions.likes.likes.find((post) => post.pubkey === userKeys.pub)
+      : false;
+  }, [postActions, userKeys]);
+  const isQuoted = useMemo(() => {
+    return userKeys
+      ? postActions.quotes.quotes.find((post) => post.pubkey === userKeys.pub)
+      : false;
+  }, [postActions, userKeys]);
+  const isZapped = useMemo(() => {
+    return userKeys
+      ? postActions.zaps.zaps.find((post) => post.pubkey === userKeys.pub)
+      : false;
+  }, [postActions, userKeys]);
+
+  return (
+    <>
+      {usersList && (
+        <ShowUsersList
+          exit={() => setUsersList(false)}
+          title={usersList.title}
+          list={usersList.list}
+          extras={usersList.extras}
+          extrasType={usersList.extrasType}
+        />
+      )}
+      {showCommentsSection && (
+        <div
+          className="fixed-container fx-centered fx-start-v"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowCommentsSections(false);
+          }}
+        >
+          <div
+            className="main-middle vox-pad-h fx-centered fx-col fx-start-v fx-start-h sc-s-18 bg-sp"
+            style={{
+              overflow: "scroll",
+              scrollBehavior: "smooth",
+              height: "100vh",
+              // width: "min(100%, 550px)",
+              position: "relative",
+              borderRadius: 0,
+              gap: 0,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+          
+            <RepEventCommentsSection
+              id={post.aTag}
+              author={author}
+              eventPubkey={post.pubkey}
+              leaveComment={showCommentsSection.comment}
+              exit={() => setShowCommentsSections(false)}
+              kind={post.kind}
+              event={post}
+            />
+          </div>
+        </div>
+      )}
+      <div
+        className="fit-container fx-centered fx-col box-pad-v-s"
+        style={{ gap: "10px" }}
+      >
+        {postActions?.zaps?.zaps?.length > 0 && (
+          <ZapAd
+            zappers={postActions.zaps.zaps}
+            onClick={() =>
+              setUsersList({
+                title: t("AVDZ5cJ"),
+                list: postActions.zaps.zaps.map((item) => item.pubkey),
+                extras: postActions.zaps.zaps,
+              })
+            }
+            margin={false}
+          />
+        )}
+        <div className="fit-container fx-scattered">
+          <div className="fx-centered" style={{ gap: "18px" }}>
+            <div className="fx-centered  pointer">
+              <div
+                data-tooltip={t("ADHdLfJ")}
+                className={`pointer icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                onClick={() => setShowCommentsSections({ comment: true })}
+              >
+                <div className="comment-24"></div>
+              </div>
+              <div
+                data-tooltip={t("AMBxvKP")}
+                className={`pointer icon-tooltip `}
+                onClick={() => setShowCommentsSections({ comment: false })}
+              >
+                <p>{postActions.replies.replies.length}</p>
+              </div>
+            </div>
+            <div className="fx-centered">
+              <Like
+                isLiked={isLiked}
+                event={post}
+                actions={postActions}
+                tagKind={"a"}
+              />
+              <div
+                className={`pointer icon-tooltip ${isLiked ? "orange-c" : ""}`}
+                data-tooltip={t("Alz0E9Y")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  postActions.likes.likes.length > 0 &&
+                    setUsersList({
+                      title: t("Alz0E9Y"),
+                      list: postActions.likes.likes.map((item) => item.pubkey),
+                      extras: postActions.likes.likes,
+                      extrasType: "reaction",
+                    });
+                }}
+              >
+                <NumberShrink value={postActions.likes.likes.length} />
+              </div>
+            </div>
+            <div className="fx-centered  pointer">
+              <Quote isQuoted={isQuoted} event={post} actions={postActions} />
+              <div
+                className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
+                data-tooltip={t("AWmDftG")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  postActions.quotes.quotes.length > 0 &&
+                    setUsersList({
+                      title: t("AWmDftG"),
+                      list: postActions.quotes.quotes.map(
+                        (item) => item.pubkey
+                      ),
+                      extras: [],
+                    });
+                }}
+              >
+                <NumberShrink value={postActions.quotes.quotes.length} />
+              </div>
+            </div>
+            <div className="fx-centered">
+              <Zap
+                user={author}
+                event={post}
+                actions={postActions}
+                isZapped={isZapped}
+              />
+              <div
+                data-tooltip={t("AO0OqWT")}
+                className={`pointer icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                onClick={() =>
+                  postActions.zaps.total > 0 &&
+                  setUsersList({
+                    title: t("AVDZ5cJ"),
+                    list: postActions.zaps.zaps.map((item) => item.pubkey),
+                    extras: postActions.zaps.zaps,
+                  })
+                }
+              >
+                <NumberShrink value={postActions.zaps.total} />
+              </div>
+            </div>
+          </div>
+          <OptionsDropdown
+            vertical={false}
+            options={[
+              <div
+                onClick={(e) =>
+                  copyText(post.naddr, t("ApPw14o", { item: "naddr" }), e)
+                }
+                className="pointer"
+              >
+                <p>{t("ApPw14o", { item: "naddr" })}</p>
+              </div>,
+              <BookmarkEvent
+                label={t("AtlqBGm")}
+                pubkey={post.pubkey}
+                kind={post.kind}
+                d={post.d}
+                image={post.thumbnail}
+              />,
+              <div className="fit-container fx-centered fx-start-h pointer">
+                <ShareLink
+                  label={t("AGB5vpj")}
+                  path={url}
+                  title={post.title}
+                  description={post.title}
+                  kind={30023}
+                  shareImgData={{
+                    post: { ...post, image: post.thumbnail },
+                    author: {
+                      pubkey: author.pubkey,
+                      picture: author.picture,
+                      display_name: author.display_name || author.name,
+                    },
+                    label: t("AyYkCrS"),
+                  }}
+                />
+              </div>,
+            ]}
+          />
+        </div>
+      </div>
+    </>
   );
 };

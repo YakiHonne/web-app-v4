@@ -30,6 +30,7 @@ db.version(2).stores({
   interests: "",
   followings: "",
   followingsRelays: "",
+  appSettings: "",
   relays: "",
   bookmarks: "",
   users: "",
@@ -116,6 +117,18 @@ export const getRelays = async (pubkey) => {
     try {
       let relays = await db.table("relays").get(pubkey);
       return relays || [];
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  } else return [];
+};
+
+export const getAppSettings = async (pubkey) => {
+  if (db) {
+    try {
+      let settings = await db.table("appSettings").get(pubkey);
+      return settings || undefined;
     } catch (err) {
       console.log(err);
       return [];
@@ -347,6 +360,28 @@ export const saveBookmarks = async (bookmarks, pubkey) => {
     console.log(err);
   }
 };
+export const saveAppSettings = async (event, pubkey, lastTimestamp) => {
+  try {
+    if (!event) return;
+    let eventToStore = {
+      last_timestamp: undefined,
+      settings: JSON.parse(event.content),
+    };
+    if (event) {
+      eventToStore = {
+        last_timestamp: event.created_at,
+        settings: JSON.parse(event.content),
+      };
+    }
+    await Dexie.ignoreTransaction(async () => {
+      await db.transaction("rw", db.appSettings, async () => {
+        await db.appSettings.put(eventToStore, pubkey);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export const saveUsers = async (pubkeys) => {
   try {
@@ -420,7 +455,7 @@ export const clearDBCache = async () => {
       });
     }
     if (ndkdb) {
-      await Dexie.delete(ndkdb.name)
+      await Dexie.delete(ndkdb.name);
       // ndkdb.tables.forEach(async (table) => {
       //   await table.clear();
       // });

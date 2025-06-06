@@ -9,7 +9,7 @@ import SearchContentCard from "../Main/SearchContentCard";
 import { getUser } from "../../Helpers/Controlers";
 import { nip19 } from "nostr-tools";
 import { setToast } from "../../Store/Slides/Publishers";
-import { compactContent } from "../../Helpers/Helpers";
+import { compactContent, nEventEncode } from "../../Helpers/Helpers";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -134,7 +134,7 @@ const NoteCard = ({ event }) => {
 
   const copyID = (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(nip19.noteEncode(event.id));
+    navigator.clipboard.writeText(nEventEncode(event.id));
     dispatch(
       setToast({
         type: 1,
@@ -173,7 +173,7 @@ const NoteCard = ({ event }) => {
           ]}
         />
       </div>
-      <Link to={`/notes/${nip19.noteEncode(event.id)}`}>
+      <Link to={`/notes/${nEventEncode(event.id)}`}>
         <p className="p-three-lines">{compactContent(event.content)}</p>
       </Link>
     </div>

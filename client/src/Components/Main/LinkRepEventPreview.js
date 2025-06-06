@@ -63,7 +63,7 @@ export default function LinkRepEventPreview({ event, allowClick = true }) {
   };
 
   if (event.kind === 1)
-    return <KindOne event={event} reactions={false} minmal={true} />;
+    return <KindOne event={event} reactions={false} minimal={true} />;
 
   if (event.kind === 30031) return <MinimalPreviewWidget widget={event} />;
   return (
@@ -76,7 +76,7 @@ export default function LinkRepEventPreview({ event, allowClick = true }) {
       <div
         className="bg-img cover-bg fx-centered"
         style={{
-          backgroundImage: `url(${event.image || event.imagePP})`,
+          backgroundImage: `url(${event.image || user.picture || event.imagePP})`,
           minWidth: "150px",
           aspectRatio: "16/9",
         }}

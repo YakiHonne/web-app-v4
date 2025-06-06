@@ -17,8 +17,8 @@ export default function LaunchSW({ metadata, exit }) {
         }}
       >
         <div
-          style={{ width: "min(100%, 550px)", overflow: "visible" }}
-          className="sc-s-18 fx-centered fx-col bg-sp box-pad-h-m box-pad-v-m"
+          style={{ width: "min(100%, 550px)", overflow: "scroll", maxHeight: "80vh" }}
+          className="sc-s-18 fx-centered fx-start-v fx-start-h fx-col bg-sp box-pad-h-m box-pad-v-m"
           onClick={(e) => {
             e.stopPropagation();
           }}

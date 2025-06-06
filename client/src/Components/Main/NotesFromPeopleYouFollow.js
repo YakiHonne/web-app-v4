@@ -7,7 +7,7 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import { setToast } from "../../Store/Slides/Publishers";
 import UserProfilePic from "./UserProfilePic";
 import OptionsDropdown from "./OptionsDropdown";
-import { compactContent } from "../../Helpers/Helpers";
+import { compactContent, nEventEncode } from "../../Helpers/Helpers";
 import Slider from "../Slider";
 import { Link } from "react-router-dom";
 import { getEmptyuserMetadata } from "../../Helpers/Encryptions";
@@ -81,7 +81,7 @@ const NoteCard = ({ event }) => {
 
   const copyID = (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(nip19.noteEncode(event.id));
+    navigator.clipboard.writeText(nEventEncode(event.id));
     dispatch(
       setToast({
         type: 1,
@@ -120,7 +120,7 @@ const NoteCard = ({ event }) => {
           ]}
         />
       </div>
-      <Link to={`/notes/${nip19.noteEncode(event.id)}`}>
+      <Link to={`/notes/${nEventEncode(event.id)}`}>
         <p className="p-three-lines">{compactContent(event.content)}</p>
       </Link>
     </div>

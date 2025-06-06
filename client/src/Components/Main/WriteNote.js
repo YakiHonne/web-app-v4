@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import {
   extractNip19,
+  getConnectedAccounts,
   getNoteDraft,
   updateNoteDraft,
 } from "../../Helpers/Helpers";
@@ -25,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import AddPolls from "./AddPolls";
 import ActionTools from "./ActionTools";
 import BrowseSmartWidgetsV2 from "./BrowseSmartWidgetsV2";
+import ProfilesPicker from "./ProfilesPicker";
 
 export default function WriteNote({
   widget,
@@ -58,6 +60,7 @@ export default function WriteNote({
   const ref = useRef();
   const lowerSectionRef = useRef(null);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(0);
+  const [selectedProfile, setSelectedProfile] = useState(false);
 
   useEffect(() => {
     if (lowerSectionRef.current) {
@@ -173,7 +176,7 @@ export default function WriteNote({
 
   const publishAsFree = async (content, tags) => {
     setIsLoading(true);
-    let eventInitEx = await InitEvent(1, content, tags);
+    let eventInitEx = await InitEvent(1, content, tags, undefined, selectedProfile);
 
     if (!eventInitEx) {
       setIsLoading(false);
@@ -201,7 +204,7 @@ export default function WriteNote({
       tags.push(["l", "FLASH NEWS"]);
       tags.push(["yaki_flash_news", encryptEventData(`${created_at}`)]);
 
-      let eventInitEx = await InitEvent(1, content, tags, created_at);
+      let eventInitEx = await InitEvent(1, content, tags, created_at, selectedProfile);
 
       if (!eventInitEx) {
         setIsLoading(false);
@@ -473,7 +476,8 @@ export default function WriteNote({
         ref={ref}
       >
         <div>
-          <UserProfilePic size={34} mainAccountUser={true} allowClick={false} />
+          {/* <UserProfilePic size={34} mainAccountUser={true} allowClick={false} /> */}
+          <ProfilesPicker setSelectedProfile={setSelectedProfile}/>
         </div>
         <div
           className="fit-container fx-scattered fx-col fx-wrap fit-height"
@@ -610,3 +614,4 @@ export default function WriteNote({
     </>
   );
 }
+

@@ -135,13 +135,15 @@ export default function MiniApp({ url, exit, setReturnedData }) {
         }}
       >
         <section
-          className="fx-centered fx-col"
+          className="fx-centered fx-col fx-start-v fx-start-h"
           style={{
             width: "450px",
             borderRadius: "10px",
             overflow: "hidden",
             backgroundColor: "#343434",
             gap: 0,
+            overflow: "scroll",
+            maxHeight: "80vh",
           }}
           onClick={(e) => {
             e.stopPropagation();

@@ -21,6 +21,7 @@ import NotePreview from "../Main/NotePreview";
 import { useTranslation } from "react-i18next";
 import LoginSignup from "../Main/LoginSignup";
 import AddPolls from "../Main/AddPolls";
+import ProfilesPicker from "../Main/ProfilesPicker";
 
 export default function Comments({
   noteTags = false,
@@ -43,6 +44,7 @@ export default function Comments({
   const [showGIFs, setShowGIFs] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const [mention, setMention] = useState("");
+    const [selectedProfile, setSelectedProfile] = useState(false);
   const textareaRef = useRef(null);
   const ref = useRef(null);
 
@@ -108,7 +110,7 @@ export default function Comments({
       }
 
       tags = [...tags, ...extracted.tags];
-      let eventInitEx = await InitEvent(1, content, tags);
+      let eventInitEx = await InitEvent(1, content, tags, undefined, selectedProfile);
       if (!eventInitEx) {
         setIsLoading(false);
         return;
@@ -272,7 +274,8 @@ export default function Comments({
         style={{ overflow: "visible", zIndex: "10", position: "relative" }}
         ref={ref}
       >
-        <UserProfilePic size={48} mainAccountUser={true} allowClick={false} />
+        {/* <UserProfilePic size={48} mainAccountUser={true} allowClick={false} /> */}
+        <ProfilesPicker setSelectedProfile={setSelectedProfile}/>
         <div
           className="fit-container fx-centered fx-wrap"
           style={{ maxWidth: "calc(100% - 48px)" }}

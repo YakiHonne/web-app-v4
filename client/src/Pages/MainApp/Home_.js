@@ -8,32 +8,32 @@ import React, {
 import { useSelector } from "react-redux";
 import Sidebar from "../../Components/Main/Sidebar";
 import {
+  filterContent,
+  getBackupWOTList,
   getParsedNote,
   getParsedRepEvent,
   removeEventsDuplicants,
-  sortEvents,
 } from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import YakiIntro from "../../Components/YakiIntro";
-
 import KindSix from "../../Components/Main/KindSix";
 import { getFollowings, saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { getSubData } from "../../Helpers/Controlers";
-import Slider from "../../Components/Slider";
-import SmallButtonDropDown from "../../Components/Main/SmallButtonDropDown";
+import {
+  getDefaultFilter,
+  getDVMJobRequest,
+  getDVMJobResponse,
+  getSubData,
+} from "../../Helpers/Controlers";
 import HomeCarouselContentSuggestions from "../../Components/Main/HomeCarouselContentSuggestions";
-import { getHighlights, getTrending } from "../../Helpers/WSInstance";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
-import InterestSuggestions from "../../Content/InterestSuggestions";
 
 import {
   getCustomSettings,
   getDefaultSettings,
   getKeys,
-  getLinkPreview,
   straightUp,
 } from "../../Helpers/Helpers";
 import LoadingLogo from "../../Components/LoadingLogo";
@@ -45,7 +45,16 @@ import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/Profi
 import PostAsNote from "../../Components/Main/PostAsNote";
 import { useTranslation } from "react-i18next";
 import bannedList from "../../Content/BannedList";
+import ContentSource from "../../Components/ContentSettings/ContentSource";
+import ContentFilter from "../../Components/ContentSettings/ContentFilter";
+
 const SUGGESTED_TAGS_VALUE = "_sggtedtags_";
+
+const getContentFromValue = (contentSource) => {
+  if (contentSource.group === "cf") return contentSource.value;
+  if (contentSource.group === "mf") return "dvms";
+  if (contentSource.group === "af") return "algo";
+};
 
 const getContentList = () => {
   let list = getCustomSettings();
@@ -58,24 +67,6 @@ const getContentList = () => {
 
 const notesReducer = (notes, action) => {
   switch (action.type) {
-    case "highlights": {
-      let nextState = { ...notes };
-      let tempArr = [...nextState[action.type], ...action.note];
-      let sortedNotes = tempArr
-        .filter((note, index, tempArr) => {
-          if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
-        })
-        .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
-      nextState[action.type] = sortedNotes;
-      return nextState;
-    }
-    case "trending": {
-      let nextState = { ...notes };
-      let tempArr = [...nextState[action.type], ...action.note];
-
-      nextState[action.type] = tempArr;
-      return nextState;
-    }
     case "widgets": {
       let nextState = { ...notes };
       let tempArr = [...nextState[action.type], ...action.note];
@@ -93,6 +84,29 @@ const notesReducer = (notes, action) => {
       let sortedNotes = tempArr
         .filter((note, index, tempArr) => {
           if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
+        })
+        .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
+      nextState[action.type] = sortedNotes;
+      return nextState;
+    }
+    case "global": {
+      let nextState = { ...notes };
+      let tempArr = [...nextState[action.type], ...action.note];
+      let sortedNotes = tempArr
+        .filter((note, index, tempArr) => {
+          if (
+            tempArr.findIndex(
+              (_) =>
+                _.id === note.id ||
+                (note.kind === 6 &&
+                  (note.relatedEvent.id === _.id ||
+                    note.relatedEvent.id === _.relatedEvent?.id)) ||
+                (_.kind === 6 &&
+                  (_.relatedEvent.id === note.id ||
+                    _.relatedEvent.id === note.relatedEvent?.id))
+            ) === index
+          )
+            return note;
         })
         .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
       nextState[action.type] = sortedNotes;
@@ -132,15 +146,26 @@ const notesReducer = (notes, action) => {
       nextState[action.type] = sortedNotes;
       return nextState;
     }
-    case "tags": {
+    case "dvms": {
       let nextState = { ...notes };
-      let tempArr = [...nextState["tags"], ...action.note];
+      let tempArr = [...nextState["dvms"], ...action.note];
       let sortedNotes = tempArr
         .filter((note, index, tempArr) => {
           if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
         })
         .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
-      nextState["tags"] = sortedNotes;
+      nextState["dvms"] = sortedNotes;
+      return nextState;
+    }
+    case "algo": {
+      let nextState = { ...notes };
+      let tempArr = [...nextState["algo"], ...action.note];
+      let sortedNotes = tempArr
+        .filter((note, index, tempArr) => {
+          if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
+        })
+        .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
+      nextState["algo"] = sortedNotes;
       return nextState;
     }
 
@@ -159,26 +184,21 @@ const notesReducer = (notes, action) => {
 };
 
 const notesInitialState = {
-  highlights: [],
   widgets: [],
   recent: [],
-  "recent_with_replies": [],
+  recent_with_replies: [],
   paid: [],
-  trending: [],
-  tags: [],
+  dvms: [],
+  algo: [],
+  global: [],
 };
 
-export default function Home() {
+export default function Home_() {
   const { t } = useTranslation();
-  const [smallButtonDropDownOptions, setSmallButtonDropDownOptions] = useState(
-    getContentList()
-  );
   const userKeys = useSelector((state) => state.userKeys);
-  const userInterestList = useSelector((state) => state.userInterestList);
   const [showWriteNote, setShowWriteNote] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(
-    smallButtonDropDownOptions[0]
-  );
+  const [selectedFilter, setSelectedFilter] = useState(getDefaultFilter(2));
+  const [selectedCategory, setSelectedCategory] = useState(false);
   const [contentSuggestions, setContentSuggestions] = useState([]);
   const extrasRef = useRef(null);
 
@@ -204,46 +224,27 @@ export default function Home() {
   useEffect(() => {
     let checkHiddenSuggestions = localStorage.getItem("hsuggest");
     const fetchContentSuggestions = async () => {
-      let tags = InterestSuggestions.sort(() => 0.5 - Math.random()).slice(
-        0,
-        3
-      );
-      tags = tags.map((_) => [_.main_tag, ..._.sub_tags]).flat();
       let content = await getSubData(
-        [{ kinds: [30023], limit: 20, "#t": tags }],
+        [{ kinds: [16], limit: 50, "#k": ["30023"] }],
         400
       );
       if (content.data.length > 0) {
         let data = content.data
-          .map((event) => getParsedRepEvent(event))
+          .map((event) =>
+            event.content ? getParsedRepEvent(JSON.parse(event.content)) : false
+          )
           .filter((event) => {
-            if (event.title) return event;
+            if (event && event.title) return event;
           });
-        setContentSuggestions(data);
-        saveUsers(content.pubkeys);
+        let defaultFilter = getDefaultFilter();
+        setContentSuggestions(
+          filterContent(defaultFilter, removeEventsDuplicants(data))
+        );
+        saveUsers(data.map((_) => _.pubkey));
       }
     };
     if (!checkHiddenSuggestions) fetchContentSuggestions();
   }, []);
-
-  useEffect(() => {
-    userInterestList.length > 0 &&
-      setSelectedCategory(smallButtonDropDownOptions[0]);
-  }, [userInterestList]);
-
-  useEffect(() => {
-    if (userKeys) {
-      setSmallButtonDropDownOptions(getContentList());
-    } else {
-      setSmallButtonDropDownOptions([
-        "trending",
-        "highlights",
-        "paid",
-        "widgets",
-      ]);
-      setSelectedCategory("trending");
-    }
-  }, [userKeys]);
 
   return (
     <>
@@ -296,74 +297,22 @@ export default function Home() {
                     className={`fx-centered  fx-wrap fit-container`}
                   >
                     <div
-                      className="fit-container sticky fx-centered box-pad-h fx-col"
+                      className="fit-container sticky fx-centered box-pad-h "
                       style={{
                         padding: "1rem",
                         borderBottom: "1px solid var(--very-dim-gray)",
                       }}
                     >
-                      <div className="fit-container fx-scattered">
-                        <Slider
-                          smallButtonDropDown={
-                            <SmallButtonDropDown
-                              options={smallButtonDropDownOptions}
-                              selectedCategory={selectedCategory}
-                              setSelectedCategory={setSelectedCategory}
-                              showSettings={userKeys}
-                            />
-                          }
-                          items={[
-                            userInterestList.length === 0 && userKeys && (
-                              <div
-                                className={
-                                  "btn sticker-gray-black p-caps fx-centered"
-                                }
-                                style={{
-                                  backgroundColor:
-                                    selectedCategory === SUGGESTED_TAGS_VALUE
-                                      ? ""
-                                      : "transparent",
-                                  color:
-                                    selectedCategory === SUGGESTED_TAGS_VALUE
-                                      ? ""
-                                      : "var(--gray)",
-                                }}
-                                onClick={() =>
-                                  setSelectedCategory(SUGGESTED_TAGS_VALUE)
-                                }
-                              >
-                                {t("A7zJDS6")}{" "}
-                                {selectedCategory === SUGGESTED_TAGS_VALUE && (
-                                  <div className="plus-sign"></div>
-                                )}
-                              </div>
-                            ),
-                            ...userInterestList.map((tag, index) => {
-                              return (
-                                <div
-                                  className={
-                                    "btn sticker-gray-black p-caps fx-centered"
-                                  }
-                                  style={{
-                                    backgroundColor:
-                                      selectedCategory === tag
-                                        ? ""
-                                        : "transparent",
-                                    color:
-                                      selectedCategory === tag
-                                        ? ""
-                                        : "var(--gray)",
-                                  }}
-                                  key={index}
-                                  onClick={() => setSelectedCategory(tag)}
-                                >
-                                  {tag}
-                                </div>
-                              );
-                            }),
-                          ]}
-                          slideBy={100}
-                          noGap={true}
+                      <div className="main-middle fx-scattered">
+                        <ContentSource
+                          selectedCategory={selectedCategory}
+                          setSelectedCategory={setSelectedCategory}
+                          type={2}
+                        />
+                        <ContentFilter
+                          selectedFilter={selectedFilter}
+                          setSelectedFilter={setSelectedFilter}
+                          type={2}
                         />
                       </div>
                     </div>
@@ -391,19 +340,11 @@ export default function Home() {
                           content={""}
                           exit={() => setShowWriteNote(false)}
                         />
-                        // <WriteNote
-                        //   content={""}
-                        //   border={false}
-                        //   borderBottom={true}
-                        //   exit={() => setShowWriteNote(false)}
-                        // />
                       )}
                       {selectedCategory !== SUGGESTED_TAGS_VALUE && (
                         <HomeFeed
-                          from={selectedCategory}
-                          smallButtonDropDownOptions={
-                            smallButtonDropDownOptions
-                          }
+                          selectedCategory={selectedCategory}
+                          selectedFilter={selectedFilter}
                         />
                       )}
                       {selectedCategory === SUGGESTED_TAGS_VALUE && (
@@ -426,29 +367,40 @@ export default function Home() {
   );
 }
 
-const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
+const HomeFeed = ({ selectedCategory, selectedFilter }) => {
+  const { t } = useTranslation();
   const userMutedList = useSelector((state) => state.userMutedList);
   const userInterestList = useSelector((state) => state.userInterestList);
   const userKeys = useSelector((state) => state.userKeys);
-  const [userFollowings, setUserFollowings] = useState([]);
+  const [userFollowings, setUserFollowings] = useState(false);
   const [notes, dispatchNotes] = useReducer(notesReducer, notesInitialState);
   const [isLoading, setIsLoading] = useState(true);
-  const [notesContentFrom, setNotesContentFrom] = useState(from);
+  const [notesContentFrom, setNotesContentFrom] = useState(
+    getContentFromValue(selectedCategory)
+  );
+  const [selectedCategoryValue, setSelectedCategoryValue] = useState(
+    selectedCategory.value
+  );
   const [notesLastEventTime, setNotesLastEventTime] = useState(undefined);
   const [rerenderTimestamp, setRerenderTimestamp] = useState(undefined);
   const [articlesSuggestions, setArticlesSuggestions] = useState([]);
-  const trendingLastScore = useRef(null);
 
   useEffect(() => {
-    if (from !== notesContentFrom) {
+    let contentFromValue = getContentFromValue(selectedCategory);
+    if (selectedCategoryValue !== selectedCategory.value) {
       straightUp();
       dispatchNotes({ type: "remove-events" });
-      setNotesContentFrom(from);
+      setNotesContentFrom(contentFromValue);
+      setSelectedCategoryValue(selectedCategory.value);
       setNotesLastEventTime(undefined);
-
-      trendingLastScore.current = undefined;
     }
-  }, [from]);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    straightUp();
+    dispatchNotes({ type: "remove-events" });
+    setNotesLastEventTime(undefined);
+  }, [selectedFilter]);
 
   useEffect(() => {
     straightUp();
@@ -460,7 +412,17 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
 
   const getNotesFilter = async () => {
     let filter;
-    let tempUserFollowings = Array.from(userFollowings);
+    let until =
+      selectedFilter.to && notesLastEventTime
+        ? Math.min(selectedFilter.to, notesLastEventTime)
+        : selectedFilter.to
+        ? selectedFilter.to
+        : notesLastEventTime;
+    let since = selectedFilter.from || undefined;
+
+    let tempUserFollowings = Array.isArray(userFollowings)
+      ? Array.from(userFollowings)
+      : [];
     if (["recent", "recent_with_replies"].includes(notesContentFrom)) {
       if (tempUserFollowings.length === 0) {
         let userKeys = getKeys();
@@ -477,10 +439,13 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         }
       }
 
-      let authors = tempUserFollowings;
-      filter = [
-        { authors, kinds: [1, 6], limit: 50, until: notesLastEventTime },
-      ];
+      let authors =
+        selectedFilter.posted_by?.length > 0
+          ? selectedFilter.posted_by
+          : tempUserFollowings.length < 5
+          ? [...tempUserFollowings, ...getBackupWOTList()]
+          : tempUserFollowings;
+      filter = [{ authors, kinds: [1, 6], limit: 50, until, since }];
       return {
         filter,
       };
@@ -491,7 +456,12 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
           kinds: [1],
           "#l": ["smart-widget"],
           limit: 50,
-          until: notesLastEventTime,
+          authors:
+            selectedFilter.posted_by?.length > 0
+              ? selectedFilter.posted_by
+              : undefined,
+          until,
+          since,
         },
       ];
       return {
@@ -504,20 +474,12 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
           kinds: [1],
           "#l": ["FLASH NEWS"],
           limit: 50,
-          until: notesLastEventTime,
-        },
-      ];
-      return {
-        filter,
-      };
-    }
-    if (!smallButtonDropDownOptions.includes(notesContentFrom)) {
-      filter = [
-        {
-          kinds: [1],
-          "#t": [notesContentFrom],
-          limit: 50,
-          until: notesLastEventTime,
+          authors:
+            selectedFilter.posted_by?.length > 0
+              ? selectedFilter.posted_by
+              : undefined,
+          until,
+          since,
         },
       ];
       return {
@@ -526,45 +488,19 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
     }
 
     return {
-      filter,
+      filter: [
+        {
+          kinds: [1, 6],
+          limit: 50,
+          authors:
+            selectedFilter.posted_by?.length > 0
+              ? selectedFilter.posted_by
+              : undefined,
+          until,
+          since,
+        },
+      ],
     };
-  };
-
-  const getTrendingNotes = async () => {
-    try {
-      setIsLoading(true);
-      let notes_ = await getTrending(20, trendingLastScore.current);
-      trendingLastScore.current = notes_.score;
-      notes_ = removeEventsDuplicants(notes_.data);
-      let pubkeys = [...new Set(notes_.map((event) => event.pubkey))];
-      saveUsers(pubkeys);
-      notes_ = await Promise.all(
-        notes_.map(async (event) => await getParsedNote(event, true))
-      );
-      dispatchNotes({ type: "trending", note: notes_ });
-      setIsLoading(false);
-      if (notesContentFrom === "trending") setIsLoading(false);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const getHighlightsNotes = async () => {
-    try {
-      setIsLoading(true);
-      let notes_ = await getHighlights(30, notesLastEventTime);
-      notes_ = sortEvents(removeEventsDuplicants(notes_));
-      let pubkeys = [...new Set(notes_.map((event) => event.pubkey))];
-      saveUsers(pubkeys);
-      notes_ = await Promise.all(
-        notes_.map(async (event) => await getParsedNote(event, true))
-      );
-      dispatchNotes({ type: "highlights", note: notes_ });
-      setIsLoading(false);
-      if (notesContentFrom === "highlights") setIsLoading(false);
-    } catch (err) {
-      console.log(err);
-    }
   };
 
   useEffect(() => {
@@ -577,16 +513,10 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       ) {
         return;
       }
-      let notesContentFrom_ = smallButtonDropDownOptions.includes(from)
-        ? from
-        : "tags";
-
-      if (notesContentFrom !== "trending") {
-        setNotesLastEventTime(
-          notes[notesContentFrom_][notes[notesContentFrom_].length - 1]
-            ?.created_at || undefined
-        );
-      } else setNotesLastEventTime(trendingLastScore.current);
+      setNotesLastEventTime(
+        notes[notesContentFrom][notes[notesContentFrom].length - 1]
+          ?.created_at || undefined
+      );
     };
     document
       .querySelector(".main-page-nostr-container")
@@ -595,42 +525,37 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       document
         .querySelector(".main-page-nostr-container")
         ?.removeEventListener("scroll", handleScroll);
-  }, [isLoading, from]);
+  }, [isLoading, selectedCategory]);
 
   useEffect(() => {
-    if (notesContentFrom === "trending") {
-      getTrendingNotes();
-      return;
-    }
-    if (notesContentFrom === "highlights") {
-      getHighlightsNotes();
-      return;
-    }
-    if (!(Array.isArray(userFollowings) && notesContentFrom !== "trending"))
-      return;
-
-    const fetchData = async () => {
+    const contentFromRelays = async () => {
       setIsLoading(true);
       let eventsPubkeys = [];
       let events = [];
       let fallBackEvents = [];
       let { filter } = await getNotesFilter();
-      let dateChecker = notesLastEventTime
-        ? notesLastEventTime - 86400
-        : Math.floor(Date.now() / 1000) - 86400;
+      let dateChecker = notesLastEventTime;
+      // ? notesLastEventTime - 86400
+      // : Math.floor(Date.now() / 1000) - 86400;
+
+      const algoRelay =
+        selectedCategory.group === "af" ? [selectedCategory.value] : [];
+
       let subscription = ndkInstance.subscribe(filter, {
         groupable: false,
         skipValidation: true,
         skipVerification: true,
         cacheUsage: "CACHE_FIRST",
         subId: "home-feed",
+        relayUrls: algoRelay,
       });
 
       subscription.on("event", async (event) => {
         eventsPubkeys.push(event.pubkey);
         let event_ = await getParsedNote(event, true);
         if (event_) fallBackEvents.push(event_);
-        if (event_ && event.created_at > dateChecker) {
+        // if (event_ && event.created_at > dateChecker) {
+        if (event_) {
           if (notesContentFrom !== "recent_with_replies") {
             if (!event_.isComment) {
               if (event.kind === 6) {
@@ -650,12 +575,11 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
       subscription.on("close", () => {
         let tempEvents =
           events.length > 0 ? Array.from(events) : Array.from(fallBackEvents);
-        tempEvents = removeEventsDuplicants(tempEvents);
-        // events = [];
-        // fallBackEvents = [];
-        if (smallButtonDropDownOptions.includes(notesContentFrom))
-          dispatchNotes({ type: notesContentFrom, note: tempEvents });
-        else dispatchNotes({ type: "tags", note: tempEvents });
+        tempEvents = filterContent(
+          selectedFilter,
+          removeEventsDuplicants(tempEvents)
+        );
+        dispatchNotes({ type: notesContentFrom, note: tempEvents });
         saveUsers(eventsPubkeys);
         setIsLoading(false);
       });
@@ -665,49 +589,74 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
         clearTimeout(timer);
       }, 1000);
     };
-
-    fetchData();
-  }, [notesLastEventTime, notesContentFrom, rerenderTimestamp]);
-
-  useEffect(() => {
-    let checkHiddenSuggestions = localStorage.getItem("hsuggest2");
-    const fetchContentSuggestions = async () => {
-      let tags = InterestSuggestions.sort(() => 0.5 - Math.random()).slice(
-        0,
-        3
-      );
-      tags = tags.map((_) => [_.main_tag, ..._.sub_tags]).flat();
-
-      let content = await getSubData(
-        [
-          {
-            kinds: [30023],
-            limit: 10,
-            "#t": !smallButtonDropDownOptions.includes(from) ? [from] : tags,
-          },
-        ],
-        200
-      );
-      if (content.data.length > 0) {
-        let data = content.data
-          .map((event) => getParsedRepEvent(event))
-          .filter((event) => {
-            if (event.title && event.image) return event;
-          });
-        if (data.length >= 3) {
-          setArticlesSuggestions(data.slice(0, 5));
-          saveUsers(content.pubkeys);
+    const contentFromDVM = async () => {
+      try {
+        setIsLoading(true);
+        let eventId = await getDVMJobRequest(selectedCategory.value);
+        if (!eventId) {
+          setIsLoading(false);
+          return;
         }
+        let data = await getDVMJobResponse(eventId, selectedCategory.value);
+        if (data.length > 0) {
+          let events = [];
+          let eventsPubkeys = [];
+          let subscription = ndkInstance.subscribe([{ ids: data }], {
+            groupable: false,
+            skipValidation: true,
+            skipVerification: true,
+            cacheUsage: "CACHE_FIRST",
+            subId: "home-feed",
+          });
+
+          subscription.on("event", async (event) => {
+            if ([1, 6].includes(event.kind)) {
+              let event_ = await getParsedNote(event, true);
+              if (!event_.isComment) {
+                if (event.kind === 6) {
+                  eventsPubkeys.push(event_.relatedEvent.pubkey);
+                }
+                events.push(event_);
+              }
+            }
+          });
+          subscription.on("close", () => {
+            dispatchNotes({
+              type: notesContentFrom,
+              note: filterContent(
+                selectedFilter,
+                removeEventsDuplicants(events)
+              ),
+            });
+            saveUsers(eventsPubkeys);
+            setIsLoading(false);
+          });
+
+          let timer = setTimeout(() => {
+            subscription.stop();
+            clearTimeout(timer);
+          }, 1000);
+        }
+      } catch (err) {
+        console.log(err);
+        setIsLoading(false);
       }
     };
-    if (!checkHiddenSuggestions) fetchContentSuggestions();
-  }, [from]);
+    if (notesContentFrom && ["cf", "af"].includes(selectedCategory?.group))
+      contentFromRelays();
+    if (notesContentFrom && ["mf"].includes(selectedCategory?.group))
+      contentFromDVM();
+  }, [
+    notesLastEventTime,
+    selectedCategoryValue,
+    rerenderTimestamp,
+    selectedFilter,
+  ]);
 
   const getContentCard = (index) => {
     if (index === 10)
       return (
         <ContentSuggestionsCards
-          tag={!smallButtonDropDownOptions.includes(from) ? from : false}
           content={articlesSuggestions}
           kind="articles"
         />
@@ -728,8 +677,66 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
 
   return (
     <div className="fx-centered  fx-wrap fit-container" style={{ gap: 0 }}>
-      {notes[smallButtonDropDownOptions.includes(from) ? from : "tags"].map(
-        (note, index) => {
+      {["recent", "recent_with_replies"].includes(notesContentFrom) &&
+        userFollowings &&
+        userFollowings?.length < 5 &&
+        notes[notesContentFrom]?.length > 0 && (
+          <div className="fit-container box-pad-h">
+            <hr />
+            <div className="fit-container fx-centered fx-start-h fx-start-v box-pad-h box-pad-v-m">
+              <div>
+                <div className="eye-opened-24"></div>
+              </div>
+              <div>
+                <p>{t("AZKoEWL")}</p>
+                <p className="gray-c">{t("AstvJYT")}</p>
+              </div>
+            </div>
+
+            {/* <p className="gray-c p-centered box-pad-h box-pad-v-m">
+              Your current feed is based on someone else's following list, start
+              following people to tailor your feed on your preference
+            </p> */}
+            <hr />
+            <hr />
+          </div>
+        )}
+      {!selectedFilter.default &&
+        notes[notesContentFrom]?.length === 0 &&
+        !isLoading && (
+          <div
+            className="fit-container fx-centered fx-col"
+            style={{ height: "40vh" }}
+          >
+            <div
+              className="yaki-logomark"
+              style={{ minWidth: "48px", minHeight: "48px", opacity: 0.5 }}
+            ></div>
+            <h4>{t("A5BPCrj")}</h4>
+            <p className="p-centered gray-c" style={{ maxWidth: "330px" }}>
+              {t("AgEkYer")}
+            </p>
+          </div>
+        )}
+      {selectedFilter.default &&
+        notes[notesContentFrom]?.length === 0 &&
+        !isLoading && (
+          <div
+            className="fit-container fx-centered fx-col"
+            style={{ height: "40vh" }}
+          >
+            <div
+              className="yaki-logomark"
+              style={{ minWidth: "48px", minHeight: "48px", opacity: 0.5 }}
+            ></div>
+            <h4>{t("A5BPCrj")}</h4>
+            <p className="p-centered gray-c" style={{ maxWidth: "330px" }}>
+              {t("ASpI7pT")}
+            </p>
+          </div>
+        )}
+      {notesContentFrom &&
+        notes[notesContentFrom].map((note, index) => {
           if (![...userMutedList, ...bannedList].includes(note.pubkey)) {
             if (
               note.kind === 6 &&
@@ -751,8 +758,7 @@ const HomeFeed = ({ from, smallButtonDropDownOptions }) => {
                 </Fragment>
               );
           }
-        }
-      )}
+        })}
 
       <div className="box-pad-v"></div>
       {isLoading && (

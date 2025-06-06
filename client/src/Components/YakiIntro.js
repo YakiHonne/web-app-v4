@@ -181,7 +181,7 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated April 28, 2025
+                  Last updated June 05, 2025
                 </p>
               </div>
               <p className="orange-c p-medium">
@@ -190,13 +190,37 @@ const Banner = ({ exit }) => {
             </div>
             <div className="box-pad-v-s"></div>
             <ul>
-              <li>Introducing Smart Widgets v2 – now dynamic and programmable. Learn more at <a href="https://yakihonne.com/docs/sw/intro" className="c1-c" target="_blank">Yaki Docs</a></li>
-              <li>New Tools Smart Widgets section in note creation for advanced content editing.</li>
-              <li>Curations, videos, and polls are now Tools Smart Widgets, enabling quick creation and seamless embedding in notes.</li>
-              <li>Zap advertisements added—top zappers can now appear below notes.</li>
-              <li>Note translation button has been relocated next to the note options for easier access.</li>
-              <li>Follower and following lists are now visible directly on the dashboard home page.</li>
-              <li>General improvements and bug fixes for a smoother experience.</li>
+              <li>
+                Content customization now supports multiple source types—from
+                your Nostr network and global feed to Data Vending Machine
+                servers and custom or algorithmic relays.
+              </li>
+              <li>
+                Advanced content filtering lets you fine-tune your experience by
+                setting time ranges, filtering by keywords, showing posts from
+                favorite users, and more.
+              </li>
+              <li>
+                Seamless multi-account publishing enables fast switching between
+                connected accounts for posting notes, comments, and
+                articles—without ending your current session.
+              </li>
+              <li>
+                Reposts are now grouped to keep your home feed clean and
+                focused.
+              </li>
+              <li>
+                Interact quickly with articles, videos, and curations while
+                viewing key stats at a glance.
+              </li>
+              <li>
+                Smart Widget types are now organized into separate tabs for a
+                clearer and more intuitive browsing experience.
+              </li>
+              <li>
+                General improvements and bug fixes for a more polished
+                experience.
+              </li>
             </ul>
             {/* <p>{`
 - Introducing Smart Widgets v2 – now dynamic and programmable. Learn more at https://yakihonne.com/docs/sw/intro

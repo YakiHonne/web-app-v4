@@ -6,8 +6,9 @@ import { useTranslation } from "react-i18next";
 
 export default function UserSearchBar({
   onClick,
+  getUserMetadata = false,
   full = false,
-  placeholder
+  placeholder,
 }) {
   const [keyword, setKeyword] = useState("");
   const { t } = useTranslation();
@@ -19,6 +20,7 @@ export default function UserSearchBar({
       if (value.includes("nprofile")) {
         let data = nip19.decode(value);
         onClick(data.data.pubkey);
+
         return;
       }
       if (value.includes("npub")) {
@@ -32,8 +34,12 @@ export default function UserSearchBar({
     }
   };
 
-  const setSelectedMention = (data) => {
+  const setSelectedMentionPubkey = (data) => {
     onClick(nip19.decode(data).data);
+    setKeyword("");
+  };
+  const setSelectedMentionMetadata = (data) => {
+    getUserMetadata(data);
     setKeyword("");
   };
 
@@ -65,7 +71,10 @@ export default function UserSearchBar({
         {keyword && (
           <MentionSuggestions
             mention={keyword}
-            setSelectedMention={setSelectedMention}
+            setSelectedMention={!getUserMetadata && setSelectedMentionPubkey}
+            setSelectedMentionMetadata={
+              getUserMetadata && setSelectedMentionMetadata
+            }
           />
         )}
       </label>

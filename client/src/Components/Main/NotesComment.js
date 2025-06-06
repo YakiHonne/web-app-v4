@@ -254,8 +254,8 @@ export default function NotesComment({
         />
       )}
       <div
-        className={`box-pad-h-m ${
-          isHistory ? "" : "box-pad-v-m"
+        className={`${
+          isHistory ? "box-pad-h-s " : "box-pad-h-m box-pad-v-m"
         } fit-container`}
         style={{
           transition: ".2s ease-in-out",

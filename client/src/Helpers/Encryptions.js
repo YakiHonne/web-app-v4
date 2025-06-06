@@ -5,7 +5,7 @@ import * as secp from "@noble/secp256k1";
 import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
-import { getAppLang, getCustomSettings, getKeys, getNoteTree } from "./Helpers";
+import { getAppLang, getCustomSettings, getKeys, getNoteTree, nEventEncode } from "./Helpers";
 import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
 import { SigningStargateClient } from "@cosmjs/stargate";
@@ -174,7 +174,7 @@ const encodeLud06 = (url) => {
 };
 
 const getParsedAuthor = (data) => {
-  let content = JSON.parse(data.content) || {};
+  let content = data.content ? JSON.parse(data.content) : {};
   let tempAuthor = {
     display_name:
       content?.display_name || content?.name || data.pubkey.substring(0, 10),
@@ -244,6 +244,7 @@ const getParsedSW = (event) => {
 
 const getParsedRepEvent = (event) => {
   try {
+    let imeta_url = "";
     let content = {
       id: event.id,
       pubkey: event.pubkey,
@@ -266,6 +267,7 @@ const getParsedRepEvent = (event) => {
         ? [...new Set(event.onRelays.map((relay) => relay.url))]
         : [],
       dir: detectDirection(event.content),
+      vUrl: "",
     };
     for (let tag of event.tags) {
       if (tag[0] === "title") {
@@ -278,7 +280,7 @@ const getParsedRepEvent = (event) => {
         content.description = tag[1];
       }
       if (tag[0] === "d") {
-        content.d = tag[1];
+        content.d = encodeURIComponent(tag[1]);
       }
       if (tag[0] === "published_at") {
         content.published_at =
@@ -304,7 +306,11 @@ const getParsedRepEvent = (event) => {
       if (tag[0] === "t") {
         content.tTags.push(tag[1]);
       }
+      if (tag[0] === "url") content.vUrl = tag[1];
+      if (tag[0] === "imeta") imeta_url = tag.find((_) => _.includes("url"));
     }
+    if (imeta_url) content.vUrl = imeta_url.split(" ")[1];
+
     content.naddr = content.d
       ? nip19.naddrEncode({
           pubkey: event.pubkey,
@@ -442,7 +448,7 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
       isFlashNews = true;
     }
 
-    let nEvent = nip19.noteEncode(event.id);
+    let nEvent = nEventEncode(event.id);
     // let nEvent = nip19.neventEncode({
     //   id: event.id,
     //   author: event.pubkey,
@@ -512,8 +518,12 @@ const getZapper = (event) => {
     let sats = decodeBolt11(getBolt11(event));
     for (let tag of event.tags) {
       if (tag[0] === "description") {
-        let tempEvent = JSON.parse(tag[1])
-        return { ...tempEvent, amount: sats, message: event.content || tempEvent.content};
+        let tempEvent = JSON.parse(tag[1]);
+        return {
+          ...tempEvent,
+          amount: sats,
+          message: event.content || tempEvent.content,
+        };
       }
     }
     return "";
@@ -620,7 +630,10 @@ const removeObjDuplicants = (list_1, list_2 = []) => {
 const removeEventsDuplicants = (list_1, list_2 = []) => {
   let tempArray = [...list_1, ...list_2];
   return tempArray.filter((item, index, tempArray) => {
-    if (tempArray.findIndex((item_1) => item_1.id === item.id) === index)
+    if (
+      item.id &&
+      tempArray.findIndex((item_1) => item_1.id === item.id) === index
+    )
       return item;
   });
 };
@@ -764,7 +777,7 @@ const getKeplrSigner = async () => {
 
     await window.keplr.enable(chainId);
 
-    console.log("chainId",chainId)
+    console.log("chainId", chainId);
     const offlineSigner = window.getOfflineSigner(chainId);
 
     // const client = await SigningStargateClient.connectWithSigner(
@@ -778,6 +791,275 @@ const getKeplrSigner = async () => {
     console.log(err);
     return false;
   }
+};
+
+// const getWOTScoreForPubkey = (network, pubkey, minScore = 3) => {
+//   try {
+//     let totalTrusting = network.filter((_) =>
+//       _.followings.includes(pubkey)
+//     ).length;
+//     // let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
+//     let equalizer = totalTrusting === 0 ? 5 : 0;
+//     let score =
+//       equalizer ||
+//       Math.floor(
+//         (Math.max(0, totalTrusting) * 10) / network.length
+//       );
+
+//     return { score, status: score >= minScore };
+//   } catch (err) {
+//     console.log(err);
+//     return [];
+//   }
+// };
+
+const precomputeTrustingCounts = (network) => {
+  const counts = new Map();
+  for (const item of network) {
+    if (item.followings) {
+      for (const pubkey of item.followings) {
+        counts.set(pubkey, (counts.get(pubkey) || 0) + 1);
+      }
+    }
+  }
+  return counts;
+};
+
+const getWOTScoreForPubkey = (network, pubkey, minScore = 3, counts) => {
+  try {
+    if (!network?.length || !pubkey) return { score: 0, status: false };
+
+    const totalTrusting = counts.get(pubkey) || 0;
+    const score =
+      totalTrusting === 0
+        ? 5
+        : Math.floor((totalTrusting * 10) / network.length);
+
+    return { score, status: score >= minScore };
+  } catch (err) {
+    console.error(err);
+    return { score: 0, status: false };
+  }
+};
+
+const getWOTList = () => {
+  try {
+    let userKeys = localStorage.getItem("_nostruserkeys");
+    let userPubkey = userKeys ? JSON.parse(userKeys)?.pub : false;
+    let prevData = localStorage.getItem(`network_${userPubkey}`);
+    prevData = prevData ? JSON.parse(prevData) : { network: [] };
+
+    if (!(prevData && userPubkey)) {
+      return [];
+    }
+    let network = prevData.wotPubkeys;
+    if (network.length === 0) {
+      return [];
+    }
+
+    return network;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+const getBackupWOTList = () => {
+  try {
+    let prevData = localStorage.getItem(`backup_wot`);
+    prevData = prevData ? JSON.parse(prevData) : { network: [] };
+
+    let network = prevData.wotPubkeys;
+    if (network.length === 0) {
+      return [];
+    }
+
+    return network;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
+// const getWOTScoreForPubkey = (pubkey, minScore = 3) => {
+//   try {
+//     let userKeys = localStorage.getItem("_nostruserkeys");
+//     let userPubkey = userKeys ? JSON.parse(userKeys)?.pub : false;
+//     let prevData = localStorage.getItem(`network_${userPubkey}`);
+//     prevData = prevData ? JSON.parse(prevData) : { network: [] };
+
+//     if (!(prevData && userPubkey)) {
+//       return {
+//         score: 10,
+//         status: true,
+//       };
+//     }
+//     let network = prevData.network;
+//     if (network.length === 0) {
+//       return {
+//         score: 10,
+//         status: true,
+//       };
+//     }
+
+//     let totalTrusting = network.filter((_) =>
+//       _.followings.includes(pubkey)
+//     ).length;
+//     let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
+//     let equalizer = totalTrusting === 0 && totalMuted === 0 ? 5 : 0;
+//     let score = equalizer || Math.floor(
+//       (Math.max(0, totalTrusting - totalMuted) * 10) /
+//         network.length
+//     );
+
+//     return { score, status: score >= minScore };
+//   } catch (err) {
+//     console.log(err);
+//     return {
+//       score: 10,
+//       status: true,
+//     };
+//   }
+// };
+
+const filterContent = (selectedFilter, list) => {
+  const matchWords = (longString, wordArray) => {
+    const stringWords = Array.isArray(longString)
+      ? longString.map((_) => _.toLowerCase())
+      : longString.toLowerCase().match(/\b\w+\b/g) || [];
+
+    const lowerCaseWordArray = wordArray.map((word) => word.toLowerCase());
+
+    let status = stringWords.some((word) => lowerCaseWordArray.includes(word));
+    return status;
+  };
+  const hasImageLinks = (string) => {
+    const imageExtensions =
+      /\.(jpg|jpeg|png|gif|bmp|webp|mp4|mp3|mov|mpeg)(?:\?[^'"]*)?(?=['"]|\s|$)/i;
+    const urlRegex = /(https?:\/\/[^\s]+)\b/i;
+    const urls = string.match(urlRegex) || [];
+    return urls.some((url) => imageExtensions.test(url));
+  };
+  const hasCurType = (kind, curType) => {
+    if (curType === "videos" && kind === 30005) return true;
+    if (curType === "articles" && kind === 30004) return true;
+    return true;
+  };
+  const sameOrigin = (type, url) => {
+    const youtubeRegex =
+      /(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+    const vimeoRegex = /(https?:\/\/)?(www\.)?(vimeo\.com\/)([0-9]+)/i;
+    if (type === "all") return true;
+    if (type === "youtube" && youtubeRegex.test(url)) return true;
+    if (type === "vimeo" && vimeoRegex.test(url)) return true;
+    return true;
+  };
+
+  const testForMixedContent = (_) => {
+    let thumbnail = selectedFilter.thumbnail ? _.image : true;
+    let excluded_words = selectedFilter.excluded_words.length
+      ? !(
+          matchWords(_.title, selectedFilter.excluded_words) ||
+          matchWords(_.description, selectedFilter.excluded_words) ||
+          matchWords(_.content, selectedFilter.excluded_words) ||
+          matchWords(_.items, selectedFilter.excluded_words)
+        )
+      : true;
+    let included_words = selectedFilter.included_words.length
+      ? matchWords(_.title, selectedFilter.included_words) ||
+        matchWords(_.description, selectedFilter.included_words) ||
+        matchWords(_.content, selectedFilter.included_words) ||
+        matchWords(_.items, selectedFilter.included_words)
+      : true;
+    let hide_sensitive = selectedFilter.hide_sensitive
+      ? !_.contentSensitive
+      : true;
+    let posted_by = selectedFilter.posted_by.length
+      ? selectedFilter.posted_by.includes(_.pubkey)
+      : true;
+    let a_min_words =
+      _.kind === 30023
+        ? _.content.split(" ").length > selectedFilter.for_articles.min_words
+        : true;
+    let n_media_only =
+      _.kind === 1
+        ? !selectedFilter.media_only
+          ? true
+          : hasImageLinks(_.content)
+          ? true
+          : false
+        : true;
+    let a_media_only =
+      _.kind === 30023
+        ? !selectedFilter.for_articles.media_only
+          ? true
+          : hasImageLinks(_.content)
+          ? true
+          : false
+        : true;
+    let c_type = [30004, 30005].includes(_.kind)
+      ? hasCurType(_.kind, selectedFilter.for_curations.type)
+      : true;
+    let c_min_items = [30004, 30005].includes(_.kind)
+      ? _.items.length > selectedFilter.for_curations.min_items
+      : true;
+    let v_source = [34235, 34236].includes(_.kind)
+      ? sameOrigin(selectedFilter.for_videos.source, _.vUrl)
+      : true;
+
+    if (
+      thumbnail &&
+      excluded_words &&
+      included_words &&
+      hide_sensitive &&
+      posted_by &&
+      n_media_only &&
+      a_min_words &&
+      a_media_only &&
+      c_type &&
+      c_min_items &&
+      v_source
+    )
+      return true;
+    return false;
+  };
+
+  const testForNotes = (_) => {
+    let tags = _.tags.filter((tag) => tag[0] === "t").map((tag) => tag[1]);
+    let excluded_words = selectedFilter.excluded_words.length
+      ? !(
+          matchWords(_.content, selectedFilter.excluded_words) ||
+          matchWords(tags, selectedFilter.excluded_words)
+        )
+      : true;
+    let included_words = selectedFilter.included_words.length
+      ? matchWords(_.content, selectedFilter.included_words) ||
+        matchWords(tags, selectedFilter.included_words)
+      : true;
+
+    let posted_by = selectedFilter.posted_by.length
+      ? selectedFilter.posted_by.includes(_.pubkey)
+      : true;
+
+    let n_media_only =
+      _.kind === 1
+        ? !selectedFilter.media_only
+          ? true
+          : hasImageLinks(_.content)
+          ? true
+          : false
+        : true;
+
+    if (excluded_words && included_words && posted_by && n_media_only)
+      return true;
+    return false;
+  };
+
+  return list.filter((_) => {
+    let status = [1, 6].includes(_.kind)
+      ? testForNotes(_.kind === 1 ? _ : _.relatedEvent)
+      : testForMixedContent(_);
+    if (status) return _;
+  });
 };
 
 export {
@@ -819,4 +1101,9 @@ export {
   parsedMaciPoll,
   downloadAsFile,
   getKeplrSigner,
+  getWOTScoreForPubkey,
+  getWOTList,
+  filterContent,
+  precomputeTrustingCounts,
+  getBackupWOTList,
 };

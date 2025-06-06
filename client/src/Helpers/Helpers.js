@@ -366,7 +366,7 @@ const getLinkFromAddr = (addr_) => {
     }
     if (addr.startsWith("nevent")) {
       let data = nip19.decode(addr);
-      return `/notes/${nip19.noteEncode(data.data.id)}`;
+      return `/notes/${nEventEncode(data.data.id)}`;
       // return `/notes/${nip19.neventEncode({
       //   author: data.data.author,
       //   id: data.data.id,
@@ -374,7 +374,7 @@ const getLinkFromAddr = (addr_) => {
     }
     if (addr.startsWith("note")) {
       let data = nip19.decode(addr);
-      return `/notes/${nip19.noteEncode(data.data)}`;
+      return `/notes/${nEventEncode(data.data)}`;
     }
 
     return addr;
@@ -1317,7 +1317,7 @@ const getDefaultSettings = (pubkey) => {
     collapsedNote: true,
     contentList: [
       { tab: "recent", isHidden: false },
-      { tab: "recent-with-replies", isHidden: false },
+      { tab: "recent_with_replies", isHidden: false },
       { tab: "trending", isHidden: false },
       { tab: "highlights", isHidden: false },
       { tab: "paid", isHidden: false },
@@ -1589,21 +1589,68 @@ const straightUp = () => {
 
 const compactContent = (note) => {
   if (!note) return "";
-  let content = note.split(" ");
+  let content = note
+    .trim()
+    .split(/(\n)/)
+    .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
+    .filter(Boolean);
   let compactedContent = [];
+  let index = 0;
   for (let word of content) {
-    let replacedNostrPrefix = word.replace("nostr:", "").replace("@", "");
+    let replacedNostrPrefix = word
+      .trim()
+      .replaceAll("nostr:", "")
+      .replaceAll("@", "");
+    // if (
+    //   replacedNostrPrefix.startsWith("npub") ||
+    //   replacedNostrPrefix.startsWith("nprofile") ||
+    //   replacedNostrPrefix.startsWith("naddr") ||
+    //   replacedNostrPrefix.startsWith("note") ||
+    //   replacedNostrPrefix.startsWith("nevent")
+    // ) {
+    //   compactedContent.push(
+    //     <a
+    //       className="c1-c"
+    //       target="_blank"
+    //       onClick={(e) => e.stopPropagation()}
+    //       href={`/${replacedNostrPrefix}`}
+    //     >{`@${replacedNostrPrefix.substring(0, 20)}`}</a>
+    //   );
     if (
-      replacedNostrPrefix.startsWith("npub") ||
-      replacedNostrPrefix.startsWith("nprofile") ||
-      replacedNostrPrefix.startsWith("naddr") ||
-      replacedNostrPrefix.startsWith("note") ||
-      replacedNostrPrefix.startsWith("nevent")
+      word.startsWith("data:image") ||
+      /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(word)
     )
-      compactedContent.push(`@${replacedNostrPrefix.substring(0, 10)}`);
-    else compactedContent.push(word);
+      compactedContent.push(<IMGElement src={word} key={index} />);
+    else if (word === "\n") {
+      compactedContent.push(<br key={index} />);
+    } else {
+      const parts = replacedNostrPrefix.split(/([@.,?!\s:()’"'])/);
+
+      const finalOutput = parts.map((part, index) => {
+        if (
+          part?.startsWith("npub1") ||
+          part?.startsWith("nprofile1") ||
+          part?.startsWith("nevent") ||
+          part?.startsWith("naddr") ||
+          part?.startsWith("note1")
+        ) {
+          const cleanedPart = part.replace(/[@.,?!]/g, "");
+
+          return (
+            <Fragment key={index}>
+              <Nip19Parsing addr={cleanedPart} minimal={true} />
+            </Fragment>
+          );
+        }
+
+        return part;
+      });
+      compactedContent.push(<Fragment key={index}>{finalOutput} </Fragment>);
+    }
+    index++;
+    // } else compactedContent.push(word);
   }
-  return compactedContent.join(" ");
+  return mergeConsecutivePElements(compactedContent);
 };
 
 const redirectToLogin = () => {
@@ -1902,6 +1949,37 @@ const addWidgetPathToUrl = (url) => {
     return false;
   }
 };
+
+const nEventEncode = (id) => {
+  return nip19.neventEncode({
+    id,
+  });
+};
+
+const getRepliesViewSettings = () => {
+  try {
+    let userKeys = getKeys();
+    if (userKeys?.pub) {
+      let isThread = localStorage.getItem(`replies-view-${userKeys.pub}`);
+      if (isThread === "thread") return true;
+      return false;
+    } else {
+      return false;
+    }
+  } catch (err) {
+    return false;
+  }
+};
+const setRepliesViewSettings = (settings = "box") => {
+  try {
+    let userKeys = getKeys();
+    if (userKeys?.pub) {
+      localStorage.setItem(`replies-view-${userKeys.pub}`, settings);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
 export {
   getNoteTree,
   getLinkFromAddr,
@@ -1957,4 +2035,7 @@ export {
   assignClientTag,
   extractRootDomain,
   addWidgetPathToUrl,
+  nEventEncode,
+  getRepliesViewSettings,
+  setRepliesViewSettings,
 };

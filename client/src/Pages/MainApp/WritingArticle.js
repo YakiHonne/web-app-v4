@@ -422,6 +422,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
+import ProfilesPicker from "../../Components/Main/ProfilesPicker";
 
 const getUploadsHistory = () => {
   let history = localStorage.getItem("YakihonneUploadsHistory");
@@ -469,6 +470,7 @@ export default function WritingArticle() {
   );
   const [isEdit, setIsEdit] = useState(true);
   const [triggerHTMLWarning, setTriggerHTMLWarning] = useState(false);
+ const [selectedProfile, setSelectedProfile] = useState(false);
 
   useEffect(() => {
     if (state && userKeys && userKeys.pub !== post_pubkey) {
@@ -608,6 +610,7 @@ export default function WritingArticle() {
           postId={post_id}
           postKind={post_kind}
           postPublishedAt={post_published_at}
+          userKeys={selectedProfile}
         />
       )}
       {showPublishingDraftScreen && (
@@ -623,6 +626,7 @@ export default function WritingArticle() {
           seenOn={seenOn || []}
           postId={post_id}
           postKind={post_kind}
+          userKeys={selectedProfile}
         />
       )}
       {isLoading && <LoadingScreen />}
@@ -798,11 +802,12 @@ export default function WritingArticle() {
                                     {t("AgGi8rh")}
                                   </button>
                                 </div>
-                                <UserProfilePic
+                                {/* <UserProfilePic
                                   size={40}
                                   mainAccountUser={true}
                                   allowClick={false}
-                                />
+                                /> */}
+                                <ProfilesPicker setSelectedProfile={setSelectedProfile}/>
                               </div>
                             </div>
                             <div>
