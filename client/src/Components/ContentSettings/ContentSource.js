@@ -402,7 +402,7 @@ export default function ContentSource({
         <div className="fx-centered">
           <RelayImage url={category.value} size={minimal ? 28 : 32} />
           <div>
-            <p className="p-maj p-one-line">{category.display_name}</p>
+            <p className="p-one-line">{category.display_name}</p>
             {!minimal && <p className="gray-c p-one-line">{category.value}</p>}
           </div>
         </div>
@@ -1121,7 +1121,7 @@ const ContentSourceSettingsItem = ({
         <div className="fx-centered">
           <RelayImage url={item.value} size={32} />
           <div>
-            <p className="p-maj">{item.display_name}</p>
+            <p>{item.display_name}</p>
             <p className="gray-c">{item.value}</p>
           </div>
         </div>

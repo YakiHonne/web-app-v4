@@ -594,6 +594,8 @@ export default function WritingArticle() {
     setShowClearEditPopup(false);
   };
 
+  console.log(post_desc)
+
   return (
     <>
       {showPublishingScreen && (
