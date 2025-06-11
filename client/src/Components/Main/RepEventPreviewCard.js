@@ -47,7 +47,6 @@ export default function RepEventPreviewCard({
   border = true,
   minimal = false,
 }) {
-  console.log(item)
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userFollowings = useSelector((state) => state.userFollowings);
   const { t } = useTranslation();

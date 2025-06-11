@@ -35,7 +35,7 @@ export default function Sidebar() {
             <div className="fx-centered fx-start-h fit-container">
               <div
                 className="yakihonne-logo-128"
-                onClick={() => customHistory.push("/docs/sw/intro")}
+                onClick={() => customHistory.push("/")}
               ></div>
               <div className="sticker sticker-c1 sticker-small">DOCS</div>
             </div>

@@ -168,11 +168,12 @@ export default function Article() {
         let tempArt = false;
         let lastCreatedAtInUser = 0;
         let lastCreatedAtInArticle = 0;
+
         let sub = ndkInstance.subscribe(
           [
             {
               kinds: [30023],
-              "#d": [naddrData.identifier],
+              "#d": [decodeURIComponent(naddrData.identifier)],
             },
 
             {
@@ -511,7 +512,7 @@ export default function Article() {
                                     post_id: post.id,
                                     post_kind: post.kind,
                                     post_title: post.title,
-                                    post_desc: post.summary,
+                                    post_desc: post.description,
                                     post_thumbnail: post.image,
                                     post_tags: post.items,
                                     post_d: post.d,
