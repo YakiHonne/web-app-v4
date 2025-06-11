@@ -53,6 +53,8 @@ import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
 import ZapAd from "../../Components/Main/ZapAd";
+import useUserProfile from "../../Hooks/useUsersProfile";
+import { saveUsers } from "../../Helpers/DB";
 
 export default function Article() {
   const { t } = useTranslation();
@@ -63,8 +65,9 @@ export default function Article() {
   const userMutedList = useSelector((state) => state.userMutedList);
 
   const [isLoaded, setIsLoaded] = useState(false);
-  const [author, setAuthor] = useState(false);
+  // const [author, setAuthor] = useState(false);
   const [post, setPost] = useState({});
+  const {isNip05Verified, userProfile} = useUserProfile(post?.pubkey || "");
   const [readMore, setReadMore] = useState([]);
   const [naddrData, setNaddrData] = useState("");
   const [usersList, setUsersList] = useState(false);
@@ -100,14 +103,14 @@ export default function Article() {
   const isMuted = useMemo(() => {
     let checkProfile = () => {
       if (!Array.isArray(userMutedList)) return false;
-      let index = userMutedList.findIndex((item) => item === author?.pubkey);
+      let index = userMutedList.findIndex((item) => item === userProfile?.pubkey);
       if (index === -1) {
         return false;
       }
       return { index };
     };
     return checkProfile();
-  }, [userMutedList, author]);
+  }, [userMutedList, userProfile]);
 
   useEffect(() => {
     const checkURL = async () => {
@@ -176,37 +179,41 @@ export default function Article() {
               "#d": [decodeURIComponent(naddrData.identifier)],
             },
 
-            {
-              kinds: [0, 10002],
-              authors: [naddrData.pubkey],
-            },
+            // {
+            //   kinds: [0, 10002],
+            //   authors: [naddrData.pubkey],
+            // },
           ],
           { cacheUsage: "CACHE_FIRST" }
         );
 
         sub.on("event", (event) => {
-          if (event.kind === 0) {
-            tempAuth = { ...event };
-            if (lastCreatedAtInUser < event.created_at) {
-              lastCreatedAtInUser = event.created_at;
-              setAuthor(getParsedAuthor(event));
-            }
-          }
+          // if (event.kind === 0) {
+          //     console.log(event)
+          //   tempAuth = { ...event };
+          //   if (lastCreatedAtInUser < event.created_at) {
+          //     lastCreatedAtInUser = event.created_at;
+          //     setAuthor(getParsedAuthor(event));
+          //   }
+          // }
           if (event.kind === 30023) {
+            saveUsers([event.pubkey]);
             tempArt = { ...event };
             if (lastCreatedAtInArticle < event.created_at) {
               lastCreatedAtInArticle = event.created_at;
               setPost(getParsedRepEvent(event));
             }
+              setIsLoaded(true);
           }
-          if (tempArt && tempAuth) {
-            setIsLoaded(true);
-          }
+          // if (tempArt && tempAuth) {
+          //   setIsLoaded(true);
+          // }
         });
         sub.on("close", () => {
-          if (!tempAuth) {
-            setAuthor(getEmptyuserMetadata(tempArt.pubkey));
-          }
+          
+          // if (!tempAuth) {
+          //   setAuthor(getEmptyuserMetadata(tempArt.pubkey));
+          // }
           setIsLoaded(true);
         });
         let timeout = setTimeout(() => {
@@ -307,7 +314,7 @@ export default function Article() {
       if (isMuted) {
         tempTags.splice(isMuted.index, 1);
       } else {
-        tempTags.push(["p", author.pubkey]);
+        tempTags.push(["p", userProfile?.pubkey]);
       }
 
       dispatch(
@@ -391,7 +398,7 @@ export default function Article() {
                       {showCommentsSection && (
                         <RepEventCommentsSection
                           id={post.aTag}
-                          author={author}
+                          author={userProfile}
                           eventPubkey={post.pubkey}
                           leaveComment={showCommentsSection.comment}
                           exit={() => setShowCommentsSections(false)}
@@ -416,9 +423,9 @@ export default function Article() {
                                 <div className="fx-centered">
                                   <UserProfilePic
                                     size={20}
-                                    img={author.picture}
+                                    img={userProfile.picture}
                                     mainAccountUser={false}
-                                    user_id={author.pubkey}
+                                    user_id={userProfile.pubkey}
                                     allowClick={true}
                                   />
                                   <div className="fx-centered fx-start-h">
@@ -426,8 +433,8 @@ export default function Article() {
                                       <p className="p-caps">
                                         {t("AsXpL4b", {
                                           name:
-                                            author.display_name ||
-                                            author.name ||
+                                            userProfile.display_name ||
+                                            userProfile.name ||
                                             minimizeKey(post.pubkey),
                                         })}
                                       </p>
@@ -463,17 +470,17 @@ export default function Article() {
                               <div className="fx-centered">
                                 <UserProfilePic
                                   size={48}
-                                  img={author.picture}
+                                  img={userProfile.picture}
                                   mainAccountUser={false}
-                                  user_id={author.pubkey}
+                                  user_id={userProfile.pubkey}
                                   allowClick={true}
                                 />
                                 <div className="fx-centered fx-col fx-start-v">
                                   <div>
                                     <p className="gray-c">{t("AVG3Uga")}</p>
                                     <p className="p-big p-caps">
-                                      {author.display_name ||
-                                        author.name ||
+                                      {userProfile.display_name ||
+                                        userProfile.name ||
                                         minimizeKey(post.pubkey)}
                                     </p>
                                   </div>
@@ -483,21 +490,21 @@ export default function Article() {
                               {userKeys.pub !== post.pubkey && (
                                 <div className="fx-centered">
                                   <Follow
-                                    toFollowKey={author.pubkey}
-                                    toFollowName={author.name}
+                                    toFollowKey={userProfile.pubkey}
+                                    toFollowName={userProfile.name}
                                     bulk={false}
                                     bulkList={[]}
                                   />
                                   <ZapTip
                                     recipientLNURL={checkForLUDS(
-                                      author.lud06,
-                                      author.lud16
+                                      userProfile.lud06,
+                                      userProfile.lud16
                                     )}
-                                    recipientPubkey={author.pubkey}
+                                    recipientPubkey={userProfile.pubkey}
                                     senderPubkey={userKeys.pub}
                                     recipientInfo={{
-                                      name: author.name,
-                                      img: author.picture,
+                                      name: userProfile.name,
+                                      img: userProfile.picture,
                                     }}
                                     aTag={`30023:${naddrData.pubkey}:${naddrData.identifier}`}
                                     forContent={post.title}
@@ -935,7 +942,7 @@ export default function Article() {
                       </div>
                       <div className="fx-centered">
                         <Zap
-                          user={author}
+                          user={userProfile}
                           event={post}
                           actions={postActions}
                           isZapped={isZapped}
@@ -989,7 +996,7 @@ export default function Article() {
                             kind={30023}
                             shareImgData={{
                               post,
-                              author,
+                              author: userProfile,
                               likes: postActions.likes.likes.length,
                             }}
                           />,

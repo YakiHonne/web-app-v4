@@ -14,7 +14,6 @@ const useUserProfile = (pubkey) => {
     const fetchData = async () => {
       try {
         let auth = getUser(pubkey);
-
         if (auth) {
           setUserProfile(auth);
           let ndkUser = new NDKUser({ pubkey });
