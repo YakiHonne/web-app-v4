@@ -415,7 +415,6 @@ export const saveUsers = async (pubkeys) => {
     //   users_pubkeys,
     // });
     // let res = data.data;
-
     await Dexie.ignoreTransaction(async () => {
       await db.transaction("rw", db.users, async () => {
         for (let metadata of res) await db.users.put(metadata, metadata.pubkey);
