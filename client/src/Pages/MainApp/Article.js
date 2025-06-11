@@ -67,7 +67,7 @@ export default function Article() {
   const [isLoaded, setIsLoaded] = useState(false);
   // const [author, setAuthor] = useState(false);
   const [post, setPost] = useState({});
-  const {isNip05Verified, userProfile} = useUserProfile(post?.pubkey || "");
+  const { isNip05Verified, userProfile } = useUserProfile(post?.pubkey || "");
   const [readMore, setReadMore] = useState([]);
   const [naddrData, setNaddrData] = useState("");
   const [usersList, setUsersList] = useState(false);
@@ -103,7 +103,9 @@ export default function Article() {
   const isMuted = useMemo(() => {
     let checkProfile = () => {
       if (!Array.isArray(userMutedList)) return false;
-      let index = userMutedList.findIndex((item) => item === userProfile?.pubkey);
+      let index = userMutedList.findIndex(
+        (item) => item === userProfile?.pubkey
+      );
       if (index === -1) {
         return false;
       }
@@ -203,14 +205,13 @@ export default function Article() {
               lastCreatedAtInArticle = event.created_at;
               setPost(getParsedRepEvent(event));
             }
-              setIsLoaded(true);
+            setIsLoaded(true);
           }
           // if (tempArt && tempAuth) {
           //   setIsLoaded(true);
           // }
         });
         sub.on("close", () => {
-          
           // if (!tempAuth) {
           //   setAuthor(getEmptyuserMetadata(tempArt.pubkey));
           // }
@@ -467,7 +468,7 @@ export default function Article() {
                                 borderBottom: "1px solid var(--very-dim-gray)",
                               }}
                             >
-                              <div className="fx-centered">
+                              {/* <div className="fx-centered">
                                 <UserProfilePic
                                   size={48}
                                   img={userProfile.picture}
@@ -485,7 +486,9 @@ export default function Article() {
                                     </p>
                                   </div>
                                 </div>
-                              </div>
+                              </div> */}
+
+                              <AuthPreview pubkey={post.pubkey} />
 
                               {userKeys.pub !== post.pubkey && (
                                 <div className="fx-centered">
@@ -1075,6 +1078,30 @@ const ReaderIndicator = () => {
           transition: ".05s linear",
         }}
       ></div>
+    </div>
+  );
+};
+
+const AuthPreview = ({ pubkey }) => {
+  const { t } = useTranslation();
+  const { userProfile } = useUserProfile(pubkey);
+  return (
+    <div className="fx-centered">
+      <UserProfilePic
+        size={48}
+        img={userProfile.picture}
+        mainAccountUser={false}
+        user_id={userProfile.pubkey}
+        allowClick={true}
+      />
+      <div className="fx-centered fx-col fx-start-v">
+        <div>
+          <p className="gray-c">{t("AVG3Uga")}</p>
+          <p className="p-big p-caps">
+            {userProfile.display_name || userProfile.name}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
