@@ -149,10 +149,10 @@ export default function Sidebar() {
               style={{ rowGap: "8px", maxHeight: "71vh" }}
             >
               <p className="p-bold">Useful links</p>
-              <div className={`pointer fit-container fx-start-h fx-centered`}>
+              <a target="_blank" href="https://github.com/YakiHonne/sw-dynamic-api" className={`pointer fit-container fx-start-h fx-centered`}>
                 <div className="link-label gray-c">Basic dynamic widgets</div>
                 <div className="share-icon"></div>
-              </div>
+              </a>
             </div>
           </div>
         </div>
