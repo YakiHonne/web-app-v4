@@ -476,6 +476,7 @@ export default function WritingArticle() {
     if (state && userKeys && userKeys.pub !== post_pubkey) {
       navigate(window.location.pathname, { replace: true, state: null });
     }
+    if(userKeys) setSelectedProfile(userKeys);
   }, [state, navigate, userKeys]);
 
   useEffect(() => {
