@@ -1659,7 +1659,7 @@ const DraftCard = ({ event, setDeleteEvent }) => {
             setDeleteEvent && (
               <div
                 className="fit-container"
-                onClick={() => setDeleteEvent(event)}
+                onClick={(e) => setDeleteEvent(event)}
               >
                 <p className="red-c">{t("Almq94P")}</p>
               </div>
