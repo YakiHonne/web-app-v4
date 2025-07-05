@@ -351,7 +351,7 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
       if (enableWalletLinking && isWalletCreated.toSave.length === 0) return;
       setIsLoading(true);
       let picture_ = pictureFile
-        ? await FileUpload(pictureFile, undefined, userKeys)
+        ? await FileUpload(pictureFile, userKeys)
         : "";
       if (picture_ === false) {
         dispatch(
@@ -364,7 +364,7 @@ const SignupScreen = ({ switchScreen, userKeys, exit }) => {
         return;
       }
       let banner_ = bannerFile
-        ? await FileUpload(bannerFile, undefined, userKeys)
+        ? await FileUpload(bannerFile, userKeys)
         : "";
       if (banner_ === false) {
         dispatch(

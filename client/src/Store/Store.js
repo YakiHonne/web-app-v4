@@ -16,6 +16,9 @@ import {
   UserInterestListReducer,
   UserSavedToolsReducer,
   UserAppSettingsReducer,
+  UserFavRelaysReducer,
+  UserWotListReducer,
+  UserBlossomServersReducer,
 } from "./Slides/UserData";
 import {
   UserFirstLoginYakiChestReducer,
@@ -73,5 +76,8 @@ export const store = configureStore({
     recentTags: RecentTagsReducer,
     wallets: WalletsReducer,
     selectedWallet: SelectedWalletReducer,
+    userFavRelays: UserFavRelaysReducer,
+    userWotList: UserWotListReducer,
+    userBlossomServers: UserBlossomServersReducer,
   },
 });

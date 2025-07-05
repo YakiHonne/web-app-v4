@@ -211,7 +211,7 @@ export default function NotesComment({
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(res.res);
+        let noteTree = await getNoteTree(res.res, undefined, undefined, undefined, event.pubkey);
         setTranslatedNote(noteTree);
         setShowTranslation(true);
       }

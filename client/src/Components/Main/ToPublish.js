@@ -104,8 +104,8 @@ export default function ToPublish({
       }
       let processedContent = extractNip19(postContent);
       const imageRegex =
-        /(?<!\!\[image\]\()https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp|bmp|svg)(?!\))/g;
-
+      /(?<!\!\[image\]\()https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp|bmp|svg)(?!\))/g;
+      
       let tempEvent = {
         created_at,
         kind: kind,

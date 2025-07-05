@@ -22,6 +22,7 @@ import bannedList from "../../Content/BannedList";
 export default function SearchNetwork({ exit }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userMutedList = useSelector((state) => state.userMutedList);
+  const userInterestList = useSelector((state) => state.userInterestList);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -159,7 +160,7 @@ export default function SearchNetwork({ exit }) {
     );
     let content_ = content.data.map((event) => {
       if (event.kind === 1) {
-        return { ...event, content: compactContent(event.content) };
+        return { ...event, content: compactContent(event.content, event.pubkey) };
       } else {
         return getParsedRepEvent(event);
       }
@@ -252,6 +253,28 @@ export default function SearchNetwork({ exit }) {
                     #{searchKeyword.replaceAll("#", "")}
                   </span>
                 </p>
+              </div>
+            </div>
+          )}
+          {userInterestList.length > 0 && (
+            <div className="fit-container fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-s">
+              <p className="gray-c">{t("AvcFYqP")}</p>
+              <div className="fx-centered fx-wrap">
+                {userInterestList?.map((interest, index) => {
+                  return (
+                    <div
+                      onClick={() =>
+                        customHistory.push(
+                          `/search?keyword=${interest?.replace("#", "%23")}`
+                        )
+                      }
+                      className="sc-s bg-sp box-pad-h-m box-pad-v-s pointer"
+                      key={index}
+                    >
+                      #{interest}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -4,8 +4,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 import {
   setUserAllRelays,
   setUserAppSettings,
+  setUserBlossomServers,
   setUserBookmarks,
   setUserChatrooms,
+  setUserFavRelays,
   setUserFollowings,
   setUserFollowingsRelays,
   setUserInterestList,
@@ -14,6 +16,7 @@ import {
   setUserMutedList,
   setUserRelays,
   setUserSavedTools,
+  setUserWotList,
 } from "../Store/Slides/UserData";
 import {
   getBookmarks,
@@ -34,6 +37,12 @@ import {
   saveInterests,
   getAppSettings,
   saveAppSettings,
+  getFavRelays,
+  saveFavRelays,
+  saveWotlist,
+  getWotlist,
+  getBlossomServers,
+  saveBlossomServers,
 } from "../Helpers/DB";
 import {
   addConnectedAccounts,
@@ -112,6 +121,22 @@ export default function AppInit() {
       async () => (userKeys ? await getMutedlist(userKeys.pub) : []),
       [userKeys]
     ) || [];
+  const favRelays =
+    useLiveQuery(
+      async () =>
+        userKeys ? await getFavRelays(userKeys.pub) : { relays: [] },
+      [userKeys]
+    ) || [];
+  const wotList =
+    useLiveQuery(
+      async () => (userKeys ? await getWotlist(userKeys.pub) : []),
+      [userKeys]
+    ) || [];
+  const blossomServers =
+    useLiveQuery(
+      async () => (userKeys ? await getBlossomServers(userKeys.pub) : []),
+      [userKeys]
+    ) || [];
   const users = useLiveQuery(async () => await getUsers(), []);
   const followingsRelays = useLiveQuery(
     async () => await getFollowingsRelays(),
@@ -129,6 +154,9 @@ export default function AppInit() {
   const previousUsers = useRef([]);
   const previousFollowingsRelays = useRef([]);
   const previousNostrClients = useRef([]);
+  const previousWotList = useRef([]);
+  const previousBlossomServers = useRef([]);
+  const previousFavRelays = useRef({ relays: [] });
 
   useEffect(() => {
     if (
@@ -156,10 +184,30 @@ export default function AppInit() {
       addExplicitRelays(relaysURLsToRead);
     }
     if (
+      JSON.stringify(previousFavRelays.current) !== JSON.stringify(favRelays)
+    ) {
+      previousFavRelays.current = favRelays;
+      dispatch(setUserFavRelays(favRelays));
+      addExplicitRelays(favRelays.relays || []);
+    }
+    if (JSON.stringify(previousWotList.current) !== JSON.stringify(wotList)) {
+      previousWotList.current = wotList;
+      dispatch(setUserWotList(wotList));
+    }
+    if (
       JSON.stringify(previousFollowings.current) !== JSON.stringify(followings)
     ) {
       previousFollowings.current = followings;
       dispatch(setUserFollowings(followings?.followings || []));
+    }
+
+    if (
+      JSON.stringify(previousBlossomServers.current) !==
+      JSON.stringify(blossomServers)
+    ) {
+      previousBlossomServers.current = blossomServers;
+
+      dispatch(setUserBlossomServers(blossomServers?.servers || []));
     }
     if (
       JSON.stringify(previousAppSettings.current) !==
@@ -236,6 +284,7 @@ export default function AppInit() {
     bookmarks,
     interestsList,
     appSettings,
+    blossomServers,
   ]);
 
   useEffect(() => {
@@ -292,15 +341,25 @@ export default function AppInit() {
   useEffect(() => {
     let subscription = null;
     const fetchData = async () => {
-      let [INBOX, RELAYS, FOLLOWINGS, MUTEDLIST, INTERESTSLIST, APPSETTINGS] =
-        await Promise.all([
-          getChatrooms(userKeys.pub),
-          getRelays(userKeys.pub),
-          getFollowings(userKeys.pub),
-          getMutedlist(userKeys.pub),
-          getInterestsList(userKeys.pub),
-          getAppSettings(userKeys.pub),
-        ]);
+      let [
+        INBOX,
+        RELAYS,
+        FOLLOWINGS,
+        MUTEDLIST,
+        INTERESTSLIST,
+        APPSETTINGS,
+        FAVRELAYS,
+        BLOSSOMSERVERS,
+      ] = await Promise.all([
+        getChatrooms(userKeys.pub),
+        getRelays(userKeys.pub),
+        getFollowings(userKeys.pub),
+        getMutedlist(userKeys.pub),
+        getInterestsList(userKeys.pub),
+        getAppSettings(userKeys.pub),
+        getFavRelays(userKeys.pub),
+        getBlossomServers(userKeys.pub),
+      ]);
       let lastMessageTimestamp =
         INBOX.length > 0
           ? INBOX.sort(
@@ -312,6 +371,9 @@ export default function AppInit() {
       let lastInterestsTimestamp = INTERESTSLIST?.last_timestamp || undefined;
       let lastMutedTimestamp = MUTEDLIST?.last_timestamp || undefined;
       let lastAppSettingsTimestamp = APPSETTINGS?.last_timestamp || undefined;
+      let lastFavRelaysTimestamp = FAVRELAYS?.last_timestamp || undefined;
+      let lastBlossomServersTimestamp =
+        BLOSSOMSERVERS?.last_timestamp || undefined;
       let lastUserMetadataTimestamp =
         getMetadataFromCachedAccounts(userKeys.pub).created_at || undefined;
       dispatch(setInitDMS(true));
@@ -319,8 +381,10 @@ export default function AppInit() {
       let tempAuthors = [];
       let tempUserFollowings;
       let tempUserInterests;
+      let tempBlossomServers;
       let tempMutedList;
       let tempRelays;
+      let tempFavRelays;
       let tempAppSettings;
       let tempBookmarks = [];
       let tempAuthMetadata = false;
@@ -375,6 +439,20 @@ export default function AppInit() {
             since: lastRelaysTimestamp
               ? lastRelaysTimestamp + 1
               : lastRelaysTimestamp,
+          },
+          {
+            kinds: [10063],
+            authors: [userKeys.pub],
+            since: lastBlossomServersTimestamp
+              ? lastBlossomServersTimestamp + 1
+              : lastBlossomServersTimestamp,
+          },
+          {
+            kinds: [10012],
+            authors: [userKeys.pub],
+            since: lastFavRelaysTimestamp
+              ? lastFavRelaysTimestamp + 1
+              : lastFavRelaysTimestamp,
           },
           {
             kinds: [30078],
@@ -466,6 +544,10 @@ export default function AppInit() {
           tempUserFollowings = { ...event };
           if (eose) saveFollowings(event, userKeys.pub);
         }
+        if (event.kind === 10063) {
+          tempBlossomServers = { ...event };
+          if (eose) saveBlossomServers(event, userKeys.pub);
+        }
         if (event.kind === 10015) {
           tempUserInterests = { ...event };
           if (eose) saveInterests(event, userKeys.pub);
@@ -477,6 +559,11 @@ export default function AppInit() {
         if (event.kind === 10002) {
           tempRelays = { ...event };
           if (eose) saveRelays(event, userKeys.pub);
+        }
+        if (event.kind === 10012) {
+          console.log(event.rawEvent());
+          tempFavRelays = { ...event.rawEvent() };
+          if (eose) saveFavRelays(event.rawEvent(), userKeys.pub);
         }
         if (event.kind === 30078) {
           tempAppSettings = { ...event };
@@ -515,6 +602,17 @@ export default function AppInit() {
         saveInterests(tempUserInterests, userKeys.pub, lastInterestsTimestamp);
         saveMutedlist(tempMutedList, userKeys.pub, lastMutedTimestamp);
         saveRelays(tempRelays, userKeys.pub, lastRelaysTimestamp);
+        saveFavRelays(tempFavRelays, userKeys.pub, lastFavRelaysTimestamp);
+        saveBlossomServers(
+          tempBlossomServers,
+          userKeys.pub,
+          lastBlossomServersTimestamp
+        );
+        saveAppSettings(
+          tempAppSettings,
+          userKeys.pub,
+          lastAppSettingsTimestamp
+        );
         saveAppSettings(
           tempAppSettings,
           userKeys.pub,
@@ -586,7 +684,7 @@ export default function AppInit() {
         let d = await getSubData(
           [
             {
-              kinds: [3],
+              kinds: [3, 10000],
               authors: b.bundled,
             },
           ],
@@ -603,7 +701,7 @@ export default function AppInit() {
       //     },
       //   ],
       //   800
-      // );
+      // );yeh
 
       if (networkData.length === 0) return;
       let network = structuredClone(networkData);
@@ -630,6 +728,7 @@ export default function AppInit() {
             ] || [],
         };
       });
+      saveWotlist(network, userKeys.pub);
       const trustingCounts = precomputeTrustingCounts(network);
       let allPubkeys = [...new Set(network.map((_) => _.followings).flat())];
       let wotPubkeys = allPubkeys.filter(

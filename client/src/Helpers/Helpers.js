@@ -1,5 +1,6 @@
-import { finalizeEvent, nip19, nip44 } from "nostr-tools";
+import { finalizeEvent, generateSecretKey, nip19, nip44 } from "nostr-tools";
 import {
+  bytesTohex,
   decryptEventData,
   encodeBase64URL,
   getBech32,
@@ -25,6 +26,7 @@ import axiosInstance from "./HTTP_Client";
 import LinkPreview from "../Components/Main/LinkPreview";
 import Gallery from "../Components/Main/Gallery";
 import MACIPollPreview from "../Components/Main/MACIPollPreview";
+import { InitEvent } from "./Controlers";
 const LoginToAPI = async (publicKey, secretKey) => {
   try {
     let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
@@ -133,7 +135,8 @@ const getNoteTree = async (
   note,
   minimal = false,
   isCollapsedNote = false,
-  wordsCount = 150
+  wordsCount = 150,
+  pubkey
 ) => {
   if (!note) return "";
 
@@ -338,7 +341,7 @@ const getNoteTree = async (
     }
   }
 
-  return mergeConsecutivePElements(finalTree);
+  return mergeConsecutivePElements(finalTree, pubkey);
 };
 
 const getLinkFromAddr = (addr_) => {
@@ -514,7 +517,7 @@ const getComponent = (children) => {
   return <div className="fit-container">{mergeConsecutivePElements(res)}</div>;
 };
 
-function mergeConsecutivePElements(arr) {
+function mergeConsecutivePElements(arr, pubkey) {
   const result = [];
   let currentTextElement = null;
   let currentImages = [];
@@ -603,7 +606,7 @@ function mergeConsecutivePElements(arr) {
         currentTextElement = null;
       }
       if (currentImages.length > 0) {
-        result.push(createImageGrid(currentImages));
+        result.push(createImageGrid(currentImages, pubkey));
         currentImages = [];
       }
       result.push(element);
@@ -614,13 +617,13 @@ function mergeConsecutivePElements(arr) {
     result.push(currentTextElement);
   }
   if (currentImages.length > 0) {
-    result.push(createImageGrid(currentImages));
+    result.push(createImageGrid(currentImages, pubkey));
   }
 
   return result;
 }
 
-function createImageGrid(images) {
+function createImageGrid(images, pubkey) {
   // if (images.length === 1)
   //   return (
   //     <div className="image-grid" key={Math.random()}>
@@ -630,7 +633,7 @@ function createImageGrid(images) {
   //     </div>
   //   );
   let images_ = images.map((image) => image.props.src);
-  return <Gallery imgs={images_} />;
+  return <Gallery imgs={images_} pubkey={pubkey} />;
 }
 
 const getAuthPubkeyFromNip05 = async (nip05Addr) => {
@@ -730,7 +733,13 @@ const getFlashnewsContent = async (news) => {
     console.log(err);
   }
 
-  let content = await getNoteTree(news.content);
+  let content = await getNoteTree(
+    news.content,
+    undefined,
+    undefined,
+    undefined,
+    news.pubkey
+  );
   return {
     id: news.id,
     content: content,
@@ -1419,7 +1428,175 @@ const getCAEATooltip = (published_at, created_at) => {
   }`;
 };
 
-const FileUpload = async (file, m = "nostr.build", userKeys, cb) => {
+const FileUpload = async (file, userKeys, cb) => {
+  let service = ["1", "2"].includes(
+    localStorage.getItem(`${userKeys.pub}_media_service`)
+  )
+    ? localStorage.getItem(`${userKeys.pub}_media_service`)
+    : "1";
+
+  let result = "";
+  if (service === "1")
+    result = await regularServerFileUpload(file, userKeys, cb);
+
+  if (service === "2")
+    result = await blossomServerFileUpload(file, userKeys, cb);
+  return result;
+};
+
+const blossomServerFileUpload = async (file, userKeys, cb) => {
+  let mirror = localStorage.getItem(`${userKeys.pub}_mirror_blossom_servers`);
+  let servers = store.getState().userBlossomServers;
+  let endpoint =
+    servers.length > 0
+      ? `${servers[0]}/upload`
+      : "https://blossom.primal.net/upload";
+
+  const arrayBuffer = await file.arrayBuffer();
+  const blob = new Blob([arrayBuffer], {
+    type: file.type || "application/octet-stream",
+  });
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const localSha256 = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  let x = localSha256;
+  let expiration = `${Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7}`;
+  let event = {
+    kind: 24242,
+    content: "Image upload",
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ["t", "upload"],
+      ["x", x],
+      ["expiration", expiration],
+    ],
+  };
+  if (userKeys.ext) {
+    try {
+      event = await window.nostr.signEvent(event);
+    } catch (err) {
+      store.dispatch(
+        setToast({
+          type: 2,
+          desc: t("AOKDMRt"),
+        })
+      );
+      console.log(err);
+      return false;
+    }
+  } else {
+    event = finalizeEvent(event, userKeys.sec);
+  }
+  let encodeB64 = encodeBase64URL(JSON.stringify(event));
+
+  try {
+    let imageURL = await axios.put(endpoint, blob, {
+      headers: {
+        "Content-Type": blob.type,
+        "Content-Length": blob.size.toString(),
+        Authorization: `Nostr ${encodeB64}`,
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        if (cb) cb(percentCompleted);
+      },
+    });
+    mirrorBlossomServerFileUpload(
+      mirror,
+      servers,
+      encodeB64,
+      imageURL.data.url
+    );
+    return imageURL.data.url;
+  } catch (err) {
+    console.log(err);
+    store.dispatch(
+      setToast({
+        type: 2,
+        desc: t("AOKDMRt"),
+      })
+    );
+    return false;
+  }
+};
+
+const mirrorBlossomServerFileUpload = async (
+  isMirror,
+  serversList,
+  eventHash,
+  fileUrl
+) => {
+  try {
+    // let hash = await downloadBlobAsArrayBuffer(fileUrl);
+    // if (!hash) return;
+    // let expiration = `${Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7}`;
+    // let event = {
+    //   kind: 24242,
+    //   content: "Image mirror",
+    //   created_at: Math.floor(Date.now() / 1000),
+    //   tags: [
+    //     ["t", "upload"],
+    //     ["x", hash],
+    //     ["expiration", expiration],
+    //   ],
+    // };
+    // event = await InitEvent(
+    //   event.kind,
+    //   event.content,
+    //   event.tags,
+    //   event.created_at
+    // );
+    // let encodeB64 = encodeBase64URL(JSON.stringify(event));
+    if (isMirror && serversList.length > 1) {
+      serversList = serversList.filter((_, index) => index !== 0);
+      let promises = await Promise.allSettled(
+        serversList.map(async (server, index) => {
+          let endpoint = `${server}/mirror`;
+          let data = {
+            url: fileUrl,
+          };
+          try {
+            await axios.put(endpoint, data, {
+              headers: {
+                Authorization: `Nostr ${eventHash}`,
+              },
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+async function downloadBlobAsArrayBuffer(fileUrl) {
+  try {
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      throw new Error("Failed to download the file.");
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const remoteSha256 = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    return remoteSha256;
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    return null;
+  }
+}
+const regularServerFileUpload = async (file, userKeys, cb) => {
   let servers = getMediaUploader();
   let selected = getSelectedServer();
   const nip96Endpoints = servers.find((_) => _.value === selected);
@@ -1587,7 +1764,7 @@ const straightUp = () => {
   el.scrollTop = 0;
 };
 
-const compactContent = (note) => {
+const compactContent = (note, pubkey) => {
   if (!note) return "";
   let content = note
     .trim()
@@ -1650,7 +1827,7 @@ const compactContent = (note) => {
     index++;
     // } else compactedContent.push(word);
   }
-  return mergeConsecutivePElements(compactedContent);
+  return mergeConsecutivePElements(compactedContent, pubkey);
 };
 
 const redirectToLogin = () => {

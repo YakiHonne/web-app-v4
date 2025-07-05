@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   getEmptyuserMetadata,
+  getWOTScoreForPubkeyLegacy,
   getZapper,
   removeEventsDuplicants,
 } from "../../Helpers/Encryptions";
@@ -337,7 +338,8 @@ export default function NotificationCenterMain() {
       });
 
       sub.on("event", (event) => {
-        if (!userMutedList.includes(event.pubkey)) {
+        let score = getWOTScoreForPubkeyLegacy(event.pubkey).status;
+        if (!userMutedList.includes(event.pubkey) && score) {
           if (event.kind === 9735) {
             let description = JSON.parse(
               event.tags.find((tag) => tag[0] === "description")[1]
@@ -778,7 +780,7 @@ const Notification = ({ event, filterByType = false }) => {
                 className="gray-c p-four-lines poll-content-box"
                 style={{ "--p-color": "var(--gray)" }}
               >
-                <MinimalNoteView note={type?.label_2} />
+                <MinimalNoteView note={type?.label_2} pubkey={user.pubkey}/>
               </p>
               {/* <p className="gray-c p-four-lines">{type?.label_2}</p> */}
             </div>
@@ -806,13 +808,13 @@ const ActivateNotification = () => {
   );
 };
 
-const MinimalNoteView = ({ note }) => {
+const MinimalNoteView = ({ note , pubkey}) => {
   const [noteTree, setNoteTree] = useState(false);
 
   useEffect(() => {
     const parseNote = async () => {
       try {
-        let pNote = await getNoteTree(note, true, true, 50);
+        let pNote = await getNoteTree(note, true, true, 50, pubkey);
 
         setNoteTree(pNote);
       } catch (err) {
@@ -821,5 +823,5 @@ const MinimalNoteView = ({ note }) => {
     };
     if (note) parseNote();
   }, [note]);
-  return <>{noteTree || compactContent(note)}</>;
+  return <>{noteTree || compactContent(note, pubkey)}</>;
 };

@@ -44,7 +44,7 @@ export default function UploadFile({
       setCurrentCount(index);
       setIsLoading(true);
       setIsUploadsLoading(true);
-      let url = await FileUpload(file, "nostr.build", userKeys, setProgress);
+      let url = await FileUpload(file, userKeys, setProgress);
       if (url) images.push(url);
       if (setFileMetadata) setFileMetadata(file);
       setIsLoading(false);

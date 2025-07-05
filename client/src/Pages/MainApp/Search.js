@@ -375,6 +375,7 @@ export default function Search() {
                       ]}
                     />
                     <hr />
+
                     {searchKeyword && selectedTab !== "people" && (
                       <div className="fx-scattered fit-container box-pad-v-s box-pad-h-m">
                         <h3>#{searchKeyword.replaceAll("#", "")}</h3>
@@ -404,7 +405,33 @@ export default function Search() {
                       </div>
                     )}
                   </div>
-                  {results.map((item, index) => {
+                  {userInterestList.length > 0 && (
+                    <div className="fit-container fx-centered fx-col fx-start-h fx-start-v box-pad-v-m">
+                      <p className="gray-c">{t("AvcFYqP")}</p>
+                      <div className="fx-centered fx-wrap">
+                        {userInterestList?.map((interest, index) => {
+                          return (
+                            <div
+                              onClick={() => {
+                                setSearchKeyword(interest.toLowerCase());
+                                setResults([]);
+                                setIsLoading(true);
+                              }}
+                              className={`sc-s  box-pad-h-m box-pad-v-s pointer ${
+                                searchKeyword === interest.toLowerCase()
+                                  ? ""
+                                  : "bg-sp"
+                              }`}
+                              key={index}
+                            >
+                              #{interest}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {selectedTab === "people" && results.map((item, index) => {
                     if (!item.kind) {
                       let url = encodePubkey(item.pubkey);
                       if (url)
@@ -417,6 +444,8 @@ export default function Search() {
                           />
                         );
                     }
+                  })}
+                  {selectedTab !== "people" && results.map((item, index) => {
                     if (
                       [1].includes(item.kind) &&
                       !userMutedList.includes(item.pubkey)
@@ -443,8 +472,11 @@ export default function Search() {
                       className="fit-container fx-col fx-centered"
                       style={{ height: "500px" }}
                     >
-                      <div className="search-24"></div>
-                      <h4>{t("AjlW15t")}</h4>
+                      <div
+                        className="search"
+                        style={{ minWidth: "48px", minHeight: "48px" }}
+                      ></div>
+                      <h4 className="box-pad-v-s">{t("AjlW15t")}</h4>
                       <p className="gray-c">{t("A0RqaoC")}</p>
                     </div>
                   )}

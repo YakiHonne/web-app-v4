@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import NotesComment from "./NotesComment";
-import { getParsedNote } from "../../Helpers/Encryptions";
+import {
+  getParsedNote,
+  getWOTList,
+  getWOTScoreForPubkeyLegacy,
+} from "../../Helpers/Encryptions";
 import { useSelector } from "react-redux";
 import { getSubData } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
@@ -157,13 +161,14 @@ export default function CommentsSection({
           let is_mention = event.tags.filter(
             (tag) => tag.length > 3 && tag[3] === "mention" && tag[1] === id
           );
-
+          let score = getWOTScoreForPubkeyLegacy(event.pubkey);
           if (
             !(
               (is_un && is_un[1] === "UNCENSORED NOTE") ||
               (is_quote && !is_comment) ||
               (is_mention.length > 0 && !is_comment)
-            )
+            ) &&
+            score.status
           ) {
             return event;
           }

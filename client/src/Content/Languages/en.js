@@ -1270,23 +1270,25 @@ const englishTranslation = {
   A492vpu: "Included words",
   A07kVBP: "Excluded words",
   AY0XZEx: "Posted by",
-  // AH4Mub1: "Feed settings",
+  AH4Mub1: "Feed settings",
+
+  AdT5mza: "Add to favorite",
+  Am4QHzR: "Remove from favorite",
+  AgZ9mO1: "Active service",
+  ATCstom: "Regular servers",
+  A0n1wDK: "BLOSSOM servers",
+  A3Ok2VN: "BLOSSOM servers (no server found)",
+  AjCVBmz: "Select a server",
+  As9gwde: "Main server",
+  AYpApBJ: "Select",
+  AoA6v9d: "Mirror all servers",
+  A2l1JgC: "Invalid URL",
+  AHFsFp7: "no server found",
 };
 
 export default englishTranslation;
 
-// AdT5mza: "",
-// Am4QHzR: "",
-// AgZ9mO1: "",
-// ATCstom: "",
-// A0n1wDK: "",
-// A3Ok2VN: "",
-// AjCVBmz: "",
-// As9gwde: "",
-// AYpApBJ: "",
-// AoA6v9d: "",
-// A2l1JgC: "",
-// AHFsFp7: "",
+
 // AlNe9hu: "",
 // AIJ7nCM: "",
 // A9eQr6B: "",

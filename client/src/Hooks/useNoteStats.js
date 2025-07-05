@@ -3,20 +3,55 @@ import { getSubData } from "../Helpers/Controlers";
 import { ndkInstance } from "../Helpers/NDKInstance";
 import {
   getEmptyEventStats,
+  getWOTScoreForPubkeyLegacy,
   getZapper,
   removeObjDuplicants,
 } from "../Helpers/Encryptions";
 import { getEventStats, saveEventStats } from "../Helpers/DB";
 import { useLiveQuery } from "dexie-react-hooks";
 
+const filterStatsByWot = (stats) => {
+  return {
+    likes: {
+      likes: stats.likes.likes.filter((like) => {
+        let score = getWOTScoreForPubkeyLegacy(like.pubkey);
+        if (score.status) return true;
+      }),
+      since: stats.likes.since,
+    },
+    reposts: {
+      reposts: stats.reposts.reposts.filter((repost) => {
+        if (getWOTScoreForPubkeyLegacy(repost.pubkey).status) return true;
+      }),
+      since: stats.reposts.since,
+    },
+    replies: {
+      replies: stats.replies.replies.filter((reply) => {
+        if (getWOTScoreForPubkeyLegacy(reply.pubkey).status) return true;
+      }),
+      since: stats.replies.since,
+    },
+    quotes: {
+      quotes: stats.quotes.quotes.filter((quote) => {
+        if (getWOTScoreForPubkeyLegacy(quote.pubkey).status) return true;
+      }),
+      since: stats.quotes.since,
+    },
+    zaps: {
+      ...stats.zaps,
+    },
+  };
+};
+
 const useNoteStats = (noteID, notePubkey) => {
   const [isLoading, setIsLoading] = useState(true);
   const postActions =
-    useLiveQuery(
-      async () =>
-        noteID ? await getEventStats(noteID) : getEmptyEventStats(""),
-      [noteID]
-    ) || getEmptyEventStats("");
+    useLiveQuery(async () => {
+      let stats = noteID ? await getEventStats(noteID) : getEmptyEventStats("");
+      let filteredStats = filterStatsByWot(stats);
+
+      return filteredStats;
+    }, [noteID]) || getEmptyEventStats("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,8 +120,8 @@ const useNoteStats = (noteID, notePubkey) => {
               kind7Since = event.created_at;
             let content = !event.content.includes(":")
               ? event.content
-              : (event.tags.find((tag) => `:${tag[1]}:` === event.content) || [])[2] ||
-                "+";
+              : (event.tags.find((tag) => `:${tag[1]}:` === event.content) ||
+                  [])[2] || "+";
             kind7.push({ id: event.id, pubkey: event.pubkey, content });
           }
           if (event.kind === 6) {

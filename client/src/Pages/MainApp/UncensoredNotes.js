@@ -59,7 +59,7 @@ export default function UncensoredNotes() {
         setTotal(FN.data.total);
         let parsedFNNews = await Promise.all(
           FN.data.flashnews.map(async (fn) => {
-            let note_tree = await getNoteTree(fn.flashnews.content);
+            let note_tree = await getNoteTree(fn.flashnews.content, undefined, undefined, undefined, fn.author.pubkey);
             return { ...fn, note_tree };
           })
         );
@@ -106,7 +106,7 @@ export default function UncensoredNotes() {
         let FN = await axios.get(API_BASE_URL + NMH_PATH, {
           params: { page, elPerPage },
         });
-        let note_tree = await getNoteTree(FN.data.flashnews.content);
+        let note_tree = await getNoteTree(FN.data.flashnews.content, undefined, undefined, undefined, FN.data.author.pubkey);
         let parsedFNNews = { ...FN.data, note_tree };
 
         let index = flashNews.findIndex(

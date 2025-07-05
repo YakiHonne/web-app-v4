@@ -1,16 +1,151 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ProgressBar from "../ProgressBar";
 import Carousel from "./Carousel";
+import { getSubData } from "../../Helpers/Controlers";
+import { bytesTohex, encodeBase64URL } from "../../Helpers/Encryptions";
+import { finalizeEvent, generateSecretKey } from "nostr-tools";
+import axios from "axios";
 
-export default function Gallery({ imgs }) {
+export default function Gallery({ imgs, pubkey }) {
+  const [carouselItems, setCarouselItems] = useState(imgs);
   const [currentImg, setCurrentImg] = useState(0);
   const [showCarousel, setShowCarousel] = useState(false);
+
+  useEffect(() => {
+    const checkImages = async () => {
+      if (imgs.length > 0 && pubkey) {
+        const imagePromises = imgs.map((img, index) => {
+          return new Promise((resolve, reject) => {
+            const imgElement = new Image();
+            let fileName = img.split("/").pop();
+            fileName = fileName.split(".")[0];
+            let toCheck = isValidSha256(fileName);
+            if (toCheck) {
+              imgElement.src = img;
+              imgElement.onload = () => resolve(img);
+              imgElement.onerror = () =>
+                resolve({
+                  img,
+                  index,
+                  status: false,
+                  toCheck: isValidSha256(fileName),
+                  fileName,
+                });
+            } else resolve(img);
+          });
+        });
+
+        try {
+          let res = await Promise.all(imagePromises);
+          res = res.filter((_) => _.status === false && _.toCheck === true);
+          if (res.length > 0) {
+            let serversEvent = await getSubData([
+              {
+                kinds: [10063],
+                authors: [pubkey],
+              },
+            ]);
+            if (serversEvent.data.length > 0) {
+              let servers = serversEvent.data[0].tags
+                .filter((_) => _[0] === "server")
+                .map((_) => _[1]);
+              if (servers && servers.length > 0) {
+                let fetchedImgs = await Promise.allSettled(
+                  res.map(async (item) => {
+                    let encodeB64 = authorizationEvent(item.fileName);
+                    let images = await Promise.allSettled(
+                      servers.map(async (server) => {
+                        try {
+                          let imageURL = await axios.get(
+                            `${server}/${item.fileName}`,
+                            {
+                              responseType: "arraybuffer",
+                              headers: {
+                                Authorization: `Nostr ${encodeB64}`,
+                              },
+                            }
+                          );
+                          const mimeType = imageURL.headers["content-type"];
+                          const base64 = btoa(
+                            new Uint8Array(imageURL.data).reduce(
+                              (data, byte) => data + String.fromCharCode(byte),
+                              ""
+                            )
+                          );
+
+                          return `data:${mimeType};base64,${base64}`;
+                        } catch (err) {
+                          console.log(err);
+                          return "";
+                        }
+                      })
+                    );
+                    images = images
+                      .filter((_) => _.status === "fulfilled")
+                      .map((_) => _.value);
+                    return {
+                      ...item,
+                      newImg: images.length > 0 ? images[0] : "",
+                    };
+                  })
+                );
+                fetchedImgs = fetchedImgs
+                  .filter((_) => _.status === "fulfilled")
+                  .map((_) => _.value);
+                setCarouselItems((prev) =>
+                  prev.map((item, index) => {
+                    let isThere = fetchedImgs.find((el) => el.index === index);
+                    if (isThere) {
+                      return isThere.newImg ? isThere.newImg : item;
+                    }
+                    return item;
+                  })
+                );
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error loading images:", error);
+        }
+      }
+    };
+
+    checkImages();
+  }, []);
+
+  const isValidSha256 = (hash) => {
+    if (typeof hash !== "string" || hash.length !== 64) {
+      return false;
+    }
+
+    const hexRegex = /^[0-9a-fA-F]{64}$/;
+    return hexRegex.test(hash);
+  };
+
+  const authorizationEvent = (fileName) => {
+    const secKey = bytesTohex(generateSecretKey());
+    let expiration = `${Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7}`;
+    let event = {
+      kind: 24242,
+      content: "Get image",
+      created_at: 1708771927,
+      tags: [
+        ["t", "get"],
+        ["expiration", expiration],
+        ["x", fileName],
+      ],
+    };
+    event = finalizeEvent(event, secKey);
+    let encodeB64 = encodeBase64URL(JSON.stringify(event));
+
+    return encodeB64;
+  };
 
   return (
     <>
       {showCarousel && (
         <Carousel
-          imgs={imgs}
+          imgs={carouselItems}
           selectedImage={currentImg}
           back={(e) => {
             e.stopPropagation();
@@ -18,7 +153,7 @@ export default function Gallery({ imgs }) {
           }}
         />
       )}
-      {imgs.length === 1 && (
+      {carouselItems.length === 1 && (
         <div className="image-grid">
           <img
             onClick={(e) => {
@@ -34,13 +169,13 @@ export default function Gallery({ imgs }) {
               objectFit: "fit",
               maxHeight: "600px",
             }}
-            src={imgs[0]}
+            src={carouselItems[0]}
             alt="el"
             loading="lazy"
           />
         </div>
       )}
-      {imgs.length > 1 && (
+      {carouselItems.length > 1 && (
         <div
           className="fx-centered fx-start-h fx-wrap fit-container sc-s-18"
           style={{
@@ -50,7 +185,7 @@ export default function Gallery({ imgs }) {
             border: "none",
           }}
         >
-          {imgs.map((item, index) => {
+          {carouselItems.map((item, index) => {
             return (
               <div
                 key={`${item}-${index}`}

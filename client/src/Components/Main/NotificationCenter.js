@@ -13,6 +13,7 @@ import NumberShrink from "../NumberShrink";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
 import { getCustomSettings } from "../../Helpers/Helpers";
+import { getWOTScoreForPubkeyLegacy } from "../../Helpers/Encryptions";
 
 export default function NotificationCenter({
   icon = false,
@@ -56,7 +57,8 @@ export default function NotificationCenter({
 
       sub.on("event", (event) => {
         try {
-          if (!(userMutedList || []).includes(event.pubkey)) {
+          let score = getWOTScoreForPubkeyLegacy(event.pubkey).status;
+          if (!(userMutedList || []).includes(event.pubkey) && score) {
             let checkForLabel = event.tags.find((tag) => tag[0] === "l");
             let isUncensored = checkForLabel
               ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
@@ -78,7 +80,7 @@ export default function NotificationCenter({
                     desc: t("AtbtAF9"),
                   })
                 );
-                isNotified = true
+                isNotified = true;
               }
             }
           }
@@ -88,7 +90,7 @@ export default function NotificationCenter({
       });
 
       sub.on("close", () => {
-        isNotified = false
+        isNotified = false;
       });
     };
 

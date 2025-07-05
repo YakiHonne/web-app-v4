@@ -404,7 +404,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
     try {
       setStep(5);
       let picture_ = pictureFile
-        ? await FileUpload(pictureFile, undefined, userKeys)
+        ? await FileUpload(pictureFile, userKeys)
         : "";
       if (picture_ === false) {
         dispatch(
@@ -418,7 +418,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
         return;
       }
       let banner_ = bannerFile
-        ? await FileUpload(bannerFile, undefined, userKeys)
+        ? await FileUpload(bannerFile, userKeys)
         : "";
       if (banner_ === false) {
         dispatch(

@@ -82,7 +82,6 @@ export default function WidgetCardV2({
         let file = base64ToFile(swMetadata.image);
         let uploadedFile = await FileUpload(
           file,
-          undefined,
           userKeys,
           setProgress
         );
@@ -472,7 +471,6 @@ const PublishWidget = ({
         let file = base64ToFile(widget.image);
         let uploadedFile = await FileUpload(
           file,
-          undefined,
           userKeys,
           setProgress
         );

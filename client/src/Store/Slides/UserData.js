@@ -145,6 +145,34 @@ const userAppSettingsSlice = createSlice({
   },
 });
 
+const userFavRelaysSlice = createSlice({
+  name: "userFavRelays",
+  initialState: {relays: []},
+  reducers: {
+    setUserFavRelays(state, action) {
+      return action.payload;
+    },
+  },
+});
+const userWotListSlice = createSlice({
+  name: "userWotList",
+  initialState: [],
+  reducers: {
+    setUserWotList(state, action) {
+      return action.payload;
+    },
+  },
+});
+const userBlossomServersSlice = createSlice({
+  name: "userBlossomServers",
+  initialState: [],
+  reducers: {
+    setUserBlossomServers(state, action) {
+      return action.payload;
+    },
+  },
+});
+
 export const { setUserMetadata } = userMetadataSlice.actions;
 export const { setUserKeys } = userKeysSlice.actions;
 export const { setUserBookmarks } = userBookmarksSlice.actions;
@@ -161,6 +189,9 @@ export const { setWallets } = walletsSlice.actions;
 export const { setSelectedWallet } = selectedWalletSlice.actions;
 export const { setUserSavedTools } = userSavedToolsSlice.actions;
 export const { setUserAppSettings } = userAppSettingsSlice.actions;
+export const { setUserFavRelays } = userFavRelaysSlice.actions;
+export const { setUserWotList } = userWotListSlice.actions;
+export const { setUserBlossomServers } = userBlossomServersSlice.actions;
 
 export const UserMetadataReducer = userMetadataSlice.reducer;
 export const UserKeysReducer = userKeysSlice.reducer;
@@ -178,3 +209,6 @@ export const WalletsReducer = walletsSlice.reducer;
 export const SelectedWalletReducer = selectedWalletSlice.reducer;
 export const UserSavedToolsReducer = userSavedToolsSlice.reducer;
 export const UserAppSettingsReducer = userAppSettingsSlice.reducer;
+export const UserFavRelaysReducer = userFavRelaysSlice.reducer;
+export const UserWotListReducer = userWotListSlice.reducer;
+export const UserBlossomServersReducer = userBlossomServersSlice.reducer;

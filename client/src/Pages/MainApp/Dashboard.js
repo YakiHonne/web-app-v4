@@ -1742,7 +1742,7 @@ const DraftCardOthers = ({ event, setPostToNote }) => {
             </div>
           </div>
           <p className="p-two-lines">
-            {event.kind === 11 && <>{compactContent(event.content)}</>}
+            {event.kind === 11 && <>{compactContent(event.content, event.pubkey)}</>}
             {event.kind === 300331 && (
               <>
                 <span>{t("AkvXmyz")}</span>
@@ -2072,7 +2072,7 @@ const NoteCard = ({ event }) => {
               })}{" "}
             </p>
           </div>
-          <p className="p-two-lines">{compactContent(isRepost.content)}</p>
+          <p className="p-two-lines">{compactContent(isRepost.content, isRepost.pubkey)}</p>
           <div className="fx-centered">
             <div className="fx-centered">
               <div className="heart"></div>

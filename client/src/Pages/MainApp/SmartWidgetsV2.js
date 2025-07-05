@@ -92,7 +92,7 @@ export default function SmartWidgetsV2() {
           return;
         }
         limit += 1;
-        let parsedContent = await getNoteTree(event.content, true);
+        let parsedContent = await getNoteTree(event.content, true, undefined, undefined, event.pubkey);
         events.push(event.pubkey);
         let nEvent = nip19.neventEncode({
           author: event.pubkey,

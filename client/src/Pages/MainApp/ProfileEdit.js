@@ -116,7 +116,7 @@ export default function ProfileEdit() {
   const uploadImages = async (data, kind) => {
     let file = data.file;
     setImageUploading(true);
-    let url = await FileUpload(file, undefined, userKeys);
+    let url = await FileUpload(file, userKeys);
     if (url) {
       if (kind === "banner") {
         setUserBanner(url);

@@ -58,7 +58,7 @@ export default function UN({
 
   useEffect(() => {
     const parseContent = async () => {
-      let res = await getNoteTree(data.content);
+      let res = await getNoteTree(data.content, undefined, undefined, undefined, data.pubkey);
       setContent(res);
     };
     parseContent();

@@ -406,7 +406,7 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
     straightUp();
     dispatchNotes({ type: "remove-events" });
     setNotesLastEventTime(undefined);
-    setUserFollowings([]);
+    setUserFollowings(false);
     if (notesLastEventTime === undefined) setRerenderTimestamp(Date.now());
   }, [userKeys]);
 

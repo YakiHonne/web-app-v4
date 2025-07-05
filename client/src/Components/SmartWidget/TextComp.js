@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getNoteTree } from "../../Helpers/Helpers";
 
-export default function TextComp({ content = "", size, weight, textColor }) {
+export default function TextComp({ content = "", size, weight, textColor, pubkey }) {
   const [parsedContent, setParsedContent] = useState(content);
   useEffect(() => {
     const parseContent = async () => {

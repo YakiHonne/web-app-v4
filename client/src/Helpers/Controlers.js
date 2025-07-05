@@ -410,6 +410,12 @@ const getRelayList = (list) => {
   }
   return parsedRelays;
 };
+const getFavRelayList = (list) => {
+  let relays = list.filter((relay) => relay[0] === "relay" && relay.length > 1);
+  return relays.map((relay) => {
+    return relay[1].replace(/\/$/, '');
+  });
+};
 
 const handleReceivedEvents = (set, event) => {
   let index = set.findIndex((_) => _.id === event.id);
@@ -424,7 +430,12 @@ const handleReceivedEvents = (set, event) => {
   return set;
 };
 
-const getSubData = async (filter, timeout = 1000, relayUrls = [], ndk = ndkInstance) => {
+const getSubData = async (
+  filter,
+  timeout = 1000,
+  relayUrls = [],
+  ndk = ndkInstance
+) => {
   const userRelays = store.getState().userRelays;
 
   if (!filter || filter.length === 0) return { data: [], pubkeys: [] };
@@ -488,6 +499,7 @@ const InitEvent = async (
       content,
       tags,
     };
+    console.log(tempEvent);
     if (userKeys.ext) {
       try {
         tempEvent = await window.nostr.signEvent(tempEvent);
@@ -784,7 +796,16 @@ const getDefaultFilter = (type = 1) => {
   return {
     default: true,
     included_words: [],
-    excluded_words: ["test", "ignore", "porn", "sex", "ass", "boobs", "hentai", "nsfw"],
+    excluded_words: [
+      "test",
+      "ignore",
+      "porn",
+      "sex",
+      "ass",
+      "boobs",
+      "hentai",
+      "nsfw",
+    ],
     posted_by: [],
     media_only: false,
   };
@@ -866,6 +887,7 @@ export {
   getUsersFromPubkeys,
   saveRelaysListsForUsers,
   getRelayList,
+  getFavRelayList,
   handleReceivedEvents,
   getUserRelaysFromNOSTR,
   getSubData,

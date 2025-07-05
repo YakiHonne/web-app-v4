@@ -5,7 +5,13 @@ import * as secp from "@noble/secp256k1";
 import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
-import { getAppLang, getCustomSettings, getKeys, getNoteTree, nEventEncode } from "./Helpers";
+import {
+  getAppLang,
+  getCustomSettings,
+  getKeys,
+  getNoteTree,
+  nEventEncode,
+} from "./Helpers";
 import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
 import { SigningStargateClient } from "@cosmjs/stargate";
@@ -465,7 +471,9 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
       let note_tree = await getNoteTree(
         event.content,
         undefined,
-        isCollapsedNote_
+        isCollapsedNote_,
+        undefined,
+        event.pubkey
       );
 
       return {
@@ -777,7 +785,6 @@ const getKeplrSigner = async () => {
 
     await window.keplr.enable(chainId);
 
-    console.log("chainId", chainId);
     const offlineSigner = window.getOfflineSigner(chainId);
 
     // const client = await SigningStargateClient.connectWithSigner(
@@ -793,25 +800,31 @@ const getKeplrSigner = async () => {
   }
 };
 
-// const getWOTScoreForPubkey = (network, pubkey, minScore = 3) => {
-//   try {
-//     let totalTrusting = network.filter((_) =>
-//       _.followings.includes(pubkey)
-//     ).length;
-//     // let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
-//     let equalizer = totalTrusting === 0 ? 5 : 0;
-//     let score =
-//       equalizer ||
-//       Math.floor(
-//         (Math.max(0, totalTrusting) * 10) / network.length
-//       );
+const getWOTScoreForPubkeyLegacy = (pubkey, minScore = 3) => {
+  try {
+    const network = store.getState().userWotList;
+    const followings = store.getState().userFollowings;
+   
+    if(followings.includes(pubkey) || network.length === 0 || !pubkey) {
+      return { score: 10, status: true };
+    }
+    let totalTrusting = network.filter((_) =>
+      _.followings.includes(pubkey)
+    ).length;
+    let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
+    let equalizer = totalTrusting === 0 ? 5 : 0;
+    let score =
+      equalizer ||
+      Math.floor(
+        (Math.max(0, totalTrusting - totalMuted) * 10) / network.length
+      );
 
-//     return { score, status: score >= minScore };
-//   } catch (err) {
-//     console.log(err);
-//     return [];
-//   }
-// };
+    return { score, status: score >= minScore };
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
 
 const precomputeTrustingCounts = (network) => {
   const counts = new Map();
@@ -828,7 +841,6 @@ const precomputeTrustingCounts = (network) => {
 const getWOTScoreForPubkey = (network, pubkey, minScore = 3, counts) => {
   try {
     if (!network?.length || !pubkey) return { score: 0, status: false };
-
     const totalTrusting = counts.get(pubkey) || 0;
     const score =
       totalTrusting === 0
@@ -1106,4 +1118,5 @@ export {
   filterContent,
   precomputeTrustingCounts,
   getBackupWOTList,
+  getWOTScoreForPubkeyLegacy,
 };

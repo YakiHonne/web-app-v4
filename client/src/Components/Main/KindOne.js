@@ -103,37 +103,6 @@ export default function KindOne({
     return checkProfile();
   }, [userMutedList, userProfile]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       let tempPubkey = event.pubkey;
-  //       let auth = getUser(tempPubkey);
-  //       if (auth) {
-  //         setUser(auth);
-  //         let ndkUser = new NDKUser({ pubkey: event.pubkey });
-  //         ndkUser.ndk = ndkInstance;
-  //         let checknip05 =
-  //           auth.nip05 && typeof auth.nip05 === "string"
-  //             ? await ndkUser.validateNip05(auth.nip05)
-  //             : false;
-
-  //         if (checknip05) setIsNip05Verified(true);
-  //       }
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   };
-  //   if (nostrAuthors.length > 0) fetchData();
-  // }, [nostrAuthors]);
-
-  // useEffect(() => {
-  //   const detectLang = async () => {
-  //     let isEnabled = await enableTranslation(event.content);
-
-  //     setIsTransEnabled(isEnabled);
-  //   };
-  //   detectLang();
-  // }, []);
   useEffect(() => {
     if (postActions && postActions?.reposts?.reposts?.length > 0)
       getReposts(postActions?.reposts?.reposts);
@@ -226,7 +195,7 @@ export default function KindOne({
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(res.res);
+        let noteTree = await getNoteTree(res.res, undefined, undefined, undefined, event.pubkey);
         setTranslatedNote(noteTree);
         setShowTranslation(true);
       }
@@ -242,7 +211,7 @@ export default function KindOne({
       );
     }
   };
-console.log(isThread)
+
   return (
     <>
       {showComments && (
@@ -335,7 +304,7 @@ console.log(isThread)
                       <>{showTranslation ? translatedNote : event.note_tree}</>
                     ) : (
                       <p className="p-four-lines">
-                        {compactContent(event.content)}
+                        {compactContent(event.content, event.pubkey)}
                       </p>
                     )}
                   </div>
@@ -351,27 +320,6 @@ console.log(isThread)
                 <p className="c1-c">... {t("AnWFKlu")}</p>
               </div>
             )}
-            {/* {isTransEnabled && (
-            <div
-              className="fit-container note-indent"
-              style={{ paddingTop: ".5rem" }}
-            >
-              {!isNoteTranslating && !showTranslation && (
-                <p className="btn-text-gray" onClick={translateNote}>
-                  {t("AdHV2qJ")}
-                </p>
-              )}
-              {!isNoteTranslating && showTranslation && (
-                <p
-                  className="btn-text-gray"
-                  onClick={() => setShowTranslation(false)}
-                >
-                  {t("AE08Wte")}
-                </p>
-              )}
-              {isNoteTranslating && <LoadingDots />}
-            </div>
-          )} */}
             {reactions && (
               <>
                 {postActions?.zaps?.zaps?.length > 0 && (
@@ -411,7 +359,6 @@ console.log(isThread)
                             ? setShowComments(true)
                             : null
                         }
-                        // onClick={redirect}
                       >
                         <p>{postActions.replies.replies.length}</p>
                       </div>

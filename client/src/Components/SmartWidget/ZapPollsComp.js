@@ -89,7 +89,7 @@ export default function ZapPollsComp({
           if (tag[0] === "closed_at") closedAt = parseInt(tag[1]) || null;
         }
         saveUsers([event.pubkey]);
-        let parsed_content = await getNoteTree(event.content);
+        let parsed_content = await getNoteTree(event.content, undefined, undefined, undefined, event.pubkey);
         if (closedAt !== null)
           setClosingTime({
             time: closedAt,
@@ -128,7 +128,7 @@ export default function ZapPollsComp({
             if (tag[0] === "value_minimum") minSats = parseInt(tag[1]) || 0;
             if (tag[0] === "closed_at") closedAt = parseInt(tag[1]) || null;
           }
-          let parsed_content = await getNoteTree(event.content);
+          let parsed_content = await getNoteTree(event.content, undefined, undefined, undefined, event.pubkey);
           if (closedAt !== null)
             setClosingTime({
               time: closedAt,

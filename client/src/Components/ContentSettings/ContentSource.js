@@ -33,6 +33,7 @@ export default function ContentSource({
   const { t } = useTranslation();
   const [list, setList] = useState([]);
   const userAppSettings = useSelector((state) => state.userAppSettings);
+  const userFavRelays = useSelector((state) => state.userFavRelays);
   const userKeys = useSelector((state) => state.userKeys);
   const [showOptions, setShowOptions] = useState(false);
   const [showFeedMarketplace, setShowFeedMarketPlace] = useState(false);
@@ -213,14 +214,14 @@ export default function ContentSource({
       userAppSettings?.settings?.content_sources?.mixed_content
     ) {
       let sources = userAppSettings?.settings?.content_sources?.mixed_content;
-      return getSourcesArray(sources, options[0].list, t);
+      return getSourcesArray(sources, options[0].list, t, userFavRelays.relays);
     }
     if (type === 2 && userAppSettings?.settings?.content_sources?.notes) {
       let sources = userAppSettings?.settings?.content_sources?.notes;
-      return getSourcesArray(sources, options[0].list, t);
+      return getSourcesArray(sources, options[0].list, t, userFavRelays.relays);
     }
     return options;
-  }, [userAppSettings, userKeys]);
+  }, [userAppSettings, userKeys, userFavRelays]);
 
   useEffect(() => {
     const handleOffClick = (e) => {
@@ -400,7 +401,23 @@ export default function ContentSource({
     if (category.group === "af")
       return (
         <div className="fx-centered">
-          <RelayImage url={category.value} size={minimal ? 28 : 32} />
+          <div style={{ position: "relative" }}>
+            {category.fav && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "5px",
+                  right: "5px",
+                  width: "10px",
+                  height: "10px",
+                  zIndex: 10,
+                }}
+              >
+                ⭐️
+              </div>
+            )}
+            <RelayImage url={category.value} size={minimal ? 28 : 32} />
+          </div>
           <div>
             <p className="p-one-line">{category.display_name}</p>
             {!minimal && <p className="gray-c p-one-line">{category.value}</p>}
@@ -575,6 +592,7 @@ const CustomizeContentSource = ({
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const userAppSettings = useSelector((state) => state.userAppSettings);
+  const userFavRelays = useSelector((state) => state.userFavRelays);
   const [sources, setSources] = useState(optionsList);
   const [category, setCategory] = useState(1);
   const [selectedDvms, setSelectedDvms] = useState(
@@ -725,10 +743,41 @@ const CustomizeContentSource = ({
           allRelays: [],
         })
       );
+      await updateFavRelays();
       exit();
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const updateFavRelays = async () => {
+    let aTags = userFavRelays.tags.filter((_) => _[0] !== "relay");
+    let relays = selectedRelaysFeed
+      .filter((_) => _.fav)
+      .map((_) => {
+        return ["relay", _.value];
+      });
+    let tags = [...aTags, ...relays];
+    let event = {
+      kind: 10012,
+      content: "",
+      tags: tags,
+    };
+    let eventInitEx = await InitEvent(
+      event.kind,
+      event.content,
+      event.tags,
+      undefined
+    );
+    if (!eventInitEx) {
+      return;
+    }
+    dispatch(
+      setToPublish({
+        eventInitEx,
+        allRelays: [],
+      })
+    );
   };
 
   return (
@@ -908,6 +957,8 @@ const FeedMarketPlace = ({ list, selectedDvms, setSelectedDvms }) => {
 
 const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
   const { t } = useTranslation();
+  // const dispatch = useDispatch();
+  // const userFavRelays = useSelector((state) => state.userFavRelays);
   const [tempRelaysFeed, setTempRelaysFeed] = useState("");
 
   const handleAddRelaysFeed = (e) => {
@@ -938,6 +989,45 @@ const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
     setSelectedRelaysFeed((prev) =>
       prev.filter((_, _index) => _index !== index)
     );
+  };
+
+  const updateFavRelaysList = async (relay, action) => {
+    // let aTags = userFavRelays.tags.filter((_) => _[0] !== "relay");
+    // let relays =
+    //   action === "add"
+    //     ? [...userFavRelays.relays, relay].map((_) => ["relay", _])
+    //     : userFavRelays.relays
+    //         .filter((_) => _ !== relay)
+    //         .map((_) => ["relay", _]);
+    // let tags = [...aTags, ...relays];
+    // let event = {
+    //   kind: 10012,
+    //   content: "",
+    //   tags: tags,
+    // };
+    // let eventInitEx = await InitEvent(
+    //   event.kind,
+    //   event.content,
+    //   event.tags,
+    //   undefined
+    // );
+    // if (!eventInitEx) {
+    //   return;
+    // }
+    // dispatch(
+    //   setToPublish({
+    //     eventInitEx,
+    //     allRelays: [],
+    //   })
+    // );
+    setSelectedRelaysFeed((prev) => {
+      return prev.map((item) => {
+        if (item.value === relay) {
+          return { ...item, fav: action === "add" };
+        }
+        return item;
+      });
+    });
   };
 
   // if (list.length === 0)
@@ -977,6 +1067,7 @@ const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
             return (
               <div
                 className="fx-scattered fit-container sc-s-18 bg-sp box-pad-h-s box-pad-v-s"
+                style={{ overflow: "visible" }}
                 key={index}
               >
                 <div className="fx-centered">
@@ -988,7 +1079,24 @@ const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
                 </div>
                 <div className="fx-centered">
                   <div
-                    className="round-icon-small"
+                    className="round-icon-small round-icon-tooltip"
+                    data-tooltip={item.fav ? t("Am4QHzR") : t("AdT5mza")}
+                    onClick={() =>
+                      updateFavRelaysList(
+                        item.value,
+                        item.fav ? "remove" : "add"
+                      )
+                    }
+                  >
+                    {item.fav ? (
+                      <div className="star-bold"></div>
+                    ) : (
+                      <div className="star"></div>
+                    )}
+                  </div>
+                  <div
+                    className="round-icon-small round-icon-tooltip"
+                    data-tooltip={t("Almq94P")}
                     onClick={() => removeRelay(index)}
                   >
                     <div className="trash"></div>
@@ -1155,7 +1263,9 @@ const ContentSourceSettingsItem = ({
   );
 };
 
-const getSourcesArray = (sources, cfBackup, t) => {
+const getSourcesArray = (sources, cfBackup, t, favRelays = []) => {
+  let relaysList = sources["relays"]?.list.map((_) => _[0]);
+  let filteredFavRelays = favRelays.filter((_) => !relaysList.includes(_));
   let sourcesArray = [];
   let community_feed_keys = {
     top: t("AZKPdUC"),
@@ -1179,18 +1289,28 @@ const getSourcesArray = (sources, cfBackup, t) => {
         };
       }) || cfBackup,
   };
-
   sourcesArray[sources["relays"]?.index || 2] = {
     group_name: t("AhSpIKN"),
     value: "af",
     list:
-      sources["relays"]?.list.map((_) => {
-        return {
-          display_name: _[0].replace("wss://", "").replace("ws://", ""),
-          value: _[0],
-          enabled: _[1],
-        };
-      }) || [],
+      [
+        ...sources["relays"]?.list.map((_) => {
+          return {
+            display_name: _[0].replace("wss://", "").replace("ws://", ""),
+            value: _[0],
+            enabled: _[1],
+            fav: favRelays.includes(_[0]),
+          };
+        }),
+        ...filteredFavRelays.map((_) => {
+          return {
+            display_name: _.replace("wss://", "").replace("ws://", ""),
+            value: _,
+            enabled: true,
+            fav: true,
+          };
+        }),
+      ] || [],
   };
 
   sourcesArray[sources["dvms"]?.index || 1] = {

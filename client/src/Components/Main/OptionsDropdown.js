@@ -25,7 +25,6 @@ export default function OptionsDropdown({
       document.removeEventListener("mousedown", handleOffClick);
     };
   }, [optionsRef]);
-
   return (
     <div style={{ position: "relative" }} ref={optionsRef}>
       <div

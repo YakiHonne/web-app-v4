@@ -265,7 +265,7 @@ export default function Note() {
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(res.res);
+        let noteTree = await getNoteTree(res.res, undefined, undefined, undefined, note.pubkey);
         setTranslatedNote(noteTree);
         setShowTranslation(true);
       }

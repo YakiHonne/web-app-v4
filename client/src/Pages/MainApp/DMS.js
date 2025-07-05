@@ -9,7 +9,11 @@ import {
   generateSecretKey,
   finalizeEvent,
 } from "nostr-tools";
-import { bytesTohex, getBech32 } from "../../Helpers/Encryptions";
+import {
+  bytesTohex,
+  getBech32,
+  getWOTScoreForPubkeyLegacy,
+} from "../../Helpers/Encryptions";
 import { getNoteTree } from "../../Helpers/Helpers";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import Date_ from "../../Components/Date_";
@@ -104,38 +108,45 @@ export default function DMS() {
     let followings = 0;
     let known = 0;
     let unknown = 0;
-    let tempChatrooms = userChatrooms.map((chatroom) => {
-      let contact = getUser(chatroom.pubkey);
+    let tempChatrooms = userChatrooms
+      .filter((_) => {
+        let st = getWOTScoreForPubkeyLegacy(_.pubkey);
+        if (getWOTScoreForPubkeyLegacy(_.pubkey).status) return true;
+      })
+      .map((chatroom) => {
+        let contact = getUser(chatroom.pubkey);
 
-      let isFollowing = userFollowings?.includes(chatroom.pubkey)
-        ? "following"
-        : false;
-      let isUnknown = false;
-      let isKnown = false;
-      if (!isFollowing) {
-        isUnknown = chatroom.convo.find((conv) => conv.pubkey === userKeys.pub)
-          ? false
-          : "unknown";
+        let isFollowing = userFollowings?.includes(chatroom.pubkey)
+          ? "following"
+          : false;
+        let isUnknown = false;
+        let isKnown = false;
+        if (!isFollowing) {
+          isUnknown = chatroom.convo.find(
+            (conv) => conv.pubkey === userKeys.pub
+          )
+            ? false
+            : "unknown";
 
-        if (!isUnknown) isKnown = "known";
-      }
-      if (isFollowing) followings = followings + 1;
-      if (isUnknown) unknown = unknown + 1;
-      if (isKnown) known = known + 1;
-      if (contact)
+          if (!isUnknown) isKnown = "known";
+        }
+        if (isFollowing) followings = followings + 1;
+        if (isUnknown) unknown = unknown + 1;
+        if (isKnown) known = known + 1;
+        if (contact)
+          return {
+            ...contact,
+            ...chatroom,
+            type: isFollowing || isUnknown || isKnown,
+          };
         return {
-          ...contact,
           ...chatroom,
+          picture: "",
+          display_name: getBech32("npub", chatroom.pubkey).substring(0, 10),
+          name: getBech32("npub", chatroom.pubkey).substring(0, 10),
           type: isFollowing || isUnknown || isKnown,
         };
-      return {
-        ...chatroom,
-        picture: "",
-        display_name: getBech32("npub", chatroom.pubkey).substring(0, 10),
-        name: getBech32("npub", chatroom.pubkey).substring(0, 10),
-        type: isFollowing || isUnknown || isKnown,
-      };
-    });
+      });
 
     setMsgsCount({ followings, known, unknown });
     setSortedInbox(tempChatrooms);
@@ -175,7 +186,7 @@ export default function DMS() {
       }
       let tempConvo = await Promise.all(
         conversation.convo.map(async (convo) => {
-          let content = await getNoteTree(convo.content);
+          let content = await getNoteTree(convo.content, undefined, undefined, undefined, convo.pubkey);
           return {
             ...convo,
             content,
@@ -1055,7 +1066,11 @@ const ConversationBox = ({ convo, back }) => {
       )} */}
       <div
         className="fx-centered fx-start-h fx-col box-pad-h-m box-pad-v-m fit-container"
-        style={{ height: "calc(100% - 160px)", overflow: "auto", paddingTop: 0 }}
+        style={{
+          height: "calc(100% - 160px)",
+          overflow: "auto",
+          paddingTop: 0,
+        }}
         ref={convoContainerRef}
       >
         {legacy && (
