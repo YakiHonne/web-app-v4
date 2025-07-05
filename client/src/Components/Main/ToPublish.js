@@ -115,7 +115,7 @@ export default function ToPublish({
 
       let eventInitEx = await InitEvent(
         tempEvent.kind,
-        tempEvent.postContent,
+        tempEvent.content,
         tempEvent.tags,
         tempEvent.created_at,
         userKeys
@@ -165,7 +165,7 @@ export default function ToPublish({
           // }
           let eventInitEx = await InitEvent(
             tempEvent.kind,
-            tempEvent.postContent,
+            tempEvent.content,
             tempEvent.tags,
             tempEvent.created_at,
             userKeys

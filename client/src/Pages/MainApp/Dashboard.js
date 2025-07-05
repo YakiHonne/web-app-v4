@@ -699,9 +699,11 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
                 setSelectedValue={switchContentType}
               />
             )}
-           {["articles", "drafts", "notes"].includes(contentFrom) &&  <button className="btn btn-normal" onClick={handleAddContent}>
-              <div className="plus-sign"></div>
-            </button>}
+            {["articles", "drafts", "notes"].includes(contentFrom) && (
+              <button className="btn btn-normal" onClick={handleAddContent}>
+                <div className="plus-sign"></div>
+              </button>
+            )}
           </div>
         </div>
         <div className="fit-container fx-centered fx-col fx-start-v box-pad-h">
@@ -1026,7 +1028,9 @@ const Widgets = ({ setPostToNote, localDraft }) => {
                     {t("ASl7AUI")}
                   </p>
                   <Link to={"/smart-widgets"}>
-                  <button className="btn btn-small btn-normal">{t("Aa15RS4")}</button>
+                    <button className="btn btn-small btn-normal">
+                      {t("Aa15RS4")}
+                    </button>
                   </Link>
                 </div>
               )}
@@ -1135,6 +1139,7 @@ const Interests = () => {
             {t("A8RA6c7")}
           </button>
         )}
+        
       </div>
       {userInterestList.length === 0 && !isManage && (
         <div className="fit-container fx-centered" style={{ padding: "3rem" }}>
@@ -1659,7 +1664,10 @@ const DraftCard = ({ event, setDeleteEvent }) => {
             setDeleteEvent && (
               <div
                 className="fit-container"
-                onClick={(e) => setDeleteEvent(event)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteEvent(event);
+                }}
               >
                 <p className="red-c">{t("Almq94P")}</p>
               </div>
