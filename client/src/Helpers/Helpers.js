@@ -3,6 +3,7 @@ import {
   bytesTohex,
   decryptEventData,
   encodeBase64URL,
+  encrypt44,
   getBech32,
   getHex,
   removeObjDuplicants,
@@ -27,9 +28,10 @@ import LinkPreview from "../Components/Main/LinkPreview";
 import Gallery from "../Components/Main/Gallery";
 import MACIPollPreview from "../Components/Main/MACIPollPreview";
 import { InitEvent } from "./Controlers";
-const LoginToAPI = async (publicKey, secretKey) => {
+
+const LoginToAPI = async (publicKey, userKeys) => {
   try {
-    let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
+    let { pubkey, password } = await getLoginsParams(publicKey, userKeys);
     if (!(pubkey && password)) return;
     const data = await axios.post("/api/v1/login", { password, pubkey });
     return data.data;
@@ -39,30 +41,47 @@ const LoginToAPI = async (publicKey, secretKey) => {
   }
 };
 
-const getLoginsParams = async (publicKey, secretKey) => {
+const getLoginsParams = async (publicKey, userKeys) => {
   try {
     let content = JSON.stringify({
       pubkey: publicKey,
       sent_at: Math.floor(new Date().getTime() / 1000),
     });
 
-    let password = secretKey
-      ? nip44.v2.encrypt(
-          content,
-          nip44.v2.utils.getConversationKey(
-            secretKey,
-            process.env.REACT_APP_CHECKER_PUBKEY
-          )
-        )
-      : await window.nostr.nip44.encrypt(
-          process.env.REACT_APP_CHECKER_PUBKEY,
-          content
-        );
+    let password = await encrypt44(
+      userKeys,
+      process.env.REACT_APP_CHECKER_PUBKEY,
+      content
+    );
 
     return { password, pubkey: publicKey };
   } catch (err) {
     console.log(err);
     return { password: false, pubkey: false };
+  }
+};
+
+const getAnswerFromAIRemoteAPI = async (pubkey_, input) => {
+  try {
+    let { password } = await getLoginsParams(pubkey_, {
+      sec: process.env.REACT_APP_CHECKER_SEC,
+    });
+    const res = await axios.post(
+      // "http://localhost:4700/api/v1/ai",
+      "https://yakiai.yakihonne.com/api/v1/ai",
+      {
+        input,
+      },
+      {
+        headers: {
+          Authorization: password,
+        },
+      }
+    );
+    const data = res.data;
+    return data;
+  } catch (err) {
+    throw Error(err);
   }
 };
 
@@ -122,6 +141,7 @@ const isImageUrl = async (url) => {
     return false;
   }
 };
+
 const isImageUrlSync = (url) => {
   try {
     if (/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url)) return true;
@@ -365,7 +385,7 @@ const getLinkFromAddr = (addr_) => {
     }
     if (addr.startsWith("npub")) {
       let hex = getHex(addr.replace(",", "").replace(".", ""));
-      return `/users/${getBech32("npub", hex)}`;
+      return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
     }
     if (addr.startsWith("nevent")) {
       let data = nip19.decode(addr);
@@ -1237,6 +1257,7 @@ const getAppLang = () => {
   if (supportedLanguageKeys.includes(lang)) return lang;
   return "en";
 };
+
 const getContentTranslationConfig = () => {
   let defaultService = {
     service: "lt",
@@ -1258,6 +1279,35 @@ const getContentTranslationConfig = () => {
     return defaultService;
   }
 };
+
+const getWotConfigDefault = () => {
+  return {
+    score: 2,
+    all: false,
+    notifications: true,
+    reactions: true,
+    dms: false,
+  };
+};
+
+const getWotConfig = () => {
+  let userKeys = getKeys();
+  if (!userKeys) return getWotConfigDefault("");
+  let config = localStorage.getItem(`${userKeys.pub}-wot-config`);
+  if (!config) return getWotConfigDefault();
+  try {
+    config = JSON.parse(config);
+    let checkConfig = Object.entries(config).filter(([key, value]) => {
+      if (["all", "notifications", "reactions", "dms", "score"].includes(key))
+        return true;
+    });
+    if (checkConfig.length === 5) return config;
+    else return getWotConfigDefault();
+  } catch (err) {
+    return getWotConfigDefault();
+  }
+};
+
 const updateContentTranslationConfig = (
   service,
   plan,
@@ -1450,7 +1500,7 @@ const blossomServerFileUpload = async (file, userKeys, cb) => {
   let endpoint =
     servers.length > 0
       ? `${servers[0]}/upload`
-      : "https://blossom.primal.net/upload";
+      : "https://blossom.yakihonne.com/upload";
 
   const arrayBuffer = await file.arrayBuffer();
   const blob = new Blob([arrayBuffer], {
@@ -1474,22 +1524,13 @@ const blossomServerFileUpload = async (file, userKeys, cb) => {
       ["expiration", expiration],
     ],
   };
-  if (userKeys.ext) {
-    try {
-      event = await window.nostr.signEvent(event);
-    } catch (err) {
-      store.dispatch(
-        setToast({
-          type: 2,
-          desc: t("AOKDMRt"),
-        })
-      );
-      console.log(err);
-      return false;
-    }
-  } else {
-    event = finalizeEvent(event, userKeys.sec);
-  }
+  event = await InitEvent(
+    event.kind,
+    event.content,
+    event.tags,
+    event.created_at
+  );
+  if (!event) return;
   let encodeB64 = encodeBase64URL(JSON.stringify(event));
 
   try {
@@ -1625,22 +1666,13 @@ const regularServerFileUpload = async (file, userKeys, cb) => {
       ["method", "POST"],
     ],
   };
-  if (userKeys.ext) {
-    try {
-      event = await window.nostr.signEvent(event);
-    } catch (err) {
-      store.dispatch(
-        setToast({
-          type: 2,
-          desc: t("AOKDMRt"),
-        })
-      );
-      console.log(err);
-      return false;
-    }
-  } else {
-    event = finalizeEvent(event, userKeys.sec);
-  }
+  event = await InitEvent(
+    event.kind,
+    event.content,
+    event.tags,
+    event.created_at
+  );
+  if (!event) return;
   let encodeB64 = encodeBase64URL(JSON.stringify(event));
   let fd = new FormData();
   fd.append("file", file);
@@ -1707,7 +1739,7 @@ const decodeNip19 = (word) => {
       .replaceAll(".", "")
       .replaceAll(";", "");
 
-    if (word_.startsWith("npub")) {
+    if (word_.startsWith("npub") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["p", decoded.data, "", "mention"],
@@ -1715,7 +1747,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("nprofile")) {
+    if (word_.startsWith("nprofile") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["p", decoded.data.pubkey, "", "mention"],
@@ -1723,7 +1755,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("nevent")) {
+    if (word_.startsWith("nevent") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["e", decoded.data.id, "", "mention"],
@@ -1731,7 +1763,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("note")) {
+    if (word_.startsWith("note") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["e", decoded.data, "", "mention"],
@@ -1739,7 +1771,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("naddr")) {
+    if (word_.startsWith("naddr") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: [
@@ -2215,4 +2247,6 @@ export {
   nEventEncode,
   getRepliesViewSettings,
   setRepliesViewSettings,
+  getWotConfig,
+  getAnswerFromAIRemoteAPI,
 };

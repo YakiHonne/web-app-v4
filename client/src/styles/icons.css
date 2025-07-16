@@ -403,7 +403,9 @@
 .star,
 .star-24,
 .star-bold,
-.star-bold-24 {
+.star-bold-24,
+.burger-menu,
+.burger-menu-24 {
     background-position: center center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -771,7 +773,9 @@
     .star,
     .star-24,
     .star-bold,
-    .star-bold-24 {
+    .star-bold-24,
+    .burger-menu,
+    .burger-menu-24 {
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -993,7 +997,8 @@
 .posts-bold,
 .switch-arrows-v2,
 .star,
-.star-bold {
+.star-bold,
+.burger-menu {
     min-width: 16px;
     min-height: 16px;
 }
@@ -1204,7 +1209,8 @@
 .posts-bold-24,
 .switch-arrows-v2-24,
 .star-24,
-.star-bold-24 {
+.star-bold-24,
+.burger-menu-24  {
     min-width: 20px;
     min-height: 20px;
 }
@@ -1220,7 +1226,10 @@
     min-height: 8rem;
 }
 
-.star, .start-24 {
+.burger-menu, .burger-menu-24 {
+    background-image: url('../media/icons/burger-menu.svg');
+}
+.star, .star-24 {
     background-image: url('../media/icons/star.svg');
 }
 

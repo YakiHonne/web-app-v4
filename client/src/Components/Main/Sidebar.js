@@ -36,6 +36,7 @@ import { useTranslation } from "react-i18next";
 import { setToast } from "../../Store/Slides/Publishers";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "../../Helpers/NDKInstance";
+import { nip19 } from "nostr-tools";
 
 export default function Sidebar() {
   const { t } = useTranslation();
@@ -230,13 +231,15 @@ export default function Sidebar() {
         pubkey: userKeys.pub,
       });
       ndkUser.ndk = ndkInstance;
-      let isVer = userMetadata.nip05 ? await ndkUser.validateNip05(userMetadata.nip05) : false;
+      let isVer = userMetadata.nip05
+        ? await ndkUser.validateNip05(userMetadata.nip05)
+        : false;
       if (isVer) {
         customHistory.push(`/users/${userMetadata.nip05}`);
         return;
       }
 
-      let pubkey = getBech32("npub", userKeys.pub);
+      let pubkey = nip19.nprofileEncode({ pubkey: userKeys.pub });
       customHistory.push(`/users/${pubkey}`);
     } catch {
       return null;
@@ -301,7 +304,9 @@ export default function Sidebar() {
                 }`}
               >
                 <div
-                  className={isPage("/discover") ? "discover-bold-24" : "discover-24"}
+                  className={
+                    isPage("/discover") ? "discover-bold-24" : "discover-24"
+                  }
                 ></div>
                 <div className="link-label">{t("ABSoIm9")}</div>
               </div>
@@ -381,6 +386,10 @@ export default function Sidebar() {
                   <div
                     className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
                       isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                      isPage(
+                        "/users/" +
+                          nip19.nprofileEncode({ pubkey: userKeys.pub })
+                      ) ||
                       isPage("/users/" + userMetadata.nip05)
                         ? "active-link"
                         : "inactive-link"
@@ -391,6 +400,10 @@ export default function Sidebar() {
                       <div
                         className={
                           isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                          isPage(
+                            "/users/" +
+                              nip19.nprofileEncode({ pubkey: userKeys.pub })
+                          ) ||
                           isPage("/users/" + userMetadata.nip05)
                             ? "user-bold-24"
                             : "user-24"
@@ -431,7 +444,7 @@ export default function Sidebar() {
                 )}
               <div style={{ height: ".5rem" }}></div>
               {/* {window.location.pathname !== "/dashboard" && ( */}
-                <WriteNew exit={() => null} />
+              <WriteNew exit={() => null} />
               {/* )} */}
             </div>
             {(showMedia || showMyContent || showWritingOptions) && (
@@ -607,7 +620,7 @@ export default function Sidebar() {
                         <div className="logout"></div>
                         <p className="fx-centered">
                           {t("AyXwdfE")}
-                          <span className="sticker sticker-normal sticker-small sticker-orange-side">
+                          <span className="sticker sticker-normal sticker-small sticker-c1-pale">
                             {userMetadata.name ||
                               userMetadata.display_name ||
                               minimizeKey(userKeys.pub)}
@@ -663,7 +676,31 @@ export default function Sidebar() {
                                   </p>
                                 </div>
                               </div>
-                              <div>
+                              <div className="fx-centered">
+                                {account.userKeys.ext && (
+                                  <div
+                                    className="sticker sticker-small sticker-orange-side"
+                                    style={{ minWidth: "max-content" }}
+                                  >
+                                    Extension
+                                  </div>
+                                )}
+                                {account.userKeys.sec && (
+                                  <div
+                                    className="sticker sticker-small sticker-red-side"
+                                    style={{ minWidth: "max-content" }}
+                                  >
+                                    nSec
+                                  </div>
+                                )}
+                                {account.userKeys.bunker && (
+                                  <div
+                                    className="sticker sticker-small sticker-green-side"
+                                    style={{ minWidth: "max-content" }}
+                                  >
+                                    Bunker
+                                  </div>
+                                )}
                                 {userKeys.pub !== account.pubkey && (
                                   <div
                                     className="fx-centered"

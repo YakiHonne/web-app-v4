@@ -9,31 +9,40 @@ import {
 } from "../Helpers/Encryptions";
 import { getEventStats, saveEventStats } from "../Helpers/DB";
 import { useLiveQuery } from "dexie-react-hooks";
+import { getWotConfig } from "../Helpers/Helpers";
 
 const filterStatsByWot = (stats) => {
+  const { score, reactions } = getWotConfig();
   return {
     likes: {
       likes: stats.likes.likes.filter((like) => {
-        let score = getWOTScoreForPubkeyLegacy(like.pubkey);
-        if (score.status) return true;
+        let scoreStatus = getWOTScoreForPubkeyLegacy(
+          like.pubkey,
+          reactions,
+          score
+        );
+        if (scoreStatus.status) return true;
       }),
       since: stats.likes.since,
     },
     reposts: {
       reposts: stats.reposts.reposts.filter((repost) => {
-        if (getWOTScoreForPubkeyLegacy(repost.pubkey).status) return true;
+        if (getWOTScoreForPubkeyLegacy(repost.pubkey, reactions, score).status)
+          return true;
       }),
       since: stats.reposts.since,
     },
     replies: {
       replies: stats.replies.replies.filter((reply) => {
-        if (getWOTScoreForPubkeyLegacy(reply.pubkey).status) return true;
+        if (getWOTScoreForPubkeyLegacy(reply.pubkey, reactions, score).status)
+          return true;
       }),
       since: stats.replies.since,
     },
     quotes: {
       quotes: stats.quotes.quotes.filter((quote) => {
-        if (getWOTScoreForPubkeyLegacy(quote.pubkey).status) return true;
+        if (getWOTScoreForPubkeyLegacy(quote.pubkey, reactions, score).status)
+          return true;
       }),
       since: stats.quotes.since,
     },

@@ -176,7 +176,13 @@ export default function WriteNote({
 
   const publishAsFree = async (content, tags) => {
     setIsLoading(true);
-    let eventInitEx = await InitEvent(1, content, tags, undefined, selectedProfile);
+    let eventInitEx = await InitEvent(
+      1,
+      content,
+      tags,
+      undefined,
+      selectedProfile
+    );
 
     if (!eventInitEx) {
       setIsLoading(false);
@@ -204,7 +210,13 @@ export default function WriteNote({
       tags.push(["l", "FLASH NEWS"]);
       tags.push(["yaki_flash_news", encryptEventData(`${created_at}`)]);
 
-      let eventInitEx = await InitEvent(1, content, tags, created_at, selectedProfile);
+      let eventInitEx = await InitEvent(
+        1,
+        content,
+        tags,
+        created_at,
+        selectedProfile
+      );
 
       if (!eventInitEx) {
         setIsLoading(false);
@@ -474,10 +486,13 @@ export default function WriteNote({
             : "none",
         }}
         ref={ref}
+        onClick={() => {
+          textareaRef?.current?.focus();
+        }}
       >
         <div>
           {/* <UserProfilePic size={34} mainAccountUser={true} allowClick={false} /> */}
-          <ProfilesPicker setSelectedProfile={setSelectedProfile}/>
+          <ProfilesPicker setSelectedProfile={setSelectedProfile} />
         </div>
         <div
           className="fit-container fx-scattered fx-col fx-wrap fit-height"
@@ -614,4 +629,3 @@ export default function WriteNote({
     </>
   );
 }
-

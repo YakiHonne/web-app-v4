@@ -126,6 +126,15 @@ const userFollowingsRelaysSlice = createSlice({
     },
   },
 });
+const userFollowingsInboxRelaysSlice = createSlice({
+  name: "userFollowingsInboxRelays",
+  initialState: [],
+  reducers: {
+    setUserFollowingsInboxRelays(state, action) {
+      return action.payload;
+    },
+  },
+});
 const userSavedToolsSlice = createSlice({
   name: "userSavedTools",
   initialState: [],
@@ -145,9 +154,18 @@ const userAppSettingsSlice = createSlice({
   },
 });
 
+const userInboxRelaysSlice = createSlice({
+  name: "userInboxRelays",
+  initialState: [],
+  reducers: {
+    setUserInboxRelays(state, action) {
+      return action.payload;
+    },
+  },
+});
 const userFavRelaysSlice = createSlice({
   name: "userFavRelays",
-  initialState: {relays: []},
+  initialState: { relays: [] },
   reducers: {
     setUserFavRelays(state, action) {
       return action.payload;
@@ -185,10 +203,12 @@ export const { setUserFollowings } = userFollowingsSlice.actions;
 export const { setUserMutedList } = userMutedListSlice.actions;
 export const { setUserBalance } = userBalanceSlice.actions;
 export const { setUserFollowingsRelays } = userFollowingsRelaysSlice.actions;
+export const { setUserFollowingsInboxRelays } = userFollowingsInboxRelaysSlice.actions;
 export const { setWallets } = walletsSlice.actions;
 export const { setSelectedWallet } = selectedWalletSlice.actions;
 export const { setUserSavedTools } = userSavedToolsSlice.actions;
 export const { setUserAppSettings } = userAppSettingsSlice.actions;
+export const { setUserInboxRelays } = userInboxRelaysSlice.actions;
 export const { setUserFavRelays } = userFavRelaysSlice.actions;
 export const { setUserWotList } = userWotListSlice.actions;
 export const { setUserBlossomServers } = userBlossomServersSlice.actions;
@@ -205,10 +225,12 @@ export const UserFollowingsReducer = userFollowingsSlice.reducer;
 export const UserMutedListReducer = userMutedListSlice.reducer;
 export const UserBalanceReducer = userBalanceSlice.reducer;
 export const UserFollowingsRelaysReducer = userFollowingsRelaysSlice.reducer;
+export const UserFollowingsInboxRelaysReducer = userFollowingsInboxRelaysSlice.reducer;
 export const WalletsReducer = walletsSlice.reducer;
 export const SelectedWalletReducer = selectedWalletSlice.reducer;
 export const UserSavedToolsReducer = userSavedToolsSlice.reducer;
 export const UserAppSettingsReducer = userAppSettingsSlice.reducer;
+export const UserInboxRelaysReducer = userInboxRelaysSlice.reducer;
 export const UserFavRelaysReducer = userFavRelaysSlice.reducer;
 export const UserWotListReducer = userWotListSlice.reducer;
 export const UserBlossomServersReducer = userBlossomServersSlice.reducer;

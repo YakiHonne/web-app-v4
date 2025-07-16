@@ -41,7 +41,7 @@ export default function ContentSource({
   const optionsRef = useRef(null);
 
   const optionsList = useMemo(() => {
-    if (!(userKeys && (userKeys?.sec || userKeys?.ext))) {
+    if (!(userKeys && (userKeys?.sec || userKeys?.ext || userKeys?.bunker))) {
       let options =
         type === 1
           ? [
@@ -505,7 +505,7 @@ export default function ContentSource({
               <p className="gray-c">
                 {type === 1 ? t("AuUadPD") : t("A84qogb")}
               </p>
-              {userKeys && (userKeys?.sec || userKeys?.ext) && (
+              {userKeys && (userKeys?.sec || userKeys?.ext || userKeys?.bunker) && (
                 <div
                   onClick={() => setShowFeedMarketPlace(!showFeedMarketplace)}
                 >

@@ -13,16 +13,15 @@ export default function LoginWithAPI({ exit }) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    if (userKeys && !(userKeys.ext || userKeys.sec)) exit();
+    if (userKeys && !(userKeys.ext || userKeys.sec || userKeys.bunker)) exit();
   }, [userKeys]);
 
   const connect = async (e) => {
     try {
       e.stopPropagation();
       setIsLoading(true);
-      let secretKey = userKeys.ext ? false : userKeys.sec;
 
-      let data = await LoginToAPI(userKeys.pub, secretKey);
+      let data = await LoginToAPI(userKeys.pub, userKeys);
       if (data) {
         localStorage.setItem("connect_yc", `${new Date().getTime()}`);
         if (data.is_new) {

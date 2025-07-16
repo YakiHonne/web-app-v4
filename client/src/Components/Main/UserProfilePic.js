@@ -69,10 +69,9 @@ export default function UserProfilePic({
             return;
           }
         }
-        let pubkey = getBech32(
-          "npub",
-          mainAccountUser ? userMetadata.pubkey : user_id
-        );
+        let pubkey = nip19.nprofileEncode({
+          pubkey: mainAccountUser ? userMetadata.pubkey : user_id,
+        });
         customHistory.push(`/users/${pubkey}`);
       }
       return null;
@@ -82,7 +81,7 @@ export default function UserProfilePic({
   };
 
   const handleInitConvo = () => {
-    if (userKeys && (userKeys.sec || userKeys.ext)) {
+    if (userKeys && (userKeys.sec || userKeys.ext || userKeys.bunker)) {
       setInitConv(true);
     }
   };

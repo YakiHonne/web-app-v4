@@ -209,6 +209,7 @@ const ExploreFeed = ({
       // : Math.floor(Date.now() / 1000) - 86400;
 
       const { artsFilter, curationsFilter, videosFilter } = getFilter();
+      console.log(selectedTab, videosFilter);
       const algoRelay =
         selectedCategory.group === "af" ? [selectedCategory.value] : [];
       let [articles, curations, videos] = await Promise.all([
@@ -388,7 +389,7 @@ const ExploreFeed = ({
               },
             ]
           : [],
-        curationsFilter: ![0, 2].includes(selectedTab)
+        curationsFilter: [0, 2].includes(selectedTab)
           ? [
               {
                 kinds: [16],
@@ -399,7 +400,7 @@ const ExploreFeed = ({
               },
             ]
           : [],
-        videosFilter: ![0, 3].includes(selectedTab)
+        videosFilter: [0, 3].includes(selectedTab)
           ? [
               {
                 kinds: [16],

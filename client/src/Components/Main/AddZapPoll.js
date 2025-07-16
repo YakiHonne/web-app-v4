@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import { InitEvent } from "../../Helpers/Controlers";
 
 export default function AddZapPoll({ exit, setNevent }) {
   const dispatch = useDispatch();
@@ -114,19 +115,16 @@ export default function AddZapPoll({ exit, setNevent }) {
       content: content,
       tags,
     };
-    if (userKeys.ext) {
-      try {
-        tempEvent = await window.nostr.signEvent(tempEvent);
-      } catch (err) {
-        console.log(err);
-        return false;
-      }
-    } else {
-      tempEvent = finalizeEvent(tempEvent, userKeys.sec);
-    }
+    let eventInitEx = await InitEvent(
+      tempEvent.kind,
+      tempEvent.content,
+      tempEvent.tags,
+      tempEvent.created_at
+    );
+    if(!eventInitEx) return
     dispatch(
       setToPublish({
-        eventInitEx: tempEvent,
+        eventInitEx: eventInitEx,
         allRelays: relaysToPublish,
       })
     );

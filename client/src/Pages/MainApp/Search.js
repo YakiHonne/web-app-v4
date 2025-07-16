@@ -35,6 +35,12 @@ export default function Search() {
   const userKeys = useSelector((state) => state.userKeys);
   const userMutedList = useSelector((state) => state.userMutedList);
   const userInterestList = useSelector((state) => state.userInterestList);
+  const userFollowings = useSelector((state) => state.userFollowings);
+  const userFollowingsMetadata = useMemo(() => {
+    return userFollowings
+      .map((_) => nostrAuthors.find((__) => __.pubkey === _))
+      .filter((_) => _);
+  }, []);
   const [searchKeyword, setSearchKeyword] = useState(urlKeyword);
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(state?.tab ? true : false);
@@ -90,8 +96,11 @@ export default function Search() {
     if (searchKeyword) {
       timer = setTimeout(async () => {
         if (selectedTab === "people") searchForUser();
-        if (selectedTab !== "people") searchForContent();
-      }, 400);
+        if (selectedTab !== "people") {
+          setResults([])
+          searchForContent();
+        }
+      }, selectedTab === "people" ? 100 : 400);
     } else {
       clearTimeout(timer);
     }
@@ -156,33 +165,71 @@ export default function Search() {
   };
 
   const searchForUser = () => {
-    const filteredUsers = searchKeyword
-      ? sortByKeyword(
-          nostrAuthors.filter((user) => {
-            if (
-              !bannedList.includes(user.pubkey) &&
-              ((typeof user.display_name === "string" &&
-                user.display_name
+    let filteredUsers = [];
+    if (!searchKeyword) {
+      filteredUsers = Array.from(userFollowingsMetadata.slice(0, 30));
+    }
+    if (searchKeyword) {
+      let checkFollowings = sortByKeyword(
+        userFollowingsMetadata.filter((user) => {
+          if (
+            !bannedList.includes(user.pubkey) &&
+            ((typeof user.display_name === "string" &&
+              user.display_name
+                ?.toLowerCase()
+                .includes(searchKeyword?.toLowerCase())) ||
+              (typeof user.name === "string" &&
+                user.name
                   ?.toLowerCase()
                   .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.name === "string" &&
-                  user.name
+              (typeof user.nip05 === "string" &&
+                user.nip05
+                  ?.toLowerCase()
+                  .includes(searchKeyword?.toLowerCase()))) &&
+            isHex(user.pubkey) &&
+            typeof user.about === "string"
+          )
+            return user;
+        }),
+        searchKeyword
+      ).slice(0, 30);
+      if (checkFollowings.length > 0) {
+        filteredUsers = structuredClone(checkFollowings);
+      }
+      if (checkFollowings.length < 5) {
+        let filterPubkeys = filteredUsers.map((_) => _.pubkey);
+        filteredUsers = [
+          ...filteredUsers,
+          ...sortByKeyword(
+            nostrAuthors.filter((user) => {
+              if (
+                !filterPubkeys.includes(user.pubkey) &&
+                !bannedList.includes(user.pubkey) &&
+                ((typeof user.display_name === "string" &&
+                  user.display_name
                     ?.toLowerCase()
                     .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.nip05 === "string" &&
-                  user.nip05
-                    ?.toLowerCase()
-                    .includes(searchKeyword?.toLowerCase()))) &&
-              isHex(user.pubkey)
-            )
-              return user;
-          }),
-          searchKeyword
-        ).slice(0, 30)
-      : Array.from(nostrAuthors.slice(0, 30));
+                  (typeof user.name === "string" &&
+                    user.name
+                      ?.toLowerCase()
+                      .includes(searchKeyword?.toLowerCase())) ||
+                  (typeof user.nip05 === "string" &&
+                    user.nip05
+                      ?.toLowerCase()
+                      .includes(searchKeyword?.toLowerCase()))) &&
+                isHex(user.pubkey) &&
+                typeof user.about === "string"
+              )
+                return user;
+            }),
+            searchKeyword
+          ).slice(0, 30),
+        ];
+      }
+    }
 
     setResults(filteredUsers);
-    getUsersFromCache();
+    if (filteredUsers.length < 5) getUsersFromCache();
     setIsLoading(false);
   };
 
@@ -235,7 +282,7 @@ export default function Search() {
   const encodePubkey = (pubkey) => {
     try {
       if (!isHex(pubkey)) return false;
-      let url = nip19.npubEncode(pubkey);
+      let url = nip19.nprofileEncode({ pubkey });
       return url;
     } catch (err) {
       console.log(err);
@@ -431,34 +478,38 @@ export default function Search() {
                       </div>
                     </div>
                   )}
-                  {selectedTab === "people" && results.map((item, index) => {
-                    if (!item.kind) {
-                      let url = encodePubkey(item.pubkey);
-                      if (url)
+                  {selectedTab === "people" &&
+                    results.map((item, index) => {
+                      if (!item.kind) {
+                        let url = encodePubkey(item.pubkey);
+                        if (url)
+                          return (
+                            <SearchUserCard
+                              user={item}
+                              key={item.id}
+                              url={url}
+                              exit={() => null}
+                            />
+                          );
+                      }
+                    })}
+                  {selectedTab !== "people" &&
+                    results.map((item, index) => {
+                      if (
+                        [1].includes(item.kind) &&
+                        !userMutedList.includes(item.pubkey)
+                      )
                         return (
-                          <SearchUserCard
-                            user={item}
-                            key={item.id}
-                            url={url}
-                            exit={() => null}
-                          />
+                          <KindOne key={item.id} event={item} border={true} />
                         );
-                    }
-                  })}
-                  {selectedTab !== "people" && results.map((item, index) => {
-                    if (
-                      [1].includes(item.kind) &&
-                      !userMutedList.includes(item.pubkey)
-                    )
-                      return (
-                        <KindOne key={item.id} event={item} border={true} />
-                      );
-                    if (
-                      [30023, 34235].includes(item.kind) &&
-                      !userMutedList.includes(item.pubkey)
-                    )
-                      return <RepEventPreviewCard key={item.id} item={item} />;
-                  })}
+                      if (
+                        [30023, 34235].includes(item.kind) &&
+                        !userMutedList.includes(item.pubkey)
+                      )
+                        return (
+                          <RepEventPreviewCard key={item.id} item={item} />
+                        );
+                    })}
                   {isLoading && (
                     <div
                       className="fit-container fx-centered"

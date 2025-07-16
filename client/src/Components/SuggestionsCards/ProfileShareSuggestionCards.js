@@ -41,7 +41,7 @@ export default function ProfileShareSuggestionCards() {
           ></div>
           <div
             className="box-pad-h box-pad-v fx-centered fx-col"
-            style={{ position: "relative", zIndex: 3 }}
+            style={{ position: "relative", zIndex: 1 }}
           >
             <UserProfilePic mainAccountUser={true} size={94} />
             <h4 className="box-pad-v-s">

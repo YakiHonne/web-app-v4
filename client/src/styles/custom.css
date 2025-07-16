@@ -2288,3 +2288,9 @@ h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
     background-color: transparent !important;
     padding: 0 !important;
 }
+
+.feed-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+}

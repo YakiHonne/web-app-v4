@@ -78,7 +78,7 @@ export default function Sidebar() {
               className="fit-container link-items fx-scattered fx-col fx-start-v "
               style={{ rowGap: "8px", maxHeight: "71vh" }}
             >
-              <p className="p-bold">Build wigdets</p>
+              <p className="p-bold">Build widgets</p>
               <div
                 onClick={() => {
                   customHistory.push("/docs/sw/basic-widgets");

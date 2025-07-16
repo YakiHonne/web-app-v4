@@ -22,6 +22,7 @@ import ShareLink from "../../Components/ShareLink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useTranslation } from "react-i18next";
+import { InitEvent } from "../../Helpers/Controlers";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 const MAX_CHAR = 500;
@@ -75,7 +76,13 @@ export default function UNEvent() {
           axios.get(API_BASE_URL + "/api/v1/balance"),
         ]);
 
-        const content = await getNoteTree(FN.data.content, undefined, undefined, undefined, FN.data.author.pubkey);
+        const content = await getNoteTree(
+          FN.data.content,
+          undefined,
+          undefined,
+          undefined,
+          FN.data.author.pubkey
+        );
         setBalance(BALANCE.data.balance);
         setFlashNews(FN.data);
         setUncensoredNotes(
@@ -155,17 +162,13 @@ export default function UNEvent() {
         created_at,
         tags: [...tags, ...parsed.tags],
       };
-      if (userKeys.ext) {
-        try {
-          event = await window.nostr.signEvent(event);
-        } catch (err) {
-          console.log(err);
-          setIsLoading(false);
-          return false;
-        }
-      } else {
-        event = finalizeEvent(event, userKeys.sec);
-      }
+      event = await InitEvent(
+        event.kind,
+        event.content,
+        event.tags,
+        event.created_at
+      );
+      if (!event) return;
 
       dispatch(
         setToPublish({

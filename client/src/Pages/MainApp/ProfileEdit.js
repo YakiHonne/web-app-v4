@@ -185,7 +185,7 @@ export default function ProfileEdit() {
                 style={{ gap: 0 }}
               >
                 <div className="main-middle">
-                  {userMetadata && (userKeys.sec || userKeys.ext) && (
+                  {userMetadata && (userKeys.sec || userKeys.ext || userKeys.bunker) && (
                     <>
                       <div
                         className="fit-container fx-centered fx-col"
@@ -507,7 +507,7 @@ export default function ProfileEdit() {
                       </div>
                     </>
                   )}
-                  {userMetadata && !userKeys.sec && !userKeys.ext && (
+                  {userMetadata && !userKeys.sec && !userKeys.ext && !userKeys.bunker && (
                     <PagePlaceholder page={"nostr-unauthorized"} />
                   )}
                   {!userMetadata && (

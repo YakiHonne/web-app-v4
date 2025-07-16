@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   compactContent,
   getLinkFromAddr,
@@ -23,6 +23,12 @@ export default function SearchNetwork({ exit }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const userMutedList = useSelector((state) => state.userMutedList);
   const userInterestList = useSelector((state) => state.userInterestList);
+  const userFollowings = useSelector((state) => state.userFollowings);
+  const userFollowingsMetadata = useMemo(() => {
+    return userFollowings
+      .map((_) => nostrAuthors.find((__) => __.pubkey === _))
+      .filter((_) => _);
+  }, []);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +71,7 @@ export default function SearchNetwork({ exit }) {
       timer = setTimeout(async () => {
         if (selectedTab === 0) searchForUser();
         if (selectedTab === 1) searchForContent();
-      }, 400);
+      }, 100);
     } else {
       clearTimeout(timer);
     }
@@ -105,38 +111,107 @@ export default function SearchNetwork({ exit }) {
   };
 
   const searchForUser = () => {
-    const filteredUsers = searchKeyword
-      ? sortByKeyword(
-          nostrAuthors.filter((user) => {
-            if (
-              !bannedList.includes(user.pubkey) &&
-              ((typeof user.display_name === "string" &&
-                user.display_name
+    let filteredUsers = [];
+    if (!searchKeyword) {
+      filteredUsers = Array.from(userFollowingsMetadata.slice(0, 30));
+    }
+    if (searchKeyword) {
+      let checkFollowings = sortByKeyword(
+        userFollowingsMetadata.filter((user) => {
+          if (
+            !bannedList.includes(user.pubkey) &&
+            ((typeof user.display_name === "string" &&
+              user.display_name
+                ?.toLowerCase()
+                .includes(searchKeyword?.toLowerCase())) ||
+              (typeof user.name === "string" &&
+                user.name
                   ?.toLowerCase()
                   .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.name === "string" &&
-                  user.name
+              (typeof user.nip05 === "string" &&
+                user.nip05
+                  ?.toLowerCase()
+                  .includes(searchKeyword?.toLowerCase()))) &&
+            isHex(user.pubkey) &&
+            typeof user.about === "string"
+          )
+            return user;
+        }),
+        searchKeyword
+      ).slice(0, 30);
+      if (checkFollowings.length > 0) {
+        filteredUsers = structuredClone(checkFollowings);
+      }
+      if (checkFollowings.length < 5) {
+        let filterPubkeys = filteredUsers.map((_) => _.pubkey);
+        filteredUsers = [
+          ...filteredUsers,
+          ...sortByKeyword(
+            nostrAuthors.filter((user) => {
+              if (
+                !filterPubkeys.includes(user.pubkey) &&
+                !bannedList.includes(user.pubkey) &&
+                ((typeof user.display_name === "string" &&
+                  user.display_name
                     ?.toLowerCase()
                     .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.nip05 === "string" &&
-                  user.nip05
-                    ?.toLowerCase()
-                    .includes(searchKeyword?.toLowerCase()))) &&
-              isHex(user.pubkey)
-            )
-              return user;
-          }),
-          searchKeyword
-        ).slice(0, 25)
-      : Array.from(
-          nostrAuthors
-            .filter((_) => !bannedList.includes(_.pubkey))
-            .slice(0, 30)
-        );
+                  (typeof user.name === "string" &&
+                    user.name
+                      ?.toLowerCase()
+                      .includes(searchKeyword?.toLowerCase())) ||
+                  (typeof user.nip05 === "string" &&
+                    user.nip05
+                      ?.toLowerCase()
+                      .includes(searchKeyword?.toLowerCase()))) &&
+                isHex(user.pubkey) &&
+                typeof user.about === "string"
+              )
+                return user;
+            }),
+            searchKeyword
+          ).slice(0, 30),
+        ];
+      }
+    }
 
     setResults(filteredUsers);
-    getUsersFromCache();
+    if (filteredUsers.length < 5) getUsersFromCache();
+      setIsLoading(false);
   };
+
+  // const searchForUser = () => {
+  //   const filteredUsers = searchKeyword
+  //     ? sortByKeyword(
+  //         nostrAuthors.filter((user) => {
+  //           if (
+  //             !bannedList.includes(user.pubkey) &&
+  //             ((typeof user.display_name === "string" &&
+  //               user.display_name
+  //                 ?.toLowerCase()
+  //                 .includes(searchKeyword?.toLowerCase())) ||
+  //               (typeof user.name === "string" &&
+  //                 user.name
+  //                   ?.toLowerCase()
+  //                   .includes(searchKeyword?.toLowerCase())) ||
+  //               (typeof user.nip05 === "string" &&
+  //                 user.nip05
+  //                   ?.toLowerCase()
+  //                   .includes(searchKeyword?.toLowerCase()))) &&
+  //             isHex(user.pubkey)
+  //           )
+  //             return user;
+  //         }),
+  //         searchKeyword
+  //       ).slice(0, 25)
+  //     : Array.from(
+  //         nostrAuthors
+  //           .filter((_) => !bannedList.includes(_.pubkey))
+  //           .slice(0, 30)
+  //       );
+
+  //   setResults(filteredUsers);
+  //   getUsersFromCache();
+  // };
 
   const searchForContent = async () => {
     let tag = searchKeyword.replaceAll("#", "");
@@ -160,7 +235,10 @@ export default function SearchNetwork({ exit }) {
     );
     let content_ = content.data.map((event) => {
       if (event.kind === 1) {
-        return { ...event, content: compactContent(event.content, event.pubkey) };
+        return {
+          ...event,
+          content: compactContent(event.content, event.pubkey),
+        };
       } else {
         return getParsedRepEvent(event);
       }
@@ -180,7 +258,7 @@ export default function SearchNetwork({ exit }) {
   const encodePubkey = (pubkey) => {
     try {
       if (!isHex(pubkey)) return false;
-      let url = nip19.npubEncode(pubkey);
+      let url = nip19.nprofileEncode({ pubkey });
       return url;
     } catch (err) {
       console.log(err);
@@ -306,7 +384,7 @@ export default function SearchNetwork({ exit }) {
               <p className="gray-c">{t("A0RqaoC")}</p>
             </div>
           )}
-          {isLoading && (
+          {isLoading && results.length === 0 && (
             <div
               className="fit-container fx-centered"
               style={{ height: "500px" }}

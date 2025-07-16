@@ -26,7 +26,7 @@ import {
   setUserKeys,
   setUserMetadata,
 } from "../Store/Slides/UserData";
-import { clearDB, savefollowingsRelays } from "./DB";
+import { clearDB, savefollowingsInboxRelays, savefollowingsRelays } from "./DB";
 import {
   getAppLang,
   getContentTranslationConfig,
@@ -34,10 +34,11 @@ import {
   getKeys,
   levelCount,
 } from "./Helpers";
-import { finalizeEvent } from "nostr-tools";
+import { finalizeEvent, SimplePool } from "nostr-tools";
 import { translationServicesEndpoints } from "../Content/TranslationServices";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
+import { BunkerSigner, parseBunkerInput } from "nostr-tools/nip46";
 
 const ConnectNDK = async (relays) => {
   try {
@@ -141,6 +142,7 @@ const getUserFromNOSTR = (pubkey) => {
         // resolve(getuserMetadata(event));
       });
       subscription.on("eose", () => {
+        subscription.stop()
         resolve(auth);
       });
     } catch (err) {
@@ -163,9 +165,11 @@ const getUserRelaysFromNOSTR = (pubkey) => {
       );
 
       subscription.on("event", (event) => {
+        subscription.stop()
         resolve(event.rawEvent());
       });
       subscription.on("eose", () => {
+        subscription.stop()
         resolve(false);
       });
     } catch (err) {
@@ -382,7 +386,28 @@ const saveRelaysListsForUsers = async (pubkeyList) => {
         relays: getRelayList(relays[1].tags),
       };
     });
+
     savefollowingsRelays(followingsRelayList);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const saveInboxRelaysListsForUsers = async (pubkeyList) => {
+  try {
+    let list = await getSubData([{ kinds: [10050], authors: pubkeyList }]);
+    let followingsRelayList = [...list.data].filter((_, index, arr) => {
+      if(arr.findIndex((item) => item.pubkey === _.pubkey) === index) return true;
+    }).map((author) => {
+      return {
+        pubkey: author.pubkey,
+        relays: author.tags
+          .filter((_) => _[0] === "relay")
+          .map((tag) => tag[1]),
+      };
+    });
+
+    savefollowingsInboxRelays(followingsRelayList);
   } catch (err) {
     console.log(err);
   }
@@ -413,7 +438,7 @@ const getRelayList = (list) => {
 const getFavRelayList = (list) => {
   let relays = list.filter((relay) => relay[0] === "relay" && relay.length > 1);
   return relays.map((relay) => {
-    return relay[1].replace(/\/$/, '');
+    return relay[1].replace(/\/$/, "");
   });
 };
 
@@ -499,7 +524,6 @@ const InitEvent = async (
       content,
       tags,
     };
-    console.log(tempEvent);
     if (userKeys.ext) {
       try {
         tempEvent = await window.nostr.signEvent(tempEvent);
@@ -507,9 +531,23 @@ const InitEvent = async (
         console.log(err);
         return false;
       }
+    } else if (userKeys.bunker) {
+      const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+      const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+        onauth: (url) => {
+          window.open(
+            url,
+            "_blank",
+            "width=600,height=650,scrollbars=yes,resizable=yes"
+          );
+        },
+      });
+      await bunker.connect();
+      tempEvent = await bunker.signEvent(tempEvent);
     } else {
       tempEvent = finalizeEvent(tempEvent, userKeys.sec);
     }
+
     return tempEvent;
   } catch (err) {
     console.log(err);
@@ -862,8 +900,8 @@ const getDVMJobResponse = async (eventId) => {
         clearTimeout(timer);
         let events = JSON.parse(event.content);
         let eventsIds = events.map((_) => _[1]);
-        resolve([...new Set(eventsIds)]);
         sub.stop();
+        resolve([...new Set(eventsIds)]);
       });
     } catch (err) {
       console.log(err);
@@ -898,4 +936,5 @@ export {
   getDefaultFilter,
   getDVMJobRequest,
   getDVMJobResponse,
+  saveInboxRelaysListsForUsers,
 };

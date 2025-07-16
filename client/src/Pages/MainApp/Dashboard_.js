@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useReducer, useState } from "react";
+import React, { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import Sidebar from "../../Components/Main/Sidebar";
 import { SelectTabs } from "../../Components/Main/SelectTabs";
@@ -207,7 +207,7 @@ const getInterestList = (list) => {
   return tempList;
 };
 
-export default function Dashboard() {
+export default function Dashboard_() {
   const { state } = useLocation();
   const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
@@ -353,6 +353,10 @@ export default function Dashboard() {
                     className="fit-height fit-container feed-container"
                     style={{ overflow: "scroll" }}
                   >
+                    <SideMenu
+                      selectedTab={selectedTab}
+                      setSelectedTab={setSelectedTab}
+                    />
                     {selectedTab === 0 && isLoading && (
                       <div
                         className="fit-container fx-centered"
@@ -374,23 +378,47 @@ export default function Dashboard() {
                     )}
                     {selectedTab === 1 && (
                       <Content
-                        filter={contentFilter}
+                        filter={"notes"}
                         localDraft={userPreview.localDraft}
                         init={state?.init || false}
                         setPostToNote={setPostToNote}
                       />
                     )}
                     {selectedTab === 2 && (
+                      <Content
+                        filter={"articles"}
+                        localDraft={userPreview.localDraft}
+                        init={state?.init || false}
+                        setPostToNote={setPostToNote}
+                      />
+                    )}
+                    {selectedTab === 3 && (
+                      <Content
+                        filter={"curations"}
+                        localDraft={userPreview.localDraft}
+                        init={state?.init || false}
+                        setPostToNote={setPostToNote}
+                      />
+                    )}
+                    {selectedTab === 4 && (
+                      <Content
+                        filter={"videos"}
+                        localDraft={userPreview.localDraft}
+                        init={state?.init || false}
+                        setPostToNote={setPostToNote}
+                      />
+                    )}
+                    {selectedTab === 5 && (
                       <Widgets
                         setPostToNote={setPostToNote}
                         localDraft={userPreview.localDraft}
                       />
                     )}
-                    {selectedTab === 3 && <Bookmarks />}
-                    {selectedTab === 4 && <Interests />}
-                    <div style={{ padding: "3rem" }}></div>
+                    {selectedTab === 6 && <Bookmarks />}
+                    {selectedTab === 7 && <Interests />}
+                    {/* <div style={{ padding: "3rem" }}></div> */}
                   </div>
-                  <div
+                  {/* <div
                     style={{
                       position: "absolute",
                       bottom: 0,
@@ -403,7 +431,7 @@ export default function Dashboard() {
                       setSelectedTab={setSelectedTab}
                       tabs={tabs}
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </main>
@@ -413,6 +441,265 @@ export default function Dashboard() {
     </>
   );
 }
+
+const SideMenu = ({ setSelectedTab, selectedTab }) => {
+  return (
+    <>
+      <SideMenuDesktop
+        setSelectedTab={setSelectedTab}
+        selectedTab={selectedTab}
+      />
+      <SideMenuMobile
+        setSelectedTab={setSelectedTab}
+        selectedTab={selectedTab}
+      />
+    </>
+  );
+};
+
+const SideMenuDesktop = ({ setSelectedTab, selectedTab }) => {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        height: "100vh",
+        width: "300px",
+        overflow: "hidden",
+        borderRight: "1px solid var(--pale-gray)",
+        position: "sticky",
+        top: 0,
+      }}
+      className="mb-hide-800"
+    >
+      <div className="box-pad-h box-pad-v">
+        <h4>{t("ALBhi3j")}</h4>
+      </div>
+      <div className="fx-centered fx-start-v fx-col" style={{ gap: "0" }}>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 0 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(0)}
+        >
+          {t("AJDdA3h")}
+        </p>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 1 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(1)}
+        >
+          {t("AYIXG83")}
+        </p>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 2 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(2)}
+        >
+          {t("AesMg52")}
+        </p>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 3 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(3)}
+        >
+          {t("AVysZ1s")}
+        </p>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 4 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(4)}
+        >
+          {t("AStkKfQ")}
+        </p>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 5 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(5)}
+        >
+          {t("A2mdxcf")}
+        </p>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 6 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(6)}
+        >
+          {t("AqwEL0G")}
+        </p>
+        <p
+          className="option fit-container box-pad-h box-pad-v-m pointer"
+          style={{
+            backgroundColor: selectedTab === 7 ? "var(--pale-gray)" : "",
+          }}
+          onClick={() => setSelectedTab(7)}
+        >
+          {t("AvcFYqP")}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const SideMenuMobile = ({ setSelectedTab, selectedTab }) => {
+  const { t } = useTranslation();
+  const [showMenu, setShowMenu] = useState(false);
+  return (
+    <div
+      style={{
+        borderBottom: "1px solid var(--pale-gray)",
+        position: "relative",
+      }}
+      className="desk-hide fit-container"
+    >
+      <div className="box-pad-h-m box-pad-v-m fit-container fx-scattered">
+        <h4>{t("ALBhi3j")}</h4>
+        <div
+          className="burger-menu"
+          onClick={() => setShowMenu(!showMenu)}
+        ></div>
+      </div>
+      {showMenu && (
+        <div
+          className="fixed-container fx-centered fx-end-h"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMenu(false);
+          }}
+        >
+          <div
+            className="fx-centered fx-start-h fx-start-v fx-col sc-s-18 slide-right"
+            style={{
+              gap: "0",
+              width: "70%",
+              height: "100vh",
+              borderRadius: "0",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="box-pad-h box-pad-v fx-scattered fit-container">
+              <h4>{t("ALBhi3j")}</h4>
+              <div
+                className="close"
+                style={{ position: "static" }}
+                onClick={() => setShowMenu(!showMenu)}
+              >
+                <div></div>
+              </div>
+            </div>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 0 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(0);
+                setShowMenu(false);
+              }}
+            >
+              {t("AJDdA3h")}
+            </p>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 1 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(1);
+                setShowMenu(false);
+              }}
+            >
+              {t("AYIXG83")}
+            </p>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 2 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(2);
+                setShowMenu(false);
+              }}
+            >
+              {t("AesMg52")}
+            </p>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 3 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(3);
+                setShowMenu(false);
+              }}
+            >
+              {t("AVysZ1s")}
+            </p>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 4 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(4);
+                setShowMenu(false);
+              }}
+            >
+              {t("AStkKfQ")}
+            </p>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 5 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(5);
+                setShowMenu(false);
+              }}
+            >
+              {t("A2mdxcf")}
+            </p>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 6 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(6);
+                setShowMenu(false);
+              }}
+            >
+              {t("AqwEL0G")}
+            </p>
+            <p
+              className="option fit-container box-pad-h box-pad-v-m pointer"
+              style={{
+                backgroundColor: selectedTab === 7 ? "var(--pale-gray)" : "",
+              }}
+              onClick={() => {
+                setSelectedTab(7);
+                setShowMenu(false);
+              }}
+            >
+              {t("AvcFYqP")}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Content = ({ filter, setPostToNote, localDraft, init }) => {
   const userKeys = useSelector((state) => state.userKeys);
@@ -626,68 +913,14 @@ const Content = ({ filter, setPostToNote, localDraft, init }) => {
         />
       )}
       <div className="fit-container">
-        <div
-          className="fit-container fx-even sticky box-pad-h"
-          style={{
-            top: "-1px",
-            // padding: "1rem",
-            paddingTop: 0,
-            paddingBottom: 0,
-            columnGap: 0,
-            borderBottom: "1px solid var(--very-dim-gray)",
-          }}
-        >
-          <div
-            className={`list-item-b fx-centered fx-shrink ${
-              contentFrom === "notes" ? "selected-list-item-b" : ""
-            }`}
-            onClick={() => switchContentType("notes")}
-          >
-            {t("AYIXG83")}
-          </div>
-          <div
-            className={`list-item-b fx-centered fx-shrink ${
-              ["articles", "drafts"].includes(contentFrom)
-                ? "selected-list-item-b"
-                : ""
-            }`}
-            onClick={() => switchContentType("articles")}
-          >
-            {t("AesMg52")}
-          </div>
-          <div
-            className={`list-item-b fx-centered fx-shrink ${
-              contentFrom === "curations" ? "selected-list-item-b" : ""
-            }`}
-            onClick={() => switchContentType("curations")}
-          >
-            {t("AVysZ1s")}
-          </div>
-          <div
-            className={`list-item-b fx-centered fx-shrink ${
-              contentFrom === "videos" ? "selected-list-item-b" : ""
-            }`}
-            onClick={() => switchContentType("videos")}
-          >
-            {t("AStkKfQ")}
-          </div>
-          {/* <div
-            className={`list-item-b fx-centered fx-shrink ${
-              contentFrom === "widgets" ? "selected-list-item-b" : ""
-            }`}
-            onClick={() => switchContentType("widgets")}
-          >
-            {t("A2mdxcf")}
-          </div> */}
-        </div>
-        <div className="fit-container fx-scattered  box-pad-v box-pad-h">
-          <h3 className="p-caps">
+        <div className="fit-container fx-scattered  box-pad-v-m box-pad-h">
+          <h4 className="p-caps">
             {["articles", "drafts"].includes(contentFrom) && t("AesMg52")}
             {contentFrom === "widgets" && t("A2mdxcf")}
             {contentFrom === "videos" && t("AStkKfQ")}
             {contentFrom === "curations" && t("AVysZ1s")}
             {contentFrom === "notes" && t("AYIXG83")}
-          </h3>
+          </h4>
           <div className="fx-centered">
             {["articles", "drafts"].includes(contentFrom) && (
               <Select
@@ -938,8 +1171,8 @@ const Widgets = ({ setPostToNote, localDraft }) => {
         <LaunchSW metadata={selectedSW} exit={() => setSelectedSW("")} />
       )}
       <div className="fit-container">
-        <div className="fit-container fx-scattered  box-pad-v box-pad-h">
-          <h3 className="p-caps">{t("A2mdxcf")}</h3>
+        <div className="fit-container fx-scattered  box-pad-v-m box-pad-h">
+          <h4 className="p-caps">{t("A2mdxcf")}</h4>
           <div className="fx-centered">
             <button className="btn btn-normal" onClick={handleAddContent}>
               <div className="plus-sign"></div>
@@ -1041,6 +1274,7 @@ const Widgets = ({ setPostToNote, localDraft }) => {
     </>
   );
 };
+
 const Bookmarks = () => {
   const userKeys = useSelector((state) => state.userKeys);
   const userBookmarks = useSelector((state) => state.userBookmarks);
@@ -1087,8 +1321,8 @@ const Bookmarks = () => {
         />
       )}
       <div className="fit-container">
-        <div className="fit-container fx-scattered  box-pad-v box-pad-h">
-          <h3 className="p-caps">{t("AqwEL0G")}</h3>
+        <div className="fit-container fx-scattered  box-pad-v-m box-pad-h">
+          <h4 className="p-caps">{t("AqwEL0G")}</h4>
           <button
             className="btn btn-normal"
             onClick={() => setShowAddBookmark(true)}
@@ -1122,6 +1356,7 @@ const Bookmarks = () => {
     </>
   );
 };
+
 const Interests = () => {
   const userInterestList = useSelector((state) => state.userInterestList);
   const { t } = useTranslation();
@@ -1132,8 +1367,8 @@ const Interests = () => {
   const [isManage, setIsManage] = useState(false);
   return (
     <div className="fit-container">
-      <div className="fit-container fx-scattered  box-pad-v box-pad-h">
-        <h3 className="p-caps">{t("AvcFYqP")}</h3>
+      <div className="fit-container fx-scattered  box-pad-v-m box-pad-h">
+        <h4 className="p-caps">{t("AvcFYqP")}</h4>
         {userInterestList.length > 0 && !isManage && (
           <button className="btn btn-normal" onClick={() => setIsManage(true)}>
             {t("A8RA6c7")}
@@ -1207,6 +1442,7 @@ const Interests = () => {
     </div>
   );
 };
+
 const HomeTab = ({
   data,
   setPostToNote,
@@ -1221,6 +1457,7 @@ const HomeTab = ({
   const [addArtsToCur, setAddArtsToCur] = useState(false);
   const [showCurationCreator, setShowCurationCreator] = useState(false);
   const [editEvent, setEditEvent] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(0);
   const [showPeople, setShowPeople] = useState(false);
 
   const handleEditItem = (event) => {
@@ -1288,9 +1525,9 @@ const HomeTab = ({
           type={"following"}
         />
       )}
-      <div className="fit-container box-pad-v box-pad-h">
+      <div className="fit-container box-pad-h">
         <div className="fit-container fx-scattered">
-          <h3>{t("AJDdA3h")}</h3>
+          {/* <h4>{t("AJDdA3h")}</h4> */}
           {/* <div style={{ width: "150px" }}>
           <WriteNew exit={() => null} />
         </div> */}
@@ -1314,7 +1551,7 @@ const HomeTab = ({
                 className="bg-img cover-bg"
               ></div>
               <div
-                className="box-pad-h fx fx-centered fx-col fx-start-h"
+                className="box-pad-h fx fx-centered fx-start-h fx-end-v"
                 style={{ position: "relative", zIndex: 1 }}
               >
                 <div
@@ -1323,66 +1560,90 @@ const HomeTab = ({
                     borderRadius: "22px",
                   }}
                 >
-                  <UserProfilePic mainAccountUser={true} size={110} />
+                  <UserProfilePic mainAccountUser={true} size={150} />
                 </div>
-                <div className="fx-centered fx-col">
-                  <h4>{userMetadata.display_name || userMetadata.name}</h4>
-                  <p className="gray-c">
-                    {t("AcqUGhB", {
-                      date: convertDate(
-                        new Date(data.userProfile.time_joined * 1000)
-                      ),
-                    })}{" "}
-                    {/* <Date_
+                <div className="box-pad-v-s fit-container fx-scattered fx-wrap">
+                  <div className="fx-centered fx-col fx-start-v">
+                    <h4>{userMetadata.display_name || userMetadata.name}</h4>
+                    <p className="gray-c">
+                      {t("AcqUGhB", {
+                        date: convertDate(
+                          new Date(data.userProfile.time_joined * 1000)
+                        ),
+                      })}{" "}
+                      {/* <Date_
                       toConvert={new Date(data.userProfile.time_joined * 1000)}
-                    /> */}
-                  </p>
+                      /> */}
+                    </p>
+                  </div>
+                  <Link to={`/yaki-points`}>
+                    <button className="btn btn-small btn-normal fx-centered">
+                      <div className="cup"></div> Yaki {t("A4IGG0z")}
+                    </button>
+                  </Link>
                 </div>
-                <Link to={`/yaki-points`}>
-                  <button className="btn btn-normal fx-centered">
-                    <div className="cup"></div> Yaki {t("A4IGG0z")}
-                  </button>
-                </Link>
               </div>
             </div>
             <div
-              className="fx-centered fx-col fx fx-stretch"
+              className="fx-centered fit-container fx-wrap"
               style={{ flex: "1 1 400px" }}
             >
-              <div className="fit-container fx-centered fx">
+              <div
+                className="fx-centered fx-wrap"
+                style={{ flex: "1 1 300px" }}
+              >
                 <div
-                  className="sc-s-18 option pointer fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
-                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                  className="sc-s-18 option pointer fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{
+                    backgroundColor: "transparent",
+                    gap: "16px",
+                    flex: "1 1 100px",
+                  }}
                   onClick={() => setShowPeople("following")}
                 >
                   <div
                     className="user-followed-24"
                     style={{ minWidth: "32px", minHeight: "32px" }}
                   ></div>
-                  <div className="fx-centered">
-                    <h4>{data.userProfile?.follows_count || 0}</h4>
+                  <div className="fx-centered fx-wrap fx-start-h">
+                    <p className="p-big">
+                      {data.userProfile?.follows_count || 0}
+                    </p>
                     <p className="gray-c">{t("A9TqNxQ")}</p>
                   </div>
                 </div>
                 <div
-                  className="sc-s-18 option pointer fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
-                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                  className="sc-s-18 option pointer fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{
+                    backgroundColor: "transparent",
+                    gap: "16px",
+                    flex: "1 1 100px",
+                  }}
                   onClick={() => setShowPeople("followers")}
                 >
                   <div
                     className="user-followed-24"
                     style={{ minWidth: "32px", minHeight: "32px" }}
                   ></div>
-                  <div className="fx-centered">
-                    <h4>{data.userProfile?.followers_count || 0}</h4>
+                  <div className="fx-centered fx-wrap fx-start-h">
+                    <p className="p-big">
+                      {data.userProfile?.followers_count || 0}
+                    </p>
                     <p className="gray-c">{t("A6huCnT")}</p>
                   </div>
                 </div>
               </div>
-              <div className="fit-container fx-centered fx">
+              <div
+                className="fx fx-centered fx-wrap"
+                style={{ flex: "1 1 300px" }}
+              >
                 <Link
-                  className="fx sc-s-18 option pointer fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
-                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                  className="sc-s-18 option pointer fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{
+                    backgroundColor: "transparent",
+                    gap: "16px",
+                    flex: "1 1 100px",
+                  }}
                   to={`/users/${nip19.nprofileEncode({
                     pubkey: userMetadata.pubkey,
                   })}`}
@@ -1392,14 +1653,18 @@ const HomeTab = ({
                     className="note-24"
                     style={{ minWidth: "32px", minHeight: "32px" }}
                   ></div>
-                  <div className="fx-centered">
-                    <h4>{data.userProfile?.note_count || 0}</h4>
+                  <div className="fx-centered fx-wrap fx-start-h">
+                    <p className="p-big">{data.userProfile?.note_count || 0}</p>
                     <p className="gray-c">{t("AYIXG83")}</p>
                   </div>
                 </Link>
                 <Link
-                  className="fx sc-s-18 option pointer fx fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
-                  style={{ backgroundColor: "transparent", gap: "16px" }}
+                  className="sc-s-18 option pointer fx-centered fx-col fx-start-v box-pad-h box-pad-v fit-height"
+                  style={{
+                    backgroundColor: "transparent",
+                    gap: "16px",
+                    flex: "1 1 100px",
+                  }}
                   to={`/users/${nip19.nprofileEncode({
                     pubkey: userMetadata.pubkey,
                   })}`}
@@ -1409,8 +1674,10 @@ const HomeTab = ({
                     className="comment-icon"
                     style={{ minWidth: "32px", minHeight: "32px" }}
                   ></div>
-                  <div className="fx-centered">
-                    <h4>{data.userProfile?.reply_count || 0}</h4>
+                  <div className="fx-centered fx-wrap fx-start-h">
+                    <p className="p-big">
+                      {data.userProfile?.reply_count || 0}
+                    </p>
                     <p className="gray-c">{t("AENEcn9")}</p>
                   </div>
                 </Link>
@@ -1419,11 +1686,11 @@ const HomeTab = ({
           </div>
           <div className="fit-container fx-centered fx-wrap">
             <div
-              className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
+              className="sc-s-18  fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
               style={{
                 backgroundColor: "transparent",
                 gap: "16px",
-                flex: "1 1 400px",
+                flex: "1 1 200px",
               }}
             >
               <div
@@ -1431,27 +1698,31 @@ const HomeTab = ({
                 style={{ minWidth: "32px", minHeight: "32px" }}
               ></div>
               <div className="fx-centered">
-                <h4>
-                  <NumberShrink
-                    value={data.userProfile?.total_zap_count || 0}
-                  />
-                </h4>
-                <p className="gray-c">{t("AFk1EBA")}</p>
+                <div>
+                  <p className="p-big">
+                    <NumberShrink
+                      value={data.userProfile?.total_zap_count || 0}
+                    />
+                  </p>
+                  <p className="gray-c">{t("AFk1EBA")}</p>
+                </div>
                 <p className="gray-c p-medium">&#8226; </p>
-                <h4>
-                  <NumberShrink
-                    value={data.userProfile?.total_satszapped || 0}
-                  />
-                </h4>
-                <p className="gray-c">{t("AUb1YTL")}</p>
+                <div>
+                  <p className="p-big">
+                    <NumberShrink
+                      value={data.userProfile?.total_satszapped || 0}
+                    />
+                  </p>
+                  <p className="gray-c">{t("AUb1YTL")}</p>
+                </div>
               </div>
             </div>
             <div
-              className="sc-s-18 fx fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
+              className="sc-s-18  fx-centered fx-col fx-start-h fx-start-v box-pad-h box-pad-v "
               style={{
                 backgroundColor: "transparent",
                 gap: "16px",
-                flex: "1 1 400px",
+                flex: "1 1 200px",
               }}
             >
               <div
@@ -1459,97 +1730,147 @@ const HomeTab = ({
                 style={{ minWidth: "32px", minHeight: "32px" }}
               ></div>
               <div className="fx-centered">
-                <h4>
-                  {
-                    <NumberShrink
-                      value={data.userProfile?.zaps_sent?.count || 0}
-                    />
-                  }
-                </h4>
-                <p className="gray-c">{t("AmdnVra")}</p>
+                <div>
+                  <p className="p-big">
+                    {
+                      <NumberShrink
+                        value={data.userProfile?.zaps_sent?.count || 0}
+                      />
+                    }
+                  </p>
+                  <p className="gray-c">{t("AmdnVra")}</p>
+                </div>
                 <p className="gray-c p-medium">&#8226; </p>
-                <h4>
-                  <NumberShrink
-                    value={(data.userProfile?.zaps_sent?.msats || 0) / 1000}
-                  />
-                </h4>
-                <p className="gray-c">{t("AUb1YTL")}</p>
+                <div>
+                  <p className="p-big">
+                    <NumberShrink
+                      value={(data.userProfile?.zaps_sent?.msats || 0) / 1000}
+                    />
+                  </p>
+                  <p className="gray-c">{t("AUb1YTL")}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        {data.latestPublished.length > 0 && (
-          <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-            <p className="gray-c p-big">{t("At9t6yz")}</p>
-            <div className="fit-container fx-centered fx-col fx-start-v">
-              {data.latestPublished.map((event) => {
-                return (
-                  <ContentCard
-                    key={event.id}
-                    event={event}
-                    setPostToNote={setPostToNote}
-                    setDeleteEvent={setDeleteEvent}
-                    setEditItem={handleEditItem}
-                    setAddArtsToCur={setAddArtsToCur}
-                  />
-                );
-              })}
-            </div>
+        <div
+          className="fit-container fx-even sticky box-pad-h"
+          style={{
+            top: "-1px",
+            // padding: "1rem",
+            paddingTop: 0,
+            paddingBottom: 0,
+            columnGap: 0,
+            borderBottom: "1px solid var(--very-dim-gray)",
+            borderTop: "1px solid var(--very-dim-gray)",
+          }}
+        >
+          <div
+            className={`list-item-b fx-centered fx-shrink ${
+              selectedCategory === 0 ? "selected-list-item-b" : ""
+            }`}
+            onClick={() => setSelectedCategory(0)}
+          >
+            {t("At9t6yz")}
+          </div>
+          <div
+            className={`list-item-b fx-centered fx-shrink ${
+              selectedCategory === 1 ? "selected-list-item-b" : ""
+            }`}
+            onClick={() => setSelectedCategory(1)}
+          >
+            {t("Ayh5F4w")}
+          </div>
+          <div
+            className={`list-item-b fx-centered fx-shrink ${
+              selectedCategory === 2 ? "selected-list-item-b" : ""
+            }`}
+            onClick={() => setSelectedCategory(2)}
+          >
+            {t("AU2yMBa")}
+          </div>
+        </div>
+        {selectedCategory === 0 && (
+          <div>
+            {data.latestPublished.length > 0 && (
+              <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
+                <div className="fit-container fx-centered fx-col fx-start-v">
+                  {data.latestPublished.map((event) => {
+                    return (
+                      <ContentCard
+                        key={event.id}
+                        event={event}
+                        setPostToNote={setPostToNote}
+                        setDeleteEvent={setDeleteEvent}
+                        setEditItem={handleEditItem}
+                        setAddArtsToCur={setAddArtsToCur}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
-        {(data.localDraft || data.drafts.length > 0) && (
-          <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-            <p className="gray-c p-big">{t("Ayh5F4w")}</p>
-            <div className="fit-container fx-centered fx-col fx-start-v">
-              {data.localDraft && (
-                <>
-                  <p className="c1-c">{t("A7noclE")}</p>
-                  {data.localDraft.noteDraft && (
-                    <ContentCard
-                      event={data.localDraft.noteDraft}
-                      setPostToNote={setPostToNote}
-                    />
+        {selectedCategory === 1 && (
+          <div>
+            {(data.localDraft || data.drafts.length > 0) && (
+              <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
+                <div className="fit-container fx-centered fx-col fx-start-v">
+                  {data.localDraft && (
+                    <>
+                      <p className="c1-c">{t("A7noclE")}</p>
+                      {data.localDraft.noteDraft && (
+                        <ContentCard
+                          event={data.localDraft.noteDraft}
+                          setPostToNote={setPostToNote}
+                        />
+                      )}
+                      {data.localDraft.artDraft && (
+                        <ContentCard event={data.localDraft.artDraft} />
+                      )}
+                      {data.localDraft.smartWidgetDraft && (
+                        <ContentCard event={data.localDraft.smartWidgetDraft} />
+                      )}
+                    </>
                   )}
-                  {data.localDraft.artDraft && (
-                    <ContentCard event={data.localDraft.artDraft} />
+                  {data.drafts.length > 0 && (
+                    <>
+                      <div className="fit-container fx-scattered">
+                        <p>{t("AQG30hM")}</p>
+                        {data.drafts.length > 4 && (
+                          <p
+                            className="btn-text-gray pointer"
+                            onClick={() => {
+                              setSelectedTab(1);
+                              setContentFilter("drafts");
+                            }}
+                          >
+                            {t("A4N51J3")}
+                          </p>
+                        )}
+                      </div>
+                      {data.drafts.slice(0, 4).map((event) => {
+                        return <ContentCard key={event.id} event={event} />;
+                      })}
+                    </>
                   )}
-                  {data.localDraft.smartWidgetDraft && (
-                    <ContentCard event={data.localDraft.smartWidgetDraft} />
-                  )}
-                </>
-              )}
-              {data.drafts.length > 0 && (
-                <>
-                  <div className="fit-container fx-scattered">
-                    <p>{t("AQG30hM")}</p>
-                    {data.drafts.length > 4 && (
-                      <p
-                        className="btn-text-gray pointer"
-                        onClick={() => {
-                          setSelectedTab(1);
-                          setContentFilter("drafts");
-                        }}
-                      >
-                        {t("A4N51J3")}
-                      </p>
-                    )}
-                  </div>
-                  {data.drafts.slice(0, 4).map((event) => {
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {selectedCategory === 2 && (
+          <div>
+            {data.popularNotes.length > 0 && (
+              <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
+                <div className="fit-container fx-centered fx-col">
+                  {data.popularNotes.map((event) => {
                     return <ContentCard key={event.id} event={event} />;
                   })}
-                </>
-              )}
-            </div>
-          </div>
-        )}
-        {data.popularNotes.length > 0 && (
-          <div className="fit-container fx-centered fx-start-v fx-col box-pad-v-m">
-            <p className="gray-c p-big">{t("AU2yMBa")}</p>
-            <div className="fit-container fx-centered fx-col">
-              {data.popularNotes.map((event) => {
-                return <ContentCard key={event.id} event={event} />;
-              })}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1682,6 +2003,7 @@ const DraftCard = ({ event, setDeleteEvent }) => {
     </div>
   );
 };
+
 const DraftCardOthers = ({ event, setPostToNote }) => {
   const { t } = useTranslation();
   const handleRedirect = (e) => {
@@ -2043,7 +2365,7 @@ const NoteCard = ({ event }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const userMetadata = useSelector((state) => state.userMetadata);
-  const isRepost = event.kind === 6 ? event : event;
+  const isRepost = event.kind === 6 ? JSON.parse(event.content) : event;
   const { postActions } = useNoteStats(isRepost.id, isRepost.pubkey);
   const isFlashNews = isRepost.tags.find(
     (tag) => tag[0] === "l" && tag[1] === "FLASH NEWS"
@@ -2334,7 +2656,7 @@ const BookmarkContent = ({ bookmark, exit }) => {
           ></div>
           <div className="fx-scattered fx-col fx-start-v">
             <div className="fx-centered fx-col fx-start-v">
-              <h3 className="p-caps">{bookmark.title}</h3>
+              <h4 className="p-caps">{bookmark.title}</h4>
               <p className="gray-c">{bookmark.description}</p>
             </div>
             <p className="gray-c">

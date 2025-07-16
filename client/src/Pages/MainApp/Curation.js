@@ -211,7 +211,7 @@ export default function Curation() {
               return [...prev, getParsedRepEvent(event)];
             else return prev;
           });
-        }
+        } else sub.stop();
       });
       sub.on("eose", () => {
         saveUsers(moreCurationsAuthorsPubkeys);

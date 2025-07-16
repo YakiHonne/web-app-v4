@@ -250,7 +250,7 @@ export default function ZapPollsComp({
   };
 
   const handleShowCashier = (option) => {
-    if (!userKeys || (userKeys && !(userKeys?.sec || userKeys?.ext))) {
+    if (!userKeys || (userKeys && !(userKeys?.sec || userKeys?.ext || userKeys?.bunker))) {
       setIsLogin(true);
       return;
     }

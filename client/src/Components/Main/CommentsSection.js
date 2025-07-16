@@ -16,6 +16,7 @@ import { Link } from "react-router-dom";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
 import LoginSignup from "./LoginSignup";
+import { getWotConfig } from "../../Helpers/Helpers";
 
 const filterComments = (all, id, isRoot) => {
   if (isRoot) return filterRootComments(all);
@@ -141,6 +142,7 @@ export default function CommentsSection({
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      const { score, reactions } = getWotConfig();
       const events = await getSubData(
         [
           {
@@ -161,14 +163,18 @@ export default function CommentsSection({
           let is_mention = event.tags.filter(
             (tag) => tag.length > 3 && tag[3] === "mention" && tag[1] === id
           );
-          let score = getWOTScoreForPubkeyLegacy(event.pubkey);
+          let scoreStatus = getWOTScoreForPubkeyLegacy(
+            event.pubkey,
+            reactions,
+            score
+          );
           if (
             !(
               (is_un && is_un[1] === "UNCENSORED NOTE") ||
               (is_quote && !is_comment) ||
               (is_mention.length > 0 && !is_comment)
             ) &&
-            score.status
+            scoreStatus.status
           ) {
             return event;
           }

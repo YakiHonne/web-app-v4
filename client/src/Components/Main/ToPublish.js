@@ -104,8 +104,8 @@ export default function ToPublish({
       }
       let processedContent = extractNip19(postContent);
       const imageRegex =
-      /(?<!\!\[image\]\()https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp|bmp|svg)(?!\))/g;
-      
+        /(?<!\!\[image\]\()https?:\/\/\S+\.(?:jpg|jpeg|png|gif|webp|bmp|svg)(?!\))/g;
+
       let tempEvent = {
         created_at,
         kind: kind,
@@ -124,17 +124,6 @@ export default function ToPublish({
         setIsLoading(false);
         return;
       }
-      // if (userKeys.ext) {
-      //   try {
-      //     tempEvent = await window.nostr.signEvent(tempEvent);
-      //   } catch (err) {
-      //     console.log(err);
-      //     setIsLoading(false);
-      //     return false;
-      //   }
-      // } else {
-      //   tempEvent = finalizeEvent(tempEvent, userKeys.sec);
-      // }
       dispatch(
         setToPublish({
           eventInitEx,
@@ -150,19 +139,7 @@ export default function ToPublish({
             content: "A draft to delete",
             tags: [["e", postId]],
           };
-          // if (userKeys.ext) {
-          //   try {
-          //     tempEvent = await window.nostr.signEvent(tempEvent);
-          //   } catch (err) {
-          //     console.log(err);
-          //     setIsLoading(false);
-          //     navigateTo("/dashboard", { state: { tabNumber: 1, filter: "articles" } });
-          //     exit();
-          //     return false;
-          //   }
-          // } else {
-          //   tempEvent = finalizeEvent(tempEvent, userKeys.sec);
-          // }
+
           let eventInitEx = await InitEvent(
             tempEvent.kind,
             tempEvent.content,

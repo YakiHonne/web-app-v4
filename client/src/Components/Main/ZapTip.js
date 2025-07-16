@@ -651,7 +651,7 @@ const Cashier = ({
                   />
                   <div
                     className="fx-centered"
-                    style={{ position: "absolute", right: "16px", top: "16px" }}
+                    style={{ position: "absolute", right: "16px", top: "8px" }}
                   >
                     <p className="gray-c">sats</p>
                   </div>

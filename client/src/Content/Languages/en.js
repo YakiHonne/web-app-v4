@@ -1284,26 +1284,27 @@ const englishTranslation = {
   AoA6v9d: "Mirror all servers",
   A2l1JgC: "Invalid URL",
   AHFsFp7: "no server found",
+  AlNe9hu: "Messages are disabled",
+  AIJ7nCM:
+    "You seem like you're connected with a remote signer, direct messages contains heavy data and may not work properly, please use a local signer or a browser extension to enable direct messages.",
+  A9eQr6B: "Remote signer",
+  AJdT1m0: "Use the below URL to connect to your bunker",
+  AB1PYvA: "NostrConnect URI was copied",
+  ACASAT7: "Web of Trust configuration",
+  ATQOG8o: "Web of trust threshold",
+  AUSdCrV: "Enabled",
+  Ad3ts4Q: "Post actions",
+  Aql44db: "Private messages",
+  AciF91F: "Content relays",
+  AEsTMiq: "Private messages relays",
+  ArApykS: "Private messages relays are not configured!",
+  Alxsg82: "Update your relays list accordingly.",
+  AOwS3ca: "You follow",
+  QuotaLimit: "You have exceeded your daily quota limit"
 };
 
 export default englishTranslation;
 
-
-// AlNe9hu: "",
-// AIJ7nCM: "",
-// A9eQr6B: "",
-// AJdT1m0: "",
-// AB1PYvA: "",
-// ACASAT7: "",
-// ATQOG8o: "",
-// AUSdCrV: "",
-// Ad3ts4Q: "",
-// Aql44db: "",
-// AciF91F: "",
-// AEsTMiq: "",
-// ArApykS: "",
-// Alxsg82: "",
-// AOwS3ca: "",
 // AI8bhpw: "",
 // A82pzWN: "",
 // ACOXf0z: "",

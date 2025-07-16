@@ -94,13 +94,14 @@ export default function Video() {
   }, [userMutedList, author]);
 
   useEffect(() => {
+    let sub;
     const fetchData = async () => {
       try {
         setVideoViews(0);
         let naddrData = await checkURL();
         if (bannedList.includes(naddrData.pubkey)) customHistory.push("/");
         setParsedAddr(naddrData);
-        let sub = ndkInstance.subscribe(
+        sub = ndkInstance.subscribe(
           [
             {
               kinds: [7, 34237],
@@ -135,13 +136,17 @@ export default function Video() {
       }
     };
     fetchData();
+    return () => {
+      if (sub) sub.stop();
+    };
   }, [id, AuthNip05, VidIdentifier]);
 
   useEffect(() => {
+    let sub;
     try {
       let count = 0;
       let moreVideosAuthorsPubkeys = [];
-      let sub = ndkInstance.subscribe(
+      sub = ndkInstance.subscribe(
         [
           {
             kinds: [34235, 34236],
@@ -168,6 +173,10 @@ export default function Video() {
       console.log(err);
       setIsLoaded(true);
     }
+
+    return () => {
+      if (sub) sub.stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -183,7 +192,11 @@ export default function Video() {
   }, [nostrAuthors, video]);
 
   useEffect(() => {
-    if (video && userKeys && (userKeys.sec || userKeys.ext)) {
+    if (
+      video &&
+      userKeys &&
+      (userKeys.sec || userKeys.ext || userKeys.bunker)
+    ) {
       dispatch(
         setToPublish({
           userKeys: userKeys,

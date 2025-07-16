@@ -19,6 +19,7 @@ import { DORA_CONFIG } from "../Content/MACI";
 import { MaciClient } from "@dorafactory/maci-sdk";
 import { store } from "../Store/Store";
 import { setToast } from "../Store/Slides/Publishers";
+import { BunkerSigner, parseBunkerInput } from "nostr-tools/nip46";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -693,6 +694,138 @@ const getClaimingData = async (pubkey, event_id, kind) => {
   }
 };
 
+const decrypt04UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip04Decrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const encrypt04UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip04Encrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const encrypt44UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip44Encrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const decrypt44UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip44Decrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const encrypt44 = async (userKeys, otherPartyPubkey, content) => {
+  let encryptedMessage = "";
+  if (userKeys.ext) {
+    encryptedMessage = await window.nostr.nip44.encrypt(
+      otherPartyPubkey,
+      content
+    );
+  } else if (userKeys.sec) {
+    encryptedMessage = nip44.v2.encrypt(
+      content,
+      nip44.v2.utils.getConversationKey(userKeys.sec, otherPartyPubkey)
+    );
+  } else {
+    encryptedMessage = await encrypt44UsingBunker(
+      userKeys,
+      otherPartyPubkey,
+      content
+    );
+  }
+  return encryptedMessage;
+};
+
+const decrypt44 = async (userKeys, otherPartyPubkey, content) => {
+  let decryptedMessage = "";
+  if (userKeys.ext) {
+    decryptedMessage = await window.nostr.nip44.decrypt(
+      otherPartyPubkey,
+      content
+    );
+  } else if (userKeys.sec) {
+    decryptedMessage = await nip44.v2.decrypt(
+      content,
+      nip44.v2.utils.getConversationKey(userKeys.sec, otherPartyPubkey)
+    );
+  } else {
+    decryptedMessage = await decrypt44UsingBunker(
+      userKeys,
+      otherPartyPubkey,
+      content
+    );
+  }
+  return decryptedMessage;
+};
+
 const decrypt04 = async (event, userKeys) => {
   let pubkey =
     event.pubkey === userKeys.pub
@@ -704,30 +837,52 @@ const decrypt04 = async (event, userKeys) => {
     decryptedMessage = await window.nostr.nip04.decrypt(pubkey, event.content);
   } else if (userKeys.sec) {
     decryptedMessage = await nip04.decrypt(userKeys.sec, pubkey, event.content);
+  } else {
+    decryptedMessage = await decrypt04UsingBunker(
+      userKeys,
+      pubkey,
+      event.content
+    );
   }
   return decryptedMessage;
 };
 
-const unwrapGiftWrap = async (event, secret) => {
+const encrypt04 = async (userKeys, otherPartyPubkey, content) => {
+  let encryptedMessage = "";
+  if (userKeys.ext) {
+    encryptedMessage = await window.nostr.nip04.encrypt(
+      otherPartyPubkey,
+      content
+    );
+  } else if (userKeys.sec) {
+    encryptedMessage = await nip04.encrypt(
+      userKeys.sec,
+      otherPartyPubkey,
+      content
+    );
+  } else {
+    encryptedMessage = await encrypt04UsingBunker(
+      userKeys,
+      otherPartyPubkey,
+      content
+    );
+  }
+  return encryptedMessage;
+};
+
+const unwrapGiftWrap = async (event, userKeys) => {
   try {
-    let decryptedEvent13 = secret
-      ? nip44.v2.decrypt(
-          event.content,
-          nip44.v2.utils.getConversationKey(secret, event.pubkey)
-        )
-      : await window.nostr.nip44.decrypt(event.pubkey, event.content);
+    let decryptedEvent13 = await decrypt44(
+      userKeys,
+      event.pubkey,
+      event.content
+    );
 
     let { pubkey, content } = JSON.parse(decryptedEvent13);
 
-    let decryptedEvent14 = secret
-      ? nip44.v2.decrypt(
-          content,
-          nip44.v2.utils.getConversationKey(secret, pubkey)
-        )
-      : await window.nostr.nip44.decrypt(pubkey, content);
+    let decryptedEvent14 = await decrypt44(userKeys, pubkey, content);
     return JSON.parse(decryptedEvent14);
   } catch (err) {
-    // console.log(err);
     return false;
   }
 };
@@ -787,12 +942,7 @@ const getKeplrSigner = async () => {
 
     const offlineSigner = window.getOfflineSigner(chainId);
 
-    // const client = await SigningStargateClient.connectWithSigner(
-    //   rpc,
-    //   offlineSigner
-    // );
     let address = await offlineSigner.getAccounts();
-    // if (address.length === 0) return false;
     return { signer: offlineSigner, address: address[0].address };
   } catch (err) {
     console.log(err);
@@ -800,19 +950,22 @@ const getKeplrSigner = async () => {
   }
 };
 
-const getWOTScoreForPubkeyLegacy = (pubkey, minScore = 3) => {
+const getWOTScoreForPubkeyLegacy = (pubkey, enabled, minScore = 3) => {
   try {
+    if (!enabled) return { score: 10, status: true };
     const network = store.getState().userWotList;
     const followings = store.getState().userFollowings;
-   
-    if(followings.includes(pubkey) || network.length === 0 || !pubkey) {
+    const userKeys = store.getState().userKeys;
+
+    if (userKeys.pub === pubkey) return { score: 10, status: true };
+    if (followings.includes(pubkey) || network.length === 0 || !pubkey) {
       return { score: 10, status: true };
     }
     let totalTrusting = network.filter((_) =>
       _.followings.includes(pubkey)
     ).length;
     let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
-    let equalizer = totalTrusting === 0 ? 5 : 0;
+    let equalizer = totalTrusting === 0 ? 10 : 0;
     let score =
       equalizer ||
       Math.floor(
@@ -1101,6 +1254,9 @@ export {
   getClaimingData,
   bytesTohex,
   decrypt04,
+  encrypt04,
+  encrypt44,
+  decrypt44,
   unwrapGiftWrap,
   encodeBase64URL,
   getuserMetadata,

@@ -138,9 +138,21 @@ const notesReducer = (notes, action) => {
     case "recent_with_replies": {
       let nextState = { ...notes };
       let tempArr = [...nextState[action.type], ...action.note];
-      let sortedNotes = tempArr
+    let sortedNotes = tempArr
         .filter((note, index, tempArr) => {
-          if (tempArr.findIndex((_) => _.id === note.id) === index) return note;
+          if (
+            tempArr.findIndex(
+              (_) =>
+                _.id === note.id ||
+                (note.kind === 6 &&
+                  (note.relatedEvent.id === _.id ||
+                    note.relatedEvent.id === _.relatedEvent?.id)) ||
+                (_.kind === 6 &&
+                  (_.relatedEvent.id === note.id ||
+                    _.relatedEvent.id === note.relatedEvent?.id))
+            ) === index
+          )
+            return note;
         })
         .sort((note_1, note_2) => note_2.created_at - note_1.created_at);
       nextState[action.type] = sortedNotes;

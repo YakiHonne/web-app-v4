@@ -38,6 +38,7 @@ import ZapAd from "./ZapAd";
 import useUserProfile from "../../Hooks/useUsersProfile";
 import RepEventPreviewCard from "./RepEventPreviewCard";
 import NotesComment from "./NotesComment";
+import { nip19 } from "nostr-tools";
 
 export default function KindOne({
   event,
@@ -195,7 +196,13 @@ export default function KindOne({
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(res.res, undefined, undefined, undefined, event.pubkey);
+        let noteTree = await getNoteTree(
+          res.res,
+          undefined,
+          undefined,
+          undefined,
+          event.pubkey
+        );
         setTranslatedNote(noteTree);
         setShowTranslation(true);
       }
@@ -646,13 +653,15 @@ const RelatedEvent = ({ event }) => {
   const handleOnClick = (e) => {
     e.stopPropagation();
     if (!user) return;
-    customHistory.push(`/users/${getBech32("npub", user.pubkey)}`);
+    customHistory.push(
+      `/users/${nip19.nprofileEncode({ pubkey: user.pubkey })}`
+    );
   };
 
   if (isThread)
     return (
       relatedEvent && (
-        <div className="slide-down fit-container">
+        <div className=" fit-container">
           {relatedEvent.kind === 1 && (
             <NotesComment
               event={relatedEvent}

@@ -8,6 +8,7 @@ import { getNoteTree, redirectToLogin } from "../../Helpers/Helpers";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { InitEvent } from "../../Helpers/Controlers";
 
 export default function UN({
   sealedCauses = [],
@@ -58,7 +59,13 @@ export default function UN({
 
   useEffect(() => {
     const parseContent = async () => {
-      let res = await getNoteTree(data.content, undefined, undefined, undefined, data.pubkey);
+      let res = await getNoteTree(
+        data.content,
+        undefined,
+        undefined,
+        undefined,
+        data.pubkey
+      );
       setContent(res);
     };
     parseContent();
@@ -128,18 +135,13 @@ export default function UN({
         created_at,
         tags,
       };
-      if (userKeys.ext) {
-        try {
-          event = await window.nostr.signEvent(event);
-        } catch (err) {
-          console.log(err);
-          setIsLoading(false);
-          return false;
-        }
-      } else {
-        event = finalizeEvent(event, userKeys.sec);
-      }
-
+      event = await InitEvent(
+        event.kind,
+        event.content,
+        event.tags,
+        event.created_at
+      );
+      if (!event) return;
       dispatch(
         setToPublish({
           eventInitEx: event,
@@ -181,18 +183,13 @@ export default function UN({
         created_at,
         tags,
       };
-      if (userKeys.ext) {
-        try {
-          event = await window.nostr.signEvent(event);
-        } catch (err) {
-          console.log(err);
-          setIsLoading(false);
-          return false;
-        }
-      } else {
-        event = finalizeEvent(event, userKeys.sec);
-      }
-
+      event = await InitEvent(
+        event.kind,
+        event.content,
+        event.tags,
+        event.created_at
+      );
+      if (!event) return;
       dispatch(
         setToPublish({
           eventInitEx: event,

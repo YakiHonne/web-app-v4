@@ -5,7 +5,7 @@ import bannedList from "../Content/BannedList";
 
 const ndkInstance = new NDK({
   explicitRelayUrls: relaysOnPlatform,
-  enableOutboxModel: true, 
+  enableOutboxModel: true,
   mutedIds: new Map([bannedList.map((p) => [p, "p"])]),
 });
 

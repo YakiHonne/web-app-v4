@@ -26,6 +26,7 @@ import {
   getSelectedServer,
   getStorageEstimate,
   getWallets,
+  getWotConfig,
   handleAppDirection,
   makeReadableNumber,
   replaceMediaUploader,
@@ -42,7 +43,6 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import { Link, useLocation } from "react-router-dom";
 import DtoLToggleButton from "../../Components/DtoLToggleButton";
 import ZapTip from "../../Components/Main/ZapTip";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Select from "../../Components/Main/Select";
 import { useTranslation } from "react-i18next";
 import i18next from "i18next";
@@ -51,19 +51,14 @@ import {
   translationServices,
   translationServicesEndpoints,
 } from "../../Content/TranslationServices";
-import AddMaciPolls from "../../Components/Main/AddMaciPolls";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
-import LoginSignup from "../../Components/Main/LoginSignup";
 import MediaUploaderServer from "../../Content/MediaUploaderServer";
-import {
-  clearDBCache,
-  db,
-  getDexieDatabaseSize,
-  ndkdb,
-} from "../../Helpers/DB";
+import { clearDBCache } from "../../Helpers/DB";
 import RelayImage from "../../Components/Main/RelayImage";
 import threadView from "../../media/images/thread-view.png";
 import boxView from "../../media/images/box-view.png";
+import NDK from "@nostr-dev-kit/ndk";
+import { nip19 } from "nostr-tools";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -97,14 +92,6 @@ export default function Settings() {
   const [showAPIKey, setShowAPIKey] = useState(false);
   const [transServiceAPIKey, setTransServiceAPIKey] = useState("");
 
-  const contentCategoriesDN = {
-    recent: t("AiAJcg1"),
-    recent_with_replies: t("AgF8nZU"),
-    trending: t("AqqxTe4"),
-    paid: t("AAg9D6c"),
-    widgets: t("AM4vyRX"),
-    highlights: t("AWj53bb"),
-  };
   const notificationDN = {
     mentions: `${t("A8Da0of")} / ${t("AENEcn9")}`,
     reactions: t("Alz0E9Y"),
@@ -125,7 +112,6 @@ export default function Settings() {
   ];
 
   const [customServer, setCustomServer] = useState(false);
-
   const [homeContentSuggestion, setHomeContentSuggestion] = useState(
     localStorage.getItem("hsuggest")
   );
@@ -153,6 +139,7 @@ export default function Settings() {
     getCustomSettings().notification || getDefaultSettings("").notification
   );
   const [legacyDM, setLegacyDM] = useState(localStorage.getItem("legacy-dm"));
+  const [wotConfig, setWotConfig] = useState(getWotConfig());
 
   const [cacheSize, setCacheSize] = useState(0);
   const [isCacheClearing, setIsCacheClearing] = useState(false);
@@ -693,6 +680,44 @@ export default function Settings() {
     }
   };
 
+  const handleChangeWotConfig = (key, value) => {
+    if (key === "score") {
+      let config = {
+        ...wotConfig,
+        score: value >= 0 && value <= 10 ? value : 2,
+      };
+      setWotConfig(config);
+      localStorage.setItem(
+        `${userKeys.pub}-wot-config`,
+        JSON.stringify(config)
+      );
+      return;
+    }
+    let newValue = !value;
+    if (key === "all") {
+      let config = {
+        ...wotConfig,
+        all: newValue,
+        notifications: newValue,
+        reactions: newValue,
+        dms: newValue,
+      };
+
+      setWotConfig(config);
+      localStorage.setItem(
+        `${userKeys.pub}-wot-config`,
+        JSON.stringify(config)
+      );
+      return;
+    }
+    let config = { ...wotConfig, [key]: newValue };
+    if (config.notifications && config.reactions && config.dms)
+      config.all = true;
+    else config.all = false;
+
+    setWotConfig(config);
+    localStorage.setItem(`${userKeys.pub}-wot-config`, JSON.stringify(config));
+  };
   return (
     <>
       {showYakiChest && <LoginWithAPI exit={() => setShowYakiChest(false)} />}
@@ -702,12 +727,12 @@ export default function Settings() {
           refresh={handleAddWallet}
         />
       )}
-      {showRelaysInfo && (
+      {/* {showRelaysInfo && (
         <RelaysInfo
           url={showRelaysInfo}
           exit={() => setShowRelaysInfo(false)}
         />
-      )}
+      )} */}
       {showDeletionPopup && (
         <DeletionPopUp
           exit={() => setShowDeletionPopup(false)}
@@ -716,7 +741,7 @@ export default function Settings() {
         />
       )}
 
-      {showRelaysUpdater && (
+      {/* {showRelaysUpdater && (
         <ToUpdateRelay
           exit={() => {
             setShowRelaysUpdater(false);
@@ -727,7 +752,7 @@ export default function Settings() {
             selectedTab("");
           }}
         />
-      )}
+      )} */}
 
       {showMutedList && <MutedList exit={() => setShowMutedList(false)} />}
       {showMediaUploader && (
@@ -743,478 +768,497 @@ export default function Settings() {
             <main className={`main-page-nostr-container `}>
               <div className="fx-centered fit-container  fx-start-v ">
                 <div className="main-middle">
-                  {userMetadata && (userKeys.sec || userKeys.ext) && (
-                    <>
-                      <h3 className="box-pad-h box-pad-v-m">{t("ABtsLBp")}</h3>
-                      <div
-                        className="fit-container fx-scattered pointer box-pad-v-m box-pad-h-m"
-                        style={{
-                          borderBottom: "1px solid var(--very-dim-gray)",
-                          borderTop: "1px solid var(--very-dim-gray)",
-                        }}
-                      >
-                        <UserProfilePic mainAccountUser={true} size={64} />
-                        <div className="fx-centered">
-                          <Link
-                            to={`/users/${getBech32("npub", userKeys.pub)}`}
-                          >
-                            <button className="btn btn-normal">
-                              {t("ACgjh46")}
-                            </button>
-                          </Link>
-                          <Link to={"/settings/profile"}>
-                            <button className="btn btn-gray">
-                              {t("AfxwB6z")}
-                            </button>
-                          </Link>
-                        </div>
-                      </div>
-                      <div
-                        className="fit-container fx-centered fx-col"
-                        style={{ gap: 0 }}
-                      >
+                  {userMetadata &&
+                    (userKeys.sec || userKeys.ext || userKeys.bunker) && (
+                      <>
+                        <h3 className="box-pad-h box-pad-v-m">
+                          {t("ABtsLBp")}
+                        </h3>
                         <div
-                          className="fit-container fx-scattered fx-col pointer"
+                          className="fit-container fx-scattered pointer box-pad-v-m box-pad-h-m"
                           style={{
                             borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
+                            borderTop: "1px solid var(--very-dim-gray)",
                           }}
                         >
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "keys"
-                                ? setSelectedTab("")
-                                : setSelectedTab("keys")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="key-icon-24"></div>
-                              <p>{t("Adl0miS")}</p>
-                            </div>
-                            <div className="arrow"></div>
+                          <UserProfilePic mainAccountUser={true} size={64} />
+                          <div className="fx-centered">
+                            <Link
+                              to={`/users/${nip19.nprofileEncode({pubkey: userKeys.pub})}`}
+                            >
+                              <button className="btn btn-normal">
+                                {t("ACgjh46")}
+                              </button>
+                            </Link>
+                            <Link to={"/settings/profile"}>
+                              <button className="btn btn-gray">
+                                {t("AfxwB6z")}
+                              </button>
+                            </Link>
                           </div>
-                          <hr />
-                          {selectedTab === "keys" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <p className="c1-c p-left fit-container">
-                                {t("Az0mazr")}
-                              </p>
-                              <div
-                                className={`fx-scattered if pointer fit-container ${
-                                  userKeys.sec ? "dashed-onH" : "if-disabled"
-                                }`}
-                                style={{ borderStyle: "dashed" }}
-                                onClick={() =>
-                                  userKeys.sec
-                                    ? copyKey(
-                                        t("AStACDI"),
-                                        getBech32("nsec", userKeys.sec)
-                                      )
-                                    : null
-                                }
-                              >
-                                <p>
-                                  {userKeys.sec ? (
-                                    shortenKey(getBech32("nsec", userKeys.sec))
-                                  ) : (
-                                    <span className="italic-txt gray-c">
-                                      {userKeys.ext
-                                        ? t("ApmycvH")
-                                        : t("Au372KY")}
-                                    </span>
-                                  )}
-                                </p>
-                                {userKeys.sec && (
-                                  <div className="copy-24"></div>
-                                )}
-                              </div>
-                              <p className="c1-c p-left fit-container">
-                                {t("AZRwERj")}
-                              </p>
-                              <div
-                                className="fx-scattered if pointer dashed-onH fit-container"
-                                style={{ borderStyle: "dashed" }}
-                                onClick={() =>
-                                  copyKey(
-                                    t("AzSXXQm"),
-                                    getBech32("npub", userKeys.pub)
-                                  )
-                                }
-                              >
-                                <p>
-                                  {shortenKey(getBech32("npub", userKeys.pub))}
-                                </p>
-                                <div className="copy-24"></div>
-                              </div>
-                              <div
-                                className="fit-container fx-end-h"
-                                onClick={exportKeys}
-                              >
-                                <div className="fx-centered">
-                                  <p className="btn-text-gray">
-                                    {t("ADv1bgl")}
-                                  </p>
-                                  <div className="export"></div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
                         </div>
                         <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            overflow: "visible",
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
-                          }}
+                          className="fit-container fx-centered fx-col"
+                          style={{ gap: 0 }}
                         >
                           <div
-                            className="fx-scattered fit-container box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "relays"
-                                ? setSelectedTab("")
-                                : setSelectedTab("relays")
-                            }
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                              gap: 0,
+                            }}
                           >
-                            <div className="fx-centered fx-start-h">
-                              <div className="server-24"></div>
-                              <p>{t("A23C0Di")}</p>
-                            </div>
-                            <div className="fx-centered">
-                              <p className="green-c">
-                                {connectedRelays.connected}{" "}
-                                <span className="gray-c">
-                                  / {connectedRelays.total} {t("A5aXNG9")}
-                                </span>
-                              </p>
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "keys"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("keys")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="key-icon-24"></div>
+                                <p>{t("Adl0miS")}</p>
+                              </div>
                               <div className="arrow"></div>
                             </div>
-                          </div>
-
-                          {selectedTab === "relays" && (
-                            <>
-                              {tempUserRelays.length > 0 && (
+                            <hr />
+                            {selectedTab === "keys" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <p className="c1-c p-left fit-container">
+                                  {t("Az0mazr")}
+                                </p>
                                 <div
-                                  className="fit-container fx-col fx-centered  fx-start-v fx-start-h"
-                                  style={{
-                                    maxHeight: "40vh",
-                                    overflow: "scroll",
-                                    overflowX: "hidden",
-                                    gap: 0,
-                                  }}
-                                  ref={relaysContainer}
-                                >
-                                  {tempUserRelays?.map((relay, index) => {
-                                    let status =
-                                      relay.read && relay.write
-                                        ? ""
-                                        : relay.read
-                                        ? "read"
-                                        : "write";
-                                    return (
-                                      <div
-                                        key={`${relay}-${index}`}
-                                        className="fit-container fx-centered fx-col fx-shrink box-pad-v-s box-pad-h-s"
-                                        style={{
-                                          overflow: "visible",
-                                          backgroundColor: relay.toDelete
-                                            ? "var(--red-side)"
-                                            : "",
-                                          borderBottom:
-                                            "1px solid var(--very-dim-gray)",
-                                          gap: 0,
-                                        }}
-                                      >
-                                        <div className="fx-scattered fit-container box-pad-h-s box-pad-v-s">
-                                          <div
-                                            className="fx-centered option"
-                                            style={{
-                                              border: "none",
-                                              backgroundColor: "transparent",
-                                            }}
-                                            onClick={() =>
-                                              setShowRelaysInfo(relay.url)
-                                            }
-                                          >
-                                            <div
-                                              style={{
-                                                minWidth: "6px",
-                                                aspectRatio: "1/1",
-                                                borderRadius: "50%",
-                                                backgroundColor: connectedRelays
-                                                  ?.relaysStatus[relay.url]
-                                                  ? "var(--green-main)"
-                                                  : "var(--red-main)",
-                                              }}
-                                            ></div>
-                                            <RelayImage url={relay.url} />
-                                            <p>{relay.url}</p>
-                                            <div
-                                              className="info-tt"
-                                              style={{
-                                                filter:
-                                                  "brightness(0) invert()",
-                                                opacity: 0.5,
-                                              }}
-                                            ></div>
-                                          </div>
-                                          <div>
-                                            {!relay.toDelete && (
-                                              <div
-                                                onClick={() =>
-                                                  removeRelayFromList(
-                                                    false,
-                                                    index
-                                                  )
-                                                }
-                                                className="round-icon-small"
-                                              >
-                                                <div className="logout-red"></div>
-                                              </div>
-                                            )}
-                                            {relay.toDelete && (
-                                              <div
-                                                onClick={() =>
-                                                  removeRelayFromList(
-                                                    true,
-                                                    index
-                                                  )
-                                                }
-                                                className="round-icon-small"
-                                              >
-                                                <div className="undo"></div>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                        {!relay.toDelete && (
-                                          <div className="fit-container fx-centered fx-start-h box-pad-h-m box-marg-s">
-                                            <button
-                                              style={{
-                                                opacity:
-                                                  status === "read" ? 1 : 0.4,
-                                              }}
-                                              className={
-                                                "btn btn-small btn-gray"
-                                              }
-                                              onClick={() =>
-                                                changeRelayStatus("read", index)
-                                              }
-                                            >
-                                              {t("AANojFe")}
-                                            </button>
-                                            <button
-                                              style={{
-                                                opacity:
-                                                  status === "write" ? 1 : 0.4,
-                                              }}
-                                              className={
-                                                "btn btn-small btn-gray"
-                                              }
-                                              onClick={() =>
-                                                changeRelayStatus(
-                                                  "write",
-                                                  index
-                                                )
-                                              }
-                                            >
-                                              {t("AHG1OTt")}
-                                            </button>
-                                            <button
-                                              style={{
-                                                opacity:
-                                                  status === "" ? 1 : 0.4,
-                                              }}
-                                              className={
-                                                "btn btn-small btn-gray"
-                                              }
-                                              onClick={() =>
-                                                changeRelayStatus("", index)
-                                              }
-                                            >
-                                              {t("AvnTmjx")}
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                              <div className="fx-centered fx-end-h fit-container box-pad-h box-pad-v-s">
-                                <AddRelays
-                                  allRelays={allRelays}
-                                  userAllRelays={tempUserRelays}
-                                  addRelay={addRelay}
-                                />
-                                <button
-                                  className={`btn ${
-                                    JSON.stringify(userAllRelays) !==
-                                    JSON.stringify(tempUserRelays)
-                                      ? "btn-normal"
-                                      : "btn-disabled"
+                                  className={`fx-scattered if pointer fit-container ${
+                                    userKeys.sec ? "dashed-onH" : "if-disabled"
                                   }`}
-                                  onClick={saveRelays}
-                                  disabled={
-                                    JSON.stringify(userAllRelays) ===
-                                    JSON.stringify(tempUserRelays)
+                                  style={{ borderStyle: "dashed" }}
+                                  onClick={() =>
+                                    userKeys.sec
+                                      ? copyKey(
+                                          t("AStACDI"),
+                                          getBech32("nsec", userKeys.sec)
+                                        )
+                                      : null
                                   }
                                 >
-                                  {t("AZWpmir")}
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
-                          }}
-                        >
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "lang"
-                                ? setSelectedTab("")
-                                : setSelectedTab("lang")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="translate-24"></div>
-                              <p>{t("ALGYjOG")}</p>
-                            </div>
-                            <div className="arrow"></div>
-                          </div>
-                          {selectedTab === "lang" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <div className="fit-container">
-                                <p className="gray-c">{t("AfwKx9Q")}</p>
-                              </div>
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AfwKx9Q")}</p>
-                                <div className="fx-centered">
-                                  <Select
-                                    options={supportedLanguage}
-                                    value={selectedAppLang}
-                                    setSelectedValue={handleSwitchLang}
-                                  />
+                                  <p>
+                                    {userKeys.sec ? (
+                                      shortenKey(
+                                        getBech32("nsec", userKeys.sec)
+                                      )
+                                    ) : (
+                                      <span className="italic-txt gray-c">
+                                        {userKeys.ext
+                                          ? t("ApmycvH")
+                                          : t("Au372KY")}
+                                      </span>
+                                    )}
+                                  </p>
+                                  {userKeys.sec && (
+                                    <div className="copy-24"></div>
+                                  )}
+                                </div>
+                                <p className="c1-c p-left fit-container">
+                                  {t("AZRwERj")}
+                                </p>
+                                <div
+                                  className="fx-scattered if pointer dashed-onH fit-container"
+                                  style={{ borderStyle: "dashed" }}
+                                  onClick={() =>
+                                    copyKey(
+                                      t("AzSXXQm"),
+                                      getBech32("npub", userKeys.pub)
+                                    )
+                                  }
+                                >
+                                  <p>
+                                    {shortenKey(
+                                      getBech32("npub", userKeys.pub)
+                                    )}
+                                  </p>
+                                  <div className="copy-24"></div>
+                                </div>
+                                <div
+                                  className="fit-container fx-end-h"
+                                  onClick={exportKeys}
+                                >
+                                  <div className="fx-centered">
+                                    <p className="btn-text-gray">
+                                      {t("ADv1bgl")}
+                                    </p>
+                                    <div className="export"></div>
+                                  </div>
                                 </div>
                               </div>
-                              <hr />
-                              <div className="fit-container">
-                                <p className="gray-c">{t("AFz9bzq")}</p>
+                            )}
+                          </div>
+                          <div
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              overflow: "visible",
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                              gap: 0,
+                            }}
+                          >
+                            <div
+                              className="fx-scattered fit-container box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "relays"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("relays")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="server-24"></div>
+                                <p>{t("A23C0Di")}</p>
                               </div>
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AFz9bzq")}</p>
-                                <Select
-                                  options={translationServices}
-                                  value={selectedTransService}
-                                  setSelectedValue={handleTransServices}
-                                />
-                              </div>
-                              <div className="fit-container fx-centered fx-col">
-                                {translationServicesEndpoints[
-                                  selectedTransService
-                                ].plans && (
-                                  <div className="fx-scattered fit-container">
-                                    <p>{t("AFLFvbx")}</p>
-                                    <Select
-                                      options={transServicesPlans}
-                                      value={transServicePlan}
-                                      setSelectedValue={handleTransServicesPlan}
-                                    />
+                              {/* <div className="fx-centered">
+                                <p className="green-c">
+                                  {connectedRelays.connected}{" "}
+                                  <span className="gray-c">
+                                    / {connectedRelays.total} {t("A5aXNG9")}
+                                  </span>
+                                </p>
+                                <div className="arrow"></div>
+                                </div> */}
+                              <div className="arrow"></div>
+                            </div>
+
+                            {selectedTab === "relays" && (
+                              <>
+                                {/* {tempUserRelays.length > 0 && (
+                                  <div
+                                    className="fit-container fx-col fx-centered  fx-start-v fx-start-h"
+                                    style={{
+                                      maxHeight: "40vh",
+                                      overflow: "scroll",
+                                      overflowX: "hidden",
+                                      gap: 0,
+                                    }}
+                                    ref={relaysContainer}
+                                  >
+                                    {tempUserRelays?.map((relay, index) => {
+                                      let status =
+                                        relay.read && relay.write
+                                          ? ""
+                                          : relay.read
+                                          ? "read"
+                                          : "write";
+                                      return (
+                                        <div
+                                          key={`${relay}-${index}`}
+                                          className="fit-container fx-centered fx-col fx-shrink box-pad-v-s box-pad-h-s"
+                                          style={{
+                                            overflow: "visible",
+                                            backgroundColor: relay.toDelete
+                                              ? "var(--red-side)"
+                                              : "",
+                                            borderBottom:
+                                              "1px solid var(--very-dim-gray)",
+                                            gap: 0,
+                                          }}
+                                        >
+                                          <div className="fx-scattered fit-container box-pad-h-s box-pad-v-s">
+                                            <div
+                                              className="fx-centered option"
+                                              style={{
+                                                border: "none",
+                                                backgroundColor: "transparent",
+                                              }}
+                                              onClick={() =>
+                                                setShowRelaysInfo(relay.url)
+                                              }
+                                            >
+                                              <div
+                                                style={{
+                                                  minWidth: "6px",
+                                                  aspectRatio: "1/1",
+                                                  borderRadius: "50%",
+                                                  backgroundColor:
+                                                    connectedRelays
+                                                      ?.relaysStatus[relay.url]
+                                                      ? "var(--green-main)"
+                                                      : "var(--red-main)",
+                                                }}
+                                              ></div>
+                                              <RelayImage url={relay.url} />
+                                              <p>{relay.url}</p>
+                                              <div
+                                                className="info-tt"
+                                                style={{
+                                                  filter:
+                                                    "brightness(0) invert()",
+                                                  opacity: 0.5,
+                                                }}
+                                              ></div>
+                                            </div>
+                                            <div>
+                                              {!relay.toDelete && (
+                                                <div
+                                                  onClick={() =>
+                                                    removeRelayFromList(
+                                                      false,
+                                                      index
+                                                    )
+                                                  }
+                                                  className="round-icon-small"
+                                                >
+                                                  <div className="logout-red"></div>
+                                                </div>
+                                              )}
+                                              {relay.toDelete && (
+                                                <div
+                                                  onClick={() =>
+                                                    removeRelayFromList(
+                                                      true,
+                                                      index
+                                                    )
+                                                  }
+                                                  className="round-icon-small"
+                                                >
+                                                  <div className="undo"></div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                          {!relay.toDelete && (
+                                            <div className="fit-container fx-centered fx-start-h box-pad-h-m box-marg-s">
+                                              <button
+                                                style={{
+                                                  opacity:
+                                                    status === "read" ? 1 : 0.4,
+                                                }}
+                                                className={
+                                                  "btn btn-small btn-gray"
+                                                }
+                                                onClick={() =>
+                                                  changeRelayStatus(
+                                                    "read",
+                                                    index
+                                                  )
+                                                }
+                                              >
+                                                {t("AANojFe")}
+                                              </button>
+                                              <button
+                                                style={{
+                                                  opacity:
+                                                    status === "write"
+                                                      ? 1
+                                                      : 0.4,
+                                                }}
+                                                className={
+                                                  "btn btn-small btn-gray"
+                                                }
+                                                onClick={() =>
+                                                  changeRelayStatus(
+                                                    "write",
+                                                    index
+                                                  )
+                                                }
+                                              >
+                                                {t("AHG1OTt")}
+                                              </button>
+                                              <button
+                                                style={{
+                                                  opacity:
+                                                    status === "" ? 1 : 0.4,
+                                                }}
+                                                className={
+                                                  "btn btn-small btn-gray"
+                                                }
+                                                onClick={() =>
+                                                  changeRelayStatus("", index)
+                                                }
+                                              >
+                                                {t("AvnTmjx")}
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 )}
-                                {!(
-                                  selectedTransService === "lt" &&
-                                  !transServicePlan
-                                ) && (
-                                  <>
-                                    <label
-                                      htmlFor="ser-apikey"
-                                      className="if fit-container fx-scattered"
-                                    >
-                                      <input
-                                        type={showAPIKey ? "text" : "password"}
-                                        className="if ifs-full if-no-border"
-                                        style={{ paddingLeft: 0 }}
-                                        placeholder={t("AMbIPen")}
-                                        value={transServiceAPIKey}
-                                        onChange={handleTransServicesAPIKey}
-                                      />
-                                      {showAPIKey && (
-                                        <div
-                                          className="eye-opened"
-                                          onClick={() =>
-                                            setShowAPIKey(!showAPIKey)
-                                          }
-                                        ></div>
-                                      )}
-                                      {!showAPIKey && (
-                                        <div
-                                          className="eye-closed"
-                                          onClick={() =>
-                                            setShowAPIKey(!showAPIKey)
-                                          }
-                                        ></div>
-                                      )}
-                                    </label>
-                                    <a
-                                      href={
-                                        translationServicesEndpoints[
-                                          selectedTransService
-                                        ].url
-                                      }
-                                      className="c1-c p-medium"
-                                      style={{ textDecoration: "underline" }}
-                                    >
-                                      {t("AJKDh94")}
-                                    </a>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
-                          }}
-                        >
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "moderation"
-                                ? setSelectedTab("")
-                                : setSelectedTab("moderation")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="content-s-24"></div>
-                              <p>{t("Ayh6w9C")}</p>
-                            </div>
-                            <div className="arrow"></div>
+                                <div className="fx-centered fx-end-h fit-container box-pad-h box-pad-v-s">
+                                  <AddRelays
+                                    allRelays={allRelays}
+                                    userAllRelays={tempUserRelays}
+                                    addRelay={addRelay}
+                                  />
+                                  <button
+                                    className={`btn ${
+                                      JSON.stringify(userAllRelays) !==
+                                      JSON.stringify(tempUserRelays)
+                                        ? "btn-normal"
+                                        : "btn-disabled"
+                                    }`}
+                                    onClick={saveRelays}
+                                    disabled={
+                                      JSON.stringify(userAllRelays) ===
+                                      JSON.stringify(tempUserRelays)
+                                    }
+                                  >
+                                    {t("AZWpmir")}
+                                  </button>
+                                </div> */}
+                                <RelaysConfig />
+                              </>
+                            )}
                           </div>
-                          {selectedTab === "moderation" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AX2OYcg")}</p>
-                                <div
-                                  className="btn-text-gray"
-                                  style={{ marginRight: ".75rem" }}
-                                  onClick={() => setShowMutedList(true)}
-                                >
-                                  {t("AsXohpb")}
+                          <div
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                              gap: 0,
+                            }}
+                          >
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "lang"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("lang")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="translate-24"></div>
+                                <p>{t("ALGYjOG")}</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            {selectedTab === "lang" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <div className="fit-container">
+                                  <p className="gray-c">{t("AfwKx9Q")}</p>
+                                </div>
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AfwKx9Q")}</p>
+                                  <div className="fx-centered">
+                                    <Select
+                                      options={supportedLanguage}
+                                      value={selectedAppLang}
+                                      setSelectedValue={handleSwitchLang}
+                                    />
+                                  </div>
+                                </div>
+                                <hr />
+                                <div className="fit-container">
+                                  <p className="gray-c">{t("AFz9bzq")}</p>
+                                </div>
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AFz9bzq")}</p>
+                                  <Select
+                                    options={translationServices}
+                                    value={selectedTransService}
+                                    setSelectedValue={handleTransServices}
+                                  />
+                                </div>
+                                <div className="fit-container fx-centered fx-col">
+                                  {translationServicesEndpoints[
+                                    selectedTransService
+                                  ].plans && (
+                                    <div className="fx-scattered fit-container">
+                                      <p>{t("AFLFvbx")}</p>
+                                      <Select
+                                        options={transServicesPlans}
+                                        value={transServicePlan}
+                                        setSelectedValue={
+                                          handleTransServicesPlan
+                                        }
+                                      />
+                                    </div>
+                                  )}
+                                  {!(
+                                    selectedTransService === "lt" &&
+                                    !transServicePlan
+                                  ) && (
+                                    <>
+                                      <label
+                                        htmlFor="ser-apikey"
+                                        className="if fit-container fx-scattered"
+                                      >
+                                        <input
+                                          type={
+                                            showAPIKey ? "text" : "password"
+                                          }
+                                          className="if ifs-full if-no-border"
+                                          style={{ paddingLeft: 0 }}
+                                          placeholder={t("AMbIPen")}
+                                          value={transServiceAPIKey}
+                                          onChange={handleTransServicesAPIKey}
+                                        />
+                                        {showAPIKey && (
+                                          <div
+                                            className="eye-opened"
+                                            onClick={() =>
+                                              setShowAPIKey(!showAPIKey)
+                                            }
+                                          ></div>
+                                        )}
+                                        {!showAPIKey && (
+                                          <div
+                                            className="eye-closed"
+                                            onClick={() =>
+                                              setShowAPIKey(!showAPIKey)
+                                            }
+                                          ></div>
+                                        )}
+                                      </label>
+                                      <a
+                                        href={
+                                          translationServicesEndpoints[
+                                            selectedTransService
+                                          ].url
+                                        }
+                                        className="c1-c p-medium"
+                                        style={{ textDecoration: "underline" }}
+                                      >
+                                        {t("AJKDh94")}
+                                      </a>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                              <div className="fx-scattered fit-container">
-                                <p>{t("A1XtC0x")}</p>
-                                {/* {customServer === false && (
+                            )}
+                          </div>
+                          <div
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                              gap: 0,
+                            }}
+                          >
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "moderation"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("moderation")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="content-s-24"></div>
+                                <p>{t("Ayh6w9C")}</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            {selectedTab === "moderation" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AX2OYcg")}</p>
+                                  <div
+                                    className="btn-text-gray"
+                                    style={{ marginRight: ".75rem" }}
+                                    onClick={() => setShowMutedList(true)}
+                                  >
+                                    {t("AsXohpb")}
+                                  </div>
+                                </div>
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("A1XtC0x")}</p>
+                                  {/* {customServer === false && (
                                   <div className="fx-centered">
                                     <Select
                                       options={getMediaUploaderFinalList()}
@@ -1230,162 +1274,288 @@ export default function Settings() {
                                     </div>
                                   </div>
                                 )} */}
-                                <div
-                                  className="btn-text-gray"
-                                  style={{ marginRight: ".75rem" }}
-                                  onClick={() => setShowMediaUploader(true)}
-                                >
-                                  {t("AsXohpb")}
-                                </div>
-                              </div>
-                              {customServer !== false && (
-                                <div
-                                  className="fx-centered fit-container slide-down box-pad-v-s"
-                                  style={{
-                                    borderBottom:
-                                      "1px solid var(--very-dim-gray)",
-                                  }}
-                                >
-                                  <input
-                                    type="text"
-                                    placeholder={t("A8PtjSa")}
-                                    className="if ifs-full"
-                                    style={{ height: "40px" }}
-                                    value={customServer}
-                                    onChange={(e) =>
-                                      setCustomServer(e.target.value)
-                                    }
-                                  />
-                                  <button
-                                    className="btn btn-normal"
-                                    style={{ minWidth: "max-content" }}
-                                    onClick={addNewServer}
-                                    disabled={isLoading}
-                                  >
-                                    {isLoading ? <LoadingDots /> : t("ALyj7Li")}
-                                  </button>
-                                  <button
-                                    className="btn btn-red"
-                                    onClick={() => setCustomServer(false)}
-                                    disabled={isLoading}
-                                  >
-                                    {isLoading ? <LoadingDots /> : t("AB4BSCe")}
-                                  </button>
-                                </div>
-                              )}
-                              <div className="fx-scattered fit-container">
-                                <p>{t("A3KL0O7")}</p>
-                                <div
-                                  className={`toggle ${
-                                    legacyDM ? "toggle-dim-gray" : ""
-                                  } ${
-                                    !legacyDM ? "toggle-c1" : "toggle-dim-gray"
-                                  }`}
-                                  onClick={handleLegacyDMs}
-                                ></div>
-                              </div>
-                              <p className="gray-c p-medium">
-                                {t("AsTdJ5U")}{" "}
-                                <a
-                                  href="https://github.com/nostr-protocol/nips/blob/master/44.md"
-                                  className="c1-c"
-                                  style={{ textDecoration: "underline" }}
-                                  target="_blank"
-                                >
-                                  nip-44
-                                </a>
-                                {t("AgOr2Vf")}{" "}
-                                <a
-                                  href="https://github.com/nostr-protocol/nips/blob/master/04.md"
-                                  className="c1-c"
-                                  style={{ textDecoration: "underline" }}
-                                  target="_blank"
-                                >
-                                  nip-04.
-                                </a>
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            overflow: "visible",
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                          }}
-                        >
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "wallets"
-                                ? setSelectedTab("")
-                                : setSelectedTab("wallets")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="wallet-24"></div>
-                              <p>{t("ACERu54")}</p>
-                            </div>
-                            <div className="arrow"></div>
-                          </div>
-                          <hr />
-
-                          {selectedTab === "wallets" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <div className="fit-container fx-scattered">
-                                <div>
-                                  <p className="gray-c">{t("A8fEwNq")}</p>
-                                </div>
-                                <div className="fx-centered">
                                   <div
-                                    className="round-icon-small round-icon-tooltip"
-                                    data-tooltip={t("A8fEwNq")}
-                                    onClick={() => setShowAddWallet(true)}
+                                    className="btn-text-gray"
+                                    style={{ marginRight: ".75rem" }}
+                                    onClick={() => setShowMediaUploader(true)}
                                   >
-                                    <div
-                                      style={{ rotate: "-45deg" }}
-                                      className="p-medium"
+                                    {t("AsXohpb")}
+                                  </div>
+                                </div>
+                                {customServer !== false && (
+                                  <div
+                                    className="fx-centered fit-container slide-down box-pad-v-s"
+                                    style={{
+                                      borderBottom:
+                                        "1px solid var(--very-dim-gray)",
+                                    }}
+                                  >
+                                    <input
+                                      type="text"
+                                      placeholder={t("A8PtjSa")}
+                                      className="if ifs-full"
+                                      style={{ height: "40px" }}
+                                      value={customServer}
+                                      onChange={(e) =>
+                                        setCustomServer(e.target.value)
+                                      }
+                                    />
+                                    <button
+                                      className="btn btn-normal"
+                                      style={{ minWidth: "max-content" }}
+                                      onClick={addNewServer}
+                                      disabled={isLoading}
                                     >
-                                      &#10005;
+                                      {isLoading ? (
+                                        <LoadingDots />
+                                      ) : (
+                                        t("ALyj7Li")
+                                      )}
+                                    </button>
+                                    <button
+                                      className="btn btn-red"
+                                      onClick={() => setCustomServer(false)}
+                                      disabled={isLoading}
+                                    >
+                                      {isLoading ? (
+                                        <LoadingDots />
+                                      ) : (
+                                        t("AB4BSCe")
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("ACASAT7")}</p>
+                                </div>
+                                <div className="fit-container">
+                                  <p className="gray-c">{t("ATQOG8o")}</p>
+                                  <div className="fit-container fx-centered">
+                                    <input
+                                      type="range"
+                                      className="ifs-full"
+                                      min={0}
+                                      max={10}
+                                      value={wotConfig.score}
+                                      onChange={(e) =>
+                                        handleChangeWotConfig(
+                                          "score",
+                                          parseInt(e.target.value)
+                                        )
+                                      }
+                                      disabled={
+                                        !(
+                                          wotConfig.notifications ||
+                                          wotConfig.reactions ||
+                                          wotConfig.dms
+                                        )
+                                      }
+                                    />
+                                    <div className="round-icon-small">
+                                      <p className="p-medium">
+                                        {wotConfig.score}
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                              {wallets.map((wallet) => {
-                                return (
+                                <div className="fit-container fx-col fx-centered fx-start-h fx-start-v">
+                                  <p className="gray-c">{t("AUSdCrV")}</p>
+                                  <div className="fit-container fx-centered fx-col">
+                                    <label
+                                      className="fit-container fx-scattered"
+                                      htmlFor="wot-AR9ctVs"
+                                    >
+                                      <p>{t("AR9ctVs")}</p>
+                                      <input
+                                        type="checkbox"
+                                        id="wot-AR9ctVs"
+                                        name="wot-AR9ctVs"
+                                        value={wotConfig.all}
+                                        checked={wotConfig.all}
+                                        onChange={() =>
+                                          handleChangeWotConfig(
+                                            "all",
+                                            wotConfig.all
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                    <label
+                                      className="fit-container fx-scattered"
+                                      htmlFor="wot-ASSFfFZ"
+                                    >
+                                      <p>{t("ASSFfFZ")}</p>
+                                      <input
+                                        type="checkbox"
+                                        id="wot-ASSFfFZ"
+                                        name="wot-ASSFfFZ"
+                                        value={wotConfig.notifications}
+                                        checked={wotConfig.notifications}
+                                        onChange={() =>
+                                          handleChangeWotConfig(
+                                            "notifications",
+                                            wotConfig.notifications
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                    <label
+                                      className="fit-container fx-scattered"
+                                      htmlFor="wot-Ad3ts4Q"
+                                    >
+                                      <p>{t("Ad3ts4Q")}</p>
+                                      <input
+                                        type="checkbox"
+                                        id="wot-Ad3ts4Q"
+                                        name="wot-Ad3ts4Q"
+                                        value={wotConfig.reactions}
+                                        checked={wotConfig.reactions}
+                                        onChange={() =>
+                                          handleChangeWotConfig(
+                                            "reactions",
+                                            wotConfig.reactions
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                    <label
+                                      className="fit-container fx-scattered"
+                                      htmlFor="wot-Aql44db"
+                                    >
+                                      <p>{t("Aql44db")}</p>
+                                      <input
+                                        type="checkbox"
+                                        id="wot-Aql44db"
+                                        name="wot-Aql44db"
+                                        value={wotConfig.dms}
+                                        checked={wotConfig.dms}
+                                        onChange={() =>
+                                          handleChangeWotConfig(
+                                            "dms",
+                                            wotConfig.dms
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("A3KL0O7")}</p>
                                   <div
-                                    className="sc-s-18 bg-sp box-pad-h-s box-pad-v-s fx-scattered fit-container"
-                                    key={wallet.id}
-                                    style={{ overflow: "visible" }}
+                                    className={`toggle ${
+                                      legacyDM ? "toggle-dim-gray" : ""
+                                    } ${
+                                      !legacyDM
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={handleLegacyDMs}
+                                  ></div>
+                                </div>
+
+                                <p className="gray-c p-medium">
+                                  {t("AsTdJ5U")}{" "}
+                                  <a
+                                    href="https://github.com/nostr-protocol/nips/blob/master/44.md"
+                                    className="c1-c"
+                                    style={{ textDecoration: "underline" }}
+                                    target="_blank"
                                   >
-                                    <div className="fx-centered">
+                                    nip-44
+                                  </a>
+                                  {t("AgOr2Vf")}{" "}
+                                  <a
+                                    href="https://github.com/nostr-protocol/nips/blob/master/04.md"
+                                    className="c1-c"
+                                    style={{ textDecoration: "underline" }}
+                                    target="_blank"
+                                  >
+                                    nip-04.
+                                  </a>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              overflow: "visible",
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                            }}
+                          >
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "wallets"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("wallets")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="wallet-24"></div>
+                                <p>{t("ACERu54")}</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+
+                            {selectedTab === "wallets" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <div className="fit-container fx-scattered">
+                                  <div>
+                                    <p className="gray-c">{t("A8fEwNq")}</p>
+                                  </div>
+                                  <div className="fx-centered">
+                                    <div
+                                      className="round-icon-small round-icon-tooltip"
+                                      data-tooltip={t("A8fEwNq")}
+                                      onClick={() => setShowAddWallet(true)}
+                                    >
+                                      <div
+                                        style={{ rotate: "-45deg" }}
+                                        className="p-medium"
+                                      >
+                                        &#10005;
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                {wallets.map((wallet) => {
+                                  return (
+                                    <div
+                                      className="sc-s-18 bg-sp box-pad-h-s box-pad-v-s fx-scattered fit-container"
+                                      key={wallet.id}
+                                      style={{ overflow: "visible" }}
+                                    >
                                       <div className="fx-centered">
-                                        {wallet.kind === 1 && (
-                                          <div className="webln-logo-24"></div>
-                                        )}
-                                        {wallet.kind === 2 && (
-                                          <div className="alby-logo-24"></div>
-                                        )}
-                                        {wallet.kind === 3 && (
-                                          <div className="nwc-logo-24"></div>
-                                        )}
-                                        <div className="fx-centered fx-col">
-                                          <div className="fx-centered">
-                                            <p>{wallet.entitle}</p>
-                                            {wallet.active && (
-                                              <div
-                                                style={{
-                                                  minWidth: "8px",
-                                                  aspectRatio: "1/1",
-                                                  backgroundColor:
-                                                    "var(--green-main)",
-                                                  borderRadius:
-                                                    "var(--border-r-50)",
-                                                }}
-                                              ></div>
-                                            )}
-                                          </div>
-                                          {/* <div className="fx-centered">
+                                        <div className="fx-centered">
+                                          {wallet.kind === 1 && (
+                                            <div className="webln-logo-24"></div>
+                                          )}
+                                          {wallet.kind === 2 && (
+                                            <div className="alby-logo-24"></div>
+                                          )}
+                                          {wallet.kind === 3 && (
+                                            <div className="nwc-logo-24"></div>
+                                          )}
+                                          <div className="fx-centered fx-col">
+                                            <div className="fx-centered">
+                                              <p>{wallet.entitle}</p>
+                                              {wallet.active && (
+                                                <div
+                                                  style={{
+                                                    minWidth: "8px",
+                                                    aspectRatio: "1/1",
+                                                    backgroundColor:
+                                                      "var(--green-main)",
+                                                    borderRadius:
+                                                      "var(--border-r-50)",
+                                                  }}
+                                                ></div>
+                                              )}
+                                            </div>
+                                            {/* <div className="fx-centered">
                                             {wallet.kind === 3 && (
                                               <div
                                                 className="sticker sticker-gray-black fx-centered"
@@ -1415,557 +1585,478 @@ export default function Settings() {
                                               </div>
                                             )}
                                           </div> */}
+                                          </div>
                                         </div>
+                                        <div className="fx-centered"></div>
                                       </div>
-                                      <div className="fx-centered"></div>
-                                    </div>
-                                    <div className="fx-centered">
-                                      {!wallet.active && (
-                                        <div
-                                          className="round-icon-small round-icon-tooltip"
-                                          data-tooltip={t("Ar6TTrh")}
-                                          onClick={() =>
-                                            handleSelectWallet(wallet.id)
-                                          }
-                                        >
-                                          <div className="switch-arrows"></div>
-                                        </div>
-                                      )}
-                                      {wallet.kind !== 1 && (
-                                        <div
-                                          className="round-icon-small round-icon-tooltip"
-                                          data-tooltip={t("AawdN9R")}
-                                          onClick={() =>
-                                            setShowDeletionPopup(wallet)
-                                          }
-                                        >
-                                          <p className="red-c">&minus;</p>
-                                        </div>
-                                      )}
-                                      {wallet.kind !== 1 && (
-                                        <OptionsDropdown
-                                          options={[
-                                            wallet.kind === 3 && (
+                                      <div className="fx-centered">
+                                        {!wallet.active && (
+                                          <div
+                                            className="round-icon-small round-icon-tooltip"
+                                            data-tooltip={t("Ar6TTrh")}
+                                            onClick={() =>
+                                              handleSelectWallet(wallet.id)
+                                            }
+                                          >
+                                            <div className="switch-arrows"></div>
+                                          </div>
+                                        )}
+                                        {wallet.kind !== 1 && (
+                                          <div
+                                            className="round-icon-small round-icon-tooltip"
+                                            data-tooltip={t("AawdN9R")}
+                                            onClick={() =>
+                                              setShowDeletionPopup(wallet)
+                                            }
+                                          >
+                                            <p className="red-c">&minus;</p>
+                                          </div>
+                                        )}
+                                        {wallet.kind !== 1 && (
+                                          <OptionsDropdown
+                                            options={[
+                                              wallet.kind === 3 && (
+                                                <div
+                                                  onClick={() =>
+                                                    copyKey(
+                                                      t("A6Pj02S"),
+                                                      wallet.data
+                                                    )
+                                                  }
+                                                >
+                                                  {t("Aoq0uKa")}
+                                                </div>
+                                              ),
+                                              wallet.kind !== 1 && (
+                                                <div
+                                                  onClick={() =>
+                                                    copyKey(
+                                                      t("ALR84Tq"),
+                                                      wallet.entitle
+                                                    )
+                                                  }
+                                                >
+                                                  {t("ArCMp34")}
+                                                </div>
+                                              ),
                                               <div
                                                 onClick={() =>
-                                                  copyKey(
-                                                    t("A6Pj02S"),
-                                                    wallet.data
-                                                  )
-                                                }
-                                              >
-                                                {t("Aoq0uKa")}
-                                              </div>
-                                            ),
-                                            wallet.kind !== 1 && (
-                                              <div
-                                                onClick={() =>
-                                                  copyKey(
-                                                    t("ALR84Tq"),
+                                                  exportWallet(
+                                                    wallet.data,
                                                     wallet.entitle
                                                   )
                                                 }
                                               >
-                                                {t("ArCMp34")}
-                                              </div>
-                                            ),
-                                            <div
-                                              onClick={() =>
-                                                exportWallet(
-                                                  wallet.data,
-                                                  wallet.entitle
-                                                )
-                                              }
-                                            >
-                                              {t("A4A5psW")}
-                                            </div>,
-                                          ]}
-                                        />
-                                      )}
+                                                {t("A4A5psW")}
+                                              </div>,
+                                            ]}
+                                          />
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                              gap: 0,
+                            }}
+                          >
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "customization"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("customization")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="custom-24"></div>
+                                <p>{t("ARS24Cc")}</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            <hr />
+                            {selectedTab === "customization" && (
+                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
+                                <div className="fit-container">
+                                  <p className="gray-c">{t("Amm6e0Z")}</p>
+                                </div>
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AozzmTY")}</p>
+                                  <div
+                                    className={`toggle ${
+                                      !collapsedNote ? "toggle-dim-gray" : ""
+                                    } ${
+                                      collapsedNote
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={handleCollapedNote}
+                                  ></div>
+                                </div>
+                                <div className="fx-scattered fit-container fx-start-v fx-col">
+                                  <p>{t("ADAM3FJ")}</p>
+                                  <div className="fit-container fx-centered">
+                                    <div
+                                      className="fx fx-centered fx-col sc-s-18 bg-sp "
+                                      style={{
+                                        borderColor:
+                                          selectedRepliesView !== "box"
+                                            ? ""
+                                            : "var(--c1)",
+                                      }}
+                                      onClick={() => handleRepliesView("box")}
+                                    >
+                                      <img
+                                        src={boxView}
+                                        style={{ width: "100%" }}
+                                        alt=""
+                                      />
+                                      <p className="gray-c box-pad-v-s">
+                                        {t("ACz8zwo")}
+                                      </p>
+                                    </div>
+                                    <div
+                                      className="fx fx-centered fx-col sc-s-18 bg-sp "
+                                      style={{
+                                        borderColor:
+                                          selectedRepliesView !== "thread"
+                                            ? ""
+                                            : "var(--c1)",
+                                      }}
+                                      onClick={() =>
+                                        handleRepliesView("thread")
+                                      }
+                                    >
+                                      <img
+                                        src={threadView}
+                                        style={{ width: "100%" }}
+                                        alt=""
+                                      />
+                                      <p className="gray-c box-pad-v-s">
+                                        {t("AlwU99D")}
+                                      </p>
                                     </div>
                                   </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
-                          }}
-                        >
-                          <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "customization"
-                                ? setSelectedTab("")
-                                : setSelectedTab("customization")
-                            }
-                          >
-                            <div className="fx-centered fx-start-h">
-                              <div className="custom-24"></div>
-                              <p>{t("ARS24Cc")}</p>
-                            </div>
-                            <div className="arrow"></div>
-                          </div>
-                          <hr />
-                          {selectedTab === "customization" && (
-                            <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                              <div className="fit-container">
-                                <p className="gray-c">{t("Amm6e0Z")}</p>
-                              </div>
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AozzmTY")}</p>
-                                <div
-                                  className={`toggle ${
-                                    !collapsedNote ? "toggle-dim-gray" : ""
-                                  } ${
-                                    collapsedNote
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={handleCollapedNote}
-                                ></div>
-                              </div>
-                              <div className="fx-scattered fit-container fx-start-v fx-col">
-                                <p>{t("ADAM3FJ")}</p>
-                                <div className="fit-container fx-centered">
-                                  <div
-                                    className="fx fx-centered fx-col sc-s-18 bg-sp "
-                                    style={{
-                                      borderColor:
-                                        selectedRepliesView !== "box"
-                                          ? ""
-                                          : "var(--c1)",
-                                    }}
-                                    onClick={() => handleRepliesView("box")}
-                                  >
-                                    <img
-                                      src={boxView}
-                                      style={{ width: "100%" }}
-                                      alt=""
-                                    />
-                                    <p className="gray-c box-pad-v-s">
-                                      {t("ACz8zwo")}
-                                    </p>
-                                  </div>
-                                  <div
-                                    className="fx fx-centered fx-col sc-s-18 bg-sp "
-                                    style={{
-                                      borderColor:
-                                        selectedRepliesView !== "thread"
-                                          ? ""
-                                          : "var(--c1)",
-                                    }}
-                                    onClick={() => handleRepliesView("thread")}
-                                  >
-                                    <img
-                                      src={threadView}
-                                      style={{ width: "100%" }}
-                                      alt=""
-                                    />
-                                    <p className="gray-c box-pad-v-s">
-                                      {t("AlwU99D")}
-                                    </p>
-                                  </div>
                                 </div>
-                              </div>
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AFVPHti")}</p>
-                                <div
-                                  className={`toggle ${
-                                    !userHoverPreview ? "toggle-dim-gray" : ""
-                                  } ${
-                                    userHoverPreview
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={handleUserHoverPreview}
-                                ></div>
-                              </div>
-                              <hr />
-                              <div className="fit-container">
-                                <p className="gray-c">{t("AKjfaA8")}</p>
-                              </div>
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AZZ4XLg")}</p>
-                                <div
-                                  className={`toggle ${
-                                    homeContentSuggestion
-                                      ? "toggle-dim-gray"
-                                      : ""
-                                  } ${
-                                    !homeContentSuggestion
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={handleHomeContentSuggestion}
-                                ></div>
-                              </div>
-                              <hr />
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AE7aj4C")}</p>
-                                <div
-                                  className={`toggle ${
-                                    userToFollowSuggestion
-                                      ? "toggle-dim-gray"
-                                      : ""
-                                  } ${
-                                    !userToFollowSuggestion
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={handleUserToFollowSuggestion}
-                                ></div>
-                              </div>
-                              <hr />
-                              <div className="fx-scattered fit-container">
-                                <p>{t("Ax8NFUb")}</p>
-                                <div
-                                  className={`toggle ${
-                                    contentSuggestion ? "toggle-dim-gray" : ""
-                                  } ${
-                                    !contentSuggestion
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={handleContentSuggestion}
-                                ></div>
-                              </div>
-                              <hr />
-                              <div className="fx-scattered fit-container">
-                                <p>{t("ANiWe9M")}</p>
-                                <div
-                                  className={`toggle ${
-                                    interestSuggestion ? "toggle-dim-gray" : ""
-                                  } ${
-                                    !interestSuggestion
-                                      ? "toggle-c1"
-                                      : "toggle-dim-gray"
-                                  }`}
-                                  onClick={handleInterestSuggestion}
-                                ></div>
-                              </div>
-                              <hr />
-                              {/* <div
-                                className="fx-scattered fit-container fx-col fx-start-v"
-                                style={{ gap: 0 }}
-                              >
-                                <p>{t("ABza23y")}</p>
-                                <div className="fit-container fx-centered fx-col">
-                                  <DragDropContext onDragEnd={handleDragEnd}>
-                                    <Droppable droppableId="set-carrousel">
-                                      {(provided, snapshot) => (
-                                        <div
-                                          ref={provided.innerRef}
-                                          style={{
-                                            borderRadius: "var(--border-r-18)",
-                                            transition: ".2s ease-in-out",
-                                            height: "100%",
-                                            ...provided.droppableProps.style,
-                                          }}
-                                          className="box-pad-v-m fit-container fx-centered fx-start-h fx-start-v fx-col"
-                                        >
-                                          {contentList.map((item, index) => {
-                                            return (
-                                              <Draggable
-                                                key={index}
-                                                draggableId={`${index}`}
-                                                index={index}
-                                              >
-                                                {(provided, snapshot) => (
-                                                  <div
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    ref={provided.innerRef}
-                                                    style={{
-                                                      borderRadius:
-                                                        "var(--border-r-18)",
-                                                      boxShadow:
-                                                        snapshot.isDragging
-                                                          ? "14px 12px 105px -41px rgba(0, 0, 0, 0.55)"
-                                                          : "",
-                                                      ...provided.draggableProps
-                                                        .style,
-                                                      overflow: "visible",
-                                                    }}
-                                                    className="fx-scattered fit-container sc-s-18 box-pad-h-s box-pad-v-s"
-                                                  >
-                                                    <p className="p-maj">
-                                                      {
-                                                        contentCategoriesDN[
-                                                          item.tab
-                                                        ]
-                                                      }
-                                                    </p>
-                                                    <div className="fx-centered">
-                                                      <div
-                                                        className={`toggle ${
-                                                          item.isHidden
-                                                            ? "toggle-dim-gray"
-                                                            : ""
-                                                        } ${
-                                                          !item.isHidden
-                                                            ? "toggle-c1"
-                                                            : "toggle-dim-gray"
-                                                        }`}
-                                                        onClick={() =>
-                                                          handleHideContentList(
-                                                            index,
-                                                            !item.isHidden
-                                                          )
-                                                        }
-                                                      ></div>
-                                                      <div
-                                                        className="drag-el"
-                                                        style={{
-                                                          minWidth: "16px",
-                                                          aspectRatio: "1/1",
-                                                        }}
-                                                      ></div>
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </Draggable>
-                                            );
-                                          })}
-                                          {provided.placeholder}
-                                        </div>
-                                      )}
-                                    </Droppable>
-                                  </DragDropContext>
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AFVPHti")}</p>
+                                  <div
+                                    className={`toggle ${
+                                      !userHoverPreview ? "toggle-dim-gray" : ""
+                                    } ${
+                                      userHoverPreview
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={handleUserHoverPreview}
+                                  ></div>
                                 </div>
-                              </div>
-                              <hr /> */}
-                              <div className="fx-scattered fit-container fx-col fx-start-v">
-                                <p className="gray-c">{t("ASSFfFZ")}</p>
-                                <div className="fit-container fx-centered fx-col">
-                                  {notification.map((item, index) => {
-                                    return (
-                                      <Fragment key={index}>
-                                        <div className="fx-scattered fit-container">
-                                          <p className="p-maj">
-                                            {notificationDN[item.tab]}
-                                          </p>
-                                          <div className="fx-centered">
-                                            <div
-                                              className={`toggle ${
-                                                item.isHidden
-                                                  ? "toggle-dim-gray"
-                                                  : ""
-                                              } ${
-                                                !item.isHidden
-                                                  ? "toggle-c1"
-                                                  : "toggle-dim-gray"
-                                              }`}
-                                              onClick={() =>
-                                                handleNotification(
-                                                  index,
+                                <hr />
+                                <div className="fit-container">
+                                  <p className="gray-c">{t("AKjfaA8")}</p>
+                                </div>
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AZZ4XLg")}</p>
+                                  <div
+                                    className={`toggle ${
+                                      homeContentSuggestion
+                                        ? "toggle-dim-gray"
+                                        : ""
+                                    } ${
+                                      !homeContentSuggestion
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={handleHomeContentSuggestion}
+                                  ></div>
+                                </div>
+                                <hr />
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AE7aj4C")}</p>
+                                  <div
+                                    className={`toggle ${
+                                      userToFollowSuggestion
+                                        ? "toggle-dim-gray"
+                                        : ""
+                                    } ${
+                                      !userToFollowSuggestion
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={handleUserToFollowSuggestion}
+                                  ></div>
+                                </div>
+                                <hr />
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("Ax8NFUb")}</p>
+                                  <div
+                                    className={`toggle ${
+                                      contentSuggestion ? "toggle-dim-gray" : ""
+                                    } ${
+                                      !contentSuggestion
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={handleContentSuggestion}
+                                  ></div>
+                                </div>
+                                <hr />
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("ANiWe9M")}</p>
+                                  <div
+                                    className={`toggle ${
+                                      interestSuggestion
+                                        ? "toggle-dim-gray"
+                                        : ""
+                                    } ${
+                                      !interestSuggestion
+                                        ? "toggle-c1"
+                                        : "toggle-dim-gray"
+                                    }`}
+                                    onClick={handleInterestSuggestion}
+                                  ></div>
+                                </div>
+                                <hr />
+                                <div className="fx-scattered fit-container fx-col fx-start-v">
+                                  <p className="gray-c">{t("ASSFfFZ")}</p>
+                                  <div className="fit-container fx-centered fx-col">
+                                    {notification.map((item, index) => {
+                                      return (
+                                        <Fragment key={index}>
+                                          <div className="fx-scattered fit-container">
+                                            <p className="p-maj">
+                                              {notificationDN[item.tab]}
+                                            </p>
+                                            <div className="fx-centered">
+                                              <div
+                                                className={`toggle ${
+                                                  item.isHidden
+                                                    ? "toggle-dim-gray"
+                                                    : ""
+                                                } ${
                                                   !item.isHidden
-                                                )
-                                              }
-                                            ></div>
+                                                    ? "toggle-c1"
+                                                    : "toggle-dim-gray"
+                                                }`}
+                                                onClick={() =>
+                                                  handleNotification(
+                                                    index,
+                                                    !item.isHidden
+                                                  )
+                                                }
+                                              ></div>
+                                            </div>
                                           </div>
-                                        </div>
-                                        <hr />
-                                      </Fragment>
-                                    );
-                                  })}
+                                          <hr />
+                                        </Fragment>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
-                          }}
-                        >
+                            )}
+                          </div>
                           <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "cache"
-                                ? setSelectedTab("")
-                                : setSelectedTab("cache")
-                            }
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                              gap: 0,
+                            }}
+                          >
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "cache"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("cache")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="cache-24"></div>
+                                <p>{t("AZEJWnf")}</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            {selectedTab === "cache" && (
+                              <div className="fit-container fx-col fx-centered box-pad-h-m box-pad-v-m">
+                                <div className="fx-scattered fit-container">
+                                  <p>{t("AfcEwqC")}</p>
+                                  <p
+                                    className={
+                                      cacheSize > 4000 ? "red-c" : "gray-c"
+                                    }
+                                  >
+                                    {cacheSize > 4000 ? (
+                                      <span className="p-medium">
+                                        {" "}
+                                        ({t("AhfkjK3")}){" "}
+                                      </span>
+                                    ) : (
+                                      ""
+                                    )}
+                                    {makeReadableNumber(cacheSize)} MB{" "}
+                                  </p>
+                                </div>
+                                <div className="fx-centered fit-container fx-end-h">
+                                  <button
+                                    className="btn btn-small btn-normal"
+                                    onClick={clearAppCache}
+                                    disabled={isCacheClearing}
+                                  >
+                                    {isCacheClearing ? (
+                                      <LoadingDots />
+                                    ) : (
+                                      t("AWj8yOR")
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className="fit-container fx-scattered fx-col pointer"
+                            style={{
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                              gap: 0,
+                            }}
+                          >
+                            <div
+                              className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
+                              onClick={() =>
+                                selectedTab === "theme"
+                                  ? setSelectedTab("")
+                                  : setSelectedTab("theme")
+                              }
+                            >
+                              <div className="fx-centered fx-start-h">
+                                <div className="theme-24"></div>
+                                <p>{t("A1iiDWU")}</p>
+                              </div>
+                              <div className="arrow"></div>
+                            </div>
+                            {selectedTab === "theme" && (
+                              <div className="fit-container fx-col fx-centered box-pad-h-m box-pad-v-m ">
+                                <div className="fx-scattered fit-container">
+                                  <DtoLToggleButton />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className="fit-container fx-scattered box-pad-h-m box-pad-v-m pointer"
+                            style={{
+                              borderBottom: "1px solid var(--very-dim-gray)",
+                            }}
                           >
                             <div className="fx-centered fx-start-h">
-                              <div className="cache-24"></div>
-                              <p>{t("AZEJWnf")}</p>
+                              <div className="cup-24"></div>
+                              <p>{t("ACALoWH")}</p>
                             </div>
-                            <div className="arrow"></div>
-                          </div>
-                          {selectedTab === "cache" && (
-                            <div className="fit-container fx-col fx-centered box-pad-h-m box-pad-v-m">
-                              <div className="fx-scattered fit-container">
-                                <p>{t("AfcEwqC")}</p>
-                                <p
-                                  className={
-                                    cacheSize > 4000 ? "red-c" : "gray-c"
-                                  }
-                                >
-                                  {cacheSize > 4000 ? (
-                                    <span className="p-medium">
-                                      {" "}
-                                      ({t("AhfkjK3")}){" "}
-                                    </span>
-                                  ) : (
-                                    ""
-                                  )}
-                                  {makeReadableNumber(cacheSize)} MB{" "}
+                            {yakiChestStats && isYakiChestLoaded && (
+                              <div className="fx-centered">
+                                <p className="green-c p-medium">
+                                  {t("A5aXNG9")}
                                 </p>
+                                <div
+                                  style={{
+                                    minWidth: "8px",
+                                    aspectRatio: "1/1",
+                                    backgroundColor: "var(--green-main)",
+                                    borderRadius: "var(--border-r-50)",
+                                  }}
+                                ></div>
                               </div>
-                              <div className="fx-centered fit-container fx-end-h">
+                            )}
+                            {!yakiChestStats && isYakiChestLoaded && (
+                              <div className="fx-centered">
                                 <button
                                   className="btn btn-small btn-normal"
-                                  onClick={clearAppCache}
-                                  disabled={isCacheClearing}
+                                  onClick={() => setShowYakiChest(true)}
                                 >
-                                  {isCacheClearing ? (
-                                    <LoadingDots />
-                                  ) : (
-                                    t("AWj8yOR")
-                                  )}
+                                  {t("Azb0lto")}
                                 </button>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered fx-col pointer"
-                          style={{
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                            gap: 0,
-                          }}
-                        >
+                            )}
+                            {!isYakiChestLoaded && (
+                              <div className="fx-centered">
+                                <LoadingDots />
+                              </div>
+                            )}
+                          </div>
                           <div
-                            className="fx-scattered fit-container  box-pad-h-m box-pad-v-m "
-                            onClick={() =>
-                              selectedTab === "theme"
-                                ? setSelectedTab("")
-                                : setSelectedTab("theme")
-                            }
+                            className="fit-container fx-scattered box-pad-h-m box-pad-v-m pointer"
+                            onClick={userLogout}
                           >
                             <div className="fx-centered fx-start-h">
-                              <div className="theme-24"></div>
-                              <p>{t("A1iiDWU")}</p>
+                              <div className="logout-24"></div>
+                              <p>{t("AyXwdfE")}</p>
                             </div>
-                            <div className="arrow"></div>
                           </div>
-                          {selectedTab === "theme" && (
-                            <div className="fit-container fx-col fx-centered box-pad-h-m box-pad-v-m ">
-                              <div className="fx-scattered fit-container">
-                                <DtoLToggleButton />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered box-pad-h-m box-pad-v-m pointer"
-                          style={{
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                          }}
-                        >
-                          <div className="fx-centered fx-start-h">
-                            <div className="cup-24"></div>
-                            <p>{t("ACALoWH")}</p>
-                          </div>
-                          {yakiChestStats && isYakiChestLoaded && (
-                            <div className="fx-centered">
-                              <p className="green-c p-medium">{t("A5aXNG9")}</p>
-                              <div
-                                style={{
-                                  minWidth: "8px",
-                                  aspectRatio: "1/1",
-                                  backgroundColor: "var(--green-main)",
-                                  borderRadius: "var(--border-r-50)",
-                                }}
-                              ></div>
-                            </div>
-                          )}
-                          {!yakiChestStats && isYakiChestLoaded && (
-                            <div className="fx-centered">
-                              <button
-                                className="btn btn-small btn-normal"
-                                onClick={() => setShowYakiChest(true)}
-                              >
-                                {t("Azb0lto")}
-                              </button>
-                            </div>
-                          )}
-                          {!isYakiChestLoaded && (
-                            <div className="fx-centered">
-                              <LoadingDots />
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className="fit-container fx-scattered box-pad-h-m box-pad-v-m pointer"
-                          onClick={userLogout}
-                        >
-                          <div className="fx-centered fx-start-h">
-                            <div className="logout-24"></div>
-                            <p>{t("AyXwdfE")}</p>
-                          </div>
-                        </div>
-                        <div
-                          className="fit-container fx-centered fx-col"
-                          style={{ height: "350px" }}
-                        >
-                          <div className="yakihonne-logo-128"></div>
-                          <p
-                            className="p-centered gray-c"
-                            style={{ maxWidth: "400px" }}
+                          <div
+                            className="fit-container fx-centered fx-col"
+                            style={{ height: "350px" }}
                           >
-                            {t("AFZ1jAD")}
-                          </p>
-                          <p className="c1-c">
-                            v{process.env.REACT_APP_APP_VERSION}
-                          </p>
-                          <div className="fx-centered">
-                            <ZapTip
-                              recipientLNURL={process.env.REACT_APP_YAKI_LUD16}
-                              recipientPubkey={
-                                process.env.REACT_APP_YAKI_PUBKEY
-                              }
-                              senderPubkey={userKeys.pub}
-                              recipientInfo={{
-                                name: "Yakihonne",
-                                picture:
-                                  "https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png",
-                              }}
-                            />
-                            <a href="mailto:info@yakihonne.com">
-                              <div
-                                className="round-icon round-icon-tooltip"
-                                data-tooltip={t("AheSXrs")}
-                              >
-                                <div className="env"></div>
-                              </div>
-                            </a>
-                            <a
-                              href="https://github.com/orgs/YakiHonne/repositories"
-                              target="_blank"
+                            <div className="yakihonne-logo-128"></div>
+                            <p
+                              className="p-centered gray-c"
+                              style={{ maxWidth: "400px" }}
                             >
-                              <div
-                                className="round-icon round-icon-tooltip"
-                                data-tooltip={"Github repos"}
+                              {t("AFZ1jAD")}
+                            </p>
+                            <p className="c1-c">
+                              v{process.env.REACT_APP_APP_VERSION}
+                            </p>
+                            <div className="fx-centered">
+                              <ZapTip
+                                recipientLNURL={
+                                  process.env.REACT_APP_YAKI_LUD16
+                                }
+                                recipientPubkey={
+                                  process.env.REACT_APP_YAKI_PUBKEY
+                                }
+                                senderPubkey={userKeys.pub}
+                                recipientInfo={{
+                                  name: "Yakihonne",
+                                  picture:
+                                    "https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png",
+                                }}
+                              />
+                              <a href="mailto:info@yakihonne.com">
+                                <div
+                                  className="round-icon round-icon-tooltip"
+                                  data-tooltip={t("AheSXrs")}
+                                >
+                                  <div className="env"></div>
+                                </div>
+                              </a>
+                              <a
+                                href="https://github.com/orgs/YakiHonne/repositories"
+                                target="_blank"
                               >
-                                <div className="github-logo"></div>
-                              </div>
-                            </a>
+                                <div
+                                  className="round-icon round-icon-tooltip"
+                                  data-tooltip={"Github repos"}
+                                >
+                                  <div className="github-logo"></div>
+                                </div>
+                              </a>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </>
-                  )}
-                  {userMetadata && !userKeys.sec && !userKeys.ext && (
-                    <PagePlaceholder page={"nostr-unauthorized"} />
-                  )}
+                      </>
+                    )}
+                  {userMetadata &&
+                    !userKeys.sec &&
+                    !userKeys.ext &&
+                    !userKeys.bunker && (
+                      <PagePlaceholder page={"nostr-unauthorized"} />
+                    )}
                   {!userMetadata && (
                     <PagePlaceholder page={"nostr-not-connected"} />
                   )}
@@ -1978,6 +2069,608 @@ export default function Settings() {
     </>
   );
 }
+
+const RelaysConfig = () => {
+  const { state } = useLocation();
+  const { t } = useTranslation();
+  const [showRelaysInfo, setShowRelaysInfo] = useState(false);
+  const [allRelays, setAllRelays] = useState([]);
+  const [selectedTab, setSelectedTab] = useState(state ? state.relaysTab : 0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await axios.get("https://api.nostr.watch/v1/online");
+        setAllRelays(data.data);
+      } catch {}
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <>
+      {showRelaysInfo && (
+        <RelaysInfo
+          url={showRelaysInfo}
+          exit={() => setShowRelaysInfo(false)}
+        />
+      )}
+      <div className="fit-container fx-scattered box-pad-h">
+        {selectedTab === 0 && (
+          <p className="c1-c slide-right">{t("AciF91F")}</p>
+        )}
+        {selectedTab === 1 && (
+          <p className="c1-c slide-right">{t("AEsTMiq")}</p>
+        )}
+        <div className="fx-centered">
+          <div className="round-icon-small" onClick={() => setSelectedTab(0)}>
+            <div className="arrow" style={{ rotate: "90deg" }}></div>
+          </div>
+          <div className="round-icon-small" onClick={() => setSelectedTab(1)}>
+            <div className="arrow" style={{ rotate: "-90deg" }}></div>
+          </div>
+        </div>
+      </div>
+      <div
+        className="fit-container fx-centered fx-start-h fx-start-v"
+        style={{ overflow: "hidden" }}
+      >
+        <div
+          className="fit-container fx-centered fx-start-h fx-start-v box-pad-v-s"
+          style={{
+            transform: `translateX(${selectedTab ? "-100%" : "0"})`,
+            transition: "transform 0.3s ease-in-out",
+          }}
+        >
+          <ContentRelays
+            setShowRelaysInfo={setShowRelaysInfo}
+            allRelays={allRelays}
+          />
+          <InboxRelays
+            setShowRelaysInfo={setShowRelaysInfo}
+            allRelays={allRelays}
+          />
+        </div>
+      </div>
+    </>
+  );
+};
+
+const ContentRelays = ({ setShowRelaysInfo, allRelays }) => {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const userKeys = useSelector((state) => state.userKeys);
+  const userAllRelays = useSelector((state) => state.userAllRelays);
+  const relaysContainer = useRef(null);
+  const [tempUserRelays, setTempUserRelays] = useState([]);
+  const [relaysStatus, setRelaysStatus] = useState([]);
+  const connectedRelays = useMemo(() => {
+    return {
+      relaysStatus: relaysStatus.reduce((acc, relay) => {
+        acc[relay.url] = relay.connected;
+        return acc;
+      }, {}),
+      connected: relaysStatus.filter((relay) => relay.connected).length,
+      total: relaysStatus.length,
+    };
+  }, [relaysStatus]);
+
+  useEffect(() => {
+    try {
+      setTempUserRelays(userAllRelays);
+      setRelaysStatus(
+        userAllRelays.map((item) => {
+          return { url: item.url, connected: false };
+        })
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  }, [userAllRelays]);
+
+  useEffect(() => {
+    const CheckRelays = async () => {
+      try {
+        let res = await Promise.all(
+          tempUserRelays.map(async (relay, index) => {
+            let isRelay = ndkInstance.pool.getRelay(relay.url);
+            if (isRelay) {
+              return { url: relay.url, connected: isRelay.connected };
+            } else {
+              let tempNDK = new NDK({ explicitRelayUrls: [relay.url] });
+              await tempNDK.connect(2000);
+              let relayStatus = tempNDK.pool.getRelay(relay.url);
+              return { url: relay.url, connected: relayStatus.connected };
+            }
+          })
+        );
+        setRelaysStatus(res);
+      } catch (err) {}
+    };
+
+    if (tempUserRelays) CheckRelays();
+  }, [tempUserRelays]);
+
+  const removeRelayFromList = (action, index) => {
+    let tempArray = tempUserRelays.map((relay) => ({ ...relay }));
+    if (action) {
+      delete tempArray[index].toDelete;
+      setTempUserRelays(tempArray);
+    } else {
+      tempArray[index].toDelete = true;
+      setTempUserRelays(tempArray);
+    }
+  };
+
+  const saveRelays = async () => {
+    saveInKind10002();
+  };
+
+  const saveInKind10002 = async () => {
+    try {
+      let tags = convertArrayToKind10002();
+      dispatch(
+        setToPublish({
+          userKeys: userKeys,
+          kind: 10002,
+          content: "",
+          tags: tags,
+          allRelays: tempUserRelays
+            .filter((relay) => relay.write)
+            .map((relay) => relay.url),
+        })
+      );
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  };
+
+  const convertArrayToKind10002 = () => {
+    let tempArray = [];
+    for (let relay of tempUserRelays) {
+      if (!relay.toDelete) {
+        let status =
+          relay.read && relay.write ? "" : relay.read ? "read" : "write";
+        if (status) tempArray.push(["r", relay.url, status]);
+        if (!status) tempArray.push(["r", relay.url]);
+      }
+    }
+    return tempArray;
+  };
+
+  const changeRelayStatus = (status, index) => {
+    let tempArray = tempUserRelays.map((relay) => ({ ...relay }));
+    tempArray[index].read = ["read", ""].includes(status) ? true : false;
+    tempArray[index].write = ["write", ""].includes(status) ? true : false;
+
+    setTempUserRelays(tempArray);
+  };
+
+  const addRelay = (url) => {
+    setTempUserRelays((prev) => {
+      let isThere = prev.find((relay) => relay.url === url);
+      if (!isThere) return [...prev, { url, read: true, write: true }];
+      return prev;
+    });
+    let timeout = setTimeout(() => {
+      if (relaysContainer.current) {
+        relaysContainer.current.scrollTop =
+          relaysContainer.current.scrollHeight;
+      }
+      clearTimeout(timeout);
+    }, 50);
+  };
+
+  return (
+    <div className="fit-container box-pad-h-m fx-shrink">
+      <div
+        className="fit-container sc-s-18 bg-sp"
+        style={{ overflow: "visible" }}
+      >
+        <div className="fx-centered fx-end-h fit-container box-pad-h-s box-pad-v-s">
+          <AddRelays
+            allRelays={allRelays}
+            userAllRelays={tempUserRelays}
+            addRelay={addRelay}
+          />
+          <button
+            className={`btn ${
+              JSON.stringify(userAllRelays) !== JSON.stringify(tempUserRelays)
+                ? "btn-normal"
+                : "btn-disabled"
+            }`}
+            onClick={saveRelays}
+            disabled={
+              JSON.stringify(userAllRelays) === JSON.stringify(tempUserRelays)
+            }
+          >
+            {t("AZWpmir")}
+          </button>
+        </div>
+        <hr />
+        {tempUserRelays.length > 0 && (
+          <div
+            className="fit-container fx-col fx-centered  fx-start-v fx-start-h"
+            style={{
+              maxHeight: "40vh",
+              overflow: "scroll",
+              overflowX: "hidden",
+              gap: 0,
+            }}
+            ref={relaysContainer}
+          >
+            {tempUserRelays?.map((relay, index) => {
+              let status =
+                relay.read && relay.write ? "" : relay.read ? "read" : "write";
+              return (
+                <div
+                  key={`${relay}-${index}`}
+                  className="fit-container fx-centered fx-col fx-shrink  box-pad-h-s box-pad-v-s"
+                  style={{
+                    overflow: "visible",
+                    backgroundColor: relay.toDelete ? "var(--red-side)" : "",
+                    borderBottom: "1px solid var(--very-dim-gray)",
+                    gap: "10px",
+                  }}
+                >
+                  <div className="fx-scattered fit-container box-pad-h-s ">
+                    <div
+                      className="fx-centered option"
+                      style={{
+                        border: "none",
+                        backgroundColor: "transparent",
+                      }}
+                      onClick={() => setShowRelaysInfo(relay.url)}
+                    >
+                      <div
+                        style={{
+                          minWidth: "6px",
+                          aspectRatio: "1/1",
+                          borderRadius: "50%",
+                          backgroundColor: connectedRelays?.relaysStatus[
+                            relay.url
+                          ]
+                            ? "var(--green-main)"
+                            : "var(--red-main)",
+                        }}
+                      ></div>
+                      <RelayImage url={relay.url} />
+                      <p>{relay.url}</p>
+                      <div
+                        className="info-tt"
+                        style={{
+                          filter: "brightness(0) invert()",
+                          opacity: 0.5,
+                        }}
+                      ></div>
+                    </div>
+                    <div>
+                      {!relay.toDelete && (
+                        <div
+                          onClick={() => removeRelayFromList(false, index)}
+                          className="round-icon-small"
+                        >
+                          <div className="logout-red"></div>
+                        </div>
+                      )}
+                      {relay.toDelete && (
+                        <div
+                          onClick={() => removeRelayFromList(true, index)}
+                          className="round-icon-small"
+                        >
+                          <div className="undo"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {!relay.toDelete && (
+                    <div className="fit-container fx-centered fx-start-h box-pad-h-m ">
+                      <button
+                        style={{
+                          opacity: status === "read" ? 1 : 0.4,
+                        }}
+                        className={"btn btn-small btn-gray"}
+                        onClick={() => changeRelayStatus("read", index)}
+                      >
+                        {t("AANojFe")}
+                      </button>
+                      <button
+                        style={{
+                          opacity: status === "write" ? 1 : 0.4,
+                        }}
+                        className={"btn btn-small btn-gray"}
+                        onClick={() => changeRelayStatus("write", index)}
+                      >
+                        {t("AHG1OTt")}
+                      </button>
+                      <button
+                        style={{
+                          opacity: status === "" ? 1 : 0.4,
+                        }}
+                        className={"btn btn-small btn-gray"}
+                        onClick={() => changeRelayStatus("", index)}
+                      >
+                        {t("AvnTmjx")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const InboxRelays = ({ setShowRelaysInfo, allRelays }) => {
+  const dispatch = useDispatch();
+  const { t } = useTranslation();
+  const userInboxRelays = useSelector((state) => state.userInboxRelays);
+  const relaysContainer = useRef(null);
+  const [inboxRelaysStatus, setInboxRelaysStatus] = useState([]);
+  const [tempUserRelays, setTempUserRelays] = useState([]);
+  const currentUserRelays = useMemo(() => {
+    return userInboxRelays.map((_) => {
+      return { url: _ };
+    });
+  }, [userInboxRelays]);
+  const suggestedRelays = useMemo(() => {
+    let relays = [
+      "wss://relay.damus.io",
+      "wss://nostr-01.yakihonne.com",
+      "wss://relay.0xchat.com",
+    ];
+    if (tempUserRelays.length === 0) return relays;
+    return relays.filter((relay) => {
+      return !tempUserRelays.some((item) => item.url === relay);
+    });
+  }, [tempUserRelays]);
+  const connectedRelays = useMemo(() => {
+    return {
+      relaysStatus: inboxRelaysStatus.reduce((acc, relay) => {
+        acc[relay.url] = relay.connected;
+        return acc;
+      }, {}),
+      connected: inboxRelaysStatus.filter((relay) => relay.connected).length,
+      total: inboxRelaysStatus.length,
+    };
+  }, [inboxRelaysStatus]);
+
+  useEffect(() => {
+    try {
+      setTempUserRelays(userInboxRelays.map((_) => ({ url: _ })));
+      setInboxRelaysStatus(
+        userInboxRelays.map((item) => {
+          return { url: item, connected: false };
+        })
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  }, [userInboxRelays]);
+
+  useEffect(() => {
+    const CheckRelays = async () => {
+      try {
+        let res = await Promise.all(
+          tempUserRelays.map(async (relay, index) => {
+            let isRelay = ndkInstance.pool.getRelay(relay.url);
+            if (isRelay) {
+              return { url: relay.url, connected: isRelay.connected };
+            } else {
+              let tempNDK = new NDK({ explicitRelayUrls: [relay.url] });
+              await tempNDK.connect(2000);
+              let relayStatus = tempNDK.pool.getRelay(relay.url);
+              return { url: relay.url, connected: relayStatus.connected };
+            }
+          })
+        );
+        setInboxRelaysStatus(res);
+      } catch (err) {}
+    };
+
+    if (tempUserRelays) CheckRelays();
+  }, [tempUserRelays]);
+
+  const removeRelayFromList = (action, index) => {
+    let tempArray = tempUserRelays.map((relay) => ({ ...relay }));
+    if (action) {
+      delete tempArray[index].toDelete;
+      setTempUserRelays(tempArray);
+    } else {
+      tempArray[index].toDelete = true;
+      setTempUserRelays(tempArray);
+    }
+  };
+
+  const saveRelays = async () => {
+    let relaysList = tempUserRelays
+      .filter((_) => !_.toDelete)
+      .map((_) => _.url);
+    let tags = relaysList.map((url) => ["relay", url]);
+    let event = {
+      kind: 10050,
+      content: "",
+      tags,
+    };
+    event = await InitEvent(event.kind, event.content, event.tags);
+    if (!event) return;
+    dispatch(
+      setToPublish({
+        eventInitEx: event,
+      })
+    );
+  };
+
+  const addRelay = (url) => {
+    setTempUserRelays((prev) => {
+      let isThere = prev.find((relay) => relay.url === url);
+      if (!isThere) return [{ url, read: true, write: true }, ...prev];
+      return prev;
+    });
+    let timeout = setTimeout(() => {
+      if (relaysContainer.current) {
+        relaysContainer.current.scrollTop =
+          relaysContainer.current.scrollHeight;
+      }
+      clearTimeout(timeout);
+    }, 50);
+  };
+
+  return (
+    <div className="fit-container box-pad-h-m fx-shrink">
+      <div
+        className="fit-container sc-s-18 bg-sp"
+        style={{ overflow: "visible" }}
+      >
+        {/* <div className="fx-scattered box-pad-h-m box-pad-v-s">
+                <p className="c1-c">Private messages relays</p>
+              </div>
+              <hr /> */}
+        <div className="fx-centered fx-end-h fit-container box-pad-h-s box-pad-v-s">
+          <AddRelays
+            allRelays={allRelays}
+            userAllRelays={tempUserRelays}
+            addRelay={addRelay}
+          />
+          <button
+            className={`btn ${
+              JSON.stringify(currentUserRelays) !==
+              JSON.stringify(tempUserRelays)
+                ? "btn-normal"
+                : "btn-disabled"
+            }`}
+            onClick={saveRelays}
+            disabled={
+              JSON.stringify(currentUserRelays) ===
+              JSON.stringify(tempUserRelays)
+            }
+          >
+            {t("AZWpmir")}
+          </button>
+        </div>
+        <hr />
+        {tempUserRelays.length > 0 && (
+          <div
+            className="fit-container fx-col fx-centered  fx-start-v fx-start-h"
+            style={{
+              maxHeight: "40vh",
+              overflow: "scroll",
+              overflowX: "hidden",
+              gap: 0,
+            }}
+            ref={relaysContainer}
+          >
+            {tempUserRelays?.map((relay, index) => {
+              return (
+                <div
+                  key={`${relay}-${index}`}
+                  className="fit-container fx-centered fx-col fx-shrink  box-pad-h-s box-pad-v-s"
+                  style={{
+                    overflow: "visible",
+                    backgroundColor: relay.toDelete ? "var(--red-side)" : "",
+                    borderBottom:
+                      index !== tempUserRelays.length - 1
+                        ? "1px solid var(--very-dim-gray)"
+                        : "",
+                    gap: "10px",
+                  }}
+                >
+                  <div className="fx-scattered fit-container box-pad-h-s ">
+                    <div
+                      className="fx-centered option"
+                      style={{
+                        border: "none",
+                        backgroundColor: "transparent",
+                      }}
+                      onClick={() => setShowRelaysInfo(relay.url)}
+                    >
+                      <div
+                        style={{
+                          minWidth: "6px",
+                          aspectRatio: "1/1",
+                          borderRadius: "50%",
+                          backgroundColor: connectedRelays?.relaysStatus[
+                            relay.url
+                          ]
+                            ? "var(--green-main)"
+                            : "var(--red-main)",
+                        }}
+                      ></div>
+                      <RelayImage url={relay.url} />
+                      <p>{relay.url}</p>
+                      <div
+                        className="info-tt"
+                        style={{
+                          filter: "brightness(0) invert()",
+                          opacity: 0.5,
+                        }}
+                      ></div>
+                    </div>
+                    <div>
+                      {!relay.toDelete && (
+                        <div
+                          onClick={() => removeRelayFromList(false, index)}
+                          className="round-icon-small"
+                        >
+                          <div className="logout-red"></div>
+                        </div>
+                      )}
+                      {relay.toDelete && (
+                        <div
+                          onClick={() => removeRelayFromList(true, index)}
+                          className="round-icon-small"
+                        >
+                          <div className="undo"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {suggestedRelays.length > 0 && (
+          <div className="fx-centered fx-col fit-container box-pad-h-s box-pad-v-s fx-start-v fx-start-h">
+            {tempUserRelays.length === 0 && (
+              <p className="gray-c box-pad-v-s p-italic">{t("AR04C4C")}</p>
+            )}
+
+            <p>{t("AoO5zem")}</p>
+            {suggestedRelays.map((relay, index) => {
+              return (
+                <div
+                  className="fx-scattered fit-container box-pad-v-s option"
+                  style={{
+                    borderBottom:
+                      index !== suggestedRelays.length - 1
+                        ? "1px solid var(--very-dim-gray)"
+                        : "",
+                  }}
+                  key={index}
+                  onClick={() => addRelay(relay)}
+                >
+                  <div className="fx-centered">
+                    <RelayImage url={relay} />
+                    <p>{relay}</p>
+                  </div>
+                  <div className="sticker sticker-gray-black">
+                    {t("ARWeWgJ")}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const MutedList = ({ exit }) => {
   const dispatch = useDispatch();
@@ -2164,7 +2857,7 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
       />
       {showList && (
         <div
-          className="fit-container sc-s-18 fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-m"
+          className="fit-container sc-s-18 fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-m slide-up"
           style={{
             position: "absolute",
             left: 0,
@@ -2174,14 +2867,30 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
             zIndex: "200",
           }}
         >
+          <div className="fx-centered fit-container">
+            <p className="gray-c" style={{ minWidth: "max-content" }}>
+              {allRelays.length} relays
+            </p>
+            <hr />
+            <hr />
+          </div>
           {searchedRelays.map((relay) => {
             return (
               <div
                 className="fx-scattered fit-container"
-                onClick={() => addRelay(relay)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addRelay(relay);
+                  setShowList(false);
+                  setSearchedRelay("");
+                }}
               >
                 <p>{relay}</p>
-                <div className="plus-sign"></div>
+                <div className="fx-centered">
+                  <div className="sticker sticker-gray-black">
+                    {t("ARWeWgJ")}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -2198,6 +2907,7 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
               }}
             >
               <p>{searchedRelay}</p>
+
               <div className="plus-sign"></div>
             </div>
           )}

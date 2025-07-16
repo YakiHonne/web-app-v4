@@ -72,7 +72,7 @@ export default function UncensoredNotes() {
     };
     const fetchMyRewardsData = async () => {
       try {
-        if (!userKeys || (userKeys && !userKeys.sec && !userKeys.ext)) {
+        if (!userKeys || (userKeys && !userKeys.sec && !userKeys.ext && !userKeys.bunker)) {
           setMyRewards([]);
           return;
         }
@@ -329,7 +329,7 @@ export default function UncensoredNotes() {
                       );
                     })}
                     {userKeys &&
-                      (userKeys.sec || userKeys.ext) &&
+                      (userKeys.sec || userKeys.ext || userKeys.bunker) &&
                       !myRewards.length && (
                         <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
                           <h4>{t("AEoE8CH")}</h4>
@@ -363,7 +363,7 @@ export default function UncensoredNotes() {
                         </button>
                       </div>
                     )}
-                    {userKeys && !userKeys.sec && !userKeys.ext && (
+                    {userKeys && !userKeys.sec && !userKeys.ext && !userKeys.bunker && (
                       <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
                         <h4>{t("ApmJsGe")}</h4>
                         <p

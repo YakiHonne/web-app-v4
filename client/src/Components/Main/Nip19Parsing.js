@@ -70,7 +70,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           authors: [pubkey],
         });
         let hex = getHex(addr_.replace(",", "").replace(".", ""));
-        let url_ = `/users/${getBech32("npub", hex)}`;
+        let url_ = `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
         setUrl(url_);
       }
 

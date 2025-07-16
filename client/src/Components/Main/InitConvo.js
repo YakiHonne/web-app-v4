@@ -6,24 +6,26 @@ import {
   generateSecretKey,
   finalizeEvent,
 } from "nostr-tools";
-import { bytesTohex } from "../../Helpers/Encryptions";
+import { bytesTohex, encrypt04, encrypt44 } from "../../Helpers/Encryptions";
 import LoadingDots from "../../Components/LoadingDots";
 import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import UserSearchBar from "../../Components/UserSearchBar";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import { useDispatch, useSelector } from "react-redux";
-import { updateYakiChestStats } from "../../Helpers/Controlers";
+import { InitEvent, updateYakiChestStats } from "../../Helpers/Controlers";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { NDKEvent, NDKRelay, NDKRelaySet } from "@nostr-dev-kit/ndk";
 import { useTranslation } from "react-i18next";
+import { getInboxRelaysForUser } from "../../Helpers/DB";
+import relaysOnPlatform from "../../Content/Relays";
 
 export default function InitiConvo({ exit, receiver = false }) {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const userKeys = useSelector((state) => state.userKeys);
-  const userRelays = useSelector((state) => state.userRelays);
+  const userInboxRelays = useSelector((state) => state.userInboxRelays);
   const [selectedPerson, setSelectedPerson] = useState(receiver || "");
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState(
@@ -38,31 +40,24 @@ export default function InitiConvo({ exit, receiver = false }) {
       !message ||
       !userKeys ||
       !selectedPerson ||
-      (userKeys && !(userKeys.ext || userKeys.sec))
+      (userKeys && !(userKeys.ext || userKeys.sec || userKeys.bunker))
     )
       return;
-
-    let relaysToPublish = userRelays;
+    let otherPartyRelays = await getInboxRelaysForUser(selectedPerson);
+    let relaysToPublish = [
+      ...new Set([
+        ...userInboxRelays,
+        ...relaysOnPlatform,
+        ...otherPartyRelays,
+      ]),
+    ];
 
     if (legacy) {
       setIsLoading(true);
-      let encryptedMessage = "";
-      if (userKeys.ext) {
-        try {
-          encryptedMessage = await window.nostr.nip04.encrypt(
-            selectedPerson,
-            message
-          );
-        } catch (err) {
-          setIsLoading(false);
-          return;
-        }
-      } else {
-        encryptedMessage = await nip04.encrypt(
-          userKeys.sec,
-          selectedPerson,
-          message
-        );
+      let encryptedMessage = await encrypt04(userKeys, selectedPerson, message);
+      if (!encryptedMessage) {
+        setIsLoading(false);
+        return;
       }
       let tags = [];
       tags.push(["p", selectedPerson]);
@@ -74,17 +69,13 @@ export default function InitiConvo({ exit, receiver = false }) {
         content: encryptedMessage,
         tags,
       };
-      if (userKeys.ext) {
-        try {
-          tempEvent = await window.nostr.signEvent(tempEvent);
-        } catch (err) {
-          console.log(err);
-          setIsLoading(false);
-          return false;
-        }
-      } else {
-        tempEvent = finalizeEvent(tempEvent, userKeys.sec);
-      }
+      tempEvent = await InitEvent(
+        tempEvent.kind,
+        tempEvent.content,
+        tempEvent.tags,
+        tempEvent.created_at
+      );
+      if (!tempEvent) return;
       dispatch(
         setToPublish({
           eventInitEx: tempEvent,
@@ -187,24 +178,24 @@ export default function InitiConvo({ exit, receiver = false }) {
 
   const getEventKind13 = async (pubkey) => {
     let unsignedKind14 = getEventKind14();
-    let content = userKeys.sec
-      ? nip44.v2.encrypt(
-          JSON.stringify(unsignedKind14),
-          nip44.v2.utils.getConversationKey(userKeys.sec, pubkey)
-        )
-      : await window.nostr.nip44.encrypt(
-          pubkey,
-          JSON.stringify(unsignedKind14)
-        );
+    let content = await encrypt44(
+      userKeys,
+      pubkey,
+      JSON.stringify(unsignedKind14)
+    );
+
     let event = {
-      created_at: Math.floor(Date.now() / 1000) - 432000,
+      created_at: Math.floor(Date.now() / 1000) - 172800,
       kind: 13,
       tags: [],
       content,
     };
-    event = userKeys.sec
-      ? finalizeEvent(event, userKeys.sec)
-      : await window.nostr.signEvent(event);
+    event = await InitEvent(
+      event.kind,
+      event.content,
+      event.tags,
+      event.created_at
+    );
     return event;
   };
 

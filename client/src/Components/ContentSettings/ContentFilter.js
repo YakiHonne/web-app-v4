@@ -113,7 +113,7 @@ export default function ContentFilter({
     }
   };
 
-  if (!(userKeys && (userKeys?.sec || userKeys?.ext))) return null;
+  if (!(userKeys && (userKeys?.sec || userKeys?.ext || userKeys?.bunker))) return null;
 
   return (
     <>

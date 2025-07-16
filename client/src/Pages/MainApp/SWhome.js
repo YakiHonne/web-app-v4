@@ -91,161 +91,138 @@ const Main = () => {
   }, [searchKeyword]);
 
   return (
-    <main className="main-page-nostr-container">
+    <main className="main-page-nostr-container box-pad-h-m">
       <div
         className="fx-centered fit-container fx-start-h fx-col box-pad-v"
         style={{ gap: 0, minHeight: "100vh" }}
       >
-        {searchType === 1 && (
+        <div className="box-pad-v fx-centered">
           <div
+            className="smart-widget-24"
             style={{
-              width: "min(100%, 600px)",
+              minWidth: "44px",
+              minHeight: "44px",
+              animation: "1.5s infinite rotate",
             }}
-            className="fx-centered fx-col fx-start-v box-pad-h-m"
-          >
-            {/* <ChatWindow
-              message={searchKeyword}
-              setMessage={setSearchKeyword}
-              setStatus={setStatus}
-            /> */}
-            <PagePlaceholder page="ai" />
-          </div>
-        )}
-        {searchType === 0 && (
-          <div className="box-pad-v fx-centered">
-            <div
-              className="smart-widget-24"
-              style={{
-                minWidth: "44px",
-                minHeight: "44px",
-                animation: "1.5s infinite rotate",
-              }}
-            ></div>
-            <h3>{t("A2mdxcf")}</h3>
-          </div>
-        )}
+          ></div>
+          <h3>{t("A2mdxcf")}</h3>
+        </div>
+
         <InputField
           handleSearch={handleSearch}
-          searchType={searchType}
-          setSearchType={setSearchType}
           setSearchKeyword={setSearchKeyword}
           status={status}
         />
-        {searchType === 0 && (
-          <>
+
+        <div
+          style={{
+            // width: "min(100%, 600px)",
+            paddingBottom: 0,
+          }}
+          className="fit-container fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
+        >
+          <div
+            className={`fit-container fx-scattered `}
+            style={{ transition: ".2s ease-in-out" }}
+            onClick={() => setShowtips(!showTips)}
+          >
+            <p>{t("A9Mca7S")}</p>
             <div
+              className="plus-sign"
               style={{
-                width: "min(100%, 600px)",
-                paddingBottom:0
+                rotate: showTips ? "45deg" : "0deg",
+                minWidth: "14px",
+                minHeight: "14px",
               }}
-              className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
-            >
-              <div
-                className={`fit-container fx-scattered `}
-                style={{ transition: ".2s ease-in-out" }}
-                onClick={() => setShowtips(!showTips)}
-              >
-                <p >{t("A9Mca7S")}</p>
-                <div
-                  className="plus-sign"
-                  style={{
-                    rotate: showTips ? "45deg" : "0deg",
-                    minWidth: "14px",
-                    minHeight: "14px",
-                  }}
-                ></div>
+            ></div>
+          </div>
+          {showTips && (
+            <>
+              <div className="fx fx-centered fx-stretch">
+                <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
+                  <p className="gray-c">
+                    <span className="c1-c">{t("AYZh36g")} </span>
+                    {t("AiCvw1P")}
+                  </p>
+                </div>
+                <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-h">
+                  <p className="gray-c">
+                    <span className="c1-c">{t("A6U9fNT")} </span>
+                    {t("AmK7zqi")}
+                  </p>
+                </div>
               </div>
-              {showTips && (
-                <>
-                  <div className="fx fx-centered fx-stretch">
-                    <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
-                      <p className="gray-c">
-                        <span className="c1-c">{t("AYZh36g")} </span>
-                        {t("AiCvw1P")}
-                      </p>
-                    </div>
-                    <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-h">
-                      <p className="gray-c">
-                        <span className="c1-c">{t("A6U9fNT")} </span>
-                        {t("AmK7zqi")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="fit-container fx-centered fx-stretch">
-                    <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx">
-                      {/* <div className="round-icon">
-                    <div className="posts-24"></div>
-                  </div> */}
-                      <div className="fx-centered fx-col fx-start-h fx-start-v">
-                        <p className="p-big p-bold">{t("Axeyl28")}</p>
-                        <p className="gray-c">{t("ASfQxuq")}</p>
-                        <Link to={"/sw-playground"} className="fit-container">
-                          <button className=" fx-centered btn-normal btn option pointer btn-full">
-                            {t("Axeyl28")}
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18  bg-sp fx">
-                      {/* <div className="round-icon">
-                    <div className="posts-24"></div>
-                  </div> */}
-                      <div className="fx-centered fx-col fx-start-h fx-start-v">
-                        <p className="p-big p-bold">{t("ADuxxCf")}</p>
-                        <p className="gray-c">{t("Afi8Kwg")}</p>
-                        <div className="fit-container fx-centered ">
-                          <Link
-                            to={
-                              "https://github.com/search?q=topic%3Asmart-widget+org%3AYakiHonne&type=Repositories"
-                            }
-                            target="_blank"
-                          >
-                            <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer fx">
-                              <div className="github-logo"></div>
-                              {t("AvcFvUD")}
-                            </div>
-                          </Link>
-                          <Link to={"/docs/sw/intro"}>
-                            <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
-                              <div className="posts"></div>
-                              {t("As9snfY")}
-                            </div>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              <div style={{ height: "7px" }}></div>
-              <hr />
-              <hr />
-            </div>
-            <div
-              style={{
-                width: "min(100%, 600px)",
-              }}
-              className="fx-centered fx-col fx-start-v box-pad-h-m"
-            >
-              {searchKeyword && (
-                <div className="fit-container fx-scattered">
-                  <h4>
-                    <span className="gray-c">{t("AWJ9AGo")}</span>{" "}
-                    {searchKeyword}
-                  </h4>
-                  <div
-                    className="close"
-                    style={{ position: "static" }}
-                    onClick={() => setSearchKeyword("")}
-                  >
-                    <div></div>
+              <div className="fit-container fx-centered fx-stretch">
+                <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx">
+                  <div className="fx-centered fx-col fx-start-h fx-start-v">
+                    <p className="p-big p-bold">{t("Axeyl28")}</p>
+                    <p className="gray-c">{t("ASfQxuq")}</p>
+                    <Link to={"/sw-playground"} className="fit-container">
+                      <button className=" fx-centered btn-normal btn option pointer btn-full">
+                        {t("Axeyl28")}
+                      </button>
+                    </Link>
                   </div>
                 </div>
-              )}
-              <SWSet external={searchKeyword} />
+                <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18  bg-sp fx">
+                  <div className="fx-centered fx-col fx-start-h fx-start-v">
+                    <p className="p-big p-bold">{t("ADuxxCf")}</p>
+                    <p className="gray-c">{t("Afi8Kwg")}</p>
+                    <div className="fit-container fx-centered ">
+                      <Link
+                        to={
+                          "https://github.com/search?q=topic%3Asmart-widget+org%3AYakiHonne&type=Repositories"
+                        }
+                        target="_blank"
+                        className="fx"
+                      >
+                        <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer fx">
+                          <div className="github-logo"></div>
+                          <p style={{ minWidth: "max-content" }}>
+                            {t("AvcFvUD")}
+                          </p>
+                        </div>
+                      </Link>
+                      <Link to={"/docs/sw/intro"} className="fx">
+                        <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
+                          <div className="posts"></div>
+                          <p style={{ minWidth: "max-content" }}>
+                            {t("As9snfY")}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          <div style={{ height: "7px" }}></div>
+          <hr />
+          <hr />
+        </div>
+        <div
+          style={{
+            // width: "min(100%, 600px)",
+          }}
+          className="fx-centered fx-col fx-start-v box-pad-h-m fit-container"
+        >
+          {searchKeyword && (
+            <div className="fit-container fx-scattered">
+              <h4>
+                <span className="gray-c">{t("AWJ9AGo")}</span> {searchKeyword}
+              </h4>
+              <div
+                className="close"
+                style={{ position: "static" }}
+                onClick={() => setSearchKeyword("")}
+              >
+                <div></div>
+              </div>
             </div>
-          </>
-        )}
+          )}
+          <SWSet external={searchKeyword} />
+        </div>
       </div>
     </main>
   );
@@ -326,7 +303,7 @@ const SWSet = ({ external }) => {
     setType(t);
     setLastEventTimestamp(undefined);
     setActions([]);
-    setEnded(false)
+    setEnded(false);
   };
 
   return (
@@ -335,22 +312,16 @@ const SWSet = ({ external }) => {
         <LaunchSW metadata={selectedSW} exit={() => setSelectedSW("")} />
       )}
       <div className="fit-container">
-        {/* {((!external && actions.length > 0) ||
-          (external && searchedTools.length > 0)) && (
-          <p className="gray-c box-pad-v-s">{t("AQ3VGVk")}</p>
-        )} */}
         <div className="fit-container fx-start-h fx-wrap fx-centered">
           {!external && (
             <div
               className="fit-container fx-centered fx-start-h sticky box-pad-h"
               style={{
                 top: "-1px",
-                // padding: "1rem",
                 paddingTop: 0,
                 paddingBottom: 0,
                 columnGap: 0,
                 borderBottom: "1px solid var(--very-dim-gray)",
-                // borderTop: "1px solid var(--very-dim-gray)",
               }}
             >
               <div
@@ -437,184 +408,7 @@ const SWSet = ({ external }) => {
   );
 };
 
-const ChatWindow = ({ message, setMessage, setStatus }) => {
-  const userKeys = useSelector((state) => state.userKeys);
-  const [messages, setMessages] = useState(getSavedConversation(userKeys.pub));
-  const [loading, setLoading] = useState(false);
-  const [stopSnapping, setStopSnapping] = useState(false);
-  const containerRef = useRef(null);
-  useEffect(() => {
-    if (message) handleSend(message);
-  }, [message]);
-
-  useEffect(() => {
-    if (containerRef.current && !stopSnapping) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const atBottom =
-        Math.abs(
-          container.scrollHeight - container.scrollTop - container.clientHeight
-        ) <= 7;
-
-      if (!atBottom) {
-        setStopSnapping(true);
-      } else {
-        setStopSnapping(false);
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll);
-
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-    };
-  }, [containerRef]);
-
-  const handleSend = async (input) => {
-    if (!input.trim()) return;
-
-    const newMessages = [
-      ...messages,
-      { role: "user", content: input, created_at: Date.now() },
-    ];
-    setMessages(newMessages);
-    setMessage("");
-    setLoading(true);
-    setStatus(false);
-    try {
-      const res = await axios.post("https://yakiai.yakihonne.com/api/v1/ai", {
-        input,
-      });
-
-      const data = res.data.message.content;
-      saveConversation(userKeys.pub, [
-        ...newMessages,
-        { role: "assistant", content: data, created_at: Date.now() },
-      ]);
-      if (stopSnapping) setStopSnapping(false);
-      setLoading(false);
-      animateTyping(data, newMessages);
-    } catch (err) {
-      console.log(err);
-      setStatus(true);
-      setLoading(false);
-    }
-  };
-
-  const animateTyping = (text, history) => {
-    const words = text.split(" ");
-    let index = 0;
-    let current = "";
-
-    const typing = () => {
-      if (index < words.length) {
-        current += (index === 0 ? "" : " ") + words[index++];
-        setMessages([
-          ...history,
-          { role: "assistant", content: current, created_at: Date.now() },
-        ]);
-        setTimeout(typing, 30);
-      } else {
-        setLoading(false);
-        setStatus(true);
-      }
-    };
-
-    typing();
-  };
-
-  const handleCopyelement = (id) => {
-    const codeRef = document.getElementById(id);
-    if (!codeRef) return;
-    const codeText = codeRef.innerText;
-    copyText(codeText, t("AwszVHZ"));
-  };
-
-  return (
-    <div className="chat-container">
-      <div className="messages" ref={containerRef}>
-        {messages.map((msg, i) => (
-          <div key={i} className={`message-${msg.role}`}>
-            <ReactMarkdown
-              children={msg.content}
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={{
-                code({ node, inline, className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || "");
-                  const codeRef = nanoid();
-                  return !inline ? (
-                    <pre style={{ padding: "1rem 0" }}>
-                      <div
-                        className="sc-s-18 box-pad-v-s box-pad-h-m fit-container fx-scattered"
-                        style={{
-                          borderBottomRightRadius: 0,
-                          borderBottomLeftRadius: 0,
-                          position: "relative",
-                          top: "0px",
-                          position: "sticky",
-                          border: "none",
-                        }}
-                      >
-                        <p className="gray-c p-italic">
-                          {match?.length > 0 ? match[1] : ""}
-                        </p>
-                        <div
-                          className="copy pointer"
-                          onClick={() => {
-                            handleCopyelement(codeRef);
-                          }}
-                        ></div>
-                      </div>
-                      <code
-                        className={`hljs ${className}`}
-                        {...props}
-                        id={codeRef}
-                      >
-                        {children}
-                      </code>
-                    </pre>
-                  ) : (
-                    <code
-                      className="inline-code"
-                      {...props}
-                      style={{ margin: "1rem 0" }}
-                    >
-                      {children}
-                    </code>
-                  );
-                },
-              }}
-            />
-          </div>
-        ))}
-        {loading && (
-          <div
-            className="sc-s box-pad-h-m box-pad-v-m"
-            style={{ width: "60px", border: "none" }}
-          >
-            <LoadingDots />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-function InputField({
-  status = true,
-  handleSearch,
-  searchType,
-  setSearchType,
-  setSearchKeyword,
-}) {
+function InputField({ status = true, handleSearch }) {
   const [searchKeywordInput, setSearchKeywordInput] = useState("");
   const inputFieldRef = useRef(null);
 
@@ -657,9 +451,9 @@ function InputField({
 
   return (
     <div
-      className="sc-s box-pad-h-s box-pad-v-s fx-centered fx-col sw-search-box"
+      className="sc-s box-pad-h-s box-pad-v-s fx-centered fx-col sw-search-box fit-container"
       style={{
-        width: "min(100%, 600px)",
+        // width: "min(100%, 600px)",
         cursor: status ? "unset" : "not-allowed",
         overflow: "visible",
       }}
@@ -667,7 +461,7 @@ function InputField({
     >
       <form
         onSubmit={(e) => {
-          if (status && searchType !== 1) {
+          if (status) {
             setSearchKeywordInput("");
             handleSearch(e, searchKeywordInput);
           }
@@ -677,15 +471,13 @@ function InputField({
       >
         <textarea
           type="text"
-          className={`if ifs-full if-no-border ${
-            status && searchType !== 1 ? "" : "if-disabled"
-          }`}
+          className={`if ifs-full if-no-border ${status ? "" : "if-disabled"}`}
           value={searchKeywordInput}
           onChange={handleTyping}
-          placeholder={searchType === 0 ? t("A3IdSmf") : t("AmClLqP")}
+          placeholder={t("A3IdSmf")}
           ref={inputFieldRef}
           onKeyDown={handleKeyDown}
-          disabled={!(status && searchType !== 1)}
+          disabled={!status}
           style={{
             padding: "1rem 0rem 1rem 1rem",
             height: "20px",
@@ -701,15 +493,8 @@ function InputField({
               status ? "option pointer" : "if-disabled"
             } fx-centered`}
             style={{
-              backgroundColor: !searchType ? "var(--pale-gray)" : "",
+              backgroundColor: "var(--pale-gray)",
             }}
-            // onClick={() => {
-            //   if (status) {
-            //     setSearchType(0);
-            //     setSearchKeyword("");
-            //     setSearchKeywordInput("");
-            //   }
-            // }}
             to={"/smart-widgets"}
           >
             <div className="search"></div>
@@ -720,15 +505,8 @@ function InputField({
               status ? "option pointer" : "if-disabled"
             } fx-centered`}
             style={{
-              backgroundColor: searchType ? "var(--pale-gray)" : "",
+              backgroundColor: "",
             }}
-            // onClick={() => {
-            //   if (status) {
-            //     setSearchType(1);
-            //     setSearchKeyword("");
-            //     setSearchKeywordInput("");
-            //   }
-            // }}
             to={"/sw-ai"}
           >
             <div className="ringbell"></div>

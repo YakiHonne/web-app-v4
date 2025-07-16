@@ -1,5 +1,6 @@
 import { finalizeEvent } from "nostr-tools";
 import axiosInstance from "./HTTP_Client";
+import { InitEvent } from "./Controlers";
 
 const getZapEventRequest = async (userKeys, content, tags = [], created_at) => {
   let event = {
@@ -8,16 +9,14 @@ const getZapEventRequest = async (userKeys, content, tags = [], created_at) => {
     created_at: created_at || Math.floor(Date.now() / 1000),
     tags,
   };
-  if (userKeys.ext) {
-    try {
-      event = await window.nostr.signEvent(event);
-    } catch {
-      return false;
-    }
-  } else {
-    event = finalizeEvent(event, userKeys.sec);
-  }
-  return encodeURI(JSON.stringify(event));
+  let eventInitEx = await InitEvent(
+    event.kind,
+    event.content,
+    event.tags,
+    event.created_at
+  );
+  if (!eventInitEx) return;
+  return encodeURI(JSON.stringify(eventInitEx));
 };
 
 const uploadToS3 = async (img, pubkey) => {

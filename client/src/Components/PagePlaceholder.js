@@ -145,6 +145,25 @@ export default function PagePlaceholder({ page, onClick = null }) {
         </div>
       </div>
     );
+  if (page === "nostr-bunker-dms")
+    return (
+      <div className="fit-container">
+        <div className="fx-centered fx-col" style={{ height: "100vh" }}>
+          <h2 className="box-marg-s p-centered">{t("AlNe9hu")}</h2>
+          <p className="p-centered gray-c" style={{ maxWidth: "450px" }}>
+            {t("AIJ7nCM")}
+          </p>
+          <div
+            className="bg-img contained-bg"
+            style={{
+              backgroundImage: `url(${HeroNostrunauthorizedMessages})`,
+              width: "min(300px, 500px)",
+              height: "300px",
+            }}
+          ></div>
+        </div>
+      </div>
+    );
   if (page === "nostr-DMS")
     return (
       <div className="fit-container">
@@ -204,7 +223,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
             >
               {t("ATSLvF2")}
             </p>
-            {userKeys && (userKeys.ext || userKeys.sec) && (
+            {userKeys && (userKeys.ext || userKeys.sec || userKeys.bunker) && (
               <button
                 className="btn btn-normal"
                 onClick={() => setShowYakiChest(true)}

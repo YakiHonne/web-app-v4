@@ -69,7 +69,7 @@ export default function NProfilePreviewer({
         </div>
       </div>
       {!close && showSharing && (
-        <Link to={`/users/${getBech32("npub", pubkey)}`} target="_blank">
+        <Link to={`/users/${nip19.nprofileEncode({ pubkey })}`} target="_blank">
           <div className="share-icon-24"></div>
         </Link>
       )}

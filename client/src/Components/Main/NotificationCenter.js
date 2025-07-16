@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import NumberShrink from "../NumberShrink";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
-import { getCustomSettings } from "../../Helpers/Helpers";
+import { getCustomSettings, getWotConfig } from "../../Helpers/Helpers";
 import { getWOTScoreForPubkeyLegacy } from "../../Helpers/Encryptions";
 
 export default function NotificationCenter({
@@ -28,6 +28,7 @@ export default function NotificationCenter({
 
   useEffect(() => {
     const fetchData = async () => {
+      let { score, notifications } = getWotConfig();
       let localStorageKey = `new-notification-${userKeys.pub}`;
       setNotifications(
         localStorage.getItem(localStorageKey)
@@ -57,8 +58,12 @@ export default function NotificationCenter({
 
       sub.on("event", (event) => {
         try {
-          let score = getWOTScoreForPubkeyLegacy(event.pubkey).status;
-          if (!(userMutedList || []).includes(event.pubkey) && score) {
+          let scoreStatus = getWOTScoreForPubkeyLegacy(
+            event.pubkey,
+            notifications,
+            score
+          ).status;
+          if (!(userMutedList || []).includes(event.pubkey) && scoreStatus) {
             let checkForLabel = event.tags.find((tag) => tag[0] === "l");
             let isUncensored = checkForLabel
               ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(

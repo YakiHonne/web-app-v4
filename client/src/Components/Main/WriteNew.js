@@ -29,7 +29,7 @@ export default function WriteNew({ exit }) {
         className="btn btn-full btn-orange fx-centered "
         style={{ padding: 0 }}
         onClick={() =>
-          !(userKeys.ext || userKeys.sec)
+          !(userKeys.ext || userKeys.sec || userKeys.bunker)
             ? setIsLogin(true)
             : setRedirectLinks(true)
         }

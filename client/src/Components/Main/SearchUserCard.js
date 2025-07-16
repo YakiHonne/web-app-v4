@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
 import UserProfilePic from "./UserProfilePic";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 export default function SearchUserCard({ user, url, exit }) {
+  const { t } = useTranslation();
+  const userFollowings = useSelector((state) => state.userFollowings);
   const [verified, setVerified] = useState(false);
+  const isFollowing = useMemo(() => {
+    return userFollowings.includes(user.pubkey);
+  }, [userFollowings]);
 
   useEffect(() => {
     const verifyUser = async () => {
@@ -45,6 +52,11 @@ export default function SearchUserCard({ user, url, exit }) {
                   {user.display_name || user.name}
                 </p>
                 {verified && <div className="checkmark-c1"></div>}
+                 {isFollowing && (
+                <div className="sticker sticker-small sticker-gray-black">
+                  {t("AOwS3ca")}
+                </div>
+              )}
               </div>
               <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
                 {user.nip05 || "N/A"}
@@ -76,6 +88,11 @@ export default function SearchUserCard({ user, url, exit }) {
                 {user.display_name || user.name}
               </p>
               {verified && <div className="checkmark-c1"></div>}
+              {isFollowing && (
+                <div className="sticker sticker-small sticker-gray-black">
+                  {t("AOwS3ca")}
+                </div>
+              )}
             </div>
             <p className={`${verified ? "" : "gray-c"} p-medium p-one-line`}>
               {user.nip05 || "N/A"}

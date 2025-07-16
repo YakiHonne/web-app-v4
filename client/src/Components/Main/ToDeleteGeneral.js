@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import { InitEvent } from "../../Helpers/Controlers";
 
 export default function ToDeleteGeneral({
   title,
@@ -14,7 +15,6 @@ export default function ToDeleteGeneral({
   refresh,
   cancel,
 }) {
-
   const dispatch = useDispatch();
   const userRelays = useSelector((state) => state.userRelays);
   const userKeys = useSelector((state) => state.userKeys);
@@ -33,26 +33,16 @@ export default function ToDeleteGeneral({
         content: "This event will be deleted!",
         tags: [["e", eventId]],
       };
-      if (userKeys.ext) {
-        try {
-          tempEvent = await window.nostr.signEvent(tempEvent);
-        } catch (err) {
-          console.log(err);
-          dispatch(
-            setToast({
-              type: 2,
-              desc: t("AT94ell"),
-            })
-          );
-          setIsLoading(false);
-          return false;
-        }
-      } else {
-        tempEvent = finalizeEvent(tempEvent, userKeys.sec);
-      }
+      let eventInitEx = await InitEvent(
+        tempEvent.kind,
+        tempEvent.content,
+        tempEvent.tags,
+        tempEvent.created_at
+      );
+      if (!eventInitEx) return;
       dispatch(
         setToPublish({
-          eventInitEx: tempEvent,
+          eventInitEx: eventInitEx,
           allRelays: relaysToPublish,
           aTag,
         })
