@@ -7,6 +7,7 @@ import {
   addWidgetPathToUrl,
   assignClientTag,
   extractRootDomain,
+  getWallets,
 } from "../../Helpers/Helpers";
 import { setToast } from "../../Store/Slides/Publishers";
 import { useTranslation } from "react-i18next";
@@ -28,6 +29,7 @@ import UserProfilePic from "../../Components/Main/UserProfilePic";
 import LoadingDots from "../../Components/LoadingDots";
 import UploadFile from "../../Components/UploadFile";
 import UserSearchBar from "../../Components/UserSearchBar";
+import PaymentGateway from "../../Components/Main/PaymentGateway";
 
 export default function Playground() {
   return (
@@ -203,7 +205,7 @@ const Main = () => {
                   data-tooltip={"Refresh"}
                   onClick={() => {
                     setSetRefresh(Date.now());
-                    setReceivedLogs([])
+                    setReceivedLogs([]);
                   }}
                 >
                   <div className="switch-arrows-v2"></div>
@@ -334,9 +336,10 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
   const dispatch = useDispatch();
   const userRelays = useSelector((state) => state.userRelays);
   const userMetadata = useSelector((state) => state.userMetadata);
+  const wallets = getWallets();
   const iframeRef = useRef(null);
 
-  const [customData, setCustomData] = useState("");
+  const [paymentPayload, setPaymentPayload] = useState("");
 
   useEffect(() => {
     let listener;
@@ -346,14 +349,18 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
         if (event?.kind === "app-loaded") {
           if (userMetadata) {
             SWHandler.host.sendContext(
-              userMetadata,
+              { ...userMetadata, hasWallet: wallets.length > 0 },
               window.location.origin,
               url,
               iframeRef.current
             );
             setReceivedLogs((prev) => [
               ...prev,
-              { data: userMetadata, kind: "user-metadata", client: false },
+              {
+                data: { ...userMetadata, hasWallet: wallets.length > 0 },
+                kind: "user-metadata",
+                client: false,
+              },
             ]);
           }
           if (!userMetadata) {
@@ -465,8 +472,8 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
             );
           }
         }
-        if (event?.kind === "custom-data") {
-          setCustomData(event.data);
+        if (event?.kind === "payment-request") {
+          setPaymentPayload(event.data);
         }
       });
     }
@@ -482,31 +489,54 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
     if (refresh) iframeRef.current.src = url;
   }, [refresh]);
 
+  const handlePaymentResponse = (data) => {
+    SWHandler.host.sendPaymentResponse(data, url, iframeRef.current);
+    setReceivedLogs((prev) => [
+      ...prev,
+      {
+        data: { ...data, preImage: data.preImage || "" },
+        kind: "payment-response",
+        client: false,
+      },
+    ]);
+  };
   return (
-    <section
-      className="fx-centered fx-col"
-      style={{
-        width: "400px",
-        borderRadius: "10px",
-        overflow: "hidden",
-        backgroundColor: "#343434",
-        gap: 0,
-      }}
-    >
-      <div className="fit-container fx-centered">
-        <iframe
-          ref={iframeRef}
-          src={url}
-          allow="microphone; camera; clipboard-write 'src'"
-          sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
-          style={{ aspectRatio: "10/16" }}
-          className="fit-container fit-height sc-s-18"
-        ></iframe>
-      </div>
-      <div className="fit-container box-pad-v-s box-pad-h-s">
-        <ManifestFile url={url} />
-      </div>
-    </section>
+    <>
+      {paymentPayload && (
+        <PaymentGateway
+          recipientAddr={paymentPayload.address}
+          paymentAmount={paymentPayload.amount}
+          recipientPubkey={paymentPayload.nostrPubkey}
+          nostrEventIDEncode={paymentPayload.nostrEventIDEncode}
+          exit={() => setPaymentPayload("")}
+          setConfirmPayment={handlePaymentResponse}
+        />
+      )}
+      <section
+        className="fx-centered fx-col"
+        style={{
+          width: "400px",
+          borderRadius: "10px",
+          overflow: "hidden",
+          backgroundColor: "#343434",
+          gap: 0,
+        }}
+      >
+        <div className="fit-container fx-centered">
+          <iframe
+            ref={iframeRef}
+            src={url}
+            allow="microphone; camera; clipboard-write 'src'"
+            sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
+            style={{ aspectRatio: "10/16" }}
+            className="fit-container fit-height sc-s-18"
+          ></iframe>
+        </div>
+        <div className="fit-container box-pad-v-s box-pad-h-s">
+          <ManifestFile url={url} />
+        </div>
+      </section>
+    </>
   );
 };
 

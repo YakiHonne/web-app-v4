@@ -246,14 +246,13 @@ export default function Wallet() {
       setIsLoading(true);
       const nwc = new webln.NWC({ nostrWalletConnectUrl: activeWallet.data });
       await nwc.enable();
-      const ONE_WEEK_IN_SECONDS = 60 * 60 * 24 * 7;
+      const ONE_WEEK_IN_SECONDS = 60 * 60 * 24 * 90;
 
       const userBalance_ = await nwc.getBalance();
-
       dispatch(setUserBalance(userBalance_.balance));
       const transactions_ = await nwc.listTransactions({
-        // from: Math.floor(new Date().getTime() / 1000 - ONE_WEEK_IN_SECONDS),
-        // until: Math.ceil(new Date().getTime() / 1000),
+        from: Math.floor(new Date().getTime() / 1000 - ONE_WEEK_IN_SECONDS),
+        until: Math.ceil(new Date().getTime() / 1000),
         limit: 50,
       });
       let sendersMetadata = transactions_.transactions

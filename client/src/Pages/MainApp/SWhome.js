@@ -277,7 +277,7 @@ const SWSet = ({ external }) => {
       const data = await getSubData([
         {
           kinds: [30033],
-          limit: 10,
+          limit: 20,
           until: lastEventTimestamp,
           "#l": type === "tool" ? ["tool", "action"] : ["basic"],
         },

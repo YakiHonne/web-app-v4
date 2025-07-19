@@ -274,7 +274,7 @@ export default function PagePlaceholder({ page, onClick = null }) {
         <div className="fit-container fx-centered">
           <div
             className="fx-centered fx-col"
-            style={{ height: "80vh", rowGap: "24px" }}
+            style={{ height: onClick ? "80vh" : "auto", rowGap: "24px" }}
           >
             <div style={{ position: "relative" }}>
               <div className="round-icon" style={{ width: "140px" }}>
@@ -318,12 +318,14 @@ export default function PagePlaceholder({ page, onClick = null }) {
             <p className="p-centered gray-c" style={{ maxWidth: "400px" }}>
               {t("AToSVHy")}
             </p>
-            <button
-              className="btn btn-orange fx-centered"
-              onClick={() => setShowAddWallet(!showAddWallet)}
-            >
-              <div className="plus-sign"></div> {t("A8fEwNq")}
-            </button>
+            {onClick && (
+              <button
+                className="btn btn-orange fx-centered"
+                onClick={() => setShowAddWallet(!showAddWallet)}
+              >
+                <div className="plus-sign"></div> {t("A8fEwNq")}
+              </button>
+            )}
           </div>
         </div>
       </>

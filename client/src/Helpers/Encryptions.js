@@ -89,8 +89,8 @@ const getEmptyEventStats = (eventID) => {
 };
 const getEmptyuserMetadata = (pubkey) => {
   return {
-    name: getBech32("npub", pubkey).substring(0, 10),
-    display_name: getBech32("npub", pubkey).substring(0, 10),
+    name: pubkey ? getBech32("npub", pubkey).substring(0, 10) : "",
+    display_name: pubkey ? getBech32("npub", pubkey).substring(0, 10) : "",
     picture: "",
     banner: "",
     about: "",
