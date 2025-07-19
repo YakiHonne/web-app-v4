@@ -576,7 +576,7 @@ const Cashier = ({
             >
               {selectedWallet && (
                 <div
-                  className="if fx-scattered option pointer fit-container"
+                  className="box-pad-h-m box-pad-v-s sc-s-18 bg-sp fx-scattered option pointer fit-container"
                   onClick={() => setShowWalletList(!showWalletsList)}
                 >
                   <div>
