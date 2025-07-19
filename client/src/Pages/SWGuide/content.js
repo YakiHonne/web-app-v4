@@ -1954,6 +1954,23 @@ function PublishForm() {
 }
 \`\`\`
 
+### Requesting Payment
+
+Request the host to initiate a Lightning payment:
+
+\`\`\`js
+import SWHandler from "smart-widget-handler";
+
+const paymentRequest = {
+  address: "lnbc1...", // or LNURL, or Lightning address
+  amount: 1000, // sats (ignored if address is a BOLT11 invoice)
+  nostrPubkey: "npub1example...", // optional
+  nostrEventIDEncode: "note1example...", // optional
+};
+
+SWHandler.client.requestPayment(paymentRequest, "https://myapp.com");
+\`\`\`
+
 ### Send Custom Data
 
 Send custom string data to the parent:
@@ -2070,7 +2087,8 @@ function App() {
     nip05: 'user@example.com',
     lud16: 'user@lightning.wallet',
     lud06: 'lightning:address',
-    website: 'https://example.com'
+    website: 'https://example.com',
+    hasWallet: false // optional for when the connected user has at least one conencted wallet
   };
   
   return (
@@ -2157,6 +2175,22 @@ function WidgetWithErrorHandling() {
   );
 }
 \`\`\`
+
+### Sending Payment Response
+
+Send a payment response from the host to the client:
+
+\`\`\`js
+import SWHandler from "smart-widget-handler";
+
+const paymentResponse = {
+  status: true, // true for success, false for error
+  preImage: "abcdef123456...", // optional, only for successful payments
+};
+
+SWHandler.host.sendPaymentResponse(paymentResponse, "https://trusted-widget.com", <YOUR_IFRAME_ELEMENT>);
+\`\`\`
+
 
 ## Complete Example
 
@@ -2366,6 +2400,25 @@ Smart Widget Handler includes TypeScript definitions for all functions and inter
 | \`sendEvent(context, status, origin, iframe)\` | Send Nostr event | \`context\`: Nostr event object<br>\`status\`: 'success' or 'error'<br>\`origin\`: Iframe origin<br>\`iframe\`: Iframe element |
 | \`sendError(errMessage, origin, iframe)\` | Send error message | \`errMessage\`: Error message string<br>\`origin\`: Iframe origin<br>\`iframe\`: Iframe element |
 
+### Message Types
+
+The library uses different message types identified by the \`data.kind\` property to handle various communication scenarios between host and client. Here's a comprehensive list of all available message types:
+
+| Message Type | Direction | Description |
+|-------------|-----------|-------------|
+| \`user-metadata\` | Host → Client | Contains Nostr account information of the connected user |
+| \`nostr-event\` | Host → Client | Contains a signed and/or published Nostr event |
+| \`err-msg\` | Host → Client | Contains an error message from the host |
+| \`payment-response\` | Host → Client | Contains the result of a payment request (success/failure) |
+| \`app-loaded\` | Client → Host | Notifies the host that the client widget is loaded and ready |
+| \`sign-event\` | Client → Host | Requests the host to sign a Nostr event |
+| \`sign-publish\` | Client → Host | Requests the host to sign and publish a Nostr event |
+| \`payment-request\` | Client → Host | Requests the host to make a Lightning payment |
+| \`custom-data\` | Client → Host | Contains custom data sent from the client to the host |
+
+When implementing listeners with \`SWHandler.host.listen()\` or \`SWHandler.client.listen()\`, you can filter and handle these message types based on your application's needs.
+
+
 ## Use Cases
 
 - **Nostr Widgets**: Create widgets that can request signing or publishing of events
@@ -2427,6 +2480,13 @@ Smart Widget Handler includes TypeScript definitions for all functions and inter
             }),
           },
           {
+            title: "Requesting Payment",
+            id: slugify("Requesting Payment", {
+              lower: true,
+              strict: true,
+            }),
+          },
+          {
             title: "Send Custom Data",
             id: slugify("Send Custom Data", {
               lower: true,
@@ -2466,6 +2526,13 @@ Smart Widget Handler includes TypeScript definitions for all functions and inter
           {
             title: "Send Error",
             id: slugify("Send Error", {
+              lower: true,
+              strict: true,
+            }),
+          },
+          {
+            title: "Sending Payment Response",
+            id: slugify("Sending Payment Response", {
               lower: true,
               strict: true,
             }),
@@ -2511,6 +2578,13 @@ Smart Widget Handler includes TypeScript definitions for all functions and inter
           {
             title: "Host",
             id: slugify("Host", {
+              lower: true,
+              strict: true,
+            }),
+          },
+          {
+            title: "Message Types",
+            id: slugify("Message Types", {
               lower: true,
               strict: true,
             }),

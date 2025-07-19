@@ -78,7 +78,7 @@
     "remark-gfm": "^3.0.1",
     "remark-parse": "^10.0.1",
     "slugify": "^1.6.6",
-    "smart-widget-handler": "^1.0.27",
+    "smart-widget-handler": "^1.0.34",
     "smart-widget-previewer": "^1.0.18",
     "unified": "^10.1.2",
     "url": "^0.11.4",

@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { InitEvent, publishEvent } from "../../Helpers/Controlers";
 import OptionsDropdown from "./OptionsDropdown";
 import PostAsNote from "./PostAsNote";
+import PaymentGateway from "./PaymentGateway";
 
 export default function MiniApp({ url, exit, setReturnedData }) {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
   const iframeRef = useRef(null);
 
   const [customData, setCustomData] = useState("");
-
+  const [paymentPayload, setPaymentPayload] = useState("");
   const reloadiFrame = () => {
     iframeRef.current.src = url;
   };
@@ -105,12 +106,19 @@ export default function MiniApp({ url, exit, setReturnedData }) {
           setCustomData(event.data);
           setReturnedData && setReturnedData(event.data);
         }
+        if (event?.kind === "payment-request") {
+          setPaymentPayload(event.data);
+        }
       });
     }
     return () => {
       if (listener) listener.close();
     };
   }, [iframeRef.current]);
+
+  const handlePaymentResponse = (data) => {
+    SWHandler.host.sendPaymentResponse(data, url, iframeRef.current);
+  };
 
   const copyURL = () => {
     navigator.clipboard.writeText(url);
@@ -127,6 +135,16 @@ export default function MiniApp({ url, exit, setReturnedData }) {
 
   return (
     <>
+      {paymentPayload && (
+        <PaymentGateway
+          recipientAddr={paymentPayload.address}
+          paymentAmount={paymentPayload.amount}
+          recipientPubkey={paymentPayload.nostrPubkey}
+          nostrEventIDEncode={paymentPayload.nostrEventIDEncode}
+          exit={() => setPaymentPayload("")}
+          setConfirmPayment={handlePaymentResponse}
+        />
+      )}
       <div
         className="fixed-container fx-centered box-pad-h"
         onClick={(e) => {
