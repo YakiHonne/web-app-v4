@@ -6,6 +6,7 @@ import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
 import {
+  compactContent,
   getAppLang,
   getCustomSettings,
   getKeys,
@@ -431,7 +432,7 @@ const enableTranslation = async (text) => {
   }
 };
 
-const getParsedNote = async (event, isCollapsedNote = false) => {
+const getParsedNote =  (event, isCollapsedNote = false) => {
   try {
     let isNoteLong = event.content.split(" ").length > 150;
     let isCollapsedNoteEnabled = getCustomSettings().collapsedNote;
@@ -469,7 +470,8 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
       : [];
 
     if (event.kind === 1) {
-      let note_tree = await getNoteTree(
+      // let note_tree = compactContent(event.content, event.pubkey);
+      let note_tree =  getNoteTree(
         event.content,
         undefined,
         isCollapsedNote_,
@@ -493,7 +495,11 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
 
     if (event.kind === 6) {
       if (!event.content) return;
-      let relatedEvent = await getParsedNote(JSON.parse(event.content), true);
+      // let relatedEvent = compactContent(
+      //   JSON.parse(event.content).content,
+      //   JSON.parse(event.content).pubkey
+      // );
+      let relatedEvent =  getParsedNote(JSON.parse(event.content), true);
       if (!relatedEvent) return false;
       return {
         ...rawEvent,
@@ -626,25 +632,27 @@ const removeDuplicatedRelays = (list_1, list_2 = []) => {
   });
 };
 const removeObjDuplicants = (list_1, list_2 = []) => {
-  let tempArray = [...list_1, ...list_2];
-  return tempArray.filter((item, index, tempArray) => {
-    if (
-      tempArray.findIndex(
-        (item_1) => JSON.stringify(item_1) === JSON.stringify(item)
-      ) === index
-    )
-      return item;
-  });
+  const seen = new Set();
+  const result = [];
+  for (const item of [...list_1, ...list_2]) {
+    const str = JSON.stringify(item);
+    if (!seen.has(str)) {
+      seen.add(str);
+      result.push(item);
+    }
+  }
+  return result;
 };
 const removeEventsDuplicants = (list_1, list_2 = []) => {
-  let tempArray = [...list_1, ...list_2];
-  return tempArray.filter((item, index, tempArray) => {
-    if (
-      item.id &&
-      tempArray.findIndex((item_1) => item_1.id === item.id) === index
-    )
-      return item;
-  });
+  const seen = new Set();
+  const result = [];
+  for (const item of [...list_1, ...list_2]) {
+    if (item.id && !seen.has(item.id)) {
+      seen.add(item.id);
+      result.push(item);
+    }
+  }
+  return result;
 };
 const sortEvents = (events) => {
   return events.sort((ev_1, ev_2) => ev_2.created_at - ev_1.created_at);
@@ -1189,34 +1197,39 @@ const filterContent = (selectedFilter, list) => {
   };
 
   const testForNotes = (_) => {
-    let tags = _.tags.filter((tag) => tag[0] === "t").map((tag) => tag[1]);
-    let excluded_words = selectedFilter.excluded_words.length
-      ? !(
-          matchWords(_.content, selectedFilter.excluded_words) ||
-          matchWords(tags, selectedFilter.excluded_words)
-        )
-      : true;
-    let included_words = selectedFilter.included_words.length
-      ? matchWords(_.content, selectedFilter.included_words) ||
-        matchWords(tags, selectedFilter.included_words)
-      : true;
-
-    let posted_by = selectedFilter.posted_by.length
-      ? selectedFilter.posted_by.includes(_.pubkey)
-      : true;
-
-    let n_media_only =
-      _.kind === 1
-        ? !selectedFilter.media_only
-          ? true
-          : hasImageLinks(_.content)
-          ? true
-          : false
+    try {
+      let tags = _.tags.filter((tag) => tag[0] === "t").map((tag) => tag[1]);
+      let excluded_words = selectedFilter.excluded_words.length
+        ? !(
+            matchWords(_.content, selectedFilter.excluded_words) ||
+            matchWords(tags, selectedFilter.excluded_words)
+          )
+        : true;
+      let included_words = selectedFilter.included_words.length
+        ? matchWords(_.content, selectedFilter.included_words) ||
+          matchWords(tags, selectedFilter.included_words)
         : true;
 
-    if (excluded_words && included_words && posted_by && n_media_only)
-      return true;
-    return false;
+      let posted_by = selectedFilter.posted_by.length
+        ? selectedFilter.posted_by.includes(_.pubkey)
+        : true;
+
+      let n_media_only =
+        _.kind === 1
+          ? !selectedFilter.media_only
+            ? true
+            : hasImageLinks(_.content)
+            ? true
+            : false
+          : true;
+
+      if (excluded_words && included_words && posted_by && n_media_only)
+        return true;
+      return false;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
   };
 
   return list.filter((_) => {

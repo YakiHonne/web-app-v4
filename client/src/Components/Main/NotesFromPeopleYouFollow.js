@@ -22,7 +22,6 @@ export default function NotesFromPeopleYouFollow() {
       let pubkeys = Array.from(userFollowings);
       pubkeys = pubkeys.sort(() => 0.5 - Math.random()).slice(0, 10);
       let data = await getSubData([{ kinds: [1], authors: pubkeys, limit: 5 }]);
-      console.log(data.data.slice(0, 10));
       setNotes(data.data.slice(0, 10));
     };
     if (notes.length > 0 || userFollowings.length === 0) return;

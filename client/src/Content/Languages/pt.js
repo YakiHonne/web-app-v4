@@ -1278,5 +1278,99 @@ const portTranslation = {
   A492vpu: "Palavras incluídas",
   A07kVBP: "Palavras excluídas",
   AY0XZEx: "Postado por",
+  AdT5mza: "Adicione ao favorito",
+  Am4QHzR: "Retire do favorito",
+  AgZ9mO1: "Serviço ativo",
+  ATCstom: "Servidores regulares",
+  A0n1wDK: "Servidores de flor",
+  A3Ok2VN: "Servidores Blossom (nenhum servidor encontrado)",
+  AjCVBmz: "Selecione um servidor",
+  As9gwde: "Servidor principal",
+  AYpApBJ: "Selecione",
+  AoA6v9d: "Espelhe todos os servidores",
+  A2l1JgC: "URL inválido",
+  AHFsFp7: "nenhum servidor encontrado",
+  AlNe9hu: "As mensagens estão desativadas",
+  AIJ7nCM: "Você está conectado com um assinante remoto. ",
+  A9eQr6B: "Assinante remoto",
+  AJdT1m0: "Use o URL abaixo para se conectar ao seu bunker",
+  AB1PYvA: "Nostrconnect Uri foi copiado",
+  ACASAT7: "Web of Trust Configuration",
+  ATQOG8o: "Limite da Web of Trust",
+  AUSdCrV: "Habilitado",
+  Ad3ts4Q: "Pós -ações",
+  Aql44db: "Mensagens privadas",
+  AciF91F: "Relés de conteúdo",
+  AEsTMiq: "Mensagens privadas retransmíneas",
+  ArApykS: "Mensagens privadas Os relés não estão configurados!",
+  Alxsg82: "Atualize sua lista de relés de acordo.",
+  AOwS3ca: "Você segue",
+  QuotaLimit: "Você excedeu seu limite diário de cota",
+  AI8bhpw: "O pagamento falhou!",
+  A82pzWN: "Você está enviando",
+  ACOXf0z: "Incapaz de processar o pagamento. ",
+  ANOiCGe: "Enviando para uma fatura ..",
+  AXq8Vb3:
+    "Gerencie suas teclas NOSTR para identidade de rede, assinatura de eventos e pós -autenticação.",
+  AUE3WRD:
+    "Configure conexões de relé NOSTR para armazenar e distribuir eventos.",
+  A0yvMQi:
+    "Escolha o seu idioma preferido para a interface Yakihonne e a tradução de conteúdo.",
+  Aa4zlCA:
+    "Controle interações de conteúdo, configurações de privacidade, manuseio de mídia e preferências de mensagens no Nostr.",
+  A0ZZIE7:
+    "Conecte e gerencie as carteiras Lightning Bitcoin para enviar/receber zaps com quantidades personalizáveis e integração externa.",
+  AvNq0fB:
+    "Personalize sua exibição de feed, gestos, pré -visualizações e preferências de Yakihonne para uma melhor experiência na nariz.",
+  AHV4nwK:
+    "Gerencie o monitoramento do desempenho do aplicativo e a otimização de armazenamento para operação suave.",
+  Aayzo1w:
+    "Personalize a aparência visual de Yakihonne para corresponder às suas preferências e à visualização do conforto.",
+  AF2ceO1:
+    "Seu sistema personalizado de recompensas e desempenho que acompanha sua atividade e engajamento na plataforma Yakihonne.",
+  A9pRbqh: "Seguro de compartilhar - isso identifica você no Nostr.",
+  AnQpdZ9:
+    "Mantenha -se privado - faça backup com segurança para acessar sua conta em outro lugar.",
+  A2wrBnY: "Adicione rapidamente um novo relé inserindo seu URL",
+  AcPWRJ9: "Pontos verdes mostram conexões ativas",
+  AJQQGgT: "Pontos vermelhos indicam relés offline",
+  AugXNf5:
+    "Menos relés estáveis = melhor desempenho e sincronização mais rápida.",
+  AjTNn13:
+    "Escolha o idioma para a interface, menus e botões de Yakihonne (atualmente: inglês)",
+  A21tdwK:
+    "Selecione o serviço de tradução para postagens em idiomas estrangeiros (atualmente: LibreTranslate-focado na privacidade e grátis)",
+  AsYLJGY:
+    "Seu nível de tradução atual e limites de uso (atualmente: camada gratuita com recursos básicos de tradução)",
+  AYnXPtk:
+    "Veja e gerencie os usuários que você impediu de aparecer em seu feed",
+  ATtpr07:
+    "Escolha qual serviço carrega suas imagens e arquivos de mídia (atualmente: Nostr.build)",
+  AYKDD4g:
+    "Conecte e gerencie as carteiras Lightning Bitcoin para enviar/receber zaps com quantidades personalizáveis e integração externa.",
+  A3nTKfp:
+    "Nota de colapso: minimize automaticamente as postagens longas para manter seu feed limpo e legível.",
+  Ai5Sb3k:
+    "Escolha Responder o estilo de exibição (caixa ou tópico) e gerencie as preferências de sugestões para pessoas, conteúdo e interesses.",
+  A864200:
+    "Mostre visualizações de perfil de usuário quando o mouse sobre os nomes de usuário.",
+  Aaa8NMg:
+    "Notificações de controle para mensagens, menções, reações e outros eventos da nariz.",
+  AZknCuh:
+    "Um mecanismo de confiança descentralizado usando atestados sociais para estabelecer reputação dentro do protocolo Nostr.",
+  AyF6bJf:
+    "Seja alertado quando alguém mencionar ou responder às suas postagens",
+  AjlJkCH: "Seja notificado quando alguns gostos ou reagirem às suas postagens",
+  A9sfGZo: "Seja alertado quando alguém compartilha ou repasse seu conteúdo",
+  Ae82ooM:
+    "Seja notificado ao receber dicas de bitcoin (zaps) em suas postagens",
+  A5HyxxL:
+    "Seja notificado quando as pessoas que você segue postagem de novo conteúdo",
+  Am0PvQX:
+    "Gerenciar sugestões de conteúdo de Yakihonne em seu feed para postagens, pessoas e compartilhamento de perfis",
+  AgBOrIx: "Exiba recomendações gerais de conteúdo em seu feed.",
+  AyBFzxq: "Mostre usuários recomendados a seguir com base em sua atividade.",
+  ARDBNh7: "Exiba postagens e artigos recomendados em seu feed.",
+  AXgwD7C: "Mostre recomendações de tópico e interesse para descoberta.",
 };
 export default portTranslation;

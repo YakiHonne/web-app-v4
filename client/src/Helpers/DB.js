@@ -586,9 +586,7 @@ export const clearDB = () => {
             "clients",
           ].includes(table.name)
         )
-          table.clear().then(() => {
-            console.log(`${table.name} cleared`);
-          });
+          table.clear();
       });
     }
   } catch (err) {
@@ -620,7 +618,6 @@ export const removeRecordFromNDKStore = async (id) => {
     if (ndkdb) {
       await ndkdb.open();
       await ndkdb.events.delete(id);
-      console.log("deleted", id);
     }
   } catch (err) {
     console.log(err);
@@ -688,7 +685,6 @@ export const getInboxRelaysForUser = async (pubkey) => {
         .map((_) => _[1]);
       savefollowingsInboxRelays([{ pubkey, relays: relaysList }]);
       return relaysList;
-
     }
     return [];
   } catch (err) {

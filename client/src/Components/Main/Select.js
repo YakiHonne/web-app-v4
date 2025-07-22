@@ -36,7 +36,7 @@ export default function Select({
     >
       <div
         className="fit-container fx-scattered if option pointer"
-        style={{ height: "var(--40)", padding: "1rem" }}
+        style={{ height: "var(--40)", padding: "1rem", minWidth: "max-content" }}
         onClick={() => (disabled ? null : setShowOptions(!showOptions))}
       >
         <div className="fx-centered">

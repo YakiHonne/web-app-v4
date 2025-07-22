@@ -88,14 +88,14 @@ export default function SmartWidgetsV2() {
       { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
     );
 
-    subscription.on("event", async (event) => {
+    subscription.on("event", (event) => {
       try {
         if (limit >= 6) {
           subscription.stop();
           return;
         }
         limit += 1;
-        let parsedContent = await getNoteTree(
+        let parsedContent = getNoteTree(
           event.content,
           true,
           undefined,

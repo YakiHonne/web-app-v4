@@ -28,6 +28,8 @@ import LinkPreview from "../Components/Main/LinkPreview";
 import Gallery from "../Components/Main/Gallery";
 import MACIPollPreview from "../Components/Main/MACIPollPreview";
 import { InitEvent } from "./Controlers";
+import LinkInspector from "../Components/LinkInspector";
+import VideoLoader from "../Components/Main/VideoLoader";
 
 const LoginToAPI = async (publicKey, userKeys) => {
   try {
@@ -114,30 +116,64 @@ const isVid = (url) => {
   return false;
 };
 
-const isImageUrl = async (url) => {
+const isImageUrl = (url) => {
+  // try {
+  //   return new Promise((resolve, reject) => {
+  //     if (
+  //       url.startsWith("data:image") ||
+  //       /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url)
+  //     )
+  //       resolve({ type: "image" });
+  //     if (/(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(url))
+  //       resolve({ type: "video" });
+  //     const img = new Image();
+
+  //     img.onload = () => {
+  //       resolve({ type: "image" });
+  //     };
+
+  //     img.onerror = () => {
+  //       resolve(false);
+  //     };
+
+  //     img.src = url;
+  //   });
+  // } catch (error) {
+  //   console.error(`Error checking URL ${url}:`, error);
+  //   return false;
+  // }
+
   try {
-    return new Promise((resolve, reject) => {
-      if (
-        url.startsWith("data:image") ||
-        /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url)
-      )
-        resolve({ type: "image" });
-      if (/(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(url))
-        resolve({ type: "video" });
-      const img = new Image();
+    // Data URLs
+    if (/^data:image/.test(url)) return { type: "image" };
+    if (/^data:video/.test(url)) return { type: "video" };
 
-      img.onload = () => {
-        resolve({ type: "image" });
-      };
+    // By extension
+    if (/(https?:\/\/[^ ]*\.(gif|png|jpg|jpeg|webp))/i.test(url))
+      return { type: "image" };
+    if (/(https?:\/\/[^ ]*\.(mp4|mov|webm|ogg|avi))/i.test(url))
+      return { type: "video" };
 
-      img.onerror = () => {
-        resolve(false);
-      };
+    // Heuristic: common image CDN/paths and known image hosts
+    if (
+      /(\/images\/|cdn\.|img\.|\/media\/|\/uploads\/|encrypted-tbn0\.gstatic\.com\/images|i\.insider\.com\/)/i.test(
+        url
+      ) &&
+      !/\.(mp4|mov|webm|ogg|avi)$/i.test(url)
+    ) {
+      return { type: "image" };
+    }
 
-      img.src = url;
-    });
+    // Heuristic: query param with image keyword
+    if (
+      /([?&]format=image|[?&]type=image)/i.test(url) &&
+      !/\.(mp4|mov|webm|ogg|avi)$/i.test(url)
+    ) {
+      return { type: "image" };
+    }
+
+    return false;
   } catch (error) {
-    console.error(`Error checking URL ${url}:`, error);
     return false;
   }
 };
@@ -151,7 +187,7 @@ const isImageUrlSync = (url) => {
   }
 };
 
-const getNoteTree = async (
+const getNoteTree = (
   note,
   minimal = false,
   isCollapsedNote = false,
@@ -213,23 +249,35 @@ const getNoteTree = async (
             );
         }
         if (!isURLVid) {
-          const checkURL = await isImageUrl(el);
+          // finalTree.push(
+          //   // <Fragment key={key}>
+          //   <LinkInspector el={el} key={key} />
+          //   // </Fragment>
+          // );
+          const checkURL = isImageUrl(el);
           if (checkURL) {
             if (checkURL.type === "image") {
               finalTree.push(<IMGElement src={el} key={key} />);
             } else if (checkURL.type === "video") {
               finalTree.push(
-                <video
+                // <video
+                //   key={key}
+                //   controls={true}
+                //   autoPlay={false}
+                //   poster="https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630"
+                //   preload="none"
+                //   name="media"
+                //   width={"100%"}
+                //   className="sc-s-18"
+                //   style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
+                // >
+                //   <source src={el} type="video/mp4" />
+                // </video>
+                <VideoLoader
                   key={key}
-                  controls={true}
-                  autoPlay={false}
-                  name="media"
-                  width={"100%"}
-                  className="sc-s-18"
-                  style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
-                >
-                  <source src={el} type="video/mp4" />
-                </video>
+                  src={el}
+                  poster="https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630"
+                />
               );
             }
           } else if (
@@ -276,16 +324,6 @@ const getNoteTree = async (
       el?.includes("https://vota-test.dorafactory.org/round/")
     ) {
       finalTree.push(<MACIPollPreview url={el} key={key} />);
-      // finalTree.push(
-      //   <iframe
-      //     key={key}
-      //     src={el}
-      //     allow="microphone; camera; clipboard-write 'src'"
-      //     sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
-      //     style={{ border: "none", aspectRatio: "10/16" }}
-      //     className="fit-container fit-height"
-      //   ></iframe>
-      // );
     } else if (
       (el?.includes("nostr:") ||
         el?.includes("naddr") ||
@@ -363,6 +401,208 @@ const getNoteTree = async (
 
   return mergeConsecutivePElements(finalTree, pubkey);
 };
+// const getNoteTree = async (
+//   note,
+//   minimal = false,
+//   isCollapsedNote = false,
+//   wordsCount = 150,
+//   pubkey
+// ) => {
+//   if (!note) return "";
+
+//   let tree = note
+//     .trim()
+//     .split(/(\n)/)
+//     .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
+//     .filter(Boolean);
+
+//   let finalTree = [];
+//   let maxChar = isCollapsedNote ? wordsCount : tree.length;
+//   for (let i = 0; i < maxChar; i++) {
+//     const el = tree[i];
+//     const key = `${el}-${i}`;
+//     if (el === "\n") {
+//       finalTree.push(<br key={key} />);
+//     } else if (
+//       (/(https?:\/\/)/i.test(el) || el.startsWith("data:image")) &&
+//       !el.includes("https://yakihonne.com/smart-widget-checker?naddr=") &&
+//       !el.includes("https://vota.dorafactory.org/round/") &&
+//       !el.includes("https://vota-test.dorafactory.org/round/")
+//     ) {
+//       const isURLVid = isVid(el);
+//       if (!minimal) {
+//         if (isURLVid) {
+//           if (isURLVid.isYT) {
+//             finalTree.push(
+//               <iframe
+//                 key={key}
+//                 style={{
+//                   width: "100%",
+//                   aspectRatio: "16/9",
+//                   borderRadius: "var(--border-r-18)",
+//                 }}
+//                 src={`https://www.youtube.com/embed/${isURLVid.videoId}`}
+//                 frameBorder="0"
+//                 allowFullScreen
+//               ></iframe>
+//             );
+//           }
+//           if (!isURLVid.isYT)
+//             finalTree.push(
+//               <iframe
+//                 key={key}
+//                 style={{
+//                   width: "100%",
+//                   aspectRatio: "16/9",
+//                   borderRadius: "var(--border-r-18)",
+//                 }}
+//                 src={`https://player.vimeo.com/video/${isURLVid.videoId}`}
+//                 frameBorder="0"
+//                 allowFullScreen
+//               ></iframe>
+//             );
+//         }
+//         if (!isURLVid) {
+//           const checkURL = await isImageUrl(el);
+//           if (checkURL) {
+//             if (checkURL.type === "image") {
+//               finalTree.push(<IMGElement src={el} key={key} />);
+//             } else if (checkURL.type === "video") {
+//               finalTree.push(
+//                 <video
+//                   key={key}
+//                   controls={true}
+//                   autoPlay={false}
+//                   name="media"
+//                   width={"100%"}
+//                   className="sc-s-18"
+//                   style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
+//                 >
+//                   <source src={el} type="video/mp4" />
+//                 </video>
+//               );
+//             }
+//           } else if (
+//             el.includes(".mp3") ||
+//             el.includes(".ogg") ||
+//             el.includes(".wav")
+//           ) {
+//             finalTree.push(
+//               <audio
+//                 controls
+//                 key={key}
+//                 className="fit-container"
+//                 style={{ margin: ".5rem auto", minWidth: "300px" }}
+//               >
+//                 <source src={el} type="audio/ogg" />
+//                 <source src={el} type="audio/mpeg" />
+//                 <source src={el} type="audio/wav" />
+//                 Your browser does not support the audio element.
+//               </audio>
+//             );
+//           } else {
+//             finalTree.push(
+//               <Fragment key={key}>
+//                 <LinkPreview url={el} />{" "}
+//               </Fragment>
+//             );
+//           }
+//         }
+//       } else
+//         finalTree.push(
+//           <Fragment key={key}>
+//             <a
+//               style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+//               href={el}
+//               className="btn-text-gray"
+//               onClick={(e) => e.stopPropagation()}
+//             >
+//               {el}
+//             </a>{" "}
+//           </Fragment>
+//         );
+//     } else if (
+//       el?.includes("https://vota.dorafactory.org/round/") ||
+//       el?.includes("https://vota-test.dorafactory.org/round/")
+//     ) {
+//       finalTree.push(<MACIPollPreview url={el} key={key} />);
+//     } else if (
+//       (el?.includes("nostr:") ||
+//         el?.includes("naddr") ||
+//         el?.includes("https://yakihonne.com/smart-widget-checker?naddr=") ||
+//         el?.includes("nprofile") ||
+//         el?.includes("npub") ||
+//         el?.includes("note1") ||
+//         el?.includes("nevent")) &&
+//       el?.length > 30
+//     ) {
+//       const nip19add = el
+//         .replace("https://yakihonne.com/smart-widget-checker?naddr=", "")
+//         .replace("nostr:", "");
+
+//       const parts = nip19add.split(/([@.,?!\s:()’"'])/);
+
+//       const finalOutput = parts.map((part, index) => {
+//         if (
+//           part?.startsWith("npub1") ||
+//           part?.startsWith("nprofile1") ||
+//           part?.startsWith("nevent") ||
+//           part?.startsWith("naddr") ||
+//           part?.startsWith("note1")
+//         ) {
+//           const cleanedPart = part.replace(/[@.,?!]/g, "");
+
+//           return (
+//             <Fragment key={index}>
+//               <Nip19Parsing addr={cleanedPart} minimal={minimal} />
+//             </Fragment>
+//           );
+//         }
+
+//         return part;
+//       });
+//       finalTree.push(<Fragment key={key}>{finalOutput} </Fragment>);
+//     } else if (el?.startsWith("lnbc") && el.length > 30) {
+//       finalTree.push(<LNBCInvoice lnbc={el} key={key} />);
+//     } else if (el?.startsWith("#")) {
+//       const match = el.match(/(#+)([\w-+]+)/);
+
+//       if (match) {
+//         const hashes = match[1];
+//         const text = match[2];
+
+//         finalTree.push(
+//           <React.Fragment key={key}>
+//             {hashes.slice(1)}
+//             <Link
+//               style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+//               to={`/search?keyword=${text}`}
+//               state={{ tab: "notes" }}
+//               className="btn-text-gray"
+//               onClick={(e) => e.stopPropagation()}
+//             >
+//               {`${hashes.slice(-1)}${text}`}
+//             </Link>{" "}
+//           </React.Fragment>
+//         );
+//       }
+//     } else {
+//       finalTree.push(
+//         <span
+//           style={{
+//             wordBreak: "break-word",
+//             color: "var(--dark-gray)",
+//           }}
+//           key={key}
+//         >
+//           {el}{" "}
+//         </span>
+//       );
+//     }
+//   }
+
+//   return mergeConsecutivePElements(finalTree, pubkey);
+// };
 
 const getLinkFromAddr = (addr_) => {
   try {
@@ -405,6 +645,7 @@ const getLinkFromAddr = (addr_) => {
     return addr_;
   }
 };
+
 const getLinkPreview = async (url) => {
   try {
     const metadata = await Promise.race([
@@ -614,7 +855,11 @@ function mergeConsecutivePElements(arr, pubkey) {
           },
         };
       }
-    } else if (typeof element.type !== "string" && element.props?.src) {
+    } else if (
+      typeof element.type !== "string" &&
+      element.props?.src &&
+      element.props?.poster === undefined
+    ) {
       if (currentTextElement) {
         result.push(currentTextElement);
         currentTextElement = null;
@@ -729,7 +974,7 @@ const getAIFeedContent = (news) => {
   };
 };
 
-const getFlashnewsContent = async (news) => {
+const getFlashnewsContent = (news) => {
   let tags = news.tags;
   let keywords = [];
   let is_important = false;
@@ -753,7 +998,7 @@ const getFlashnewsContent = async (news) => {
     console.log(err);
   }
 
-  let content = await getNoteTree(
+  let content = getNoteTree(
     news.content,
     undefined,
     undefined,
@@ -1989,7 +2234,6 @@ const verifyEvent = (event) => {
   }
 
   if (kind !== 30033) {
-    console.log("Event is not a smart widget");
     return false;
   }
   let identifier = "";
@@ -2249,4 +2493,5 @@ export {
   setRepliesViewSettings,
   getWotConfig,
   getAnswerFromAIRemoteAPI,
+  isImageUrl,
 };

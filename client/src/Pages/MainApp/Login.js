@@ -174,7 +174,6 @@ const Bunker = () => {
       sub.stop();
       const bunkerPointer = await parseBunkerInput(bunkerUrl);
       if (!bunkerPointer) {
-        console.log("Invalid URL");
         return;
       }
       const bunker = new BunkerSigner(localKeys.privateKey, bunkerPointer, {

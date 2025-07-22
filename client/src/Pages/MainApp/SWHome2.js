@@ -73,6 +73,7 @@ export default function SWhome2() {
 }
 
 const Main = () => {
+  const userKeys = useSelector((state) => state.userKeys);
   const [status, setStatus] = useState(true);
   const [showTips, setShowtips] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -90,25 +91,29 @@ const Main = () => {
 
   return (
     <main className="main-page-nostr-container">
-      <div
-        className="fx-centered fit-container fx-start-h fx-col box-pad-v box-pad-h-m"
-        style={{ gap: 0, minHeight: "100vh" }}
-      >
-        <div className="fit-container fx-centered fx-col fx-start-v box-pad-h-m">
-          <ChatWindow
-            message={searchKeyword}
-            setMessage={setSearchKeyword}
-            setStatus={setStatus}
-          />
-          {/* <PagePlaceholder page="ai" /> */}
-        </div>
+      {userKeys && (userKeys.ext || userKeys.sec || userKeys.bunker) ? (
+        <div
+          className="fx-centered fit-container fx-start-h fx-col box-pad-v box-pad-h-m"
+          style={{ gap: 0, minHeight: "100vh" }}
+        >
+          <div className="fit-container fx-centered fx-col fx-start-v box-pad-h-m">
+            <ChatWindow
+              message={searchKeyword}
+              setMessage={setSearchKeyword}
+              setStatus={setStatus}
+            />
+            {/* <PagePlaceholder page="ai" /> */}
+          </div>
 
-        <InputField
-          handleSearch={handleSearch}
-          setSearchKeyword={setSearchKeyword}
-          status={status}
-        />
-      </div>
+          <InputField
+            handleSearch={handleSearch}
+            setSearchKeyword={setSearchKeyword}
+            status={status}
+          />
+        </div>
+      ) : (
+        <PagePlaceholder page={"nostr-not-connected"} />
+      )}
     </main>
   );
 };
@@ -320,7 +325,11 @@ const ChatWindow = ({ message, setMessage, setStatus }) => {
       {quotaMessage && (
         <div
           className="fit-container fx-centered fx-start-h sc-s-18 box-pad-h box-pad-v box-marg-s slide-up"
-          style={{ position: "relative", backgroundColor: "var(--orange-side)", borderColor: "var(--c1)" }}
+          style={{
+            position: "relative",
+            backgroundColor: "var(--orange-side)",
+            borderColor: "var(--c1)",
+          }}
         >
           <div className="close" onClick={() => setQuotaMessage("")}>
             <div></div>

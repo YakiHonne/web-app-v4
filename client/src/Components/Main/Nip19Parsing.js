@@ -88,12 +88,16 @@ export default function Nip19Parsing({ addr, minimal = false }) {
     }
     setIsParsed(true);
 
+    if (filter.length === 0) {
+      setIsLoading(false);
+      return;
+    }
     const sub = ndkInstance.subscribe(filter, {
       cacheUsage: "CACHE_FIRST",
       groupable: false,
       subId: "nip19-parsing",
     });
-    sub.on("event", async (event) => {
+    sub.on("event", (event) => {
       if (event.id) {
         if (event.kind === 0) {
           let content = JSON.parse(event.content);
@@ -111,7 +115,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           });
         }
         if (event.kind === 1) {
-          let parsedEvent = await getParsedNote(event, true);
+          let parsedEvent = getParsedNote(event, true);
 
           setEvent(parsedEvent);
           setIsLoading(false);

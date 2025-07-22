@@ -211,7 +211,13 @@ export default function NotesComment({
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(res.res, undefined, undefined, undefined, event.pubkey);
+        let noteTree = getNoteTree(
+          res.res,
+          undefined,
+          undefined,
+          undefined,
+          event.pubkey
+        );
         setTranslatedNote(noteTree);
         setShowTranslation(true);
       }
@@ -238,12 +244,7 @@ export default function NotesComment({
         position: "relative",
       }}
     >
-      {isReply && (
-        <div
-          className="reply-tail"
-          // style={{ right: isReplyBorder ? "-.0625rem" : 0 }}
-        ></div>
-      )}
+      {isReply && <div className="reply-tail"></div>}
       {usersList && (
         <ShowUsersList
           exit={() => setUsersList(false)}
@@ -317,24 +318,10 @@ export default function NotesComment({
             hasReplies ? "reply-side-border-2" : ""
           }`}
           style={{
-            // marginLeft: "1rem",
-            // marginLeft: ".39rem",
-            // paddingLeft: "1.5rem",
             paddingTop: "1rem",
             paddingBottom: isHistory ? "1rem" : "unset",
-            // borderLeft: hasReplies ? "1px solid var(--dim-gray)" : "",
           }}
         >
-          {/* {isMuted && (
-            <div className="fit-container fx-centered fx-start-h">
-              <div
-                className="fx-centered box-pad-h-s box-pad-v-s sc-s-18"
-                style={{ padding: ".25rem .5rem" }}
-              >
-                <p className="red-c p-medium">{t("AgJ47NX")}</p>
-              </div>
-            </div>
-          )} */}
           {!isMuted && (
             <>
               <div className="fit-container pointer" onClick={onClick}>
@@ -349,40 +336,22 @@ export default function NotesComment({
                   <p className="c1-c">... {t("AnWFKlu")}</p>
                 </div>
               )}
-              {/* {isTransEnabled && (
-                <div className="fit-container" style={{ paddingTop: ".5rem" }}>
-                  {!isNoteTranslating && !showTranslation && (
-                    <p
-                      className="btn-text-gray pointer"
-                      onClick={translateNote}
-                    >
-                      {t("AdHV2qJ")}
-                    </p>
-                  )}
-                  {!isNoteTranslating && showTranslation && (
-                    <p
-                      className="btn-text-gray pointer"
-                      onClick={() => setShowTranslation(false)}
-                    >
-                      {t("AE08Wte")}
-                    </p>
-                  )}
-                  {isNoteTranslating && <LoadingDots />}
-                </div>
-              )} */}
               {!noReactions && (
                 <>
                   {postActions?.zaps?.zaps?.length > 0 && (
                     <div className="fit-container">
-                      <ZapAd zappers={postActions.zaps.zaps} onClick={() =>
-                                setUsersList({
-                                  title: t("AVDZ5cJ"),
-                                  list: postActions.zaps.zaps.map(
-                                    (item) => item.pubkey
-                                  ),
-                                  extras: postActions.zaps.zaps,
-                                })
-                              }/>
+                      <ZapAd
+                        zappers={postActions.zaps.zaps}
+                        onClick={() =>
+                          setUsersList({
+                            title: t("AVDZ5cJ"),
+                            list: postActions.zaps.zaps.map(
+                              (item) => item.pubkey
+                            ),
+                            extras: postActions.zaps.zaps,
+                          })
+                        }
+                      />
                     </div>
                   )}
 

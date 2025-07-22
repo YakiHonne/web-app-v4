@@ -22,7 +22,7 @@ const filterComments = (all, id, isRoot) => {
   if (isRoot) return filterRootComments(all);
   return filterRepliesComments(all, id);
 };
-const filterRepliesComments = async (all, id) => {
+const filterRepliesComments = (all, id) => {
   let temp = [];
   for (let comment of all) {
     if (
@@ -33,10 +33,9 @@ const filterRepliesComments = async (all, id) => {
           ["reply", "root"].includes(item[3])
       )
     ) {
-      let [note_tree, replies] = await Promise.all([
-        getParsedNote(comment, true),
-        countReplies(comment.id, all),
-      ]);
+      let note_tree = getParsedNote(comment, true);
+      let replies = countReplies(comment.id, all);
+
       temp.push({
         ...note_tree,
         replies,
@@ -46,7 +45,7 @@ const filterRepliesComments = async (all, id) => {
   return temp;
 };
 
-const filterRootComments = async (all) => {
+const filterRootComments = (all) => {
   let temp = [];
 
   for (let comment of all) {
@@ -62,10 +61,9 @@ const filterRootComments = async (all) => {
         Array.isArray(isRoot) &&
         isReply[1] === isRoot[1])
     ) {
-      let [note_tree, replies] = await Promise.all([
-        getParsedNote(comment, true),
-        countReplies(comment.id, all),
-      ]);
+      let note_tree = getParsedNote(comment, true);
+      let replies = countReplies(comment.id, all);
+
       temp.push({
         ...note_tree,
         replies,
@@ -75,7 +73,7 @@ const filterRootComments = async (all) => {
   return temp;
 };
 
-const countReplies = async (id, all) => {
+const countReplies = (id, all) => {
   let replies = [];
 
   for (let comment of all) {
@@ -83,8 +81,8 @@ const countReplies = async (id, all) => {
       (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
     );
     if (ev) {
-      let nestedReplies = await countReplies(comment.id, all);
-      let _ = await getParsedNote(comment, true);
+      let nestedReplies = countReplies(comment.id, all);
+      let _ = getParsedNote(comment, true);
       replies.push({
         ..._,
         replies: nestedReplies,
@@ -131,8 +129,8 @@ export default function CommentsSection({
   }, [netComments, userMutedList]);
 
   useEffect(() => {
-    let parsedCom = async () => {
-      let res = await filterComments(comments, id, isRoot);
+    let parsedCom = () => {
+      let res = filterComments(comments, id, isRoot);
       setNetComments(res);
       if (res.length !== 0 || comments.length > 0) setIsLoading(false);
     };

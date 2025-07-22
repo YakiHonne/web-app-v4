@@ -157,7 +157,7 @@ export default function Note() {
       skipVerification: true,
     });
 
-    subscription.on("event", async (event) => {
+    subscription.on("event", (event) => {
       if (bannedList.includes(event.pubkey)) customHistory.push("/");
       if (event.kind !== 1) {
         setUnsupportedKind(true);
@@ -175,7 +175,7 @@ export default function Note() {
           ? false
           : event.tags.find((tag) => tag.length > 3 && tag[3] === "reply");
 
-      let tempNote = await getParsedNote(event, false);
+      let tempNote = getParsedNote(event, false);
 
       if (tempNote) {
         saveUsers([event.pubkey]);
@@ -265,7 +265,7 @@ export default function Note() {
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(res.res, undefined, undefined, undefined, note.pubkey);
+        let noteTree =  getNoteTree(res.res, undefined, undefined, undefined, note.pubkey);
         setTranslatedNote(noteTree);
         setShowTranslation(true);
       }

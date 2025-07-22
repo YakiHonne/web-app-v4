@@ -1548,7 +1548,6 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
         // eslint-disable-next-line no-undef
         BigInt("0x" + Buffer.from(sig.signature, "base64").toString("hex"))
       );
-      console.log(keypair);
       return keypair;
     } catch (err) {
       console.log(err);

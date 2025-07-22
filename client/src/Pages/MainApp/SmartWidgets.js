@@ -88,14 +88,20 @@ export default function SmartWidgets() {
       { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
     );
 
-    subscription.on("event", async (event) => {
+    subscription.on("event", (event) => {
       try {
         if (limit >= 6) {
           subscription.stop();
           return;
         }
         limit += 1;
-        let parsedContent = await getNoteTree(event.content, true, undefined, undefined, event.pubkey);
+        let parsedContent = getNoteTree(
+          event.content,
+          true,
+          undefined,
+          undefined,
+          event.pubkey
+        );
         events.push(event.pubkey);
         let nEvent = nip19.neventEncode({
           author: event.pubkey,

@@ -30,6 +30,7 @@ import LoadingDots from "../../Components/LoadingDots";
 import UploadFile from "../../Components/UploadFile";
 import UserSearchBar from "../../Components/UserSearchBar";
 import PaymentGateway from "../../Components/Main/PaymentGateway";
+import LoadingLogo from "../../Components/LoadingLogo";
 
 export default function Playground() {
   return (
@@ -336,6 +337,7 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
   const dispatch = useDispatch();
   const userRelays = useSelector((state) => state.userRelays);
   const userMetadata = useSelector((state) => state.userMetadata);
+  const [isLoading, setIsLoading] = useState(true);
   const wallets = getWallets();
   const iframeRef = useRef(null);
 
@@ -347,6 +349,7 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
       listener = SWHandler.host.listen(async (event) => {
         setReceivedLogs((prev) => [...prev, { ...event, client: true }]);
         if (event?.kind === "app-loaded") {
+          setIsLoading(false);
           if (userMetadata) {
             SWHandler.host.sendContext(
               { ...userMetadata, hasWallet: wallets.length > 0 },
@@ -483,6 +486,7 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
   }, [iframeRef.current, url]);
 
   useEffect(() => {
+    if (!isLoading) setIsLoading(true);
     iframeRef.current.src = url;
   }, [url]);
   useEffect(() => {
@@ -512,6 +516,7 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
           setConfirmPayment={handlePaymentResponse}
         />
       )}
+
       <section
         className="fx-centered fx-col"
         style={{
@@ -522,7 +527,10 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
           gap: 0,
         }}
       >
-        <div className="fit-container fx-centered">
+        <div
+          className="fit-container fx-centered"
+          style={{ position: "relative" }}
+        >
           <iframe
             ref={iframeRef}
             src={url}
@@ -531,6 +539,25 @@ const MiniApp = ({ url, setReceivedLogs, refresh }) => {
             style={{ aspectRatio: "10/16" }}
             className="fit-container fit-height sc-s-18"
           ></iframe>
+          {isLoading && (
+            <section
+              className="fx-centered fx-col sc-s-18"
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                zIndex: 1,
+                width: "100%",
+                height: "100%",
+                borderRadius: "10px",
+                overflow: "hidden",
+                gap: 0,
+                aspectRatio: "10/16",
+              }}
+            >
+              <LoadingLogo size={64} />
+            </section>
+          )}
         </div>
         <div className="fit-container box-pad-v-s box-pad-h-s">
           <ManifestFile url={url} />
@@ -544,6 +571,7 @@ const ManifestFile = ({ url }) => {
   const [metadata, setMetadata] = useState(false);
   const [isMetadataLoding, setIsMetadataLoading] = useState(false);
   const [showGenerateFile, setShowGenerateFile] = useState(false);
+
   useEffect(() => {
     const getApp = async (url_) => {
       try {

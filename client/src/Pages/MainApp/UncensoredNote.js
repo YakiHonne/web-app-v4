@@ -76,7 +76,7 @@ export default function UNEvent() {
           axios.get(API_BASE_URL + "/api/v1/balance"),
         ]);
 
-        const content = await getNoteTree(
+        const content = getNoteTree(
           FN.data.content,
           undefined,
           undefined,

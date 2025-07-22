@@ -12,9 +12,9 @@ export default function NotePreview({
   const { t } = useTranslation();
 
   useEffect(() => {
-    const parseNote = async () => {
+    const parseNote = () => {
       try {
-        let parsedNote = await getNoteTree(content);
+        let parsedNote = getNoteTree(content);
         setParsedContent(parsedNote);
       } catch (err) {
         console.log(err);

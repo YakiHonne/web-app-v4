@@ -57,12 +57,17 @@ export default function UncensoredNotes() {
         ]);
         setBalance(BALANCE.data.balance);
         setTotal(FN.data.total);
-        let parsedFNNews = await Promise.all(
-          FN.data.flashnews.map(async (fn) => {
-            let note_tree = await getNoteTree(fn.flashnews.content, undefined, undefined, undefined, fn.author.pubkey);
-            return { ...fn, note_tree };
-          })
-        );
+        let parsedFNNews = FN.data.flashnews.map(async (fn) => {
+          let note_tree = getNoteTree(
+            fn.flashnews.content,
+            undefined,
+            undefined,
+            undefined,
+            fn.author.pubkey
+          );
+          return { ...fn, note_tree };
+        });
+
         setFlashNews([...flashNews, ...parsedFNNews]);
         setIsLoading(false);
       } catch (err) {
@@ -72,7 +77,10 @@ export default function UncensoredNotes() {
     };
     const fetchMyRewardsData = async () => {
       try {
-        if (!userKeys || (userKeys && !userKeys.sec && !userKeys.ext && !userKeys.bunker)) {
+        if (
+          !userKeys ||
+          (userKeys && !userKeys.sec && !userKeys.ext && !userKeys.bunker)
+        ) {
           setMyRewards([]);
           return;
         }
@@ -106,7 +114,13 @@ export default function UncensoredNotes() {
         let FN = await axios.get(API_BASE_URL + NMH_PATH, {
           params: { page, elPerPage },
         });
-        let note_tree = await getNoteTree(FN.data.flashnews.content, undefined, undefined, undefined, FN.data.author.pubkey);
+        let note_tree = getNoteTree(
+          FN.data.flashnews.content,
+          undefined,
+          undefined,
+          undefined,
+          FN.data.author.pubkey
+        );
         let parsedFNNews = { ...FN.data, note_tree };
 
         let index = flashNews.findIndex(
@@ -363,18 +377,21 @@ export default function UncensoredNotes() {
                         </button>
                       </div>
                     )}
-                    {userKeys && !userKeys.sec && !userKeys.ext && !userKeys.bunker && (
-                      <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                        <h4>{t("ApmJsGe")}</h4>
-                        <p
-                          className="gray-c p-centered"
-                          style={{ maxWidth: "600px" }}
-                        >
-                          {t("AQ3K2E1")}
-                        </p>
-                        <h4 className="red-c">:(</h4>
-                      </div>
-                    )}
+                    {userKeys &&
+                      !userKeys.sec &&
+                      !userKeys.ext &&
+                      !userKeys.bunker && (
+                        <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
+                          <h4>{t("ApmJsGe")}</h4>
+                          <p
+                            className="gray-c p-centered"
+                            style={{ maxWidth: "600px" }}
+                          >
+                            {t("AQ3K2E1")}
+                          </p>
+                          <h4 className="red-c">:(</h4>
+                        </div>
+                      )}
                   </div>
                 )}
                 {isLoading && (

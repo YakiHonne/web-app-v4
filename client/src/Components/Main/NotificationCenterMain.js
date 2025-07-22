@@ -852,9 +852,9 @@ const MinimalNoteView = ({ note, pubkey }) => {
   const [noteTree, setNoteTree] = useState(false);
 
   useEffect(() => {
-    const parseNote = async () => {
+    const parseNote = () => {
       try {
-        let pNote = await getNoteTree(note, true, true, 50, pubkey);
+        let pNote = getNoteTree(note, true, true, 50, pubkey);
 
         setNoteTree(pNote);
       } catch (err) {

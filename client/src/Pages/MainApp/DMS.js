@@ -33,7 +33,11 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
-import { checkAllConvo, checkCurrentConvo, getInboxRelaysForUser } from "../../Helpers/DB";
+import {
+  checkAllConvo,
+  checkCurrentConvo,
+  getInboxRelaysForUser,
+} from "../../Helpers/DB";
 import Emojis from "../../Components/Emojis";
 import Gifs from "../../Components/Gifs";
 import { useTranslation } from "react-i18next";
@@ -185,31 +189,27 @@ export default function DMS() {
     // }
   }, [userKeys]);
 
-  const handleSelectedConversation = async (
-    conversation,
-    ignoreLoading = false
-  ) => {
+  const handleSelectedConversation = (conversation, ignoreLoading = false) => {
     try {
       if (!ignoreLoading) {
         setIsConvoLoading(true);
         setSelectedConvo(false);
       }
-      let tempConvo = await Promise.all(
-        conversation.convo.map(async (convo) => {
-          let content = await getNoteTree(
-            convo.content,
-            undefined,
-            undefined,
-            undefined,
-            convo.pubkey
-          );
-          return {
-            ...convo,
-            content,
-            raw_content: convo.content,
-          };
-        })
-      );
+      let tempConvo = conversation.convo.map((convo) => {
+        let content = getNoteTree(
+          convo.content,
+          undefined,
+          undefined,
+          undefined,
+          convo.pubkey
+        );
+        return {
+          ...convo,
+          content,
+          raw_content: convo.content,
+        };
+      });
+      console.log(tempConvo);
       setSelectedConvo({
         ...conversation,
         convo: tempConvo,
@@ -645,7 +645,12 @@ export default function DMS() {
                       <p className="gray-c p-medium">
                         {t("Alxsg82")}{" "}
                         <span className="c1-c">
-                          <Link to={"/settings"} state={{relaysTab: 1, tab: "relays"}}>{t("ABtsLBp")}</Link>
+                          <Link
+                            to={"/settings"}
+                            state={{ relaysTab: 1, tab: "relays" }}
+                          >
+                            {t("ABtsLBp")}
+                          </Link>
                         </span>
                       </p>
                     </div>
@@ -885,7 +890,13 @@ const ConversationBox = ({ convo, back }) => {
     )
       return;
     let otherPartyRelays = await getInboxRelaysForUser(convo.pubkey);
-    let relaysToPublish = [...new Set([...userInboxRelays, ...relaysOnPlatform, ...otherPartyRelays])];
+    let relaysToPublish = [
+      ...new Set([
+        ...userInboxRelays,
+        ...relaysOnPlatform,
+        ...otherPartyRelays,
+      ]),
+    ];
     // setMessage("");
     // setReplayOn(false);
     // setShowProgress(true);

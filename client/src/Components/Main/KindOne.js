@@ -15,8 +15,6 @@ import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { getSubData, getUser, translate } from "../../Helpers/Controlers";
-import { ndkInstance } from "../../Helpers/NDKInstance";
-import { NDKUser } from "@nostr-dev-kit/ndk";
 import OptionsDropdown from "./OptionsDropdown";
 import useNoteStats from "../../Hooks/useNoteStats";
 import Like from "../Reactions/Like";
@@ -196,7 +194,7 @@ export default function KindOne({
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(
+        let noteTree = getNoteTree(
           res.res,
           undefined,
           undefined,
@@ -618,10 +616,9 @@ const RelatedEvent = ({ event }) => {
           saveUsers([event_.data[0].pubkey]);
           let parsedEvent;
           if (kind === 1) {
-            parsedEvent = await getParsedNote(event_.data[0]);
+            parsedEvent = getParsedNote(event_.data[0]);
             parsedEvent = { ...parsedEvent, isComment: false };
           } else {
-            console.log(event_.data[0]);
             parsedEvent = getParsedRepEvent(event_.data[0]);
           }
           setRelatedEvent(parsedEvent);
@@ -659,22 +656,35 @@ const RelatedEvent = ({ event }) => {
   };
 
   if (isThread)
-    return (
-      relatedEvent && (
-        <div className=" fit-container">
-          {relatedEvent.kind === 1 && (
-            <NotesComment
-              event={relatedEvent}
-              hasReplies={true}
-              isHistory={true}
-            />
-          )}
-          {relatedEvent.kind !== 1 && (
-            <RepEventPreviewCard item={relatedEvent} />
-          )}
+    return relatedEvent ? (
+      <div className=" fit-container">
+        {relatedEvent.kind === 1 && (
+          <NotesComment
+            event={relatedEvent}
+            hasReplies={true}
+            isHistory={true}
+          />
+        )}
+        {relatedEvent.kind !== 1 && <RepEventPreviewCard item={relatedEvent} />}
+      </div>
+    ) : (
+      <div
+        className="fit-container box-pad-h-m fx-centered fx-start-h fx-start-v fx-col"
+        style={{ gap: 0 }}
+      >
+        <div className="sc-s bg-sp box-pad-h-s box-pad-v-s ">
+          <LoadingDots />
         </div>
-      )
+        <div
+          style={{
+            height: "20px",
+            borderLeft: "1px solid var(--pale-gray)",
+            marginLeft: "1rem",
+          }}
+        ></div>
+      </div>
     );
+
   return (
     <>
       <div className="fit-container fx-centered fx-start-h">

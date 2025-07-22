@@ -620,7 +620,6 @@ export default function AppInit() {
           if (eose) saveInboxRelays(event, userKeys.pub);
         }
         if (event.kind === 10012) {
-          console.log(event.rawEvent());
           tempFavRelays = { ...event.rawEvent() };
           if (eose) saveFavRelays(event.rawEvent(), userKeys.pub);
         }

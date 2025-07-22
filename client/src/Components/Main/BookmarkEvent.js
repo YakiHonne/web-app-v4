@@ -32,7 +32,6 @@ export default function BookmarkEvent({
       : false;
   }, [userBookmarks, userKeys]);
 
-  console.log(showBookmarksPicker);
   return (
     <>
       {showBookmarksPicker && (

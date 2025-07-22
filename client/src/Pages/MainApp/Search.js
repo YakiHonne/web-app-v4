@@ -82,6 +82,7 @@ export default function Search() {
       return;
     }
     setSearchKeyword(value);
+    setResults([]);
   };
 
   useEffect(() => {
@@ -94,13 +95,15 @@ export default function Search() {
 
     var timer = setTimeout(null);
     if (searchKeyword) {
-      timer = setTimeout(async () => {
-        if (selectedTab === "people") searchForUser();
-        if (selectedTab !== "people") {
-          setResults([])
-          searchForContent();
-        }
-      }, selectedTab === "people" ? 100 : 400);
+      timer = setTimeout(
+        async () => {
+          if (selectedTab === "people") searchForUser();
+          if (selectedTab !== "people") {
+            searchForContent();
+          }
+        },
+        selectedTab === "people" ? 100 : 400
+      );
     } else {
       clearTimeout(timer);
     }
@@ -256,16 +259,15 @@ export default function Search() {
     if (selectedTab === "all-media") filter.kinds = [1, 30023, 34235];
     let content = await getSubData([filter], 500);
 
-    let content_ = await Promise.all(
-      content.data.map(async (event) => {
-        if (event.kind === 1) {
-          let parsedNote = await getParsedNote(event, true);
-          return parsedNote;
-        } else {
-          return getParsedRepEvent(event);
-        }
-      })
-    );
+    let content_ = content.data.map((event) => {
+      if (event.kind === 1) {
+        let parsedNote = getParsedNote(event, true);
+        return parsedNote;
+      } else {
+        return getParsedRepEvent(event);
+      }
+    });
+
     setIsLoading(false);
     setResults((prev) => [...prev, ...content_]);
     saveUsers(content.pubkeys);

@@ -182,7 +182,7 @@ const notesInitialState = {
 
 const getRelayFromURL = (location) => {
   let r = new URLSearchParams(location.search).get("r");
-  console.log(r)
+  console.log(r);
   if (!r) return "";
   return r.startsWith("ws://") ? r : `wss://${r.replace("wss://", "")}` || "";
 };
@@ -207,7 +207,7 @@ export default function NoteSharedRelay() {
     }
     return [];
   }, [userAppSettings]);
-  
+
   useEffect(() => {
     if (!extrasRef.current) return;
 
@@ -237,7 +237,8 @@ export default function NoteSharedRelay() {
             ...userAppSettings?.settings?.content_sources?.notes,
             relays: {
               index:
-                userAppSettings?.settings?.content_sources?.notes?.relays?.index || 0,
+                userAppSettings?.settings?.content_sources?.notes?.relays
+                  ?.index || 0,
               list: [
                 ...(userAppSettings?.settings?.content_sources?.notes?.relays
                   ?.list || []),
@@ -342,13 +343,23 @@ export default function NoteSharedRelay() {
                           <div className="main-middle fx-scattered">
                             <h4>{relay}</h4>
                             {userKeys && !relaysList.includes(relay) && (
-                              <button className="fx-centered btn btn-normal btn-small" onClick={handleUpdateSettings}>
+                              <button
+                                className="fx-centered btn btn-normal btn-small"
+                                onClick={handleUpdateSettings}
+                              >
                                 <div className="plus-sign"></div>Add to my list
                               </button>
                             )}
                             {userKeys && relaysList.includes(relay) && (
-                              <div className="fx-centered btn btn-gst btn-small" style={{pointerEvents: "none"}}>
-                                On my list<div className="check-24" style={{margin: 0}}></div>
+                              <div
+                                className="fx-centered btn btn-gst btn-small"
+                                style={{ pointerEvents: "none" }}
+                              >
+                                On my list
+                                <div
+                                  className="check-24"
+                                  style={{ margin: 0 }}
+                                ></div>
                               </div>
                             )}
                           </div>
@@ -456,9 +467,9 @@ const HomeFeed = ({ relay, selectedCategory, selectedFilter }) => {
         }
       );
 
-      subscription.on("event", async (event) => {
+      subscription.on("event", (event) => {
         eventsPubkeys.push(event.pubkey);
-        let event_ = await getParsedNote(event, true);
+        let event_ = getParsedNote(event, true);
         if (event_) fallBackEvents.push(event_);
         if (event_) {
           if (event.kind === 6) {

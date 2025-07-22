@@ -99,6 +99,13 @@ export default function Settings() {
     zaps: "Zaps",
     following: t("A9TqNxQ"),
   };
+  const notificationDesc = {
+    mentions: t("AyF6bJf"),
+    reactions: t("AjlJkCH"),
+    reposts: t("A9sfGZo"),
+    zaps: t("Ae82ooM"),
+    following: t("A5HyxxL"),
+  };
 
   const transServicesPlans = [
     {
@@ -568,7 +575,6 @@ export default function Settings() {
       i18next.changeLanguage(value);
       localStorage.setItem("app-lang", value);
       handleAppDirection(value);
-      console.log(selectedTransService);
       setTransServicePlan(!transServicePlan);
     } else {
       dispatch(
@@ -784,7 +790,9 @@ export default function Settings() {
                           <UserProfilePic mainAccountUser={true} size={64} />
                           <div className="fx-centered">
                             <Link
-                              to={`/users/${nip19.nprofileEncode({pubkey: userKeys.pub})}`}
+                              to={`/users/${nip19.nprofileEncode({
+                                pubkey: userKeys.pub,
+                              })}`}
                             >
                               <button className="btn btn-normal">
                                 {t("ACgjh46")}
@@ -816,18 +824,30 @@ export default function Settings() {
                                   : setSelectedTab("keys")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="key-icon-24"></div>
-                                <p>{t("Adl0miS")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="key-icon-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("Adl0miS")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("AXq8Vb3")}
+                                  </p>
+                                </div>
                               </div>
                               <div className="arrow"></div>
                             </div>
-                            <hr />
+
                             {selectedTab === "keys" && (
-                              <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
-                                <p className="c1-c p-left fit-container">
-                                  {t("Az0mazr")}
-                                </p>
+                              <div className="fit-container fx-col fx-centered fx-start-v box-pad-h-m box-pad-v-m ">
+                                <div>
+                                  <p className="c1-c p-left fit-container">
+                                    {t("Az0mazr")}
+                                  </p>
+                                  <p className="p-medium gray-c">
+                                    {t("AnQpdZ9")}
+                                  </p>
+                                </div>
                                 <div
                                   className={`fx-scattered if pointer fit-container ${
                                     userKeys.sec ? "dashed-onH" : "if-disabled"
@@ -859,9 +879,14 @@ export default function Settings() {
                                     <div className="copy-24"></div>
                                   )}
                                 </div>
-                                <p className="c1-c p-left fit-container">
-                                  {t("AZRwERj")}
-                                </p>
+                                <div>
+                                  <p className="c1-c p-left fit-container">
+                                    {t("AZRwERj")}
+                                  </p>
+                                  <p className="p-medium gray-c">
+                                    {t("A9pRbqh")}
+                                  </p>
+                                </div>
                                 <div
                                   className="fx-scattered if pointer dashed-onH fit-container"
                                   style={{ borderStyle: "dashed" }}
@@ -909,200 +934,22 @@ export default function Settings() {
                                   : setSelectedTab("relays")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="server-24"></div>
-                                <p>{t("A23C0Di")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="server-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("A23C0Di")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("AUE3WRD")}
+                                  </p>
+                                </div>
                               </div>
-                              {/* <div className="fx-centered">
-                                <p className="green-c">
-                                  {connectedRelays.connected}{" "}
-                                  <span className="gray-c">
-                                    / {connectedRelays.total} {t("A5aXNG9")}
-                                  </span>
-                                </p>
-                                <div className="arrow"></div>
-                                </div> */}
                               <div className="arrow"></div>
                             </div>
 
                             {selectedTab === "relays" && (
                               <>
-                                {/* {tempUserRelays.length > 0 && (
-                                  <div
-                                    className="fit-container fx-col fx-centered  fx-start-v fx-start-h"
-                                    style={{
-                                      maxHeight: "40vh",
-                                      overflow: "scroll",
-                                      overflowX: "hidden",
-                                      gap: 0,
-                                    }}
-                                    ref={relaysContainer}
-                                  >
-                                    {tempUserRelays?.map((relay, index) => {
-                                      let status =
-                                        relay.read && relay.write
-                                          ? ""
-                                          : relay.read
-                                          ? "read"
-                                          : "write";
-                                      return (
-                                        <div
-                                          key={`${relay}-${index}`}
-                                          className="fit-container fx-centered fx-col fx-shrink box-pad-v-s box-pad-h-s"
-                                          style={{
-                                            overflow: "visible",
-                                            backgroundColor: relay.toDelete
-                                              ? "var(--red-side)"
-                                              : "",
-                                            borderBottom:
-                                              "1px solid var(--very-dim-gray)",
-                                            gap: 0,
-                                          }}
-                                        >
-                                          <div className="fx-scattered fit-container box-pad-h-s box-pad-v-s">
-                                            <div
-                                              className="fx-centered option"
-                                              style={{
-                                                border: "none",
-                                                backgroundColor: "transparent",
-                                              }}
-                                              onClick={() =>
-                                                setShowRelaysInfo(relay.url)
-                                              }
-                                            >
-                                              <div
-                                                style={{
-                                                  minWidth: "6px",
-                                                  aspectRatio: "1/1",
-                                                  borderRadius: "50%",
-                                                  backgroundColor:
-                                                    connectedRelays
-                                                      ?.relaysStatus[relay.url]
-                                                      ? "var(--green-main)"
-                                                      : "var(--red-main)",
-                                                }}
-                                              ></div>
-                                              <RelayImage url={relay.url} />
-                                              <p>{relay.url}</p>
-                                              <div
-                                                className="info-tt"
-                                                style={{
-                                                  filter:
-                                                    "brightness(0) invert()",
-                                                  opacity: 0.5,
-                                                }}
-                                              ></div>
-                                            </div>
-                                            <div>
-                                              {!relay.toDelete && (
-                                                <div
-                                                  onClick={() =>
-                                                    removeRelayFromList(
-                                                      false,
-                                                      index
-                                                    )
-                                                  }
-                                                  className="round-icon-small"
-                                                >
-                                                  <div className="logout-red"></div>
-                                                </div>
-                                              )}
-                                              {relay.toDelete && (
-                                                <div
-                                                  onClick={() =>
-                                                    removeRelayFromList(
-                                                      true,
-                                                      index
-                                                    )
-                                                  }
-                                                  className="round-icon-small"
-                                                >
-                                                  <div className="undo"></div>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                          {!relay.toDelete && (
-                                            <div className="fit-container fx-centered fx-start-h box-pad-h-m box-marg-s">
-                                              <button
-                                                style={{
-                                                  opacity:
-                                                    status === "read" ? 1 : 0.4,
-                                                }}
-                                                className={
-                                                  "btn btn-small btn-gray"
-                                                }
-                                                onClick={() =>
-                                                  changeRelayStatus(
-                                                    "read",
-                                                    index
-                                                  )
-                                                }
-                                              >
-                                                {t("AANojFe")}
-                                              </button>
-                                              <button
-                                                style={{
-                                                  opacity:
-                                                    status === "write"
-                                                      ? 1
-                                                      : 0.4,
-                                                }}
-                                                className={
-                                                  "btn btn-small btn-gray"
-                                                }
-                                                onClick={() =>
-                                                  changeRelayStatus(
-                                                    "write",
-                                                    index
-                                                  )
-                                                }
-                                              >
-                                                {t("AHG1OTt")}
-                                              </button>
-                                              <button
-                                                style={{
-                                                  opacity:
-                                                    status === "" ? 1 : 0.4,
-                                                }}
-                                                className={
-                                                  "btn btn-small btn-gray"
-                                                }
-                                                onClick={() =>
-                                                  changeRelayStatus("", index)
-                                                }
-                                              >
-                                                {t("AvnTmjx")}
-                                              </button>
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                                <div className="fx-centered fx-end-h fit-container box-pad-h box-pad-v-s">
-                                  <AddRelays
-                                    allRelays={allRelays}
-                                    userAllRelays={tempUserRelays}
-                                    addRelay={addRelay}
-                                  />
-                                  <button
-                                    className={`btn ${
-                                      JSON.stringify(userAllRelays) !==
-                                      JSON.stringify(tempUserRelays)
-                                        ? "btn-normal"
-                                        : "btn-disabled"
-                                    }`}
-                                    onClick={saveRelays}
-                                    disabled={
-                                      JSON.stringify(userAllRelays) ===
-                                      JSON.stringify(tempUserRelays)
-                                    }
-                                  >
-                                    {t("AZWpmir")}
-                                  </button>
-                                </div> */}
                                 <RelaysConfig />
                               </>
                             )}
@@ -1122,9 +969,16 @@ export default function Settings() {
                                   : setSelectedTab("lang")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="translate-24"></div>
-                                <p>{t("ALGYjOG")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="translate-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("ALGYjOG")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("A0yvMQi")}
+                                  </p>
+                                </div>
                               </div>
                               <div className="arrow"></div>
                             </div>
@@ -1134,8 +988,16 @@ export default function Settings() {
                                   <p className="gray-c">{t("AfwKx9Q")}</p>
                                 </div>
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("AfwKx9Q")}</p>
-                                  <div className="fx-centered">
+                                  <div>
+                                    <p>{t("AfwKx9Q")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("AjTNn13")}
+                                    </p>
+                                  </div>
+                                  <div
+                                    className="fx-centered"
+                                    style={{ minWidth: "max-content" }}
+                                  >
                                     <Select
                                       options={supportedLanguage}
                                       value={selectedAppLang}
@@ -1148,7 +1010,12 @@ export default function Settings() {
                                   <p className="gray-c">{t("AFz9bzq")}</p>
                                 </div>
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("AFz9bzq")}</p>
+                                  <div>
+                                    <p>{t("AFz9bzq")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("A21tdwK")}
+                                    </p>
+                                  </div>
                                   <Select
                                     options={translationServices}
                                     value={selectedTransService}
@@ -1160,7 +1027,12 @@ export default function Settings() {
                                     selectedTransService
                                   ].plans && (
                                     <div className="fx-scattered fit-container">
-                                      <p>{t("AFLFvbx")}</p>
+                                      <div>
+                                        <p>{t("AFLFvbx")}</p>
+                                        <p className="p-medium gray-c">
+                                          {t("AsYLJGY")}
+                                        </p>
+                                      </div>
                                       <Select
                                         options={transServicesPlans}
                                         value={transServicePlan}
@@ -1238,16 +1110,28 @@ export default function Settings() {
                                   : setSelectedTab("moderation")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="content-s-24"></div>
-                                <p>{t("Ayh6w9C")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="content-s-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("Ayh6w9C")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("Aa4zlCA")}
+                                  </p>
+                                </div>
                               </div>
                               <div className="arrow"></div>
                             </div>
                             {selectedTab === "moderation" && (
                               <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("AX2OYcg")}</p>
+                                  <div>
+                                    <p>{t("AX2OYcg")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("AYnXPtk")}
+                                    </p>
+                                  </div>
                                   <div
                                     className="btn-text-gray"
                                     style={{ marginRight: ".75rem" }}
@@ -1257,23 +1141,12 @@ export default function Settings() {
                                   </div>
                                 </div>
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("A1XtC0x")}</p>
-                                  {/* {customServer === false && (
-                                  <div className="fx-centered">
-                                    <Select
-                                      options={getMediaUploaderFinalList()}
-                                      value={selectedMediaServer}
-                                      setSelectedValue={handleSwitchMediaServer}
-                                    />
-                                    <div
-                                      className="round-icon-small round-icon-tooltip"
-                                      data-tooltip={t("ALyj7Li")}
-                                      onClick={() => setCustomServer("")}
-                                    >
-                                      <div className="plus-sign"></div>
-                                    </div>
+                                  <div>
+                                    <p>{t("A1XtC0x")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("ATtpr07")}
+                                    </p>
                                   </div>
-                                )} */}
                                   <div
                                     className="btn-text-gray"
                                     style={{ marginRight: ".75rem" }}
@@ -1326,7 +1199,12 @@ export default function Settings() {
                                   </div>
                                 )}
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("ACASAT7")}</p>
+                                  <div>
+                                    <p>{t("ACASAT7")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("AZknCuh")}
+                                    </p>
+                                  </div>
                                 </div>
                                 <div className="fit-container">
                                   <p className="gray-c">{t("ATQOG8o")}</p>
@@ -1492,19 +1370,27 @@ export default function Settings() {
                                   : setSelectedTab("wallets")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="wallet-24"></div>
-                                <p>{t("ACERu54")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="wallet-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("ACERu54")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("A0ZZIE7")}
+                                  </p>
+                                </div>
                               </div>
                               <div className="arrow"></div>
                             </div>
-                            <hr />
-
                             {selectedTab === "wallets" && (
                               <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                                 <div className="fit-container fx-scattered">
                                   <div>
-                                    <p className="gray-c">{t("A8fEwNq")}</p>
+                                    <p>{t("A8fEwNq")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("AYKDD4g")}
+                                    </p>
                                   </div>
                                   <div className="fx-centered">
                                     <div
@@ -1555,36 +1441,6 @@ export default function Settings() {
                                                 ></div>
                                               )}
                                             </div>
-                                            {/* <div className="fx-centered">
-                                            {wallet.kind === 3 && (
-                                              <div
-                                                className="sticker sticker-gray-black fx-centered"
-                                                onClick={() =>
-                                                  copyKey(
-                                                    t("A6Pj02S"),
-                                                    wallet.data
-                                                  )
-                                                }
-                                              >
-                                                {t("Aoq0uKa")}
-                                                <div className="copy"></div>
-                                              </div>
-                                            )}
-                                            {wallet.kind !== 1 && (
-                                              <div
-                                                className="sticker sticker-gray-black fx-centered"
-                                                onClick={() =>
-                                                  copyKey(
-                                                    t("ALR84Tq"),
-                                                    wallet.entitle
-                                                  )
-                                                }
-                                              >
-                                                {t("ArCMp34")}
-                                                <div className="copy"></div>
-                                              </div>
-                                            )}
-                                          </div> */}
                                           </div>
                                         </div>
                                         <div className="fx-centered"></div>
@@ -1674,20 +1530,31 @@ export default function Settings() {
                                   : setSelectedTab("customization")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="custom-24"></div>
-                                <p>{t("ARS24Cc")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="custom-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("ARS24Cc")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("AvNq0fB")}
+                                  </p>
+                                </div>
                               </div>
                               <div className="arrow"></div>
                             </div>
-                            <hr />
                             {selectedTab === "customization" && (
                               <div className="fit-container fx-col fx-centered  box-pad-h-m box-pad-v-m ">
                                 <div className="fit-container">
                                   <p className="gray-c">{t("Amm6e0Z")}</p>
                                 </div>
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("AozzmTY")}</p>
+                                  <div>
+                                    <p>{t("AozzmTY")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("A3nTKfp")}
+                                    </p>
+                                  </div>
                                   <div
                                     className={`toggle ${
                                       !collapsedNote ? "toggle-dim-gray" : ""
@@ -1700,7 +1567,12 @@ export default function Settings() {
                                   ></div>
                                 </div>
                                 <div className="fx-scattered fit-container fx-start-v fx-col">
-                                  <p>{t("ADAM3FJ")}</p>
+                                  <div>
+                                    <p>{t("ADAM3FJ")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("Ai5Sb3k")}
+                                    </p>
+                                  </div>
                                   <div className="fit-container fx-centered">
                                     <div
                                       className="fx fx-centered fx-col sc-s-18 bg-sp "
@@ -1745,7 +1617,12 @@ export default function Settings() {
                                   </div>
                                 </div>
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("AFVPHti")}</p>
+                                  <div>
+                                    <p>{t("AFVPHti")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("A864200")}
+                                    </p>
+                                  </div>
                                   <div
                                     className={`toggle ${
                                       !userHoverPreview ? "toggle-dim-gray" : ""
@@ -1760,9 +1637,17 @@ export default function Settings() {
                                 <hr />
                                 <div className="fit-container">
                                   <p className="gray-c">{t("AKjfaA8")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("Am0PvQX")}
+                                  </p>
                                 </div>
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("AZZ4XLg")}</p>
+                                  <div>
+                                    <p>{t("AZZ4XLg")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("AgBOrIx")}
+                                    </p>
+                                  </div>
                                   <div
                                     className={`toggle ${
                                       homeContentSuggestion
@@ -1778,7 +1663,12 @@ export default function Settings() {
                                 </div>
                                 <hr />
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("AE7aj4C")}</p>
+                                  <div>
+                                    <p>{t("AE7aj4C")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("AyBFzxq")}
+                                    </p>
+                                  </div>
                                   <div
                                     className={`toggle ${
                                       userToFollowSuggestion
@@ -1794,7 +1684,12 @@ export default function Settings() {
                                 </div>
                                 <hr />
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("Ax8NFUb")}</p>
+                                  <div>
+                                    <p>{t("Ax8NFUb")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("ARDBNh7")}
+                                    </p>
+                                  </div>
                                   <div
                                     className={`toggle ${
                                       contentSuggestion ? "toggle-dim-gray" : ""
@@ -1808,7 +1703,12 @@ export default function Settings() {
                                 </div>
                                 <hr />
                                 <div className="fx-scattered fit-container">
-                                  <p>{t("ANiWe9M")}</p>
+                                  <div>
+                                    <p>{t("ANiWe9M")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("AXgwD7C")}
+                                    </p>
+                                  </div>
                                   <div
                                     className={`toggle ${
                                       interestSuggestion
@@ -1824,15 +1724,25 @@ export default function Settings() {
                                 </div>
                                 <hr />
                                 <div className="fx-scattered fit-container fx-col fx-start-v">
-                                  <p className="gray-c">{t("ASSFfFZ")}</p>
+                                  <div>
+                                    <p className="gray-c">{t("ASSFfFZ")}</p>
+                                    <p className="p-medium gray-c">
+                                      {t("Aaa8NMg")}
+                                    </p>
+                                  </div>
                                   <div className="fit-container fx-centered fx-col">
                                     {notification.map((item, index) => {
                                       return (
                                         <Fragment key={index}>
                                           <div className="fx-scattered fit-container">
-                                            <p className="p-maj">
-                                              {notificationDN[item.tab]}
-                                            </p>
+                                            <div>
+                                              <p className="p-maj">
+                                                {notificationDN[item.tab]}
+                                              </p>
+                                              <p className="p-medium gray-c">
+                                                {notificationDesc[item.tab]}
+                                              </p>
+                                            </div>
                                             <div className="fx-centered">
                                               <div
                                                 className={`toggle ${
@@ -1877,9 +1787,16 @@ export default function Settings() {
                                   : setSelectedTab("cache")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="cache-24"></div>
-                                <p>{t("AZEJWnf")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="cache-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("AZEJWnf")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("AHV4nwK")}
+                                  </p>
+                                </div>
                               </div>
                               <div className="arrow"></div>
                             </div>
@@ -1934,9 +1851,16 @@ export default function Settings() {
                                   : setSelectedTab("theme")
                               }
                             >
-                              <div className="fx-centered fx-start-h">
-                                <div className="theme-24"></div>
-                                <p>{t("A1iiDWU")}</p>
+                              <div className="fx-centered fx-start-h fx-start-v">
+                                <div className="box-pad-v-s">
+                                  <div className="theme-24"></div>
+                                </div>
+                                <div>
+                                  <p>{t("A1iiDWU")}</p>
+                                  <p className="p-medium gray-c">
+                                    {t("Aayzo1w")}
+                                  </p>
+                                </div>
                               </div>
                               <div className="arrow"></div>
                             </div>
@@ -1954,9 +1878,16 @@ export default function Settings() {
                               borderBottom: "1px solid var(--very-dim-gray)",
                             }}
                           >
-                            <div className="fx-centered fx-start-h">
-                              <div className="cup-24"></div>
-                              <p>{t("ACALoWH")}</p>
+                            <div className="fx-centered fx-start-h fx-start-v">
+                              <div className="box-pad-v-s">
+                                <div className="cup-24"></div>
+                              </div>
+                              <div>
+                                <p>{t("ACALoWH")}</p>
+                                <p className="p-medium gray-c">
+                                  {t("AF2ceO1")}
+                                </p>
+                              </div>
                             </div>
                             {yakiChestStats && isYakiChestLoaded && (
                               <div className="fx-centered">
@@ -2075,6 +2006,7 @@ const RelaysConfig = () => {
   const { t } = useTranslation();
   const [showRelaysInfo, setShowRelaysInfo] = useState(false);
   const [allRelays, setAllRelays] = useState([]);
+  const [showStatus, setShowStatus] = useState(false);
   const [selectedTab, setSelectedTab] = useState(state ? state.relaysTab : 0);
 
   useEffect(() => {
@@ -2095,12 +2027,61 @@ const RelaysConfig = () => {
           exit={() => setShowRelaysInfo(false)}
         />
       )}
+      {showStatus && (
+        <div className="fixed-container fx-centered box-pad-h">
+          <div
+            style={{
+              width: "min(100%, 400px)",
+              position: "relative",
+              gap: "20px",
+            }}
+            className="fx-centered fx-start-v fx-col box-pad-v box-pad-h sc-s-18 bg-sp slide-up"
+          >
+            <div className="close" onClick={() => setShowStatus(false)}>
+              <div></div>
+            </div>
+            <h4>{t("AmikACu")}</h4>
+            <div className="fx-centered fx-start-h fx-col fx-start-v">
+              <div className="fx-centered">
+                <div
+                  style={{
+                    minWidth: "6px",
+                    aspectRatio: "1/1",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--green-main)",
+                  }}
+                ></div>
+                <p>{t("AcPWRJ9")}</p>
+              </div>
+              <div className="fx-centered">
+                <div
+                  style={{
+                    minWidth: "6px",
+                    aspectRatio: "1/1",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--red-main)",
+                  }}
+                ></div>
+                <p>{t("AJQQGgT")}</p>
+              </div>
+            </div>
+            <hr />
+            <p className="gray-c">{t("AugXNf5")}</p>
+          </div>
+        </div>
+      )}
       <div className="fit-container fx-scattered box-pad-h">
         {selectedTab === 0 && (
-          <p className="c1-c slide-right">{t("AciF91F")}</p>
+          <div className="fx-centered" onClick={() => setShowStatus(true)}>
+            <p className="c1-c slide-right">{t("AciF91F")}</p>
+            <div className="info-tt" style={{ rotate: "180deg" }}></div>
+          </div>
         )}
         {selectedTab === 1 && (
-          <p className="c1-c slide-right">{t("AEsTMiq")}</p>
+          <div className="fx-centered" onClick={() => setShowStatus(true)}>
+            <p className="c1-c slide-right">{t("AEsTMiq")}</p>
+            <div className="info-tt" style={{ rotate: "180deg" }}></div>
+          </div>
         )}
         <div className="fx-centered">
           <div className="round-icon-small" onClick={() => setSelectedTab(0)}>
@@ -2269,7 +2250,7 @@ const ContentRelays = ({ setShowRelaysInfo, allRelays }) => {
         className="fit-container sc-s-18 bg-sp"
         style={{ overflow: "visible" }}
       >
-        <div className="fx-centered fx-end-h fit-container box-pad-h-s box-pad-v-s">
+        <div className="fx-centered fx-end-h fx-start-v fit-container box-pad-h-s box-pad-v-s">
           <AddRelays
             allRelays={allRelays}
             userAllRelays={tempUserRelays}
@@ -2342,7 +2323,8 @@ const ContentRelays = ({ setShowRelaysInfo, allRelays }) => {
                         className="info-tt"
                         style={{
                           filter: "brightness(0) invert()",
-                          opacity: 0.5,
+                          rotate: "180deg",
+                          opacity: 0.9,
                         }}
                       ></div>
                     </div>
@@ -2531,7 +2513,7 @@ const InboxRelays = ({ setShowRelaysInfo, allRelays }) => {
                 <p className="c1-c">Private messages relays</p>
               </div>
               <hr /> */}
-        <div className="fx-centered fx-end-h fit-container box-pad-h-s box-pad-v-s">
+        <div className="fx-centered fx-end-h fx-start-v  fit-container box-pad-h-s box-pad-v-s">
           <AddRelays
             allRelays={allRelays}
             userAllRelays={tempUserRelays}
@@ -2855,6 +2837,9 @@ const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
         value={searchedRelay}
         onChange={handleOnChange}
       />
+      <div className="box-pad-v-s box-pad-h-s">
+        <p className="gray-c p-medium">{t("A2wrBnY")}</p>
+      </div>
       {showList && (
         <div
           className="fit-container sc-s-18 fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-m slide-up"

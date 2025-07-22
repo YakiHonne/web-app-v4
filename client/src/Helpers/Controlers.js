@@ -142,7 +142,7 @@ const getUserFromNOSTR = (pubkey) => {
         // resolve(getuserMetadata(event));
       });
       subscription.on("eose", () => {
-        subscription.stop()
+        subscription.stop();
         resolve(auth);
       });
     } catch (err) {
@@ -165,11 +165,11 @@ const getUserRelaysFromNOSTR = (pubkey) => {
       );
 
       subscription.on("event", (event) => {
-        subscription.stop()
+        subscription.stop();
         resolve(event.rawEvent());
       });
       subscription.on("eose", () => {
-        subscription.stop()
+        subscription.stop();
         resolve(false);
       });
     } catch (err) {
@@ -396,16 +396,19 @@ const saveRelaysListsForUsers = async (pubkeyList) => {
 const saveInboxRelaysListsForUsers = async (pubkeyList) => {
   try {
     let list = await getSubData([{ kinds: [10050], authors: pubkeyList }]);
-    let followingsRelayList = [...list.data].filter((_, index, arr) => {
-      if(arr.findIndex((item) => item.pubkey === _.pubkey) === index) return true;
-    }).map((author) => {
-      return {
-        pubkey: author.pubkey,
-        relays: author.tags
-          .filter((_) => _[0] === "relay")
-          .map((tag) => tag[1]),
-      };
-    });
+    let followingsRelayList = [...list.data]
+      .filter((_, index, arr) => {
+        if (arr.findIndex((item) => item.pubkey === _.pubkey) === index)
+          return true;
+      })
+      .map((author) => {
+        return {
+          pubkey: author.pubkey,
+          relays: author.tags
+            .filter((_) => _[0] === "relay")
+            .map((tag) => tag[1]),
+        };
+      });
 
     savefollowingsInboxRelays(followingsRelayList);
   } catch (err) {
@@ -459,7 +462,8 @@ const getSubData = async (
   filter,
   timeout = 1000,
   relayUrls = [],
-  ndk = ndkInstance
+  ndk = ndkInstance,
+  maxEvents = 1000
 ) => {
   const userRelays = store.getState().userRelays;
 
@@ -478,6 +482,10 @@ const getSubData = async (
       return temp;
     });
 
+    if (!filter_ || filter_.length === 0) {
+      resolve({ data: [], pubkeys: [] });
+      return;
+    }
     let sub = ndk.subscribe(filter_, {
       cacheUsage: "CACHE_FIRST",
       groupable: false,
@@ -499,9 +507,11 @@ const getSubData = async (
     };
 
     sub.on("event", (event) => {
-      pubkeys.push(event.pubkey);
-      if (event.id) events.push(event.rawEvent());
-      startTimer();
+      if (events.length <= maxEvents) {
+        pubkeys.push(event.pubkey);
+        if (event.id) events.push(event.rawEvent());
+        startTimer();
+      }
     });
 
     startTimer();

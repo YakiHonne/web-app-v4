@@ -8,14 +8,14 @@ import LoadingDots from "../LoadingDots";
 import LinkRepEventPreview from "./LinkRepEventPreview";
 import { useTranslation } from "react-i18next";
 
-const traceEventPath = async (id, all, mainEventID, tagKind) => {
+const traceEventPath = (id, all, mainEventID, tagKind) => {
   const path = [];
   let currentId = id;
   while (currentId) {
     const event = all.find((comment) => comment.id === currentId);
     if (!event) break;
 
-    let parsedEvent = await getParsedNote(event, true);
+    let parsedEvent = getParsedNote(event, true);
 
     path.unshift(parsedEvent);
     const parentRoot = event.tags.find(
@@ -32,7 +32,7 @@ const traceEventPath = async (id, all, mainEventID, tagKind) => {
   if (tagKind === "e") {
     let mainEvent = all.find((comment) => comment.id === mainEventID);
     if (mainEvent) {
-      let parsedEvent = await getParsedNote(mainEvent, true);
+      let parsedEvent = getParsedNote(mainEvent, true);
       path.unshift(parsedEvent);
     }
   }
@@ -61,8 +61,8 @@ export default function HistorySection({
   const [netComments, setNetComments] = useState([]);
 
   useEffect(() => {
-    let parsedCom = async () => {
-      let res = await traceEventPath(targetedEventID, comments, id, tagKind);
+    let parsedCom = () => {
+      let res = traceEventPath(targetedEventID, comments, id, tagKind);
       setNetComments(res);
       if (res.length !== 0) setIsLoading(false);
     };

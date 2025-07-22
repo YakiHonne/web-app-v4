@@ -5,8 +5,6 @@ import {
   encodeLud06,
   shortenKey,
 } from "../../Helpers/Encryptions";
-import axiosInstance from "../../Helpers/HTTP_Client";
-import UserProfilePic from "./UserProfilePic";
 import QRCode from "react-qr-code";
 import relaysOnPlatform from "../../Content/Relays";
 import { getZapEventRequest } from "../../Helpers/NostrPublisher";
@@ -15,18 +13,15 @@ import { webln } from "@getalby/sdk";
 import { decode } from "light-bolt11-decoder";
 import { getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
-import { updateYakiChestStats } from "../../Helpers/Controlers";
-import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
 import { setToast } from "../../Store/Slides/Publishers";
-import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
-import LoginSignup from "./LoginSignup";
 import useUserProfile from "../../Hooks/useUsersProfile";
 import { nip19 } from "nostr-tools";
 import Lottie from "lottie-react";
 import successJSON from "../../media/JSONs/success.json";
 import PagePlaceholder from "../PagePlaceholder";
 import { Link } from "react-router-dom";
+import { saveUsers } from "../../Helpers/DB";
 
 export default function PaymentGateway({
   recipientAddr,
@@ -87,75 +82,71 @@ export default function PaymentGateway({
 
   if (isLoading)
     return (
-      <div className="fixed-container fx-centered" style={{ zIndex: 200000 }}>
+      <div className="fixed-container fx-centered" style={{ zIndex: 2000000 }}>
         <LoadingDots />
       </div>
     );
   if (wallets.length === 0)
-  return (
-    <div
-      className="fixed-container fx-centered box-pad-h"
-      style={{ zIndex: 200000 }}
-    >
-      {/* display error window */}
+    return (
       <div
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-        className="sc-s bg-sp box-pad-h box-pad-v fx-centered fx-col slide-up"
-        style={{
-          width: "min(100%, 400px)",
-          position: "relative",
-          overflow: "visible",
-          padding: "3rem 1rem",
-        }}
+        className="fixed-container fx-centered box-pad-h"
+        style={{ zIndex: 2000000 }}
       >
-        <div className="close" onClick={exit}>
-          <div></div>
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="sc-s bg-sp box-pad-h box-pad-v fx-centered fx-col slide-up"
+          style={{
+            width: "min(100%, 400px)",
+            position: "relative",
+            overflow: "visible",
+            padding: "3rem 1rem",
+          }}
+        >
+          <div className="close" onClick={exit}>
+            <div></div>
+          </div>
+          <PagePlaceholder page={"nostr-add-wallet"} />
+          <Link to={"/wallet"} target="_blank">
+            <button className="btn btn-normal">{t("A8fEwNq")}</button>
+          </Link>
         </div>
-        <PagePlaceholder page={"nostr-add-wallet"} />
-        <Link to={"/wallet"} target="_blank">
-          <button className="btn btn-normal">{t("A8fEwNq")}</button>
-        </Link>
       </div>
-    </div>
-  );
+    );
   if (
     !recipientAddr ||
     (!callback && !recipientAddr.startsWith("lnbc")) ||
     (!lnbcAmount && recipientAddr.startsWith("lnbc"))
   )
-  return (
-    <div
-      className="fixed-container fx-centered box-pad-h"
-      style={{ zIndex: 200000 }}
-    >
+    return (
       <div
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-        className="sc-s bg-sp box-pad-h box-pad-v fx-centered fx-col slide-up"
-        style={{
-          width: "min(100%, 400px)",
-          position: "relative",
-          overflow: "visible",
-        }}
+        className="fixed-container fx-centered box-pad-h"
+        style={{ zIndex: 2000000 }}
       >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
         <div
-          className="crossmark-tt"
-          style={{ minWidth: "50px", minHeight: "50px" }}
-        ></div>
-        <h4>Payment failed</h4>
-        <p className="box-pad-h gray-c p-centered">
-          Could not establish the payment process, the address provided might be
-          faulty
-        </p>
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="sc-s bg-sp box-pad-h box-pad-v fx-centered fx-col slide-up"
+          style={{
+            width: "min(100%, 400px)",
+            position: "relative",
+            overflow: "visible",
+          }}
+        >
+          <div className="close" onClick={exit}>
+            <div></div>
+          </div>
+          <div
+            className="crossmark-tt"
+            style={{ minWidth: "50px", minHeight: "50px" }}
+          ></div>
+          <h4>{t("AI8bhpw")}</h4>
+          <p className="box-pad-h gray-c p-centered">{t("ACOXf0z")}</p>
+        </div>
       </div>
-    </div>
-  );
+    );
   return (
     <Cashier
       recipientAddr={recipientAddr}
@@ -187,7 +178,7 @@ const Cashier = ({
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userMetadata = useSelector((state) => state.userMetadata);
-  const [amount, setAmount] = useState(paymentAmount);
+  const [amount, setAmount] = useState(paymentAmount || 21);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [invoice, setInvoice] = useState("");
@@ -256,6 +247,7 @@ const Cashier = ({
           );
           if (res.data.status === "ERROR") {
             setIsLoading(false);
+            setConfirmation("failed");
             dispatch(
               setToast({
                 type: 2,
@@ -266,6 +258,7 @@ const Cashier = ({
           }
           lnbcInvoice = res.data.pr;
         } catch (err) {
+          setConfirmation("failed");
           setIsLoading(false);
           dispatch(
             setToast({
@@ -288,28 +281,22 @@ const Cashier = ({
       let res = await sendPayment(lnbcInvoice);
       setConfirmPayment(res);
       if (eventToPublish) {
-        let sub = ndkInstance.subscribe(
-          [
-            {
-              kinds: [9735],
-              "#p": [recipientPubkey],
-              since: eventCreatedAt - 1,
-            },
-          ],
-          { groupable: false, cacheUsage: "ONLY_RELAY" }
-        );
-        sub.on("event", (event) => {
-          setReceivedEvent(event.rawEvent());
-          setConfirmation("confirmed");
-          setIsLoading(false);
-          sub.stop();
+        setReceivedEvent({
+          kinds: [9735],
+          "#p": [recipientPubkey],
+          since: eventCreatedAt - 1,
         });
-      } else {
-        setConfirmation("confirmed");
-        setIsLoading(false);
       }
+      if (res.status) {
+        setConfirmation("confirmed");
+      } else {
+        setConfirmation("failed");
+      }
+      setIsLoading(false);
     } catch (err) {
       console.log(err);
+      setConfirmation("failed");
+      setIsLoading(false);
     }
   };
 
@@ -446,7 +433,6 @@ const Cashier = ({
   };
 
   const handleSelectWallet = (walletID) => {
-    // let walletID = e.target.value;
     let index = wallets.findIndex((wallet) => wallet.id == walletID);
 
     let tempWallets = Array.from(wallets);
@@ -468,7 +454,7 @@ const Cashier = ({
         e.stopPropagation();
         exit();
       }}
-      style={{ zIndex: 200000 }}
+      style={{ zIndex: 2000000 }}
     >
       <div
         onClick={(e) => {
@@ -481,54 +467,39 @@ const Cashier = ({
           overflow: "visible",
         }}
       >
-        {/* <div
-          className="close"
-          onClick={(e) => {
-            e.stopPropagation();
-            exit();
-          }}
-        >
-          <div></div>
-        </div> */}
-        {/* <div className="fx-centered box-marg-s">
-          <div className="fx-centered fx-col">
-            <UserProfilePic size={54} mainAccountUser={true} />
-            <p className="gray-c p-medium">{userMetadata.name}</p>
-          </div>
-          {recipientPubkey && (
-            <>
-              <div style={{ position: "relative", width: "30%" }}>
-                {confirmation === "confirmed" && (
-                  <div
-                    className="checkmark slide-left"
-                    style={{ scale: "3" }}
-                  ></div>
-                )}
-                {confirmation !== "confirmed" && (
-                  <div className="arrows-animated">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                )}
-              </div>
-              <div className="fx-centered fx-col">
-                <UserProfilePic
-                  size={54}
-                  img={recipientInfo.img || recipientInfo.picture}
-                  mainAccountUser={false}
-                />
-                <p className="gray-c p-medium">{recipientInfo.name}</p>
-              </div>
-            </>
-          )}
-        </div> */}
-
-        {/* <hr style={{ margin: "1rem auto" }} /> */}
         {confirmation === "initiated" && (
           <div className="fx-centered fx-col fit-container fx-start-v">
             <div className="fit-container fx-centered fx-col">
-              <div className="fit-container fx-centered">
+              {recipientPubkey && (
+                <div
+                  className="fx-centered sc-s bg-sp"
+                  style={{ padding: ".35rem .45rem", gap: "20px" }}
+                >
+                  <div
+                    className="bg-img cover-bg pointer"
+                    style={{
+                      minHeight: "30px",
+                      minWidth: "30px",
+                      backgroundImage: `url(${userMetadata?.picture})`,
+                      borderRadius: "50%",
+                    }}
+                  ></div>
+                  {/* <div className="arrow" style={{rotate: "-90deg"}}></div> */}
+                  <div style={{ position: "relative" }}>
+                    <div className="arrows-animated">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                  <ReceiverInfo
+                    pubkey={recipientPubkey}
+                    recipientAddr={recipientAddr}
+                    isLNBC={isLNBC}
+                  />
+                </div>
+              )}
+              <div className="fit-container fx-centered" style={{ gap: 0 }}>
                 <div
                   style={{
                     position: "relative",
@@ -539,8 +510,9 @@ const Cashier = ({
                 >
                   {selectedWallet && (
                     <div
-                      className="box-pad-h-m box-pad-v-s sc-s bg-sp fx-scattered option pointer fit-container"
+                      className="box-pad-h-s sc-s bg-sp fx-scattered option pointer fit-container"
                       onClick={() => setShowWalletList(!showWalletsList)}
+                      style={{ padding: ".25rem .5rem" }}
                     >
                       <div className="fx-centered">
                         {selectedWallet.kind === 1 && (
@@ -626,7 +598,7 @@ const Cashier = ({
                 <>
                   <div className="fx-centered fx-col box-pad-v-m box-pad-h-s">
                     <div className="fx-centered fx-col">
-                      <p className="gray-c p-big">You're sending</p>
+                      <p className="gray-c p-big">{t("A82pzWN")}</p>
                       <input
                         type="number"
                         className="if p-bold if-no-border ifs-full p-centered"
@@ -661,10 +633,10 @@ const Cashier = ({
                   </div>
                 </>
               )}
-              {(isLNBC || paymentAmount) && (
+              {(isLNBC || paymentAmount !== 0) && (
                 <div className="fx-centered fx-col box-pad-v-m">
                   <div className="fx-centered fx-col">
-                    <p className="gray-c p-big">You're sending</p>
+                    <p className="gray-c p-big">{t("A82pzWN")}</p>
 
                     <h1 style={{ fontSize: "80px" }}>{amount}</h1>
                     <p className="gray-c p-big">Sats</p>
@@ -672,43 +644,12 @@ const Cashier = ({
                 </div>
               )}
             </div>
-            {/* <div className="fx-centered fit-container">
-              <button
-                className="btn btn-gst btn-full"
-                onClick={() => {
-                  onConfirmation(true);
-                }}
-                disabled={isLoading}
-              >
-                {isLoading ? <LoadingDots /> : t("AWADEEz")}
-              </button>
-              <button
-                className="btn btn-normal btn-full fx-centered"
-                onClick={() => onConfirmation(false)}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <LoadingDots />
-                ) : (
-                  <>
-                    {isLNBC ? (
-                      t("AloNXcI", { amount: amount })
-                    ) : (
-                      <>
-                        <div className="bolt"></div> Zap
-                      </>
-                    )}
-                  </>
-                )}
-              </button>
-            </div> */}
-            <div className="fit-container fx-centered" style={{ gap: "30px" }}>
+            <div className="fit-container fx-centered" style={{ gap: "16px" }}>
               <div
-                className="fx-centered fx-col option pointer"
+                className="fx-centered fx-col option pointer fx"
                 style={{
-                  aspectRatio: "1/1",
-                  width: "85px",
-                  borderRadius: "var(--border-r-50)",
+                  height: "95px",
+                  borderRadius: "24px",
                   border: "1px solid var(--red-main)",
                 }}
                 onClick={isLoading ? null : exit}
@@ -720,16 +661,15 @@ const Cashier = ({
                     <p className="red-c p-big" style={{ height: "20px" }}>
                       &#10005;
                     </p>
-                    <p className="p-medium red-c">Cancel</p>
+                    <p className="red-c">{t("AB4BSCe")}</p>
                   </>
                 )}
               </div>
               <div
-                className="fx-centered fx-col option pointer"
+                className="fx-centered fx-col option pointer fx"
                 style={{
-                  aspectRatio: "1/1",
-                  width: "85px",
-                  borderRadius: "var(--border-r-50)",
+                  height: "95px",
+                  borderRadius: "24px",
                   border: "1px solid var(--pale-gray)",
                 }}
                 onClick={() => {
@@ -741,16 +681,15 @@ const Cashier = ({
                 ) : (
                   <>
                     <div className="qrcode-24"></div>
-                    <p className="p-medium">Invoice</p>
+                    <p>{t("AvEHTiP")}</p>
                   </>
                 )}
               </div>
               <div
-                className="fx-centered fx-col option pointer"
+                className="fx-centered fx-col option pointer fx"
                 style={{
-                  aspectRatio: "1/1",
-                  width: "85px",
-                  borderRadius: "var(--border-r-50)",
+                  height: "95px",
+                  borderRadius: "24px",
                   backgroundColor: "var(--c1)",
                 }}
                 onClick={() => (isLoading ? null : onConfirmation())}
@@ -762,7 +701,7 @@ const Cashier = ({
                     <p className="p-big" style={{ height: "20px" }}>
                       &#8593;
                     </p>
-                    <p className="p-medium">Send</p>
+                    <p>{t("A14LwWS")}</p>
                   </>
                 )}
               </div>
@@ -830,7 +769,90 @@ const Cashier = ({
             </button>
           </div>
         )}
+        {confirmation === "failed" && (
+          <div
+            className="fx-centered fx-col fit-container"
+            style={{ height: "16vh" }}
+          >
+            <div
+              className="crossmark-tt"
+              style={{ minHeight: "50px", minWidth: "50px" }}
+            ></div>
+            <h4 className="slide-down box-pad-v-m">{t("AI8bhpw")}</h4>
+            <button className="btn btn-normal slide-up" onClick={exit}>
+              {t("Acglhzb")}
+            </button>
+          </div>
+        )}
       </div>
+    </div>
+  );
+};
+
+const ReceiverInfo = ({ pubkey, isLNBC, recipientAddr }) => {
+  const { t } = useTranslation();
+  const ref = useRef(null);
+  const { isNip05Verified, userProfile } = useUserProfile(pubkey);
+  const [showInfo, setShowInfo] = useState(false);
+
+  useEffect(() => {
+    if (!(userProfile.display_name && userProfile.picture)) saveUsers([pubkey]);
+  }, []);
+
+  useEffect(() => {
+    const handleOffClick = (e) => {
+      e.stopPropagation();
+      if (ref.current && !ref.current.contains(e.target)) setShowInfo(false);
+    };
+    document.addEventListener("mousedown", handleOffClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOffClick);
+    };
+  }, [ref]);
+  return (
+    <div style={{ position: "relative", zIndex: "100" }} ref={ref}>
+      <div
+        className="bg-img cover-bg pointer"
+        style={{
+          minHeight: "30px",
+          minWidth: "30px",
+          backgroundImage: `url(${userProfile?.picture})`,
+          borderRadius: "50%",
+        }}
+        onClick={() => setShowInfo(!showInfo)}
+      ></div>
+
+      {showInfo && (
+        <div
+          className="sc-s bg-sp box-pad-h box-pad-v-s slide-left"
+          style={{
+            position: "absolute",
+            top: "0",
+            left: "calc(100% + 8px)",
+            width: "max-content",
+            maxWidth: "300px",
+            height: "100%",
+            zIndex: 101,
+          }}
+        >
+          <div className="fx-centered fx-start-h">
+            <p className="p-maj">{userProfile?.display_name}</p>
+            {isNip05Verified && <div className="checkmark-c1"></div>}
+          </div>
+          {!isLNBC && (
+            <p className="p-one-line gray-c">
+              {userProfile.lud16
+                ? userProfile.lud16.length < 40
+                  ? userProfile.lud16
+                  : shortenKey(userProfile.lud16, 10)
+                : shortenKey(recipientAddr, 10)}
+            </p>
+          )}
+          {isLNBC && (
+            <p className="p-one-line gray-c p-italic">{t("ANOiCGe")}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
