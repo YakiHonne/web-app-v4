@@ -181,7 +181,7 @@ const Banner = ({ exit }) => {
               <div>
                 <p>Updates</p>
                 <p className="gray-c p-italic p-medium">
-                  Last updated June 05, 2025
+                  Last updated July 22, 2025
                 </p>
               </div>
               <p className="orange-c p-medium">
@@ -191,46 +191,72 @@ const Banner = ({ exit }) => {
             <div className="box-pad-v-s"></div>
             <ul>
               <li>
-                Content customization now supports multiple source types—from
-                your Nostr network and global feed to Data Vending Machine
-                servers and custom or algorithmic relays.
+                Secure login with remote signers (nSec Bunkers) is now available
+                for safer account management.
               </li>
               <li>
-                Advanced content filtering lets you fine-tune your experience by
-                setting time ranges, filtering by keywords, showing posts from
-                favorite users, and more.
+                BLOSSOM is now supported, allowing you to upload, mirror, and
+                access mirrored files—with easy server setup in settings.
               </li>
               <li>
-                Seamless multi-account publishing enables fast switching between
-                connected accounts for posting notes, comments, and
-                articles—without ending your current session.
+                The zapping window has a brand-new design—quick wallet
+                switching, recipient previews, and a bigger, more user-friendly
+                layout make sending zaps easier than ever.
               </li>
               <li>
-                Reposts are now grouped to keep your home feed clean and
-                focused.
+                Favorite relays support lets you easily access and manage your
+                go-to relay sources when browsing content.
               </li>
               <li>
-                Interact quickly with articles, videos, and curations while
-                viewing key stats at a glance.
+                Smart Widget AI Assistant is live! Developers can now get
+                real-time help to build and use smart widgets more easily.
               </li>
               <li>
-                Smart Widget types are now organized into separate tabs for a
-                clearer and more intuitive browsing experience.
+                Lightning payments through miniapps are now supported, letting
+                developers securely trigger payments via smart widgets.
               </li>
               <li>
-                General improvements and bug fixes for a more polished
+                Web of Trust is now everywhere, helping improve post stats,
+                notifications, and messaging based on who you trust.
+              </li>
+              <li>
+                Set your own trust score threshold in settings to fine-tune what
+                you see and who you interact with.
+              </li>
+              <li>
+                Custom messaging relays let you send and receive DMs through the
+                relays you choose.
+              </li>
+              <li>
+                Relay settings got a fresh redesign for a cleaner, more
+                intuitive experience.
+              </li>
+              <li>
+                Notifications now load faster, giving you a smoother experience
+                all around.
+              </li>
+              <li>
+                Search is faster and smarter—across spotlight, the main search
+                page, and mentions in notes.
+              </li>
+              <li>
+                Refined dashboard layout for a smoother and more intuitive user
                 experience.
               </li>
+              <li>
+                See signer types at a glance in the side menu to better
+                understand each connected account.
+              </li>
+              <li>
+                Interest list added to both the search page and spotlight for
+                quicker content discovery.
+              </li>
+              <li>
+                Removing selected filter now stick—your choices are remembered
+                even after refreshing the page.
+              </li>
+              <li> General improvements and bug fix</li>
             </ul>
-            {/* <p>{`
-- Introducing Smart Widgets v2 – now dynamic and programmable. Learn more at https://yakihonne.com/docs/sw/intro
-- New Tools Smart Widgets section in note creation for advanced content editing.
-- Curations, videos, and polls are now Tools Smart Widgets, enabling quick creation and seamless embedding in notes.
-- Zap advertisements added—top zappers can now appear below notes.
-- Note translation button has been relocated next to the note options for easier access.
-- Follower and following lists are now visible directly on the dashboard home page.
-- General improvements and bug fixes for a smoother experience.
-`}</p> */}
           </div>
           {content.map((card, index) => {
             return (

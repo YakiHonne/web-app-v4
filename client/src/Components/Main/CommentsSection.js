@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import NotesComment from "./NotesComment";
-import { getParsedNote } from "../../Helpers/Encryptions";
+import {
+  getParsedNote,
+  getWOTList,
+  getWOTScoreForPubkeyLegacy,
+} from "../../Helpers/Encryptions";
 import { useSelector } from "react-redux";
 import { getSubData } from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
@@ -12,12 +16,13 @@ import { Link } from "react-router-dom";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
 import LoginSignup from "./LoginSignup";
+import { getWotConfig } from "../../Helpers/Helpers";
 
 const filterComments = (all, id, isRoot) => {
   if (isRoot) return filterRootComments(all);
   return filterRepliesComments(all, id);
 };
-const filterRepliesComments = async (all, id) => {
+const filterRepliesComments = (all, id) => {
   let temp = [];
   for (let comment of all) {
     if (
@@ -28,10 +33,9 @@ const filterRepliesComments = async (all, id) => {
           ["reply", "root"].includes(item[3])
       )
     ) {
-      let [note_tree, replies] = await Promise.all([
-        getParsedNote(comment, true),
-        countReplies(comment.id, all),
-      ]);
+      let note_tree = getParsedNote(comment, true);
+      let replies = countReplies(comment.id, all);
+
       temp.push({
         ...note_tree,
         replies,
@@ -41,7 +45,7 @@ const filterRepliesComments = async (all, id) => {
   return temp;
 };
 
-const filterRootComments = async (all) => {
+const filterRootComments = (all) => {
   let temp = [];
 
   for (let comment of all) {
@@ -57,10 +61,9 @@ const filterRootComments = async (all) => {
         Array.isArray(isRoot) &&
         isReply[1] === isRoot[1])
     ) {
-      let [note_tree, replies] = await Promise.all([
-        getParsedNote(comment, true),
-        countReplies(comment.id, all),
-      ]);
+      let note_tree = getParsedNote(comment, true);
+      let replies = countReplies(comment.id, all);
+
       temp.push({
         ...note_tree,
         replies,
@@ -70,7 +73,7 @@ const filterRootComments = async (all) => {
   return temp;
 };
 
-const countReplies = async (id, all) => {
+const countReplies = (id, all) => {
   let replies = [];
 
   for (let comment of all) {
@@ -78,8 +81,8 @@ const countReplies = async (id, all) => {
       (item) => item[3] === "reply" && item[0] === "e" && item[1] === id
     );
     if (ev) {
-      let nestedReplies = await countReplies(comment.id, all);
-      let _ = await getParsedNote(comment, true);
+      let nestedReplies = countReplies(comment.id, all);
+      let _ = getParsedNote(comment, true);
       replies.push({
         ..._,
         replies: nestedReplies,
@@ -126,8 +129,8 @@ export default function CommentsSection({
   }, [netComments, userMutedList]);
 
   useEffect(() => {
-    let parsedCom = async () => {
-      let res = await filterComments(comments, id, isRoot);
+    let parsedCom = () => {
+      let res = filterComments(comments, id, isRoot);
       setNetComments(res);
       if (res.length !== 0 || comments.length > 0) setIsLoading(false);
     };
@@ -137,6 +140,7 @@ export default function CommentsSection({
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      const { score, reactions } = getWotConfig();
       const events = await getSubData(
         [
           {
@@ -157,13 +161,18 @@ export default function CommentsSection({
           let is_mention = event.tags.filter(
             (tag) => tag.length > 3 && tag[3] === "mention" && tag[1] === id
           );
-
+          let scoreStatus = getWOTScoreForPubkeyLegacy(
+            event.pubkey,
+            reactions,
+            score
+          );
           if (
             !(
               (is_un && is_un[1] === "UNCENSORED NOTE") ||
               (is_quote && !is_comment) ||
               (is_mention.length > 0 && !is_comment)
-            )
+            ) &&
+            scoreStatus.status
           ) {
             return event;
           }

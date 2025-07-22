@@ -115,11 +115,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
           className="fx-centered fx-start-h box-pad-v fit-container"
           style={{ columnGap: "16px" }}
         >
-          <UserProfilePic
-            size={32}
-            mainAccountUser={true}
-            allowClick={true}
-          />
+          <UserProfilePic size={32} mainAccountUser={true} allowClick={true} />
           <div className="fx-centered fx-start-h fx-start-v">
             <p>{userMetadata.name || minimizeKey(pubkey)}</p>
             <ShortenKey id={pubkey} />
@@ -256,7 +252,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
                 onClick={() => {
                   customHistory.push(
-                    `/users/${getBech32("npub", userKeys.pub)}`
+                    `/users/${nip19.nprofileEncode({ pubkey: userKeys.pub })}`
                   );
                   dismiss();
                 }}

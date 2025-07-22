@@ -5,6 +5,7 @@ import UserProfilePic from "../../Components/Main/UserProfilePic";
 import QRCode from "react-qr-code";
 import { getBech32, shortenKey } from "../../Helpers/Encryptions";
 import { useTranslation } from "react-i18next";
+import { nip19 } from "nostr-tools";
 
 export default function QRSharing({ user, exit, isVerified }) {
   const dispatch = useDispatch();
@@ -89,7 +90,9 @@ export default function QRSharing({ user, exit, isVerified }) {
               copyKey(
                 t("AoTWbxS"),
                 `https://yakihonne.com/users/${
-                  isVerified ? user.nip05 : getBech32("npub", user.pubkey)
+                  isVerified
+                    ? user.nip05
+                    : nip19.nprofileEncode({ pubkey: user.pubkey })
                 }`
               )
             }

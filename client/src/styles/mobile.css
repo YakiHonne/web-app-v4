@@ -368,7 +368,12 @@
     color: var(--black);
      pointer-events: none;
 } */
-
+.feed-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
+}
   .sw-container .round-icon-small {
     display: flex;
   }

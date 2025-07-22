@@ -304,7 +304,7 @@ hr:last-child {
     justify-content: center;
     align-items: center;
     width: fit-content;
-    padding: 0 var(--10);
+    padding: 0 8px;
     min-height: 20px;
     border-radius: var(--border-r-6);
     font-size: var(--12);
@@ -322,8 +322,8 @@ hr:last-child {
     justify-content: center;
     align-items: center;
     width: fit-content;
-    padding: 0 8px;
-    min-height: 18px;
+    padding: 0 5px;
+    height: 10px;
     border-radius: var(--border-r-6);
     font-size: var(--10);
     word-break: break-word;
@@ -344,6 +344,10 @@ hr:last-child {
 .sticker-red {
     background: var(--red-main);
     color: white;
+}
+.sticker-red-side {
+    background: var(--red-side);
+    color: var(--red-main);
 }
 
 .sticker-c1-pale {
@@ -396,6 +400,10 @@ hr:last-child {
 .sticker-green {
     background: var(--green-main);
     color: white;
+}
+.sticker-green-side {
+    background: var(--green-side);
+    color: var(--green-main);
 }
 
 .sticker-click:active {

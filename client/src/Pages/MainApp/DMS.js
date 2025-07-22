@@ -9,8 +9,14 @@ import {
   generateSecretKey,
   finalizeEvent,
 } from "nostr-tools";
-import { bytesTohex, getBech32 } from "../../Helpers/Encryptions";
-import { getNoteTree } from "../../Helpers/Helpers";
+import {
+  bytesTohex,
+  encrypt04,
+  encrypt44,
+  getBech32,
+  getWOTScoreForPubkeyLegacy,
+} from "../../Helpers/Encryptions";
+import { getNoteTree, getWotConfig } from "../../Helpers/Helpers";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import Date_ from "../../Components/Date_";
 import { useRef } from "react";
@@ -19,15 +25,25 @@ import PagePlaceholder from "../../Components/PagePlaceholder";
 import UploadFile from "../../Components/UploadFile";
 import InitiConvo from "../../Components/Main/InitConvo";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import { getUser, updateYakiChestStats } from "../../Helpers/Controlers";
+import {
+  getUser,
+  InitEvent,
+  updateYakiChestStats,
+} from "../../Helpers/Controlers";
 import { useDispatch, useSelector } from "react-redux";
 import { setToPublish } from "../../Store/Slides/Publishers";
 import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
-import { checkAllConvo, checkCurrentConvo } from "../../Helpers/DB";
+import {
+  checkAllConvo,
+  checkCurrentConvo,
+  getInboxRelaysForUser,
+} from "../../Helpers/DB";
 import Emojis from "../../Components/Emojis";
 import Gifs from "../../Components/Gifs";
 import { useTranslation } from "react-i18next";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
+import { Link } from "react-router-dom";
+import relaysOnPlatform from "../../Content/Relays";
 
 const getFilterDMByTime = (type) => {
   let filterType =
@@ -56,6 +72,7 @@ export default function DMS() {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const initDMS = useSelector((state) => state.initDMS);
   const userFollowings = useSelector((state) => state.userFollowings);
+  const userInboxRelays = useSelector((state) => state.userInboxRelays);
 
   const { t } = useTranslation();
   const [selectedConvo, setSelectedConvo] = useState(false);
@@ -104,38 +121,46 @@ export default function DMS() {
     let followings = 0;
     let known = 0;
     let unknown = 0;
-    let tempChatrooms = userChatrooms.map((chatroom) => {
-      let contact = getUser(chatroom.pubkey);
+    let { score, dms } = getWotConfig();
+    let tempChatrooms = userChatrooms
+      .filter((_) => {
+        if (getWOTScoreForPubkeyLegacy(_.pubkey, dms, score).status)
+          return true;
+      })
+      .map((chatroom) => {
+        let contact = getUser(chatroom.pubkey);
 
-      let isFollowing = userFollowings?.includes(chatroom.pubkey)
-        ? "following"
-        : false;
-      let isUnknown = false;
-      let isKnown = false;
-      if (!isFollowing) {
-        isUnknown = chatroom.convo.find((conv) => conv.pubkey === userKeys.pub)
-          ? false
-          : "unknown";
+        let isFollowing = userFollowings?.includes(chatroom.pubkey)
+          ? "following"
+          : false;
+        let isUnknown = false;
+        let isKnown = false;
+        if (!isFollowing) {
+          isUnknown = chatroom.convo.find(
+            (conv) => conv.pubkey === userKeys.pub
+          )
+            ? false
+            : "unknown";
 
-        if (!isUnknown) isKnown = "known";
-      }
-      if (isFollowing) followings = followings + 1;
-      if (isUnknown) unknown = unknown + 1;
-      if (isKnown) known = known + 1;
-      if (contact)
+          if (!isUnknown) isKnown = "known";
+        }
+        if (isFollowing) followings = followings + 1;
+        if (isUnknown) unknown = unknown + 1;
+        if (isKnown) known = known + 1;
+        if (contact)
+          return {
+            ...contact,
+            ...chatroom,
+            type: isFollowing || isUnknown || isKnown,
+          };
         return {
-          ...contact,
           ...chatroom,
+          picture: "",
+          display_name: getBech32("npub", chatroom.pubkey).substring(0, 10),
+          name: getBech32("npub", chatroom.pubkey).substring(0, 10),
           type: isFollowing || isUnknown || isKnown,
         };
-      return {
-        ...chatroom,
-        picture: "",
-        display_name: getBech32("npub", chatroom.pubkey).substring(0, 10),
-        name: getBech32("npub", chatroom.pubkey).substring(0, 10),
-        type: isFollowing || isUnknown || isKnown,
-      };
-    });
+      });
 
     setMsgsCount({ followings, known, unknown });
     setSortedInbox(tempChatrooms);
@@ -164,25 +189,27 @@ export default function DMS() {
     // }
   }, [userKeys]);
 
-  const handleSelectedConversation = async (
-    conversation,
-    ignoreLoading = false
-  ) => {
+  const handleSelectedConversation = (conversation, ignoreLoading = false) => {
     try {
       if (!ignoreLoading) {
         setIsConvoLoading(true);
         setSelectedConvo(false);
       }
-      let tempConvo = await Promise.all(
-        conversation.convo.map(async (convo) => {
-          let content = await getNoteTree(convo.content);
-          return {
-            ...convo,
-            content,
-            raw_content: convo.content,
-          };
-        })
-      );
+      let tempConvo = conversation.convo.map((convo) => {
+        let content = getNoteTree(
+          convo.content,
+          undefined,
+          undefined,
+          undefined,
+          convo.pubkey
+        );
+        return {
+          ...convo,
+          content,
+          raw_content: convo.content,
+        };
+      });
+      console.log(tempConvo);
       setSelectedConvo({
         ...conversation,
         convo: tempConvo,
@@ -294,6 +321,43 @@ export default function DMS() {
               style={{ padding: 0, overflow: "hidden" }}
             >
               <PagePlaceholder page={"nostr-not-connected"} />
+            </main>
+          </div>
+        </div>
+      </div>
+    );
+  if (userKeys.bunker)
+    return (
+      <div>
+        <Helmet>
+          <title>Yakihonne | Messages</title>
+          <meta
+            name="description"
+            content={"Your end-to-end encrypted inbox"}
+          />
+          <meta
+            property="og:description"
+            content={"Your end-to-end encrypted inbox"}
+          />
+
+          <meta property="og:url" content={`https://yakihonne.com/messages`} />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="Yakihonne" />
+          <meta property="og:title" content="Yakihonne | Messages" />
+          <meta property="twitter:title" content="Yakihonne | Messages" />
+          <meta
+            property="twitter:description"
+            content={"Your end-to-end encrypted inbox"}
+          />
+        </Helmet>
+        <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
+          <div className="main-container">
+            <Sidebar />
+            <main
+              className="main-page-nostr-container"
+              style={{ padding: 0, overflow: "hidden" }}
+            >
+              <PagePlaceholder page={"nostr-bunker-dms"} />
             </main>
           </div>
         </div>
@@ -508,6 +572,7 @@ export default function DMS() {
                     </div>
                   </div>
                 )}
+
                 {!showSearch && (
                   <div
                     className="fx-centered fit-container box-marg-s slide-up"
@@ -570,6 +635,24 @@ export default function DMS() {
                       >
                         {t("ANAOuTj", { count: msgsCount.unknown })}
                       </span>
+                    </div>
+                  </div>
+                )}
+                {userInboxRelays.length === 0 && (
+                  <div className="fit-container box-pad-h-m box-marg-s">
+                    <div className="fit-container box-pad-h-s box-pad-v-s sc-s-18">
+                      <p className="p-medium">{t("ArApykS")}</p>
+                      <p className="gray-c p-medium">
+                        {t("Alxsg82")}{" "}
+                        <span className="c1-c">
+                          <Link
+                            to={"/settings"}
+                            state={{ relaysTab: 1, tab: "relays" }}
+                          >
+                            {t("ABtsLBp")}
+                          </Link>
+                        </span>
+                      </p>
                     </div>
                   </div>
                 )}
@@ -761,6 +844,7 @@ const ConversationBox = ({ convo, back }) => {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const userRelays = useSelector((state) => state.userRelays);
+  const userInboxRelays = useSelector((state) => state.userInboxRelays);
 
   const { t } = useTranslation();
   const convoContainerRef = useRef(null);
@@ -799,27 +883,26 @@ const ConversationBox = ({ convo, back }) => {
   }, [message]);
 
   const handleSendMessage = async () => {
-    if (!message || !userKeys || (userKeys && !(userKeys.ext || userKeys.sec)))
+    if (
+      !message ||
+      !userKeys ||
+      (userKeys && !(userKeys.ext || userKeys.sec || userKeys.bunker))
+    )
       return;
-
-    let relaysToPublish = userRelays;
+    let otherPartyRelays = await getInboxRelaysForUser(convo.pubkey);
+    let relaysToPublish = [
+      ...new Set([
+        ...userInboxRelays,
+        ...relaysOnPlatform,
+        ...otherPartyRelays,
+      ]),
+    ];
     // setMessage("");
     // setReplayOn(false);
     // setShowProgress(true);
     if (legacy) {
-      let encryptedMessage = "";
-      if (userKeys.ext) {
-        encryptedMessage = await window.nostr.nip04.encrypt(
-          convo.pubkey,
-          message
-        );
-      } else {
-        encryptedMessage = await nip04.encrypt(
-          userKeys.sec,
-          convo.pubkey,
-          message
-        );
-      }
+      let encryptedMessage = await encrypt04(userKeys, convo.pubkey, message);
+
       setMessage("");
       setReplayOn(false);
       setShowProgress(true);
@@ -827,12 +910,12 @@ const ConversationBox = ({ convo, back }) => {
       tags.push(["p", convo.pubkey, convo.display_name || convo.name || ""]);
       if (replayOn) tags.push(["e", replayOn.id]);
       let created_at = Math.floor(Date.now() / 1000);
-      let tempEvent = {
-        created_at,
-        kind: 4,
-        content: encryptedMessage,
-        tags,
-      };
+      // let tempEvent = {
+      //   created_at,
+      //   kind: 4,
+      //   content: encryptedMessage,
+      //   tags,
+      // };
 
       dispatch(
         setToPublish({
@@ -935,24 +1018,24 @@ const ConversationBox = ({ convo, back }) => {
 
   const getEventKind13 = async (pubkey) => {
     let unsignedKind14 = getEventKind14();
-    let content = userKeys.sec
-      ? nip44.v2.encrypt(
-          JSON.stringify(unsignedKind14),
-          nip44.v2.utils.getConversationKey(userKeys.sec, pubkey)
-        )
-      : await window.nostr.nip44.encrypt(
-          pubkey,
-          JSON.stringify(unsignedKind14)
-        );
+    let content = await encrypt44(
+      userKeys,
+      pubkey,
+      JSON.stringify(unsignedKind14)
+    );
+
     let event = {
-      created_at: Math.floor(Date.now() / 1000) - 432000,
+      created_at: Math.floor(Date.now() / 1000) - 172800,
       kind: 13,
       tags: [],
       content,
     };
-    event = userKeys.sec
-      ? finalizeEvent(event, userKeys.sec)
-      : await window.nostr.signEvent(event);
+    event = await InitEvent(
+      event.kind,
+      event.content,
+      event.tags,
+      event.created_at
+    );
     return event;
   };
 
@@ -1055,7 +1138,11 @@ const ConversationBox = ({ convo, back }) => {
       )} */}
       <div
         className="fx-centered fx-start-h fx-col box-pad-h-m box-pad-v-m fit-container"
-        style={{ height: "calc(100% - 160px)", overflow: "auto", paddingTop: 0 }}
+        style={{
+          height: "calc(100% - 160px)",
+          overflow: "auto",
+          paddingTop: 0,
+        }}
         ref={convoContainerRef}
       >
         {legacy && (

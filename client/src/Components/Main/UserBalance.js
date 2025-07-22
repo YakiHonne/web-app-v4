@@ -29,7 +29,7 @@ export default function UserBalance() {
   useEffect(() => {
     if (["/wallet"].includes(window.location.pathname)) return;
     if (!userKeys) return;
-    if (userKeys && (userKeys?.ext || userKeys?.sec)) {
+    if (userKeys && (userKeys?.ext || userKeys?.sec || userKeys?.bunker)) {
       let tempWallets = getWallets();
       let selectedWallet_ = tempWallets.find((wallet) => wallet.active);
       if (selectedWallet_) {
@@ -129,7 +129,7 @@ export default function UserBalance() {
     localStorage.setItem("isSatsHidden", ts);
   };
 
-  if (!(userKeys && (userKeys?.ext || userKeys?.sec))) return;
+  if (!(userKeys && (userKeys?.ext || userKeys?.sec || userKeys?.bunker))) return;
   if (userKeys?.sec && userBalance == "N/A")
     return (
       <Link

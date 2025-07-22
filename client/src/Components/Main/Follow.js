@@ -108,7 +108,6 @@ const FollowText = ({
       let tempTags = Array.from(userFollowings || []);
       if (isFollowing.status) {
         let index = tempTags.findIndex((item) => item === toFollowKey);
-        console.log(tempTags);
         tempTags.splice(index, 1);
       } else {
         tempTags.push(toFollowKey);

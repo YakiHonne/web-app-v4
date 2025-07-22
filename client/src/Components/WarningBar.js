@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getStorageEstimate } from "../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 export default function WarningBar() {
   const { t } = useTranslation();
@@ -11,7 +12,7 @@ export default function WarningBar() {
       let isClosed = localStorage.getItem("warning-bar-closed") || false;
       if (isClosed) return;
       let size = await getStorageEstimate();
-      if (size > 2000) {
+      if (size > 1200) {
         setShow(true);
       } else {
         setShow(false);
@@ -40,9 +41,11 @@ export default function WarningBar() {
       <div className="fit-container fx-centered">
         <p style={{ color: "white" }}>
           {t("AG1GvYp")}{" "}
-          <button className="btn btn-text-gray" style={{ color: "black" }}>
-            {t("AAazvst")}
-          </button>
+          <Link to="/settings" state={{tab: "cache"}}>
+            <button className="btn btn-text-gray" style={{ color: "black" }}>
+              {t("AAazvst")}
+            </button>
+          </Link>
         </p>
       </div>
       <div>

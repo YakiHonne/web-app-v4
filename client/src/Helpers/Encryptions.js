@@ -5,7 +5,14 @@ import * as secp from "@noble/secp256k1";
 import { decode } from "light-bolt11-decoder";
 import { getImagePlaceholder } from "../Content/NostrPPPlaceholder";
 import CryptoJS from "crypto-js";
-import { getAppLang, getCustomSettings, getKeys, getNoteTree, nEventEncode } from "./Helpers";
+import {
+  compactContent,
+  getAppLang,
+  getCustomSettings,
+  getKeys,
+  getNoteTree,
+  nEventEncode,
+} from "./Helpers";
 import { t } from "i18next";
 import axiosInstance from "./HTTP_Client";
 import { SigningStargateClient } from "@cosmjs/stargate";
@@ -13,6 +20,7 @@ import { DORA_CONFIG } from "../Content/MACI";
 import { MaciClient } from "@dorafactory/maci-sdk";
 import { store } from "../Store/Store";
 import { setToast } from "../Store/Slides/Publishers";
+import { BunkerSigner, parseBunkerInput } from "nostr-tools/nip46";
 
 const LNURL_REGEX =
   /^(?:http.*[&?]lightning=|lightning:)?(lnurl[0-9]{1,}[02-9ac-hj-np-z]+)/;
@@ -424,7 +432,7 @@ const enableTranslation = async (text) => {
   }
 };
 
-const getParsedNote = async (event, isCollapsedNote = false) => {
+const getParsedNote =  (event, isCollapsedNote = false) => {
   try {
     let isNoteLong = event.content.split(" ").length > 150;
     let isCollapsedNoteEnabled = getCustomSettings().collapsedNote;
@@ -462,10 +470,13 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
       : [];
 
     if (event.kind === 1) {
-      let note_tree = await getNoteTree(
+      // let note_tree = compactContent(event.content, event.pubkey);
+      let note_tree =  getNoteTree(
         event.content,
         undefined,
-        isCollapsedNote_
+        isCollapsedNote_,
+        undefined,
+        event.pubkey
       );
 
       return {
@@ -484,7 +495,11 @@ const getParsedNote = async (event, isCollapsedNote = false) => {
 
     if (event.kind === 6) {
       if (!event.content) return;
-      let relatedEvent = await getParsedNote(JSON.parse(event.content), true);
+      // let relatedEvent = compactContent(
+      //   JSON.parse(event.content).content,
+      //   JSON.parse(event.content).pubkey
+      // );
+      let relatedEvent =  getParsedNote(JSON.parse(event.content), true);
       if (!relatedEvent) return false;
       return {
         ...rawEvent,
@@ -617,25 +632,27 @@ const removeDuplicatedRelays = (list_1, list_2 = []) => {
   });
 };
 const removeObjDuplicants = (list_1, list_2 = []) => {
-  let tempArray = [...list_1, ...list_2];
-  return tempArray.filter((item, index, tempArray) => {
-    if (
-      tempArray.findIndex(
-        (item_1) => JSON.stringify(item_1) === JSON.stringify(item)
-      ) === index
-    )
-      return item;
-  });
+  const seen = new Set();
+  const result = [];
+  for (const item of [...list_1, ...list_2]) {
+    const str = JSON.stringify(item);
+    if (!seen.has(str)) {
+      seen.add(str);
+      result.push(item);
+    }
+  }
+  return result;
 };
 const removeEventsDuplicants = (list_1, list_2 = []) => {
-  let tempArray = [...list_1, ...list_2];
-  return tempArray.filter((item, index, tempArray) => {
-    if (
-      item.id &&
-      tempArray.findIndex((item_1) => item_1.id === item.id) === index
-    )
-      return item;
-  });
+  const seen = new Set();
+  const result = [];
+  for (const item of [...list_1, ...list_2]) {
+    if (item.id && !seen.has(item.id)) {
+      seen.add(item.id);
+      result.push(item);
+    }
+  }
+  return result;
 };
 const sortEvents = (events) => {
   return events.sort((ev_1, ev_2) => ev_2.created_at - ev_1.created_at);
@@ -685,6 +702,138 @@ const getClaimingData = async (pubkey, event_id, kind) => {
   }
 };
 
+const decrypt04UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip04Decrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const encrypt04UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip04Encrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const encrypt44UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip44Encrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const decrypt44UsingBunker = async (userKeys, otherPartyPubkey, content) => {
+  try {
+    const bunkerPointer = await parseBunkerInput(userKeys.bunker);
+    const bunker = new BunkerSigner(userKeys.localKeys.sec, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+    await bunker.connect();
+
+    let data = await bunker.nip44Decrypt(otherPartyPubkey, content);
+    return data;
+  } catch (err) {
+    console.log(err);
+    return "";
+  }
+};
+
+const encrypt44 = async (userKeys, otherPartyPubkey, content) => {
+  let encryptedMessage = "";
+  if (userKeys.ext) {
+    encryptedMessage = await window.nostr.nip44.encrypt(
+      otherPartyPubkey,
+      content
+    );
+  } else if (userKeys.sec) {
+    encryptedMessage = nip44.v2.encrypt(
+      content,
+      nip44.v2.utils.getConversationKey(userKeys.sec, otherPartyPubkey)
+    );
+  } else {
+    encryptedMessage = await encrypt44UsingBunker(
+      userKeys,
+      otherPartyPubkey,
+      content
+    );
+  }
+  return encryptedMessage;
+};
+
+const decrypt44 = async (userKeys, otherPartyPubkey, content) => {
+  let decryptedMessage = "";
+  if (userKeys.ext) {
+    decryptedMessage = await window.nostr.nip44.decrypt(
+      otherPartyPubkey,
+      content
+    );
+  } else if (userKeys.sec) {
+    decryptedMessage = await nip44.v2.decrypt(
+      content,
+      nip44.v2.utils.getConversationKey(userKeys.sec, otherPartyPubkey)
+    );
+  } else {
+    decryptedMessage = await decrypt44UsingBunker(
+      userKeys,
+      otherPartyPubkey,
+      content
+    );
+  }
+  return decryptedMessage;
+};
+
 const decrypt04 = async (event, userKeys) => {
   let pubkey =
     event.pubkey === userKeys.pub
@@ -696,30 +845,52 @@ const decrypt04 = async (event, userKeys) => {
     decryptedMessage = await window.nostr.nip04.decrypt(pubkey, event.content);
   } else if (userKeys.sec) {
     decryptedMessage = await nip04.decrypt(userKeys.sec, pubkey, event.content);
+  } else {
+    decryptedMessage = await decrypt04UsingBunker(
+      userKeys,
+      pubkey,
+      event.content
+    );
   }
   return decryptedMessage;
 };
 
-const unwrapGiftWrap = async (event, secret) => {
+const encrypt04 = async (userKeys, otherPartyPubkey, content) => {
+  let encryptedMessage = "";
+  if (userKeys.ext) {
+    encryptedMessage = await window.nostr.nip04.encrypt(
+      otherPartyPubkey,
+      content
+    );
+  } else if (userKeys.sec) {
+    encryptedMessage = await nip04.encrypt(
+      userKeys.sec,
+      otherPartyPubkey,
+      content
+    );
+  } else {
+    encryptedMessage = await encrypt04UsingBunker(
+      userKeys,
+      otherPartyPubkey,
+      content
+    );
+  }
+  return encryptedMessage;
+};
+
+const unwrapGiftWrap = async (event, userKeys) => {
   try {
-    let decryptedEvent13 = secret
-      ? nip44.v2.decrypt(
-          event.content,
-          nip44.v2.utils.getConversationKey(secret, event.pubkey)
-        )
-      : await window.nostr.nip44.decrypt(event.pubkey, event.content);
+    let decryptedEvent13 = await decrypt44(
+      userKeys,
+      event.pubkey,
+      event.content
+    );
 
     let { pubkey, content } = JSON.parse(decryptedEvent13);
 
-    let decryptedEvent14 = secret
-      ? nip44.v2.decrypt(
-          content,
-          nip44.v2.utils.getConversationKey(secret, pubkey)
-        )
-      : await window.nostr.nip44.decrypt(pubkey, content);
+    let decryptedEvent14 = await decrypt44(userKeys, pubkey, content);
     return JSON.parse(decryptedEvent14);
   } catch (err) {
-    // console.log(err);
     return false;
   }
 };
@@ -777,15 +948,9 @@ const getKeplrSigner = async () => {
 
     await window.keplr.enable(chainId);
 
-    console.log("chainId", chainId);
     const offlineSigner = window.getOfflineSigner(chainId);
 
-    // const client = await SigningStargateClient.connectWithSigner(
-    //   rpc,
-    //   offlineSigner
-    // );
     let address = await offlineSigner.getAccounts();
-    // if (address.length === 0) return false;
     return { signer: offlineSigner, address: address[0].address };
   } catch (err) {
     console.log(err);
@@ -793,25 +958,34 @@ const getKeplrSigner = async () => {
   }
 };
 
-// const getWOTScoreForPubkey = (network, pubkey, minScore = 3) => {
-//   try {
-//     let totalTrusting = network.filter((_) =>
-//       _.followings.includes(pubkey)
-//     ).length;
-//     // let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
-//     let equalizer = totalTrusting === 0 ? 5 : 0;
-//     let score =
-//       equalizer ||
-//       Math.floor(
-//         (Math.max(0, totalTrusting) * 10) / network.length
-//       );
+const getWOTScoreForPubkeyLegacy = (pubkey, enabled, minScore = 3) => {
+  try {
+    if (!enabled) return { score: 10, status: true };
+    const network = store.getState().userWotList;
+    const followings = store.getState().userFollowings;
+    const userKeys = store.getState().userKeys;
 
-//     return { score, status: score >= minScore };
-//   } catch (err) {
-//     console.log(err);
-//     return [];
-//   }
-// };
+    if (userKeys.pub === pubkey) return { score: 10, status: true };
+    if (followings.includes(pubkey) || network.length === 0 || !pubkey) {
+      return { score: 10, status: true };
+    }
+    let totalTrusting = network.filter((_) =>
+      _.followings.includes(pubkey)
+    ).length;
+    let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
+    let equalizer = totalTrusting === 0 ? 10 : 0;
+    let score =
+      equalizer ||
+      Math.floor(
+        (Math.max(0, totalTrusting - totalMuted) * 10) / network.length
+      );
+
+    return { score, status: score >= minScore };
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
 
 const precomputeTrustingCounts = (network) => {
   const counts = new Map();
@@ -828,7 +1002,6 @@ const precomputeTrustingCounts = (network) => {
 const getWOTScoreForPubkey = (network, pubkey, minScore = 3, counts) => {
   try {
     if (!network?.length || !pubkey) return { score: 0, status: false };
-
     const totalTrusting = counts.get(pubkey) || 0;
     const score =
       totalTrusting === 0
@@ -1024,34 +1197,39 @@ const filterContent = (selectedFilter, list) => {
   };
 
   const testForNotes = (_) => {
-    let tags = _.tags.filter((tag) => tag[0] === "t").map((tag) => tag[1]);
-    let excluded_words = selectedFilter.excluded_words.length
-      ? !(
-          matchWords(_.content, selectedFilter.excluded_words) ||
-          matchWords(tags, selectedFilter.excluded_words)
-        )
-      : true;
-    let included_words = selectedFilter.included_words.length
-      ? matchWords(_.content, selectedFilter.included_words) ||
-        matchWords(tags, selectedFilter.included_words)
-      : true;
-
-    let posted_by = selectedFilter.posted_by.length
-      ? selectedFilter.posted_by.includes(_.pubkey)
-      : true;
-
-    let n_media_only =
-      _.kind === 1
-        ? !selectedFilter.media_only
-          ? true
-          : hasImageLinks(_.content)
-          ? true
-          : false
+    try {
+      let tags = _.tags.filter((tag) => tag[0] === "t").map((tag) => tag[1]);
+      let excluded_words = selectedFilter.excluded_words.length
+        ? !(
+            matchWords(_.content, selectedFilter.excluded_words) ||
+            matchWords(tags, selectedFilter.excluded_words)
+          )
+        : true;
+      let included_words = selectedFilter.included_words.length
+        ? matchWords(_.content, selectedFilter.included_words) ||
+          matchWords(tags, selectedFilter.included_words)
         : true;
 
-    if (excluded_words && included_words && posted_by && n_media_only)
-      return true;
-    return false;
+      let posted_by = selectedFilter.posted_by.length
+        ? selectedFilter.posted_by.includes(_.pubkey)
+        : true;
+
+      let n_media_only =
+        _.kind === 1
+          ? !selectedFilter.media_only
+            ? true
+            : hasImageLinks(_.content)
+            ? true
+            : false
+          : true;
+
+      if (excluded_words && included_words && posted_by && n_media_only)
+        return true;
+      return false;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
   };
 
   return list.filter((_) => {
@@ -1089,6 +1267,9 @@ export {
   getClaimingData,
   bytesTohex,
   decrypt04,
+  encrypt04,
+  encrypt44,
+  decrypt44,
   unwrapGiftWrap,
   encodeBase64URL,
   getuserMetadata,
@@ -1106,4 +1287,5 @@ export {
   filterContent,
   precomputeTrustingCounts,
   getBackupWOTList,
+  getWOTScoreForPubkeyLegacy,
 };

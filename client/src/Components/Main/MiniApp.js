@@ -8,6 +8,7 @@ import { InitEvent, publishEvent } from "../../Helpers/Controlers";
 import OptionsDropdown from "./OptionsDropdown";
 import PostAsNote from "./PostAsNote";
 import PaymentGateway from "./PaymentGateway";
+import LoadingLogo from "../LoadingLogo";
 
 export default function MiniApp({ url, exit, setReturnedData }) {
   const { t } = useTranslation();
@@ -16,7 +17,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
   const userMetadata = useSelector((state) => state.userMetadata);
   const domain = extractRootDomain(url);
   const iframeRef = useRef(null);
-
+  const [isLoading, setIsLoading] = useState(true);
   const [customData, setCustomData] = useState("");
   const [paymentPayload, setPaymentPayload] = useState("");
   const reloadiFrame = () => {
@@ -28,6 +29,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
     if (iframeRef.current) {
       listener = SWHandler.host.listen(async (event) => {
         if (event?.kind === "app-loaded") {
+          setIsLoading(false);
           if (userMetadata)
             SWHandler.host.sendContext(
               userMetadata,
@@ -206,15 +208,34 @@ export default function MiniApp({ url, exit, setReturnedData }) {
               ]}
             />
           </div>
-          <div className="fit-container fx-centered">
+          <div className="fit-container fx-centered" style={{ position: "relative" }}>
             <iframe
               ref={iframeRef}
               src={url}
               allow="microphone; camera; clipboard-write 'src'"
               sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
-              style={{ border: "none", aspectRatio: "10/16" }}
+              style={{ border: "none", aspectRatio: "10/16", opacity: isLoading ? 0 : 1 }}
               className="fit-container fit-height"
             ></iframe>
+            {isLoading && (
+              <div
+                className="fx-centered fx-col sc-s-18"
+                style={{
+                  position: "absolute",
+                  borderRadius: 0, 
+                  left: 0,
+                  top: 0,
+                  zIndex: 1,
+                  width: "100%",
+                  height: "100%",
+                  overflow: "hidden",
+                  gap: 0,
+                  aspectRatio: "10/16",
+                }}
+              >
+                <LoadingLogo size={64} />
+              </div>
+            )}
           </div>
         </section>
       </div>

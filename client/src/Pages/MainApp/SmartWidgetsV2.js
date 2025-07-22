@@ -70,6 +70,9 @@ export default function SmartWidgetsV2() {
     });
 
     setSub(subscription);
+    return () => {
+      subscription.stop();
+    };
   }, [contentSource, myWidgetsLE, comWidgetsLE]);
 
   useEffect(() => {
@@ -85,14 +88,20 @@ export default function SmartWidgetsV2() {
       { closeOnEose: true, cacheUsage: "CACHE_FIRST" }
     );
 
-    subscription.on("event", async (event) => {
+    subscription.on("event", (event) => {
       try {
         if (limit >= 6) {
           subscription.stop();
           return;
         }
         limit += 1;
-        let parsedContent = await getNoteTree(event.content, true);
+        let parsedContent = getNoteTree(
+          event.content,
+          true,
+          undefined,
+          undefined,
+          event.pubkey
+        );
         events.push(event.pubkey);
         let nEvent = nip19.neventEncode({
           author: event.pubkey,
@@ -117,6 +126,10 @@ export default function SmartWidgetsV2() {
     subscription.on("close", () => {
       saveUsers([...new Set(events)]);
     });
+
+    return () => {
+      subscription.stop();
+    };
   }, []);
 
   const getFilter = () => {

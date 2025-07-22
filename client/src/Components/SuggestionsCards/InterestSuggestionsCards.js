@@ -163,7 +163,7 @@ export default function InterestSuggestionsCards({
                           position: "absolute",
                           left: 0,
                           top: 0,
-                          zIndex: 2,
+                          zIndex: 1,
                           backgroundImage: `url(${item.icon})`,
                         }}
                         className="bg-img cover-bg fit-container fit-height"

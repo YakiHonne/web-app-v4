@@ -35,6 +35,12 @@ export default function Search() {
   const userKeys = useSelector((state) => state.userKeys);
   const userMutedList = useSelector((state) => state.userMutedList);
   const userInterestList = useSelector((state) => state.userInterestList);
+  const userFollowings = useSelector((state) => state.userFollowings);
+  const userFollowingsMetadata = useMemo(() => {
+    return userFollowings
+      .map((_) => nostrAuthors.find((__) => __.pubkey === _))
+      .filter((_) => _);
+  }, []);
   const [searchKeyword, setSearchKeyword] = useState(urlKeyword);
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(state?.tab ? true : false);
@@ -76,6 +82,7 @@ export default function Search() {
       return;
     }
     setSearchKeyword(value);
+    setResults([]);
   };
 
   useEffect(() => {
@@ -88,10 +95,15 @@ export default function Search() {
 
     var timer = setTimeout(null);
     if (searchKeyword) {
-      timer = setTimeout(async () => {
-        if (selectedTab === "people") searchForUser();
-        if (selectedTab !== "people") searchForContent();
-      }, 400);
+      timer = setTimeout(
+        async () => {
+          if (selectedTab === "people") searchForUser();
+          if (selectedTab !== "people") {
+            searchForContent();
+          }
+        },
+        selectedTab === "people" ? 100 : 400
+      );
     } else {
       clearTimeout(timer);
     }
@@ -156,33 +168,71 @@ export default function Search() {
   };
 
   const searchForUser = () => {
-    const filteredUsers = searchKeyword
-      ? sortByKeyword(
-          nostrAuthors.filter((user) => {
-            if (
-              !bannedList.includes(user.pubkey) &&
-              ((typeof user.display_name === "string" &&
-                user.display_name
+    let filteredUsers = [];
+    if (!searchKeyword) {
+      filteredUsers = Array.from(userFollowingsMetadata.slice(0, 30));
+    }
+    if (searchKeyword) {
+      let checkFollowings = sortByKeyword(
+        userFollowingsMetadata.filter((user) => {
+          if (
+            !bannedList.includes(user.pubkey) &&
+            ((typeof user.display_name === "string" &&
+              user.display_name
+                ?.toLowerCase()
+                .includes(searchKeyword?.toLowerCase())) ||
+              (typeof user.name === "string" &&
+                user.name
                   ?.toLowerCase()
                   .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.name === "string" &&
-                  user.name
+              (typeof user.nip05 === "string" &&
+                user.nip05
+                  ?.toLowerCase()
+                  .includes(searchKeyword?.toLowerCase()))) &&
+            isHex(user.pubkey) &&
+            typeof user.about === "string"
+          )
+            return user;
+        }),
+        searchKeyword
+      ).slice(0, 30);
+      if (checkFollowings.length > 0) {
+        filteredUsers = structuredClone(checkFollowings);
+      }
+      if (checkFollowings.length < 5) {
+        let filterPubkeys = filteredUsers.map((_) => _.pubkey);
+        filteredUsers = [
+          ...filteredUsers,
+          ...sortByKeyword(
+            nostrAuthors.filter((user) => {
+              if (
+                !filterPubkeys.includes(user.pubkey) &&
+                !bannedList.includes(user.pubkey) &&
+                ((typeof user.display_name === "string" &&
+                  user.display_name
                     ?.toLowerCase()
                     .includes(searchKeyword?.toLowerCase())) ||
-                (typeof user.nip05 === "string" &&
-                  user.nip05
-                    ?.toLowerCase()
-                    .includes(searchKeyword?.toLowerCase()))) &&
-              isHex(user.pubkey)
-            )
-              return user;
-          }),
-          searchKeyword
-        ).slice(0, 30)
-      : Array.from(nostrAuthors.slice(0, 30));
+                  (typeof user.name === "string" &&
+                    user.name
+                      ?.toLowerCase()
+                      .includes(searchKeyword?.toLowerCase())) ||
+                  (typeof user.nip05 === "string" &&
+                    user.nip05
+                      ?.toLowerCase()
+                      .includes(searchKeyword?.toLowerCase()))) &&
+                isHex(user.pubkey) &&
+                typeof user.about === "string"
+              )
+                return user;
+            }),
+            searchKeyword
+          ).slice(0, 30),
+        ];
+      }
+    }
 
     setResults(filteredUsers);
-    getUsersFromCache();
+    if (filteredUsers.length < 5) getUsersFromCache();
     setIsLoading(false);
   };
 
@@ -209,16 +259,15 @@ export default function Search() {
     if (selectedTab === "all-media") filter.kinds = [1, 30023, 34235];
     let content = await getSubData([filter], 500);
 
-    let content_ = await Promise.all(
-      content.data.map(async (event) => {
-        if (event.kind === 1) {
-          let parsedNote = await getParsedNote(event, true);
-          return parsedNote;
-        } else {
-          return getParsedRepEvent(event);
-        }
-      })
-    );
+    let content_ = content.data.map((event) => {
+      if (event.kind === 1) {
+        let parsedNote = getParsedNote(event, true);
+        return parsedNote;
+      } else {
+        return getParsedRepEvent(event);
+      }
+    });
+
     setIsLoading(false);
     setResults((prev) => [...prev, ...content_]);
     saveUsers(content.pubkeys);
@@ -235,7 +284,7 @@ export default function Search() {
   const encodePubkey = (pubkey) => {
     try {
       if (!isHex(pubkey)) return false;
-      let url = nip19.npubEncode(pubkey);
+      let url = nip19.nprofileEncode({ pubkey });
       return url;
     } catch (err) {
       console.log(err);
@@ -375,6 +424,7 @@ export default function Search() {
                       ]}
                     />
                     <hr />
+
                     {searchKeyword && selectedTab !== "people" && (
                       <div className="fx-scattered fit-container box-pad-v-s box-pad-h-m">
                         <h3>#{searchKeyword.replaceAll("#", "")}</h3>
@@ -404,32 +454,64 @@ export default function Search() {
                       </div>
                     )}
                   </div>
-                  {results.map((item, index) => {
-                    if (!item.kind) {
-                      let url = encodePubkey(item.pubkey);
-                      if (url)
+                  {userInterestList.length > 0 && (
+                    <div className="fit-container fx-centered fx-col fx-start-h fx-start-v box-pad-v-m">
+                      <p className="gray-c">{t("AvcFYqP")}</p>
+                      <div className="fx-centered fx-wrap">
+                        {userInterestList?.map((interest, index) => {
+                          return (
+                            <div
+                              onClick={() => {
+                                setSearchKeyword(interest.toLowerCase());
+                                setResults([]);
+                                setIsLoading(true);
+                              }}
+                              className={`sc-s  box-pad-h-m box-pad-v-s pointer ${
+                                searchKeyword === interest.toLowerCase()
+                                  ? ""
+                                  : "bg-sp"
+                              }`}
+                              key={index}
+                            >
+                              #{interest}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {selectedTab === "people" &&
+                    results.map((item, index) => {
+                      if (!item.kind) {
+                        let url = encodePubkey(item.pubkey);
+                        if (url)
+                          return (
+                            <SearchUserCard
+                              user={item}
+                              key={item.id}
+                              url={url}
+                              exit={() => null}
+                            />
+                          );
+                      }
+                    })}
+                  {selectedTab !== "people" &&
+                    results.map((item, index) => {
+                      if (
+                        [1].includes(item.kind) &&
+                        !userMutedList.includes(item.pubkey)
+                      )
                         return (
-                          <SearchUserCard
-                            user={item}
-                            key={item.id}
-                            url={url}
-                            exit={() => null}
-                          />
+                          <KindOne key={item.id} event={item} border={true} />
                         );
-                    }
-                    if (
-                      [1].includes(item.kind) &&
-                      !userMutedList.includes(item.pubkey)
-                    )
-                      return (
-                        <KindOne key={item.id} event={item} border={true} />
-                      );
-                    if (
-                      [30023, 34235].includes(item.kind) &&
-                      !userMutedList.includes(item.pubkey)
-                    )
-                      return <RepEventPreviewCard key={item.id} item={item} />;
-                  })}
+                      if (
+                        [30023, 34235].includes(item.kind) &&
+                        !userMutedList.includes(item.pubkey)
+                      )
+                        return (
+                          <RepEventPreviewCard key={item.id} item={item} />
+                        );
+                    })}
                   {isLoading && (
                     <div
                       className="fit-container fx-centered"
@@ -443,8 +525,11 @@ export default function Search() {
                       className="fit-container fx-col fx-centered"
                       style={{ height: "500px" }}
                     >
-                      <div className="search-24"></div>
-                      <h4>{t("AjlW15t")}</h4>
+                      <div
+                        className="search"
+                        style={{ minWidth: "48px", minHeight: "48px" }}
+                      ></div>
+                      <h4 className="box-pad-v-s">{t("AjlW15t")}</h4>
                       <p className="gray-c">{t("A0RqaoC")}</p>
                     </div>
                   )}

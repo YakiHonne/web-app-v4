@@ -50,6 +50,8 @@ export default function ContentFilter({
   }, [filtersRef]);
 
   useEffect(() => {
+    let checkFilter = localStorage.getItem(`${type}-selectedFilter`);
+    if (!checkFilter) return;
     if (selectedFilter.default && filters.length > 0) {
       setSelectedFilter({ ...filters[0], index: 0 });
     } else if (!selectedFilter.default && filters.length > 0) {
@@ -111,7 +113,7 @@ export default function ContentFilter({
     }
   };
 
-  if (!(userKeys && (userKeys?.sec || userKeys?.ext))) return null;
+  if (!(userKeys && (userKeys?.sec || userKeys?.ext || userKeys?.bunker))) return null;
 
   return (
     <>
@@ -168,6 +170,7 @@ export default function ContentFilter({
               onClick={() => {
                 setShowFilters(false);
                 setSelectedFilter(getDefaultFilter());
+                localStorage.removeItem(`${type}-selectedFilter`);
               }}
             >
               <div style={{ backgroundColor: "transparent" }}></div>
@@ -236,11 +239,13 @@ export default function ContentFilter({
                     style={{
                       height: "35px",
                       borderRadius: "var(--border-r-18)",
+                      overflow: "visible",
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedFilter({ ...filter, index });
                       setShowFilters(false);
+                      localStorage.setItem(`${type}-selectedFilter`, "true");
                     }}
                   >
                     <p className="p-maj p-one-line">{filter.title}</p>

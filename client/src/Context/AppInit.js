@@ -4,16 +4,21 @@ import { useLiveQuery } from "dexie-react-hooks";
 import {
   setUserAllRelays,
   setUserAppSettings,
+  setUserBlossomServers,
   setUserBookmarks,
   setUserChatrooms,
+  setUserFavRelays,
   setUserFollowings,
+  setUserFollowingsInboxRelays,
   setUserFollowingsRelays,
+  setUserInboxRelays,
   setUserInterestList,
   setUserKeys,
   setUserMetadata,
   setUserMutedList,
   setUserRelays,
   setUserSavedTools,
+  setUserWotList,
 } from "../Store/Slides/UserData";
 import {
   getBookmarks,
@@ -34,11 +39,21 @@ import {
   saveInterests,
   getAppSettings,
   saveAppSettings,
+  getFavRelays,
+  saveFavRelays,
+  saveWotlist,
+  getWotlist,
+  getBlossomServers,
+  saveBlossomServers,
+  getInboxRelays,
+  saveInboxRelays,
+  getFollowingsInboxRelays,
 } from "../Helpers/DB";
 import {
   addConnectedAccounts,
   getNostrClients,
   getSubData,
+  saveInboxRelaysListsForUsers,
   saveRelaysListsForUsers,
   updateYakiChestStats,
   userLogout,
@@ -65,6 +80,7 @@ import { setIsYakiChestLoaded } from "../Store/Slides/YakiChest";
 import relaysOnPlatform from "../Content/Relays";
 import {
   NDKNip07Signer,
+  NDKNip46Signer,
   NDKPrivateKeySigner,
   NDKRelayAuthPolicies,
 } from "@nostr-dev-kit/ndk";
@@ -112,9 +128,35 @@ export default function AppInit() {
       async () => (userKeys ? await getMutedlist(userKeys.pub) : []),
       [userKeys]
     ) || [];
+  const favRelays =
+    useLiveQuery(
+      async () =>
+        userKeys ? await getFavRelays(userKeys.pub) : { relays: [] },
+      [userKeys]
+    ) || [];
+  const inboxRelays =
+    useLiveQuery(
+      async () =>
+        userKeys ? await getInboxRelays(userKeys.pub) : [],
+      [userKeys]
+    ) || [];
+  const wotList =
+    useLiveQuery(
+      async () => (userKeys ? await getWotlist(userKeys.pub) : []),
+      [userKeys]
+    ) || [];
+  const blossomServers =
+    useLiveQuery(
+      async () => (userKeys ? await getBlossomServers(userKeys.pub) : []),
+      [userKeys]
+    ) || [];
   const users = useLiveQuery(async () => await getUsers(), []);
   const followingsRelays = useLiveQuery(
     async () => await getFollowingsRelays(),
+    []
+  );
+  const followingsInboxRelays = useLiveQuery(
+    async () => await getFollowingsInboxRelays(),
     []
   );
   const nostrClients = useLiveQuery(async () => await getClients(), []);
@@ -128,7 +170,12 @@ export default function AppInit() {
   const previousBookmarks = useRef([]);
   const previousUsers = useRef([]);
   const previousFollowingsRelays = useRef([]);
+  const previousFollowingsInboxRelays = useRef([]);
   const previousNostrClients = useRef([]);
+  const previousWotList = useRef([]);
+  const previousBlossomServers = useRef([]);
+  const previousInboxRelays = useRef([]);
+  const previousFavRelays = useRef({ relays: [] });
 
   useEffect(() => {
     if (
@@ -156,10 +203,37 @@ export default function AppInit() {
       addExplicitRelays(relaysURLsToRead);
     }
     if (
+      JSON.stringify(previousFavRelays.current) !== JSON.stringify(favRelays)
+    ) {
+      previousFavRelays.current = favRelays;
+      dispatch(setUserFavRelays(favRelays));
+      addExplicitRelays(favRelays.relays || []);
+    }
+    if (
+      JSON.stringify(previousInboxRelays.current) !== JSON.stringify(inboxRelays)
+    ) {
+      previousInboxRelays.current = inboxRelays;
+      dispatch(setUserInboxRelays(inboxRelays.relays));
+      addExplicitRelays(inboxRelays.relays || []);
+    }
+    if (JSON.stringify(previousWotList.current) !== JSON.stringify(wotList)) {
+      previousWotList.current = wotList;
+      dispatch(setUserWotList(wotList));
+    }
+    if (
       JSON.stringify(previousFollowings.current) !== JSON.stringify(followings)
     ) {
       previousFollowings.current = followings;
       dispatch(setUserFollowings(followings?.followings || []));
+    }
+
+    if (
+      JSON.stringify(previousBlossomServers.current) !==
+      JSON.stringify(blossomServers)
+    ) {
+      previousBlossomServers.current = blossomServers;
+
+      dispatch(setUserBlossomServers(blossomServers?.servers || []));
     }
     if (
       JSON.stringify(previousAppSettings.current) !==
@@ -220,6 +294,13 @@ export default function AppInit() {
       dispatch(setUserFollowingsRelays(followingsRelays));
     }
     if (
+      JSON.stringify(previousFollowingsInboxRelays.current) !==
+      JSON.stringify(followingsInboxRelays)
+    ) {
+      previousFollowingsInboxRelays.current = followingsInboxRelays;
+      dispatch(setUserFollowingsInboxRelays(followingsInboxRelays));
+    }
+    if (
       JSON.stringify(previousNostrClients.current) !==
       JSON.stringify(nostrClients)
     ) {
@@ -232,10 +313,13 @@ export default function AppInit() {
     followings,
     mutedlist,
     followingsRelays,
+    followingsInboxRelays,
     users,
     bookmarks,
     interestsList,
     appSettings,
+    blossomServers,
+    inboxRelays
   ]);
 
   useEffect(() => {
@@ -272,6 +356,15 @@ export default function AppInit() {
           const signer = new NDKPrivateKeySigner(userKeys.sec);
           ndkInstance.signer = signer;
         }
+        if (userKeys.bunker) {
+          const localKeys = new NDKPrivateKeySigner(userKeys.localKeys.sec);
+          const signer = new NDKNip46Signer(
+            ndkInstance,
+            userKeys.bunker,
+            localKeys
+          );
+          ndkInstance.signer = signer;
+        }
       }
       // ndkInstance.relayAuthDefaultPolicy = async (relay) => {
       //   console.log(relay);
@@ -292,15 +385,27 @@ export default function AppInit() {
   useEffect(() => {
     let subscription = null;
     const fetchData = async () => {
-      let [INBOX, RELAYS, FOLLOWINGS, MUTEDLIST, INTERESTSLIST, APPSETTINGS] =
-        await Promise.all([
-          getChatrooms(userKeys.pub),
-          getRelays(userKeys.pub),
-          getFollowings(userKeys.pub),
-          getMutedlist(userKeys.pub),
-          getInterestsList(userKeys.pub),
-          getAppSettings(userKeys.pub),
-        ]);
+      let [
+        INBOX,
+        RELAYS,
+        FOLLOWINGS,
+        MUTEDLIST,
+        INTERESTSLIST,
+        APPSETTINGS,
+        FAVRELAYS,
+        BLOSSOMSERVERS,
+        INBOXRELAYS
+      ] = await Promise.all([
+        getChatrooms(userKeys.pub),
+        getRelays(userKeys.pub),
+        getFollowings(userKeys.pub),
+        getMutedlist(userKeys.pub),
+        getInterestsList(userKeys.pub),
+        getAppSettings(userKeys.pub),
+        getFavRelays(userKeys.pub),
+        getBlossomServers(userKeys.pub),
+        getInboxRelays(userKeys.pub),
+      ]);
       let lastMessageTimestamp =
         INBOX.length > 0
           ? INBOX.sort(
@@ -312,6 +417,10 @@ export default function AppInit() {
       let lastInterestsTimestamp = INTERESTSLIST?.last_timestamp || undefined;
       let lastMutedTimestamp = MUTEDLIST?.last_timestamp || undefined;
       let lastAppSettingsTimestamp = APPSETTINGS?.last_timestamp || undefined;
+      let lastInboxRelaysTimestamp = INBOXRELAYS?.last_timestamp || undefined;
+      let lastFavRelaysTimestamp = FAVRELAYS?.last_timestamp || undefined;
+      let lastBlossomServersTimestamp =
+        BLOSSOMSERVERS?.last_timestamp || undefined;
       let lastUserMetadataTimestamp =
         getMetadataFromCachedAccounts(userKeys.pub).created_at || undefined;
       dispatch(setInitDMS(true));
@@ -319,8 +428,11 @@ export default function AppInit() {
       let tempAuthors = [];
       let tempUserFollowings;
       let tempUserInterests;
+      let tempBlossomServers;
       let tempMutedList;
       let tempRelays;
+      let tempInboxRelays;
+      let tempFavRelays;
       let tempAppSettings;
       let tempBookmarks = [];
       let tempAuthMetadata = false;
@@ -377,6 +489,27 @@ export default function AppInit() {
               : lastRelaysTimestamp,
           },
           {
+            kinds: [10050],
+            authors: [userKeys.pub],
+            since: lastInboxRelaysTimestamp
+              ? lastInboxRelaysTimestamp + 1
+              : lastInboxRelaysTimestamp,
+          },
+          {
+            kinds: [10063],
+            authors: [userKeys.pub],
+            since: lastBlossomServersTimestamp
+              ? lastBlossomServersTimestamp + 1
+              : lastBlossomServersTimestamp,
+          },
+          {
+            kinds: [10012],
+            authors: [userKeys.pub],
+            since: lastFavRelaysTimestamp
+              ? lastFavRelaysTimestamp + 1
+              : lastFavRelaysTimestamp,
+          },
+          {
             kinds: [30078],
             authors: [userKeys.pub],
             "#d": ["YakihonneAppSettings"],
@@ -405,7 +538,7 @@ export default function AppInit() {
         }
       );
       subscription.on("event", async (event) => {
-        if (event.kind === 4) {
+        if (event.kind === 4 && !userKeys.bunker) {
           let decryptedMessage = "";
           tempAuthors = [...new Set([...tempAuthors, event.pubkey])];
           let peer =
@@ -430,9 +563,9 @@ export default function AppInit() {
           tempInbox.push(tempEvent);
           if (eose) saveChatrooms(tempInbox, [event.pubkey], userKeys.pub);
         }
-        if (event.kind === 1059 && (userKeys.sec || window?.nostr?.nip44)) {
+        if (event.kind === 1059 && (userKeys.sec || window?.nostr?.nip44) && !userKeys.bunker) {
           try {
-            let unwrappedEvent = await unwrapGiftWrap(event, userKeys.sec);
+            let unwrappedEvent = await unwrapGiftWrap(event, userKeys);
             if (unwrappedEvent && unwrappedEvent.kind === 14) {
               tempAuthors = [
                 ...new Set([...tempAuthors, unwrappedEvent.pubkey]),
@@ -466,6 +599,10 @@ export default function AppInit() {
           tempUserFollowings = { ...event };
           if (eose) saveFollowings(event, userKeys.pub);
         }
+        if (event.kind === 10063) {
+          tempBlossomServers = { ...event };
+          if (eose) saveBlossomServers(event, userKeys.pub);
+        }
         if (event.kind === 10015) {
           tempUserInterests = { ...event };
           if (eose) saveInterests(event, userKeys.pub);
@@ -477,6 +614,14 @@ export default function AppInit() {
         if (event.kind === 10002) {
           tempRelays = { ...event };
           if (eose) saveRelays(event, userKeys.pub);
+        }
+        if (event.kind === 10050) {
+          tempInboxRelays = { ...event };
+          if (eose) saveInboxRelays(event, userKeys.pub);
+        }
+        if (event.kind === 10012) {
+          tempFavRelays = { ...event.rawEvent() };
+          if (eose) saveFavRelays(event.rawEvent(), userKeys.pub);
         }
         if (event.kind === 30078) {
           tempAppSettings = { ...event };
@@ -515,6 +660,18 @@ export default function AppInit() {
         saveInterests(tempUserInterests, userKeys.pub, lastInterestsTimestamp);
         saveMutedlist(tempMutedList, userKeys.pub, lastMutedTimestamp);
         saveRelays(tempRelays, userKeys.pub, lastRelaysTimestamp);
+        saveInboxRelays(tempInboxRelays, userKeys.pub, lastInboxRelaysTimestamp);
+        saveFavRelays(tempFavRelays, userKeys.pub, lastFavRelaysTimestamp);
+        saveBlossomServers(
+          tempBlossomServers,
+          userKeys.pub,
+          lastBlossomServersTimestamp
+        );
+        saveAppSettings(
+          tempAppSettings,
+          userKeys.pub,
+          lastAppSettingsTimestamp
+        );
         saveAppSettings(
           tempAppSettings,
           userKeys.pub,
@@ -531,7 +688,7 @@ export default function AppInit() {
       });
     };
 
-    if (userKeys && (userKeys.ext || userKeys.sec)) {
+    if (userKeys && (userKeys.ext || userKeys.sec || userKeys.bunker)) {
       fetchData();
     }
     return () => {
@@ -586,7 +743,7 @@ export default function AppInit() {
         let d = await getSubData(
           [
             {
-              kinds: [3],
+              kinds: [3, 10000],
               authors: b.bundled,
             },
           ],
@@ -603,7 +760,7 @@ export default function AppInit() {
       //     },
       //   ],
       //   800
-      // );
+      // );yeh
 
       if (networkData.length === 0) return;
       let network = structuredClone(networkData);
@@ -630,6 +787,7 @@ export default function AppInit() {
             ] || [],
         };
       });
+      saveWotlist(network, userKeys.pub);
       const trustingCounts = precomputeTrustingCounts(network);
       let allPubkeys = [...new Set(network.map((_) => _.followings).flat())];
       let wotPubkeys = allPubkeys.filter(
@@ -732,6 +890,7 @@ export default function AppInit() {
     };
     if (followings && followings?.followings?.length > 0) {
       saveRelaysListsForUsers(followings?.followings);
+      saveInboxRelaysListsForUsers(followings?.followings);
     }
     if (followings && followings?.followings?.length >= 5) {
       buildWOTList();

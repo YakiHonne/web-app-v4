@@ -74,7 +74,7 @@ export default function ZapPollsComp({
   }, [nostrAuthors, poll]);
 
   useEffect(() => {
-    const getData = async () => {
+    const getData = () => {
       setIsLoading(true);
       if (event) {
         let currentTime = Math.floor(Date.now() / 1000);
@@ -89,7 +89,13 @@ export default function ZapPollsComp({
           if (tag[0] === "closed_at") closedAt = parseInt(tag[1]) || null;
         }
         saveUsers([event.pubkey]);
-        let parsed_content = await getNoteTree(event.content);
+        let parsed_content = getNoteTree(
+          event.content,
+          undefined,
+          undefined,
+          undefined,
+          event.pubkey
+        );
         if (closedAt !== null)
           setClosingTime({
             time: closedAt,
@@ -115,7 +121,7 @@ export default function ZapPollsComp({
         cacheUsage: "CACHE_FIRST",
       });
 
-      sub.on("event", async (event) => {
+      sub.on("event", (event) => {
         try {
           let currentTime = Math.floor(Date.now() / 1000);
           let options = [];
@@ -128,7 +134,13 @@ export default function ZapPollsComp({
             if (tag[0] === "value_minimum") minSats = parseInt(tag[1]) || 0;
             if (tag[0] === "closed_at") closedAt = parseInt(tag[1]) || null;
           }
-          let parsed_content = await getNoteTree(event.content);
+          let parsed_content = getNoteTree(
+            event.content,
+            undefined,
+            undefined,
+            undefined,
+            event.pubkey
+          );
           if (closedAt !== null)
             setClosingTime({
               time: closedAt,
@@ -250,7 +262,10 @@ export default function ZapPollsComp({
   };
 
   const handleShowCashier = (option) => {
-    if (!userKeys || (userKeys && !(userKeys?.sec || userKeys?.ext))) {
+    if (
+      !userKeys ||
+      (userKeys && !(userKeys?.sec || userKeys?.ext || userKeys?.bunker))
+    ) {
       setIsLogin(true);
       return;
     }

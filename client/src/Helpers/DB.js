@@ -1,6 +1,7 @@
 import Dexie from "dexie";
 import {
   aggregateUsers,
+  getFavRelayList,
   getNostrClients,
   getRelayList,
   getSubData,
@@ -30,12 +31,17 @@ db.version(2).stores({
   interests: "",
   followings: "",
   followingsRelays: "",
+  followingsInboxRelays: "",
   appSettings: "",
   relays: "",
+  inboxRelays: "",
+  favrelays: "",
   bookmarks: "",
   users: "",
   clients: "",
   eventStats: "",
+  wot: "",
+  blossomServers: "",
   notificationLastEventTS: "",
 });
 
@@ -99,6 +105,17 @@ export const getMutedlist = async (pubkey) => {
     }
   } else return [];
 };
+export const getWotlist = async (pubkey) => {
+  if (db) {
+    try {
+      let wotList = await db.table("wot").get(pubkey);
+      return wotList || [];
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  } else return [];
+};
 
 export const getNotificationLastEventTS = async (pubkey) => {
   if (db) {
@@ -117,6 +134,39 @@ export const getRelays = async (pubkey) => {
     try {
       let relays = await db.table("relays").get(pubkey);
       return relays || [];
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  } else return [];
+};
+export const getInboxRelays = async (pubkey) => {
+  if (db) {
+    try {
+      let inboxRelays = await db.table("inboxRelays").get(pubkey);
+      return inboxRelays || [];
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  } else return [];
+};
+export const getBlossomServers = async (pubkey) => {
+  if (db) {
+    try {
+      let blossomServers = await db.table("blossomServers").get(pubkey);
+      return blossomServers || [];
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  } else return [];
+};
+export const getFavRelays = async (pubkey) => {
+  if (db) {
+    try {
+      let relays = await db.table("favrelays").get(pubkey);
+      return relays || { relays: [] };
     } catch (err) {
       console.log(err);
       return [];
@@ -191,6 +241,20 @@ export const getFollowingsRelays = async () => {
     try {
       let followingsRelays = await db.table("followingsRelays").toArray();
       return followingsRelays;
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
+  } else return [];
+};
+
+export const getFollowingsInboxRelays = async () => {
+  if (db) {
+    try {
+      let followingsInboxRelays = await db
+        .table("followingsInboxRelays")
+        .toArray();
+      return followingsInboxRelays;
     } catch (err) {
       console.log(err);
       return [];
@@ -295,6 +359,31 @@ export const saveInterests = async (event, pubkey, lastTimestamp) => {
     console.log(err);
   }
 };
+export const saveBlossomServers = async (event, pubkey, lastTimestamp) => {
+  if (!event && lastTimestamp) return;
+  let eventToStore = { last_timestamp: undefined, servers: [] };
+
+  if (event) {
+    let servers = event.tags
+      .filter(
+        (tag) =>
+          tag[0] === "server" &&
+          (tag[1].startsWith("http://") || tag[1].startsWith("https://"))
+      )
+      .map((tag) => tag[1]);
+    eventToStore = { last_timestamp: event.created_at, servers };
+  }
+
+  try {
+    await Dexie.ignoreTransaction(async () => {
+      await db.transaction("rw", db.blossomServers, async () => {
+        await db.blossomServers.put(eventToStore, pubkey);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export const savefollowingsRelays = async (followingsRelays) => {
   try {
@@ -302,6 +391,18 @@ export const savefollowingsRelays = async (followingsRelays) => {
       await db.transaction("rw", db.followingsRelays, async () => {
         for (let relaysSet of followingsRelays)
           await db.followingsRelays.put(relaysSet, relaysSet.pubkey);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+export const savefollowingsInboxRelays = async (followingsRelays) => {
+  try {
+    await Dexie.ignoreTransaction(async () => {
+      await db.transaction("rw", db.followingsInboxRelays, async () => {
+        for (let relaysSet of followingsRelays)
+          await db.followingsInboxRelays.put(relaysSet, relaysSet.pubkey);
       });
     });
   } catch (err) {
@@ -329,6 +430,17 @@ export const saveMutedlist = async (event, pubkey, lastTimestamp) => {
     console.log(err);
   }
 };
+export const saveWotlist = async (list, pubkey) => {
+  try {
+    await Dexie.ignoreTransaction(async () => {
+      await db.transaction("rw", db.wot, async () => {
+        await db.wot.put(list, pubkey);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export const saveRelays = async (event, pubkey, lastTimestamp) => {
   if (!event && lastTimestamp) return;
@@ -342,6 +454,43 @@ export const saveRelays = async (event, pubkey, lastTimestamp) => {
     await Dexie.ignoreTransaction(async () => {
       await db.transaction("rw", db.relays, async () => {
         await db.relays.put(eventToStore, pubkey);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+export const saveInboxRelays = async (event, pubkey, lastTimestamp) => {
+  if (!event && lastTimestamp) return;
+  let eventToStore = { last_timestamp: undefined, relays: [] };
+  if (event) {
+    let relays = event.tags
+      .filter((tag) => tag[0] === "relay")
+      .map((tag) => tag[1]);
+    eventToStore = { last_timestamp: event.created_at, relays };
+  }
+
+  try {
+    await Dexie.ignoreTransaction(async () => {
+      await db.transaction("rw", db.inboxRelays, async () => {
+        await db.inboxRelays.put(eventToStore, pubkey);
+      });
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+export const saveFavRelays = async (event, pubkey, lastTimestamp) => {
+  if (!event && lastTimestamp) return;
+  let eventToStore = { last_timestamp: undefined, relays: [] };
+  if (event) {
+    let relays = getFavRelayList(event.tags);
+    eventToStore = { last_timestamp: event.created_at, ...event, relays };
+  }
+  try {
+    await Dexie.ignoreTransaction(async () => {
+      await db.transaction("rw", db.favrelays, async () => {
+        await db.favrelays.put(eventToStore, pubkey);
       });
     });
   } catch (err) {
@@ -437,9 +586,7 @@ export const clearDB = () => {
             "clients",
           ].includes(table.name)
         )
-          table.clear().then(() => {
-            console.log(`${table.name} cleared`);
-          });
+          table.clear();
       });
     }
   } catch (err) {
@@ -471,7 +618,6 @@ export const removeRecordFromNDKStore = async (id) => {
     if (ndkdb) {
       await ndkdb.open();
       await ndkdb.events.delete(id);
-      console.log("deleted", id);
     }
   } catch (err) {
     console.log(err);
@@ -511,6 +657,34 @@ export const getOutboxRelays = async (pubkey) => {
         .filter((relay) => relay.read)
         .map((relay) => relay.url)
         .splice(0, 2);
+    }
+    return [];
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const getInboxRelaysForUser = async (pubkey) => {
+  try {
+    const store_ = store.getState();
+    const userFollowingsInboxRelays = store_.userFollowingsInboxRelays;
+    let relays = userFollowingsInboxRelays.find(
+      (item) => item.pubkey === pubkey
+    );
+    if (relays) {
+      return relays.relays;
+    }
+
+    let userRelaysFromNOSTR = await getSubData([
+      { kinds: [10050], authors: [pubkey] },
+    ]);
+
+    if (userRelaysFromNOSTR.data.length > 0) {
+      let relaysList = userRelaysFromNOSTR.data.tags
+        .filter((_) => _[0] === "relay")
+        .map((_) => _[1]);
+      savefollowingsInboxRelays([{ pubkey, relays: relaysList }]);
+      return relaysList;
     }
     return [];
   } catch (err) {

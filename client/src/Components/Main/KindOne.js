@@ -15,8 +15,6 @@ import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
 import { getSubData, getUser, translate } from "../../Helpers/Controlers";
-import { ndkInstance } from "../../Helpers/NDKInstance";
-import { NDKUser } from "@nostr-dev-kit/ndk";
 import OptionsDropdown from "./OptionsDropdown";
 import useNoteStats from "../../Hooks/useNoteStats";
 import Like from "../Reactions/Like";
@@ -38,6 +36,7 @@ import ZapAd from "./ZapAd";
 import useUserProfile from "../../Hooks/useUsersProfile";
 import RepEventPreviewCard from "./RepEventPreviewCard";
 import NotesComment from "./NotesComment";
+import { nip19 } from "nostr-tools";
 
 export default function KindOne({
   event,
@@ -103,37 +102,6 @@ export default function KindOne({
     return checkProfile();
   }, [userMutedList, userProfile]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       let tempPubkey = event.pubkey;
-  //       let auth = getUser(tempPubkey);
-  //       if (auth) {
-  //         setUser(auth);
-  //         let ndkUser = new NDKUser({ pubkey: event.pubkey });
-  //         ndkUser.ndk = ndkInstance;
-  //         let checknip05 =
-  //           auth.nip05 && typeof auth.nip05 === "string"
-  //             ? await ndkUser.validateNip05(auth.nip05)
-  //             : false;
-
-  //         if (checknip05) setIsNip05Verified(true);
-  //       }
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   };
-  //   if (nostrAuthors.length > 0) fetchData();
-  // }, [nostrAuthors]);
-
-  // useEffect(() => {
-  //   const detectLang = async () => {
-  //     let isEnabled = await enableTranslation(event.content);
-
-  //     setIsTransEnabled(isEnabled);
-  //   };
-  //   detectLang();
-  // }, []);
   useEffect(() => {
     if (postActions && postActions?.reposts?.reposts?.length > 0)
       getReposts(postActions?.reposts?.reposts);
@@ -226,7 +194,13 @@ export default function KindOne({
         );
       }
       if (res.status === 200) {
-        let noteTree = await getNoteTree(res.res);
+        let noteTree = getNoteTree(
+          res.res,
+          undefined,
+          undefined,
+          undefined,
+          event.pubkey
+        );
         setTranslatedNote(noteTree);
         setShowTranslation(true);
       }
@@ -242,7 +216,7 @@ export default function KindOne({
       );
     }
   };
-console.log(isThread)
+
   return (
     <>
       {showComments && (
@@ -335,7 +309,7 @@ console.log(isThread)
                       <>{showTranslation ? translatedNote : event.note_tree}</>
                     ) : (
                       <p className="p-four-lines">
-                        {compactContent(event.content)}
+                        {compactContent(event.content, event.pubkey)}
                       </p>
                     )}
                   </div>
@@ -351,27 +325,6 @@ console.log(isThread)
                 <p className="c1-c">... {t("AnWFKlu")}</p>
               </div>
             )}
-            {/* {isTransEnabled && (
-            <div
-              className="fit-container note-indent"
-              style={{ paddingTop: ".5rem" }}
-            >
-              {!isNoteTranslating && !showTranslation && (
-                <p className="btn-text-gray" onClick={translateNote}>
-                  {t("AdHV2qJ")}
-                </p>
-              )}
-              {!isNoteTranslating && showTranslation && (
-                <p
-                  className="btn-text-gray"
-                  onClick={() => setShowTranslation(false)}
-                >
-                  {t("AE08Wte")}
-                </p>
-              )}
-              {isNoteTranslating && <LoadingDots />}
-            </div>
-          )} */}
             {reactions && (
               <>
                 {postActions?.zaps?.zaps?.length > 0 && (
@@ -411,7 +364,6 @@ console.log(isThread)
                             ? setShowComments(true)
                             : null
                         }
-                        // onClick={redirect}
                       >
                         <p>{postActions.replies.replies.length}</p>
                       </div>
@@ -664,10 +616,9 @@ const RelatedEvent = ({ event }) => {
           saveUsers([event_.data[0].pubkey]);
           let parsedEvent;
           if (kind === 1) {
-            parsedEvent = await getParsedNote(event_.data[0]);
+            parsedEvent = getParsedNote(event_.data[0]);
             parsedEvent = { ...parsedEvent, isComment: false };
           } else {
-            console.log(event_.data[0]);
             parsedEvent = getParsedRepEvent(event_.data[0]);
           }
           setRelatedEvent(parsedEvent);
@@ -699,26 +650,41 @@ const RelatedEvent = ({ event }) => {
   const handleOnClick = (e) => {
     e.stopPropagation();
     if (!user) return;
-    customHistory.push(`/users/${getBech32("npub", user.pubkey)}`);
+    customHistory.push(
+      `/users/${nip19.nprofileEncode({ pubkey: user.pubkey })}`
+    );
   };
 
   if (isThread)
-    return (
-      relatedEvent && (
-        <div className="slide-down fit-container">
-          {relatedEvent.kind === 1 && (
-            <NotesComment
-              event={relatedEvent}
-              hasReplies={true}
-              isHistory={true}
-            />
-          )}
-          {relatedEvent.kind !== 1 && (
-            <RepEventPreviewCard item={relatedEvent} />
-          )}
+    return relatedEvent ? (
+      <div className=" fit-container">
+        {relatedEvent.kind === 1 && (
+          <NotesComment
+            event={relatedEvent}
+            hasReplies={true}
+            isHistory={true}
+          />
+        )}
+        {relatedEvent.kind !== 1 && <RepEventPreviewCard item={relatedEvent} />}
+      </div>
+    ) : (
+      <div
+        className="fit-container box-pad-h-m fx-centered fx-start-h fx-start-v fx-col"
+        style={{ gap: 0 }}
+      >
+        <div className="sc-s bg-sp box-pad-h-s box-pad-v-s ">
+          <LoadingDots />
         </div>
-      )
+        <div
+          style={{
+            height: "20px",
+            borderLeft: "1px solid var(--pale-gray)",
+            marginLeft: "1rem",
+          }}
+        ></div>
+      </div>
     );
+
   return (
     <>
       <div className="fit-container fx-centered fx-start-h">

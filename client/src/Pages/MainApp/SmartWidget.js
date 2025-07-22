@@ -39,6 +39,7 @@ import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
 import PostAsNote from "../../Components/Main/PostAsNote";
+import { InitEvent } from "../../Helpers/Controlers";
 
 const getTypeMetada = (type, isDarkMode) => {
   let text_color = isDarkMode === "0" ? "#ffffff" : "#1C1B1F";
@@ -268,7 +269,7 @@ export default function NostrSmartWidget() {
               <div className="box-pad-h-m fit-container">
                 {userKeys && (
                   <>
-                    {(userKeys.sec || userKeys.ext) && (
+                    {(userKeys.sec || userKeys.ext || userKeys.bunker) && (
                       <>
                         {buildOptions && (
                           <>
@@ -318,7 +319,7 @@ export default function NostrSmartWidget() {
                       </>
                     )}
 
-                    {!userKeys.sec && !userKeys.ext && (
+                    {!userKeys.sec && !userKeys.ext && !userKeys.bunker && (
                       <PagePlaceholder page={"nostr-unauthorized"} />
                     )}
                   </>
@@ -975,17 +976,13 @@ const SmartWidgetBuilder = ({
       content: content,
       tags,
     };
-    if (userKeys.ext) {
-      try {
-        tempEvent = await window.nostr.signEvent(tempEvent);
-      } catch (err) {
-        console.log(err);
-        setIsLoading(false);
-        return false;
-      }
-    } else {
-      tempEvent = finalizeEvent(tempEvent, userKeys.sec);
-    }
+    tempEvent = await InitEvent(
+      tempEvent.kind,
+      tempEvent.content,
+      tempEvent.tags,
+      tempEvent.created_at
+    );
+    if (!tempEvent) return;
     dispatch(
       setToPublish({
         eventInitEx: tempEvent,

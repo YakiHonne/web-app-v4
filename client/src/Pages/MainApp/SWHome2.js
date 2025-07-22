@@ -1,31 +1,30 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import Sidebar from "../../Components/Main/Sidebar";
-import SWActionPreview from "../../Components/Main/SWActionPreview";
-import { useTranslation } from "react-i18next";
-import { getSubData } from "../../Helpers/Controlers";
-import { saveUsers } from "../../Helpers/DB";
-import { getParsedSW } from "../../Helpers/Encryptions";
 import LoadingDots from "../../Components/LoadingDots";
 import { useSelector } from "react-redux";
-import LaunchSW from "./LaunchSW";
-import axiosInstance from "../../Helpers/HTTP_Client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
 import "highlight.js/styles/github-dark.css";
-import { copyText } from "../../Helpers/Helpers";
+import {
+  copyText,
+  getKeys,
+  getAnswerFromAIRemoteAPI,
+} from "../../Helpers/Helpers";
 import { nanoid } from "nanoid";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { t } from "i18next";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 
-const getSavedConversation = (pubkey) => {
+const getSavedConversation = () => {
+  const getUserKeys = getKeys();
+  if (!getUserKeys) return [];
   let aiConversation = localStorage.getItem("aiConversation");
   aiConversation = JSON.parse(aiConversation) || {};
-  let conversation = aiConversation[pubkey];
+  let conversation = aiConversation[getUserKeys.pub];
   if (!conversation) return [];
   return conversation;
 };
@@ -74,7 +73,7 @@ export default function SWhome2() {
 }
 
 const Main = () => {
-  const [searchType, setSearchType] = useState(1);
+  const userKeys = useSelector((state) => state.userKeys);
   const [status, setStatus] = useState(true);
   const [showTips, setShowtips] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -92,310 +91,38 @@ const Main = () => {
 
   return (
     <main className="main-page-nostr-container">
-      <div
-        className="fx-centered fit-container fx-start-h fx-col box-pad-v"
-        style={{ gap: 0, minHeight: "100vh" }}
-      >
-        {searchType === 1 && (
-          <div
-            style={{
-              width: "min(100%, 600px)",
-            }}
-            className="fx-centered fx-col fx-start-v box-pad-h-m"
-          >
-            {/* <ChatWindow
+      {userKeys && (userKeys.ext || userKeys.sec || userKeys.bunker) ? (
+        <div
+          className="fx-centered fit-container fx-start-h fx-col box-pad-v box-pad-h-m"
+          style={{ gap: 0, minHeight: "100vh" }}
+        >
+          <div className="fit-container fx-centered fx-col fx-start-v box-pad-h-m">
+            <ChatWindow
               message={searchKeyword}
               setMessage={setSearchKeyword}
               setStatus={setStatus}
-            /> */}
-            <PagePlaceholder page="ai" />
+            />
+            {/* <PagePlaceholder page="ai" /> */}
           </div>
-        )}
-        {searchType === 0 && (
-          <div className="box-pad-v fx-centered">
-            <div
-              className="smart-widget-24"
-              style={{
-                minWidth: "44px",
-                minHeight: "44px",
-                animation: "1.5s infinite rotate",
-              }}
-            ></div>
-            <h3>{t("A2mdxcf")}</h3>
-          </div>
-        )}
-        <InputField
-          handleSearch={handleSearch}
-          searchType={searchType}
-          setSearchType={setSearchType}
-          setSearchKeyword={setSearchKeyword}
-          status={status}
-        />
-        {searchType === 0 && (
-          <>
-            <div
-              style={{
-                width: "min(100%, 600px)",
-              }}
-              className="fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
-            >
-              <div
-                className={`fit-container fx-scattered `}
-                style={{ transition: ".2s ease-in-out" }}
-                onClick={() => setShowtips(!showTips)}
-              >
-                <p className="p-big">{t("A9Mca7S")}</p>
-                <div
-                  className="plus-sign"
-                  style={{
-                    rotate: showTips ? "45deg" : "0deg",
-                    minWidth: "14px",
-                    minHeight: "14px",
-                  }}
-                ></div>
-              </div>
-              {showTips && (
-                <>
-                  <div className="fx fx-centered fx-stretch">
-                    <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp">
-                      <p className="gray-c">
-                        <span className="c1-c">{t("AYZh36g")} </span>
-                        {t("AiCvw1P")}
-                      </p>
-                    </div>
-                    <div className="fx box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx-centered fx-col fx-start-h">
-                      <p className="gray-c">
-                        <span className="c1-c">{t("A6U9fNT")} </span>
-                        {t("AmK7zqi")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="fit-container fx-centered fx-stretch">
-                    <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18 bg-sp fx">
-                      {/* <div className="round-icon">
-                    <div className="posts-24"></div>
-                  </div> */}
-                      <div className="fx-centered fx-col fx-start-h fx-start-v">
-                        <p className="p-big p-bold">{t("Axeyl28")}</p>
-                        <p className="gray-c">{t("ASfQxuq")}</p>
-                        <Link to={"/sw-playground"} className="fit-container">
-                          <button className=" fx-centered btn-normal btn option pointer btn-full">
-                            {t("Axeyl28")}
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="fx-centered fx-start-h fx-start-v box-pad-h-m box-pad-v-m sc-s-18  bg-sp fx">
-                      {/* <div className="round-icon">
-                    <div className="posts-24"></div>
-                  </div> */}
-                      <div className="fx-centered fx-col fx-start-h fx-start-v">
-                        <p className="p-big p-bold">{t("ADuxxCf")}</p>
-                        <p className="gray-c">{t("Afi8Kwg")}</p>
-                        <div className="fit-container fx-centered ">
-                          <Link
-                            to={
-                              "https://github.com/search?q=topic%3Asmart-widget+org%3AYakiHonne&type=Repositories"
-                            }
-                            target="_blank"
-                          >
-                            <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer fx">
-                              <div className="github-logo"></div>
-                              {t("AvcFvUD")}
-                            </div>
-                          </Link>
-                          <Link to={"/docs/sw/intro"}>
-                            <div className="box-pad-h-m box-pad-v-s sc-s fx-centered bg-sp option pointer">
-                              <div className="posts"></div>
-                              {t("As9snfY")}
-                            </div>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              <div style={{ height: "7px" }}></div>
-              <hr />
-              <hr />
-            </div>
-            <div
-              style={{
-                width: "min(100%, 600px)",
-              }}
-              className="fx-centered fx-col fx-start-v box-pad-h-m"
-            >
-              {searchKeyword && (
-                <div className="fit-container fx-scattered">
-                  <h4>
-                    <span className="gray-c">{t("AWJ9AGo")}</span>{" "}
-                    {searchKeyword}
-                  </h4>
-                  <div
-                    className="close"
-                    style={{ position: "static" }}
-                    onClick={() => setSearchKeyword("")}
-                  >
-                    <div></div>
-                  </div>
-                </div>
-              )}
-              <SWSet external={searchKeyword} />
-            </div>
-          </>
-        )}
-      </div>
-    </main>
-  );
-};
 
-const SWSet = ({ external }) => {
-  const { t } = useTranslation();
-  const userSavedTools = useSelector((state) => state.userSavedTools);
-  const [actions, setActions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedSW, setSelectedSW] = useState("");
-  const [lastEventTimestamp, setLastEventTimestamp] = useState(undefined);
-  const [isEnded, setEnded] = useState(false);
-  const [savedTools, setSavedTools] = useState([]);
-  const [searchedTools, setSearchedTools] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (userSavedTools.length === 0 && savedTools.length > 0) {
-        setSavedTools([]);
-        return;
-      }
-      let swIDs = userSavedTools.map((_) => _.split(":")[2]);
-      if (swIDs.length === 0) return;
-      const data = await getSubData([{ kinds: [30033], "#d": swIDs }]);
-      setSavedTools(data.data.map((_) => getParsedSW(_)));
-      saveUsers(data.pubkeys);
-    };
-    const fetchDataDVM = async () => {
-      try {
-        setIsLoading(true);
-        if (searchedTools.length > 0) setSearchedTools([]);
-        let data = await axiosInstance.post("/api/v1/dvm-query", {
-          message: external,
-        });
-        setSearchedTools(data.data.map((_) => getParsedSW(_)));
-        saveUsers(external.map((_) => _.pubkey));
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setIsLoading(false);
-      }
-    };
-    if (!external) fetchData();
-    if (external) fetchDataDVM();
-  }, [userSavedTools, external]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!isLoading) setIsLoading(true);
-      const data = await getSubData([
-        { kinds: [30033], limit: 10, until: lastEventTimestamp },
-      ]);
-      setActions((prev) => [...prev, ...data.data.map((_) => getParsedSW(_))]);
-      saveUsers(data.pubkeys);
-      setIsLoading(false);
-      if (data.data.length === 0) setEnded(true);
-    };
-
-    fetchData();
-  }, [lastEventTimestamp]);
-
-  const handleLastEventTS = () => {
-    setLastEventTimestamp(actions[actions.length - 1].created_at - 1);
-  };
-
-  const handleCbButton = (data) => {
-    if (data.type === "basic") setSelectedSW(data);
-  };
-
-  return (
-    <>
-      {selectedSW && (
-        <LaunchSW metadata={selectedSW} exit={() => setSelectedSW("")} />
-      )}
-      <div className="fit-container">
-        {((!external && actions.length > 0) ||
-          (external && searchedTools.length > 0)) && (
-          <p className="gray-c box-pad-v-s">{t("AQ3VGVk")}</p>
-        )}
-        <div className="fit-container fx-start-h fx-wrap fx-centered">
-          {!external &&
-            actions.map((sw) => {
-              return (
-                <div className="ifs-small" key={sw.id}>
-                  <SWActionPreview
-                    metadata={sw}
-                    setSelectSW={(data) => setSelectedSW(data)}
-                    cbButton={handleCbButton}
-                  />
-                </div>
-              );
-            })}
-          {external &&
-            searchedTools.map((sw) => {
-              return (
-                <div className="ifs-small" key={sw.id}>
-                  <SWActionPreview
-                    metadata={sw}
-                    setSelectSW={(data) => setSelectedSW(data)}
-                    cbButton={handleCbButton}
-                  />
-                </div>
-              );
-            })}
-          {!isLoading && !isEnded && !external && (
-            <div
-              className="fit-container fx-centered box-pad-v-m pointer btn-text-gray"
-              onClick={handleLastEventTS}
-            >
-              <p>{t("AnWFKlu")}</p>
-              <div className="arrow"></div>
-            </div>
-          )}
-          {isEnded && (
-            <div className="fit-container box-pad-v-m fx-centered">
-              <p className="gray-c">{t("AUrhqmn")}</p>
-            </div>
-          )}
-          {isLoading && (
-            <div
-              style={{ height: "150px" }}
-              className="fit-container fx-centered"
-            >
-              <LoadingDots />
-            </div>
-          )}
+          <InputField
+            handleSearch={handleSearch}
+            setSearchKeyword={setSearchKeyword}
+            status={status}
+          />
         </div>
-        {((!external && actions.length === 0) ||
-          (external && searchedTools.length === 0)) &&
-          !isLoading && (
-            <div
-              className="fit-container fx-centered fx-col"
-              style={{ height: "150px" }}
-            >
-              <div
-                className="yaki-logomark"
-                style={{ minWidth: "48px", minHeight: "48px", opacity: 0.5 }}
-              ></div>
-              <p className="gray-c">{t("ANA9vN0")}</p>
-            </div>
-          )}
-      </div>
-    </>
+      ) : (
+        <PagePlaceholder page={"nostr-not-connected"} />
+      )}
+    </main>
   );
 };
 
 const ChatWindow = ({ message, setMessage, setStatus }) => {
   const userKeys = useSelector((state) => state.userKeys);
-  const [messages, setMessages] = useState(getSavedConversation(userKeys.pub));
+  const [messages, setMessages] = useState(getSavedConversation());
   const [loading, setLoading] = useState(false);
+  const [quotaMessage, setQuotaMessage] = useState("");
   const [stopSnapping, setStopSnapping] = useState(false);
   const containerRef = useRef(null);
   useEffect(() => {
@@ -444,24 +171,60 @@ const ChatWindow = ({ message, setMessage, setStatus }) => {
     setLoading(true);
     setStatus(false);
     try {
-      const res = await axios.post("https://yakiai.yakihonne.com/api/v1/ai", {
-        input,
-      });
+      const res = await getAnswerFromAIRemoteAPI(userKeys.pub, input);
 
-      const data = res.data.message.content;
-      saveConversation(userKeys.pub, [
-        ...newMessages,
-        { role: "assistant", content: data, created_at: Date.now() },
-      ]);
+      if (res.status) {
+        const data = res.message;
+        saveConversation(userKeys.pub, [
+          ...newMessages,
+          { role: "assistant", content: data, created_at: Date.now() },
+        ]);
+        animateTyping(data, newMessages);
+      }
+      if (!res.status) {
+        const data = res.message;
+        setQuotaMessage(data);
+      }
       if (stopSnapping) setStopSnapping(false);
       setLoading(false);
-      animateTyping(data, newMessages);
+      setStatus(true);
     } catch (err) {
       console.log(err);
       setStatus(true);
       setLoading(false);
     }
   };
+  // const handleSend = async (input) => {
+  //   if (!input.trim()) return;
+
+  //   const newMessages = [
+  //     ...messages,
+  //     { role: "user", content: input, created_at: Date.now() },
+  //   ];
+  //   setMessages(newMessages);
+  //   setMessage("");
+  //   setLoading(true);
+  //   setStatus(false);
+  //   try {
+  //     const res = await getAnswerFromAIRemoteAPI(userKeys.pub, input)
+  //     // const res = await axios.post("https://yakiai.yakihonne.com/api/v1/ai", {
+  //     //   input,
+  //     // });
+
+  //     // const data = res.data.message.content;
+  //     // saveConversation(userKeys.pub, [
+  //     //   ...newMessages,
+  //     //   { role: "assistant", content: data, created_at: Date.now() },
+  //     // ]);
+  //     // if (stopSnapping) setStopSnapping(false);
+  //     // setLoading(false);
+  //     // animateTyping(data, newMessages);
+  //   } catch (err) {
+  //     console.log(err);
+  //     setStatus(true);
+  //     setLoading(false);
+  //   }
+  // };
 
   const animateTyping = (text, history) => {
     const words = text.split(" ");
@@ -559,17 +322,27 @@ const ChatWindow = ({ message, setMessage, setStatus }) => {
           </div>
         )}
       </div>
+      {quotaMessage && (
+        <div
+          className="fit-container fx-centered fx-start-h sc-s-18 box-pad-h box-pad-v box-marg-s slide-up"
+          style={{
+            position: "relative",
+            backgroundColor: "var(--orange-side)",
+            borderColor: "var(--c1)",
+          }}
+        >
+          <div className="close" onClick={() => setQuotaMessage("")}>
+            <div></div>
+          </div>
+          <div className="info"></div>
+          <p className="c1-c">{t(quotaMessage)}</p>
+        </div>
+      )}
     </div>
   );
 };
 
-function InputField({
-  status = true,
-  handleSearch,
-  searchType,
-  setSearchType,
-  setSearchKeyword,
-}) {
+function InputField({ status = true, handleSearch }) {
   const [searchKeywordInput, setSearchKeywordInput] = useState("");
   const inputFieldRef = useRef(null);
 
@@ -612,9 +385,8 @@ function InputField({
 
   return (
     <div
-      className="sc-s box-pad-h-s box-pad-v-s fx-centered fx-col sw-search-box"
+      className="sc-s box-pad-h-s box-pad-v-s fx-centered fx-col sw-search-box fit-container"
       style={{
-        width: "min(100%, 600px)",
         cursor: status ? "unset" : "not-allowed",
         overflow: "visible",
       }}
@@ -622,7 +394,7 @@ function InputField({
     >
       <form
         onSubmit={(e) => {
-          if (status && searchType !== 1) {
+          if (status) {
             setSearchKeywordInput("");
             handleSearch(e, searchKeywordInput);
           }
@@ -632,15 +404,13 @@ function InputField({
       >
         <textarea
           type="text"
-          className={`if ifs-full if-no-border ${
-            status && searchType !== 1 ? "" : "if-disabled"
-          }`}
+          className={`if ifs-full if-no-border ${status ? "" : "if-disabled"}`}
           value={searchKeywordInput}
           onChange={handleTyping}
-          placeholder={searchType === 0 ? t("A3IdSmf") : t("AmClLqP")}
+          placeholder={t("AmClLqP")}
           ref={inputFieldRef}
           onKeyDown={handleKeyDown}
-          disabled={!(status && searchType !== 1)}
+          disabled={!status}
           style={{
             padding: "1rem 0rem 1rem 1rem",
             height: "20px",
@@ -650,50 +420,37 @@ function InputField({
         />
       </form>
       <div className="fit-container fx-scattered box-pad-h-m box-pad-v-m">
-          <div className="fx-centered">
-                <Link
-                  className={`sc-s box-pad-h-m box-pad-v-s ${
-                    status ? "option pointer" : "if-disabled"
-                  } fx-centered`}
-                  style={{
-                    backgroundColor: !searchType ? "var(--pale-gray)" : "",
-                  }}
-                  // onClick={() => {
-                  //   if (status) {
-                  //     setSearchType(0);
-                  //     setSearchKeyword("");
-                  //     setSearchKeywordInput("");
-                  //   }
-                  // }}
-                  to={"/smart-widgets"}
-                >
-                  <div className="search"></div>
-                  {t("AYZh36g")}
-                </Link>
-                <Link
-                  className={`sc-s box-pad-h-m box-pad-v-s ${
-                    status ? "option pointer" : "if-disabled"
-                  } fx-centered`}
-                  style={{
-                    backgroundColor: searchType ? "var(--pale-gray)" : "",
-                  }}
-                  // onClick={() => {
-                  //   if (status) {
-                  //     setSearchType(1);
-                  //     setSearchKeyword("");
-                  //     setSearchKeywordInput("");
-                  //   }
-                  // }}
-                  to={"/sw-ai"}
-                >
-                  <div className="ringbell"></div>
-                  {t("A6U9fNT")}
-                </Link>
-              </div>
+        <div className="fx-centered">
+          <Link
+            className={`sc-s box-pad-h-m box-pad-v-s ${
+              status ? "option pointer" : "if-disabled"
+            } fx-centered`}
+            to={"/smart-widgets"}
+          >
+            <div className="search"></div>
+            {t("AYZh36g")}
+          </Link>
+          <Link
+            className={`sc-s box-pad-h-m box-pad-v-s ${
+              status ? "option pointer" : "if-disabled"
+            } fx-centered`}
+            style={{
+              backgroundColor: "var(--pale-gray)",
+            }}
+            to={"/sw-ai"}
+          >
+            <div className="ringbell"></div>
+            {t("A6U9fNT")}
+          </Link>
+        </div>
         {status && (
           <div
             className="round-icon slide-up"
-            style={{ minWidth: "40px", minHeight: "40px", backgroundColor: "var(--c1)" }}
+            style={{
+              minWidth: "40px",
+              minHeight: "40px",
+              backgroundColor: "var(--c1)",
+            }}
             onClick={() => {
               if (status) {
                 setSearchKeywordInput("");

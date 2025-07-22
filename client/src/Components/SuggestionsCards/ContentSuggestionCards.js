@@ -174,7 +174,7 @@ const NoteCard = ({ event }) => {
         />
       </div>
       <Link to={`/notes/${nEventEncode(event.id)}`}>
-        <p className="p-three-lines">{compactContent(event.content)}</p>
+        <p className="p-three-lines">{compactContent(event.content, event.pubkey)}</p>
       </Link>
     </div>
   );

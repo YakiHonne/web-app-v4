@@ -1,7 +1,11 @@
 import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import LoadingDots from "../../Components/LoadingDots";
-import { getUser, getUserFromNOSTR } from "../../Helpers/Controlers";
+import {
+  getSubData,
+  getUser,
+  getUserFromNOSTR,
+} from "../../Helpers/Controlers";
 import { setUserKeys } from "../../Store/Slides/UserData";
 import {
   bytesTohex,
@@ -12,9 +16,20 @@ import {
 } from "../../Helpers/Encryptions";
 import profilePlaceholder from "../../media/images/profile-avatar.png";
 import s8e from "../../media/images/s8-e-yma.png";
-import { generateSecretKey, getPublicKey } from "nostr-tools";
+import {
+  generateSecretKey,
+  getPublicKey,
+  nip04,
+  nip44,
+  SimplePool,
+} from "nostr-tools";
 import * as secp from "@noble/secp256k1";
-import { FileUpload, getWallets, updateWallets } from "../../Helpers/Helpers";
+import {
+  copyText,
+  FileUpload,
+  getWallets,
+  updateWallets,
+} from "../../Helpers/Helpers";
 import { setToast } from "../../Store/Slides/Publishers";
 import ymaHero from "../../media/images/login-yma-hero.png";
 import ymaQR from "../../media/images/yma-qr.png";
@@ -24,16 +39,27 @@ import InterestSuggestions from "../../Content/InterestSuggestions";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveUsers } from "../../Helpers/DB";
 import axios from "axios";
-import { NDKEvent, NDKPrivateKeySigner } from "@nostr-dev-kit/ndk";
+import NDK, {
+  NDKEvent,
+  NDKNip46Signer,
+  NDKPrivateKeySigner,
+} from "@nostr-dev-kit/ndk";
 import relaysOnPlatform from "../../Content/Relays";
 import { FilePicker } from "../../Components/FilePicker";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
+import {
+  BUNKER_REGEX,
+  BunkerSigner,
+  parseBunkerInput,
+} from "nostr-tools/nip46";
+import { NostrConnect } from "nostr-tools/kinds";
+import QRCode from "react-qr-code";
 let stepsNumber = 4;
 let isNewAccount = getWallets().length > 0 ? true : false;
+
 export default function Login() {
   const { t } = useTranslation();
   let sk = bytesTohex(generateSecretKey());
@@ -82,6 +108,204 @@ export default function Login() {
     </div>
   );
 }
+
+const Bunker = () => {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const [nostrConnectURI, setNostrConnectURI] = useState("");
+  const [bunkerURL, setBunkerURL] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const localKeys = NDKPrivateKeySigner.generate();
+
+  const launchBunkerWindow = () => {
+    const relay = "wss://nostr-01.yakihonne.com";
+    const localSigner = NDKNip46Signer.nostrconnect(
+      ndkInstance,
+      relay,
+      localKeys,
+      {
+        name: "Yakihonne",
+        url: "https://yakihonne.com",
+        perms: [],
+      }
+    );
+    let nostrConnectUri = localSigner.nostrConnectUri;
+    setNostrConnectURI(nostrConnectUri);
+    const sub = ndkInstance.subscribe(
+      [{ kinds: [NostrConnect], "#p": [localKeys.pubkey] }],
+      {
+        groupable: false,
+        skipVerification: true,
+        skipValidation: true,
+      }
+    );
+    sub.on("event", async (event) => {
+      let data = "";
+      let isDecrypted = false;
+      let remotePubkey = event.pubkey;
+      let bunkerUrl = `bunker://${remotePubkey}?relay=wss://relay.nsec.app&relay=${relay}`;
+      try {
+        data = nip44.decrypt(
+          event.content,
+          nip44.v2.utils.getConversationKey(localKeys.privateKey, event.pubkey)
+        );
+        isDecrypted = true;
+        data = JSON.parse(data);
+      } catch (err) {
+        console.log(err);
+      }
+
+      if (!isDecrypted) {
+        try {
+          data = nip04.decrypt(
+            localKeys.privateKey,
+            event.pubkey,
+            event.content
+          );
+          data = JSON.parse(data);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      if (!data) {
+        sub.stop();
+        return;
+      }
+      sub.stop();
+      const bunkerPointer = await parseBunkerInput(bunkerUrl);
+      if (!bunkerPointer) {
+        return;
+      }
+      const bunker = new BunkerSigner(localKeys.privateKey, bunkerPointer, {
+        onauth: (url) => {
+          window.open(
+            url,
+            "_blank",
+            "width=600,height=650,scrollbars=yes,resizable=yes"
+          );
+        },
+      });
+
+      await bunker.connect();
+      const pubkey = await bunker.getPublicKey();
+      let toSave = {
+        localKeys: {
+          sec: localKeys.privateKey,
+          pub: getPublicKey(localKeys.privateKey),
+        },
+        pub: pubkey,
+        bunker: bunkerUrl,
+      };
+      dispatch(setUserKeys(toSave));
+
+      customHistory.back();
+    });
+  };
+  const handleBunker = async () => {
+    let testInput = BUNKER_REGEX.test(bunkerURL);
+    if (!testInput) {
+      dispatch(
+        setToast({
+          type: 2,
+          desc: t("A2l1JgC"),
+        })
+      );
+      return;
+    }
+    const bunkerPointer = await parseBunkerInput(bunkerURL);
+    if (!bunkerPointer) {
+      throw new Error("Invalid bunker input");
+    }
+    setIsLoading(true);
+    const bunker = new BunkerSigner(localKeys.privateKey, bunkerPointer, {
+      onauth: (url) => {
+        window.open(
+          url,
+          "_blank",
+          "width=600,height=650,scrollbars=yes,resizable=yes"
+        );
+      },
+    });
+
+    await bunker.connect();
+    const pubkey = await bunker.getPublicKey();
+    let toSave = {
+      localKeys: {
+        sec: localKeys.privateKey,
+        pub: getPublicKey(localKeys.privateKey),
+      },
+      pub: pubkey,
+      bunker: bunkerURL,
+    };
+    setIsLoading(false);
+    dispatch(setUserKeys(toSave));
+    customHistory.back();
+  };
+
+  return (
+    <>
+      {nostrConnectURI && (
+        <div className="fixed-container fx-centered box-pad-h">
+          <div
+            className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered fx-col slide-up"
+            style={{ position: "relative", width: "min(100%,340px)" }}
+          >
+            <div className="close" onClick={() => setNostrConnectURI("")}>
+              <div></div>
+            </div>
+            <div className="fit-container fx-centered fx-col">
+              <h4>{t("A9eQr6B")}</h4>
+              <p className="box-pad-h p-centered gray-c">{t("AJdT1m0")}</p>
+              <div
+                className="sc-s-18 fx-centered box-pad-h-m box-pad-v-m"
+                style={{ backgroundColor: "white" }}
+              >
+                <QRCode value={nostrConnectURI} width={400} />
+              </div>
+              <div
+                className="fit-container fx-scattered box-pad-h-m box-pad-v-s sc-s-d pointer"
+                onClick={() => copyText(nostrConnectURI, t("AB1PYvA"))}
+              >
+                <p className="p-one-line gray-c">{nostrConnectURI}</p>
+                <div className="copy"></div>
+              </div>
+            </div>
+            <div className="fit-container fx-centered">
+              <p className="gray-c">{t("Ax46s4g")}</p>
+            </div>
+            <div className="fit-container fx-centered fx-col">
+              <input
+                type="text"
+                className="if ifs-full"
+                placeholder="bunker://..."
+                value={bunkerURL}
+                onChange={(e) => setBunkerURL(e.target.value)}
+              />
+              <div className="fit-container fx-centered">
+                <button
+                  className="btn btn-normal btn-full"
+                  style={{ minWidth: "max-content" }}
+                  onClick={handleBunker}
+                  disabled={isLoading || !bunkerURL}
+                >
+                  {isLoading ? <LoadingDots /> : t("AmOtzoL")}
+                </button>
+                {isLoading && (
+                  <button className="btn-red btn btn-full">
+                    {t("AB4BSCe")}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <button className="btn btn-gray btn-full" onClick={launchBunkerWindow}>
+        {t("A9eQr6B")}
+      </button>
+    </>
+  );
+};
 
 const LeftSection = () => {
   return (
@@ -219,7 +443,7 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
 
   return (
     <>
-      <div className="fit-container slide-left">
+      <div className="fit-container">
         <input
           type="text"
           className="if ifs-full box-marg-s"
@@ -235,17 +459,16 @@ const LoginScreen = ({ switchScreen, userKeys }) => {
           >
             {isLoading ? <LoadingDots /> : <>{t("AmOtzoL")}</>}
           </button>
+          <p>{t("Ax46s4g")}</p>
+          <Bunker />
           {checkExt && (
-            <>
-              <p>{t("Ax46s4g")}</p>
-              <button
-                className="btn btn-gst btn-full"
-                disabled={!checkExt}
-                onClick={onLoginWithExt}
-              >
-                {isLoading ? <LoadingDots /> : <>{t("AgG7T1H")}</>}
-              </button>
-            </>
+            <button
+              className="btn btn-gray btn-full"
+              disabled={!checkExt}
+              onClick={onLoginWithExt}
+            >
+              {isLoading ? <LoadingDots /> : <>{t("AgG7T1H")}</>}
+            </button>
           )}
           {!checkExt && (
             <button className="btn btn-disabled btn-full" disabled={true}>
@@ -290,7 +513,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
   const [selectedInterests, setSelectedInterests] = useState([]);
   const [showErrorMessage, setShowMessageError] = useState(false);
   const [showEmptyUNMessage, setShowMessageEmtpyUN] = useState(false);
-    const [showInvalidMessage, setShowInvalidMessage] = useState(false);
+  const [showInvalidMessage, setShowInvalidMessage] = useState(false);
   const [userName, setUserName] = useState("");
   const [enableWalletLinking, setEnablingWalletLinking] = useState(true);
 
@@ -403,9 +626,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
   const initializeAccount = async () => {
     try {
       setStep(5);
-      let picture_ = pictureFile
-        ? await FileUpload(pictureFile, undefined, userKeys)
-        : "";
+      let picture_ = pictureFile ? await FileUpload(pictureFile, userKeys) : "";
       if (picture_ === false) {
         dispatch(
           setToast({
@@ -417,9 +638,7 @@ const SignupScreen = ({ switchScreen, userKeys }) => {
 
         return;
       }
-      let banner_ = bannerFile
-        ? await FileUpload(bannerFile, undefined, userKeys)
-        : "";
+      let banner_ = bannerFile ? await FileUpload(bannerFile, userKeys) : "";
       if (banner_ === false) {
         dispatch(
           setToast({

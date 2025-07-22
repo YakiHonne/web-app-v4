@@ -8,6 +8,7 @@ import {
   getParsedRepEvent,
   getParsedSW,
   getuserMetadata,
+  shortenKey,
 } from "../../Helpers/Encryptions";
 import { useLocation, useParams } from "react-router-dom";
 import Sidebar from "../../Components/Main/Sidebar";
@@ -21,7 +22,7 @@ import Helmet from "react-helmet";
 import axios from "axios";
 import NumberShrink from "../../Components/NumberShrink";
 import ArrowUp from "../../Components/ArrowUp";
-import { getAuthPubkeyFromNip05, straightUp } from "../../Helpers/Helpers";
+import { getAuthPubkeyFromNip05, getNoteTree, straightUp } from "../../Helpers/Helpers";
 import LoadingDots from "../../Components/LoadingDots";
 import ShareLink from "../../Components/ShareLink";
 import InitiConvo from "../../Components/Main/InitConvo";
@@ -48,6 +49,7 @@ import bannedList from "../../Content/BannedList";
 import NotesFromPeopleYouFollow from "../../Components/Main/NotesFromPeopleYouFollow";
 import UserFollowers from "./UserFollowers";
 import WidgetCardV2 from "../../Components/Main/WidgetCardV2";
+import useUserProfile from "../../Hooks/useUsersProfile";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -281,23 +283,23 @@ const UserMetadata = ({ refreshUser }) => {
     }
   }, [id, timestamp]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const USER_IMPACT = await axios.get(
-          API_BASE_URL + "/api/v1/user-impact",
-          {
-            params: { pubkey: id },
-          }
-        );
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const USER_IMPACT = await axios.get(
+  //         API_BASE_URL + "/api/v1/user-impact",
+  //         {
+  //           params: { pubkey: id },
+  //         }
+  //       );
 
-        setUserImpact(USER_IMPACT.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    if (id) fetchData();
-  }, [id]);
+  //       setUserImpact(USER_IMPACT.data);
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   };
+  //   if (id) fetchData();
+  // }, [id]);
 
   useEffect(() => {
     const getID = async () => {
@@ -315,6 +317,7 @@ const UserMetadata = ({ refreshUser }) => {
         console.log(err);
       }
     };
+
     getID();
     setShowPeople(false);
   }, [user_id]);
@@ -334,7 +337,9 @@ const UserMetadata = ({ refreshUser }) => {
         let userProfile = stats.find((_) => _.kind === 0);
         let userStats_ = stats.find((_) => _.kind === 10000105);
         userStats_ = userStats_ ? JSON.parse(userStats_.content) : false;
-        let parsedProfile = getuserMetadata(userProfile);
+        let parsedProfile = userProfile
+          ? getuserMetadata(userProfile)
+          : getEmptyuserMetadata(id);
         setUser(parsedProfile);
         refreshUser(parsedProfile);
         saveFetchedUsers([parsedProfile]);
@@ -365,6 +370,7 @@ const UserMetadata = ({ refreshUser }) => {
       p.ndk = ndkInstance;
       if (!stats) {
         let profile = await p.fetchProfile();
+
         if (profile) {
           let parsedProfile = getParsedAuthor(JSON.parse(profile.profileEvent));
           setUser(parsedProfile);
@@ -466,31 +472,13 @@ const UserMetadata = ({ refreshUser }) => {
           type={showPeople}
         />
       )}
-      {showWritingImpact && (
-        <WritingImpact
-          writingImpact={userImpact.writing_impact}
-          exit={() => setShowWritingImpact(false)}
-        />
-      )}
-      {showRatingImpact && (
-        <RatingImpact
-          ratingImpact={userImpact.rating_impact}
-          exit={() => setShowRatingImpact(false)}
-        />
-      )}
+
       {initConv && <InitiConvo exit={() => setInitConv(false)} receiver={id} />}
       {showQR && (
         <QRSharing
           user={user}
           exit={() => setShowQR(false)}
           isVerified={isNip05Verified}
-        />
-      )}
-      {showUserImpact && (
-        <UserImpact
-          user={user}
-          exit={() => setShowUserImpact(false)}
-          userImpact={userImpact}
         />
       )}
       {showMetadataCarousel && (
@@ -580,12 +568,20 @@ const UserMetadata = ({ refreshUser }) => {
                           setReceivedEvent={() => null}
                         />
                         <div
-                          className="round-icon round-icon-tooltip"
+                          className={`round-icon round-icon-tooltip ${
+                            !userKeys || userKeys.bunker ? "if-disabled" : ""
+                          }`}
                           data-tooltip={
                             userKeys && (userKeys.sec || userKeys.ext)
                               ? t("AEby39n", { name: user?.name || "" })
-                              : t("ASuKdFB", { name: user?.name || "" })
+                              : t("AlNe9hu")
                           }
+                          style={{
+                            cursor:
+                              userKeys && (userKeys.sec || userKeys.ext)
+                                ? "pointer"
+                                : "not-allowed",
+                          }}
                           onClick={handleInitConvo}
                         >
                           <div className="env-edit-24"></div>
@@ -601,12 +597,12 @@ const UserMetadata = ({ refreshUser }) => {
                         >
                           <p className="fx-centered">{t("AHrJpSX")}</p>
                         </div>,
-                        <div
-                          className="fit-container fx-centered fx-start-h pointer"
-                          onClick={() => setShowUserImpact(true)}
-                        >
-                          <p className="fx-centered">{t("AP8YaBk")}</p>
-                        </div>,
+                        // <div
+                        //   className="fit-container fx-centered fx-start-h pointer"
+                        //   onClick={() => setShowUserImpact(true)}
+                        // >
+                        //   <p className="fx-centered">{t("AP8YaBk")}</p>
+                        // </div>,
                         <div className="fit-container fx-centered fx-start-h pointer">
                           <ShareLink
                             label={t("AawXy2A")}
@@ -679,7 +675,9 @@ const UserMetadata = ({ refreshUser }) => {
                 <div className="nip05-24"></div>{" "}
                 {user?.nip05 && (
                   <p className="p-one-line" style={{ minWidth: "max-content" }}>
-                    {user?.nip05}
+                    {user?.nip05?.length < 50
+                      ? user?.nip05
+                      : shortenKey(user?.nip05, 15)}
                   </p>
                 )}
                 {!user?.nip05 && <p>N/A</p>}
@@ -710,7 +708,8 @@ const UserMetadata = ({ refreshUser }) => {
             >
               <div className="box-pad-v-s fx-centered fx-start-v fx-col">
                 {user?.about && (
-                  <p className="p-centered  p-left">{user?.about}</p>
+                  <div>{getNoteTree(user?.about)}</div>
+                  // <p className="p-centered  p-left">{user?.about}</p>
                 )}
                 <div className="fx-centered">
                   <div className="fx-centered" style={{ columnGap: "10px" }}>
@@ -784,17 +783,20 @@ const UserFeed = ({ user }) => {
         if (user_id?.includes("@")) {
           let pubkey = await getAuthPubkeyFromNip05(user_id);
           setPubkey(pubkey);
+          setLastEventTime(undefined);
+          setContentFrom("notes");
           return;
         }
         let pubkey = nip19.decode(user_id);
         setPubkey(pubkey.data.pubkey || pubkey.data);
+        setLastEventTime(undefined);
+        setContentFrom("notes");
       } catch (err) {
         console.log(err);
       }
     };
     getID();
     straightUp();
-    setLastEventTime(undefined);
     dispatchEvents({ type: "remove-events" });
   }, [user_id]);
 
@@ -812,7 +814,7 @@ const UserFeed = ({ user }) => {
       {
         kinds: kinds[contentFrom],
         authors: [pubkey],
-        limit: 100,
+        limit: 30,
         until: lastEventTime,
       },
     ];
@@ -846,73 +848,83 @@ const UserFeed = ({ user }) => {
   }, [isLoading]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let filter = getNotesFilter();
+        const res = await getSubData(filter);
+        let data = res.data.slice(0, 30);
+        let pubkeys = res.pubkeys;
+        let ev = [];
+        if (data.length > 0) {
+          ev = data.map((event) => {
+            if ([1, 6].includes(event.kind)) {
+              let event_ = getParsedNote(event, true);
+              if (event_) {
+                if (
+                  contentFrom === "replies" &&
+                  event_.isComment &&
+                  event_.isQuote === ""
+                ) {
+                  return event_;
+                } else if (contentFrom === "notes" && !event_.isComment) {
+                  if (event.kind === 6) {
+                    pubkeys.push(event_.relatedEvent.pubkey);
+                  }
+                  return event_;
+                }
+              }
+            }
+            if ([30023, 30004].includes(event.kind)) {
+              let event_ = getParsedRepEvent(event);
+              return event_;
+            }
+            if ([30033].includes(event.kind) && event.id) {
+              let event_ = getParsedSW(event);
+              try {
+                return {
+                  ...event_,
+                  metadata: event_,
+                  author: getEmptyuserMetadata(event.pubkey),
+                };
+              } catch (err) {
+                console.log(err);
+              }
+            }
+            if ([34235, 34236].includes(event.kind)) {
+              let event_ = getParsedRepEvent(event);
+              return event_;
+            }
+          });
+          ev = ev.filter((_) => _);
+          if (ev.length > 0) {
+            saveUsers(pubkeys);
+          }
+          dispatchEvents({ type: contentFrom, note: ev });
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
     if (!pubkey) return;
     setIsLoading(true);
-    let eventsPubkeys = [];
-    let events_ = [];
-    let filter = getNotesFilter();
+    fetchData();
+    // subscription.on("event", async (event) => {});
 
-    let subscription = ndkInstance.subscribe(filter, {
-      skipValidation: true,
-      groupable: false,
-      skipVerification: true,
-      cacheUsage: "ONLY_RELAY",
-    });
+    // subscription.on("close", () => {
+    //   dispatchEvents({ type: contentFrom, note: events_ });
+    //   saveUsers(eventsPubkeys);
+    //   setIsLoading(false);
+    // });
 
-    subscription.on("event", async (event) => {
-      if ([1, 6].includes(event.kind)) {
-        let event_ = await getParsedNote(event, true);
-        if (event_) {
-          if (
-            contentFrom === "replies" &&
-            event_.isComment &&
-            event_.isQuote === ""
-          ) {
-            events_.push(event_);
-          } else if (contentFrom === "notes" && !event_.isComment) {
-            if (event.kind === 6) {
-              eventsPubkeys.push(event_.relatedEvent.pubkey);
-            }
-            events_.push(event_);
-          }
-        }
-      }
-      if ([30023, 30004].includes(event.kind)) {
-        let event_ = getParsedRepEvent(event);
-        events_.push(event_);
-      }
-      if ([30033].includes(event.kind) && event.id) {
-        let event_ = getParsedSW(event);
-        try {
-          events_.push({
-            ...event_,
-            metadata: event_,
-            author: getEmptyuserMetadata(event.pubkey),
-          });
-        } catch (err) {
-          console.log(err);
-        }
-      }
-      if ([34235, 34236].includes(event.kind)) {
-        let event_ = getParsedRepEvent(event);
-        events_.push(event_);
-      }
-    });
+    // setNotesSub(subscription);
 
-    subscription.on("close", () => {
-      dispatchEvents({ type: contentFrom, note: events_ });
-      saveUsers(eventsPubkeys);
-      setIsLoading(false);
-    });
+    // let timer = setTimeout(() => subscription.stop(), 2000);
 
-    setNotesSub(subscription);
-
-    let timer = setTimeout(() => subscription.stop(), 2000);
-
-    return () => {
-      if (subscription) subscription.stop();
-      clearTimeout(timer);
-    };
+    // return () => {
+    //   if (subscription) subscription.stop();
+    //   clearTimeout(timer);
+    // };
   }, [lastEventTime, contentFrom, pubkey]);
 
   const switchContentType = (type) => {
@@ -1168,203 +1180,6 @@ const UserFeed = ({ user }) => {
   );
 };
 
-// const UserFollowers = ({ id, followersCount }) => {
-//   const { t } = useTranslation();
-//   const [followers, setFollowers] = useState([]);
-//   const [showPeople, setShowPeople] = useState(false);
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   useEffect(() => {
-//     if (!id) return;
-
-//     const fetchData = async () => {
-//       if (!isLoading) setIsLoading(true);
-//       let userFollowers = await getUserFollowers(id);
-//       if (userFollowers) {
-//         userFollowers = userFollowers
-//           .filter((_) => _.kind === 0)
-//           .map((_) => {
-//             return getuserMetadata(_);
-//           });
-//         setFollowers(userFollowers);
-//       } else {
-//         let data = await getSubData([{ kinds: [3], "#p": [id] }]);
-
-//         let users = await getSubData([
-//           { kinds: [0], authors: [...new Set(data.pubkeys)] },
-//         ]);
-
-//         userFollowers = users.data
-//           .filter((user, index, arr) => {
-//             if (arr.findIndex((_) => _.pubkey === user.pubkey) === index)
-//               return user;
-//           })
-//           .map((_) => {
-//             return getuserMetadata(_);
-//           });
-//         setFollowers(userFollowers);
-//       }
-//     };
-//     if (showPeople) fetchData();
-//   }, [showPeople]);
-
-//   useEffect(() => {
-//     setShowPeople(false);
-//   }, [id]);
-
-//   return (
-//     <>
-//       {showPeople === "followers" && (
-//         <ShowPeople
-//           exit={() => setShowPeople(false)}
-//           list={followers}
-//           type={showPeople}
-//         />
-//       )}
-//       <div className="pointer" onClick={() => setShowPeople("followers")}>
-//         <p>
-//           <NumberShrink value={followersCount} />{" "}
-//           <span className="gray-c">{t("A6huCnT")}</span>
-//         </p>
-//       </div>
-//     </>
-//   );
-// };
-
-const WritingImpact = ({ writingImpact }) => {
-  const { t } = useTranslation();
-  return (
-    <div className="fit-container fx-centered fx-col">
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="green-c">+{writingImpact.positive_writing_impact}</h4>
-        <p>{t("Aqnw40M")}</p>
-        <p className="gray-c p-medium">{t("AKWbsS4")}</p>
-      </div>
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="red-c">-{writingImpact.negative_writing_impact}</h4>
-        <p>{t("AsC8aFW")}</p>
-        <p className="gray-c p-medium">{t("AniOQt4")}</p>
-      </div>
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="gray-c">{writingImpact.ongoing_writing_impact}</h4>
-        <p>{t("ArkRgJu")}</p>
-        <p className="gray-c p-medium">{t("AWR7eI9")}</p>
-      </div>
-    </div>
-  );
-};
-
-const RatingImpact = ({ ratingImpact }) => {
-  const { t } = useTranslation();
-  return (
-    <div className="fit-container fx-centered fx-col">
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="green-c">+{ratingImpact.positive_rating_impact_h}</h4>
-        <p>{t("APnZzQa")}</p>
-        <p className="gray-c p-medium">{t("AFwN7DV")}</p>
-      </div>
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="green-c">+{ratingImpact.positive_rating_impact_nh}</h4>
-        <p>{t("AYnS32k")}</p>
-        <p className="gray-c p-medium">{t("A7oOA48")}</p>
-      </div>
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="red-c">-{ratingImpact.negative_rating_impact_h}</h4>
-        <p>{t("AjCrjhx")}</p>
-        <p className="gray-c p-medium">{t("AU1uyHU")}</p>
-      </div>
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="red-c fx-centered">
-          -{ratingImpact.negative_rating_impact_nh}{" "}
-          <span
-            className="sticker sticker-normal sticker-red"
-            style={{
-              padding: ".5rem",
-              height: ".75rem",
-              borderRadius: "8px",
-            }}
-          >
-            x2
-          </span>
-        </h4>
-        <p>{t("ArOeceG")}</p>
-        <p className="gray-c p-medium">{t("A41M6w5")}</p>
-      </div>
-      <div className="fx-centered fx-col fit-container fx-start-v">
-        <h4 className="gray-c">{ratingImpact.ongoing_rating_impact}</h4>
-        <p>{t("Am1FnXt")}</p>
-        <p className="gray-c p-medium">{t("AnvvOLs")}</p>
-      </div>
-    </div>
-  );
-};
-
-const UserImpact = ({ user, exit, userImpact }) => {
-  const { t } = useTranslation();
-  const [selectedTab, setSelectedTab] = useState("write");
-
-  return (
-    <div
-      className="fixed-container box-pad-h box-pad-v fx-start-v fx-centered"
-      style={{ paddingTop: "6rem" }}
-      onClick={exit}
-    >
-      <div
-        className="sc-s-18 bg-sp box-pad-h box-pad-v"
-        style={{
-          width: "min(100%,500px)",
-          position: "relative",
-          maxHeight: "calc(100vh - 12rem)",
-          overflow: "scroll",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="close" onClick={exit}>
-          <div></div>
-        </div>
-        <div className="fx-centered fx-col">
-          <UserProfilePic
-            user_id={user?.pubkey}
-            mainAccountUser={false}
-            size={100}
-            img={user?.picture}
-          />
-          <h4 className="p-centered">{user?.display_name || user?.name}</h4>
-        </div>
-        <div className="fx-centered box-pad-v-m fit-container">
-          <div
-            className={`fx fx-centered list-item-b ${
-              selectedTab === "write" ? "selected-list-item-b" : ""
-            }`}
-            onClick={() => setSelectedTab("write")}
-          >
-            <h4>{userImpact.writing_impact.writing_impact}</h4>
-            <p className="gray-c">{t("AlBboNU")}</p>
-          </div>
-
-          <div
-            className={`fx fx-centered list-item-b ${
-              selectedTab === "rate" ? "selected-list-item-b" : ""
-            }`}
-            onClick={() => setSelectedTab("rate")}
-          >
-            <h4>{userImpact.rating_impact.rating_impact}</h4>
-            <p className="gray-c">{t("Ar691Yl")}</p>
-          </div>
-        </div>
-        <div className="fx-centered fit-container ">
-          {selectedTab === "write" && (
-            <WritingImpact writingImpact={userImpact.writing_impact} />
-          )}
-          {selectedTab === "rate" && (
-            <RatingImpact ratingImpact={userImpact.rating_impact} />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const UserPP = ({ src, size, user_id, setSelectedItemInCarousel }) => {
   if (!src) {
     return (
@@ -1419,101 +1234,3 @@ const UserPP = ({ src, size, user_id, setSelectedItemInCarousel }) => {
     />
   );
 };
-// const UserPP = ({ src, size, user_id }) => {
-//   const [resize, setResize] = useState(false);
-//   if (!src) {
-//     return (
-//       <div
-//         style={{
-//           border: "6px solid var(--white)",
-//           borderRadius: "var(--border-r-50)",
-//           position: "relative",
-//           overflow: "hidden",
-//           minWidth: `${size}px`,
-//           minHeight: `${size}px`,
-//           maxWidth: `${size}px`,
-//           maxHeight: `${size}px`,
-//         }}
-//         className="settings-profile-pic"
-//       >
-//         <Avatar
-//           size={size}
-//           name={user_id}
-//           variant="marble"
-//           square
-//           colors={["#0A0310", "#49007E", "#FF005B", "#FF7D10", "#FFB238"]}
-//         />
-//       </div>
-//     );
-//   }
-//   return (
-//     <>
-//       {resize && (
-//         <div
-//           className="fixed-container box-pad-h box-pad-v fx-centered "
-//           onClick={(e) => {
-//             e.stopPropagation();
-//             setResize(false);
-//           }}
-//           style={{ zIndex: 2000 }}
-//         >
-//           <div
-//             style={{
-//               position: "relative",
-//               // maxWidth: "800px",
-//               // maxHeight: "80vh",
-//               width: "min(100%, 600px)",
-//             }}
-//           >
-//             <div
-//               className="close"
-//               onClick={(e) => {
-//                 e.stopPropagation();
-//                 setResize(false);
-//               }}
-//             >
-//               <div></div>
-//             </div>
-//             <img
-//               className="sc-s-18"
-//               width={"100%"}
-//               style={{
-//                 objectFit: "contain",
-//                 maxHeight: "60vh",
-//                 backgroundColor: "transparent",
-//               }}
-//               src={src}
-//               alt="el"
-//               loading="lazy"
-//             />
-//           </div>
-//         </div>
-//       )}
-//       <img
-//         onClick={(e) => {
-//           e.stopPropagation();
-//           setResize(true);
-//         }}
-//         className="sc-s-18 settings-profile-pic"
-//         style={{
-//           cursor: "zoom-in",
-//           aspectRatio: "1/1",
-//           objectFit: "cover",
-//           minWidth: `${size}px`,
-//           minHeight: `${size}px`,
-//           maxWidth: `${size}px`,
-//           maxHeight: `${size}px`,
-//           border: "6px solid var(--white)",
-//           borderRadius: "var(--border-r-50)",
-//           position: "relative",
-//           overflow: "hidden",
-//           borderRadius: "var(--border-r-50)",
-//         }}
-//         width={"100%"}
-//         src={src}
-//         alt="el"
-//         loading="lazy"
-//       />
-//     </>
-//   );
-// };

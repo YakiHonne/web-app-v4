@@ -220,7 +220,7 @@ export default function Article() {
         let timeout = setTimeout(() => {
           sub.stop();
           clearTimeout(timeout);
-        }, 4000);
+        }, 3000);
       } catch (err) {
         customHistory.push("/");
       }
@@ -252,6 +252,8 @@ export default function Article() {
           if (count < 5) {
             count = count + 1;
             setReadMore((prev) => [...prev, getParsedRepEvent(event)]);
+          } else {
+            sub.stop()
           }
         });
       } catch (err) {

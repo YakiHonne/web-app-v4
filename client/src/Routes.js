@@ -47,18 +47,22 @@ import Home_ from "./Pages/MainApp/Home_";
 import NoteSharedRelay from "./Pages/MainApp/NoteSharedRelay";
 import ExploreSharedRelay from "./Pages/MainApp/ExploreSharedRelay";
 import SWhome2 from "./Pages/MainApp/SWHome2";
+import Dashboard_ from "./Pages/MainApp/Dashboard_";
+import Home_v2 from "./Pages/MainApp/Home_v2";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
   { path: "/:nevent", element: <FourOFour /> },
   { path: "/search", element: <Search /> },
   { path: "/m/maci-poll", element: <MACIPollStarter /> },
+  // { path: "/", element: <Home_v2 /> },
   { path: "/", element: <Home_ /> },
   // { path: "/", element: <Home /> },
   { path: "/r/notes", element: <NoteSharedRelay /> },
   { path: "/r/discover", element: <ExploreSharedRelay /> },
   { path: "/login", element: <Login /> },
-  { path: "/dashboard", element: <Dashboard /> },
+  { path: "/dashboard", element: <Dashboard_ /> },
+  // { path: "/dashboard", element: <Dashboard /> },
   { path: "/articles", element: <Articles /> },
   { path: "/discover", element: <Explore_ /> },
   // { path: "/discover", element: <Explore /> },

@@ -1,7 +1,9 @@
-import { finalizeEvent, nip19, nip44 } from "nostr-tools";
+import { finalizeEvent, generateSecretKey, nip19, nip44 } from "nostr-tools";
 import {
+  bytesTohex,
   decryptEventData,
   encodeBase64URL,
+  encrypt44,
   getBech32,
   getHex,
   removeObjDuplicants,
@@ -25,9 +27,13 @@ import axiosInstance from "./HTTP_Client";
 import LinkPreview from "../Components/Main/LinkPreview";
 import Gallery from "../Components/Main/Gallery";
 import MACIPollPreview from "../Components/Main/MACIPollPreview";
-const LoginToAPI = async (publicKey, secretKey) => {
+import { InitEvent } from "./Controlers";
+import LinkInspector from "../Components/LinkInspector";
+import VideoLoader from "../Components/Main/VideoLoader";
+
+const LoginToAPI = async (publicKey, userKeys) => {
   try {
-    let { pubkey, password } = await getLoginsParams(publicKey, secretKey);
+    let { pubkey, password } = await getLoginsParams(publicKey, userKeys);
     if (!(pubkey && password)) return;
     const data = await axios.post("/api/v1/login", { password, pubkey });
     return data.data;
@@ -37,30 +43,47 @@ const LoginToAPI = async (publicKey, secretKey) => {
   }
 };
 
-const getLoginsParams = async (publicKey, secretKey) => {
+const getLoginsParams = async (publicKey, userKeys) => {
   try {
     let content = JSON.stringify({
       pubkey: publicKey,
       sent_at: Math.floor(new Date().getTime() / 1000),
     });
 
-    let password = secretKey
-      ? nip44.v2.encrypt(
-          content,
-          nip44.v2.utils.getConversationKey(
-            secretKey,
-            process.env.REACT_APP_CHECKER_PUBKEY
-          )
-        )
-      : await window.nostr.nip44.encrypt(
-          process.env.REACT_APP_CHECKER_PUBKEY,
-          content
-        );
+    let password = await encrypt44(
+      userKeys,
+      process.env.REACT_APP_CHECKER_PUBKEY,
+      content
+    );
 
     return { password, pubkey: publicKey };
   } catch (err) {
     console.log(err);
     return { password: false, pubkey: false };
+  }
+};
+
+const getAnswerFromAIRemoteAPI = async (pubkey_, input) => {
+  try {
+    let { password } = await getLoginsParams(pubkey_, {
+      sec: process.env.REACT_APP_CHECKER_SEC,
+    });
+    const res = await axios.post(
+      // "http://localhost:4700/api/v1/ai",
+      "https://yakiai.yakihonne.com/api/v1/ai",
+      {
+        input,
+      },
+      {
+        headers: {
+          Authorization: password,
+        },
+      }
+    );
+    const data = res.data;
+    return data;
+  } catch (err) {
+    throw Error(err);
   }
 };
 
@@ -93,33 +116,68 @@ const isVid = (url) => {
   return false;
 };
 
-const isImageUrl = async (url) => {
+const isImageUrl = (url) => {
+  // try {
+  //   return new Promise((resolve, reject) => {
+  //     if (
+  //       url.startsWith("data:image") ||
+  //       /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url)
+  //     )
+  //       resolve({ type: "image" });
+  //     if (/(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(url))
+  //       resolve({ type: "video" });
+  //     const img = new Image();
+
+  //     img.onload = () => {
+  //       resolve({ type: "image" });
+  //     };
+
+  //     img.onerror = () => {
+  //       resolve(false);
+  //     };
+
+  //     img.src = url;
+  //   });
+  // } catch (error) {
+  //   console.error(`Error checking URL ${url}:`, error);
+  //   return false;
+  // }
+
   try {
-    return new Promise((resolve, reject) => {
-      if (
-        url.startsWith("data:image") ||
-        /(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url)
-      )
-        resolve({ type: "image" });
-      if (/(https?:\/\/[^ ]*\.(?:mp4|mov))/i.test(url))
-        resolve({ type: "video" });
-      const img = new Image();
+    // Data URLs
+    if (/^data:image/.test(url)) return { type: "image" };
+    if (/^data:video/.test(url)) return { type: "video" };
 
-      img.onload = () => {
-        resolve({ type: "image" });
-      };
+    // By extension
+    if (/(https?:\/\/[^ ]*\.(gif|png|jpg|jpeg|webp))/i.test(url))
+      return { type: "image" };
+    if (/(https?:\/\/[^ ]*\.(mp4|mov|webm|ogg|avi))/i.test(url))
+      return { type: "video" };
 
-      img.onerror = () => {
-        resolve(false);
-      };
+    // Heuristic: common image CDN/paths and known image hosts
+    if (
+      /(\/images\/|cdn\.|img\.|\/media\/|\/uploads\/|encrypted-tbn0\.gstatic\.com\/images|i\.insider\.com\/)/i.test(
+        url
+      ) &&
+      !/\.(mp4|mov|webm|ogg|avi)$/i.test(url)
+    ) {
+      return { type: "image" };
+    }
 
-      img.src = url;
-    });
+    // Heuristic: query param with image keyword
+    if (
+      /([?&]format=image|[?&]type=image)/i.test(url) &&
+      !/\.(mp4|mov|webm|ogg|avi)$/i.test(url)
+    ) {
+      return { type: "image" };
+    }
+
+    return false;
   } catch (error) {
-    console.error(`Error checking URL ${url}:`, error);
     return false;
   }
 };
+
 const isImageUrlSync = (url) => {
   try {
     if (/(https?:\/\/[^ ]*\.(?:gif|png|jpg|jpeg|webp))/i.test(url)) return true;
@@ -129,11 +187,12 @@ const isImageUrlSync = (url) => {
   }
 };
 
-const getNoteTree = async (
+const getNoteTree = (
   note,
   minimal = false,
   isCollapsedNote = false,
-  wordsCount = 150
+  wordsCount = 150,
+  pubkey
 ) => {
   if (!note) return "";
 
@@ -190,23 +249,35 @@ const getNoteTree = async (
             );
         }
         if (!isURLVid) {
-          const checkURL = await isImageUrl(el);
+          // finalTree.push(
+          //   // <Fragment key={key}>
+          //   <LinkInspector el={el} key={key} />
+          //   // </Fragment>
+          // );
+          const checkURL = isImageUrl(el);
           if (checkURL) {
             if (checkURL.type === "image") {
               finalTree.push(<IMGElement src={el} key={key} />);
             } else if (checkURL.type === "video") {
               finalTree.push(
-                <video
+                // <video
+                //   key={key}
+                //   controls={true}
+                //   autoPlay={false}
+                //   poster="https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630"
+                //   preload="none"
+                //   name="media"
+                //   width={"100%"}
+                //   className="sc-s-18"
+                //   style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
+                // >
+                //   <source src={el} type="video/mp4" />
+                // </video>
+                <VideoLoader
                   key={key}
-                  controls={true}
-                  autoPlay={false}
-                  name="media"
-                  width={"100%"}
-                  className="sc-s-18"
-                  style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
-                >
-                  <source src={el} type="video/mp4" />
-                </video>
+                  src={el}
+                  poster="https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630"
+                />
               );
             }
           } else if (
@@ -253,16 +324,6 @@ const getNoteTree = async (
       el?.includes("https://vota-test.dorafactory.org/round/")
     ) {
       finalTree.push(<MACIPollPreview url={el} key={key} />);
-      // finalTree.push(
-      //   <iframe
-      //     key={key}
-      //     src={el}
-      //     allow="microphone; camera; clipboard-write 'src'"
-      //     sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
-      //     style={{ border: "none", aspectRatio: "10/16" }}
-      //     className="fit-container fit-height"
-      //   ></iframe>
-      // );
     } else if (
       (el?.includes("nostr:") ||
         el?.includes("naddr") ||
@@ -338,8 +399,210 @@ const getNoteTree = async (
     }
   }
 
-  return mergeConsecutivePElements(finalTree);
+  return mergeConsecutivePElements(finalTree, pubkey);
 };
+// const getNoteTree = async (
+//   note,
+//   minimal = false,
+//   isCollapsedNote = false,
+//   wordsCount = 150,
+//   pubkey
+// ) => {
+//   if (!note) return "";
+
+//   let tree = note
+//     .trim()
+//     .split(/(\n)/)
+//     .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
+//     .filter(Boolean);
+
+//   let finalTree = [];
+//   let maxChar = isCollapsedNote ? wordsCount : tree.length;
+//   for (let i = 0; i < maxChar; i++) {
+//     const el = tree[i];
+//     const key = `${el}-${i}`;
+//     if (el === "\n") {
+//       finalTree.push(<br key={key} />);
+//     } else if (
+//       (/(https?:\/\/)/i.test(el) || el.startsWith("data:image")) &&
+//       !el.includes("https://yakihonne.com/smart-widget-checker?naddr=") &&
+//       !el.includes("https://vota.dorafactory.org/round/") &&
+//       !el.includes("https://vota-test.dorafactory.org/round/")
+//     ) {
+//       const isURLVid = isVid(el);
+//       if (!minimal) {
+//         if (isURLVid) {
+//           if (isURLVid.isYT) {
+//             finalTree.push(
+//               <iframe
+//                 key={key}
+//                 style={{
+//                   width: "100%",
+//                   aspectRatio: "16/9",
+//                   borderRadius: "var(--border-r-18)",
+//                 }}
+//                 src={`https://www.youtube.com/embed/${isURLVid.videoId}`}
+//                 frameBorder="0"
+//                 allowFullScreen
+//               ></iframe>
+//             );
+//           }
+//           if (!isURLVid.isYT)
+//             finalTree.push(
+//               <iframe
+//                 key={key}
+//                 style={{
+//                   width: "100%",
+//                   aspectRatio: "16/9",
+//                   borderRadius: "var(--border-r-18)",
+//                 }}
+//                 src={`https://player.vimeo.com/video/${isURLVid.videoId}`}
+//                 frameBorder="0"
+//                 allowFullScreen
+//               ></iframe>
+//             );
+//         }
+//         if (!isURLVid) {
+//           const checkURL = await isImageUrl(el);
+//           if (checkURL) {
+//             if (checkURL.type === "image") {
+//               finalTree.push(<IMGElement src={el} key={key} />);
+//             } else if (checkURL.type === "video") {
+//               finalTree.push(
+//                 <video
+//                   key={key}
+//                   controls={true}
+//                   autoPlay={false}
+//                   name="media"
+//                   width={"100%"}
+//                   className="sc-s-18"
+//                   style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
+//                 >
+//                   <source src={el} type="video/mp4" />
+//                 </video>
+//               );
+//             }
+//           } else if (
+//             el.includes(".mp3") ||
+//             el.includes(".ogg") ||
+//             el.includes(".wav")
+//           ) {
+//             finalTree.push(
+//               <audio
+//                 controls
+//                 key={key}
+//                 className="fit-container"
+//                 style={{ margin: ".5rem auto", minWidth: "300px" }}
+//               >
+//                 <source src={el} type="audio/ogg" />
+//                 <source src={el} type="audio/mpeg" />
+//                 <source src={el} type="audio/wav" />
+//                 Your browser does not support the audio element.
+//               </audio>
+//             );
+//           } else {
+//             finalTree.push(
+//               <Fragment key={key}>
+//                 <LinkPreview url={el} />{" "}
+//               </Fragment>
+//             );
+//           }
+//         }
+//       } else
+//         finalTree.push(
+//           <Fragment key={key}>
+//             <a
+//               style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+//               href={el}
+//               className="btn-text-gray"
+//               onClick={(e) => e.stopPropagation()}
+//             >
+//               {el}
+//             </a>{" "}
+//           </Fragment>
+//         );
+//     } else if (
+//       el?.includes("https://vota.dorafactory.org/round/") ||
+//       el?.includes("https://vota-test.dorafactory.org/round/")
+//     ) {
+//       finalTree.push(<MACIPollPreview url={el} key={key} />);
+//     } else if (
+//       (el?.includes("nostr:") ||
+//         el?.includes("naddr") ||
+//         el?.includes("https://yakihonne.com/smart-widget-checker?naddr=") ||
+//         el?.includes("nprofile") ||
+//         el?.includes("npub") ||
+//         el?.includes("note1") ||
+//         el?.includes("nevent")) &&
+//       el?.length > 30
+//     ) {
+//       const nip19add = el
+//         .replace("https://yakihonne.com/smart-widget-checker?naddr=", "")
+//         .replace("nostr:", "");
+
+//       const parts = nip19add.split(/([@.,?!\s:()’"'])/);
+
+//       const finalOutput = parts.map((part, index) => {
+//         if (
+//           part?.startsWith("npub1") ||
+//           part?.startsWith("nprofile1") ||
+//           part?.startsWith("nevent") ||
+//           part?.startsWith("naddr") ||
+//           part?.startsWith("note1")
+//         ) {
+//           const cleanedPart = part.replace(/[@.,?!]/g, "");
+
+//           return (
+//             <Fragment key={index}>
+//               <Nip19Parsing addr={cleanedPart} minimal={minimal} />
+//             </Fragment>
+//           );
+//         }
+
+//         return part;
+//       });
+//       finalTree.push(<Fragment key={key}>{finalOutput} </Fragment>);
+//     } else if (el?.startsWith("lnbc") && el.length > 30) {
+//       finalTree.push(<LNBCInvoice lnbc={el} key={key} />);
+//     } else if (el?.startsWith("#")) {
+//       const match = el.match(/(#+)([\w-+]+)/);
+
+//       if (match) {
+//         const hashes = match[1];
+//         const text = match[2];
+
+//         finalTree.push(
+//           <React.Fragment key={key}>
+//             {hashes.slice(1)}
+//             <Link
+//               style={{ wordBreak: "break-word", color: "var(--orange-main)" }}
+//               to={`/search?keyword=${text}`}
+//               state={{ tab: "notes" }}
+//               className="btn-text-gray"
+//               onClick={(e) => e.stopPropagation()}
+//             >
+//               {`${hashes.slice(-1)}${text}`}
+//             </Link>{" "}
+//           </React.Fragment>
+//         );
+//       }
+//     } else {
+//       finalTree.push(
+//         <span
+//           style={{
+//             wordBreak: "break-word",
+//             color: "var(--dark-gray)",
+//           }}
+//           key={key}
+//         >
+//           {el}{" "}
+//         </span>
+//       );
+//     }
+//   }
+
+//   return mergeConsecutivePElements(finalTree, pubkey);
+// };
 
 const getLinkFromAddr = (addr_) => {
   try {
@@ -362,7 +625,7 @@ const getLinkFromAddr = (addr_) => {
     }
     if (addr.startsWith("npub")) {
       let hex = getHex(addr.replace(",", "").replace(".", ""));
-      return `/users/${getBech32("npub", hex)}`;
+      return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
     }
     if (addr.startsWith("nevent")) {
       let data = nip19.decode(addr);
@@ -382,6 +645,7 @@ const getLinkFromAddr = (addr_) => {
     return addr_;
   }
 };
+
 const getLinkPreview = async (url) => {
   try {
     const metadata = await Promise.race([
@@ -514,7 +778,7 @@ const getComponent = (children) => {
   return <div className="fit-container">{mergeConsecutivePElements(res)}</div>;
 };
 
-function mergeConsecutivePElements(arr) {
+function mergeConsecutivePElements(arr, pubkey) {
   const result = [];
   let currentTextElement = null;
   let currentImages = [];
@@ -591,7 +855,11 @@ function mergeConsecutivePElements(arr) {
           },
         };
       }
-    } else if (typeof element.type !== "string" && element.props?.src) {
+    } else if (
+      typeof element.type !== "string" &&
+      element.props?.src &&
+      element.props?.poster === undefined
+    ) {
       if (currentTextElement) {
         result.push(currentTextElement);
         currentTextElement = null;
@@ -603,7 +871,7 @@ function mergeConsecutivePElements(arr) {
         currentTextElement = null;
       }
       if (currentImages.length > 0) {
-        result.push(createImageGrid(currentImages));
+        result.push(createImageGrid(currentImages, pubkey));
         currentImages = [];
       }
       result.push(element);
@@ -614,13 +882,13 @@ function mergeConsecutivePElements(arr) {
     result.push(currentTextElement);
   }
   if (currentImages.length > 0) {
-    result.push(createImageGrid(currentImages));
+    result.push(createImageGrid(currentImages, pubkey));
   }
 
   return result;
 }
 
-function createImageGrid(images) {
+function createImageGrid(images, pubkey) {
   // if (images.length === 1)
   //   return (
   //     <div className="image-grid" key={Math.random()}>
@@ -630,7 +898,7 @@ function createImageGrid(images) {
   //     </div>
   //   );
   let images_ = images.map((image) => image.props.src);
-  return <Gallery imgs={images_} />;
+  return <Gallery imgs={images_} pubkey={pubkey} />;
 }
 
 const getAuthPubkeyFromNip05 = async (nip05Addr) => {
@@ -706,7 +974,7 @@ const getAIFeedContent = (news) => {
   };
 };
 
-const getFlashnewsContent = async (news) => {
+const getFlashnewsContent = (news) => {
   let tags = news.tags;
   let keywords = [];
   let is_important = false;
@@ -730,7 +998,13 @@ const getFlashnewsContent = async (news) => {
     console.log(err);
   }
 
-  let content = await getNoteTree(news.content);
+  let content = getNoteTree(
+    news.content,
+    undefined,
+    undefined,
+    undefined,
+    news.pubkey
+  );
   return {
     id: news.id,
     content: content,
@@ -1228,6 +1502,7 @@ const getAppLang = () => {
   if (supportedLanguageKeys.includes(lang)) return lang;
   return "en";
 };
+
 const getContentTranslationConfig = () => {
   let defaultService = {
     service: "lt",
@@ -1249,6 +1524,35 @@ const getContentTranslationConfig = () => {
     return defaultService;
   }
 };
+
+const getWotConfigDefault = () => {
+  return {
+    score: 2,
+    all: false,
+    notifications: true,
+    reactions: true,
+    dms: false,
+  };
+};
+
+const getWotConfig = () => {
+  let userKeys = getKeys();
+  if (!userKeys) return getWotConfigDefault("");
+  let config = localStorage.getItem(`${userKeys.pub}-wot-config`);
+  if (!config) return getWotConfigDefault();
+  try {
+    config = JSON.parse(config);
+    let checkConfig = Object.entries(config).filter(([key, value]) => {
+      if (["all", "notifications", "reactions", "dms", "score"].includes(key))
+        return true;
+    });
+    if (checkConfig.length === 5) return config;
+    else return getWotConfigDefault();
+  } catch (err) {
+    return getWotConfigDefault();
+  }
+};
+
 const updateContentTranslationConfig = (
   service,
   plan,
@@ -1419,7 +1723,166 @@ const getCAEATooltip = (published_at, created_at) => {
   }`;
 };
 
-const FileUpload = async (file, m = "nostr.build", userKeys, cb) => {
+const FileUpload = async (file, userKeys, cb) => {
+  let service = ["1", "2"].includes(
+    localStorage.getItem(`${userKeys.pub}_media_service`)
+  )
+    ? localStorage.getItem(`${userKeys.pub}_media_service`)
+    : "1";
+
+  let result = "";
+  if (service === "1")
+    result = await regularServerFileUpload(file, userKeys, cb);
+
+  if (service === "2")
+    result = await blossomServerFileUpload(file, userKeys, cb);
+  return result;
+};
+
+const blossomServerFileUpload = async (file, userKeys, cb) => {
+  let mirror = localStorage.getItem(`${userKeys.pub}_mirror_blossom_servers`);
+  let servers = store.getState().userBlossomServers;
+  let endpoint =
+    servers.length > 0
+      ? `${servers[0]}/upload`
+      : "https://blossom.yakihonne.com/upload";
+
+  const arrayBuffer = await file.arrayBuffer();
+  const blob = new Blob([arrayBuffer], {
+    type: file.type || "application/octet-stream",
+  });
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const localSha256 = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  let x = localSha256;
+  let expiration = `${Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7}`;
+  let event = {
+    kind: 24242,
+    content: "Image upload",
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ["t", "upload"],
+      ["x", x],
+      ["expiration", expiration],
+    ],
+  };
+  event = await InitEvent(
+    event.kind,
+    event.content,
+    event.tags,
+    event.created_at
+  );
+  if (!event) return;
+  let encodeB64 = encodeBase64URL(JSON.stringify(event));
+
+  try {
+    let imageURL = await axios.put(endpoint, blob, {
+      headers: {
+        "Content-Type": blob.type,
+        "Content-Length": blob.size.toString(),
+        Authorization: `Nostr ${encodeB64}`,
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        if (cb) cb(percentCompleted);
+      },
+    });
+    mirrorBlossomServerFileUpload(
+      mirror,
+      servers,
+      encodeB64,
+      imageURL.data.url
+    );
+    return imageURL.data.url;
+  } catch (err) {
+    console.log(err);
+    store.dispatch(
+      setToast({
+        type: 2,
+        desc: t("AOKDMRt"),
+      })
+    );
+    return false;
+  }
+};
+
+const mirrorBlossomServerFileUpload = async (
+  isMirror,
+  serversList,
+  eventHash,
+  fileUrl
+) => {
+  try {
+    // let hash = await downloadBlobAsArrayBuffer(fileUrl);
+    // if (!hash) return;
+    // let expiration = `${Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7}`;
+    // let event = {
+    //   kind: 24242,
+    //   content: "Image mirror",
+    //   created_at: Math.floor(Date.now() / 1000),
+    //   tags: [
+    //     ["t", "upload"],
+    //     ["x", hash],
+    //     ["expiration", expiration],
+    //   ],
+    // };
+    // event = await InitEvent(
+    //   event.kind,
+    //   event.content,
+    //   event.tags,
+    //   event.created_at
+    // );
+    // let encodeB64 = encodeBase64URL(JSON.stringify(event));
+    if (isMirror && serversList.length > 1) {
+      serversList = serversList.filter((_, index) => index !== 0);
+      let promises = await Promise.allSettled(
+        serversList.map(async (server, index) => {
+          let endpoint = `${server}/mirror`;
+          let data = {
+            url: fileUrl,
+          };
+          try {
+            await axios.put(endpoint, data, {
+              headers: {
+                Authorization: `Nostr ${eventHash}`,
+              },
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+async function downloadBlobAsArrayBuffer(fileUrl) {
+  try {
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      throw new Error("Failed to download the file.");
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const remoteSha256 = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    return remoteSha256;
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    return null;
+  }
+}
+const regularServerFileUpload = async (file, userKeys, cb) => {
   let servers = getMediaUploader();
   let selected = getSelectedServer();
   const nip96Endpoints = servers.find((_) => _.value === selected);
@@ -1448,22 +1911,13 @@ const FileUpload = async (file, m = "nostr.build", userKeys, cb) => {
       ["method", "POST"],
     ],
   };
-  if (userKeys.ext) {
-    try {
-      event = await window.nostr.signEvent(event);
-    } catch (err) {
-      store.dispatch(
-        setToast({
-          type: 2,
-          desc: t("AOKDMRt"),
-        })
-      );
-      console.log(err);
-      return false;
-    }
-  } else {
-    event = finalizeEvent(event, userKeys.sec);
-  }
+  event = await InitEvent(
+    event.kind,
+    event.content,
+    event.tags,
+    event.created_at
+  );
+  if (!event) return;
   let encodeB64 = encodeBase64URL(JSON.stringify(event));
   let fd = new FormData();
   fd.append("file", file);
@@ -1530,7 +1984,7 @@ const decodeNip19 = (word) => {
       .replaceAll(".", "")
       .replaceAll(";", "");
 
-    if (word_.startsWith("npub")) {
+    if (word_.startsWith("npub") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["p", decoded.data, "", "mention"],
@@ -1538,7 +1992,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("nprofile")) {
+    if (word_.startsWith("nprofile") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["p", decoded.data.pubkey, "", "mention"],
@@ -1546,7 +2000,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("nevent")) {
+    if (word_.startsWith("nevent") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["e", decoded.data.id, "", "mention"],
@@ -1554,7 +2008,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("note")) {
+    if (word_.startsWith("note") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: ["e", decoded.data, "", "mention"],
@@ -1562,7 +2016,7 @@ const decodeNip19 = (word) => {
         scheme: `nostr:${word_}`,
       };
     }
-    if (word_.startsWith("naddr")) {
+    if (word_.startsWith("naddr") && word_.length > 30) {
       let decoded = nip19.decode(word_);
       return {
         tag: [
@@ -1587,7 +2041,7 @@ const straightUp = () => {
   el.scrollTop = 0;
 };
 
-const compactContent = (note) => {
+const compactContent = (note, pubkey) => {
   if (!note) return "";
   let content = note
     .trim()
@@ -1650,7 +2104,7 @@ const compactContent = (note) => {
     index++;
     // } else compactedContent.push(word);
   }
-  return mergeConsecutivePElements(compactedContent);
+  return mergeConsecutivePElements(compactedContent, pubkey);
 };
 
 const redirectToLogin = () => {
@@ -1780,7 +2234,6 @@ const verifyEvent = (event) => {
   }
 
   if (kind !== 30033) {
-    console.log("Event is not a smart widget");
     return false;
   }
   let identifier = "";
@@ -2038,4 +2491,7 @@ export {
   nEventEncode,
   getRepliesViewSettings,
   setRepliesViewSettings,
+  getWotConfig,
+  getAnswerFromAIRemoteAPI,
+  isImageUrl,
 };

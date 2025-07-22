@@ -595,8 +595,6 @@ export default function WritingArticle() {
     setShowClearEditPopup(false);
   };
 
-  console.log(post_desc)
-
   return (
     <>
       {showPublishingScreen && (
@@ -687,7 +685,7 @@ export default function WritingArticle() {
                 <div className="box-pad-h-m fit-container">
                   {userKeys && (
                     <>
-                      {(userKeys.sec || userKeys.ext) && (
+                      {(userKeys.sec || userKeys.ext || userKeys.bunker) && (
                         <>
                           <div className="fit-container">
                             <div className="fx-scattered fit-container sticky">
@@ -1220,7 +1218,7 @@ export default function WritingArticle() {
                           </div>
                         </>
                       )}
-                      {!userKeys.sec && !userKeys.ext && (
+                      {!userKeys.sec && !userKeys.ext && !userKeys.bunker && (
                         <PagePlaceholder page={"nostr-unauthorized"} />
                       )}
                     </>

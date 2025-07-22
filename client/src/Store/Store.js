@@ -16,6 +16,11 @@ import {
   UserInterestListReducer,
   UserSavedToolsReducer,
   UserAppSettingsReducer,
+  UserFavRelaysReducer,
+  UserWotListReducer,
+  UserBlossomServersReducer,
+  UserInboxRelaysReducer,
+  UserFollowingsInboxRelaysReducer,
 } from "./Slides/UserData";
 import {
   UserFirstLoginYakiChestReducer,
@@ -73,5 +78,10 @@ export const store = configureStore({
     recentTags: RecentTagsReducer,
     wallets: WalletsReducer,
     selectedWallet: SelectedWalletReducer,
+    userFavRelays: UserFavRelaysReducer,
+    userInboxRelays: UserInboxRelaysReducer,
+    userWotList: UserWotListReducer,
+    userBlossomServers: UserBlossomServersReducer,
+    userFollowingsInboxRelays: UserFollowingsInboxRelaysReducer,
   },
 });

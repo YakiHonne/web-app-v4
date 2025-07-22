@@ -388,7 +388,7 @@ const ExploreFeed = ({
               },
             ]
           : [],
-        curationsFilter: ![0, 2].includes(selectedTab)
+        curationsFilter: [0, 2].includes(selectedTab)
           ? [
               {
                 kinds: [16],
@@ -399,7 +399,7 @@ const ExploreFeed = ({
               },
             ]
           : [],
-        videosFilter: ![0, 3].includes(selectedTab)
+        videosFilter: [0, 3].includes(selectedTab)
           ? [
               {
                 kinds: [16],

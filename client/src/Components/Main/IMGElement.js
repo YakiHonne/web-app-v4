@@ -39,26 +39,28 @@ export default function IMGElement({ src }) {
           </div>
         </div>
       )}
-      <img
-        onClick={(e) => {
-          e.stopPropagation();
-          setResize(true);
-        }}
-        className="sc-s-18"
-        style={{
-          margin: ".5rem 0 .5rem 0",
-          cursor: "zoom-in",
-          maxWidth: "100%",
-          // aspectRatio: "16/9",
-          objectFit: "fit",
+      <div className="img-grid">
+        <img
+          onClick={(e) => {
+            e.stopPropagation();
+            setResize(true);
+          }}
+          className="sc-s-18"
+          style={{
+            margin: ".5rem 0 .5rem 0",
+            cursor: "zoom-in",
+            maxWidth: "100%",
+            // aspectRatio: "16/9",
+            objectFit: "fit",
 
-          maxHeight: "600px",
-        }}
-        // width={"100%"}
-        src={src}
-        alt="el"
-        loading="lazy"
-      />
+            maxHeight: "600px",
+          }}
+          // width={"100%"}
+          src={src}
+          alt="el"
+          loading="lazy"
+        />
+      </div>
     </>
   );
 }

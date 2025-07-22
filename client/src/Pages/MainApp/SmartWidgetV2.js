@@ -135,7 +135,7 @@ export default function SmartWidgetV2() {
               <div className="box-pad-h-m fit-container">
                 {userKeys && (
                   <>
-                    {(userKeys.sec || userKeys.ext) && (
+                    {(userKeys.sec || userKeys.ext || userKeys.bunker) && (
                       <>
                         {buildOptions && (
                           <>
@@ -179,7 +179,7 @@ export default function SmartWidgetV2() {
                         )}
                       </>
                     )}
-                    {!userKeys.sec && !userKeys.ext && (
+                    {!userKeys.sec && !userKeys.ext && !userKeys.bunker && (
                       <PagePlaceholder page={"nostr-unauthorized"} />
                     )}
                   </>

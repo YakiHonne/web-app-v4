@@ -15,7 +15,7 @@ export default function UploadFile({
   setIsUploadsLoading = () => null,
   setFileMetadata = null,
 }) {
-  const inputID = nanoid()
+  const inputID = nanoid();
   const userKeys = useSelector((state) => state.userKeys);
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -30,8 +30,8 @@ export default function UploadFile({
     let files = e.target.files;
     let index = 0;
     setFilesCount(files.length);
-    let images = []
-    if (!files && (!userKeys.sec || !userKeys.ext)) {
+    let images = [];
+    if (!files && (!userKeys.sec || !userKeys.ext || !userKeys.bunker)) {
       dispatch(
         setToast({
           type: 2,
@@ -44,7 +44,7 @@ export default function UploadFile({
       setCurrentCount(index);
       setIsLoading(true);
       setIsUploadsLoading(true);
-      let url = await FileUpload(file, "nostr.build", userKeys, setProgress);
+      let url = await FileUpload(file, userKeys, setProgress);
       if (url) images.push(url);
       if (setFileMetadata) setFileMetadata(file);
       setIsLoading(false);
@@ -132,7 +132,7 @@ export default function UploadFile({
         </div>
       )}
       <label
-          htmlFor={inputID}
+        htmlFor={inputID}
         className={round ? (small ? "round-icon-small" : "round-icon") : ""}
         style={{
           position: "relative",

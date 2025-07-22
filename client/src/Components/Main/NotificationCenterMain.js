@@ -1,26 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   getEmptyuserMetadata,
+  getWOTScoreForPubkeyLegacy,
   getZapper,
   removeEventsDuplicants,
 } from "../../Helpers/Encryptions";
 import UserProfilePic from "./UserProfilePic";
 import Date_ from "../Date_";
 import { useSelector } from "react-redux";
-import { getUser } from "../../Helpers/Controlers";
+import { getSubData, getUser } from "../../Helpers/Controlers";
 import {
   getFollowings,
   getMutedlist,
+  getNotificationLastEventTS,
   saveNotificationLastEventTS,
   saveUsers,
 } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import { nip19 } from "nostr-tools";
+import { nip19, sortEvents } from "nostr-tools";
 import { Link, useNavigate } from "react-router-dom";
 import {
   compactContent,
   getCustomSettings,
   getNoteTree,
+  getWotConfig,
   nEventEncode,
   straightUp,
 } from "../../Helpers/Helpers";
@@ -319,165 +322,138 @@ export default function NotificationCenterMain() {
   })();
 
   useEffect(() => {
+    let sub;
     const fetchData = async () => {
       setIsLoading(true);
-      let [userFollowings, userMutedList] = await Promise.all([
-        getFollowings(userKeys.pub),
-        getMutedlist(userKeys.pub),
-      ]);
+      let { score, notifications } = getWotConfig();
+      let [userFollowings, userMutedList, lastEventCreatedAt] =
+        await Promise.all([
+          getFollowings(userKeys.pub),
+          getMutedlist(userKeys.pub),
+          getNotificationLastEventTS(userKeys.pub),
+        ]);
       userFollowings = userFollowings ? userFollowings.followings : [];
       userMutedList = userMutedList ? userMutedList.mutedlist : [];
+      let notificationsHistory = getNotificationsHistory(userKeys.pub);
       let tempAuth = [];
-      let tempEvents = [];
-      let filter = getFilter(userFollowings);
-      let eose = false;
-      const sub = ndkInstance.subscribe(filter, {
-        cacheUsage: "CACHE_FIRST",
-        groupable: false,
-      });
-
-      sub.on("event", (event) => {
-        if (!userMutedList.includes(event.pubkey)) {
-          if (event.kind === 9735) {
-            let description = JSON.parse(
-              event.tags.find((tag) => tag[0] === "description")[1]
-            );
-
-            tempAuth.push(description.pubkey);
-            tempEvents = removeEventsDuplicants(
-              [
-                {
-                  ...description,
-                  created_at: event.created_at,
-                  amount: getZapper(event).amount,
-                },
-                ...tempEvents,
-              ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
-            );
-          } else if (event.kind === 6) {
-            try {
-              let isEventValid = JSON.parse(event.content);
-              if (isEventValid) {
-                let pubkeys = event.tags
-                  .filter((tag) => tag[0] === "p")
-                  .map((tag) => tag[1]);
-                tempAuth.push([...pubkeys, event.pubkey]);
-                tempEvents = removeEventsDuplicants(
-                  [event.rawEvent(), ...tempEvents].sort(
-                    (ev1, ev2) => ev2.created_at - ev1.created_at
-                  )
-                );
-              }
-            } catch (err) {
-              console.log("event kind:6 ditched");
-            }
-          } else {
-            let checkForLabel = event.tags.find((tag) => tag[0] === "l");
-            let isUncensored = checkForLabel
-              ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
-                  checkForLabel[1]
-                )
-              : false;
-
-            if (!isUncensored) {
-              let pubkeys = event.tags
-                .filter((tag) => tag[0] === "p")
-                .map((tag) => tag[1]);
-              tempAuth.push([...pubkeys, event.pubkey]);
-              tempEvents = removeEventsDuplicants(
-                [event.rawEvent(), ...tempEvents].sort(
-                  (ev1, ev2) => ev2.created_at - ev1.created_at
-                )
-              );
-            }
-          }
-          if (eose) {
+      let filter = getFilter(
+        userFollowings,
+        notificationsHistory.length > 0
+          ? lastEventCreatedAt
+            ? lastEventCreatedAt + 1
+            : undefined
+          : undefined
+      );
+      let data = await getSubData(filter);
+      data = data.data
+        .map((event) => {
+          let scoreStatus = getWOTScoreForPubkeyLegacy(
+            event.pubkey,
+            notifications,
+            score
+          ).status;
+          if (!userMutedList.includes(event.pubkey) && scoreStatus) {
             if (event.kind === 9735) {
               let description = JSON.parse(
                 event.tags.find((tag) => tag[0] === "description")[1]
               );
               tempAuth.push(description.pubkey);
-              if (event.created_at > tempEvents[0].created_at)
-                setNewNotifications((prev) =>
-                  removeEventsDuplicants([
-                    {
-                      ...description,
-                      created_at: event.created_at,
-                      amount: getZapper(event).amount,
-                    },
-                    ...prev,
-                  ])
-                );
-              else {
-                setNotifications((prev) =>
-                  [
-                    ...prev,
-                    {
-                      ...description,
-                      created_at: event.created_at,
-                      amount: getZapper(event).amount,
-                    },
-                  ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
-                );
+              return {
+                ...description,
+                created_at: event.created_at,
+                amount: getZapper(event).amount,
+              };
+            } else if (event.kind === 6) {
+              try {
+                let isEventValid = JSON.parse(event.content);
+                if (isEventValid) {
+                  let pubkeys = event.tags
+                    .filter((tag) => tag[0] === "p")
+                    .map((tag) => tag[1]);
+                  tempAuth.push([...pubkeys, event.pubkey]);
+                  return event;
+                }
+              } catch (err) {
+                console.log("event kind:6 ditched");
               }
-              tempEvents = removeEventsDuplicants(
-                [
-                  { ...description, created_at: event.created_at },
-                  ...tempEvents,
-                ].sort((ev1, ev2) => ev2.created_at - ev1.created_at)
-              );
-
-              saveNotificationLastEventTS(
-                userKeys.pub,
-                tempEvents[0].created_at
-              );
             } else {
-              let pubkeys = event.tags
-                .filter((tag) => tag[0] === "p")
-                .map((tag) => tag[1]);
-              tempAuth.push([...pubkeys, event.pubkey]);
-
-              if (event.created_at > tempEvents[1].created_at)
-                setNewNotifications((prev) =>
-                  removeEventsDuplicants([event.rawEvent(), ...prev])
-                );
-              else {
-                setNotifications((prev) =>
-                  [...prev, event.rawEvent()].sort(
-                    (ev1, ev2) => ev2.created_at - ev1.created_at
+              let checkForLabel = event.tags.find((tag) => tag[0] === "l");
+              let isUncensored = checkForLabel
+                ? ["UNCENSORED NOTE RATING", "UNCENSORED NOTE"].includes(
+                    checkForLabel[1]
                   )
-                );
+                : false;
+              if (!isUncensored) {
+                let pubkeys = event.tags
+                  .filter((tag) => tag[0] === "p")
+                  .map((tag) => tag[1]);
+                tempAuth.push([...pubkeys, event.pubkey]);
+                return event;
               }
-              tempEvents = removeEventsDuplicants(
-                [event.rawEvent(), ...tempEvents].sort(
-                  (ev1, ev2) => ev2.created_at - ev1.created_at
-                )
-              );
-              saveNotificationLastEventTS(
-                userKeys.pub,
-                tempEvents[0].created_at
-              );
             }
+          } else return false;
+        })
+        .filter((_) => _);
+
+      let list = saveNotificationsHistory(userKeys.pub, data);
+      setNotifications(list);
+      if (data.length)
+        saveNotificationLastEventTS(userKeys.pub, data[0]?.created_at);
+      setIsLoading(false);
+      saveUsers(tempAuth.flat());
+      filter = getFilter(userFollowings, list[0]?.created_at + 1);
+      sub = ndkInstance.subscribe(filter, {
+        cacheUsage: "CACHE_FIRST",
+        groupable: false,
+      });
+      sub.on("event", (event) => {
+        let scoreStatus = getWOTScoreForPubkeyLegacy(
+          event.pubkey,
+          notifications,
+          score
+        ).status;
+        if (!userMutedList.includes(event.pubkey) && scoreStatus) {
+          if (event.kind === 9735) {
+            let description = JSON.parse(
+              event.tags.find((tag) => tag[0] === "description")[1]
+            );
+            saveUsers([description.pubkey]);
+            setNewNotifications((prev) =>
+              removeEventsDuplicants([
+                {
+                  ...description,
+                  created_at: event.created_at,
+                  amount: getZapper(event).amount,
+                },
+                ...prev,
+              ])
+            );
+          } else {
+            let pubkeys = event.tags
+              .filter((tag) => tag[0] === "p")
+              .map((tag) => tag[1]);
+            saveUsers([...pubkeys, event.pubkey]);
+
+            setNewNotifications((prev) =>
+              removeEventsDuplicants([event.rawEvent(), ...prev])
+            );
           }
         }
       });
-      sub.on("eose", () => {
-        eose = true;
-        setNotifications(tempEvents);
-        if (tempEvents.length)
-          saveNotificationLastEventTS(userKeys.pub, tempEvents[0].created_at);
-        setIsLoading(false);
-        saveUsers(tempAuth.flat());
-      });
     };
     if (userKeys) {
-      setNotifications([]);
-      fetchData();
+      let tempNot = getNotificationsHistory(userKeys.pub);
+      if (tempNot && tempNot.length > 0) setNotifications(tempNot);
+      else setNotifications([]);
+      fetchData(tempNot && tempNot.length > 0);
     }
     if (!userKeys) {
       setNotifications([]);
       return;
     }
+    return () => {
+      if (sub) sub.stop();
+    };
   }, [userKeys]);
 
   const switchContentSource = (source) => {
@@ -498,12 +474,14 @@ export default function NotificationCenterMain() {
         events.push(event);
       }
     }
-    setNotifications((prev) => [...events, ...prev]);
+    let list = saveNotificationsHistory(userKeys.pub, events);
+    setNotifications(list);
+    saveNotificationLastEventTS(userKeys.pub, list[0].created_at);
     setNewNotifications([]);
     straightUp();
   };
 
-  const getFilter = (fList) => {
+  const getFilter = (fList, since) => {
     let filter = [];
     let { mentions, zaps, reactions, reposts, following } =
       notificationSettings;
@@ -512,46 +490,81 @@ export default function NotificationCenterMain() {
       filter.push({
         kinds: [30023, 30004, 34235, 30031],
         "#p": [userKeys.pub],
-        limit: 20,
+        limit: 10,
+        since,
       });
       filter.push({
         kinds: [1],
         "#p": [userKeys.pub],
-        limit: 20,
+        limit: 10,
+        since,
       });
     }
     if (!zaps)
       filter.push({
         kinds: [9735],
         "#p": [userKeys.pub],
-        limit: 20,
+        limit: 10,
+        since,
       });
     if (!reactions)
       filter.push({
         kinds: [7],
         "#p": [userKeys.pub],
-        limit: 20,
+        limit: 10,
+        since,
       });
     if (!reposts)
       filter.push({
         kinds: [6],
         "#p": [userKeys.pub],
-        limit: 20,
+        limit: 10,
+        since,
       });
     if (!following) {
       filter.push({
         kinds: [30023, 30004, 34235, 30031],
         authors: fList,
-        limit: 20,
+        limit: 10,
+        since,
       });
       filter.push({
         kinds: [1],
         authors: fList,
         "#l": ["FLASH NEWS"],
-        limit: 20,
+        limit: 10,
+        since,
       });
     }
     return filter;
+  };
+
+  const getNotificationsHistory = (pubkey) => {
+    try {
+      let list = localStorage.getItem(`notificationsSet_${pubkey}`);
+
+      if (list) {
+        list = JSON.parse(list);
+        return list;
+      }
+      return [];
+    } catch (err) {
+      return [];
+    }
+  };
+
+  const saveNotificationsHistory = (pubkey, list) => {
+    try {
+      let history = getNotificationsHistory(pubkey);
+      let newList = removeEventsDuplicants(sortEvents([...list, ...history]));
+      localStorage.setItem(
+        `notificationsSet_${pubkey}`,
+        JSON.stringify(newList.slice(0, 1000))
+      );
+      return newList;
+    } catch (err) {
+      return [];
+    }
   };
 
   return (
@@ -572,6 +585,7 @@ export default function NotificationCenterMain() {
           width: "min(100%, 600px)",
           height: "100%",
           gap: 0,
+          position: "relative",
         }}
         className=" fx-centered fx-col fx-start-h fx-start-v"
         onClick={(e) => {
@@ -640,8 +654,32 @@ export default function NotificationCenterMain() {
               {t("A9TqNxQ")}
             </div>
           </div>
+          {isLoading && notifications.length > 0 && (
+            <div>
+              <div
+                className="fit-container sc-s-18"
+                style={{
+                  width: "100%",
+                  position: "absolute",
+                  left: 0,
+                  top: "100px",
+                  overflow: "hidden",
+                  zIndex: 211,
+                  height: "20px",
+                  border: "none",
+                  backgroundColor: "transparent",
+                }}
+              >
+                <div
+                  style={{ height: "4px", backgroundColor: "var(--c1)" }}
+                  className="v-bounce"
+                ></div>
+              </div>
+            </div>
+          )}
         </div>
-        {!isLoading && (
+
+        {notifications.length > 0 && (
           <div
             className="fit-container fx-centered fx-col fx-start-h"
             style={{
@@ -669,7 +707,7 @@ export default function NotificationCenterMain() {
             ? "mentions"
             : contentFrom
         ] && <ActivateNotification />}
-        {isLoading && (
+        {isLoading && notifications.length === 0 && (
           <div className="fx-centered fit-container" style={{ height: "70vh" }}>
             <LoadingLogo size={96} />
           </div>
@@ -769,7 +807,11 @@ const Notification = ({ event, filterByType = false }) => {
                   <p className="p-four-lines">{type?.label_1} </p>
                 </div>
                 {event.kind === 1 && (
-                  <div onClick={(e) => e.stopPropagation()} className="round-icon-small round-icon-tooltip" data-tooltip={t("AtGAGPY")}>
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="round-icon-small round-icon-tooltip"
+                    data-tooltip={t("AtGAGPY")}
+                  >
                     <Zap user={user} event={event} actions={postActions} />
                   </div>
                 )}
@@ -778,7 +820,7 @@ const Notification = ({ event, filterByType = false }) => {
                 className="gray-c p-four-lines poll-content-box"
                 style={{ "--p-color": "var(--gray)" }}
               >
-                <MinimalNoteView note={type?.label_2} />
+                <MinimalNoteView note={type?.label_2} pubkey={user.pubkey} />
               </p>
               {/* <p className="gray-c p-four-lines">{type?.label_2}</p> */}
             </div>
@@ -806,13 +848,13 @@ const ActivateNotification = () => {
   );
 };
 
-const MinimalNoteView = ({ note }) => {
+const MinimalNoteView = ({ note, pubkey }) => {
   const [noteTree, setNoteTree] = useState(false);
 
   useEffect(() => {
-    const parseNote = async () => {
+    const parseNote = () => {
       try {
-        let pNote = await getNoteTree(note, true, true, 50);
+        let pNote = getNoteTree(note, true, true, 50, pubkey);
 
         setNoteTree(pNote);
       } catch (err) {
@@ -821,5 +863,5 @@ const MinimalNoteView = ({ note }) => {
     };
     if (note) parseNote();
   }, [note]);
-  return <>{noteTree || compactContent(note)}</>;
+  return <>{noteTree || compactContent(note, pubkey)}</>;
 };
