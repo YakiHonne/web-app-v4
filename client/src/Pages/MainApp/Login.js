@@ -118,7 +118,7 @@ const Bunker = () => {
   const localKeys = NDKPrivateKeySigner.generate();
 
   const launchBunkerWindow = () => {
-    const relay = "wss://nostr-01.yakihonne.com";
+    const relay = "wss://nostr-01.yakihonne.com&relay=wss://offchain.pub&relay=wss://relay.nsec.app&relay=wss://relay.damus.io&relay=wss://relay.nostr.band";
     const localSigner = NDKNip46Signer.nostrconnect(
       ndkInstance,
       relay,
@@ -139,6 +139,7 @@ const Bunker = () => {
         skipValidation: true,
       }
     );
+   
     sub.on("event", async (event) => {
       let data = "";
       let isDecrypted = false;
