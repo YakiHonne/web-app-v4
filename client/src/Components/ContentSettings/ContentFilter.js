@@ -201,7 +201,7 @@ export default function ContentFilter({
             style={{
               position: "absolute",
               top: "110%",
-              right: "0",
+              // right: "0",
               backgroundColor: "var(--dim-gray)",
               width: "300px",
               zIndex: 1000,

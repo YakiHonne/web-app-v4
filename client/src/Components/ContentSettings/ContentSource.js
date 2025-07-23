@@ -481,14 +481,14 @@ export default function ContentSource({
             style={{
               position: "absolute",
               top: "110%",
-              left: "0",
+              // left: "0",
               backgroundColor: "var(--dim-gray)",
               width: "350px",
               maxHeight: "40vh",
               overflowY: "scroll",
               zIndex: 1000,
             }}
-            className="sc-s-18 bg-sp fx-centered fx-col fx-start-v fx-start-h pointer drop-down slide-down"
+            className="sc-s-18 bg-sp fx-centered fx-col fx-start-v fx-start-h pointer drop-down-r slide-down"
             onClick={() => setShowOptions(false)}
           >
             <div
