@@ -1529,8 +1529,8 @@ const getWotConfigDefault = () => {
   return {
     score: 2,
     all: false,
-    notifications: true,
-    reactions: true,
+    notifications: false,
+    reactions: false,
     dms: false,
   };
 };
