@@ -350,14 +350,14 @@ export default function KindOne({
                 >
                   <div className="fx-centered" style={{ columnGap: "1rem" }}>
                     <div className="fx-centered">
-                      <div className="icon-tooltip" data-tooltip={t("ADHdLfJ")}>
+                      <div className="round-icon-tooltip" data-tooltip={t("ADHdLfJ")}>
                         <div
                           className="comment-24"
                           onClick={() => setToggleComment(!toggleComment)}
                         ></div>
                       </div>
                       <div
-                        className="icon-tooltip"
+                        className="round-icon-tooltip"
                         data-tooltip={t("AMBxvKP")}
                         onClick={() =>
                           postActions.replies.replies.length > 0
@@ -375,7 +375,7 @@ export default function KindOne({
                         actions={postActions}
                       />
                       <div
-                        className={`icon-tooltip ${isLiked ? "orange-c" : ""}`}
+                        className={`round-icon-tooltip ${isLiked ? "orange-c" : ""}`}
                         data-tooltip={t("Alz0E9Y")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -405,7 +405,7 @@ export default function KindOne({
                         actions={postActions}
                       />
                       <div
-                        className={`icon-tooltip ${
+                        className={`round-icon-tooltip ${
                           isReposted ? "orange-c" : ""
                         }`}
                         data-tooltip={t("Aai65RJ")}
@@ -433,7 +433,7 @@ export default function KindOne({
                         actions={postActions}
                       />
                       <div
-                        className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
+                        className={`round-icon-tooltip ${isQuoted ? "orange-c" : ""}`}
                         data-tooltip={t("AWmDftG")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -453,7 +453,7 @@ export default function KindOne({
                       </div>
                     </div>
                     <div className="fx-centered">
-                      <div className="icon-tooltip" data-tooltip={t("AtGAGPY")}>
+                      <div className="round-icon-tooltip" data-tooltip={t("AtGAGPY")}>
                         <Zap
                           user={userProfile}
                           event={event}
@@ -462,7 +462,7 @@ export default function KindOne({
                         />
                       </div>
                       <div
-                        className={`icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                        className={`round-icon-tooltip ${isZapped ? "orange-c" : ""}`}
                         data-tooltip={t("AVDZ5cJ")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -485,7 +485,7 @@ export default function KindOne({
                       <div className="fit-container">
                         {!isNoteTranslating && !showTranslation && (
                           <div
-                            className="icon-tooltip"
+                            className="round-icon-tooltip"
                             data-tooltip={t("AdHV2qJ")}
                             onClick={translateNote}
                           >
@@ -494,7 +494,7 @@ export default function KindOne({
                         )}
                         {!isNoteTranslating && showTranslation && (
                           <div
-                            className="icon-tooltip"
+                            className="round-icon-tooltip"
                             data-tooltip={t("AE08Wte")}
                             onClick={() => setShowTranslation(false)}
                           >

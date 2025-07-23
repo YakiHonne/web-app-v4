@@ -97,7 +97,7 @@ export default function Repost({ isReposted, event, actions }) {
     <>
     {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       <div
-        className={"icon-tooltip"}
+        className={"round-icon-tooltip"}
         data-tooltip={t("AUvmzyU")}
         onClick={reactToNote}
       >

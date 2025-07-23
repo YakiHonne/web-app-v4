@@ -188,7 +188,7 @@ export default function ShareLink({
                 {shareImgData && (
                   <button
                     className={`btn btn-gray btn-full ${
-                      isLoading ? "flash" : "icon-tooltip"
+                      isLoading ? "flash" : "round-icon-tooltip"
                     } fx-centered`}
                     onClick={() => (isLoading ? null : convert())}
                   >
@@ -300,7 +300,7 @@ export default function ShareLink({
         </div>
       )}
       <div
-        className={label ? "fx-scattered fit-container" : "icon-tooltip"}
+        className={label ? "fx-scattered fit-container" : "round-icon-tooltip"}
         data-tooltip={t("AGB5vpj")}
         onClick={handleSharing}
       >

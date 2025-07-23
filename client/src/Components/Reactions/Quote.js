@@ -48,7 +48,7 @@ const [isLogin, setIsLogin] = useState(false);
       )}
       {isLogin && <LoginSignup exit={() => setIsLogin(false)} />}
       <div
-        className={"icon-tooltip"}
+        className={"round-icon-tooltip"}
         data-tooltip={t("A5XLJln")}
         onClick={() => userKeys ? setShowQuoteBox(true) : setIsLogin(true)}
       >

@@ -487,7 +487,7 @@ const getSubData = async (
       return;
     }
     let sub = ndk.subscribe(filter_, {
-      cacheUsage: "CACHE_FIRST",
+      // cacheUsage: "CACHE_FIRST",
       groupable: false,
       skipVerification: true,
       skipValidation: true,

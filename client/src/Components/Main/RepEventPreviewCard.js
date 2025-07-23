@@ -230,7 +230,12 @@ export default function RepEventPreviewCard({
             >
               <div style={{ width: "max(70%, 800px)" }} dir={item.dir}>
                 <div className="fx-scattered">
-                  <h4 className="p-three-lines" style={{fontSize: "24px", lineHeight: "130%"}}>{item.title}</h4>
+                  <h4
+                    className="p-three-lines"
+                    style={{ fontSize: "24px", lineHeight: "130%" }}
+                  >
+                    {item.title}
+                  </h4>
                   {/* <p className="p-two-lines p-big p-bold">{item.title}</p> */}
                 </div>
                 <div className="box-pad-v-s ">
@@ -246,7 +251,9 @@ export default function RepEventPreviewCard({
                 style={{
                   backgroundColor:
                     "linear-gradient(93deg, #880185 -6.44%, #FA4EFF 138.71%)",
-                  backgroundImage: `url(${item.image || authorData.picture || item.imagePP})`,
+                  backgroundImage: `url(${
+                    item.image || authorData.picture || item.imagePP
+                  })`,
                   width: "max(30%,200px)",
                   aspectRatio: "1/1",
                   border: "none",
@@ -373,7 +380,6 @@ const Reactions = ({ post, author, url }) => {
               e.stopPropagation();
             }}
           >
-          
             <RepEventCommentsSection
               id={post.aTag}
               author={author}
@@ -408,14 +414,16 @@ const Reactions = ({ post, author, url }) => {
             <div className="fx-centered  pointer">
               <div
                 data-tooltip={t("ADHdLfJ")}
-                className={`pointer icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                className={`pointer round-icon-tooltip ${
+                  isZapped ? "orange-c" : ""
+                }`}
                 onClick={() => setShowCommentsSections({ comment: true })}
               >
                 <div className="comment-24"></div>
               </div>
               <div
                 data-tooltip={t("AMBxvKP")}
-                className={`pointer icon-tooltip `}
+                className={`pointer round-icon-tooltip `}
                 onClick={() => setShowCommentsSections({ comment: false })}
               >
                 <p>{postActions.replies.replies.length}</p>
@@ -429,7 +437,9 @@ const Reactions = ({ post, author, url }) => {
                 tagKind={"a"}
               />
               <div
-                className={`pointer icon-tooltip ${isLiked ? "orange-c" : ""}`}
+                className={`pointer round-icon-tooltip ${
+                  isLiked ? "orange-c" : ""
+                }`}
                 data-tooltip={t("Alz0E9Y")}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -448,7 +458,7 @@ const Reactions = ({ post, author, url }) => {
             <div className="fx-centered  pointer">
               <Quote isQuoted={isQuoted} event={post} actions={postActions} />
               <div
-                className={`icon-tooltip ${isQuoted ? "orange-c" : ""}`}
+                className={`round-icon-tooltip ${isQuoted ? "orange-c" : ""}`}
                 data-tooltip={t("AWmDftG")}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -466,15 +476,19 @@ const Reactions = ({ post, author, url }) => {
               </div>
             </div>
             <div className="fx-centered">
-              <Zap
-                user={author}
-                event={post}
-                actions={postActions}
-                isZapped={isZapped}
-              />
+              <div className="round-icon-tooltip" data-tooltip={t("AtGAGPY")}>
+                <Zap
+                  user={author}
+                  event={post}
+                  actions={postActions}
+                  isZapped={isZapped}
+                />
+              </div>
               <div
                 data-tooltip={t("AO0OqWT")}
-                className={`pointer icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                className={`pointer round-icon-tooltip ${
+                  isZapped ? "orange-c" : ""
+                }`}
                 onClick={() =>
                   postActions.zaps.total > 0 &&
                   setUsersList({

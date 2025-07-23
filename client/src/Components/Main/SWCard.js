@@ -41,7 +41,6 @@ export default function SWCard({ widget, onNextWidget }) {
   const userKeys = useSelector((state) => state.userKeys);
   const [triggerMiniApp, setTriggerMiniApp] = useState("");
   const [triggerZap, setTriggerZap] = useState("");
-
   return (
     <>
       {triggerZap && (
