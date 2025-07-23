@@ -11,6 +11,7 @@ import japaneseTranslation from "../Content/Languages/ja";
 import thaiTranslation from "../Content/Languages/th";
 import arabicTranslation from "../Content/Languages/ar";
 import italianTranslation from "../Content/Languages/it";
+import frenchTranslation from "../Content/Languages/fr";
 
 const supportedLanguage = [
   {
@@ -23,6 +24,12 @@ const supportedLanguage = [
     display_name: "中国人",
     value: "zh",
     left_el: <div className="flag-zh"></div>,
+    disabled: false,
+  },
+  {
+    display_name: "Français",
+    value: "fr",
+    left_el: <div className="flag-fr"></div>,
     disabled: false,
   },
   {
@@ -59,11 +66,11 @@ const supportedLanguage = [
     display_name: "العربية",
     value: "ar",
     left_el: <div className="flag-ar"></div>,
-    disabled: true,
+    disabled: false,
   },
 ];
 
-const supportedLanguageKeys = ["en", "zh", "es", "it", "pt", "th", "ja"];
+const supportedLanguageKeys = ["en", "zh", "fr", "es", "it", "pt", "th", "ja", "ar"];
 // const supportedLanguageKeys = ["en", "es", "zh", "pt", "ja", "th", "ar"];
 
 i18n
@@ -101,6 +108,9 @@ i18n
       },
       it: {
         translation: { ...italianTranslation },
+      },
+      fr: {
+        translation: { ...frenchTranslation },
       },
     },
   });

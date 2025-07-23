@@ -282,6 +282,7 @@ const SWSet = ({ external }) => {
           "#l": type === "tool" ? ["tool", "action"] : ["basic"],
         },
       ]);
+      console.log(data)
       setActions((prev) => [...prev, ...data.data.map((_) => getParsedSW(_))]);
       saveUsers(data.pubkeys);
       setIsLoading(false);

@@ -387,6 +387,8 @@
 .flag-th-24,
 .flag-it,
 .flag-it-24,
+.flag-fr,
+.flag-fr-24,
 .user-bold,
 .user-bold-24,
 .export,
@@ -990,6 +992,7 @@
 .flag-zh,
 .flag-th,
 .flag-it,
+.flag-fr,
 .user-bold,
 .export,
 .github-logo,
@@ -1202,6 +1205,7 @@
 .flag-zh-24,
 .flag-th-24,
 .flag-it-24,
+.flag-fr-24,
 .user-bold-24,
 .export-24,
 .github-logo-24,
@@ -1276,6 +1280,11 @@
 .flag-it,
 .flag-it-24 {
     background-image: url('../media/icons/flag-it.svg');
+}
+
+.flag-fr,
+.flag-fr-24 {
+    background-image: url('../media/icons/flag-fr.svg');
 }
 
 .flag-th,

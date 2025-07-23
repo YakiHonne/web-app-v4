@@ -359,7 +359,7 @@ export default function NotesComment({
                     <div className="fx-centered" style={{ columnGap: "16px" }}>
                       <div className="fx-centered">
                         <div
-                          className="icon-tooltip"
+                          className="round-icon-tooltip"
                           data-tooltip={t("ADHdLfJ")}
                         >
                           <div
@@ -378,7 +378,7 @@ export default function NotesComment({
                           actions={postActions}
                         />
                         <div
-                          className={`pointer icon-tooltip ${
+                          className={`pointer round-icon-tooltip ${
                             isLiked ? "orange-c" : ""
                           } `}
                           data-tooltip={t("Alz0E9Y")}
@@ -412,7 +412,7 @@ export default function NotesComment({
                           actions={postActions}
                         />
                         <div
-                          className={`icon-tooltip ${
+                          className={`round-icon-tooltip ${
                             isReposted ? "orange-c" : ""
                           } `}
                           data-tooltip={t("Aai65RJ")}
@@ -440,7 +440,7 @@ export default function NotesComment({
                           actions={postActions}
                         />
                         <div
-                          className={`pointer icon-tooltip ${
+                          className={`pointer round-icon-tooltip ${
                             isQuoted ? "orange-c" : ""
                           }`}
                           data-tooltip={t("AWmDftG")}
@@ -463,7 +463,7 @@ export default function NotesComment({
                       </div>
                       <div className="fx-centered">
                         <div
-                          className="icon-tooltip"
+                          className="round-icon-tooltip"
                           data-tooltip={t("AtGAGPY")}
                         >
                           <Zap
@@ -474,7 +474,7 @@ export default function NotesComment({
                           />
                         </div>
                         <div
-                          className={`pointer icon-tooltip ${
+                          className={`pointer round-icon-tooltip ${
                             isZapped ? "orange-c" : ""
                           }`}
                           data-tooltip={t("AVDZ5cJ")}
@@ -499,7 +499,7 @@ export default function NotesComment({
                         <div className="fit-container">
                           {!isNoteTranslating && !showTranslation && (
                             <div
-                              className="icon-tooltip"
+                              className="round-icon-tooltip"
                               data-tooltip={t("AdHV2qJ")}
                               onClick={translateNote}
                             >
@@ -508,7 +508,7 @@ export default function NotesComment({
                           )}
                           {!isNoteTranslating && showTranslation && (
                             <div
-                              className="icon-tooltip"
+                              className="round-icon-tooltip"
                               data-tooltip={t("AE08Wte")}
                               onClick={() => setShowTranslation(false)}
                             >

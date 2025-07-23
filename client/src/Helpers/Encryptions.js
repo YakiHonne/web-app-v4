@@ -210,7 +210,6 @@ const getParsedSW = (event) => {
   let type = "basic";
   let icon = "";
   let buttons = [];
-
   for (let tag of event.tags) {
     if (tag[0] === "d") d = tag[1];
     if (tag[0] === "l") type = tag[1];
@@ -224,7 +223,7 @@ const getParsedSW = (event) => {
   return {
     id,
     created_at: event.created_at,
-    sig: event.sig,
+    sig: event.sig || "sig",
     pubkey,
     aTag: `30033:${event.pubkey}:${d}`,
     type,
@@ -432,7 +431,7 @@ const enableTranslation = async (text) => {
   }
 };
 
-const getParsedNote =  (event, isCollapsedNote = false) => {
+const getParsedNote = (event, isCollapsedNote = false) => {
   try {
     let isNoteLong = event.content.split(" ").length > 150;
     let isCollapsedNoteEnabled = getCustomSettings().collapsedNote;
@@ -471,7 +470,7 @@ const getParsedNote =  (event, isCollapsedNote = false) => {
 
     if (event.kind === 1) {
       // let note_tree = compactContent(event.content, event.pubkey);
-      let note_tree =  getNoteTree(
+      let note_tree = getNoteTree(
         event.content,
         undefined,
         isCollapsedNote_,
@@ -499,7 +498,7 @@ const getParsedNote =  (event, isCollapsedNote = false) => {
       //   JSON.parse(event.content).content,
       //   JSON.parse(event.content).pubkey
       // );
-      let relatedEvent =  getParsedNote(JSON.parse(event.content), true);
+      let relatedEvent = getParsedNote(JSON.parse(event.content), true);
       if (!relatedEvent) return false;
       return {
         ...rawEvent,
@@ -973,12 +972,16 @@ const getWOTScoreForPubkeyLegacy = (pubkey, enabled, minScore = 3) => {
       _.followings.includes(pubkey)
     ).length;
     let totalMuted = network.filter((_) => _.muted.includes(pubkey)).length;
-    let equalizer = totalTrusting === 0 ? 10 : 0;
-    let score =
-      equalizer ||
-      Math.floor(
-        (Math.max(0, totalTrusting - totalMuted) * 10) / network.length
-      );
+    let ratio = totalTrusting / network.length;
+    let mutesPenalty = (totalMuted / network.length) * 0.5;
+    let baseScore = (Math.log(1 + ratio * 100) / Math.log(11)) * 8;
+    // let equalizer = totalTrusting === 0 ? 10 : 0;
+    let score = Math.max(0, Math.min(8, baseScore - mutesPenalty));
+    // let score =
+    //   equalizer ||
+    //   Math.floor(
+    //     (Math.max(0, totalTrusting - totalMuted) * 10) / network.length
+    //   );
 
     return { score, status: score >= minScore };
   } catch (err) {

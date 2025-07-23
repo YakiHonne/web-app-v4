@@ -22,7 +22,11 @@ import Helmet from "react-helmet";
 import axios from "axios";
 import NumberShrink from "../../Components/NumberShrink";
 import ArrowUp from "../../Components/ArrowUp";
-import { getAuthPubkeyFromNip05, getNoteTree, straightUp } from "../../Helpers/Helpers";
+import {
+  getAuthPubkeyFromNip05,
+  getNoteTree,
+  straightUp,
+} from "../../Helpers/Helpers";
 import LoadingDots from "../../Components/LoadingDots";
 import ShareLink from "../../Components/ShareLink";
 import InitiConvo from "../../Components/Main/InitConvo";
@@ -900,8 +904,8 @@ const UserFeed = ({ user }) => {
             saveUsers(pubkeys);
           }
           dispatchEvents({ type: contentFrom, note: ev });
-          setIsLoading(false);
         }
+        setIsLoading(false);
       } catch (err) {
         console.log(err);
       }

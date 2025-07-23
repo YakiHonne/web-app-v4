@@ -1270,89 +1270,95 @@ const englishTranslation = {
   A07kVBP: "Excluded words",
   AY0XZEx: "Posted by",
   AH4Mub1: "Feed settings",
-
-  "AdT5mza": "Add to favorite",
-  "Am4QHzR": "Remove from favorite",
-  "AgZ9mO1": "Active service",
-  "ATCstom": "Regular servers",
-  "A0n1wDK": "BLOSSOM servers",
-  "A3Ok2VN": "BLOSSOM servers (no server found)",
-  "AjCVBmz": "Select a server",
-  "As9gwde": "Main server",
-  "AYpApBJ": "Select",
-  "AoA6v9d": "Mirror all servers",
-  "A2l1JgC": "Invalid URL",
-  "AHFsFp7": "no server found",
-  "AlNe9hu": "Messages are disabled",
-  "AIJ7nCM":
+  AdT5mza: "Add to favorite",
+  Am4QHzR: "Remove from favorite",
+  AgZ9mO1: "Active service",
+  ATCstom: "Regular servers",
+  A0n1wDK: "BLOSSOM servers",
+  A3Ok2VN: "BLOSSOM servers (no server found)",
+  AjCVBmz: "Select a server",
+  As9gwde: "Main server",
+  AYpApBJ: "Select",
+  AoA6v9d: "Mirror all servers",
+  A2l1JgC: "Invalid URL",
+  AHFsFp7: "no server found",
+  AlNe9hu: "Messages are disabled",
+  AIJ7nCM:
     "You are connected with a remote signer. Direct messages may contain large amounts of data and might not work properly. For the best experience, please use a local signer or a browser extension to enable direct messaging.",
-  "A9eQr6B": "Remote signer",
-  "AJdT1m0": "Use the below URL to connect to your bunker",
-  "AB1PYvA": "NostrConnect URI was copied",
-  "ACASAT7": "Web of Trust configuration",
-  "ATQOG8o": "Web of trust threshold",
-  "AUSdCrV": "Enabled",
-  "Ad3ts4Q": "Post actions",
-  "Aql44db": "Private messages",
-  "AciF91F": "Content relays",
-  "AEsTMiq": "Private messages relays",
-  "ArApykS": "Private messages relays are not configured!",
-  "Alxsg82": "Update your relays list accordingly.",
-  "AOwS3ca": "You follow",
-  "QuotaLimit": "You have exceeded your daily quota limit",
-  "AI8bhpw": "Payment failed!",
-  "A82pzWN": "You're sending",
-  "ACOXf0z":
+  A9eQr6B: "Remote signer",
+  AJdT1m0: "Use the below URL to connect to your bunker",
+  AB1PYvA: "NostrConnect URI was copied",
+  ACASAT7: "Web of Trust configuration",
+  ATQOG8o: "Web of trust threshold",
+  AUSdCrV: "Enabled",
+  Ad3ts4Q: "Post actions",
+  Aql44db: "Private messages",
+  AciF91F: "Content relays",
+  AEsTMiq: "Private messages relays",
+  ArApykS: "Private messages relays are not configured!",
+  Alxsg82: "Update your relays list accordingly.",
+  AOwS3ca: "You follow",
+  QuotaLimit: "You have exceeded your daily quota limit",
+  AI8bhpw: "Payment failed!",
+  A82pzWN: "You're sending",
+  ACOXf0z:
     "Unable to process the payment. Please check the payment address and try again.",
-  "ANOiCGe": "Sending to an invoice..",
-  "AXq8Vb3":
+  ANOiCGe: "Sending to an invoice..",
+  AXq8Vb3:
     "Manage your Nostr keys for network identity, event signing, and post authentication.",
-  "AUE3WRD":
+  AUE3WRD:
     "Configure Nostr relay connections for storing and distributing events.",
-  "A0yvMQi":
+  A0yvMQi:
     "Choose your preferred language for YakiHonne interface and content translation.",
-  "Aa4zlCA":
+  Aa4zlCA:
     "Control content interactions, privacy settings, media handling, and messaging preferences on Nostr.",
-  "A0ZZIE7":
+  A0ZZIE7:
     "Connect and manage Bitcoin Lightning wallets for sending/receiving zaps with customizable amounts and external integration.",
-  "AvNq0fB":
+  AvNq0fB:
     "Personalize your YakiHonne feed display, gestures, previews, and preferences for better Nostr experience.",
-  "AHV4nwK":
+  AHV4nwK:
     "Manage app performance monitoring and storage optimization for smooth operation.",
-  "Aayzo1w":
+  Aayzo1w:
     "Customize YakiHonne's visual appearance to match your preferences and viewing comfort.",
-  "AF2ceO1":
+  AF2ceO1:
     "Your personalized rewards and achievement system that tracks your activity and engagement within the YakiHonne platform.",
-  "A9pRbqh": "Safe to share – this identifies you on Nostr.",
-  "AnQpdZ9": "Keep private – backup securely to access your account elsewhere.",
-  "A2wrBnY": "Quickly add a new relay by entering its URL",
-  "AcPWRJ9": "Green dots show active connections",
-  "AJQQGgT": "Red dots indicate offline relays",
-  "AugXNf5": "Fewer stable relays = better performance and faster syncing.",
-  "AjTNn13":
+  A9pRbqh: "Safe to share – this identifies you on Nostr.",
+  AnQpdZ9: "Keep private – backup securely to access your account elsewhere.",
+  A2wrBnY: "Quickly add a new relay by entering its URL",
+  AcPWRJ9: "Green dots show active connections",
+  AJQQGgT: "Red dots indicate offline relays",
+  AugXNf5: "Fewer stable relays = better performance and faster syncing.",
+  AjTNn13:
     "Choose the language for YakiHonne's interface, menus, and buttons (currently: English)",
-  "A21tdwK":
+  A21tdwK:
     "Select translation service for posts in foreign languages (currently: LibreTranslate – privacy-focused and free)",
-  "AsYLJGY":
+  AsYLJGY:
     "Your current translation plan tier and usage limits (currently: Free tier with basic translation features)",
-  "AYnXPtk": "View and manage users you've blocked from appearing in your feed",
-  "ATtpr07": "Choose which service uploads your images and media files (currently: nostr.build)",
-  "AYKDD4g": "Connect and manage Bitcoin Lightning wallets for sending/receiving zaps with customizable amounts and external integration.",
-  "A3nTKfp": "Collapse note: Automatically minimize long posts to keep your feed clean and readable.",
-  "Ai5Sb3k": "Choose reply display style (Box or Thread) and manage suggestion preferences for people, content, and interests.",
-  "A864200": "Show user profile previews when hover over the usernames.",
-  "Aaa8NMg": "Control notifications for messages, mentions, reactions, and other Nostr events.",
-  "AZknCuh": "A decentralized trust mechanism using social attestations to establish reputation within the Nostr protocol.",
-  "AyF6bJf": "Get alerted when someone mentions you or replies to your posts",
-  "AjlJkCH": "Get notified when some likes or react to your posts",
-  "A9sfGZo": "Get alerted when someone shares or reposts your content",
-  "Ae82ooM": "Get notified when you receive Bitcoin tips (zaps) on your posts",
-  "A5HyxxL": "Get notified when people you follow post new content",
-  "Am0PvQX": "Manage YakiHonne content suggestions in your feed for posts, people, and profile sharing",
-  "AgBOrIx": "Display general content recommendations in your feed.",
-  "AyBFzxq": "Show recommended users to follow based on your activity.",
-  "ARDBNh7": "Display recommended posts and articles in your feed.",
-  "AXgwD7C": "Show topic and interest recommendations for discovery.",
+  AYnXPtk: "View and manage users you've blocked from appearing in your feed",
+  ATtpr07:
+    "Choose which service uploads your images and media files (currently: nostr.build)",
+  AYKDD4g:
+    "Connect and manage Bitcoin Lightning wallets for sending/receiving zaps with customizable amounts and external integration.",
+  A3nTKfp:
+    "Collapse note: Automatically minimize long posts to keep your feed clean and readable.",
+  Ai5Sb3k:
+    "Choose reply display style (Box or Thread) and manage suggestion preferences for people, content, and interests.",
+  A864200: "Show user profile previews when hover over the usernames.",
+  Aaa8NMg:
+    "Control notifications for messages, mentions, reactions, and other Nostr events.",
+  AZknCuh:
+    "A decentralized trust mechanism using social attestations to establish reputation within the Nostr protocol.",
+  AyF6bJf: "Get alerted when someone mentions you or replies to your posts",
+  AjlJkCH: "Get notified when some likes or react to your posts",
+  A9sfGZo: "Get alerted when someone shares or reposts your content",
+  Ae82ooM: "Get notified when you receive Bitcoin tips (zaps) on your posts",
+  A5HyxxL: "Get notified when people you follow post new content",
+  Am0PvQX:
+    "Manage YakiHonne content suggestions in your feed for posts, people, and profile sharing",
+  AgBOrIx: "Display general content recommendations in your feed.",
+  AyBFzxq: "Show recommended users to follow based on your activity.",
+  ARDBNh7: "Display recommended posts and articles in your feed.",
+  AXgwD7C: "Show topic and interest recommendations for discovery.",
 };
 
 export default englishTranslation;

@@ -117,7 +117,7 @@ export default function Like({ isLiked, event, actions, tagKind = "e" }) {
         ref={optionsRef}
       >
         <div
-          className={"icon-tooltip pointer"}
+          className={"round-icon-tooltip pointer"}
           data-tooltip={t("AJW1vH9")}
           onClick={() => !isLiked ? setShowEmoji(!showEmoji) : reactToNote(undefined)}
           onDoubleClick={() => reactToNote("+")}

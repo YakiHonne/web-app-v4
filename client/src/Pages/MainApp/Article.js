@@ -868,7 +868,7 @@ export default function Article() {
                       <div className="fx-centered  pointer">
                         <div
                           data-tooltip={t("ADHdLfJ")}
-                          className={`pointer icon-tooltip ${
+                          className={`pointer round-icon-tooltip ${
                             isZapped ? "orange-c" : ""
                           }`}
                           onClick={() =>
@@ -879,7 +879,7 @@ export default function Article() {
                         </div>
                         <div
                           data-tooltip={t("AMBxvKP")}
-                          className={`pointer icon-tooltip `}
+                          className={`pointer round-icon-tooltip `}
                           onClick={() =>
                             setShowCommentsSections({ comment: false })
                           }
@@ -895,7 +895,7 @@ export default function Article() {
                           tagKind={"a"}
                         />
                         <div
-                          className={`pointer icon-tooltip ${
+                          className={`pointer round-icon-tooltip ${
                             isLiked ? "orange-c" : ""
                           }`}
                           data-tooltip={t("Alz0E9Y")}
@@ -924,7 +924,7 @@ export default function Article() {
                           actions={postActions}
                         />
                         <div
-                          className={`icon-tooltip ${
+                          className={`round-icon-tooltip ${
                             isQuoted ? "orange-c" : ""
                           }`}
                           data-tooltip={t("AWmDftG")}
@@ -954,7 +954,7 @@ export default function Article() {
                         />
                         <div
                           data-tooltip={t("AO0OqWT")}
-                          className={`pointer icon-tooltip ${
+                          className={`pointer round-icon-tooltip ${
                             isZapped ? "orange-c" : ""
                           }`}
                           onClick={() =>

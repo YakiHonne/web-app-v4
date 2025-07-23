@@ -252,10 +252,14 @@ const Banner = ({ exit }) => {
                 quicker content discovery.
               </li>
               <li>
+                Arabic and French language support has been added for a more
+                inclusive experience.
+              </li>
+              <li>
                 Removing selected filter now stick—your choices are remembered
                 even after refreshing the page.
               </li>
-              <li> General improvements and bug fix</li>
+              <li>General improvements and bug fix</li>
             </ul>
           </div>
           {content.map((card, index) => {

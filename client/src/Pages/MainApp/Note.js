@@ -497,7 +497,7 @@ export default function Note() {
                                 actions={postActions}
                               />
                               <div
-                                className={`icon-tooltip ${
+                                className={`round-icon-tooltip ${
                                   isLiked ? "orange-c" : ""
                                 }`}
                                 data-tooltip={t("Alz0E9Y")}
@@ -531,7 +531,7 @@ export default function Note() {
                                 actions={postActions}
                               />
                               <div
-                                className={`icon-tooltip ${
+                                className={`round-icon-tooltip ${
                                   isReposted ? "orange-c" : ""
                                 }`}
                                 data-tooltip={t("Aai65RJ")}
@@ -564,7 +564,7 @@ export default function Note() {
                                 actions={postActions}
                               />
                               <div
-                                className={`icon-tooltip ${
+                                className={`round-icon-tooltip ${
                                   isQuoted ? "orange-c" : ""
                                 }`}
                                 data-tooltip={t("AWmDftG")}
@@ -590,7 +590,7 @@ export default function Note() {
                               style={{ columnGap: "8px" }}
                             >
                               <div
-                                className="icon-tooltip"
+                                className="round-icon-tooltip"
                                 data-tooltip="Tip note"
                               >
                                 <Zap
@@ -602,7 +602,7 @@ export default function Note() {
                               </div>
                               <div
                                 data-tooltip={t("AO0OqWT")}
-                                className={`pointer icon-tooltip ${
+                                className={`pointer round-icon-tooltip ${
                                   isZapped ? "orange-c" : ""
                                 }`}
                                 onClick={() =>
@@ -625,7 +625,7 @@ export default function Note() {
                               <div className="fit-container">
                                 {!isNoteTranslating && !showTranslation && (
                                   <div
-                                    className="icon-tooltip"
+                                    className="round-icon-tooltip"
                                     data-tooltip={t("AdHV2qJ")}
                                     onClick={translateNote}
                                   >
@@ -634,7 +634,7 @@ export default function Note() {
                                 )}
                                 {!isNoteTranslating && showTranslation && (
                                   <div
-                                    className="icon-tooltip"
+                                    className="round-icon-tooltip"
                                     data-tooltip={t("AE08Wte")}
                                     onClick={() => setShowTranslation(false)}
                                   >
