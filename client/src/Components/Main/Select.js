@@ -12,7 +12,7 @@ export default function Select({
   const [showOptions, setShowOptions] = useState(false);
   const selectedValue = useMemo(() => {
     return options.find((option) => option?.value === value);
-  }, [value]);
+  }, [value, options]);
   const optionsRef = useRef(null);
   useEffect(() => {
     const handleOffClick = (e) => {

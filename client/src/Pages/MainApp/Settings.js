@@ -575,7 +575,7 @@ export default function Settings() {
       i18next.changeLanguage(value);
       localStorage.setItem("app-lang", value);
       handleAppDirection(value);
-      setTransServicePlan(!transServicePlan);
+      // setTransServicePlan(!transServicePlan);
     } else {
       dispatch(
         setToast({
