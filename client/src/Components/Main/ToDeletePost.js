@@ -31,7 +31,7 @@ export default function ToDeletePost({
           content: "This event will be deleted!",
           tags: [["e", post_id]],
           aTag,
-          allRelays: [...relayToDeleteFrom],
+          allRelays: [],
         })
       );
       if (relayToDeleteFrom.length > 1) initDeleteFromS3(thumbnail);

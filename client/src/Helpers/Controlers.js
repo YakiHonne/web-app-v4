@@ -31,6 +31,7 @@ import {
   getAppLang,
   getContentTranslationConfig,
   getCurrentLevel,
+  getCustomServices,
   getKeys,
   levelCount,
 } from "./Helpers";
@@ -603,6 +604,13 @@ const getEventStatAfterEOSE = (
 
 const translate = async (text) => {
   let service = getContentTranslationConfig();
+  if (service.service.startsWith("custom-")) {
+    let customServices = getCustomServices();
+    service = {
+      ...service,
+      ...customServices[service.service],
+    };
+  }
   let lang = getAppLang();
   let { raw, specialContent } = extractRawContent(text);
 

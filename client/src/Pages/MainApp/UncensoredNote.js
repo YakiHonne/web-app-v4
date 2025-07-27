@@ -230,339 +230,327 @@ export default function UNEvent() {
           content={API_BASE_URL + "/event/" + flashNews.nEvent + ".png"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            <ArrowUp />
-            <div className="fit-container fx-centered fx-start-v fx-start-h">
-              <div style={{ flex: 1.5 }} className="box-pad-h-s">
-                <Link className="fit-container" to="/verify-notes">
-                  <div
-                    className="fit-container fx-centered fx-start-h box-pad-v-m sticky"
-                    style={{
-                      columnGap: "16px",
-                    }}
-                  >
-                    <div className="round-icon">
-                      <div className="arrow arrow-back"></div>
-                    </div>
-                    <h4>{t("AuWEFcH")}</h4>
-                  </div>
-                </Link>
-                <div className="fit-container fx-centered fx-col">
-                  <div
-                    className="fit-container fx-centered fx-start-h fx-start-v box-marg-s box-pad-h-m box-pad-v-m"
-                    style={{ columnGap: "10px" }}
-                  >
-                    <div>
-                      <UserProfilePic
-                        img={flashNews.author.picture}
-                        size={38}
-                        user_id={flashNews.author.pubkey}
-                      />
-                    </div>
-                    <div
-                      className="fx-centered fx-col fx-start-h"
-                      style={{ width: "calc(100% - 40px)" }}
-                    >
-                      <div className="fit-container fx-scattered">
-                        <div className="fx-centered fx-start-h fit-container">
-                          <p className="gray-c">
-                            {t("AsXpL4b", { name: flashNews.author.name })}
-                          </p>
-                          <p className="gray-c">&#x2022;</p>
-                          <p className="gray-c">
-                            <Date_
-                              toConvert={new Date(flashNews.created_at * 1000)}
-                              time={true}
-                            />
-                          </p>
-                        </div>
-                        <ShareLink
-                          path={`/verify-notes/${flashNews.nEvent}`}
-                          title={
-                            flashNews.author.display_name ||
-                            flashNews.author.name
-                          }
-                          description={flashNews.content}
-                          kind={1}
-                          shareImgData={{
-                            post: flashNews,
-                            author: flashNews.author,
-                            extra: {
-                              ...flashNews.sealed_note,
-                              is_sealed: flashNews.sealed_note ? true : false,
-                            },
-                            label: "Uncensored note",
-                          }}
-                        />
-                      </div>
 
-                      <div className="fit-container">
-                        {/* <div
+      <ArrowUp />
+      <div className="fit-container fx-centered fx-start-v fx-start-h">
+        <div style={{ flex: 1.5 }} className="box-pad-h-s">
+          <Link className="fit-container" to="/verify-notes">
+            <div
+              className="fit-container fx-centered fx-start-h box-pad-v-m sticky"
+              style={{
+                columnGap: "16px",
+              }}
+            >
+              <div className="round-icon">
+                <div className="arrow arrow-back"></div>
+              </div>
+              <h4>{t("AuWEFcH")}</h4>
+            </div>
+          </Link>
+          <div className="fit-container fx-centered fx-col">
+            <div
+              className="fit-container fx-centered fx-start-h fx-start-v box-marg-s box-pad-h-m box-pad-v-m"
+              style={{ columnGap: "10px" }}
+            >
+              <div>
+                <UserProfilePic
+                  img={flashNews.author.picture}
+                  size={38}
+                  user_id={flashNews.author.pubkey}
+                />
+              </div>
+              <div
+                className="fx-centered fx-col fx-start-h"
+                style={{ width: "calc(100% - 40px)" }}
+              >
+                <div className="fit-container fx-scattered">
+                  <div className="fx-centered fx-start-h fit-container">
+                    <p className="gray-c">
+                      {t("AsXpL4b", { name: flashNews.author.name })}
+                    </p>
+                    <p className="gray-c">&#x2022;</p>
+                    <p className="gray-c">
+                      <Date_
+                        toConvert={new Date(flashNews.created_at * 1000)}
+                        time={true}
+                      />
+                    </p>
+                  </div>
+                  <ShareLink
+                    path={`/verify-notes/${flashNews.nEvent}`}
+                    title={
+                      flashNews.author.display_name || flashNews.author.name
+                    }
+                    description={flashNews.content}
+                    kind={1}
+                    shareImgData={{
+                      post: flashNews,
+                      author: flashNews.author,
+                      extra: {
+                        ...flashNews.sealed_note,
+                        is_sealed: flashNews.sealed_note ? true : false,
+                      },
+                      label: "Uncensored note",
+                    }}
+                  />
+                </div>
+
+                <div className="fit-container">
+                  {/* <div
                       className="fx-centered fx-start-h fx-wrap box-marg-s"
                       style={{ rowGap: 0, columnGap: "4px" }}
                     > */}
-                        <div className="fit-container">{content}</div>
-                      </div>
-                      {userKeys &&
-                        userKeys.pub !== flashNews.author.pubkey &&
-                        !isContributed &&
-                        !sealedNote && (
+                  <div className="fit-container">{content}</div>
+                </div>
+                {userKeys &&
+                  userKeys.pub !== flashNews.author.pubkey &&
+                  !isContributed &&
+                  !sealedNote && (
+                    <div
+                      className="fit-container fx-centered fx-start-v fx-start-h sc-s-18"
+                      style={{ columnGap: "16px", rowGap: 0 }}
+                    >
+                      <div className="fit-container">
+                        <div className="fit-container fx-scattered box-pad-h-s box-pad-v-s">
                           <div
-                            className="fit-container fx-centered fx-start-v fx-start-h sc-s-18"
-                            style={{ columnGap: "16px", rowGap: 0 }}
+                            className="fx-centered fx-start-h"
+                            style={{ columnGap: "16px" }}
                           >
-                            <div className="fit-container">
-                              <div className="fit-container fx-scattered box-pad-h-s box-pad-v-s">
-                                <div
-                                  className="fx-centered fx-start-h"
-                                  style={{ columnGap: "16px" }}
-                                >
-                                  <UserProfilePic
-                                    mainAccountUser={true}
-                                    size={38}
-                                  />
-                                  <div>
-                                    <p className="p-medium gray-c">
-                                      {t("A8pP6gz")}
-                                    </p>
-                                    <p className="p-bold">{t("A80wepI")}</p>
-                                  </div>
-                                </div>
-                                <button
-                                  className="btn btn-normal"
-                                  onClick={handlePublishing}
-                                  disabled={isLoading}
-                                >
-                                  {isLoading ? <LoadingDots /> : t("AT4tygn")}
-                                </button>
-                              </div>
-                              <hr />
-                              <div className="box-pad-h-m box-pad-v-m">
-                                <textarea
-                                  className="txt-area fit-container no-scrollbar if-no-border"
-                                  style={{
-                                    padding: "0",
-                                    borderRadius: 0,
-                                    color:
-                                      MAX_CHAR - currentWordsCount < 0
-                                        ? "var(--red-main)"
-                                        : "",
-                                  }}
-                                  placeholder={t("AlOVbtN", {
-                                    name: userMetadata.name || "",
-                                  })}
-                                  value={note}
-                                  onChange={handleNoteOnChange}
-                                />
-                                <div className="fit-container">
-                                  {MAX_CHAR - currentWordsCount <= 0 && (
-                                    <p className="red-c p-medium">
-                                      {t("Ahy97Wm", {
-                                        count: MAX_CHAR - currentWordsCount,
-                                      })}
-                                    </p>
-                                  )}
-                                  {MAX_CHAR - currentWordsCount > 0 && (
-                                    <p className="gray-c p-medium">
-                                      {t("Ahy97Wm", {
-                                        count: MAX_CHAR - currentWordsCount,
-                                      })}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <hr />
-                              <div className="fit-container">
-                                <input
-                                  type="text"
-                                  className="if ifs-full if-no-border"
-                                  placeholder={t("AkZiEiU")}
-                                  value={source}
-                                  onChange={(e) => setSource(e.target.value)}
-                                />
-                              </div>
-                              <hr />
-                              <label
-                                htmlFor="check-note-type"
-                                className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m"
-                              >
-                                <input
-                                  type="checkbox"
-                                  id="check-note-type"
-                                  checked={noteType}
-                                  onChange={() => setNoteType(!noteType)}
-                                />
-                                <p className={noteType ? "" : "gray-c"}>
-                                  {t("A2vH1G8")}
-                                </p>
-                              </label>
+                            <UserProfilePic mainAccountUser={true} size={38} />
+                            <div>
+                              <p className="p-medium gray-c">{t("A8pP6gz")}</p>
+                              <p className="p-bold">{t("A80wepI")}</p>
                             </div>
                           </div>
-                        )}
-                      {!userKeys && (
-                        <div className="fit-container fx-centered fx-col box-pad-h box-pad-v sc-s-18">
-                          <h4>{t("Ao5adkz")}</h4>
-                          <p
-                            className="gray-c p-centered"
-                            style={{ maxWidth: "400px" }}
-                          >
-                            {t("A7qYBVd")}
-                          </p>
                           <button
                             className="btn btn-normal"
-                            onClick={() => redirectToLogin()}
+                            onClick={handlePublishing}
+                            disabled={isLoading}
                           >
-                            {t("AmOtzoL")}
+                            {isLoading ? <LoadingDots /> : t("AT4tygn")}
                           </button>
                         </div>
-                      )}
-                      {sealedNote && (
-                        <UN
-                          data={JSON.parse(sealedNote.content)}
-                          flashNewsAuthor={flashNews.author.pubkey}
-                          sealedCauses={sealedNote.tags
-                            .filter((tag) => tag[0] === "cause")
-                            .map((tag) => tag[1])}
-                          setTimestamp={null}
-                          state="sealed"
-                        />
-                      )}
-                      {isContributed && (
-                        <div
-                          className="fx-centered fx-start-h fit-container option if pointer"
-                          style={{
-                            border: "none",
-                            backgroundColor: "var(--green-side)",
-                          }}
-                        >
-                          <div className="checkmark"></div>
-                          <p className="green-c">{t("Aundnph")}</p>
+                        <hr />
+                        <div className="box-pad-h-m box-pad-v-m">
+                          <textarea
+                            className="txt-area fit-container no-scrollbar if-no-border"
+                            style={{
+                              padding: "0",
+                              borderRadius: 0,
+                              color:
+                                MAX_CHAR - currentWordsCount < 0
+                                  ? "var(--red-main)"
+                                  : "",
+                            }}
+                            placeholder={t("AlOVbtN", {
+                              name: userMetadata.name || "",
+                            })}
+                            value={note}
+                            onChange={handleNoteOnChange}
+                          />
+                          <div className="fit-container">
+                            {MAX_CHAR - currentWordsCount <= 0 && (
+                              <p className="red-c p-medium">
+                                {t("Ahy97Wm", {
+                                  count: MAX_CHAR - currentWordsCount,
+                                })}
+                              </p>
+                            )}
+                            {MAX_CHAR - currentWordsCount > 0 && (
+                              <p className="gray-c p-medium">
+                                {t("Ahy97Wm", {
+                                  count: MAX_CHAR - currentWordsCount,
+                                })}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {(uncensoredNotes.length > 0 ||
-                  flashNews.sealed_not_helpful_notes.length > 0) && (
-                  <>
-                    <h4 className="box-marg-s">{t("AtKC9kH")}</h4>
-                    <div className="fx-centered fx-col fit-container">
-                      {uncensoredNotes.map((note) => {
-                        return (
-                          <UN
-                            data={note}
-                            key={note.id}
-                            flashNewsAuthor={flashNews.author.pubkey}
-                            setTimestamp={setTimestamp}
-                            action={sealedNote ? false : true}
+                        <hr />
+                        <div className="fit-container">
+                          <input
+                            type="text"
+                            className="if ifs-full if-no-border"
+                            placeholder={t("AkZiEiU")}
+                            value={source}
+                            onChange={(e) => setSource(e.target.value)}
                           />
-                        );
-                      })}
-                      {flashNews.sealed_not_helpful_notes.map((_note) => {
-                        let note = JSON.parse(_note.content);
-                        return (
-                          <UN
-                            data={note}
-                            key={note.id}
-                            flashNewsAuthor={flashNews.author.pubkey}
-                            setTimestamp={() => null}
-                            sealedCauses={_note.tags
-                              .filter((tag) => tag[0] === "cause")
-                              .map((tag) => tag[1])}
-                            state="nh"
-                            action={false}
+                        </div>
+                        <hr />
+                        <label
+                          htmlFor="check-note-type"
+                          className="fit-container fx-centered fx-start-h box-pad-h-m box-pad-v-m"
+                        >
+                          <input
+                            type="checkbox"
+                            id="check-note-type"
+                            checked={noteType}
+                            onChange={() => setNoteType(!noteType)}
                           />
-                        );
-                      })}
+                          <p className={noteType ? "" : "gray-c"}>
+                            {t("A2vH1G8")}
+                          </p>
+                        </label>
+                      </div>
                     </div>
-                  </>
-                )}
-                {!isLoading &&
-                  uncensoredNotes.length === 0 &&
-                  flashNews.sealed_not_helpful_notes.length === 0 && (
-                    <PagePlaceholder page={"nostr-un"} />
                   )}
-              </div>
-              <div
-                style={{
-                  flex: "1",
-                  position: "sticky",
-                  top: 0,
-                }}
-                className="box-pad-h-m box-pad-v-m fx-centered fx-col un-banners"
-              >
-                <div
-                  className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
-                  style={{
-                    position: "relative",
-                    backgroundColor: "var(--c3)",
-                    border: "none",
-                  }}
-                >
-                  <div
-                    className="cup-24"
-                    style={{
-                      minHeight: "120px",
-                      minWidth: "120px",
-                      position: "absolute",
-                      right: "-20px",
-                      bottom: "-10px",
-                      filter: "brightness(0) invert()",
-                      opacity: ".2",
-                      rotate: "20deg",
-                    }}
-                  ></div>
-                  <div className="fx-centered fx-col fx-start-v">
-                    <p className="p-medium" style={{ color: "white" }}>
-                      {t("Ay17eyW")}
+                {!userKeys && (
+                  <div className="fit-container fx-centered fx-col box-pad-h box-pad-v sc-s-18">
+                    <h4>{t("Ao5adkz")}</h4>
+                    <p
+                      className="gray-c p-centered"
+                      style={{ maxWidth: "400px" }}
+                    >
+                      {t("A7qYBVd")}
                     </p>
-                    <div className="fx-centered fx-end-v">
-                      <h2 className="orange-c">{balance || "N/A"}</h2>
-                      <p style={{ color: "white" }}>Sats.</p>
-                    </div>
+                    <button
+                      className="btn btn-normal"
+                      onClick={() => redirectToLogin()}
+                    >
+                      {t("AmOtzoL")}
+                    </button>
                   </div>
-                </div>
-                <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
+                )}
+                {sealedNote && (
+                  <UN
+                    data={JSON.parse(sealedNote.content)}
+                    flashNewsAuthor={flashNews.author.pubkey}
+                    sealedCauses={sealedNote.tags
+                      .filter((tag) => tag[0] === "cause")
+                      .map((tag) => tag[1])}
+                    setTimestamp={null}
+                    state="sealed"
+                  />
+                )}
+                {isContributed && (
                   <div
-                    className="note-24"
-                    style={{ minHeight: "48px", minWidth: "48px" }}
+                    className="fx-centered fx-start-h fit-container option if pointer"
+                    style={{
+                      border: "none",
+                      backgroundColor: "var(--green-side)",
+                    }}
                   >
-                    {" "}
+                    <div className="checkmark"></div>
+                    <p className="green-c">{t("Aundnph")}</p>
                   </div>
-                  <h4>{t("AtTBm8o")}</h4>
-                  <p className="gray-c">{t("A9YOTCh")}</p>
-                  <Link
-                    target="_blank"
-                    to={
-                      "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
-                    }
-                  >
-                    <button className="btn btn-normal">{t("Azigg0N")}</button>
-                  </Link>
-                </div>
-                <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
-                  <h4>{t("AlAlx8I")}</h4>
-                  <ul>
-                    <li className="gray-c">{t("AEkp3uJ")}</li>
-                    <li className="gray-c">{t("ApW8X5d")}</li>
-                    <li className="gray-c">{t("AHc4MVZ")}</li>
-                  </ul>
-                  <Link
-                    target="_blank"
-                    to={
-                      "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
-                    }
-                  >
-                    <button className="btn btn-normal">{t("Azigg0N")}</button>
-                  </Link>
-                </div>
-                <Footer />
+                )}
               </div>
             </div>
-          </main>
+          </div>
+          {(uncensoredNotes.length > 0 ||
+            flashNews.sealed_not_helpful_notes.length > 0) && (
+            <>
+              <h4 className="box-marg-s">{t("AtKC9kH")}</h4>
+              <div className="fx-centered fx-col fit-container">
+                {uncensoredNotes.map((note) => {
+                  return (
+                    <UN
+                      data={note}
+                      key={note.id}
+                      flashNewsAuthor={flashNews.author.pubkey}
+                      setTimestamp={setTimestamp}
+                      action={sealedNote ? false : true}
+                    />
+                  );
+                })}
+                {flashNews.sealed_not_helpful_notes.map((_note) => {
+                  let note = JSON.parse(_note.content);
+                  return (
+                    <UN
+                      data={note}
+                      key={note.id}
+                      flashNewsAuthor={flashNews.author.pubkey}
+                      setTimestamp={() => null}
+                      sealedCauses={_note.tags
+                        .filter((tag) => tag[0] === "cause")
+                        .map((tag) => tag[1])}
+                      state="nh"
+                      action={false}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {!isLoading &&
+            uncensoredNotes.length === 0 &&
+            flashNews.sealed_not_helpful_notes.length === 0 && (
+              <PagePlaceholder page={"nostr-un"} />
+            )}
+        </div>
+        <div
+          style={{
+            flex: "1",
+            position: "sticky",
+            top: 0,
+          }}
+          className="box-pad-h-m box-pad-v-m fx-centered fx-col un-banners"
+        >
+          <div
+            className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
+            style={{
+              position: "relative",
+              backgroundColor: "var(--c3)",
+              border: "none",
+            }}
+          >
+            <div
+              className="cup-24"
+              style={{
+                minHeight: "120px",
+                minWidth: "120px",
+                position: "absolute",
+                right: "-20px",
+                bottom: "-10px",
+                filter: "brightness(0) invert()",
+                opacity: ".2",
+                rotate: "20deg",
+              }}
+            ></div>
+            <div className="fx-centered fx-col fx-start-v">
+              <p className="p-medium" style={{ color: "white" }}>
+                {t("Ay17eyW")}
+              </p>
+              <div className="fx-centered fx-end-v">
+                <h2 className="orange-c">{balance || "N/A"}</h2>
+                <p style={{ color: "white" }}>Sats.</p>
+              </div>
+            </div>
+          </div>
+          <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
+            <div
+              className="note-24"
+              style={{ minHeight: "48px", minWidth: "48px" }}
+            >
+              {" "}
+            </div>
+            <h4>{t("AtTBm8o")}</h4>
+            <p className="gray-c">{t("A9YOTCh")}</p>
+            <Link
+              target="_blank"
+              to={
+                "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
+              }
+            >
+              <button className="btn btn-normal">{t("Azigg0N")}</button>
+            </Link>
+          </div>
+          <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
+            <h4>{t("AlAlx8I")}</h4>
+            <ul>
+              <li className="gray-c">{t("AEkp3uJ")}</li>
+              <li className="gray-c">{t("ApW8X5d")}</li>
+              <li className="gray-c">{t("AHc4MVZ")}</li>
+            </ul>
+            <Link
+              target="_blank"
+              to={
+                "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
+              }
+            >
+              <button className="btn btn-normal">{t("Azigg0N")}</button>
+            </Link>
+          </div>
+          <Footer />
         </div>
       </div>
     </div>

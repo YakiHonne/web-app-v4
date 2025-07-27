@@ -13,7 +13,7 @@ import NumberShrink from "../NumberShrink";
 import { customHistory } from "../../Helpers/History";
 import { useTranslation } from "react-i18next";
 import { getCustomSettings, getWotConfig } from "../../Helpers/Helpers";
-import { getWOTScoreForPubkeyLegacy } from "../../Helpers/Encryptions";
+import { getWOTScoreForPubkeyLegacy, removeDuplicants } from "../../Helpers/Encryptions";
 
 export default function NotificationCenter({
   icon = false,
@@ -47,7 +47,7 @@ export default function NotificationCenter({
         userFollowings,
         lastEventCreatedAt ? lastEventCreatedAt + 1 : undefined
       );
-      let events = 0;
+      let events = [];
       let isNotified = false;
       const sub = ndkInstance.subscribe(filter, {
         cacheUsage: "CACHE_FIRST",
@@ -71,8 +71,10 @@ export default function NotificationCenter({
                 )
               : false;
             if (!isUncensored && event.pubkey !== userKeys.pub) {
-              events = events + 1;
-              localStorage.setItem(localStorageKey, events);
+              events.push(event);
+              events = removeDuplicants(events)
+              let eventsCount = events.length;
+              localStorage.setItem(localStorageKey, eventsCount);
               setNotifications((prev) => prev + 1);
               if (created_at < event.created_at) {
                 created_at = event.created_at;
@@ -172,6 +174,7 @@ export default function NotificationCenter({
   const handleOnClick = () => {
     let localStorageKey = `new-notification-${userKeys.pub}`;
     localStorage.setItem(localStorageKey, 0);
+    setNotifications(0)
     if (dismiss) dismiss();
     customHistory.push("/notifications");
   };

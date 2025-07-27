@@ -601,7 +601,7 @@ const RelatedEvent = ({ event }) => {
         setIsRelatedEventLoaded(false);
         let event_ =
           kind === 1
-            ? await getSubData([{ kinds: [kind], ids: [ids] }], 1000)
+            ? await getSubData([{ kinds: [kind], ids: [ids] }], 500)
             : await getSubData(
                 [
                   {
@@ -610,7 +610,7 @@ const RelatedEvent = ({ event }) => {
                     "#d": [ids.identifier],
                   },
                 ],
-                1000
+                500
               );
         if (event_.data.length > 0) {
           saveUsers([event_.data[0].pubkey]);

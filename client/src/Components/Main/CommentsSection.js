@@ -148,7 +148,7 @@ export default function CommentsSection({
             [`#${tagKind}`]: [rootData ? rootData[1] : id],
           },
         ],
-        500
+        200
       );
 
       let tempEvents = events.data

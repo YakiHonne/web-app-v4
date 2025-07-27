@@ -61,12 +61,7 @@ export default function Playground() {
           content={"Interact with the community smart widgets"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <Main />
-        </div>
-      </div>
+      <Main />
     </div>
   );
 }
@@ -99,7 +94,7 @@ const Main = () => {
   };
 
   return (
-    <main className="main-page-nostr-container">
+    <>
       {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
       {userKeys && (
         <div className="fit-container fx-centered fx-start-h fx-start-v">
@@ -328,7 +323,7 @@ const Main = () => {
           </div>
         </div>
       )}
-    </main>
+    </>
   );
 };
 

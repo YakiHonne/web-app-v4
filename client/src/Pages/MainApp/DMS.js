@@ -313,17 +313,8 @@ export default function DMS() {
             content={"Your end-to-end encrypted inbox"}
           />
         </Helmet>
-        <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <div className="main-container">
-            <Sidebar />
-            <main
-              className="main-page-nostr-container"
-              style={{ padding: 0, overflow: "hidden" }}
-            >
-              <PagePlaceholder page={"nostr-not-connected"} />
-            </main>
-          </div>
-        </div>
+
+        <PagePlaceholder page={"nostr-not-connected"} />
       </div>
     );
   if (userKeys.bunker)
@@ -350,17 +341,8 @@ export default function DMS() {
             content={"Your end-to-end encrypted inbox"}
           />
         </Helmet>
-        <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <div className="main-container">
-            <Sidebar />
-            <main
-              className="main-page-nostr-container"
-              style={{ padding: 0, overflow: "hidden" }}
-            >
-              <PagePlaceholder page={"nostr-bunker-dms"} />
-            </main>
-          </div>
-        </div>
+
+        <PagePlaceholder page={"nostr-bunker-dms"} />
       </div>
     );
 
@@ -388,17 +370,8 @@ export default function DMS() {
             content={"Your end-to-end encrypted inbox"}
           />
         </Helmet>
-        <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <div className="main-container">
-            <Sidebar />
-            <main
-              className="main-page-nostr-container"
-              style={{ padding: 0, overflow: "hidden" }}
-            >
-              <PagePlaceholder page={"nostr-unauthorized-messages"} />
-            </main>
-          </div>
-        </div>
+
+        <PagePlaceholder page={"nostr-unauthorized-messages"} />
       </div>
     );
 
@@ -426,17 +399,8 @@ export default function DMS() {
             content={"Your end-to-end encrypted inbox"}
           />
         </Helmet>
-        <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <div className="main-container">
-            <Sidebar />
-            <main
-              className="main-page-nostr-container"
-              style={{ padding: 0, overflow: "hidden" }}
-            >
-              <PagePlaceholder page={"nostr-DMS-waiting"} />
-            </main>
-          </div>
-        </div>
+
+        <PagePlaceholder page={"nostr-DMS-waiting"} />
       </div>
     );
 
@@ -462,378 +426,338 @@ export default function DMS() {
       </Helmet>
       {initConv && <InitiConvo exit={() => setInitConv(false)} />}
       <div
-        className="fit-container fx-centered"
-        style={{ columnGap: 0, overflow: "hidden" }}
+        className="fit-container fx-centered fx-start-h fx-stretch DM-container"
+        style={{
+          columnGap: 0,
+          width: "min(100%,1200px)",
+        }}
       >
-        <div className="main-container">
-          <Sidebar />
-          <main
-            className="main-page-nostr-container"
-            style={{ padding: 0, overflow: "hidden" }}
-          >
-            <div
-              className="fit-container fx-centered fx-start-h fx-stretch DM-container"
-              style={{
-                columnGap: 0,
-                width: "min(100%,1200px)",
-              }}
-            >
-              <div
-                style={{
-                  // width: "450px",
-                  flex: "1 1 400px",
-                  border: "1px solid var(--dim-gray)",
+        <div
+          style={{
+            // width: "450px",
+            flex: "1 1 400px",
+            border: "1px solid var(--dim-gray)",
 
-                  overflowY: "scroll",
-                }}
-                className={!mbHide ? "mb-hide-800" : ""}
-              >
-                <div className="box-pad-h-m box-pad-v-m fit-container fx-scattered">
-                  <h4>{t("As2zi6P")}</h4>
-                  <div className="fx-centered">
-                    {!showSearch && (
-                      <div onClick={handleShowSearch}>
-                        <div className="search-24"></div>
-                      </div>
-                    )}
-                    <div onClick={() => setInitConv(true)}>
-                      <div className="env-edit-24"></div>
-                    </div>
-                    <OptionsDropdown
-                      options={[
-                        <div className="pointer" onClick={handleReadAll}>
-                          <p>{t("A0qY0bf")}</p>
-                        </div>,
-                        <div className="fit-container">
-                          <hr
-                            style={{
-                              borderColor: "#555555",
-                              width: "30px",
-                              marginBottom: ".5rem",
-                            }}
-                          />
-                          <p
-                            className="p-medium gray-c"
-                            style={{ marginBottom: ".25rem" }}
-                          >
-                            {t("ATpzz5G")}
-                          </p>
-                          <div className="fit-container">
-                            {filterByTimeTypes.map((type) => {
-                              return (
-                                <div
-                                  className="pointer fit-container fx-scattered"
-                                  onClick={() => handleDMFilter(type.value)}
-                                >
-                                  <span
-                                    className={
-                                      filterByTimeType == type.value
-                                        ? "green-c"
-                                        : ""
-                                    }
-                                  >
-                                    {type.display_name}
-                                  </span>
-                                  {filterByTimeType == type.value && (
-                                    <div className="check-24"></div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>,
-                      ]}
-                    />
-                  </div>
+            overflowY: "scroll",
+          }}
+          className={!mbHide ? "mb-hide-800" : ""}
+        >
+          <div className="box-pad-h-m box-pad-v-m fit-container fx-scattered">
+            <h4>{t("As2zi6P")}</h4>
+            <div className="fx-centered">
+              {!showSearch && (
+                <div onClick={handleShowSearch}>
+                  <div className="search-24"></div>
                 </div>
-                {showSearch && (
-                  <div
-                    style={{
-                      borderTop: "1px solid var(--very-dim-gray)",
-                      borderBottom: "1px solid var(--very-dim-gray)",
-                    }}
-                    className="slide-down fx-scattered box-pad-h-m"
-                  >
-                    <input
-                      type="text"
-                      className="if ifs-full if-no-border"
-                      placeholder={t("AUdNamU")}
-                      value={keyword}
-                      onChange={handleSearch}
-                      autoFocus
+              )}
+              <div onClick={() => setInitConv(true)}>
+                <div className="env-edit-24"></div>
+              </div>
+              <OptionsDropdown
+                options={[
+                  <div className="pointer" onClick={handleReadAll}>
+                    <p>{t("A0qY0bf")}</p>
+                  </div>,
+                  <div className="fit-container">
+                    <hr
+                      style={{
+                        borderColor: "#555555",
+                        width: "30px",
+                        marginBottom: ".5rem",
+                      }}
                     />
-
-                    <div
-                      className="close"
-                      style={{ position: "static" }}
-                      onClick={handleShowSearch}
+                    <p
+                      className="p-medium gray-c"
+                      style={{ marginBottom: ".25rem" }}
                     >
-                      <div></div>
-                    </div>
-                  </div>
-                )}
-
-                {!showSearch && (
-                  <div
-                    className="fx-centered fit-container box-marg-s slide-up"
-                    style={{ columnGap: 0 }}
-                  >
-                    <div
-                      style={{
-                        padding: ".5rem .5rem",
-                        borderBottom: `2px solid ${
-                          contentType == "following"
-                            ? "var(--c1)"
-                            : "var(--dim-gray)"
-                        }`,
-                      }}
-                      onClick={() => handleContentType("following")}
-                      className="pointer fx fx-centered"
-                    >
-                      <span
-                        className={
-                          contentType === "following" ? "c1-c" : "gray-c"
-                        }
-                      >
-                        {t("AdugC5z", { count: msgsCount.followings })}
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        padding: ".5rem .5rem",
-                        borderBottom: `2px solid ${
-                          contentType == "known"
-                            ? "var(--c1)"
-                            : "var(--dim-gray)"
-                        }`,
-                      }}
-                      onClick={() => handleContentType("known")}
-                      className="pointer fx fx-centered"
-                    >
-                      <span
-                        className={contentType === "known" ? "c1-c" : "gray-c"}
-                      >
-                        {t("AkMu1GE", { count: msgsCount.known })}
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        padding: ".5rem .5rem",
-                        borderBottom: `2px solid ${
-                          contentType == "unknown"
-                            ? "var(--c1)"
-                            : "var(--dim-gray)"
-                        }`,
-                      }}
-                      onClick={() => handleContentType("unknown")}
-                      className="pointer fx fx-centered"
-                    >
-                      <span
-                        className={
-                          contentType === "unknown" ? "c1-c" : "gray-c"
-                        }
-                      >
-                        {t("ANAOuTj", { count: msgsCount.unknown })}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {userInboxRelays.length === 0 && (
-                  <div className="fit-container box-pad-h-m box-marg-s">
-                    <div className="fit-container box-pad-h-s box-pad-v-s sc-s-18">
-                      <p className="p-medium">{t("ArApykS")}</p>
-                      <p className="gray-c p-medium">
-                        {t("Alxsg82")}{" "}
-                        <span className="c1-c">
-                          <Link
-                            to={"/settings"}
-                            state={{ relaysTab: 1, tab: "relays" }}
-                          >
-                            {t("ABtsLBp")}
-                          </Link>
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                )}
-                <div
-                  className="fit-container fx-centered fx-wrap"
-                  style={{ rowGap: 0, overflow: "auto" }}
-                >
-                  {!showSearch &&
-                    sortedInbox.map((convo) => {
-                      if (
-                        convo.type === contentType &&
-                        convo.last_message > filterBytime
-                      )
+                      {t("ATpzz5G")}
+                    </p>
+                    <div className="fit-container">
+                      {filterByTimeTypes.map((type) => {
                         return (
                           <div
-                            className="fit-container fx-scattered  box-pad-h option box-pad-v-s pointer slide-up"
-                            key={convo.id}
-                            style={{
-                              backgroundColor:
-                                selectedConvo.id === convo.id
-                                  ? "var(--very-dim-gray)"
-                                  : "",
-                            }}
-                            onClick={() =>
-                              handleSelectedConversation({ ...convo })
-                            }
+                            className="pointer fit-container fx-scattered"
+                            onClick={() => handleDMFilter(type.value)}
                           >
-                            <div className="fx-centered">
-                              <div>
-                                <UserProfilePic
-                                  img={convo.picture}
-                                  size={40}
-                                  user_id={convo.pubkey}
-                                  mainAccountUser={false}
-                                  allowClick={false}
-                                />
-                              </div>
-                              <div>
-                                <p>
-                                  {convo.display_name ||
-                                    convo.name ||
-                                    convo.pubkey.substring(0, 10)}
-                                </p>
-                                <div className="fx-centered fx-start-h">
-                                  {convo.convo[convo.convo.length - 1].peer && (
-                                    <p className="p-medium p-one-line">
-                                      {t("ARrkukw")}
-                                    </p>
-                                  )}
-                                  <p
-                                    className="gray-c p-medium p-one-line"
-                                    style={{ maxWidth: "100px" }}
-                                  >
-                                    {
-                                      convo.convo[convo.convo.length - 1]
-                                        .content
-                                    }
-                                  </p>
-                                  <p className="orange-c p-medium">
-                                    <Date_
-                                      toConvert={
-                                        new Date(convo.last_message * 1000)
-                                      }
-                                    />
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            {!convo.checked && (
-                              <div
-                                style={{
-                                  minWidth: "8px",
-                                  aspectRatio: "1/1",
-                                  backgroundColor: "var(--red-main)",
-                                  borderRadius: "var(--border-r-50)",
-                                }}
-                              ></div>
+                            <span
+                              className={
+                                filterByTimeType == type.value ? "green-c" : ""
+                              }
+                            >
+                              {type.display_name}
+                            </span>
+                            {filterByTimeType == type.value && (
+                              <div className="check-24"></div>
                             )}
                           </div>
                         );
-                    })}
-                  {keyword &&
-                    searchedConvos.map((convo) => {
-                      return (
-                        <div
-                          className="fit-container fx-scattered box-pad-h option box-pad-v-s pointer"
-                          key={convo.id}
-                          onClick={() =>
-                            handleSelectedConversation({ ...convo })
-                          }
-                        >
-                          <div className="fx-centered">
-                            <div>
-                              <UserProfilePic
-                                img={convo.picture}
-                                size={40}
-                                user_id={convo.pubkey}
-                                mainAccountUser={false}
-                                allowClick={false}
-                              />
-                            </div>
-                            <div>
-                              <p>
-                                {convo.display_name ||
-                                  convo.name ||
-                                  convo.pubkey.substring(0, 10)}
-                              </p>
-                              <div className="fx-centered fx-start-h">
-                                {convo.convo[convo.convo.length - 1].peer && (
-                                  <p className="p-medium p-one-line">
-                                    {t("ARrkukw")}
-                                  </p>
-                                )}
-                                <p
-                                  className="gray-c p-medium p-one-line"
-                                  style={{ maxWidth: "100px" }}
-                                >
-                                  {convo.convo[convo.convo.length - 1].content}
-                                </p>
-                                <p className="orange-c p-medium">
-                                  <Date_
-                                    toConvert={
-                                      new Date(convo.last_message * 1000)
-                                    }
-                                  />
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          {!convo.checked && (
-                            <div
-                              style={{
-                                minWidth: "8px",
-                                aspectRatio: "1/1",
-                                backgroundColor: "var(--red-main)",
-                                borderRadius: "var(--border-r-50)",
-                              }}
-                            ></div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  {keyword && !searchedConvos.length && (
-                    <div
-                      style={{ height: "50vh" }}
-                      className="box-pad-h fx-centered fx-col"
-                    >
-                      <h4>{t("A52Tdsw")}</h4>
-                      <p className="gray-c p-centered">{t("As03HYz")}</p>
+                      })}
                     </div>
-                  )}
-                </div>
+                  </div>,
+                ]}
+              />
+            </div>
+          </div>
+          {showSearch && (
+            <div
+              style={{
+                borderTop: "1px solid var(--very-dim-gray)",
+                borderBottom: "1px solid var(--very-dim-gray)",
+              }}
+              className="slide-down fx-scattered box-pad-h-m"
+            >
+              <input
+                type="text"
+                className="if ifs-full if-no-border"
+                placeholder={t("AUdNamU")}
+                value={keyword}
+                onChange={handleSearch}
+                autoFocus
+              />
+
+              <div
+                className="close"
+                style={{ position: "static" }}
+                onClick={handleShowSearch}
+              >
+                <div></div>
+              </div>
+            </div>
+          )}
+
+          {!showSearch && (
+            <div
+              className="fx-centered fit-container box-marg-s slide-up"
+              style={{ columnGap: 0 }}
+            >
+              <div
+                style={{
+                  padding: ".5rem .5rem",
+                  borderBottom: `2px solid ${
+                    contentType == "following" ? "var(--c1)" : "var(--dim-gray)"
+                  }`,
+                }}
+                onClick={() => handleContentType("following")}
+                className="pointer fx fx-centered"
+              >
+                <span
+                  className={contentType === "following" ? "c1-c" : "gray-c"}
+                >
+                  {t("AdugC5z", { count: msgsCount.followings })}
+                </span>
               </div>
               <div
                 style={{
-                  flex: "1 1 600px",
-                  // width: "min(100%, calc(100% - 350px))",
-                  border: "1px solid var(--dim-gray)",
+                  padding: ".5rem .5rem",
+                  borderBottom: `2px solid ${
+                    contentType == "known" ? "var(--c1)" : "var(--dim-gray)"
+                  }`,
                 }}
-                className={mbHide ? "mb-hide-800" : ""}
+                onClick={() => handleContentType("known")}
+                className="pointer fx fx-centered"
               >
-                {isConvoLoading && (
-                  <div
-                    className="fit-container fx-centered"
-                    style={{ height: "100%" }}
-                  >
-                    <span className="loader"></span>
-                  </div>
-                )}
-                {!selectedConvo && !isConvoLoading && (
-                  <PagePlaceholder page={"nostr-DMS"} />
-                )}
-                {selectedConvo && (
-                  <ConversationBox
-                    convo={selectedConvo}
-                    back={() => setMbHide(!mbHide)}
-                  />
-                )}
+                <span className={contentType === "known" ? "c1-c" : "gray-c"}>
+                  {t("AkMu1GE", { count: msgsCount.known })}
+                </span>
+              </div>
+              <div
+                style={{
+                  padding: ".5rem .5rem",
+                  borderBottom: `2px solid ${
+                    contentType == "unknown" ? "var(--c1)" : "var(--dim-gray)"
+                  }`,
+                }}
+                onClick={() => handleContentType("unknown")}
+                className="pointer fx fx-centered"
+              >
+                <span className={contentType === "unknown" ? "c1-c" : "gray-c"}>
+                  {t("ANAOuTj", { count: msgsCount.unknown })}
+                </span>
               </div>
             </div>
-          </main>
+          )}
+          {userInboxRelays.length === 0 && (
+            <div className="fit-container box-pad-h-m box-marg-s">
+              <div className="fit-container box-pad-h-s box-pad-v-s sc-s-18">
+                <p className="p-medium">{t("ArApykS")}</p>
+                <p className="gray-c p-medium">
+                  {t("Alxsg82")}{" "}
+                  <span className="c1-c">
+                    <Link
+                      to={"/settings"}
+                      state={{ relaysTab: 1, tab: "relays" }}
+                    >
+                      {t("ABtsLBp")}
+                    </Link>
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+          <div
+            className="fit-container fx-centered fx-wrap"
+            style={{ rowGap: 0, overflow: "auto" }}
+          >
+            {!showSearch &&
+              sortedInbox.map((convo) => {
+                if (
+                  convo.type === contentType &&
+                  convo.last_message > filterBytime
+                )
+                  return (
+                    <div
+                      className="fit-container fx-scattered  box-pad-h option box-pad-v-s pointer slide-up"
+                      key={convo.id}
+                      style={{
+                        backgroundColor:
+                          selectedConvo.id === convo.id
+                            ? "var(--very-dim-gray)"
+                            : "",
+                      }}
+                      onClick={() => handleSelectedConversation({ ...convo })}
+                    >
+                      <div className="fx-centered">
+                        <div>
+                          <UserProfilePic
+                            img={convo.picture}
+                            size={40}
+                            user_id={convo.pubkey}
+                            mainAccountUser={false}
+                            allowClick={false}
+                          />
+                        </div>
+                        <div>
+                          <p>
+                            {convo.display_name ||
+                              convo.name ||
+                              convo.pubkey.substring(0, 10)}
+                          </p>
+                          <div className="fx-centered fx-start-h">
+                            {convo.convo[convo.convo.length - 1].peer && (
+                              <p className="p-medium p-one-line">
+                                {t("ARrkukw")}
+                              </p>
+                            )}
+                            <p
+                              className="gray-c p-medium p-one-line"
+                              style={{ maxWidth: "100px" }}
+                            >
+                              {convo.convo[convo.convo.length - 1].content}
+                            </p>
+                            <p className="orange-c p-medium">
+                              <Date_
+                                toConvert={new Date(convo.last_message * 1000)}
+                              />
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      {!convo.checked && (
+                        <div
+                          style={{
+                            minWidth: "8px",
+                            aspectRatio: "1/1",
+                            backgroundColor: "var(--red-main)",
+                            borderRadius: "var(--border-r-50)",
+                          }}
+                        ></div>
+                      )}
+                    </div>
+                  );
+              })}
+            {keyword &&
+              searchedConvos.map((convo) => {
+                return (
+                  <div
+                    className="fit-container fx-scattered box-pad-h option box-pad-v-s pointer"
+                    key={convo.id}
+                    onClick={() => handleSelectedConversation({ ...convo })}
+                  >
+                    <div className="fx-centered">
+                      <div>
+                        <UserProfilePic
+                          img={convo.picture}
+                          size={40}
+                          user_id={convo.pubkey}
+                          mainAccountUser={false}
+                          allowClick={false}
+                        />
+                      </div>
+                      <div>
+                        <p>
+                          {convo.display_name ||
+                            convo.name ||
+                            convo.pubkey.substring(0, 10)}
+                        </p>
+                        <div className="fx-centered fx-start-h">
+                          {convo.convo[convo.convo.length - 1].peer && (
+                            <p className="p-medium p-one-line">
+                              {t("ARrkukw")}
+                            </p>
+                          )}
+                          <p
+                            className="gray-c p-medium p-one-line"
+                            style={{ maxWidth: "100px" }}
+                          >
+                            {convo.convo[convo.convo.length - 1].content}
+                          </p>
+                          <p className="orange-c p-medium">
+                            <Date_
+                              toConvert={new Date(convo.last_message * 1000)}
+                            />
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {!convo.checked && (
+                      <div
+                        style={{
+                          minWidth: "8px",
+                          aspectRatio: "1/1",
+                          backgroundColor: "var(--red-main)",
+                          borderRadius: "var(--border-r-50)",
+                        }}
+                      ></div>
+                    )}
+                  </div>
+                );
+              })}
+            {keyword && !searchedConvos.length && (
+              <div
+                style={{ height: "50vh" }}
+                className="box-pad-h fx-centered fx-col"
+              >
+                <h4>{t("A52Tdsw")}</h4>
+                <p className="gray-c p-centered">{t("As03HYz")}</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <div
+          style={{
+            flex: "1 1 600px",
+            // width: "min(100%, calc(100% - 350px))",
+            border: "1px solid var(--dim-gray)",
+          }}
+          className={mbHide ? "mb-hide-800" : ""}
+        >
+          {isConvoLoading && (
+            <div
+              className="fit-container fx-centered"
+              style={{ height: "100%" }}
+            >
+              <span className="loader"></span>
+            </div>
+          )}
+          {!selectedConvo && !isConvoLoading && (
+            <PagePlaceholder page={"nostr-DMS"} />
+          )}
+          {selectedConvo && (
+            <ConversationBox
+              convo={selectedConvo}
+              back={() => setMbHide(!mbHide)}
+            />
+          )}
         </div>
       </div>
     </div>

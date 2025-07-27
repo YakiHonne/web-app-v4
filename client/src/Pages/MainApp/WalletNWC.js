@@ -91,57 +91,50 @@ export default function WalletNWC() {
 
   return (
     <div>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            <div className="fx-centered fit-container fx-start-h fx-start-v ">
-              <div
-                style={{ width: "min(100%, 600px)" }}
-                className="box-pad-h-m box-pad-v"
-              >
-                <div className="fit-container fx-col fx-centered">
-                  <Link
-                    className="fx-centered fx-start-h fit-container"
-                    to={"/wallet"}
-                  >
-                    <div className="round-icon">
-                      <div className="arrow" style={{ rotate: "90deg" }}></div>
-                    </div>
-                  </Link>
-                  <div className="fx-centered fx-col fx-start-h box-pad-v-m">
-                    <h4>{t("AO3Hd2n")}</h4>
-                    <p className="gray-c">{t("Aq8tvve")}</p>
-                  </div>
-                  <input
-                    type="text"
-                    className="if ifs-full"
-                    placeholder="nostr+walletconnect:<pubkey>?relay=<relay>&secret=<secret>"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                  />
-                  <p className="gray-c">
-                    {t("ARihsdt")}{" "}
-                    <a
-                      href="https://nwc.getalby.com"
-                      className="c1-c"
-                      style={{ textDecoration: "underline" }}
-                      target="_blank"
-                    >
-                      {t("ArGP8uD")}
-                    </a>
-                  </p>
-                  <button
-                    className="btn btn-normal btn-full"
-                    onClick={addNWC}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? <LoadingDots /> : t("Azb0lto")}
-                  </button>
-                </div>
+      <div className="fx-centered fit-container fx-start-h fx-start-v ">
+        <div
+          style={{ width: "min(100%, 600px)" }}
+          className="box-pad-h-m box-pad-v"
+        >
+          <div className="fit-container fx-col fx-centered">
+            <Link
+              className="fx-centered fx-start-h fit-container"
+              to={"/wallet"}
+            >
+              <div className="round-icon">
+                <div className="arrow" style={{ rotate: "90deg" }}></div>
               </div>
+            </Link>
+            <div className="fx-centered fx-col fx-start-h box-pad-v-m">
+              <h4>{t("AO3Hd2n")}</h4>
+              <p className="gray-c">{t("Aq8tvve")}</p>
             </div>
-          </main>
+            <input
+              type="text"
+              className="if ifs-full"
+              placeholder="nostr+walletconnect:<pubkey>?relay=<relay>&secret=<secret>"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+            <p className="gray-c">
+              {t("ARihsdt")}{" "}
+              <a
+                href="https://nwc.getalby.com"
+                className="c1-c"
+                style={{ textDecoration: "underline" }}
+                target="_blank"
+              >
+                {t("ArGP8uD")}
+              </a>
+            </p>
+            <button
+              className="btn btn-normal btn-full"
+              onClick={addNWC}
+              disabled={isLoading}
+            >
+              {isLoading ? <LoadingDots /> : t("Azb0lto")}
+            </button>
+          </div>
         </div>
       </div>
     </div>

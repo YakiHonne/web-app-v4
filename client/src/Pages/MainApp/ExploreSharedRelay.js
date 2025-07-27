@@ -104,8 +104,8 @@ export default function ExploreSharedRelay() {
             ...userAppSettings?.settings?.content_sources?.mixed_content,
             relays: {
               index:
-                userAppSettings?.settings?.content_sources?.mixed_content?.relays
-                  ?.index || 0,
+                userAppSettings?.settings?.content_sources?.mixed_content
+                  ?.relays?.index || 0,
               list: [
                 ...(userAppSettings?.settings?.content_sources?.mixed_content
                   ?.relays?.list || []),
@@ -169,115 +169,103 @@ export default function ExploreSharedRelay() {
           content={"Discover media content on nostr"}
         />
       </Helmet>
-
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            <ArrowUp />
+      <ArrowUp />
+      <div
+        className="fit-container fx-centered fx-start-h fx-start-v"
+        style={{ gap: 0 }}
+      >
+        {relay && (
+          <div
+            className={`fit-container fx-centered fx-start-v fx-wrap  fit-container mobile-container`}
+            style={{
+              position: "relative",
+            }}
+          >
             <div
-              className="fit-container fx-centered fx-start-h fx-start-v"
-              style={{ gap: 0 }}
+              className="fit-container sticky fx-centered box-pad-h "
+              style={{
+                padding: "1rem",
+                borderBottom: "1px solid var(--very-dim-gray)",
+              }}
             >
-              {relay && (
-                <div
-                  className={`fit-container fx-centered fx-start-v fx-wrap  fit-container mobile-container`}
-                  style={{
-                    position: "relative",
-                  }}
-                >
-                  <div
-                    className="fit-container sticky fx-centered box-pad-h "
-                    style={{
-                      padding: "1rem",
-                      borderBottom: "1px solid var(--very-dim-gray)",
-                    }}
+              <div className="main-middle fx-scattered">
+                <h4>{relay}</h4>
+                {userKeys && !relaysList.includes(relay) && (
+                  <button
+                    className="fx-centered btn btn-normal btn-small"
+                    onClick={handleUpdateSettings}
                   >
-                    <div className="main-middle fx-scattered">
-                      <h4>{relay}</h4>
-                      {userKeys && !relaysList.includes(relay) && (
-                        <button
-                          className="fx-centered btn btn-normal btn-small"
-                          onClick={handleUpdateSettings}
-                        >
-                          <div className="plus-sign"></div>Add to my list
-                        </button>
-                      )}
-                      {userKeys && relaysList.includes(relay) && (
-                        <div
-                          className="fx-centered btn btn-gst btn-small"
-                          style={{ pointerEvents: "none" }}
-                        >
-                          On my list
-                          <div className="check-24" style={{ margin: 0 }}></div>
-                        </div>
-                      )}
-                    </div>
+                    <div className="plus-sign"></div>Add to my list
+                  </button>
+                )}
+                {userKeys && relaysList.includes(relay) && (
+                  <div
+                    className="fx-centered btn btn-gst btn-small"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    On my list
+                    <div className="check-24" style={{ margin: 0 }}></div>
                   </div>
-
-                  <div
-                    className=" main-middle feed-container"
-                    style={{
-                      overflow: "scroll",
-                      marginBottom: "4rem",
-                      height: "calc(100dvh - 4.375rem)",
-                    }}
-                  >
-                    <ExploreFeed
-                      selectedTab={selectedTab}
-                      selectedCategory={selectedCategory}
-                      selectedFilter={selectedFilter}
-                      isLoading={isLoading}
-                      setIsLoading={setIsLoading}
-                      relay={relay}
-                    />
-                  </div>
-                  {selectedCategory.group !== "mf" && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        pointerEvents: isLoading ? "none" : "auto",
-                        zIndex: 101,
-                      }}
-                      className="fit-container fx-centered box-pad-v"
-                    >
-                      <SelectTabs
-                        selectedTab={selectedTab}
-                        setSelectedTab={setSelectedTab}
-                        tabs={tabs}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-              {!relay && (
-                <div
-                  className="fit-container fx-centered fx-col"
-                  style={{ height: "80vh" }}
-                >
-                  <div
-                    className="yaki-logomark"
-                    style={{
-                      minWidth: "48px",
-                      minHeight: "48px",
-                      opacity: 0.5,
-                    }}
-                  ></div>
-                  <h4>Invalid URL</h4>
-                  <p
-                    className="p-centered gray-c"
-                    style={{ maxWidth: "330px" }}
-                  >
-                    It looks like the shared relay URL is broken or does not
-                    exist
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </main>
-        </div>
+
+            <div
+              className=" main-middle feed-container"
+              style={{
+                overflow: "scroll",
+                marginBottom: "4rem",
+                height: "calc(100dvh - 4.375rem)",
+              }}
+            >
+              <ExploreFeed
+                selectedTab={selectedTab}
+                selectedCategory={selectedCategory}
+                selectedFilter={selectedFilter}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                relay={relay}
+              />
+            </div>
+            {selectedCategory.group !== "mf" && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  pointerEvents: isLoading ? "none" : "auto",
+                  zIndex: 101,
+                }}
+                className="fit-container fx-centered box-pad-v"
+              >
+                <SelectTabs
+                  selectedTab={selectedTab}
+                  setSelectedTab={setSelectedTab}
+                  tabs={tabs}
+                />
+              </div>
+            )}
+          </div>
+        )}
+        {!relay && (
+          <div
+            className="fit-container fx-centered fx-col"
+            style={{ height: "80vh" }}
+          >
+            <div
+              className="yaki-logomark"
+              style={{
+                minWidth: "48px",
+                minHeight: "48px",
+                opacity: 0.5,
+              }}
+            ></div>
+            <h4>Invalid URL</h4>
+            <p className="p-centered gray-c" style={{ maxWidth: "330px" }}>
+              It looks like the shared relay URL is broken or does not exist
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

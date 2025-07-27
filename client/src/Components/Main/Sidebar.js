@@ -37,10 +37,11 @@ import { setToast } from "../../Store/Slides/Publishers";
 import { NDKUser } from "@nostr-dev-kit/ndk";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { nip19 } from "nostr-tools";
+import { useLocation } from "react-router-dom";
 
 export default function Sidebar() {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const {pathname} = useLocation()
   const userMetadata = useSelector((state) => state.userMetadata);
   const userKeys = useSelector((state) => state.userKeys);
   const userChatrooms = useSelector((state) => state.userChatrooms);
@@ -71,7 +72,7 @@ export default function Sidebar() {
     return userChatrooms.find((chatroom) => !chatroom.checked);
   }, [userChatrooms]);
   const isPage = (url) => {
-    if (url === window.location.pathname) return true;
+    if (url === pathname) return true;
     return false;
   };
 

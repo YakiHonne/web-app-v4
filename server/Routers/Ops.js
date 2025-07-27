@@ -152,7 +152,7 @@ const UserLevels = require("../Models/UserLevels");
 //   },
 //   "basic-widgets": {
 //     title: "Basic widgets",
-//     content: `# Basic widgets 
+//     content: `# Basic widgets
 
 // This guide shows how to build dynamic Nostr smart widgets using the \`smart-widget-builder\` package.
 
@@ -184,7 +184,7 @@ const UserLevels = require("../Models/UserLevels");
 
 //     // Create welcome image and buttons
 //     let SWImage = new Image("https://example.com/weather-widget-welcome.png");
-    
+
 //     // Button that posts to the /weather endpoint
 //     let SWButton = new Button(
 //       1,
@@ -229,14 +229,14 @@ const UserLevels = require("../Models/UserLevels");
 //   try {
 //     // Extract parameters from request
 //     const { input, pubkey, aTag } = req.body;
-    
+
 //     // Use input from previous widget or default
 //     const location = input || "New York";
-    
+
 //     // Log user information (optional)
 //     console.log(\`Request from user: \$\{pubkey\}\`);
 //     console.log(\`Widget aTag: \$\{aTag\}\`);
-    
+
 //     // Initialize Smart Widget
 //     let SMART_WIDGET = new SW();
 
@@ -312,7 +312,7 @@ const UserLevels = require("../Models/UserLevels");
 //     <div style="width: 800px; min-height: 600px; background-color: #2c3e50;">
 //         <div style="width: 100%; min-height: 600px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; padding: 3rem">
 //             <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 120%; height: 120%; filter: blur(6px); background-size: cover; overflow: hidden; background-position: center; background-image: url(\$\{data.icon\}); z-index: 0;"></div>
-           
+
 //             <div style="width: 100%; position: relative; z-index: 2; display: flex; justify-content: center; flex-direction: column; gap: 20px; align-items: center; padding: 40px; border-radius: 30px; background-color: rgba(255, 255, 255, 0.9)">
 //                 <h1 style="font-size: 48px; text-align: center; margin: 0; color: #2c3e50">\$\{data.location\}</h1>
 //                 <h2 style="font-size: 72px; text-align: center; margin: 0; color: #3498db">\$\{data.temperature\}°C</h2>
@@ -457,7 +457,6 @@ const UserLevels = require("../Models/UserLevels");
 // └── package.json
 // \`\`\`
 
-
 // ## Integration with Host App
 
 // The \`smart-widget-handler\` package provides a bridge for communication between your mini app and the host application.
@@ -519,19 +518,19 @@ const UserLevels = require("../Models/UserLevels");
 
 // function ActionApp() {
 //   const [userMetadata, setUserMetadata] = useState(null);
-  
+
 //   useEffect(() => {
 //     SWhandler.client.ready();
-    
+
 //     const listener = SWhandler.client.listen((event) => {
 //       if (event.kind === "user-metadata") {
 //         setUserMetadata(event.data?.user);
 //       }
 //     });
-    
+
 //     return () => listener?.close();
 //   }, []);
-  
+
 //   return (
 //     <div>
 //       {userMetadata ? (
@@ -559,27 +558,27 @@ const UserLevels = require("../Models/UserLevels");
 // function ToolApp() {
 //   const [userMetadata, setUserMetadata] = useState(null);
 //   const [hostOrigin, setHostOrigin] = useState(null);
-  
+
 //   useEffect(() => {
 //     SWhandler.client.ready();
-    
+
 //     const listener = SWhandler.client.listen((event) => {
 //       if (event.kind === "user-metadata") {
 //         setUserMetadata(event.data?.user);
 //         setHostOrigin(event.data?.host_origin);
 //       }
 //     });
-    
+
 //     return () => listener?.close();
 //   }, []);
-  
+
 //   const sendDataToHost = (data) => {
 //     if (hostOrigin) {
 //       // Send context data back to the host app
 //       SWhandler.client.sendContext(data, hostOrigin);
 //     }
 //   };
-  
+
 //   return (
 //     <div>
 //       {userMetadata ? (
@@ -615,7 +614,7 @@ const UserLevels = require("../Models/UserLevels");
 //     content: "Hello from my mini app!",
 //     tags: [["t", "miniapp"], ["t", "test"]]
 //   };
-  
+
 //   signEvent(eventTemplate);
 // };
 // \`\`\`
@@ -680,7 +679,6 @@ const UserLevels = require("../Models/UserLevels");
 // - Content recommendation engines
 // - Information lookup services
 
-
 // ## Quick tutorials
 
 // <iframe style="aspect-ratio:16/9; width:100%; border-radius:10px" src="https://www.youtube.com/embed/SS-5N-LVCPM" title="Dawn of Persia - Rhythmic Ancient Persian Inspired Ambient Music" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
@@ -717,7 +715,7 @@ const UserLevels = require("../Models/UserLevels");
 
 // The package supports three types of widgets:
 // - **Basic**: Standard widgets with multiple components
-// - **Action**: Simplified widgets for specific actions 
+// - **Action**: Simplified widgets for specific actions
 // - **Tool**: Tool-type widgets for utility functions
 
 // ## Usage
@@ -725,26 +723,26 @@ const UserLevels = require("../Models/UserLevels");
 // ### Import
 
 // \`\`\`javascript
-// const { 
-//   SW, 
-//   SWComponentsSet, 
-//   Image, 
-//   Icon, 
-//   Input, 
-//   Button, 
-//   DEFAULT_RELAYS 
+// const {
+//   SW,
+//   SWComponentsSet,
+//   Image,
+//   Icon,
+//   Input,
+//   Button,
+//   DEFAULT_RELAYS
 // } = require('smart-widget-builder');
 // \`\`\`
 
 // ## Basic Example
 
 // \`\`\`javascript
-// const { 
-//   SW, 
-//   SWComponentsSet, 
-//   Image, 
-//   Button, 
-//   Input 
+// const {
+//   SW,
+//   SWComponentsSet,
+//   Image,
+//   Button,
+//   Input
 // } = require('smart-widget-builder');
 
 // // Create a widget and publish it
@@ -756,22 +754,22 @@ const UserLevels = require("../Models/UserLevels");
 //       undefined, // use default relays
 //       process.env.NOSTR_SECRET_KEY // your secret key, optional
 //     );
-    
+
 //     // Initialize connection to relays
 //     await smartWidget.init();
-    
+
 //     // Create widget components
 //     const widgetImage = new Image('https://example.com/my-widget-image.jpg');
 //     const widgetInput = new Input('Enter your name');
 //     const submitButton = new Button(1, 'Submit', 'post', 'https://api.example.com/submit');
 //     const profileButton = new Button(2, 'View Profile', 'nostr', 'nostr:npub1...');
-    
+
 //     // Combine components into a set
 //     const componentsSet = new SWComponentsSet(
 //       [widgetImage, widgetInput, submitButton, profileButton],
 //       smartWidget
 //     );
-    
+
 //     // Publish the widget
 //     const result = await smartWidget.publish(
 //       componentsSet,
@@ -779,12 +777,12 @@ const UserLevels = require("../Models/UserLevels");
 //       'unique-identifier-123', // optional
 //       5000 // timeout in ms
 //     );
-    
+
 //     // Get the naddr (Nostr address) for sharing
 //     console.log('Widget created successfully!');
 //     console.log('Nostr Address:', result.naddr);
 //     console.log('Event ID:', result.event.id);
-    
+
 //     return result;
 //   } catch (err) {
 //     console.error('Error creating widget:', err.message);
@@ -948,7 +946,7 @@ const UserLevels = require("../Models/UserLevels");
 
 // ### Action/Tool Widget
 // - Required: 1 Image component
-// - Required: 1 Icon component 
+// - Required: 1 Icon component
 // - Special case: 1 Button of type 'app'
 
 // ## API Reference
@@ -983,7 +981,6 @@ const UserLevels = require("../Models/UserLevels");
 // | \`zap\` | Lightning payment | Email address or lnurl/lnbc |
 // | \`post\` | Form submission | http:// or https:// endpoint |
 // | \`app\` | App integration | http:// or https:// URL |
-
 
 // ## Configuration
 // Create a .env file for the secret key, this will be used as a fallback if the SW() constructor was not provided with one to sign and publish event
@@ -1059,8 +1056,8 @@ const UserLevels = require("../Models/UserLevels");
 //   return (
 //     <div className="widget-container">
 //       <h2>Smart Widget Preview</h2>
-      
-//       <Widget 
+
+//       <Widget
 //         event={widgetEvent}
 //         onNostrButton={handleNostrButton}
 //         onZapButton={handleZapButton}
@@ -1180,7 +1177,7 @@ const UserLevels = require("../Models/UserLevels");
 //   return newWidgetEvent;
 // }
 
-// <Widget 
+// <Widget
 //   event={widgetEvent}
 //   onNextWidget={handleNextWidget}
 //   userHexPubkey="user_pubkey_for_authentication"
@@ -1197,7 +1194,7 @@ const UserLevels = require("../Models/UserLevels");
 //   // Handle the action, such as opening a mini app or modal
 // }
 
-// <Widget 
+// <Widget
 //   event={actionWidgetEvent}
 //   onActionWidget={handleActionWidget}
 // />
@@ -1208,7 +1205,7 @@ const UserLevels = require("../Models/UserLevels");
 // You can customize the appearance of widgets using the provided props:
 
 // \`\`\`jsx
-// <Widget 
+// <Widget
 //   event={widgetEvent}
 //   buttonStyleClassName="my-custom-button-class"
 //   inputStyleClassName="my-custom-input-class"
@@ -1276,9 +1273,9 @@ const UserLevels = require("../Models/UserLevels");
 //   return (
 //     <div className="widget-demo">
 //       <h1>Smart Widget Demo</h1>
-      
+
 //       <div className="widget-wrapper">
-//         <Widget 
+//         <Widget
 //           event={currentWidget}
 //           onNextWidget={handleNextWidget}
 //           onNostrButton={handleNostrButton}
@@ -1361,11 +1358,11 @@ const UserLevels = require("../Models/UserLevels");
 //   useEffect(() => {
 //     // Notify parent application that this widget is ready
 //     SWHandler.client.ready();
-    
+
 //     // Or specify a parent origin
 //     // SWHandler.client.ready('https://parent-domain.com');
 //   }, []);
-  
+
 //   return <div>Widget content</div>;
 // }
 // \`\`\`
@@ -1380,25 +1377,25 @@ const UserLevels = require("../Models/UserLevels");
 
 // function WidgetApp() {
 //   const [user, setUser] = useState(null);
-  
+
 //   useEffect(() => {
 //     // Notify parent we're ready
 //     SWHandler.client.ready();
-    
+
 //     // Set up listener for parent messages
 //     const listener = SWHandler.client.listen((data) => {
 //       console.log('Received message from parent:', data);
-      
+
 //       // Handle user metadata
 //       if (data.kind === 'user-metadata') {
 //         setUser(data.data.user);
 //       }
 //     });
-    
+
 //     // Clean up listener on component unmount
 //     return () => listener.close();
 //   }, []);
-  
+
 //   return (
 //     <div>
 //       {user ? (
@@ -1432,7 +1429,7 @@ const UserLevels = require("../Models/UserLevels");
 //       'https://parent-domain.com' // parent origin
 //     );
 //   };
-  
+
 //   return (
 //     <button onClick={handleSignRequest}>
 //       Sign Note
@@ -1451,10 +1448,10 @@ const UserLevels = require("../Models/UserLevels");
 
 // function PublishForm() {
 //   const [content, setContent] = useState('');
-  
+
 //   const handleSubmit = (e) => {
 //     e.preventDefault();
-    
+
 //     const eventDraft = {
 //       content,
 //       tags: [['t', 'widget-post']],
@@ -1466,10 +1463,10 @@ const UserLevels = require("../Models/UserLevels");
 //       'https://parent-domain.com' // parent origin
 //     );
 //   };
-  
+
 //   return (
 //     <form onSubmit={handleSubmit}>
-//       <textarea 
+//       <textarea
 //         value={content}
 //         onChange={(e) => setContent(e.target.value)}
 //         placeholder="What's on your mind?"
@@ -1491,14 +1488,14 @@ const UserLevels = require("../Models/UserLevels");
 // function CustomActionButton() {
 //   const sendCustomData = () => {
 //     SWHandler.client.sendContext(
-//       JSON.stringify({ 
-//         customAction: 'doSomething', 
-//         data: { value: 123 } 
+//       JSON.stringify({
+//         customAction: 'doSomething',
+//         data: { value: 123 }
 //       }),
 //       'https://parent-domain.com' // parent origin
 //     );
 //   };
-  
+
 //   return (
 //     <button onClick={sendCustomData}>
 //       Trigger Custom Action
@@ -1521,25 +1518,25 @@ const UserLevels = require("../Models/UserLevels");
 
 // function WidgetContainer() {
 //   const iframeRef = useRef(null);
-  
+
 //   useEffect(() => {
 //     const listener = SWHandler.host.listen((data) => {
 //       console.log('Received message from iframe:', data);
-      
+
 //       if (data.kind === 'sign-event') {
 //         // Handle sign request
 //         // ...
 //       }
 //     });
-    
+
 //     return () => listener.close();
 //   }, []);
-  
+
 //   return (
 //     <div className="widget-container">
-//       <iframe 
+//       <iframe
 //         ref={iframeRef}
-//         src="https://trusted-widget.com" 
+//         src="https://trusted-widget.com"
 //         title="Nostr Widget"
 //       />
 //     </div>
@@ -1557,7 +1554,7 @@ const UserLevels = require("../Models/UserLevels");
 
 // function WidgetContainer({ userProfile }) {
 //   const iframeRef = useRef(null);
-  
+
 //   useEffect(() => {
 //     // Wait for iframe to load
 //     const handleIframeLoad = () => {
@@ -1568,18 +1565,18 @@ const UserLevels = require("../Models/UserLevels");
 //         iframeRef.current // iframe element reference
 //       );
 //     };
-    
+
 //     const iframe = iframeRef.current;
 //     if (iframe) {
 //       iframe.addEventListener('load', handleIframeLoad);
 //       return () => iframe.removeEventListener('load', handleIframeLoad);
 //     }
 //   }, [userProfile]);
-  
+
 //   return (
-//     <iframe 
+//     <iframe
 //       ref={iframeRef}
-//       src="https://trusted-widget.com" 
+//       src="https://trusted-widget.com"
 //       title="Nostr Widget"
 //     />
 //   );
@@ -1589,7 +1586,7 @@ const UserLevels = require("../Models/UserLevels");
 // function App() {
 //   const userProfile = {
 //     pubkey: '00000000000000000000000000000000000000000000000000000000000000000',
-//     display_name: 'User', 
+//     display_name: 'User',
 //     name: 'username',
 //     picture: 'https://example.com/avatar.jpg',
 //     banner: 'https://example.com/banner.jpg',
@@ -1598,7 +1595,7 @@ const UserLevels = require("../Models/UserLevels");
 //     lud06: 'lightning:address',
 //     website: 'https://example.com'
 //   };
-  
+
 //   return (
 //     <WidgetContainer userProfile={userProfile} />
 //   );
@@ -1615,7 +1612,7 @@ const UserLevels = require("../Models/UserLevels");
 
 // function WidgetWithEventHandling() {
 //   const iframeRef = useRef(null);
-  
+
 //   const sendSignedEvent = () => {
 //     const nostrEvent = {
 //       pubkey: '00000000000000000000000000000000000000000000000000000000000000000',
@@ -1626,7 +1623,7 @@ const UserLevels = require("../Models/UserLevels");
 //       sig: 'signature',
 //       kind: 1
 //     };
-    
+
 //     SWHandler.host.sendEvent(
 //       nostrEvent,
 //       'success', // or 'error'
@@ -1634,12 +1631,12 @@ const UserLevels = require("../Models/UserLevels");
 //       iframeRef.current // iframe element reference
 //     );
 //   };
-  
+
 //   return (
 //     <div>
-//       <iframe 
+//       <iframe
 //         ref={iframeRef}
-//         src="https://trusted-widget.com" 
+//         src="https://trusted-widget.com"
 //         title="Nostr Widget"
 //       />
 //       <button onClick={sendSignedEvent}>
@@ -1660,7 +1657,7 @@ const UserLevels = require("../Models/UserLevels");
 
 // function WidgetWithErrorHandling() {
 //   const iframeRef = useRef(null);
-  
+
 //   const sendError = () => {
 //     SWHandler.host.sendError(
 //       'An error occurred while processing your request',
@@ -1668,12 +1665,12 @@ const UserLevels = require("../Models/UserLevels");
 //       iframeRef.current // iframe element reference
 //     );
 //   };
-  
+
 //   return (
 //     <div>
-//       <iframe 
+//       <iframe
 //         ref={iframeRef}
-//         src="https://trusted-widget.com" 
+//         src="https://trusted-widget.com"
 //         title="Nostr Widget"
 //       />
 //       <button onClick={sendError}>
@@ -1696,15 +1693,15 @@ const UserLevels = require("../Models/UserLevels");
 //   const [user, setUser] = useState(null);
 //   const [signedEvents, setSignedEvents] = useState([]);
 //   const [content, setContent] = useState('');
-  
+
 //   useEffect(() => {
 //     // Notify parent we're ready
 //     SWHandler.client.ready();
-    
+
 //     // Set up listener for parent messages
 //     const listener = SWHandler.client.listen((data) => {
 //       console.log('Received message from parent:', data);
-      
+
 //       if (data.kind === 'user-metadata') {
 //         setUser(data.data.user);
 //       } else if (data.kind === 'nostr-event' && data.data.status === 'success') {
@@ -1712,14 +1709,14 @@ const UserLevels = require("../Models/UserLevels");
 //         setSignedEvents(prev => [...prev, data.data.event]);
 //       }
 //     });
-    
+
 //     // Clean up on unmount
 //     return () => listener.close();
 //   }, []);
-  
+
 //   const handlePublish = () => {
 //     if (!content.trim()) return;
-    
+
 //     SWHandler.client.requestEventPublish(
 //       {
 //         content,
@@ -1728,24 +1725,24 @@ const UserLevels = require("../Models/UserLevels");
 //       },
 //       window.location.ancestorOrigins[0]
 //     );
-    
+
 //     // Clear the input
 //     setContent('');
 //   };
-  
+
 //   if (!user) {
 //     return <div>Loading user data...</div>;
 //   }
-  
+
 //   return (
 //     <div className="widget-container">
 //       <div className="user-info">
 //         <img src={user.picture} alt={user.name} width="50" height="50" />
 //         <h2>{user.display_name || user.name}</h2>
 //       </div>
-      
+
 //       <div className="publish-form">
-//         <textarea 
+//         <textarea
 //           value={content}
 //           onChange={(e) => setContent(e.target.value)}
 //           placeholder="What's on your mind?"
@@ -1753,7 +1750,7 @@ const UserLevels = require("../Models/UserLevels");
 //         />
 //         <button onClick={handlePublish}>Publish Note</button>
 //       </div>
-      
+
 //       {signedEvents.length > 0 && (
 //         <div className="events-list">
 //           <h3>Your Notes</h3>
@@ -1783,7 +1780,7 @@ const UserLevels = require("../Models/UserLevels");
 // function WidgetHostApp() {
 //   const iframeRef = useRef(null);
 //   const [widgetReady, setWidgetReady] = useState(false);
-  
+
 //   // User profile data
 //   const userProfile = {
 //     pubkey: '00000000000000000000000000000000000000000000000000000000000000000',
@@ -1796,15 +1793,15 @@ const UserLevels = require("../Models/UserLevels");
 //     lud06: 'lightning:address',
 //     website: 'https://example.com'
 //   };
-  
+
 //   useEffect(() => {
 //     // Listen for messages from the widget
 //     const listener = SWHandler.host.listen((data) => {
 //       console.log('Message from widget:', data);
-      
+
 //       if (data.kind === 'app-loaded') {
 //         setWidgetReady(true);
-        
+
 //         // Send user data to the widget
 //         SWHandler.host.sendContext(
 //           userProfile,
@@ -1815,7 +1812,7 @@ const UserLevels = require("../Models/UserLevels");
 //       } else if (data.kind === 'sign-publish') {
 //         // Handle sign and publish request
 //         const eventToSign = data.data;
-        
+
 //         // After signing the event (typically with a Nostr signer)
 //         const signedEvent = {
 //           ...eventToSign,
@@ -1824,7 +1821,7 @@ const UserLevels = require("../Models/UserLevels");
 //           id: 'calculated_id', // Would be calculated from event data
 //           sig: 'generated_signature' // Would be generated from private key
 //         };
-        
+
 //         // Send signed event back to iframe
 //         SWHandler.host.sendEvent(
 //           signedEvent,
@@ -1832,31 +1829,31 @@ const UserLevels = require("../Models/UserLevels");
 //           'https://trusted-widget.com',
 //           iframeRef.current
 //         );
-        
+
 //         // In a real app, you would then publish to relays
 //         console.log('Publishing event to relays:', signedEvent);
 //       }
 //     });
-    
+
 //     return () => listener.close();
 //   }, []);
-  
+
 //   return (
 //     <div className="app-container">
 //       <h1>Host Application</h1>
-      
+
 //       <div className="widget-wrapper">
 //         <h2>Embedded Widget</h2>
-//         <iframe 
+//         <iframe
 //           ref={iframeRef}
-//           src="https://trusted-widget.com" 
+//           src="https://trusted-widget.com"
 //           title="Nostr Widget"
 //           width="100%"
 //           height="500px"
 //           style={{ border: '1px solid #ccc', borderRadius: '8px' }}
 //         />
 //       </div>
-      
+
 //       <div className="widget-status">
 //         Widget Status: {widgetReady ? 'Ready' : 'Loading...'}
 //       </div>
@@ -2416,6 +2413,15 @@ router.post("/api/v1/translate", auth_data, async (req, res) => {
     }
     if (service.service === "nw") {
       let translatedContent = await nwTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+    if (service.service.startsWith("custom-")) {
+      let translatedContent = await customTranslate(
         raw,
         service,
         lang,
@@ -3090,6 +3096,45 @@ const nwTranslate = async (text, service, lang, specialContent) => {
 
     let apikey = service.proApikey;
     if (!apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        format: "text",
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent, lang),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+
+const customTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.free || service.pro;
+    let apikey = service.apiKey;
+    if (!path) {
       return {
         status: 400,
         res: "",

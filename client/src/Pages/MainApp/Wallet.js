@@ -408,350 +408,475 @@ export default function Wallet() {
           <meta property="twitter:title" content="Manage your wallet" />
           <meta property="twitter:description" content="Manage your wallet" />
         </Helmet>
-        <div className="fit-container fx-centered">
-          <div className="main-container">
-            <Sidebar />
-            <main className="main-page-nostr-container">
-              <ArrowUp />
-              <div className="fx-centered fit-container  fx-start-v">
-                <div className="box-pad-h-m main-middle">
-                  {!(userKeys.ext || userKeys.sec || userKeys.bunker) && (
-                    <PagePlaceholder page={"nostr-wallet"} />
-                  )}
-                  {(userKeys.ext || userKeys.sec || userKeys.bunker) &&
-                    wallets.length === 0 && (
-                      <PagePlaceholder
-                        page={"nostr-add-wallet"}
-                        onClick={handleAddWallet}
-                      />
-                    )}
-                  {(userKeys.ext || userKeys.sec || userKeys.bunker) &&
-                    wallets.length > 0 && (
-                      <div>
-                        <div
-                          className="fit-container box-pad-v-m fx-scattered"
-                          style={{ position: "relative", zIndex: 100 }}
-                        >
-                          <div>
-                            <h4>{t("ARXDO1q")}</h4>
+        <ArrowUp />
+        <div className="fx-centered fit-container  fx-start-v">
+          <div className="box-pad-h-m main-middle">
+            {!(userKeys.ext || userKeys.sec || userKeys.bunker) && (
+              <PagePlaceholder page={"nostr-wallet"} />
+            )}
+            {(userKeys.ext || userKeys.sec || userKeys.bunker) &&
+              wallets.length === 0 && (
+                <PagePlaceholder
+                  page={"nostr-add-wallet"}
+                  onClick={handleAddWallet}
+                />
+              )}
+            {(userKeys.ext || userKeys.sec || userKeys.bunker) &&
+              wallets.length > 0 && (
+                <div>
+                  <div
+                    className="fit-container box-pad-v-m fx-scattered"
+                    style={{ position: "relative", zIndex: 100 }}
+                  >
+                    <div>
+                      <h4>{t("ARXDO1q")}</h4>
+                    </div>
+                    <div className="fx-centered">
+                      <div
+                        className="round-icon round-icon-small round-icon-tooltip"
+                        data-tooltip={t("A8fEwNq")}
+                        onClick={() => setShowAddWallet(true)}
+                      >
+                        <div className="plus-sign"></div>
+                      </div>
+                      <div style={{ position: "relative" }} ref={walletListRef}>
+                        {selectedWallet && (
+                          <div
+                            className="fit-container fx-scattered if option pointer"
+                            style={{
+                              height: "var(--40)",
+                              padding: "1rem",
+                            }}
+                            onClick={() => setShowWalletList(!showWalletsList)}
+                          >
+                            <p>{selectedWallet.entitle}</p>
+                            <div className="arrow-12"></div>
                           </div>
-                          <div className="fx-centered">
-                            <div
-                              className="round-icon round-icon-small round-icon-tooltip"
-                              data-tooltip={t("A8fEwNq")}
-                              onClick={() => setShowAddWallet(true)}
-                            >
-                              <div className="plus-sign"></div>
-                            </div>
-                            <div
-                              style={{ position: "relative" }}
-                              ref={walletListRef}
-                            >
-                              {selectedWallet && (
-                                <div
-                                  className="fit-container fx-scattered if option pointer"
-                                  style={{
-                                    height: "var(--40)",
-                                    padding: "1rem",
-                                  }}
-                                  onClick={() =>
-                                    setShowWalletList(!showWalletsList)
-                                  }
-                                >
-                                  <p>{selectedWallet.entitle}</p>
-                                  <div className="arrow-12"></div>
-                                </div>
-                              )}
-                              {showWalletsList && (
-                                <div
-                                  className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v drop-down"
-                                  style={{
-                                    width: "400px",
-                                    backgroundColor: "var(--c1-side)",
-                                    position: "absolute",
+                        )}
+                        {showWalletsList && (
+                          <div
+                            className="fx-centered fx-col sc-s-18  box-pad-v-s fx-start-v drop-down"
+                            style={{
+                              width: "400px",
+                              backgroundColor: "var(--c1-side)",
+                              position: "absolute",
 
-                                    top: "calc(100% + 5px)",
-                                    rowGap: 0,
+                              top: "calc(100% + 5px)",
+                              rowGap: 0,
+                              overflow: "visible",
+                            }}
+                          >
+                            <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
+                              {t("AnXYtQy")}
+                            </p>
+                            {wallets.map((wallet) => {
+                              let isLinked = checkIsLinked(wallet.entitle);
+                              return (
+                                <div
+                                  key={wallet.id}
+                                  className="option-no-scale fit-container fx-scattered sc-s-18 pointer box-pad-h-m box-pad-v-s"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectWallet(wallet.id);
+                                  }}
+                                  style={{
+                                    border: "none",
                                     overflow: "visible",
                                   }}
                                 >
-                                  <p className="p-medium gray-c box-pad-h-m box-pad-v-s">
-                                    {t("AnXYtQy")}
-                                  </p>
-                                  {wallets.map((wallet) => {
-                                    let isLinked = checkIsLinked(
-                                      wallet.entitle
-                                    );
-                                    return (
+                                  <div className="fx-centered">
+                                    {wallet.active && (
                                       <div
-                                        key={wallet.id}
-                                        className="option-no-scale fit-container fx-scattered sc-s-18 pointer box-pad-h-m box-pad-v-s"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleSelectWallet(wallet.id);
-                                        }}
                                         style={{
-                                          border: "none",
-                                          overflow: "visible",
+                                          minWidth: "8px",
+                                          aspectRatio: "1/1",
+                                          backgroundColor: "var(--green-main)",
+                                          borderRadius: "var(--border-r-50)",
+                                        }}
+                                      ></div>
+                                    )}
+                                    <p
+                                      className={wallet.active ? "green-c" : ""}
+                                    >
+                                      {wallet.entitle}
+                                    </p>
+                                    {isLinked && (
+                                      <div
+                                        className="round-icon-tooltip"
+                                        data-tooltip={t("ANExIY1")}
+                                      >
+                                        <div className="sticker sticker-small sticker-green-pale">
+                                          {t("AqlBPla")}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {wallet.kind !== 1 && (
+                                    <OptionsDropdown
+                                      options={[
+                                        !isLinked && (
+                                          <div
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectWalletToLink(
+                                                wallet.entitle
+                                              );
+                                            }}
+                                          >
+                                            {t("AmQVpu4")}
+                                          </div>
+                                        ),
+                                        wallet.entitle.includes("@") && (
+                                          <div
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              copyKey(
+                                                t("ALR84Tq"),
+                                                wallet.entitle
+                                              );
+                                            }}
+                                          >
+                                            {t("ApO1nbv")}
+                                          </div>
+                                        ),
+                                        wallet.kind === 3 && (
+                                          <div
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              copyKey(
+                                                t("A6Pj02S"),
+                                                wallet.data
+                                              );
+                                            }}
+                                          >
+                                            {t("A6ntZLW")}
+                                          </div>
+                                        ),
+                                        <div
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            exportWallet(
+                                              wallet.data,
+                                              wallet.entitle
+                                            );
+                                          }}
+                                        >
+                                          {t("A4A5psW")}
+                                        </div>,
+                                        <div
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowDeletionPopup(wallet);
+                                          }}
+                                        >
+                                          <span className="red-c">
+                                            {t("AawdN9R")}
+                                          </span>
+                                        </div>,
+                                      ]}
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="fx-scattered box-pad-h fit-container fx-col fx-wrap"
+                    style={{
+                      position: "relative",
+                      padding: "1rem",
+                    }}
+                  >
+                    {!isLoading && (
+                      <div className="fx-centered fx-col box-pad-v">
+                        <h5>{t("AbcY4ef")}</h5>
+                        <div className="fx-centered">
+                          <h2 className="orange-c">{userBalance}</h2>
+                          <p className="gray-c">Sats</p>
+                        </div>
+                        <SatsToUSD sats={userBalance} />
+                        {selectedWallet.kind !== 1 &&
+                          selectedWallet.entitle.includes("@") && (
+                            <div
+                              className="btn btn-gray btn-small fx-centered"
+                              onClick={() =>
+                                selectedWallet.entitle.includes("@")
+                                  ? copyKey(
+                                      t("ALR84Tq"),
+                                      selectedWallet.entitle
+                                    )
+                                  : walletWarning()
+                              }
+                            >
+                              {selectedWallet.entitle}
+                              <div className="copy"></div>
+                            </div>
+                          )}
+                      </div>
+                    )}
+                    {!isLoading &&
+                      !(
+                        profileHasWallet.hasWallet &&
+                        profileHasWallet.isWalletLinked
+                      ) && (
+                        <div className="box-pad-h box-pad-v fit-container sc-s-18 fx-centered fx-centered fx-col gray-c p-centered">
+                          {!profileHasWallet.hasWallet && <>{t("AAPZe91")}</>}
+                          {profileHasWallet.hasWallet &&
+                            !profileHasWallet.isWalletLinked && (
+                              <>{t("AHKiPjO")}</>
+                            )}{" "}
+                          {t("AHTCsEO")}
+                        </div>
+                      )}
+                    {isLoading && (
+                      <div
+                        className="fx-centered fx-col box-pad-v"
+                        style={{ height: "150px" }}
+                      >
+                        <LoadingDots />
+                      </div>
+                    )}
+                    <div className="fx-centered fit-container">
+                      <button
+                        style={{ height: "70px", gap: 0 }}
+                        className={
+                          selectedWallet
+                            ? "btn btn-gray fx fx-centered fx-col"
+                            : "btn btn-disabled fx fx-centered fx-col"
+                        }
+                        onClick={() =>
+                          selectedWallet ? setOps("receive") : null
+                        }
+                        disabled={selectedWallet ? false : true}
+                      >
+                        <span className="p-big">&#8595;</span>
+                        <span>{t("A8SflFr")}</span>
+                      </button>
+                      <button
+                        style={{ height: "70px", gap: 0 }}
+                        className={
+                          selectedWallet
+                            ? "btn btn-orange  fx fx-centered fx-col"
+                            : "btn btn-disabled fx fx-centered fx-col"
+                        }
+                        onClick={() => (selectedWallet ? setOps("send") : null)}
+                        disabled={selectedWallet ? false : true}
+                      >
+                        <span className="p-big">&#8593;</span>
+                        <span>{t("A14LwWS")}</span>
+                      </button>
+                    </div>
+                  </div>
+                  {ops === "send" && (
+                    <SendPayment
+                      exit={() => setOps("")}
+                      wallets={wallets}
+                      selectedWallet={selectedWallet}
+                      setWallets={setWallets}
+                      refreshTransactions={() => setTimestamp(Date.now())}
+                    />
+                  )}
+                  {ops === "receive" && (
+                    <ReceivePayment
+                      exit={() => setOps("")}
+                      wallets={wallets}
+                      selectedWallet={selectedWallet}
+                      setWallets={setWallets}
+                    />
+                  )}
+                  {isLoading && (
+                    <div
+                      className="fit-container fx-centered"
+                      style={{ height: "40vh" }}
+                    >
+                      <p className="gray-c">{t("AZhgADD")}</p> <LoadingDots />
+                    </div>
+                  )}
+                  {!isLoading && (
+                    <>
+                      {transactions.length > 0 &&
+                        selectedWallet?.kind === 1 && (
+                          <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
+                            <p className="gray-c">{t("AzLQdQO")}</p>
+                            {transactions.map((transaction, index) => {
+                              let author =
+                                nostrAuthors.find(
+                                  (author) =>
+                                    author.pubkey === transaction.pubkey
+                                ) || getEmptyuserMetadata(transaction.pubkey);
+                              return (
+                                <div
+                                  key={transaction.id}
+                                  className="fit-container fx-scattered fx-col box-pad-v-m"
+                                  style={{
+                                    border: "none",
+                                    overflow: "visible",
+                                    borderTop:
+                                      index !== 0
+                                        ? "1px solid var(--very-dim-gray)"
+                                        : "",
+                                  }}
+                                >
+                                  <div className="fit-container fx-scattered">
+                                    <div className="fx-centered fx-start-h">
+                                      <div style={{ position: "relative" }}>
+                                        <UserProfilePic
+                                          mainAccountUser={false}
+                                          user_id={author.pubkey}
+                                          size={48}
+                                          img={author.picture}
+                                        />
+                                        <div
+                                          className="round-icon-small round-icon-tooltip"
+                                          data-tooltip={t("A4G4OJ7")}
+                                          style={{
+                                            position: "absolute",
+                                            scale: ".65",
+                                            backgroundColor: "var(--pale-gray)",
+                                            right: "-8px",
+                                            bottom: "-10px",
+                                          }}
+                                        >
+                                          <p className="green-c">&#8595;</p>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="gray-c p-medium">
+                                          <Date_
+                                            toConvert={
+                                              new Date(
+                                                transaction.created_at * 1000
+                                              )
+                                            }
+                                            time={true}
+                                          />
+                                        </p>
+                                        <p className="p-medium">
+                                          {t("AdrOPfO", {
+                                            name:
+                                              author.display_name ||
+                                              author.name ||
+                                              author.pubkey.substring(0, 10),
+                                          })}
+                                          <span className="orange-c">
+                                            {" "}
+                                            {transaction.amount}{" "}
+                                            <span className="gray-c">Sats</span>
+                                          </span>
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {transaction.message && (
+                                      <div
+                                        className="round-icon-small round-icon-tooltip"
+                                        data-tooltip={t("AYMJ2uj")}
+                                        onClick={() =>
+                                          displayMessage === transaction.id
+                                            ? setDisplayMessage(false)
+                                            : setDisplayMessage(transaction.id)
+                                        }
+                                      >
+                                        <div className="comment-not"></div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {transaction.message &&
+                                    displayMessage === transaction.id && (
+                                      <div
+                                        className="fit-container sc-s box-pad-h-s box-pad-v-s p-medium"
+                                        style={{
+                                          backgroundColor: "var(--c1-side)",
+                                          borderRadius: "var(--border-r-6)",
                                         }}
                                       >
-                                        <div className="fx-centered">
-                                          {wallet.active && (
+                                        <p className="gray-c p-medium">
+                                          {t("AVZHXQq")}
+                                        </p>
+                                        <p className="p-medium">
+                                          {transaction.message}
+                                        </p>
+                                      </div>
+                                    )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      {transactions.length === 0 &&
+                        selectedWallet?.kind === 1 && (
+                          <div
+                            className="fit-container fx-centered fx-col"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>{t("Ag3spMM")}</h4>
+                            <p className="gray-c">{t("ABF4HcR")}</p>
+                          </div>
+                        )}
+                      {walletTransactions.length > 0 &&
+                        selectedWallet?.kind === 2 && (
+                          <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
+                            <p className="gray-c">{t("Aflt0YJ")}</p>
+                            {walletTransactions.map((transaction) => {
+                              let isZap = transaction.metadata?.zap_request;
+                              let author = isZap
+                                ? nostrAuthors.find(
+                                    (author) =>
+                                      author.pubkey ===
+                                      transaction.metadata.zap_request.pubkey
+                                  )
+                                : false;
+                              return (
+                                <div
+                                  key={transaction.identifier}
+                                  className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
+                                  style={{
+                                    border: "none",
+                                    overflow: "visible",
+                                  }}
+                                >
+                                  <div className="fit-container fx-scattered">
+                                    <div className="fx-centered fx-start-h">
+                                      {(!isZap ||
+                                        (isZap &&
+                                          transaction.type === "outgoing")) && (
+                                        <>
+                                          {transaction.type === "outgoing" && (
                                             <div
-                                              style={{
-                                                minWidth: "8px",
-                                                aspectRatio: "1/1",
-                                                backgroundColor:
-                                                  "var(--green-main)",
-                                                borderRadius:
-                                                  "var(--border-r-50)",
-                                              }}
-                                            ></div>
-                                          )}
-                                          <p
-                                            className={
-                                              wallet.active ? "green-c" : ""
-                                            }
-                                          >
-                                            {wallet.entitle}
-                                          </p>
-                                          {isLinked && (
-                                            <div
-                                              className="round-icon-tooltip"
-                                              data-tooltip={t("ANExIY1")}
+                                              className="round-icon round-icon-tooltip"
+                                              data-tooltip={t("AkPQ73T")}
                                             >
-                                              <div className="sticker sticker-small sticker-green-pale">
-                                                {t("AqlBPla")}
-                                              </div>
+                                              <p className="red-c">&#8593;</p>
                                             </div>
                                           )}
-                                        </div>
-                                        {wallet.kind !== 1 && (
-                                          <OptionsDropdown
-                                            options={[
-                                              !isLinked && (
-                                                <div
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectWalletToLink(
-                                                      wallet.entitle
-                                                    );
-                                                  }}
-                                                >
-                                                  {t("AmQVpu4")}
-                                                </div>
-                                              ),
-                                              wallet.entitle.includes("@") && (
-                                                <div
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    copyKey(
-                                                      t("ALR84Tq"),
-                                                      wallet.entitle
-                                                    );
-                                                  }}
-                                                >
-                                                  {t("ApO1nbv")}
-                                                </div>
-                                              ),
-                                              wallet.kind === 3 && (
-                                                <div
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    copyKey(
-                                                      t("A6Pj02S"),
-                                                      wallet.data
-                                                    );
-                                                  }}
-                                                >
-                                                  {t("A6ntZLW")}
-                                                </div>
-                                              ),
-                                              <div
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  exportWallet(
-                                                    wallet.data,
-                                                    wallet.entitle
-                                                  );
-                                                }}
-                                              >
-                                                {t("A4A5psW")}
-                                              </div>,
-                                              <div
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setShowDeletionPopup(wallet);
-                                                }}
-                                              >
-                                                <span className="red-c">
-                                                  {t("AawdN9R")}
-                                                </span>
-                                              </div>,
-                                            ]}
-                                          />
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div
-                          className="fx-scattered box-pad-h fit-container fx-col fx-wrap"
-                          style={{
-                            position: "relative",
-                            padding: "1rem",
-                          }}
-                        >
-                          {!isLoading && (
-                            <div className="fx-centered fx-col box-pad-v">
-                              <h5>{t("AbcY4ef")}</h5>
-                              <div className="fx-centered">
-                                <h2 className="orange-c">{userBalance}</h2>
-                                <p className="gray-c">Sats</p>
-                              </div>
-                              <SatsToUSD sats={userBalance} />
-                              {selectedWallet.kind !== 1 &&
-                                selectedWallet.entitle.includes("@") && (
-                                  <div
-                                    className="btn btn-gray btn-small fx-centered"
-                                    onClick={() =>
-                                      selectedWallet.entitle.includes("@")
-                                        ? copyKey(
-                                            t("ALR84Tq"),
-                                            selectedWallet.entitle
-                                          )
-                                        : walletWarning()
-                                    }
-                                  >
-                                    {selectedWallet.entitle}
-                                    <div className="copy"></div>
-                                  </div>
-                                )}
-                            </div>
-                          )}
-                          {!isLoading &&
-                            !(
-                              profileHasWallet.hasWallet &&
-                              profileHasWallet.isWalletLinked
-                            ) && (
-                              <div className="box-pad-h box-pad-v fit-container sc-s-18 fx-centered fx-centered fx-col gray-c p-centered">
-                                {!profileHasWallet.hasWallet && (
-                                  <>{t("AAPZe91")}</>
-                                )}
-                                {profileHasWallet.hasWallet &&
-                                  !profileHasWallet.isWalletLinked && (
-                                    <>{t("AHKiPjO")}</>
-                                  )}{" "}
-                                {t("AHTCsEO")}
-                              </div>
-                            )}
-                          {isLoading && (
-                            <div
-                              className="fx-centered fx-col box-pad-v"
-                              style={{ height: "150px" }}
-                            >
-                              <LoadingDots />
-                            </div>
-                          )}
-                          <div className="fx-centered fit-container">
-                            <button
-                              style={{ height: "70px", gap: 0 }}
-                              className={
-                                selectedWallet
-                                  ? "btn btn-gray fx fx-centered fx-col"
-                                  : "btn btn-disabled fx fx-centered fx-col"
-                              }
-                              onClick={() =>
-                                selectedWallet ? setOps("receive") : null
-                              }
-                              disabled={selectedWallet ? false : true}
-                            >
-                              <span className="p-big">&#8595;</span>
-                              <span>{t("A8SflFr")}</span>
-                            </button>
-                            <button
-                              style={{ height: "70px", gap: 0 }}
-                              className={
-                                selectedWallet
-                                  ? "btn btn-orange  fx fx-centered fx-col"
-                                  : "btn btn-disabled fx fx-centered fx-col"
-                              }
-                              onClick={() =>
-                                selectedWallet ? setOps("send") : null
-                              }
-                              disabled={selectedWallet ? false : true}
-                            >
-                              <span className="p-big">&#8593;</span>
-                              <span>{t("A14LwWS")}</span>
-                            </button>
-                          </div>
-                        </div>
-                        {ops === "send" && (
-                          <SendPayment
-                            exit={() => setOps("")}
-                            wallets={wallets}
-                            selectedWallet={selectedWallet}
-                            setWallets={setWallets}
-                            refreshTransactions={() => setTimestamp(Date.now())}
-                          />
-                        )}
-                        {ops === "receive" && (
-                          <ReceivePayment
-                            exit={() => setOps("")}
-                            wallets={wallets}
-                            selectedWallet={selectedWallet}
-                            setWallets={setWallets}
-                          />
-                        )}
-                        {isLoading && (
-                          <div
-                            className="fit-container fx-centered"
-                            style={{ height: "40vh" }}
-                          >
-                            <p className="gray-c">{t("AZhgADD")}</p>{" "}
-                            <LoadingDots />
-                          </div>
-                        )}
-                        {!isLoading && (
-                          <>
-                            {transactions.length > 0 &&
-                              selectedWallet?.kind === 1 && (
-                                <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
-                                  <p className="gray-c">{t("AzLQdQO")}</p>
-                                  {transactions.map((transaction, index) => {
-                                    let author =
-                                      nostrAuthors.find(
-                                        (author) =>
-                                          author.pubkey === transaction.pubkey
-                                      ) ||
-                                      getEmptyuserMetadata(transaction.pubkey);
-                                    return (
-                                      <div
-                                        key={transaction.id}
-                                        className="fit-container fx-scattered fx-col box-pad-v-m"
-                                        style={{
-                                          border: "none",
-                                          overflow: "visible",
-                                          borderTop:
-                                            index !== 0
-                                              ? "1px solid var(--very-dim-gray)"
-                                              : "",
-                                        }}
-                                      >
-                                        <div className="fit-container fx-scattered">
-                                          <div className="fx-centered fx-start-h">
+                                          {transaction.type !== "outgoing" && (
                                             <div
-                                              style={{ position: "relative" }}
+                                              className="round-icon round-icon-tooltip"
+                                              data-tooltip={t("A4G4OJ7")}
+                                            >
+                                              <p className="green-c">&#8595;</p>
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
+                                      {isZap &&
+                                        transaction.type !== "outgoing" && (
+                                          <>
+                                            <div
+                                              style={{
+                                                position: "relative",
+                                              }}
                                             >
                                               <UserProfilePic
                                                 mainAccountUser={false}
-                                                user_id={author.pubkey}
                                                 size={48}
-                                                img={author.picture}
+                                                user_id={isZap.pubkey}
+                                                img={
+                                                  author ? author.picture : ""
+                                                }
                                               />
                                               <div
                                                 className="round-icon-small round-icon-tooltip"
@@ -761,7 +886,7 @@ export default function Wallet() {
                                                   scale: ".65",
                                                   backgroundColor:
                                                     "var(--pale-gray)",
-                                                  right: "-8px",
+                                                  right: "-5px",
                                                   bottom: "-10px",
                                                 }}
                                               >
@@ -770,504 +895,286 @@ export default function Wallet() {
                                                 </p>
                                               </div>
                                             </div>
-                                            <div>
-                                              <p className="gray-c p-medium">
-                                                <Date_
-                                                  toConvert={
-                                                    new Date(
-                                                      transaction.created_at *
-                                                        1000
-                                                    )
-                                                  }
-                                                  time={true}
-                                                />
-                                              </p>
-                                              <p className="p-medium">
-                                                {t("AdrOPfO", {
-                                                  name:
-                                                    author.display_name ||
-                                                    author.name ||
-                                                    author.pubkey.substring(
-                                                      0,
-                                                      10
-                                                    ),
-                                                })}
-                                                <span className="orange-c">
-                                                  {" "}
-                                                  {transaction.amount}{" "}
-                                                  <span className="gray-c">
-                                                    Sats
-                                                  </span>
-                                                </span>
-                                              </p>
-                                            </div>
-                                          </div>
-                                          {transaction.message && (
-                                            <div
-                                              className="round-icon-small round-icon-tooltip"
-                                              data-tooltip={t("AYMJ2uj")}
-                                              onClick={() =>
-                                                displayMessage ===
-                                                transaction.id
-                                                  ? setDisplayMessage(false)
-                                                  : setDisplayMessage(
-                                                      transaction.id
-                                                    )
-                                              }
-                                            >
-                                              <div className="comment-not"></div>
-                                            </div>
+                                          </>
+                                        )}
+                                      <div>
+                                        <p className="gray-c p-medium">
+                                          <Date_
+                                            toConvert={
+                                              new Date(
+                                                transaction.creation_date * 1000
+                                              )
+                                            }
+                                            time={true}
+                                          />
+                                        </p>
+                                        <p className="p-medium">
+                                          {(!isZap ||
+                                            (isZap &&
+                                              transaction.type ===
+                                                "outgoing")) && (
+                                            <>
+                                              {transaction.type === "outgoing"
+                                                ? t("ATyFagO")
+                                                : t("AyVA6Q3")}
+                                            </>
                                           )}
-                                        </div>
-                                        {transaction.message &&
-                                          displayMessage === transaction.id && (
-                                            <div
-                                              className="fit-container sc-s box-pad-h-s box-pad-v-s p-medium"
-                                              style={{
-                                                backgroundColor:
-                                                  "var(--c1-side)",
-                                                borderRadius:
-                                                  "var(--border-r-6)",
-                                              }}
-                                            >
-                                              <p className="gray-c p-medium">
-                                                {t("AVZHXQq")}
-                                              </p>
-                                              <p className="p-medium">
-                                                {transaction.message}
-                                              </p>
-                                            </div>
+                                          {(isZap ||
+                                            (isZap &&
+                                              transaction.type !==
+                                                "outgoing")) && (
+                                            <>
+                                              {t("AdrOPfO", {
+                                                name: author
+                                                  ? author.display_name ||
+                                                    author.name
+                                                  : getBech32(
+                                                      "npub",
+                                                      isZap.pubkey
+                                                    ).substring(0, 10),
+                                              })}
+                                            </>
                                           )}
+                                          <span className="orange-c">
+                                            {" "}
+                                            {transaction.amount}{" "}
+                                            <span className="gray-c">Sats</span>
+                                          </span>
+                                        </p>
                                       </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            {transactions.length === 0 &&
-                              selectedWallet?.kind === 1 && (
-                                <div
-                                  className="fit-container fx-centered fx-col"
-                                  style={{ height: "30vh" }}
-                                >
-                                  <h4>{t("Ag3spMM")}</h4>
-                                  <p className="gray-c">{t("ABF4HcR")}</p>
-                                </div>
-                              )}
-                            {walletTransactions.length > 0 &&
-                              selectedWallet?.kind === 2 && (
-                                <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
-                                  <p className="gray-c">{t("Aflt0YJ")}</p>
-                                  {walletTransactions.map((transaction) => {
-                                    let isZap =
-                                      transaction.metadata?.zap_request;
-                                    let author = isZap
-                                      ? nostrAuthors.find(
-                                          (author) =>
-                                            author.pubkey ===
-                                            transaction.metadata.zap_request
-                                              .pubkey
-                                        )
-                                      : false;
-                                    return (
+                                    </div>
+                                    {(transaction.memo ||
+                                      transaction.comment) && (
                                       <div
-                                        key={transaction.identifier}
-                                        className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
+                                        className="round-icon-small round-icon-tooltip"
+                                        data-tooltip={t("AYMJ2uj")}
+                                        onClick={() =>
+                                          displayMessage ===
+                                          transaction.identifier
+                                            ? setDisplayMessage(false)
+                                            : setDisplayMessage(
+                                                transaction.identifier
+                                              )
+                                        }
+                                      >
+                                        <div className="comment-not"></div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {(transaction.memo || transaction.comment) &&
+                                    displayMessage ===
+                                      transaction.identifier && (
+                                      <div
+                                        className="fit-container sc-s box-pad-h-s box-pad-v-s p-medium"
                                         style={{
-                                          border: "none",
-                                          overflow: "visible",
+                                          backgroundColor: "var(--c1-side)",
+                                          borderRadius: "var(--border-r-6)",
                                         }}
                                       >
-                                        <div className="fit-container fx-scattered">
-                                          <div className="fx-centered fx-start-h">
-                                            {(!isZap ||
-                                              (isZap &&
-                                                transaction.type ===
-                                                  "outgoing")) && (
-                                              <>
-                                                {transaction.type ===
-                                                  "outgoing" && (
-                                                  <div
-                                                    className="round-icon round-icon-tooltip"
-                                                    data-tooltip={t("AkPQ73T")}
-                                                  >
-                                                    <p className="red-c">
-                                                      &#8593;
-                                                    </p>
-                                                  </div>
-                                                )}
-                                                {transaction.type !==
-                                                  "outgoing" && (
-                                                  <div
-                                                    className="round-icon round-icon-tooltip"
-                                                    data-tooltip={t("A4G4OJ7")}
-                                                  >
-                                                    <p className="green-c">
-                                                      &#8595;
-                                                    </p>
-                                                  </div>
-                                                )}
-                                              </>
-                                            )}
-                                            {isZap &&
-                                              transaction.type !==
-                                                "outgoing" && (
-                                                <>
-                                                  <div
-                                                    style={{
-                                                      position: "relative",
-                                                    }}
-                                                  >
-                                                    <UserProfilePic
-                                                      mainAccountUser={false}
-                                                      size={48}
-                                                      user_id={isZap.pubkey}
-                                                      img={
-                                                        author
-                                                          ? author.picture
-                                                          : ""
-                                                      }
-                                                    />
-                                                    <div
-                                                      className="round-icon-small round-icon-tooltip"
-                                                      data-tooltip={t(
-                                                        "A4G4OJ7"
-                                                      )}
-                                                      style={{
-                                                        position: "absolute",
-                                                        scale: ".65",
-                                                        backgroundColor:
-                                                          "var(--pale-gray)",
-                                                        right: "-5px",
-                                                        bottom: "-10px",
-                                                      }}
-                                                    >
-                                                      <p className="green-c">
-                                                        &#8595;
-                                                      </p>
-                                                    </div>
-                                                  </div>
-                                                </>
-                                              )}
-                                            <div>
-                                              <p className="gray-c p-medium">
-                                                <Date_
-                                                  toConvert={
-                                                    new Date(
-                                                      transaction.creation_date *
-                                                        1000
-                                                    )
-                                                  }
-                                                  time={true}
-                                                />
-                                              </p>
-                                              <p className="p-medium">
-                                                {(!isZap ||
-                                                  (isZap &&
-                                                    transaction.type ===
-                                                      "outgoing")) && (
-                                                  <>
-                                                    {transaction.type ===
-                                                    "outgoing"
-                                                      ? t("ATyFagO")
-                                                      : t("AyVA6Q3")}
-                                                  </>
-                                                )}
-                                                {(isZap ||
-                                                  (isZap &&
-                                                    transaction.type !==
-                                                      "outgoing")) && (
-                                                  <>
-                                                    {t("AdrOPfO", {
-                                                      name: author
-                                                        ? author.display_name ||
-                                                          author.name
-                                                        : getBech32(
-                                                            "npub",
-                                                            isZap.pubkey
-                                                          ).substring(0, 10),
-                                                    })}
-                                                  </>
-                                                )}
-                                                <span className="orange-c">
-                                                  {" "}
-                                                  {transaction.amount}{" "}
-                                                  <span className="gray-c">
-                                                    Sats
-                                                  </span>
-                                                </span>
-                                              </p>
-                                            </div>
-                                          </div>
-                                          {(transaction.memo ||
-                                            transaction.comment) && (
+                                        <p className="gray-c p-medium">
+                                          {t("AVZHXQq")}
+                                        </p>
+                                        <p className="p-medium">
+                                          {transaction.memo ||
+                                            transaction.comment}
+                                        </p>
+                                      </div>
+                                    )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      {walletTransactions.length === 0 &&
+                        selectedWallet?.kind === 2 && (
+                          <div
+                            className="fit-container fx-centered fx-col"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>{t("Ag3spMM")}</h4>
+                            <p className="gray-c p-centered">{t("AgaoyPx")}</p>
+                          </div>
+                        )}
+                      {walletTransactions.length > 0 &&
+                        selectedWallet?.kind === 3 && (
+                          <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
+                            <p className="gray-c">{t("Aflt0YJ")}</p>
+                            {walletTransactions.map((transaction, index) => {
+                              let isZap = transaction.metadata?.zap_request;
+                              let author = isZap
+                                ? nostrAuthors.find(
+                                    (author) =>
+                                      author.pubkey ===
+                                      transaction.metadata.zap_request.pubkey
+                                  )
+                                : false;
+                              return (
+                                <div
+                                  key={`${transaction.invoice}-${index}`}
+                                  className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
+                                  style={{
+                                    border: "none",
+                                    overflow: "visible",
+                                  }}
+                                >
+                                  <div className="fit-container fx-scattered">
+                                    <div className="fx-centered fx-start-h">
+                                      {(!isZap ||
+                                        (isZap &&
+                                          transaction.type === "outgoing")) && (
+                                        <>
+                                          {transaction.type === "outgoing" && (
                                             <div
-                                              className="round-icon-small round-icon-tooltip"
-                                              data-tooltip={t("AYMJ2uj")}
-                                              onClick={() =>
-                                                displayMessage ===
-                                                transaction.identifier
-                                                  ? setDisplayMessage(false)
-                                                  : setDisplayMessage(
-                                                      transaction.identifier
-                                                    )
-                                              }
+                                              className="round-icon round-icon-tooltip"
+                                              data-tooltip={t("AkPQ73T")}
                                             >
-                                              <div className="comment-not"></div>
+                                              <p className="red-c">&#8593;</p>
                                             </div>
                                           )}
-                                        </div>
-                                        {(transaction.memo ||
-                                          transaction.comment) &&
-                                          displayMessage ===
-                                            transaction.identifier && (
+                                          {transaction.type !== "outgoing" && (
                                             <div
-                                              className="fit-container sc-s box-pad-h-s box-pad-v-s p-medium"
+                                              className="round-icon round-icon-tooltip"
+                                              data-tooltip={t("A4G4OJ7")}
+                                            >
+                                              <p className="green-c">&#8595;</p>
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
+                                      {isZap &&
+                                        transaction.type !== "outgoing" && (
+                                          <>
+                                            <div
                                               style={{
-                                                backgroundColor:
-                                                  "var(--c1-side)",
-                                                borderRadius:
-                                                  "var(--border-r-6)",
+                                                position: "relative",
                                               }}
                                             >
-                                              <p className="gray-c p-medium">
-                                                {t("AVZHXQq")}
-                                              </p>
-                                              <p className="p-medium">
-                                                {transaction.memo ||
-                                                  transaction.comment}
-                                              </p>
-                                            </div>
-                                          )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            {walletTransactions.length === 0 &&
-                              selectedWallet?.kind === 2 && (
-                                <div
-                                  className="fit-container fx-centered fx-col"
-                                  style={{ height: "30vh" }}
-                                >
-                                  <h4>{t("Ag3spMM")}</h4>
-                                  <p className="gray-c p-centered">
-                                    {t("AgaoyPx")}
-                                  </p>
-                                </div>
-                              )}
-                            {walletTransactions.length > 0 &&
-                              selectedWallet?.kind === 3 && (
-                                <div className="fit-container box-pad-v fx-centered fx-col fx-start-v">
-                                  <p className="gray-c">{t("Aflt0YJ")}</p>
-                                  {walletTransactions.map(
-                                    (transaction, index) => {
-                                      let isZap =
-                                        transaction.metadata?.zap_request;
-                                      let author = isZap
-                                        ? nostrAuthors.find(
-                                            (author) =>
-                                              author.pubkey ===
-                                              transaction.metadata.zap_request
-                                                .pubkey
-                                          )
-                                        : false;
-                                      return (
-                                        <div
-                                          key={`${transaction.invoice}-${index}`}
-                                          className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
-                                          style={{
-                                            border: "none",
-                                            overflow: "visible",
-                                          }}
-                                        >
-                                          <div className="fit-container fx-scattered">
-                                            <div className="fx-centered fx-start-h">
-                                              {(!isZap ||
-                                                (isZap &&
-                                                  transaction.type ===
-                                                    "outgoing")) && (
-                                                <>
-                                                  {transaction.type ===
-                                                    "outgoing" && (
-                                                    <div
-                                                      className="round-icon round-icon-tooltip"
-                                                      data-tooltip={t(
-                                                        "AkPQ73T"
-                                                      )}
-                                                    >
-                                                      <p className="red-c">
-                                                        &#8593;
-                                                      </p>
-                                                    </div>
-                                                  )}
-                                                  {transaction.type !==
-                                                    "outgoing" && (
-                                                    <div
-                                                      className="round-icon round-icon-tooltip"
-                                                      data-tooltip={t(
-                                                        "A4G4OJ7"
-                                                      )}
-                                                    >
-                                                      <p className="green-c">
-                                                        &#8595;
-                                                      </p>
-                                                    </div>
-                                                  )}
-                                                </>
-                                              )}
-                                              {isZap &&
-                                                transaction.type !==
-                                                  "outgoing" && (
-                                                  <>
-                                                    <div
-                                                      style={{
-                                                        position: "relative",
-                                                      }}
-                                                    >
-                                                      <UserProfilePic
-                                                        mainAccountUser={false}
-                                                        size={48}
-                                                        user_id={isZap.pubkey}
-                                                        img={
-                                                          author
-                                                            ? author.picture
-                                                            : ""
-                                                        }
-                                                      />
-                                                      <div
-                                                        className="round-icon-small round-icon-tooltip"
-                                                        data-tooltip={t(
-                                                          "A4G4OJ7"
-                                                        )}
-                                                        style={{
-                                                          position: "absolute",
-                                                          scale: ".65",
-                                                          backgroundColor:
-                                                            "var(--pale-gray)",
-                                                          right: "-5px",
-                                                          bottom: "-10px",
-                                                        }}
-                                                      >
-                                                        <p className="green-c">
-                                                          &#8595;
-                                                        </p>
-                                                      </div>
-                                                    </div>
-                                                  </>
-                                                )}
-                                              <div>
-                                                <p className="gray-c p-medium">
-                                                  <Date_
-                                                    toConvert={
-                                                      new Date(
-                                                        transaction.created_at *
-                                                          1000
-                                                      )
-                                                    }
-                                                    time={true}
-                                                  />
-                                                </p>
-                                                <p className="p-medium">
-                                                  {(!isZap ||
-                                                    (isZap &&
-                                                      transaction.type ===
-                                                        "outgoing")) && (
-                                                    <>
-                                                      {transaction.type ===
-                                                      "outgoing"
-                                                        ? t("ATyFagO")
-                                                        : t("AyVA6Q3")}
-                                                    </>
-                                                  )}
-                                                  {(isZap ||
-                                                    (isZap &&
-                                                      transaction.type !==
-                                                        "outgoing")) && (
-                                                    <>
-                                                      {t("AdrOPfO", {
-                                                        name: author
-                                                          ? author.display_name ||
-                                                            author.name
-                                                          : getBech32(
-                                                              "npub",
-                                                              isZap.pubkey
-                                                            ).substring(0, 10),
-                                                      })}
-                                                    </>
-                                                  )}
-
-                                                  <span className="orange-c">
-                                                    {" "}
-                                                    {transaction.amount}{" "}
-                                                    <span className="gray-c">
-                                                      Sats
-                                                    </span>
-                                                  </span>
-                                                </p>
-                                              </div>
-                                            </div>
-                                            {transaction.description && (
+                                              <UserProfilePic
+                                                mainAccountUser={false}
+                                                size={48}
+                                                user_id={isZap.pubkey}
+                                                img={
+                                                  author ? author.picture : ""
+                                                }
+                                              />
                                               <div
                                                 className="round-icon-small round-icon-tooltip"
-                                                data-tooltip={t("AYMJ2uj")}
-                                                onClick={() =>
-                                                  displayMessage ===
-                                                  transaction.invoice
-                                                    ? setDisplayMessage(false)
-                                                    : setDisplayMessage(
-                                                        transaction.invoice
-                                                      )
-                                                }
-                                              >
-                                                <div className="comment-not"></div>
-                                              </div>
-                                            )}
-                                          </div>
-                                          {transaction.description &&
-                                            displayMessage ===
-                                              transaction.invoice && (
-                                              <div
-                                                className="fit-container sc-s box-pad-h-s box-pad-v-s p-medium"
+                                                data-tooltip={t("A4G4OJ7")}
                                                 style={{
+                                                  position: "absolute",
+                                                  scale: ".65",
                                                   backgroundColor:
-                                                    "var(--c1-side)",
-                                                  borderRadius:
-                                                    "var(--border-r-6)",
+                                                    "var(--pale-gray)",
+                                                  right: "-5px",
+                                                  bottom: "-10px",
                                                 }}
                                               >
-                                                <p className="gray-c p-medium">
-                                                  {t("AVZHXQq")}
-                                                </p>
-                                                <p className="p-medium">
-                                                  {transaction.description}
+                                                <p className="green-c">
+                                                  &#8595;
                                                 </p>
                                               </div>
-                                            )}
-                                        </div>
-                                      );
-                                    }
-                                  )}
+                                            </div>
+                                          </>
+                                        )}
+                                      <div>
+                                        <p className="gray-c p-medium">
+                                          <Date_
+                                            toConvert={
+                                              new Date(
+                                                transaction.created_at * 1000
+                                              )
+                                            }
+                                            time={true}
+                                          />
+                                        </p>
+                                        <p className="p-medium">
+                                          {(!isZap ||
+                                            (isZap &&
+                                              transaction.type ===
+                                                "outgoing")) && (
+                                            <>
+                                              {transaction.type === "outgoing"
+                                                ? t("ATyFagO")
+                                                : t("AyVA6Q3")}
+                                            </>
+                                          )}
+                                          {(isZap ||
+                                            (isZap &&
+                                              transaction.type !==
+                                                "outgoing")) && (
+                                            <>
+                                              {t("AdrOPfO", {
+                                                name: author
+                                                  ? author.display_name ||
+                                                    author.name
+                                                  : getBech32(
+                                                      "npub",
+                                                      isZap.pubkey
+                                                    ).substring(0, 10),
+                                              })}
+                                            </>
+                                          )}
+
+                                          <span className="orange-c">
+                                            {" "}
+                                            {transaction.amount}{" "}
+                                            <span className="gray-c">Sats</span>
+                                          </span>
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {transaction.description && (
+                                      <div
+                                        className="round-icon-small round-icon-tooltip"
+                                        data-tooltip={t("AYMJ2uj")}
+                                        onClick={() =>
+                                          displayMessage === transaction.invoice
+                                            ? setDisplayMessage(false)
+                                            : setDisplayMessage(
+                                                transaction.invoice
+                                              )
+                                        }
+                                      >
+                                        <div className="comment-not"></div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {transaction.description &&
+                                    displayMessage === transaction.invoice && (
+                                      <div
+                                        className="fit-container sc-s box-pad-h-s box-pad-v-s p-medium"
+                                        style={{
+                                          backgroundColor: "var(--c1-side)",
+                                          borderRadius: "var(--border-r-6)",
+                                        }}
+                                      >
+                                        <p className="gray-c p-medium">
+                                          {t("AVZHXQq")}
+                                        </p>
+                                        <p className="p-medium">
+                                          {transaction.description}
+                                        </p>
+                                      </div>
+                                    )}
                                 </div>
-                              )}
-                            {walletTransactions.length === 0 &&
-                              selectedWallet?.kind === 3 && (
-                                <div
-                                  className="fit-container fx-centered fx-col"
-                                  style={{ height: "30vh" }}
-                                >
-                                  <h4>{t("Ag3spMM")}</h4>
-                                  <p className="gray-c p-centered">
-                                    {t("AgaoyPx")}
-                                  </p>
-                                </div>
-                              )}
-                          </>
+                              );
+                            })}
+                          </div>
                         )}
-                      </div>
-                    )}
+                      {walletTransactions.length === 0 &&
+                        selectedWallet?.kind === 3 && (
+                          <div
+                            className="fit-container fx-centered fx-col"
+                            style={{ height: "30vh" }}
+                          >
+                            <h4>{t("Ag3spMM")}</h4>
+                            <p className="gray-c p-centered">{t("AgaoyPx")}</p>
+                          </div>
+                        )}
+                    </>
+                  )}
                 </div>
-              </div>
-            </main>
+              )}
           </div>
         </div>
       </div>

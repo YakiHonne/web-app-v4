@@ -198,10 +198,10 @@ export default function User() {
           <meta property="twitter:description" content={user?.about} />
           <meta property="twitter:image" content={user?.picture} />
         </Helmet>
-        <div className="fit-container fx-centered">
+        {/* <div className="fit-container fx-centered">
           <div className="main-container">
             <Sidebar />
-            <main className="main-page-nostr-container">
+            <main className="main-page-nostr-container"> */}
               <ArrowUp />
               <div
                 className="fx-centered fit-container  fx-start-v"
@@ -223,9 +223,9 @@ export default function User() {
                   </div>
                 </div>
               </div>
-            </main>
+            {/* </main>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );
@@ -761,7 +761,7 @@ const UserFeed = ({ user }) => {
     eventsReducer,
     eventsInitialState
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [contentFrom, setContentFrom] = useState(
     state ? state.contentType : "notes"
   );
@@ -801,6 +801,7 @@ const UserFeed = ({ user }) => {
     };
     getID();
     straightUp();
+    setIsLoading(true);
     dispatchEvents({ type: "remove-events" });
   }, [user_id]);
 
@@ -855,7 +856,7 @@ const UserFeed = ({ user }) => {
     const fetchData = async () => {
       try {
         let filter = getNotesFilter();
-        const res = await getSubData(filter);
+        const res = await getSubData(filter, 200);
         let data = res.data.slice(0, 30);
         let pubkeys = res.pubkeys;
         let ev = [];

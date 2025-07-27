@@ -218,120 +218,109 @@ export default function SmartWidgetsV2() {
           refresh={handleRefreshData}
         />
       )}
-      <div className="fit-container fx-centered">
-        <ArrowUp />
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            <div
-              className="fx-centered fit-container fx-start-h fx-start-v"
-              style={{ gap: 0 }}
-            >
-              <div
-                className="box-pad-h-m fx-col fx-centered fx-start-h fx-start-v main-middle"
-                style={{ gap: 0 }}
-              >
+
+      <div
+        className="fx-centered fit-container fx-start-h fx-start-v"
+        style={{ gap: 0 }}
+      >
+        <div
+          className="box-pad-h-m fx-col fx-centered fx-start-h fx-start-v main-middle"
+          style={{ gap: 0 }}
+        >
+          <div
+            className="fit-container sticky fx-centered fx-col"
+            style={{ rowGap: "16px" }}
+          >
+            <div className="fit-container fx-scattered ">
+              <h4>{t("A2mdxcf")}</h4>
+              <Link to="/smart-widget-checker">
                 <div
-                  className="fit-container sticky fx-centered fx-col"
-                  style={{ rowGap: "16px" }}
+                  className="round-icon-small round-icon-tooltip"
+                  data-tooltip={t("Ax1rvqR")}
                 >
-                  <div className="fit-container fx-scattered ">
-                    <h4>{t("A2mdxcf")}</h4>
-                    <Link to="/smart-widget-checker">
-                      <div
-                        className="round-icon-small round-icon-tooltip"
-                        data-tooltip={t("Ax1rvqR")}
-                      >
-                        <div className="smart-widget-checker"></div>
-                      </div>
-                    </Link>
-                  </div>
+                  <div className="smart-widget-checker"></div>
                 </div>
-                <div
-                  className={`fit-container fx-col fx-centered fx-start-h fx-start-v`}
-                >
-                  {contentSource === "community" &&
-                    comWidgets.map((widget) => {
-                      return (
-                        <WidgetCardV2
-                          widget={widget}
-                          key={widget.id}
-                          deleteWidget={() =>
-                            setSelectedWidgetID(widget.metadata)
-                          }
-                        />
-                      );
-                    })}
-                  {contentSource === "self" &&
-                    myWidgets.map((widget) => {
-                      return (
-                        <WidgetCardV2
-                          widget={widget}
-                          key={widget.id}
-                          deleteWidget={() =>
-                            setSelectedWidgetID(widget.metadata)
-                          }
-                        />
-                      );
-                    })}
-                </div>
-                {isLoading && (
-                  <div
-                    className="fit-container fx-centered"
-                    style={{ height: "30vh" }}
-                  >
-                    <p className="gray-c">{t("AKvHyxG")}</p>
-                    <LoadingDots />
-                  </div>
-                )}
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  top:
-                    extrasRef.current?.getBoundingClientRect().height >=
-                    window.innerHeight
-                      ? `calc(95vh - ${
-                          extrasRef.current?.getBoundingClientRect().height || 0
-                        }px)`
-                      : 0,
-                }}
-                className={`fx-centered  fx-wrap fx-start- box-pad-v sticky extras-homepage`}
-                ref={extrasRef}
-              >
-                <div className="sc-s-18 bg-sp fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
-                  <div
-                    className="smart-widget"
-                    style={{ minHeight: "48px", minWidth: "48px" }}
-                  >
-                    {" "}
-                  </div>
-                  <h4>{t("AuIjxur")}</h4>
-                  <p className="gray-c">{t("AoDLI81")}</p>
-                  <Link target="_blank" to={"/yakihonne-smart-widgets"}>
-                    <button className="btn btn-normal">{t("AArGqN7")}</button>
-                  </Link>
-                </div>
-                {notes.length > 0 && (
-                  <div
-                    className="fit-container sc-s-18 bg-sp box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                    style={{
-                      backgroundColor: "var(--c1-side)",
-                      rowGap: "24px",
-                    }}
-                  >
-                    <div className="fx-centered fx-start-h">
-                      <h4>{t("AUz9szc")}</h4>
-                    </div>
-                    {notes.map((note) => {
-                      return <NoteCard note={note} key={note.id} />;
-                    })}
-                  </div>
-                )}
-                <Footer />
-              </div>
+              </Link>
             </div>
-          </main>
+          </div>
+          <div
+            className={`fit-container fx-col fx-centered fx-start-h fx-start-v`}
+          >
+            {contentSource === "community" &&
+              comWidgets.map((widget) => {
+                return (
+                  <WidgetCardV2
+                    widget={widget}
+                    key={widget.id}
+                    deleteWidget={() => setSelectedWidgetID(widget.metadata)}
+                  />
+                );
+              })}
+            {contentSource === "self" &&
+              myWidgets.map((widget) => {
+                return (
+                  <WidgetCardV2
+                    widget={widget}
+                    key={widget.id}
+                    deleteWidget={() => setSelectedWidgetID(widget.metadata)}
+                  />
+                );
+              })}
+          </div>
+          {isLoading && (
+            <div
+              className="fit-container fx-centered"
+              style={{ height: "30vh" }}
+            >
+              <p className="gray-c">{t("AKvHyxG")}</p>
+              <LoadingDots />
+            </div>
+          )}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            top:
+              extrasRef.current?.getBoundingClientRect().height >=
+              window.innerHeight
+                ? `calc(95vh - ${
+                    extrasRef.current?.getBoundingClientRect().height || 0
+                  }px)`
+                : 0,
+          }}
+          className={`fx-centered  fx-wrap fx-start- box-pad-v sticky extras-homepage`}
+          ref={extrasRef}
+        >
+          <div className="sc-s-18 bg-sp fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
+            <div
+              className="smart-widget"
+              style={{ minHeight: "48px", minWidth: "48px" }}
+            >
+              {" "}
+            </div>
+            <h4>{t("AuIjxur")}</h4>
+            <p className="gray-c">{t("AoDLI81")}</p>
+            <Link target="_blank" to={"/yakihonne-smart-widgets"}>
+              <button className="btn btn-normal">{t("AArGqN7")}</button>
+            </Link>
+          </div>
+          {notes.length > 0 && (
+            <div
+              className="fit-container sc-s-18 bg-sp box-pad-h box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+              style={{
+                backgroundColor: "var(--c1-side)",
+                rowGap: "24px",
+              }}
+            >
+              <div className="fx-centered fx-start-h">
+                <h4>{t("AUz9szc")}</h4>
+              </div>
+              {notes.map((note) => {
+                return <NoteCard note={note} key={note.id} />;
+              })}
+            </div>
+          )}
+          <Footer />
         </div>
       </div>
     </div>

@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "../../Components/Main/Sidebar";
 import { Helmet } from "react-helmet";
 import PagePlaceholder from "../../Components/PagePlaceholder";
-import LoadingDots from "../../Components/LoadingDots";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { nip19 } from "nostr-tools";
-import WidgetCard from "../../Components/Main/WidgetCardV2";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
-import SWEventStructure from "../../Components/Main/SWEventStructure";
-import SWCard from "../../Components/Main/SWCard";
 import WidgetCardV2 from "../../Components/Main/WidgetCardV2";
 import { getEmptyuserMetadata, getParsedSW } from "../../Helpers/Encryptions";
 import { getAuthPubkeyFromNip05 } from "../../Helpers/Helpers";
@@ -127,48 +122,42 @@ export default function SWV2() {
           content={"Check the status of a smart widget"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            {/* <PagePlaceholder page={"maintenance"}/> */}
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div className="box-pad-h-m box-pad-v-m fit-container">
-                <div className="fit-container fx-centered fx-start-h fx-start-v">
-                  <div
-                    style={{ width: "min(100%,800px)", flex: 1.5 }}
-                    className={` ${!mbHide ? "mb-hide-800" : ""}`}
-                  >
-                    {!widget && <PagePlaceholder page={"widgets"} />}
 
-                    {widget && <WidgetCardV2 widget={widget} />}
-                  </div>
-                  <div
-                    style={{
-                      height: "100vh",
-                      backgroundColor: "var(--pale-gray)",
-                      width: "1px",
-                      position: "sticky",
-                      top: 0,
-                      margin: "0 .5rem",
-                    }}
-                    className="mb-hide-800"
-                  ></div>
-                  <div
-                    style={{
-                      width: "min(100%,500px)",
-                      flex: 1,
-                      height: "100vh",
-                      overflow: "scroll",
-                    }}
-                    className={`box-pad-h-m box-pad-v sticky ${
-                      mbHide ? "mb-hide-800" : ""
-                    }`}
-                  ></div>
-                </div>
-              </div>
+      {/* <PagePlaceholder page={"maintenance"}/> */}
+      <div className="fx-centered fit-container fx-start-h fx-start-v">
+        <div className="box-pad-h-m box-pad-v-m fit-container">
+          <div className="fit-container fx-centered fx-start-h fx-start-v">
+            <div
+              style={{ width: "min(100%,800px)", flex: 1.5 }}
+              className={` ${!mbHide ? "mb-hide-800" : ""}`}
+            >
+              {!widget && <PagePlaceholder page={"widgets"} />}
+
+              {widget && <WidgetCardV2 widget={widget} />}
             </div>
-          </main>
+            <div
+              style={{
+                height: "100vh",
+                backgroundColor: "var(--pale-gray)",
+                width: "1px",
+                position: "sticky",
+                top: 0,
+                margin: "0 .5rem",
+              }}
+              className="mb-hide-800"
+            ></div>
+            <div
+              style={{
+                width: "min(100%,500px)",
+                flex: 1,
+                height: "100vh",
+                overflow: "scroll",
+              }}
+              className={`box-pad-h-m box-pad-v sticky ${
+                mbHide ? "mb-hide-800" : ""
+              }`}
+            ></div>
+          </div>
         </div>
       </div>
     </div>
