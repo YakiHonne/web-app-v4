@@ -184,8 +184,6 @@ export default function MiniApp({ url, exit, setReturnedData }) {
             overflow: "hidden",
             backgroundColor: "#282828",
             gap: 0,
-            overflow: "scroll",
-            maxHeight: "80vh",
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -234,6 +232,8 @@ export default function MiniApp({ url, exit, setReturnedData }) {
                 aspectRatio: "10/16.5",
                 opacity: isLoading ? 0 : 1,
                 borderRadius: "18px",
+                overflow: "scroll",
+                maxHeight: "80vh",
               }}
               className="fit-container fit-height"
             ></iframe>
