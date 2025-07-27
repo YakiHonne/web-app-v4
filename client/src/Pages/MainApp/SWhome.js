@@ -224,7 +224,7 @@ const SWSet = ({ external }) => {
       }
       let swIDs = userSavedTools.map((_) => _.split(":")[2]);
       if (swIDs.length === 0) return;
-      const data = await getSubData([{ kinds: [30033], "#d": swIDs }], 150);
+      const data = await getSubData([{ kinds: [30033], "#d": swIDs }], 400);
       setSavedTools(data.data.map((_) => getParsedSW(_)));
       saveUsers(data.pubkeys);
     };
@@ -259,7 +259,7 @@ const SWSet = ({ external }) => {
             "#l": type === "tool" ? ["tool", "action"] : ["basic"],
           },
         ],
-        150
+        400
       );
       console.log(data);
       setActions((prev) => [...prev, ...data.data.map((_) => getParsedSW(_))]);
