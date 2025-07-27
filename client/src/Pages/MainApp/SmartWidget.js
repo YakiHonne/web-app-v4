@@ -261,73 +261,64 @@ export default function NostrSmartWidget() {
           content={"Your portal for building your smart widget"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div className="box-pad-h-m fit-container">
-                {userKeys && (
-                  <>
-                    {(userKeys.sec || userKeys.ext || userKeys.bunker) && (
-                      <>
-                        {buildOptions && (
-                          <>
-                            {buildOption === "normal" && (
-                              <BuildOptions
-                                setTemplate={(data, newID) => {
-                                  setBuildOptions(false);
-                                  setTemplate(data);
-                                  newID && setWidgetID(nanoid());
-                                }}
-                                template={template}
-                                setBuildOption={(option) =>
-                                  setBuildOption(option)
-                                }
-                                back={() => setBuildOptions(false)}
-                              />
-                            )}
-                            {buildOption === "template" && (
-                              <SWTemplates
-                                setBuildOption={() => setBuildOption("normal")}
-                                setTemplate={handleSelectTemplate}
-                              />
-                            )}
-                            {buildOption === "drafts" && (
-                              <SWDrafts
-                                back={setBuildOption}
-                                setTemplate={handleSelectDraft}
-                              />
-                            )}
-                          </>
-                        )}
-                        {!buildOptions && (
-                          <SmartWidgetBuilder
-                            template={template}
-                            back={(data) => {
-                              setBuildOptions(true);
-                              setTemplate(data);
-                            }}
-                            containerBorderColor={containerBorderColor}
-                            containerBackgroundColor={containerBackgroundColor}
-                            postingOption={postingOption}
-                            widget={state ? state.metadata : null}
-                            widgetID={widgetID}
-                            triggerPublish={triggerPublish}
-                          />
-                        )}
-                      </>
-                    )}
+      <div className="fx-centered fit-container fx-start-h fx-start-v">
+        <div className="box-pad-h-m fit-container">
+          {userKeys && (
+            <>
+              {(userKeys.sec || userKeys.ext || userKeys.bunker) && (
+                <>
+                  {buildOptions && (
+                    <>
+                      {buildOption === "normal" && (
+                        <BuildOptions
+                          setTemplate={(data, newID) => {
+                            setBuildOptions(false);
+                            setTemplate(data);
+                            newID && setWidgetID(nanoid());
+                          }}
+                          template={template}
+                          setBuildOption={(option) => setBuildOption(option)}
+                          back={() => setBuildOptions(false)}
+                        />
+                      )}
+                      {buildOption === "template" && (
+                        <SWTemplates
+                          setBuildOption={() => setBuildOption("normal")}
+                          setTemplate={handleSelectTemplate}
+                        />
+                      )}
+                      {buildOption === "drafts" && (
+                        <SWDrafts
+                          back={setBuildOption}
+                          setTemplate={handleSelectDraft}
+                        />
+                      )}
+                    </>
+                  )}
+                  {!buildOptions && (
+                    <SmartWidgetBuilder
+                      template={template}
+                      back={(data) => {
+                        setBuildOptions(true);
+                        setTemplate(data);
+                      }}
+                      containerBorderColor={containerBorderColor}
+                      containerBackgroundColor={containerBackgroundColor}
+                      postingOption={postingOption}
+                      widget={state ? state.metadata : null}
+                      widgetID={widgetID}
+                      triggerPublish={triggerPublish}
+                    />
+                  )}
+                </>
+              )}
 
-                    {!userKeys.sec && !userKeys.ext && !userKeys.bunker && (
-                      <PagePlaceholder page={"nostr-unauthorized"} />
-                    )}
-                  </>
-                )}
-                {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
-              </div>
-            </div>
-          </main>
+              {!userKeys.sec && !userKeys.ext && !userKeys.bunker && (
+                <PagePlaceholder page={"nostr-unauthorized"} />
+              )}
+            </>
+          )}
+          {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
         </div>
       </div>
     </div>

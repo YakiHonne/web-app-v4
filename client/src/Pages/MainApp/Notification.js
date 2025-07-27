@@ -30,35 +30,20 @@ export default function Notification() {
           content={"Take a glimpse of all your notification"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main
-            className="main-page-nostr-container"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            style={{ padding: 0 }}
-          >
-            <ArrowUp />
 
-            <div className="fit-container fx-centered fx-start-h fx-start-v">
-              <div
-                className="fit-container fx-centered fx-start-v "
-                style={{ gap: 0 }}
-              >
-                <div
-                  style={{ gap: 0 }}
-                  className={`fx-centered  fx-wrap main-middle`}
-                >
-                  {userKeys && <NotificationCenterMain />}
-                  {!userKeys && (
-                    <PagePlaceholder page={"nostr-not-connected"} />
-                  )}
-                </div>
-              </div>
-            </div>
-          </main>
+      <ArrowUp />
+      <div className="fit-container fx-centered fx-start-h fx-start-v">
+        <div
+          className="fit-container fx-centered fx-start-v "
+          style={{ gap: 0 }}
+        >
+          <div
+            style={{ gap: 0 }}
+            className={`fx-centered  fx-wrap main-middle`}
+          >
+            {userKeys && <NotificationCenterMain />}
+            {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
+          </div>
         </div>
       </div>
     </div>

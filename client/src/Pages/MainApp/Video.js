@@ -297,384 +297,352 @@ export default function Video() {
           <meta property="twitter:description" content={video.content} />
           <meta property="twitter:image" content={video.image} />
         </Helmet>
-
-        <div className="fit-container fx-centered" style={{ columnGap: 0 }}>
-          <div className="main-container">
-            <Sidebar />
-            <main className="main-page-nostr-container">
-              <ArrowUp />
-
-              <div
-                className="fit-container fx-centered fx-start-v"
-                style={{ minHeight: "100vh" }}
-              >
-                {isMuted && (
-                  <PagePlaceholder page={"muted-user"} onClick={muteUnmute} />
-                )}
-                {!isMuted && (
-                  <div className="main-middle box-pad-h-m">
-                    {showCommentsSection && (
-                      <RepEventCommentsSection
-                        id={video.aTag}
-                        author={author}
-                        eventPubkey={video.pubkey}
-                        leaveComment={showCommentsSection.comment}
-                        exit={() => setShowCommentsSections(false)}
-                        kind={video.kind}
-                        event={video}
-                      />
-                    )}
-                    {!showCommentsSection && (
-                      <>
-                        <Backbar />
-                        <div>
-                          {getVideoFromURL(video.url)}
-                          <div
-                            className="fx-centered fx-col fx-start-h fx-start-v"
-                            style={{ marginTop: ".5rem" }}
-                          >
-                            <h4>{video.title}</h4>
-                          </div>
-                          <div className="fx-scattered fit-container box-pad-v-m">
-                            <div className="fx-centered">
-                              <UserProfilePic
-                                img={author.picture}
-                                size={24}
-                                user_id={author.pubkey}
-                                allowClick={true}
-                              />
-                              <p>{author.name}</p>
-                            </div>
-                            <div className="fx-centered">
-                              <Follow
-                                size="small"
-                                icon={false}
-                                toFollowKey={author.pubkey}
-                                toFollowName={""}
-                                bulkList={[]}
-                              />
-                            </div>
-                          </div>
-                          <div
-                            className="fit-container sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-start-h fx-start-v fx-wrap pointer"
-                            style={{
-                              border: "none",
-                              backgroundColor: "var(--c1-side)",
-                            }}
-                            onClick={() =>
-                              setExpandDescription(!expandDescription)
-                            }
-                          >
-                            <div className="fit-container fx-centered fx-start-h">
-                              <p className="gray-c p-medium">
-                                {t("AginxGR", { count: videoViews })}
-                              </p>
-                              <p className="p-small gray-c">&#9679;</p>
-                              <p className="gray-c p-medium">
-                                <Date_
-                                  toConvert={
-                                    new Date(video.published_at * 1000)
-                                  }
-                                  time={true}
-                                />
-                              </p>
-                            </div>
-                            <p
-                              className={`fit-container ${
-                                !expandDescription ? "p-four-lines" : ""
-                              }`}
-                            >
-                              {video.content}
-                            </p>
-                            {!video.content && (
-                              <p className="gray-c p-medium p-italic">
-                                {t("AtZrjns")}
-                              </p>
-                            )}
-
-                            <div className="fx-centered fx-start-h fx-wrap">
-                              {video.keywords.map((tag, index) => {
-                                return (
-                                  <Link
-                                    key={index}
-                                    className="sticker sticker-small sticker-gray-gray pointer"
-                                    to={`/search?keyword=${tag?.replace(
-                                      "#",
-                                      "%23"
-                                    )}`}
-                                    state={{ tab: "videos" }}
-                                  >
-                                    {tag}
-                                  </Link>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          {morePosts.length > 0 && (
-                            <div
-                              className="fit-container box-pad-v fx-centered fx-col fx-start-v box-marg-s"
-                              style={{
-                                rowGap: "24px",
-                                border: "none",
-                              }}
-                            >
-                              <h4>{t("Aag9u1h")}</h4>
-                              <div className="fit-container fx-centered fx-wrap">
-                                {morePosts.map((video_) => {
-                                  if (video_.id !== video.id)
-                                    return (
-                                      <Link
-                                        key={video_.id}
-                                        className="fit-container fx-centered fx-start-h"
-                                        to={`/videos/${video_.naddr}`}
-                                        target="_blank"
-                                      >
-                                        <div
-                                          style={{
-                                            minWidth: "128px",
-                                            aspectRatio: "16/9",
-                                            borderRadius: "var(--border-r-6)",
-                                            backgroundImage: `url(${video_.image})`,
-                                            backgroundColor: "black",
-                                            position: "relative",
-                                          }}
-                                          className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
-                                        >
-                                          <div
-                                            className="fx-centered"
-                                            style={{
-                                              position: "absolute",
-                                              left: 0,
-                                              top: 0,
-                                              width: "100%",
-                                              height: "100%",
-                                            }}
-                                          >
-                                            <div className="play-vid-58"></div>
-                                          </div>
-                                        </div>
-                                        <div>
-                                          <p className="p-small gray-c">
-                                            <Date_
-                                              toConvert={
-                                                new Date(
-                                                  video_.published_at * 1000
-                                                )
-                                              }
-                                            />
-                                          </p>
-                                          <p className="p-medium p-two-lines">
-                                            {video_.title}
-                                          </p>
-                                          <AuthorPreviewExtra
-                                            authorPubkey={video_.pubkey}
-                                          />
-                                        </div>
-                                      </Link>
-                                    );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-              {!showCommentsSection && !isMuted && (
-                <div
-                  className="fit-container fx-col sticky-to-fixed fx-centered"
-                  style={{
-                    bottom: 0,
-                    borderTop: "1px solid var(--very-dim-gray)",
-                  }}
-                >
-                  {postActions?.zaps?.zaps?.length > 0 && (
-                    <div className="main-middle">
-                      <ZapAd
-                        zappers={postActions.zaps.zaps}
-                        onClick={() =>
-                          setUsersList({
-                            title: t("AVDZ5cJ"),
-                            list: postActions.zaps.zaps.map(
-                              (item) => item.pubkey
-                            ),
-                            extras: postActions.zaps.zaps,
-                          })
-                        }
-                        margin={false}
-                      />
+        <ArrowUp />
+        <div
+          className="fit-container fx-centered fx-start-v"
+          style={{ minHeight: "100vh" }}
+        >
+          {isMuted && (
+            <PagePlaceholder page={"muted-user"} onClick={muteUnmute} />
+          )}
+          {!isMuted && (
+            <div className="main-middle box-pad-h-m">
+              {showCommentsSection && (
+                <RepEventCommentsSection
+                  id={video.aTag}
+                  author={author}
+                  eventPubkey={video.pubkey}
+                  leaveComment={showCommentsSection.comment}
+                  exit={() => setShowCommentsSections(false)}
+                  kind={video.kind}
+                  event={video}
+                />
+              )}
+              {!showCommentsSection && (
+                <>
+                  <Backbar />
+                  <div>
+                    {getVideoFromURL(video.url)}
+                    <div
+                      className="fx-centered fx-col fx-start-h fx-start-v"
+                      style={{ marginTop: ".5rem" }}
+                    >
+                      <h4>{video.title}</h4>
                     </div>
-                  )}
-                  <div className="main-middle fx-scattered">
-                    <div className="fx-centered  pointer">
-                      <div
-                        data-tooltip={t("ADHdLfJ")}
-                        className={`pointer round-icon-tooltip ${
-                          isZapped ? "orange-c" : ""
-                        }`}
-                        onClick={() =>
-                          setShowCommentsSections({ comment: true })
-                        }
-                      >
-                        <div className="comment-24"></div>
+                    <div className="fx-scattered fit-container box-pad-v-m">
+                      <div className="fx-centered">
+                        <UserProfilePic
+                          img={author.picture}
+                          size={24}
+                          user_id={author.pubkey}
+                          allowClick={true}
+                        />
+                        <p>{author.name}</p>
                       </div>
-                      <div
-                        data-tooltip={t("AMBxvKP")}
-                        className={`pointer round-icon-tooltip `}
-                        onClick={() =>
-                          setShowCommentsSections({ comment: false })
-                        }
-                      >
-                        <p>{postActions.replies.replies.length}</p>
-                      </div>
-                    </div>
-                    <div className="fx-centered">
-                      <Like
-                        isLiked={isLiked}
-                        event={video}
-                        actions={postActions}
-                        tagKind={"a"}
-                      />
-                      <div
-                        className={`pointer round-icon-tooltip ${
-                          isLiked ? "orange-c" : ""
-                        }`}
-                        data-tooltip={t("Alz0E9Y")}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          postActions.likes.likes.length > 0 &&
-                            setUsersList({
-                              title: t("Alz0E9Y"),
-                              list: postActions.likes.likes.map(
-                                (item) => item.pubkey
-                              ),
-                              extras: postActions.likes.likes,
-                              extrasType: "reaction",
-                            });
-                        }}
-                      >
-                        <NumberShrink value={postActions.likes.likes.length} />
-                      </div>
-                    </div>
-                    <div className="fx-centered  pointer">
-                      <Quote
-                        isQuoted={isQuoted}
-                        event={video}
-                        actions={postActions}
-                      />
-                      <div
-                        className={`round-icon-tooltip ${isQuoted ? "orange-c" : ""}`}
-                        data-tooltip={t("AWmDftG")}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          postActions.quotes.quotes.length > 0 &&
-                            setUsersList({
-                              title: t("AWmDftG"),
-                              list: postActions.quotes.quotes.map(
-                                (item) => item.pubkey
-                              ),
-                              extras: [],
-                            });
-                        }}
-                      >
-                        <NumberShrink
-                          value={postActions.quotes.quotes.length}
+                      <div className="fx-centered">
+                        <Follow
+                          size="small"
+                          icon={false}
+                          toFollowKey={author.pubkey}
+                          toFollowName={""}
+                          bulkList={[]}
                         />
                       </div>
                     </div>
-                    <div className="fx-centered">
-                      <Zap
-                        user={author}
-                        event={video}
-                        actions={postActions}
-                        isZapped={isZapped}
-                      />
-                      <div
-                        data-tooltip={t("AO0OqWT")}
-                        className={`pointer round-icon-tooltip ${
-                          isZapped ? "orange-c" : ""
+                    <div
+                      className="fit-container sc-s-18 box-pad-h-m box-pad-v-m fx-centered fx-start-h fx-start-v fx-wrap pointer"
+                      style={{
+                        border: "none",
+                        backgroundColor: "var(--c1-side)",
+                      }}
+                      onClick={() => setExpandDescription(!expandDescription)}
+                    >
+                      <div className="fit-container fx-centered fx-start-h">
+                        <p className="gray-c p-medium">
+                          {t("AginxGR", { count: videoViews })}
+                        </p>
+                        <p className="p-small gray-c">&#9679;</p>
+                        <p className="gray-c p-medium">
+                          <Date_
+                            toConvert={new Date(video.published_at * 1000)}
+                            time={true}
+                          />
+                        </p>
+                      </div>
+                      <p
+                        className={`fit-container ${
+                          !expandDescription ? "p-four-lines" : ""
                         }`}
-                        onClick={() =>
-                          postActions.zaps.total > 0 &&
-                          setUsersList({
-                            title: t("AVDZ5cJ"),
-                            list: postActions.zaps.zaps.map(
-                              (item) => item.pubkey
-                            ),
-                            extras: postActions.zaps.zaps,
-                          })
-                        }
                       >
-                        <NumberShrink value={postActions.zaps.total} />
+                        {video.content}
+                      </p>
+                      {!video.content && (
+                        <p className="gray-c p-medium p-italic">
+                          {t("AtZrjns")}
+                        </p>
+                      )}
+
+                      <div className="fx-centered fx-start-h fx-wrap">
+                        {video.keywords.map((tag, index) => {
+                          return (
+                            <Link
+                              key={index}
+                              className="sticker sticker-small sticker-gray-gray pointer"
+                              to={`/search?keyword=${tag?.replace("#", "%23")}`}
+                              state={{ tab: "videos" }}
+                            >
+                              {tag}
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
-                    <OptionsDropdown
-                      options={[
-                        <div
-                          onClick={(e) =>
-                            copyText(
-                              video.naddr,
-                              t("ApPw14o", { item: "naddr" }),
-                              e
-                            )
-                          }
-                          className="pointer"
-                        >
-                          <p>{t("ApPw14o", { item: "naddr" })}</p>
-                        </div>,
-                        userKeys && userKeys.pub !== video.pubkey && (
-                          <>
-                            <div
-                              className="fit-container fx-centered fx-start-h pointer"
-                              onClick={() => setShowArticleToCuration(true)}
-                            >
-                              <p>{t("A89Qqmt")}</p>
-                            </div>
-                            <BookmarkEvent
-                              label={t("As4mP1x")}
-                              pubkey={video.pubkey}
-                              kind={video.kind}
-                              d={parsedAddr.identifier}
-                              image={video.image}
-                            />
-                          </>
-                        ),
-                        <div className="fit-container fx-centered fx-start-h pointer">
-                          <ShareLink
-                            label={t("AT9KulV")}
-                            path={`/videos/${video.naddr}`}
-                            title={author.display_name || author.name}
-                            description={video.content}
-                            kind={34235}
-                            shareImgData={{
-                              post: {
-                                ...video,
-                                description: video.content,
-                              },
-                              author,
-                              likes: postActions.likes.likes.length,
-                              views: videoViews,
-                            }}
-                          />
-                        </div>,
-                        <div onClick={muteUnmute} className="pointer">
-                          {isMuted ? (
-                            <p className="red-c">{t("AKELUbQ")}</p>
-                          ) : (
-                            <p className="red-c">{t("AGMxuQ0")}</p>
-                          )}
-                        </div>,
-                      ]}
-                      displayAbove={true}
-                    />
+                    {morePosts.length > 0 && (
+                      <div
+                        className="fit-container box-pad-v fx-centered fx-col fx-start-v box-marg-s"
+                        style={{
+                          rowGap: "24px",
+                          border: "none",
+                        }}
+                      >
+                        <h4>{t("Aag9u1h")}</h4>
+                        <div className="fit-container fx-centered fx-wrap">
+                          {morePosts.map((video_) => {
+                            if (video_.id !== video.id)
+                              return (
+                                <Link
+                                  key={video_.id}
+                                  className="fit-container fx-centered fx-start-h"
+                                  to={`/videos/${video_.naddr}`}
+                                  target="_blank"
+                                >
+                                  <div
+                                    style={{
+                                      minWidth: "128px",
+                                      aspectRatio: "16/9",
+                                      borderRadius: "var(--border-r-6)",
+                                      backgroundImage: `url(${video_.image})`,
+                                      backgroundColor: "black",
+                                      position: "relative",
+                                    }}
+                                    className="bg-img cover-bg fx-centered fx-end-v fx-end-h box-pad-h-s box-pad-v-s"
+                                  >
+                                    <div
+                                      className="fx-centered"
+                                      style={{
+                                        position: "absolute",
+                                        left: 0,
+                                        top: 0,
+                                        width: "100%",
+                                        height: "100%",
+                                      }}
+                                    >
+                                      <div className="play-vid-58"></div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <p className="p-small gray-c">
+                                      <Date_
+                                        toConvert={
+                                          new Date(video_.published_at * 1000)
+                                        }
+                                      />
+                                    </p>
+                                    <p className="p-medium p-two-lines">
+                                      {video_.title}
+                                    </p>
+                                    <AuthorPreviewExtra
+                                      authorPubkey={video_.pubkey}
+                                    />
+                                  </div>
+                                </Link>
+                              );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                </>
               )}
-            </main>
-          </div>
+            </div>
+          )}
         </div>
+        {!showCommentsSection && !isMuted && (
+          <div
+            className="fit-container fx-col sticky-to-fixed fx-centered"
+            style={{
+              bottom: 0,
+              borderTop: "1px solid var(--very-dim-gray)",
+            }}
+          >
+            {postActions?.zaps?.zaps?.length > 0 && (
+              <div className="main-middle">
+                <ZapAd
+                  zappers={postActions.zaps.zaps}
+                  onClick={() =>
+                    setUsersList({
+                      title: t("AVDZ5cJ"),
+                      list: postActions.zaps.zaps.map((item) => item.pubkey),
+                      extras: postActions.zaps.zaps,
+                    })
+                  }
+                  margin={false}
+                />
+              </div>
+            )}
+            <div className="main-middle fx-scattered">
+              <div className="fx-centered  pointer">
+                <div
+                  data-tooltip={t("ADHdLfJ")}
+                  className={`pointer round-icon-tooltip ${
+                    isZapped ? "orange-c" : ""
+                  }`}
+                  onClick={() => setShowCommentsSections({ comment: true })}
+                >
+                  <div className="comment-24"></div>
+                </div>
+                <div
+                  data-tooltip={t("AMBxvKP")}
+                  className={`pointer round-icon-tooltip `}
+                  onClick={() => setShowCommentsSections({ comment: false })}
+                >
+                  <p>{postActions.replies.replies.length}</p>
+                </div>
+              </div>
+              <div className="fx-centered">
+                <Like
+                  isLiked={isLiked}
+                  event={video}
+                  actions={postActions}
+                  tagKind={"a"}
+                />
+                <div
+                  className={`pointer round-icon-tooltip ${
+                    isLiked ? "orange-c" : ""
+                  }`}
+                  data-tooltip={t("Alz0E9Y")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    postActions.likes.likes.length > 0 &&
+                      setUsersList({
+                        title: t("Alz0E9Y"),
+                        list: postActions.likes.likes.map(
+                          (item) => item.pubkey
+                        ),
+                        extras: postActions.likes.likes,
+                        extrasType: "reaction",
+                      });
+                  }}
+                >
+                  <NumberShrink value={postActions.likes.likes.length} />
+                </div>
+              </div>
+              <div className="fx-centered  pointer">
+                <Quote
+                  isQuoted={isQuoted}
+                  event={video}
+                  actions={postActions}
+                />
+                <div
+                  className={`round-icon-tooltip ${isQuoted ? "orange-c" : ""}`}
+                  data-tooltip={t("AWmDftG")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    postActions.quotes.quotes.length > 0 &&
+                      setUsersList({
+                        title: t("AWmDftG"),
+                        list: postActions.quotes.quotes.map(
+                          (item) => item.pubkey
+                        ),
+                        extras: [],
+                      });
+                  }}
+                >
+                  <NumberShrink value={postActions.quotes.quotes.length} />
+                </div>
+              </div>
+              <div className="fx-centered">
+                <Zap
+                  user={author}
+                  event={video}
+                  actions={postActions}
+                  isZapped={isZapped}
+                />
+                <div
+                  data-tooltip={t("AO0OqWT")}
+                  className={`pointer round-icon-tooltip ${
+                    isZapped ? "orange-c" : ""
+                  }`}
+                  onClick={() =>
+                    postActions.zaps.total > 0 &&
+                    setUsersList({
+                      title: t("AVDZ5cJ"),
+                      list: postActions.zaps.zaps.map((item) => item.pubkey),
+                      extras: postActions.zaps.zaps,
+                    })
+                  }
+                >
+                  <NumberShrink value={postActions.zaps.total} />
+                </div>
+              </div>
+              <OptionsDropdown
+                options={[
+                  <div
+                    onClick={(e) =>
+                      copyText(video.naddr, t("ApPw14o", { item: "naddr" }), e)
+                    }
+                    className="pointer"
+                  >
+                    <p>{t("ApPw14o", { item: "naddr" })}</p>
+                  </div>,
+                  userKeys && userKeys.pub !== video.pubkey && (
+                    <>
+                      <div
+                        className="fit-container fx-centered fx-start-h pointer"
+                        onClick={() => setShowArticleToCuration(true)}
+                      >
+                        <p>{t("A89Qqmt")}</p>
+                      </div>
+                      <BookmarkEvent
+                        label={t("As4mP1x")}
+                        pubkey={video.pubkey}
+                        kind={video.kind}
+                        d={parsedAddr.identifier}
+                        image={video.image}
+                      />
+                    </>
+                  ),
+                  <div className="fit-container fx-centered fx-start-h pointer">
+                    <ShareLink
+                      label={t("AT9KulV")}
+                      path={`/videos/${video.naddr}`}
+                      title={author.display_name || author.name}
+                      description={video.content}
+                      kind={34235}
+                      shareImgData={{
+                        post: {
+                          ...video,
+                          description: video.content,
+                        },
+                        author,
+                        likes: postActions.likes.likes.length,
+                        views: videoViews,
+                      }}
+                    />
+                  </div>,
+                  <div onClick={muteUnmute} className="pointer">
+                    {isMuted ? (
+                      <p className="red-c">{t("AKELUbQ")}</p>
+                    ) : (
+                      <p className="red-c">{t("AGMxuQ0")}</p>
+                    )}
+                  </div>,
+                ]}
+                displayAbove={true}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

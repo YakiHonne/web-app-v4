@@ -118,7 +118,7 @@ const FollowText = ({
           kind: 3,
           content: "",
           tags: tempTags.map((p) => ["p", p]),
-          allRelays: [...filterRelays(relaysOnPlatform, userRelays)],
+          // allRelays: [...filterRelays(relaysOnPlatform, userRelays)],
         })
       );
       // setTags(tempTags);å

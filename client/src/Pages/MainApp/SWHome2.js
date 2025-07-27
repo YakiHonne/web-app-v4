@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
-import Sidebar from "../../Components/Main/Sidebar";
 import LoadingDots from "../../Components/LoadingDots";
 import { useSelector } from "react-redux";
 import ReactMarkdown from "react-markdown";
@@ -14,7 +13,6 @@ import {
   getAnswerFromAIRemoteAPI,
 } from "../../Helpers/Helpers";
 import { nanoid } from "nanoid";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import { t } from "i18next";
 import PagePlaceholder from "../../Components/PagePlaceholder";
@@ -62,12 +60,7 @@ export default function SWhome2() {
           content={"Interact with the community smart widgets"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <Main />
-        </div>
-      </div>
+      <Main />
     </div>
   );
 }
@@ -83,14 +76,13 @@ const Main = () => {
       setSearchKeyword(searchKeywordInput.trim());
     }
   };
-
   useEffect(() => {
     if (showTips && searchKeyword) setShowtips(!showTips);
     if (!showTips && !searchKeyword) setShowtips(!showTips);
   }, [searchKeyword]);
 
   return (
-    <main className="main-page-nostr-container">
+    <div>
       {userKeys && (userKeys.ext || userKeys.sec || userKeys.bunker) ? (
         <div
           className="fx-centered fit-container fx-start-h fx-col box-pad-v box-pad-h-m"
@@ -114,7 +106,7 @@ const Main = () => {
       ) : (
         <PagePlaceholder page={"nostr-not-connected"} />
       )}
-    </main>
+    </div>
   );
 };
 

@@ -126,68 +126,60 @@ export default function SmartWidgetV2() {
           content={"Your portal for building your smart widget"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            {/* <PagePlaceholder page={"maintenance"}/> */}
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div className="box-pad-h-m fit-container">
-                {userKeys && (
-                  <>
-                    {(userKeys.sec || userKeys.ext || userKeys.bunker) && (
-                      <>
-                        {buildOptions && (
-                          <>
-                            {buildOption === "normal" && (
-                              <BuildOptions
-                                setTemplate={(data, newID) => {
-                                  setBuildOptions(false);
-                                  setTemplate(data);
-                                }}
-                                template={template}
-                                setBuildOption={(option) =>
-                                  setBuildOption(option)
-                                }
-                                back={() => setBuildOptions(false)}
-                              />
-                            )}
-                            {buildOption === "template" && (
-                              <SWTemplates
-                                setBuildOption={() => setBuildOption("normal")}
-                                setTemplate={handleSelectTemplate}
-                                templates={templates}
-                              />
-                            )}
-                            {buildOption === "drafts" && (
-                              <SWDrafts
-                                back={setBuildOption}
-                                setTemplate={handleSelectDraft}
-                              />
-                            )}
-                          </>
-                        )}
-                        {!buildOptions && (
-                          <SmartWidgetBuilder
-                            back={(data) => {
-                              setBuildOptions(true);
-                              setTemplate(data);
-                            }}
-                            template={template}
-                            identifier={identifier}
-                          />
-                        )}
-                      </>
-                    )}
-                    {!userKeys.sec && !userKeys.ext && !userKeys.bunker && (
-                      <PagePlaceholder page={"nostr-unauthorized"} />
-                    )}
-                  </>
-                )}
-                {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
-              </div>
-            </div>
-          </main>
+
+      {/* <PagePlaceholder page={"maintenance"}/> */}
+      <div className="fx-centered fit-container fx-start-h fx-start-v">
+        <div className="box-pad-h-m fit-container">
+          {userKeys && (
+            <>
+              {(userKeys.sec || userKeys.ext || userKeys.bunker) && (
+                <>
+                  {buildOptions && (
+                    <>
+                      {buildOption === "normal" && (
+                        <BuildOptions
+                          setTemplate={(data, newID) => {
+                            setBuildOptions(false);
+                            setTemplate(data);
+                          }}
+                          template={template}
+                          setBuildOption={(option) => setBuildOption(option)}
+                          back={() => setBuildOptions(false)}
+                        />
+                      )}
+                      {buildOption === "template" && (
+                        <SWTemplates
+                          setBuildOption={() => setBuildOption("normal")}
+                          setTemplate={handleSelectTemplate}
+                          templates={templates}
+                        />
+                      )}
+                      {buildOption === "drafts" && (
+                        <SWDrafts
+                          back={setBuildOption}
+                          setTemplate={handleSelectDraft}
+                        />
+                      )}
+                    </>
+                  )}
+                  {!buildOptions && (
+                    <SmartWidgetBuilder
+                      back={(data) => {
+                        setBuildOptions(true);
+                        setTemplate(data);
+                      }}
+                      template={template}
+                      identifier={identifier}
+                    />
+                  )}
+                </>
+              )}
+              {!userKeys.sec && !userKeys.ext && !userKeys.bunker && (
+                <PagePlaceholder page={"nostr-unauthorized"} />
+              )}
+            </>
+          )}
+          {!userKeys && <PagePlaceholder page={"nostr-not-connected"} />}
         </div>
       </div>
     </div>

@@ -10,32 +10,10 @@ import LoadingDots from "../../Components/LoadingDots";
 import { useSelector } from "react-redux";
 import LaunchSW from "./LaunchSW";
 import axiosInstance from "../../Helpers/HTTP_Client";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
 import "highlight.js/styles/github-dark.css";
-import { copyText } from "../../Helpers/Helpers";
-import { nanoid } from "nanoid";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import { t } from "i18next";
-import PagePlaceholder from "../../Components/PagePlaceholder";
-
-const getSavedConversation = (pubkey) => {
-  let aiConversation = localStorage.getItem("aiConversation");
-  aiConversation = JSON.parse(aiConversation) || {};
-  let conversation = aiConversation[pubkey];
-  if (!conversation) return [];
-  return conversation;
-};
-
-const saveConversation = (pubkey, data) => {
-  const aiConversation = localStorage.getItem("aiConversation");
-  let conversation = JSON.parse(aiConversation) || {};
-  conversation[pubkey] = data;
-  localStorage.setItem("aiConversation", JSON.stringify(conversation));
-};
 
 export default function SWhome() {
   return (
@@ -63,12 +41,8 @@ export default function SWhome() {
           content={"Interact with the community smart widgets"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <Main />
-        </div>
-      </div>
+
+      <Main />
     </div>
   );
 }
@@ -91,7 +65,7 @@ const Main = () => {
   }, [searchKeyword]);
 
   return (
-    <main className="main-page-nostr-container box-pad-h-m">
+    <div className="box-pad-h-m">
       <div
         className="fx-centered fit-container fx-start-h fx-col box-pad-v"
         style={{ gap: 0, minHeight: "100vh" }}
@@ -202,9 +176,11 @@ const Main = () => {
           <hr />
         </div>
         <div
-          style={{
-            // width: "min(100%, 600px)",
-          }}
+          style={
+            {
+              // width: "min(100%, 600px)",
+            }
+          }
           className="fx-centered fx-col fx-start-v box-pad-h-m fit-container"
         >
           {searchKeyword && (
@@ -224,7 +200,7 @@ const Main = () => {
           <SWSet external={searchKeyword} />
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 
@@ -248,7 +224,7 @@ const SWSet = ({ external }) => {
       }
       let swIDs = userSavedTools.map((_) => _.split(":")[2]);
       if (swIDs.length === 0) return;
-      const data = await getSubData([{ kinds: [30033], "#d": swIDs }]);
+      const data = await getSubData([{ kinds: [30033], "#d": swIDs }], 150);
       setSavedTools(data.data.map((_) => getParsedSW(_)));
       saveUsers(data.pubkeys);
     };
@@ -274,15 +250,18 @@ const SWSet = ({ external }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!isLoading) setIsLoading(true);
-      const data = await getSubData([
-        {
-          kinds: [30033],
-          limit: 20,
-          until: lastEventTimestamp,
-          "#l": type === "tool" ? ["tool", "action"] : ["basic"],
-        },
-      ]);
-      console.log(data)
+      const data = await getSubData(
+        [
+          {
+            kinds: [30033],
+            limit: 20,
+            until: lastEventTimestamp,
+            "#l": type === "tool" ? ["tool", "action"] : ["basic"],
+          },
+        ],
+        150
+      );
+      console.log(data);
       setActions((prev) => [...prev, ...data.data.map((_) => getParsedSW(_))]);
       saveUsers(data.pubkeys);
       setIsLoading(false);

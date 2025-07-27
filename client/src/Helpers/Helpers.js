@@ -1614,6 +1614,19 @@ const handleAppDirection = (toChangeLang) => {
     document.documentElement.dir = "ltr";
 };
 
+const getCustomServices = () => {
+  let userKeys = getKeys();
+  if (!userKeys) return {};
+  let customServices = localStorage.getItem(`custom-lang-services-${userKeys.pub}`);
+  if (!customServices) return {};
+  try {
+    customServices = JSON.parse(customServices);
+    return customServices;
+  } catch (err) {
+    return {};
+  }
+}
+
 const getDefaultSettings = (pubkey) => {
   return {
     pubkey,
@@ -2494,4 +2507,5 @@ export {
   getWotConfig,
   getAnswerFromAIRemoteAPI,
   isImageUrl,
+  getCustomServices
 };

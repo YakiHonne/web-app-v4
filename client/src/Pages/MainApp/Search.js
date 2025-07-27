@@ -339,204 +339,183 @@ export default function Search() {
           content={"Search for people, notes and different content on nostr"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main
-            className="main-page-nostr-container"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            style={{ padding: 0 }}
+      <ArrowUp />
+      <div className="fit-container fx-centered fx-start-h fx-start-v">
+        <div
+          className="fit-container fx-centered fx-start-v "
+          style={{ gap: 0 }}
+        >
+          <div
+            style={{ gap: 0 }}
+            className={`fx-centered fx-wrap fit-container main-middle`}
           >
-            <ArrowUp />
-            <div className="fit-container fx-centered fx-start-h fx-start-v">
+            <div
+              className="fit-container sticky fx-centered fx-start-h fx-start-v fx-col box-pad-h "
+              style={{
+                padding: ".5rem",
+                borderBottom: "1px solid var(--very-dim-gray)",
+              }}
+            >
               <div
-                className="fit-container fx-centered fx-start-v "
-                style={{ gap: 0 }}
+                className="fx-centered fit-container"
+                style={{
+                  position: "relative",
+                  borderBottom: "1px solid var(--very-dim-gray)",
+                }}
               >
-                <div
-                  style={{ gap: 0 }}
-                  className={`fx-centered fx-wrap fit-container main-middle`}
-                >
+                <div className="search-24"></div>
+                <input
+                  type="text"
+                  placeholder="Search people, notes and content"
+                  className="if ifs-full if-no-border"
+                  onChange={handleOnChange}
+                  value={searchKeyword}
+                  style={{ paddingLeft: ".5rem" }}
+                  autoFocus
+                />
+                {searchKeyword && (
                   <div
-                    className="fit-container sticky fx-centered fx-start-h fx-start-v fx-col box-pad-h "
-                    style={{
-                      padding: ".5rem",
-                      borderBottom: "1px solid var(--very-dim-gray)",
+                    className="close"
+                    onClick={() => {
+                      !isLoading && setSearchKeyword("");
                     }}
                   >
-                    <div
-                      className="fx-centered fit-container"
-                      style={{
-                        position: "relative",
-                        borderBottom: "1px solid var(--very-dim-gray)",
-                      }}
-                    >
-                      <div className="search-24"></div>
-                      <input
-                        type="text"
-                        placeholder="Search people, notes and content"
-                        className="if ifs-full if-no-border"
-                        onChange={handleOnChange}
-                        value={searchKeyword}
-                        style={{ paddingLeft: ".5rem" }}
-                        autoFocus
-                      />
-                      {searchKeyword && (
-                        <div
-                          className="close"
-                          onClick={() => {
-                            !isLoading && setSearchKeyword("");
-                          }}
-                        >
-                          <div></div>
-                        </div>
-                      )}
-                    </div>
-                    <Slider
-                      items={[
-                        ...[
-                          "people",
-                          "all-media",
-                          "articles",
-                          "notes",
-                          "videos",
-                        ].map((tag, index) => {
-                          return (
-                            <div
-                              className={
-                                "btn sticker-gray-black p-caps fx-centered"
-                              }
-                              style={{
-                                backgroundColor:
-                                  selectedTab === tag ? "" : "transparent",
-                                color: selectedTab === tag ? "" : "var(--gray)",
-                                pointerEvents: isLoading ? "none" : "auto",
-                              }}
-                              key={index}
-                              onClick={() => handleSelectedTab(tag)}
-                            >
-                              {tabsContent[tag]}
-                            </div>
-                          );
-                        }),
-                      ]}
-                    />
-                    <hr />
-
-                    {searchKeyword && selectedTab !== "people" && (
-                      <div className="fx-scattered fit-container box-pad-v-s box-pad-h-m">
-                        <h3>#{searchKeyword.replaceAll("#", "")}</h3>
-                        {userKeys && (
-                          <button
-                            className={`btn ${
-                              followed ? "btn-normal" : "btn-gray"
-                            } fx-centered`}
-                            onClick={saveInterestList}
-                          >
-                            {!followed && (
-                              <>
-                                {t("APkD8MP")} <div className="plus-sign"></div>
-                              </>
-                            )}
-                            {followed && (
-                              <>
-                                {t("AiKpDYn")}
-                                <div
-                                  className="check-24"
-                                  style={{ filter: "brightness(0) invert()" }}
-                                ></div>
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    <div></div>
                   </div>
-                  {userInterestList.length > 0 && (
-                    <div className="fit-container fx-centered fx-col fx-start-h fx-start-v box-pad-v-m">
-                      <p className="gray-c">{t("AvcFYqP")}</p>
-                      <div className="fx-centered fx-wrap">
-                        {userInterestList?.map((interest, index) => {
-                          return (
-                            <div
-                              onClick={() => {
-                                setSearchKeyword(interest.toLowerCase());
-                                setResults([]);
-                                setIsLoading(true);
-                              }}
-                              className={`sc-s  box-pad-h-m box-pad-v-s pointer ${
-                                searchKeyword === interest.toLowerCase()
-                                  ? ""
-                                  : "bg-sp"
-                              }`}
-                              key={index}
-                            >
-                              #{interest}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {selectedTab === "people" &&
-                    results.map((item, index) => {
-                      if (!item.kind) {
-                        let url = encodePubkey(item.pubkey);
-                        if (url)
-                          return (
-                            <SearchUserCard
-                              user={item}
-                              key={item.id}
-                              url={url}
-                              exit={() => null}
-                            />
-                          );
-                      }
-                    })}
-                  {selectedTab !== "people" &&
-                    results.map((item, index) => {
-                      if (
-                        [1].includes(item.kind) &&
-                        !userMutedList.includes(item.pubkey)
-                      )
-                        return (
-                          <KindOne key={item.id} event={item} border={true} />
-                        );
-                      if (
-                        [30023, 34235].includes(item.kind) &&
-                        !userMutedList.includes(item.pubkey)
-                      )
-                        return (
-                          <RepEventPreviewCard key={item.id} item={item} />
-                        );
-                    })}
-                  {isLoading && (
-                    <div
-                      className="fit-container fx-centered"
-                      style={{ height: "500px" }}
+                )}
+              </div>
+              <Slider
+                items={[
+                  ...["people", "all-media", "articles", "notes", "videos"].map(
+                    (tag, index) => {
+                      return (
+                        <div
+                          className={
+                            "btn sticker-gray-black p-caps fx-centered"
+                          }
+                          style={{
+                            backgroundColor:
+                              selectedTab === tag ? "" : "transparent",
+                            color: selectedTab === tag ? "" : "var(--gray)",
+                            pointerEvents: isLoading ? "none" : "auto",
+                          }}
+                          key={index}
+                          onClick={() => handleSelectedTab(tag)}
+                        >
+                          {tabsContent[tag]}
+                        </div>
+                      );
+                    }
+                  ),
+                ]}
+              />
+              <hr />
+
+              {searchKeyword && selectedTab !== "people" && (
+                <div className="fx-scattered fit-container box-pad-v-s box-pad-h-m">
+                  <h3>#{searchKeyword.replaceAll("#", "")}</h3>
+                  {userKeys && (
+                    <button
+                      className={`btn ${
+                        followed ? "btn-normal" : "btn-gray"
+                      } fx-centered`}
+                      onClick={saveInterestList}
                     >
-                      <LoadingLogo />
-                    </div>
-                  )}
-                  {results.length === 0 && !isLoading && (
-                    <div
-                      className="fit-container fx-col fx-centered"
-                      style={{ height: "500px" }}
-                    >
-                      <div
-                        className="search"
-                        style={{ minWidth: "48px", minHeight: "48px" }}
-                      ></div>
-                      <h4 className="box-pad-v-s">{t("AjlW15t")}</h4>
-                      <p className="gray-c">{t("A0RqaoC")}</p>
-                    </div>
+                      {!followed && (
+                        <>
+                          {t("APkD8MP")} <div className="plus-sign"></div>
+                        </>
+                      )}
+                      {followed && (
+                        <>
+                          {t("AiKpDYn")}
+                          <div
+                            className="check-24"
+                            style={{ filter: "brightness(0) invert()" }}
+                          ></div>
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
-              </div>
+              )}
             </div>
-          </main>
+            {userInterestList.length > 0 && (
+              <div className="fit-container fx-centered fx-col fx-start-h fx-start-v box-pad-v-m">
+                <p className="gray-c">{t("AvcFYqP")}</p>
+                <div className="fx-centered fx-wrap">
+                  {userInterestList?.map((interest, index) => {
+                    return (
+                      <div
+                        onClick={() => {
+                          setSearchKeyword(interest.toLowerCase());
+                          setResults([]);
+                          setIsLoading(true);
+                        }}
+                        className={`sc-s  box-pad-h-m box-pad-v-s pointer ${
+                          searchKeyword === interest.toLowerCase()
+                            ? ""
+                            : "bg-sp"
+                        }`}
+                        key={index}
+                      >
+                        #{interest}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {selectedTab === "people" &&
+              results.map((item, index) => {
+                if (!item.kind) {
+                  let url = encodePubkey(item.pubkey);
+                  if (url)
+                    return (
+                      <SearchUserCard
+                        user={item}
+                        key={item.id}
+                        url={url}
+                        exit={() => null}
+                      />
+                    );
+                }
+              })}
+            {selectedTab !== "people" &&
+              results.map((item, index) => {
+                if (
+                  [1].includes(item.kind) &&
+                  !userMutedList.includes(item.pubkey)
+                )
+                  return <KindOne key={item.id} event={item} border={true} />;
+                if (
+                  [30023, 34235].includes(item.kind) &&
+                  !userMutedList.includes(item.pubkey)
+                )
+                  return <RepEventPreviewCard key={item.id} item={item} />;
+              })}
+            {isLoading && (
+              <div
+                className="fit-container fx-centered"
+                style={{ height: "500px" }}
+              >
+                <LoadingLogo />
+              </div>
+            )}
+            {results.length === 0 && !isLoading && (
+              <div
+                className="fit-container fx-col fx-centered"
+                style={{ height: "500px" }}
+              >
+                <div
+                  className="search"
+                  style={{ minWidth: "48px", minHeight: "48px" }}
+                ></div>
+                <h4 className="box-pad-v-s">{t("AjlW15t")}</h4>
+                <p className="gray-c">{t("A0RqaoC")}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

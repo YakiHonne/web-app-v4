@@ -310,98 +310,82 @@ export default function NoteSharedRelay() {
             }
           />
         </Helmet>
-        <div className="fit-container fx-centered">
-          <div className="main-container">
-            <Sidebar />
-            <main
-              className="main-page-nostr-container"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              style={{ padding: 0 }}
+        <YakiIntro />
+        <ArrowUp />
+        <div className="fit-container fx-centered fx-start-h fx-start-v">
+          <div
+            className="fit-container fx-centered fx-start-v fx-start-h"
+            style={{ gap: 0 }}
+          >
+            <div
+              style={{ gap: 0 }}
+              className={`fx-centered  fx-wrap fit-container`}
             >
-              <YakiIntro />
-              <ArrowUp />
-              <div className="fit-container fx-centered fx-start-h fx-start-v">
-                <div
-                  className="fit-container fx-centered fx-start-v fx-start-h"
-                  style={{ gap: 0 }}
-                >
+              {relay && (
+                <>
                   <div
-                    style={{ gap: 0 }}
-                    className={`fx-centered  fx-wrap fit-container`}
+                    className="fit-container sticky fx-centered box-pad-h "
+                    style={{
+                      padding: "1rem",
+                      borderBottom: "1px solid var(--very-dim-gray)",
+                    }}
                   >
-                    {relay && (
-                      <>
-                        <div
-                          className="fit-container sticky fx-centered box-pad-h "
-                          style={{
-                            padding: "1rem",
-                            borderBottom: "1px solid var(--very-dim-gray)",
-                          }}
+                    <div className="main-middle fx-scattered">
+                      <h4>{relay}</h4>
+                      {userKeys && !relaysList.includes(relay) && (
+                        <button
+                          className="fx-centered btn btn-normal btn-small"
+                          onClick={handleUpdateSettings}
                         >
-                          <div className="main-middle fx-scattered">
-                            <h4>{relay}</h4>
-                            {userKeys && !relaysList.includes(relay) && (
-                              <button
-                                className="fx-centered btn btn-normal btn-small"
-                                onClick={handleUpdateSettings}
-                              >
-                                <div className="plus-sign"></div>Add to my list
-                              </button>
-                            )}
-                            {userKeys && relaysList.includes(relay) && (
-                              <div
-                                className="fx-centered btn btn-gst btn-small"
-                                style={{ pointerEvents: "none" }}
-                              >
-                                On my list
-                                <div
-                                  className="check-24"
-                                  style={{ margin: 0 }}
-                                ></div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="main-middle">
-                          {selectedCategory !== SUGGESTED_TAGS_VALUE && (
-                            <HomeFeed
-                              selectedCategory={selectedCategory}
-                              selectedFilter={selectedFilter}
-                              relay={relay}
-                            />
-                          )}
-                        </div>
-                      </>
-                    )}
-                    {!relay && (
-                      <div
-                        className="fit-container fx-centered fx-col"
-                        style={{ height: "80vh" }}
-                      >
+                          <div className="plus-sign"></div>Add to my list
+                        </button>
+                      )}
+                      {userKeys && relaysList.includes(relay) && (
                         <div
-                          className="yaki-logomark"
-                          style={{
-                            minWidth: "48px",
-                            minHeight: "48px",
-                            opacity: 0.5,
-                          }}
-                        ></div>
-                        <h4>Invalid URL</h4>
-                        <p
-                          className="p-centered gray-c"
-                          style={{ maxWidth: "330px" }}
+                          className="fx-centered btn btn-gst btn-small"
+                          style={{ pointerEvents: "none" }}
                         >
-                          It looks like the shared relay URL is broken or does
-                          not exist
-                        </p>
-                      </div>
+                          On my list
+                          <div className="check-24" style={{ margin: 0 }}></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="main-middle">
+                    {selectedCategory !== SUGGESTED_TAGS_VALUE && (
+                      <HomeFeed
+                        selectedCategory={selectedCategory}
+                        selectedFilter={selectedFilter}
+                        relay={relay}
+                      />
                     )}
                   </div>
+                </>
+              )}
+              {!relay && (
+                <div
+                  className="fit-container fx-centered fx-col"
+                  style={{ height: "80vh" }}
+                >
+                  <div
+                    className="yaki-logomark"
+                    style={{
+                      minWidth: "48px",
+                      minHeight: "48px",
+                      opacity: 0.5,
+                    }}
+                  ></div>
+                  <h4>Invalid URL</h4>
+                  <p
+                    className="p-centered gray-c"
+                    style={{ maxWidth: "330px" }}
+                  >
+                    It looks like the shared relay URL is broken or does not
+                    exist
+                  </p>
                 </div>
-              </div>
-            </main>
+              )}
+            </div>
           </div>
         </div>
       </div>

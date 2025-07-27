@@ -176,7 +176,7 @@ export default function SearchNetwork({ exit }) {
 
     setResults(filteredUsers);
     if (filteredUsers.length < 5) getUsersFromCache();
-      setIsLoading(false);
+    setIsLoading(false);
   };
 
   // const searchForUser = () => {
@@ -317,11 +317,12 @@ export default function SearchNetwork({ exit }) {
           {searchKeyword && (
             <div
               className="fit-container box-pad-h-s box-pad-v-s fx-centered"
-              onClick={() =>
+              onClick={() => {
                 customHistory.push(
                   `/search?keyword=${searchKeyword?.replace("#", "%23")}`
-                )
-              }
+                );
+                exit();
+              }}
             >
               <div className="fit-container slide-down box-pad-h-m box-pad-v-m sc-s-18 fx-centered fx-start-h pointer">
                 <div className="search"></div>{" "}
@@ -341,11 +342,12 @@ export default function SearchNetwork({ exit }) {
                 {userInterestList?.map((interest, index) => {
                   return (
                     <div
-                      onClick={() =>
+                      onClick={() => {
                         customHistory.push(
                           `/search?keyword=${interest?.replace("#", "%23")}`
-                        )
-                      }
+                        );
+                        exit();
+                      }}
                       className="sc-s bg-sp box-pad-h-m box-pad-v-s pointer"
                       key={index}
                     >

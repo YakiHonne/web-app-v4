@@ -205,282 +205,274 @@ export default function UncensoredNotes() {
           }
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            <ArrowUp />
+
+      <ArrowUp />
+      <div
+        className="fit-container fx-centered fx-start-v fx-start-h"
+        style={{ gap: 0 }}
+      >
+        <div className="main-middle">
+          <div
+            className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h un-banner"
+            style={{
+              position: "relative",
+              backgroundColor: "var(--c3)",
+              border: "none",
+            }}
+          >
             <div
-              className="fit-container fx-centered fx-start-v fx-start-h"
-              style={{ gap: 0 }}
-            >
-              <div className="main-middle">
-                <div
-                  className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h un-banner"
-                  style={{
-                    position: "relative",
-                    backgroundColor: "var(--c3)",
-                    border: "none",
-                  }}
-                >
-                  <div
-                    className="cup-24"
-                    style={{
-                      minHeight: "120px",
-                      minWidth: "120px",
-                      position: "absolute",
-                      right: "-20px",
-                      bottom: "-10px",
-                      filter: "brightness(0) invert()",
-                      opacity: ".2",
-                      rotate: "20deg",
-                    }}
-                  ></div>
-                  <div className="fx-centered fx-col fx-start-v">
-                    <p className=" p-medium" style={{ color: "white" }}>
-                      {t("Ay17eyW")}
-                    </p>
-                    <div className="fx-centered fx-end-v">
-                      <h2 className="orange-c">{balance || "N/A"}</h2>
-                      <p style={{ color: "white" }}>Sats.</p>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="fit-container fx-scattered box-pad-v-m  box-pad-h-m"
-                  style={{
-                    position: "sticky",
-                    background: "var(--white)",
-                    top: "0",
-                    gap: 0,
-                    zIndex: "100",
-                    borderBottom: "1px solid var(--very-dim-gray)",
-                  }}
-                >
-                  <div className="fx-centered" style={{ columnGap: "16px" }}>
-                    <div
-                      onClick={() => handleContentType("new")}
-                      className={"btn sticker-gray-black p-caps fx-centered"}
-                      style={{
-                        backgroundColor:
-                          contentType === "new" ? "" : "transparent",
-                        color: contentType === "new" ? "" : "var(--gray)",
-                      }}
-                    >
-                      {t("ADOU7Ed")}
-                    </div>
-                    <div
-                      onClick={() => handleContentType("nmh")}
-                      className={"btn sticker-gray-black p-caps fx-centered"}
-                      style={{
-                        backgroundColor:
-                          contentType === "nmh" ? "" : "transparent",
-                        color: contentType === "nmh" ? "" : "var(--gray)",
-                      }}
-                    >
-                      {t("Ak8B1oL")}
-                    </div>
-                    <div
-                      onClick={() => handleContentType("sealed")}
-                      className={"btn sticker-gray-black p-caps fx-centered"}
-                      style={{
-                        backgroundColor:
-                          contentType === "sealed" ? "" : "transparent",
-                        color: contentType === "sealed" ? "" : "var(--gray)",
-                      }}
-                    >
-                      {t("ALbnctt")}
-                    </div>
-                  </div>
-                  <div className="fx-centered">
-                    {!contentType && (
-                      <div
-                        className="round-icon round-icon-tooltip option"
-                        data-tooltip={t("AckKGvv")}
-                        onClick={() => setTimestamp(Date.now())}
-                      >
-                        <div className="switch-arrows-24"></div>
-                      </div>
-                    )}
-                    <div
-                      className="round-icon round-icon-tooltip"
-                      data-tooltip={t("AXjyFcp")}
-                      onClick={() => handleContentType("")}
-                    >
-                      <div className="cup-24"></div>
-                    </div>
-                  </div>
-                </div>
-                {contentType && (
-                  <div
-                    className="fit-container fx-centered fx-col "
-                    style={{ gap: 0 }}
-                  >
-                    {flashNews.map((fn) => {
-                      if (!userMutedList.includes(fn.author.pubkey))
-                        return (
-                          <FlashNewsCard
-                            key={fn.flashnews.id}
-                            data={fn}
-                            refreshFlashNews={refreshFlashNews}
-                          />
-                        );
-                    })}
-                  </div>
-                )}
-                {!contentType && (
-                  <div className="fit-container fx-centered fx-col ">
-                    {myRewards.map((myrw) => {
-                      return (
-                        <MyRewardedItem
-                          key={myrw.id}
-                          rwdItem={myrw}
-                          setTimestamp={setTimestamp}
-                          rewards={rewards}
-                          isLoading={isLoadingGlobal}
-                          setIsLoading={setIsLoadingGlobal}
-                        />
-                      );
-                    })}
-                    {userKeys &&
-                      (userKeys.sec || userKeys.ext || userKeys.bunker) &&
-                      !myRewards.length && (
-                        <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                          <h4>{t("AEoE8CH")}</h4>
-                          <p
-                            className="gray-c p-centered"
-                            style={{ maxWidth: "600px" }}
-                          >
-                            {t("A5nF77W")}
-                          </p>
-                          <Link to={"/"}>
-                            <button className="btn btn-text-gray">
-                              {t("Aik5uGa")}
-                            </button>
-                          </Link>
-                        </div>
-                      )}
-                    {!userKeys && (
-                      <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                        <h4>{t("AMxTRuK")}</h4>
-                        <p
-                          className="gray-c p-centered"
-                          style={{ maxWidth: "600px" }}
-                        >
-                          {t("AX35a5g")}
-                        </p>
-                        <button
-                          className="btn btn-normal"
-                          onClick={() => redirectToLogin()}
-                        >
-                          {t("AmOtzoL")}
-                        </button>
-                      </div>
-                    )}
-                    {userKeys &&
-                      !userKeys.sec &&
-                      !userKeys.ext &&
-                      !userKeys.bunker && (
-                        <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
-                          <h4>{t("ApmJsGe")}</h4>
-                          <p
-                            className="gray-c p-centered"
-                            style={{ maxWidth: "600px" }}
-                          >
-                            {t("AQ3K2E1")}
-                          </p>
-                          <h4 className="red-c">:(</h4>
-                        </div>
-                      )}
-                  </div>
-                )}
-                {isLoading && (
-                  <div
-                    className="fit-container fx-centered box-marg"
-                    style={{ height: "30vh" }}
-                  >
-                    <p className="gray-c">{t("AKvHyxG")}</p>
-                    <LoadingDots />
-                  </div>
-                )}
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  position: "sticky",
-                  top: 0,
-                }}
-                className="box-pad-h-m box-pad-v-m fx-centered fx-col extras-homepage"
-              >
-                <div
-                  className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
-                  style={{
-                    position: "relative",
-                    backgroundColor: "var(--c3)",
-                    border: "none",
-                  }}
-                >
-                  <div
-                    className="cup-24"
-                    style={{
-                      minHeight: "120px",
-                      minWidth: "120px",
-                      position: "absolute",
-                      right: "-20px",
-                      bottom: "-10px",
-                      filter: "brightness(0) invert()",
-                      opacity: ".2",
-                      rotate: "20deg",
-                    }}
-                  ></div>
-                  <div className="fx-centered fx-col fx-start-v">
-                    <p className="p-medium" style={{ color: "white" }}>
-                      {t("Ay17eyW")}
-                    </p>
-                    <div className="fx-centered fx-end-v">
-                      <h2 className="orange-c">{balance || "N/A"}</h2>
-                      <p style={{ color: "white" }}>Sats.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
-                  <div
-                    className="note-24"
-                    style={{ minHeight: "48px", minWidth: "48px" }}
-                  >
-                    {" "}
-                  </div>
-                  <h4>{t("AtTBm8o")}</h4>
-                  <p className="gray-c">{t("A9YOTCh")}</p>
-                  <Link
-                    target="_blank"
-                    to={
-                      "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
-                    }
-                  >
-                    <button className="btn btn-normal">{t("Azigg0N")}</button>
-                  </Link>
-                </div>
-                <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
-                  <h4>{t("AlAlx8I")}</h4>
-                  <ul>
-                    <li className="gray-c">{t("AEkp3uJ")}</li>
-                    <li className="gray-c">{t("ApW8X5d")}</li>
-                    <li className="gray-c">{t("AHc4MVZ")}</li>
-                  </ul>
-                  <Link
-                    target="_blank"
-                    to={
-                      "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
-                    }
-                  >
-                    <button className="btn btn-normal">{t("Azigg0N")}</button>
-                  </Link>
-                </div>
-                <Footer />
+              className="cup-24"
+              style={{
+                minHeight: "120px",
+                minWidth: "120px",
+                position: "absolute",
+                right: "-20px",
+                bottom: "-10px",
+                filter: "brightness(0) invert()",
+                opacity: ".2",
+                rotate: "20deg",
+              }}
+            ></div>
+            <div className="fx-centered fx-col fx-start-v">
+              <p className=" p-medium" style={{ color: "white" }}>
+                {t("Ay17eyW")}
+              </p>
+              <div className="fx-centered fx-end-v">
+                <h2 className="orange-c">{balance || "N/A"}</h2>
+                <p style={{ color: "white" }}>Sats.</p>
               </div>
             </div>
-          </main>
+          </div>
+          <div
+            className="fit-container fx-scattered box-pad-v-m  box-pad-h-m"
+            style={{
+              position: "sticky",
+              background: "var(--white)",
+              top: "0",
+              gap: 0,
+              zIndex: "100",
+              borderBottom: "1px solid var(--very-dim-gray)",
+            }}
+          >
+            <div className="fx-centered" style={{ columnGap: "16px" }}>
+              <div
+                onClick={() => handleContentType("new")}
+                className={"btn sticker-gray-black p-caps fx-centered"}
+                style={{
+                  backgroundColor: contentType === "new" ? "" : "transparent",
+                  color: contentType === "new" ? "" : "var(--gray)",
+                }}
+              >
+                {t("ADOU7Ed")}
+              </div>
+              <div
+                onClick={() => handleContentType("nmh")}
+                className={"btn sticker-gray-black p-caps fx-centered"}
+                style={{
+                  backgroundColor: contentType === "nmh" ? "" : "transparent",
+                  color: contentType === "nmh" ? "" : "var(--gray)",
+                }}
+              >
+                {t("Ak8B1oL")}
+              </div>
+              <div
+                onClick={() => handleContentType("sealed")}
+                className={"btn sticker-gray-black p-caps fx-centered"}
+                style={{
+                  backgroundColor:
+                    contentType === "sealed" ? "" : "transparent",
+                  color: contentType === "sealed" ? "" : "var(--gray)",
+                }}
+              >
+                {t("ALbnctt")}
+              </div>
+            </div>
+            <div className="fx-centered">
+              {!contentType && (
+                <div
+                  className="round-icon round-icon-tooltip option"
+                  data-tooltip={t("AckKGvv")}
+                  onClick={() => setTimestamp(Date.now())}
+                >
+                  <div className="switch-arrows-24"></div>
+                </div>
+              )}
+              <div
+                className="round-icon round-icon-tooltip"
+                data-tooltip={t("AXjyFcp")}
+                onClick={() => handleContentType("")}
+              >
+                <div className="cup-24"></div>
+              </div>
+            </div>
+          </div>
+          {contentType && (
+            <div
+              className="fit-container fx-centered fx-col "
+              style={{ gap: 0 }}
+            >
+              {flashNews.map((fn) => {
+                if (!userMutedList.includes(fn.author.pubkey))
+                  return (
+                    <FlashNewsCard
+                      key={fn.flashnews.id}
+                      data={fn}
+                      refreshFlashNews={refreshFlashNews}
+                    />
+                  );
+              })}
+            </div>
+          )}
+          {!contentType && (
+            <div className="fit-container fx-centered fx-col ">
+              {myRewards.map((myrw) => {
+                return (
+                  <MyRewardedItem
+                    key={myrw.id}
+                    rwdItem={myrw}
+                    setTimestamp={setTimestamp}
+                    rewards={rewards}
+                    isLoading={isLoadingGlobal}
+                    setIsLoading={setIsLoadingGlobal}
+                  />
+                );
+              })}
+              {userKeys &&
+                (userKeys.sec || userKeys.ext || userKeys.bunker) &&
+                !myRewards.length && (
+                  <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
+                    <h4>{t("AEoE8CH")}</h4>
+                    <p
+                      className="gray-c p-centered"
+                      style={{ maxWidth: "600px" }}
+                    >
+                      {t("A5nF77W")}
+                    </p>
+                    <Link to={"/"}>
+                      <button className="btn btn-text-gray">
+                        {t("Aik5uGa")}
+                      </button>
+                    </Link>
+                  </div>
+                )}
+              {!userKeys && (
+                <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
+                  <h4>{t("AMxTRuK")}</h4>
+                  <p
+                    className="gray-c p-centered"
+                    style={{ maxWidth: "600px" }}
+                  >
+                    {t("AX35a5g")}
+                  </p>
+                  <button
+                    className="btn btn-normal"
+                    onClick={() => redirectToLogin()}
+                  >
+                    {t("AmOtzoL")}
+                  </button>
+                </div>
+              )}
+              {userKeys &&
+                !userKeys.sec &&
+                !userKeys.ext &&
+                !userKeys.bunker && (
+                  <div className="fit-container fx-centered fx-col box-pad-h box-marg-full">
+                    <h4>{t("ApmJsGe")}</h4>
+                    <p
+                      className="gray-c p-centered"
+                      style={{ maxWidth: "600px" }}
+                    >
+                      {t("AQ3K2E1")}
+                    </p>
+                    <h4 className="red-c">:(</h4>
+                  </div>
+                )}
+            </div>
+          )}
+          {isLoading && (
+            <div
+              className="fit-container fx-centered box-marg"
+              style={{ height: "30vh" }}
+            >
+              <p className="gray-c">{t("AKvHyxG")}</p>
+              <LoadingDots />
+            </div>
+          )}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            position: "sticky",
+            top: 0,
+          }}
+          className="box-pad-h-m box-pad-v-m fx-centered fx-col extras-homepage"
+        >
+          <div
+            className="sc-s-18 fit-container box-pad-h box-pad-v fx-centered fx-start-h"
+            style={{
+              position: "relative",
+              backgroundColor: "var(--c3)",
+              border: "none",
+            }}
+          >
+            <div
+              className="cup-24"
+              style={{
+                minHeight: "120px",
+                minWidth: "120px",
+                position: "absolute",
+                right: "-20px",
+                bottom: "-10px",
+                filter: "brightness(0) invert()",
+                opacity: ".2",
+                rotate: "20deg",
+              }}
+            ></div>
+            <div className="fx-centered fx-col fx-start-v">
+              <p className="p-medium" style={{ color: "white" }}>
+                {t("Ay17eyW")}
+              </p>
+              <div className="fx-centered fx-end-v">
+                <h2 className="orange-c">{balance || "N/A"}</h2>
+                <p style={{ color: "white" }}>Sats.</p>
+              </div>
+            </div>
+          </div>
+          <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v">
+            <div
+              className="note-24"
+              style={{ minHeight: "48px", minWidth: "48px" }}
+            >
+              {" "}
+            </div>
+            <h4>{t("AtTBm8o")}</h4>
+            <p className="gray-c">{t("A9YOTCh")}</p>
+            <Link
+              target="_blank"
+              to={
+                "/article/naddr1qq252nj4w4kkvan8dpuxx6f5x3n9xstk23tkyq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65wpcr66x"
+              }
+            >
+              <button className="btn btn-normal">{t("Azigg0N")}</button>
+            </Link>
+          </div>
+          <div className="sc-s-18 fit-container box-pad-h-m box-pad-v-m fx-centered fx-col fx-start-v box-marg-s">
+            <h4>{t("AlAlx8I")}</h4>
+            <ul>
+              <li className="gray-c">{t("AEkp3uJ")}</li>
+              <li className="gray-c">{t("ApW8X5d")}</li>
+              <li className="gray-c">{t("AHc4MVZ")}</li>
+            </ul>
+            <Link
+              target="_blank"
+              to={
+                "/article/naddr1qq2kw52htue8wez8wd9nj36pwucyx33hwsmrgq3qyzvxlwp7wawed5vgefwfmugvumtp8c8t0etk3g8sky4n0ndvyxesxpqqqp65w6998qf"
+              }
+            >
+              <button className="btn btn-normal">{t("Azigg0N")}</button>
+            </Link>
+          </div>
+          <Footer />
         </div>
       </div>
     </div>

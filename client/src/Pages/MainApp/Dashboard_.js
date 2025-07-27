@@ -339,86 +339,81 @@ export default function Dashboard_() {
             content={"Manage your content with ease"}
           />
         </Helmet>
-
-        <div className="fit-container fx-centered">
-          <div className="main-container">
-            <Sidebar />
-            <main className="main-page-nostr-container">
-              <div
-                className="fx-centered fit-container fx-start-h fx-start-v"
-                style={{ gap: 0 }}
-              >
-                <div className="dahsboard-section fit-container">
-                  <div
-                    className="fit-height fit-container feed-container"
-                    style={{ overflow: "scroll" }}
-                  >
-                    <SideMenu
-                      selectedTab={selectedTab}
-                      setSelectedTab={setSelectedTab}
-                    />
-                    {selectedTab === 0 && isLoading && (
-                      <div
-                        className="fit-container fx-centered"
-                        style={{ height: "100vh" }}
-                      >
-                        <div className="fx-centered">
-                          <LoadingLogo />
-                        </div>
-                      </div>
-                    )}
-                    {selectedTab === 0 && userPreview && !isLoading && (
-                      <HomeTab
-                        data={userPreview}
-                        setPostToNote={setPostToNote}
-                        setContentFilter={setContentFilter}
-                        setSelectedTab={setSelectedTab}
-                        handleUpdate={handleUpdate}
-                      />
-                    )}
-                    {selectedTab === 1 && (
-                      <Content
-                        filter={"notes"}
-                        localDraft={userPreview.localDraft}
-                        init={state?.init || false}
-                        setPostToNote={setPostToNote}
-                      />
-                    )}
-                    {selectedTab === 2 && (
-                      <Content
-                        filter={"articles"}
-                        localDraft={userPreview.localDraft}
-                        init={state?.init || false}
-                        setPostToNote={setPostToNote}
-                      />
-                    )}
-                    {selectedTab === 3 && (
-                      <Content
-                        filter={"curations"}
-                        localDraft={userPreview.localDraft}
-                        init={state?.init || false}
-                        setPostToNote={setPostToNote}
-                      />
-                    )}
-                    {selectedTab === 4 && (
-                      <Content
-                        filter={"videos"}
-                        localDraft={userPreview.localDraft}
-                        init={state?.init || false}
-                        setPostToNote={setPostToNote}
-                      />
-                    )}
-                    {selectedTab === 5 && (
-                      <Widgets
-                        setPostToNote={setPostToNote}
-                        localDraft={userPreview.localDraft}
-                      />
-                    )}
-                    {selectedTab === 6 && <Bookmarks />}
-                    {selectedTab === 7 && <Interests />}
-                    {/* <div style={{ padding: "3rem" }}></div> */}
+        <div
+          className="fx-centered fit-container fx-start-h fx-start-v"
+          style={{ gap: 0 }}
+        >
+          <div className="dahsboard-section fit-container">
+            <div
+              className="fit-height fit-container feed-container"
+              style={{ overflow: "scroll" }}
+            >
+              <SideMenu
+                selectedTab={selectedTab}
+                setSelectedTab={setSelectedTab}
+              />
+              {selectedTab === 0 && isLoading && (
+                <div
+                  className="fit-container fx-centered"
+                  style={{ height: "100vh" }}
+                >
+                  <div className="fx-centered">
+                    <LoadingLogo />
                   </div>
-                  {/* <div
+                </div>
+              )}
+              {selectedTab === 0 && userPreview && !isLoading && (
+                <HomeTab
+                  data={userPreview}
+                  setPostToNote={setPostToNote}
+                  setContentFilter={setContentFilter}
+                  setSelectedTab={setSelectedTab}
+                  handleUpdate={handleUpdate}
+                />
+              )}
+              {selectedTab === 1 && (
+                <Content
+                  filter={"notes"}
+                  localDraft={userPreview.localDraft}
+                  init={state?.init || false}
+                  setPostToNote={setPostToNote}
+                />
+              )}
+              {selectedTab === 2 && (
+                <Content
+                  filter={"articles"}
+                  localDraft={userPreview.localDraft}
+                  init={state?.init || false}
+                  setPostToNote={setPostToNote}
+                />
+              )}
+              {selectedTab === 3 && (
+                <Content
+                  filter={"curations"}
+                  localDraft={userPreview.localDraft}
+                  init={state?.init || false}
+                  setPostToNote={setPostToNote}
+                />
+              )}
+              {selectedTab === 4 && (
+                <Content
+                  filter={"videos"}
+                  localDraft={userPreview.localDraft}
+                  init={state?.init || false}
+                  setPostToNote={setPostToNote}
+                />
+              )}
+              {selectedTab === 5 && (
+                <Widgets
+                  setPostToNote={setPostToNote}
+                  localDraft={userPreview.localDraft}
+                />
+              )}
+              {selectedTab === 6 && <Bookmarks />}
+              {selectedTab === 7 && <Interests />}
+              {/* <div style={{ padding: "3rem" }}></div> */}
+            </div>
+            {/* <div
                     style={{
                       position: "absolute",
                       bottom: 0,
@@ -432,9 +427,6 @@ export default function Dashboard_() {
                       tabs={tabs}
                     />
                   </div> */}
-                </div>
-              </div>
-            </main>
           </div>
         </div>
       </div>

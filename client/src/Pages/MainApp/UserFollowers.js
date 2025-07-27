@@ -31,7 +31,7 @@ export default function UserFollowers({
           });
         setFollowers(userFollowers);
       } else {
-        let data = await getSubData([{ kinds: [3], "#p": [id] }]);
+        let data = await getSubData([{ kinds: [3], "#p": [id] }], 300);
 
         let users = await getSubData([
           { kinds: [0], authors: [...new Set(data.pubkeys)] },

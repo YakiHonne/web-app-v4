@@ -112,112 +112,106 @@ export default function SmartWidgetCheckerV2() {
           content={"Check the status of a smart widget"}
         />
       </Helmet>
-      <div className="fit-container fx-centered">
-        <div className="main-container">
-          <Sidebar />
-          <main className="main-page-nostr-container">
-            {/* <PagePlaceholder page={"maintenance"}/> */}
-            <div className="fx-centered fit-container fx-start-h fx-start-v">
-              <div className="box-pad-h-m fit-container">
-                <div className="fit-container fx-centered fx-start-h fx-start-v">
-                  <div
-                    style={{ width: "min(100%,800px)", flex: 1.5 }}
-                    className={` ${!mbHide ? "mb-hide-800" : ""}`}
-                  >
-                    <div className="fit-container fx-scattered sticky">
-                      <div
-                        className={`fx-centered fx-start-h if ifs-full ${
-                          widget ? "if-disabled" : ""
-                        }`}
-                        style={{
-                          gap: 0,
-                          pointerEvents: widget ? "none" : "auto",
-                        }}
-                      >
-                        <div className="search"></div>
-                        <input
-                          type="text"
-                          className="if if-no-border ifs-full"
-                          placeholder={t("AzL2pM8")}
-                          disabled={isLoading}
-                          value={naddr}
-                          onChange={(e) => setNaddr(e.target.value)}
-                        />
-                      </div>
-                      <div className="fx-centered">
-                        {widget && (
-                          <div
-                            className="round-icon round-icon-tooltip"
-                            disabled={isLoading}
-                            onClick={clearPage}
-                            data-tooltip={t("AboMK2E")}
-                          >
-                            {isLoading ? (
-                              <LoadingDots />
-                            ) : (
-                              <div className="trash"></div>
-                            )}
-                          </div>
-                        )}
-                        <div
-                          className="round-icon desk-hide round-icon-tooltip"
-                          data-tooltip={t("AZBr1AS")}
-                          onClick={() => setMbHide(false)}
-                        >
-                          <div className="curation"></div>
-                        </div>
-                      </div>
+
+      {/* <PagePlaceholder page={"maintenance"}/> */}
+      <div className="fx-centered fit-container fx-start-h fx-start-v">
+        <div className="box-pad-h-m fit-container">
+          <div className="fit-container fx-centered fx-start-h fx-start-v">
+            <div
+              style={{ width: "min(100%,800px)", flex: 1.5 }}
+              className={` ${!mbHide ? "mb-hide-800" : ""}`}
+            >
+              <div className="fit-container fx-scattered sticky">
+                <div
+                  className={`fx-centered fx-start-h if ifs-full ${
+                    widget ? "if-disabled" : ""
+                  }`}
+                  style={{
+                    gap: 0,
+                    pointerEvents: widget ? "none" : "auto",
+                  }}
+                >
+                  <div className="search"></div>
+                  <input
+                    type="text"
+                    className="if if-no-border ifs-full"
+                    placeholder={t("AzL2pM8")}
+                    disabled={isLoading}
+                    value={naddr}
+                    onChange={(e) => setNaddr(e.target.value)}
+                  />
+                </div>
+                <div className="fx-centered">
+                  {widget && (
+                    <div
+                      className="round-icon round-icon-tooltip"
+                      disabled={isLoading}
+                      onClick={clearPage}
+                      data-tooltip={t("AboMK2E")}
+                    >
+                      {isLoading ? (
+                        <LoadingDots />
+                      ) : (
+                        <div className="trash"></div>
+                      )}
                     </div>
-                    {!widget && <PagePlaceholder page={"widgets"} />}
-                    {widget && (
-                      <SWCard
-                        onNextWidget={(data) => setWidget(data)}
-                        widget={widget}
-                      />
-                    )}
-                  </div>
+                  )}
                   <div
-                    style={{
-                      height: "100vh",
-                      backgroundColor: "var(--pale-gray)",
-                      width: "1px",
-                      position: "sticky",
-                      top: 0,
-                      margin: "0 .5rem",
-                    }}
-                    className="mb-hide-800"
-                  ></div>
-                  <div
-                    style={{
-                      width: "min(100%,500px)",
-                      flex: 1,
-                      height: "100vh",
-                      overflow: "scroll",
-                    }}
-                    className={`box-pad-h-m box-pad-v sticky ${
-                      mbHide ? "mb-hide-800" : ""
-                    }`}
+                    className="round-icon desk-hide round-icon-tooltip"
+                    data-tooltip={t("AZBr1AS")}
+                    onClick={() => setMbHide(false)}
                   >
-                    {widget && (
-                      <>
-                        <div className="fx-centered fx-start-h fit-container box-marg-s">
-                          <div
-                            className="round-icon desk-hide round-icon-tooltip"
-                            onClick={() => setMbHide(true)}
-                            data-tooltip={t("ATB2h6T")}
-                          >
-                            <div className="arrow arrow-back"></div>
-                          </div>
-                          <h4>{t("AYmIvXo")}</h4>
-                        </div>
-                        <SWEventStructure widget={widget} />
-                      </>
-                    )}
+                    <div className="curation"></div>
                   </div>
                 </div>
               </div>
+              {!widget && <PagePlaceholder page={"widgets"} />}
+              {widget && (
+                <SWCard
+                  onNextWidget={(data) => setWidget(data)}
+                  widget={widget}
+                />
+              )}
             </div>
-          </main>
+            <div
+              style={{
+                height: "100vh",
+                backgroundColor: "var(--pale-gray)",
+                width: "1px",
+                position: "sticky",
+                top: 0,
+                margin: "0 .5rem",
+              }}
+              className="mb-hide-800"
+            ></div>
+            <div
+              style={{
+                width: "min(100%,500px)",
+                flex: 1,
+                height: "100vh",
+                overflow: "scroll",
+              }}
+              className={`box-pad-h-m box-pad-v sticky ${
+                mbHide ? "mb-hide-800" : ""
+              }`}
+            >
+              {widget && (
+                <>
+                  <div className="fx-centered fx-start-h fit-container box-marg-s">
+                    <div
+                      className="round-icon desk-hide round-icon-tooltip"
+                      onClick={() => setMbHide(true)}
+                      data-tooltip={t("ATB2h6T")}
+                    >
+                      <div className="arrow arrow-back"></div>
+                    </div>
+                    <h4>{t("AYmIvXo")}</h4>
+                  </div>
+                  <SWEventStructure widget={widget} />
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

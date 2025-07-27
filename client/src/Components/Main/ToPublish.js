@@ -127,7 +127,7 @@ export default function ToPublish({
       dispatch(
         setToPublish({
           eventInitEx,
-          allRelays: relaysToPublish,
+          allRelays: [],
         })
       );
 
@@ -158,7 +158,7 @@ export default function ToPublish({
           dispatch(
             setToPublish({
               eventInitEx,
-              allRelays: relaysToPublish,
+              allRelays: [],
             })
           );
           setIsLoading(false);

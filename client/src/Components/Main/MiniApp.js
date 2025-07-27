@@ -9,6 +9,12 @@ import OptionsDropdown from "./OptionsDropdown";
 import PostAsNote from "./PostAsNote";
 import PaymentGateway from "./PaymentGateway";
 import LoadingLogo from "../LoadingLogo";
+import axios from "axios";
+import { saveUsers } from "../../Helpers/DB";
+import useUserProfile from "../../Hooks/useUsersProfile";
+import UserProfilePic from "./UserProfilePic";
+import { Link } from "react-router-dom";
+import { nip19 } from "nostr-tools";
 
 export default function MiniApp({ url, exit, setReturnedData }) {
   const { t } = useTranslation();
@@ -20,11 +26,13 @@ export default function MiniApp({ url, exit, setReturnedData }) {
   const [isLoading, setIsLoading] = useState(true);
   const [customData, setCustomData] = useState("");
   const [paymentPayload, setPaymentPayload] = useState("");
+  const [appMetadata, setAppMetadata] = useState({});
   const reloadiFrame = () => {
     iframeRef.current.src = url;
   };
 
   useEffect(() => {
+    fetchAppMetadata();
     let listener;
     if (iframeRef.current) {
       listener = SWHandler.host.listen(async (event) => {
@@ -132,6 +140,19 @@ export default function MiniApp({ url, exit, setReturnedData }) {
     );
   };
 
+  const fetchAppMetadata = async () => {
+    try {
+      let path = `https://${url.split("/")[2]}/.well-known/widget.json`;
+      const response = await axios.get(path);
+      if (response.data?.pubkey) {
+        setAppMetadata(response.data);
+        saveUsers([response.data?.pubkey]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   if (customData && !setReturnedData)
     return <PostAsNote exit={exit} content={customData} />;
 
@@ -148,19 +169,20 @@ export default function MiniApp({ url, exit, setReturnedData }) {
         />
       )}
       <div
-        className="fixed-container fx-centered box-pad-h"
+        className="fixed-container fx-centered fx-col box-pad-h"
         onClick={(e) => {
           e.stopPropagation();
           exit();
         }}
       >
-        <section
-          className="fx-centered fx-col fx-start-v fx-start-h"
+        <div
+          className="fx-centered fx-col fx-start-v fx-start-h slide-up"
           style={{
-            width: "450px",
-            borderRadius: "10px",
+            width: "455px",
+            padding: "5px",
+            borderRadius: "18px",
             overflow: "hidden",
-            backgroundColor: "#343434",
+            backgroundColor: "#282828",
             gap: 0,
             overflow: "scroll",
             maxHeight: "80vh",
@@ -169,7 +191,10 @@ export default function MiniApp({ url, exit, setReturnedData }) {
             e.stopPropagation();
           }}
         >
-          <div className="sw-fit-container box-pad-h-m box-pad-v-s fx-scattered">
+          <div
+            className="sw-fit-container box-pad-h-s box-pad-v-s fx-scattered"
+            style={{ zIndex: 2 }}
+          >
             <div
               className="close"
               style={{ position: "static" }}
@@ -178,43 +203,38 @@ export default function MiniApp({ url, exit, setReturnedData }) {
               <div></div>
             </div>
             <div className="fx-centered fx-col" style={{ gap: 0 }}>
-              <p>{domain}</p>
-              <p className="p-one-line gray-c p-medium">
-                {url.replace("https://", "")}
+              <p className="p-big p-bold">
+                {appMetadata?.widget?.title || domain}
               </p>
             </div>
             <OptionsDropdown
               options={[
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: ".8rem",
-                    cursor: "pointer",
-                  }}
-                  onClick={copyURL}
-                >
-                  Copy link
-                </p>,
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: ".8rem",
-                    cursor: "pointer",
-                  }}
-                  onClick={reloadiFrame}
-                >
-                  Reload app
-                </p>,
+                <div className="fx-centered pointer">
+                  <div className="copy"></div>
+                  <p onClick={copyURL}>Copy link</p>
+                </div>,
+                <div className="fx-centered">
+                  <div className="switch-arrows"></div>
+                  <p onClick={reloadiFrame}>Reload app</p>
+                </div>,
               ]}
             />
           </div>
-          <div className="fit-container fx-centered" style={{ position: "relative" }}>
+          <div
+            className="fit-container fx-centered"
+            style={{ position: "relative", borderRadius: "10px", zIndex: 1 }}
+          >
             <iframe
               ref={iframeRef}
               src={url}
               allow="microphone; camera; clipboard-write 'src'"
               sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
-              style={{ border: "none", aspectRatio: "10/16", opacity: isLoading ? 0 : 1 }}
+              style={{
+                border: "none",
+                aspectRatio: "10/16.5",
+                opacity: isLoading ? 0 : 1,
+                borderRadius: "18px",
+              }}
               className="fit-container fit-height"
             ></iframe>
             {isLoading && (
@@ -222,7 +242,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
                 className="fx-centered fx-col sc-s-18"
                 style={{
                   position: "absolute",
-                  borderRadius: 0, 
+                  borderRadius: 0,
                   left: 0,
                   top: 0,
                   zIndex: 1,
@@ -231,14 +251,51 @@ export default function MiniApp({ url, exit, setReturnedData }) {
                   overflow: "hidden",
                   gap: 0,
                   aspectRatio: "10/16",
+                  borderRadius: "18px",
                 }}
               >
                 <LoadingLogo size={64} />
               </div>
             )}
           </div>
-        </section>
+        </div>
+        {!isLoading && appMetadata && (
+          <UserPreview pubkey={appMetadata?.pubkey} />
+        )}
       </div>
     </>
   );
 }
+
+const UserPreview = ({ pubkey }) => {
+  const { userProfile } = useUserProfile(pubkey);
+  if (!pubkey) return null;
+  return (
+    <div
+      className="sc-s-18 bg-sp fx-scattered box-pad-h-s box-pad-v-s slide-down"
+      style={{ width: "440px", borderRadius: "18px" }}
+    >
+      <div className="fx-centered">
+        <UserProfilePic
+          pubkey={pubkey}
+          img={userProfile.picture}
+          mainAccountUser={false}
+          size={48}
+        />
+        <div>
+          <p className="gray-c p-medium">Developed by</p>
+          <p className="p-maj p-big">
+            {userProfile.display_name || userProfile.name}
+          </p>
+        </div>
+      </div>
+      <Link
+        to={`/users/${nip19.nprofileEncode({ pubkey })}`}
+        target="_blank"
+        className="box-pad-h-s"
+      >
+        <div className="share-icon-24"></div>
+      </Link>
+    </div>
+  );
+};
