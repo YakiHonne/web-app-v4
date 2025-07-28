@@ -100,7 +100,7 @@ export default function Slider({
 
       {showArrows && (
         <div
-          className="pointer slide-left fit-height fx-centered gradient-bg-right"
+          className="pointer fit-height fx-centered gradient-bg-right"
           onClick={slideRight}
           style={{
             position: "absolute",

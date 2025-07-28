@@ -18,6 +18,7 @@ import SearchUserCard from "./SearchUserCard";
 import SearchContentCard from "./SearchContentCard";
 import { useTranslation } from "react-i18next";
 import bannedList from "../../Content/BannedList";
+import Slider from "../Slider";
 
 export default function SearchNetwork({ exit }) {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
@@ -284,8 +285,9 @@ export default function SearchNetwork({ exit }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          style={{ overflow: "scroll", height: "100%", paddingBottom: "4rem" }}
-        >
+          style={{ overflow: "scroll", height: "100%", paddingBottom: "4rem",  }}
+       className="fit-container"
+       >
           <div
             className="sticky fit-container fx-centered fx-start-h box-pad-h"
             style={{
@@ -338,24 +340,29 @@ export default function SearchNetwork({ exit }) {
           {userInterestList.length > 0 && (
             <div className="fit-container fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-s">
               <p className="gray-c">{t("AvcFYqP")}</p>
-              <div className="fx-centered fx-wrap">
-                {userInterestList?.map((interest, index) => {
-                  return (
-                    <div
-                      onClick={() => {
-                        customHistory.push(
-                          `/search?keyword=${interest?.replace("#", "%23")}`
-                        );
-                        exit();
-                      }}
-                      className="sc-s bg-sp box-pad-h-m box-pad-v-s pointer"
-                      key={index}
-                    >
-                      #{interest}
-                    </div>
-                  );
-                })}
+              {/* <div className="fx-centered fx-wrap"> */}
+              <div className="fit-container">
+                <Slider
+                  slideBy={200}
+                  items={userInterestList?.map((interest, index) => {
+                    return (
+                      <div
+                        onClick={() => {
+                          customHistory.push(
+                            `/search?keyword=${interest?.replace("#", "%23")}`
+                          );
+                          exit();
+                        }}
+                        className="sc-s bg-sp box-pad-h-m box-pad-v-s pointer"
+                        key={index}
+                      >
+                        #{interest}
+                      </div>
+                    );
+                  })}
+                />
               </div>
+              {/* </div> */}
             </div>
           )}
           {results.map((item, index) => {

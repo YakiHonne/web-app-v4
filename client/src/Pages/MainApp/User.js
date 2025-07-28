@@ -819,7 +819,7 @@ const UserFeed = ({ user }) => {
       {
         kinds: kinds[contentFrom],
         authors: [pubkey],
-        limit: 30,
+        limit: 50,
         until: lastEventTime,
       },
     ];
@@ -857,7 +857,7 @@ const UserFeed = ({ user }) => {
       try {
         let filter = getNotesFilter();
         const res = await getSubData(filter, 200);
-        let data = res.data.slice(0, 30);
+        let data = res.data.slice(0, 100);
         let pubkeys = res.pubkeys;
         let ev = [];
         if (data.length > 0) {
