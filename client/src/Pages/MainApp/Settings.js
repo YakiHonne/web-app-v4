@@ -39,7 +39,12 @@ import {
 } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
-import { getUser, InitEvent, userLogout } from "../../Helpers/Controlers";
+import {
+  exportAllWallets,
+  getUser,
+  InitEvent,
+  userLogout,
+} from "../../Helpers/Controlers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { Link, useLocation } from "react-router-dom";
 import DtoLToggleButton from "../../Components/DtoLToggleButton";
@@ -56,11 +61,13 @@ import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import MediaUploaderServer from "../../Content/MediaUploaderServer";
 import { clearDBCache } from "../../Helpers/DB";
 import RelayImage from "../../Components/Main/RelayImage";
-import threadView from "../../media/images/thread-view.png";
-import boxView from "../../media/images/box-view.png";
 import NDK from "@nostr-dev-kit/ndk";
 import { nip19 } from "nostr-tools";
 import { nanoid } from "nanoid";
+import RelaysPicker from "../../Components/Main/RelaysPicker";
+import EventOptions from "../../Components/ElementOptions/EventOptions";
+let boxView = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/box-view.png";
+let threadView = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thread-view.png";
 
 export default function Settings() {
   const { state } = useLocation();
@@ -73,7 +80,34 @@ export default function Settings() {
     <>
       <div>
         <Helmet>
-          <title>Yakihonne | Settings</title>
+        <title>Yakihonne | Settings</title>
+        <meta
+          name="description"
+          content={"Customize your Yakihonne experience with powerful privacy and interface options. Take control of your digital presence on the Nostr network.."}
+        />
+        <meta
+          property="og:description"
+          content={"Customize your Yakihonne experience with powerful privacy and interface options. Take control of your digital presence on the Nostr network.."}
+        />
+        <meta
+          property="og:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
+        <meta property="og:url" content={`https://yakihonne.com/settings`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Yakihonne" />
+        <meta property="og:title" content="Yakihonne | Settings" />
+        <meta property="twitter:title" content="Yakihonne | Settings" />
+        <meta
+          property="twitter:description"
+          content={"Customize your Yakihonne experience with powerful privacy and interface options. Take control of your digital presence on the Nostr network.."}
+        />
+        <meta
+          property="twitter:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+        />
         </Helmet>
 
         <div className="fx-centered fit-container  fx-start-v ">
@@ -158,7 +192,7 @@ const SettingsHeader = ({ userKeys }) => {
       <UserProfilePic mainAccountUser={true} size={64} />
       <div className="fx-centered">
         <Link
-          to={`/users/${nip19.nprofileEncode({
+          to={`/profile/${nip19.nprofileEncode({
             pubkey: userKeys.pub,
           })}`}
         >
@@ -955,38 +989,9 @@ const WalletsManagement = ({ selectedTab, setSelectedTab, userKeys }) => {
     setShowAddWallet(false);
   };
 
-  const exportWallet = (nwc, addr) => {
-    downloadAsFile(
-      [
-        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
-        "---",
-        `wallet secret: ${typeof nwc === "string" ? nwc : "N/A"}`,
-      ].join("\n"),
-      "text/plain",
-      `NWC-for-${addr}.txt`,
-      t("AVUlnek")
-    );
-  };
 
-  const handleDelete = () => {
-    try {
-      let tempWallets = wallets.filter(
-        (wallet) => wallet.id !== showDeletionPopup.id
-      );
-      if (tempWallets.length > 0 && showDeletionPopup.active) {
-        tempWallets[0].active = true;
-        setWallets(tempWallets);
-        setShowDeletionPopup(false);
-        updateWallets(tempWallets);
-        return;
-      }
-
-      setWallets(tempWallets);
-      setShowDeletionPopup(false);
-      updateWallets(tempWallets);
-    } catch (err) {
-      console.log(err);
-    }
+  const refreshAfterDeletion = (w) => {
+    setWallets(w);
   };
 
   const handleSelectWallet = (walletID) => {
@@ -1010,14 +1015,6 @@ const WalletsManagement = ({ selectedTab, setSelectedTab, userKeys }) => {
           refresh={handleAddWallet}
         />
       )}
-      {showDeletionPopup && (
-        <DeletionPopUp
-          exit={() => setShowDeletionPopup(false)}
-          handleDelete={handleDelete}
-          wallet={showDeletionPopup}
-        />
-      )}
-
       <div
         className="fit-container fx-scattered fx-col pointer"
         style={{
@@ -1052,6 +1049,13 @@ const WalletsManagement = ({ selectedTab, setSelectedTab, userKeys }) => {
                 <p className="p-medium gray-c">{t("AYKDD4g")}</p>
               </div>
               <div className="fx-centered">
+                <button
+                  className="btn-small btn btn-normal"
+                  style={{ minWidth: "max-content" }}
+                  onClick={exportAllWallets}
+                >
+                  {t("Aq791XG")}
+                </button>
                 <div
                   className="round-icon-small round-icon-tooltip"
                   data-tooltip={t("A8fEwNq")}
@@ -1108,44 +1112,7 @@ const WalletsManagement = ({ selectedTab, setSelectedTab, userKeys }) => {
                       </div>
                     )}
                     {wallet.kind !== 1 && (
-                      <div
-                        className="round-icon-small round-icon-tooltip"
-                        data-tooltip={t("AawdN9R")}
-                        onClick={() => setShowDeletionPopup(wallet)}
-                      >
-                        <p className="red-c">&minus;</p>
-                      </div>
-                    )}
-                    {wallet.kind !== 1 && (
-                      <OptionsDropdown
-                        options={[
-                          wallet.kind === 3 && (
-                            <div
-                              onClick={() =>
-                                copyText(wallet.data, t("A6Pj02S"))
-                              }
-                            >
-                              {t("Aoq0uKa")}
-                            </div>
-                          ),
-                          wallet.kind !== 1 && (
-                            <div
-                              onClick={() =>
-                                copyText(wallet.entitle, t("ALR84Tq"))
-                              }
-                            >
-                              {t("ArCMp34")}
-                            </div>
-                          ),
-                          <div
-                            onClick={() =>
-                              exportWallet(wallet.data, wallet.entitle)
-                            }
-                          >
-                            {t("A4A5psW")}
-                          </div>,
-                        ]}
-                      />
+                      <EventOptions event={wallet} component={"wallet"} refreshAfterDeletion={refreshAfterDeletion}/>
                     )}
                   </div>
                 </div>
@@ -1733,7 +1700,7 @@ const SettingsFooter = ({ userKeys }) => {
           recipientInfo={{
             name: "Yakihonne",
             picture:
-              "https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png",
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png",
           }}
         />
         <a href="mailto:info@yakihonne.com">
@@ -2010,7 +1977,7 @@ const ContentRelays = ({ setShowRelaysInfo, allRelays }) => {
         style={{ overflow: "visible" }}
       >
         <div className="fx-centered fx-end-h fx-start-v fit-container box-pad-h-s box-pad-v-s">
-          <AddRelays
+          <RelaysPicker
             allRelays={allRelays}
             userAllRelays={tempUserRelays}
             addRelay={addRelay}
@@ -2273,7 +2240,7 @@ const InboxRelays = ({ setShowRelaysInfo, allRelays }) => {
               </div>
               <hr /> */}
         <div className="fx-centered fx-end-h fx-start-v  fit-container box-pad-h-s box-pad-v-s">
-          <AddRelays
+          <RelaysPicker
             allRelays={allRelays}
             userAllRelays={tempUserRelays}
             addRelay={addRelay}
@@ -2536,118 +2503,6 @@ const DeletionPopUp = ({ exit, handleDelete, wallet }) => {
         </div>
       </section>
     </section>
-  );
-};
-
-const AddRelays = ({ allRelays, userAllRelays, addRelay }) => {
-  const { t } = useTranslation();
-  const [showList, setShowList] = useState(false);
-  const [searchedRelay, setSearchedRelay] = useState("");
-
-  const searchedRelays = useMemo(() => {
-    let tempRelay = allRelays.filter((relay) => {
-      if (
-        !userAllRelays.map((_) => _.url).includes(relay) &&
-        relay.includes(searchedRelay)
-      )
-        return relay;
-    });
-    return tempRelay;
-  }, [userAllRelays, searchedRelay, allRelays]);
-  const optionsRef = useRef(null);
-
-  useEffect(() => {
-    const handleOffClick = (e) => {
-      if (optionsRef.current && !optionsRef.current.contains(e.target))
-        setShowList(false);
-    };
-    document.addEventListener("mousedown", handleOffClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOffClick);
-    };
-  }, [optionsRef]);
-
-  const handleOnChange = (e) => {
-    let value = e.target.value;
-    setSearchedRelay(value);
-  };
-
-  return (
-    <div
-      style={{ position: "relative" }}
-      className="fit-container"
-      ref={optionsRef}
-      onClick={() => setShowList(true)}
-    >
-      <input
-        placeholder={t("ALPrAZz")}
-        className="if ifs-full"
-        style={{ height: "var(--40)" }}
-        value={searchedRelay}
-        onChange={handleOnChange}
-      />
-      <div className="box-pad-v-s box-pad-h-s">
-        <p className="gray-c p-medium">{t("A2wrBnY")}</p>
-      </div>
-      {showList && (
-        <div
-          className="fit-container sc-s-18 fx-centered fx-col fx-start-h fx-start-v box-pad-h-m box-pad-v-m slide-up"
-          style={{
-            position: "absolute",
-            left: 0,
-            top: "calc(100% + 5px)",
-            maxHeight: "200px",
-            overflow: "scroll",
-            zIndex: "200",
-          }}
-        >
-          <div className="fx-centered fit-container">
-            <p className="gray-c" style={{ minWidth: "max-content" }}>
-              {allRelays.length} relays
-            </p>
-            <hr />
-            <hr />
-          </div>
-          {searchedRelays.map((relay) => {
-            return (
-              <div
-                className="fx-scattered fit-container"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  addRelay(relay);
-                  setShowList(false);
-                  setSearchedRelay("");
-                }}
-              >
-                <p>{relay}</p>
-                <div className="fx-centered">
-                  <div className="sticker sticker-gray-black">
-                    {t("ARWeWgJ")}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          {searchedRelays.length === 0 && searchedRelay && (
-            <div
-              className="fx-scattered fit-container"
-              onClick={() => {
-                addRelay(
-                  searchedRelay.includes("ws://")
-                    ? searchedRelay
-                    : "wss://" + searchedRelay.replace("wss://", "")
-                );
-                setSearchedRelay("");
-              }}
-            >
-              <p>{searchedRelay}</p>
-
-              <div className="plus-sign"></div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
   );
 };
 

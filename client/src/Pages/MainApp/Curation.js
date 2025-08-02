@@ -43,6 +43,8 @@ import { useTranslation } from "react-i18next";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
 import ZapAd from "../../Components/Main/ZapAd";
+import EventOptions from "../../Components/ElementOptions/EventOptions";
+import useIsMute from "../../Hooks/useIsMute";
 
 export default function Curation() {
   const { id, CurationKind, AuthNip05, ArtIdentifier } = useParams();
@@ -50,7 +52,6 @@ export default function Curation() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
-  const userMutedList = useSelector((state) => state.userMutedList);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [isArtsLoaded, setIsArtsLoaded] = useState(false);
@@ -60,6 +61,7 @@ export default function Curation() {
   const [usersList, setUsersList] = useState(false);
   const [showCommentsSection, setShowCommentsSections] = useState(false);
   const [morePosts, setMorePosts] = useState([]);
+  const { muteUnmute, isMuted } = useIsMute(curation.pubkey);
 
   const { postActions } = useRepEventStats(curation?.aTag, curation?.pubkey);
 
@@ -78,18 +80,6 @@ export default function Curation() {
       ? postActions.zaps.zaps.find((item) => item.pubkey === userKeys.pub)
       : false;
   }, [postActions, userKeys]);
-
-  const isMuted = useMemo(() => {
-    let checkProfile = () => {
-      if (!Array.isArray(userMutedList)) return false;
-      let index = userMutedList.findIndex((item) => item === curation?.pubkey);
-      if (index === -1) {
-        return false;
-      }
-      return { index };
-    };
-    return checkProfile();
-  }, [userMutedList, curation]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -268,30 +258,6 @@ export default function Curation() {
     return tempArray.filter((item) => item);
   };
 
-  const muteUnmute = async () => {
-    try {
-      if (!Array.isArray(userMutedList)) return;
-      let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
-      if (isMuted) {
-        tempTags.splice(isMuted.index, 1);
-      } else {
-        tempTags.push(["p", curation.pubkey]);
-      }
-
-      dispatch(
-        setToPublish({
-          userKeys: userKeys,
-          kind: 10000,
-          content: "",
-          tags: tempTags,
-          allRelays: [],
-        })
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
@@ -307,13 +273,13 @@ export default function Curation() {
 
       <div>
         <Helmet>
-          <title>Yakihonne | {curation?.title || ""}</title>
-          <meta name="description" content={curation?.description || ""} />
+          <title>Yakihonne | {curation?.title || "N/A"}</title>
+          <meta name="description" content={curation?.description || "N/A"} />
           <meta
             property="og:description"
-            content={curation?.description || ""}
+            content={curation?.description || "N/A"}
           />
-          <meta property="og:image" content={curation?.image || ""} />
+          <meta property="og:image" content={curation?.image || "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"} />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="700" />
           <meta
@@ -322,13 +288,13 @@ export default function Curation() {
           />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
-          <meta property="og:title" content={curation?.title || ""} />
-          <meta property="twitter:title" content={curation?.title || ""} />
+          <meta property="og:title" content={curation?.title || "N/A"} />
+          <meta property="twitter:title" content={curation?.title || "N/A"} />
           <meta
             property="twitter:description"
-            content={curation?.description || ""}
+            content={curation?.description || "N/A"}
           />
-          <meta property="twitter:image" content={curation?.image || ""} />
+          <meta property="twitter:image" content={curation?.image || "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"} />
         </Helmet>
         <div
           className="fit-container fx-centered fx-start-v"
@@ -678,46 +644,10 @@ export default function Curation() {
                   <NumberShrink value={postActions.zaps.total} />
                 </div>
               </div>
-              <OptionsDropdown
-                options={[
-                  <div
-                    onClick={(e) =>
-                      copyText(
-                        curation.naddr,
-                        t("ApPw14o", { item: "naddr" }),
-                        e
-                      )
-                    }
-                    className="pointer"
-                  >
-                    <p>{t("ApPw14o", { item: "naddr" })}</p>
-                  </div>,
-                  <BookmarkEvent
-                    label={t("A8YL3m4")}
-                    pubkey={curation.author_pubkey}
-                    d={curation.d}
-                  />,
-                  <ShareLink
-                    label={t("AVUI6uC")}
-                    title={curation.title}
-                    description={curation.description}
-                    path={`/${curation.naddr}`}
-                    kind={30023}
-                    shareImgData={{
-                      post: curation,
-                      author: curationAuthor,
-                      likes: postActions.likes.likes.length,
-                    }}
-                  />,
-                  <div onClick={muteUnmute} className="pointer">
-                    {isMuted ? (
-                      <p className="red-c">{t("AKELUbQ")}</p>
-                    ) : (
-                      <p className="red-c">{t("AGMxuQ0")}</p>
-                    )}
-                  </div>,
-                ]}
-                displayAbove={true}
+              <EventOptions
+                event={curation}
+                eventActions={postActions}
+                component="repEventsCard"
               />
             </div>
           </div>

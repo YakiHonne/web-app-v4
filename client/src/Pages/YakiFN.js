@@ -1,31 +1,56 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import s1 from "../media/images/FN/add-flash-news.png";
-import s2 from "../media/images/FN/community-wallet.png";
-import s3 from "../media/images/FN/flashNews-page.png";
-import s4 from "../media/images/FN/flash-news-workflow.png";
-import s5 from "../media/images/FN/sealed-misleading-note.png";
-import s6 from "../media/images/FN/Uncensored-notes-page-rated-helpfful.png";
-import s7 from "../media/images/FN/Uncensored-notes-page.png";
-import s8 from "../media/images/FN/flashNews_payment.png";
-import s9 from "../media/images/FN/writingRatingImpacts.png";
-import s10 from "../media/images/FN/flashNews_page.png";
-import s11 from "../media/images/FN/uncensoredNotes_page_new.png";
-import s12 from "../media/images/FN/uncensoredNotes_page_newWEB.png";
-import s13 from "../media/images/FN/uncensoredNotes-writing.png";
-import s14 from "../media/images/FN/uncensoredNotes-rating.png";
-import s15 from "../media/images/FN/uncensoredNotes_page_NeedsYourHelpWEB.png";
-import s16 from "../media/images/FN/flashNewsPageWithHelpfulNote.png";
-import s17 from "../media/images/FN/uncensoredNotePageRatedHelpful.png";
-import s18 from "../media/images/FN/uncensoredNotePageRatedNotHelpful.png";
-import s19 from "../media/images/FN/uncensoredNotes_ratingProcessWaitingClaim.png";
-import s20 from "../media/images/FN/uncensoredNotesMyRewardsNormalSATs.png";
-import s21 from "../media/images/FN/un_authorrater_payment.png";
-import s22 from "../media/images/FN/uncensoredNote_ratingImpact.png";
-import s23 from "../media/images/FN/uncensoredNote_writingImpact.png";
-import s24 from "../media/images/FN/uncensoredNotes_ratingProcess.png";
-import s25 from "../media/images/FN/writingRatingImpacts_.png";
 import { Helmet } from "react-helmet";
+let s1 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/add-flash-news.png";
+let s2 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/community-wallet.png";
+let s3 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/flashNews-page.png";
+let s4 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/flash-news-workflow.png";
+let s5 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/sealed-misleading-note.png";
+let s6 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/Uncensored-notes-page-rated-helpfful.png";
+let s7 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/Uncensored-notes-page.png";
+let s8 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/flashNews_payment.png";
+let s9 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/writingRatingImpacts.png";
+let s10 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/flashNews_page.png";
+let s11 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotes_page_new.png";
+let s12 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotes_page_newWEB.png";
+let s13 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotes-writing.png";
+let s14 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotes-rating.png";
+let s15 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotes_page_NeedsYourHelpWEB.png";
+let s16 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/flashNewsPageWithHelpfulNote.png";
+let s17 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotePageRatedHelpful.png";
+let s18 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotePageRatedNotHelpful.png";
+let s19 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotes_ratingProcessWaitingClaim.png";
+let s20 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotesMyRewardsNormalSATs.png";
+let s21 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/un_authorrater_payment.png";
+let s22 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNote_ratingImpact.png";
+let s23 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNote_writingImpact.png";
+let s24 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/uncensoredNotes_ratingProcess.png";
+let s25 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/FN/writingRatingImpacts_.png";
 
 export default function YakiFN() {
   return (
@@ -37,12 +62,24 @@ export default function YakiFN() {
         <title>Yakihonne | Flash news and uncensored notes introduction</title>
         <meta
           name="description"
-          content={"Flash news and uncensored notes introduction"}
+          content={
+            "Monetize your short-form content with Bitcoin Lightning microtransactions. Create premium notes with flexible access models for your audience."
+          }
         />
         <meta
           property="og:description"
-          content={"Flash news and uncensored notes introduction"}
+          content={
+            "Monetize your short-form content with Bitcoin Lightning microtransactions. Create premium notes with flexible access models for your audience."
+          }
         />
+        <meta
+          property="og:image"
+          content={
+            "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          }
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
         <meta
           property="og:url"
           content={`https://yakihonne.com/yakihonne-paid-notes`}
@@ -59,7 +96,15 @@ export default function YakiFN() {
         />
         <meta
           property="twitter:description"
-          content={"Flash news and uncensored notes introduction"}
+          content={
+            "Monetize your short-form content with Bitcoin Lightning microtransactions. Create premium notes with flexible access models for your audience."
+          }
+        />
+        <meta
+          property="twitter:image"
+          content={
+            "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          }
         />
       </Helmet>
       <div
@@ -80,12 +125,15 @@ export default function YakiFN() {
           <Link to={"/"} className="fx-centered">
             <div
               className="yakihonne-logo"
-              style={{ filter: "brightness(0) invert()", width: "128px", height: "48px" }}
+              style={{
+                filter: "brightness(0) invert()",
+                width: "128px",
+                height: "48px",
+              }}
             ></div>
           </Link>
 
           <div className="fx-centered">
-            
             <Link
               to={"/verify-notes"}
               target={"_blank"}
@@ -131,11 +179,11 @@ export default function YakiFN() {
             }}
             className="fit-container"
             // src={
-            //   "https://yakihonne.s3.ap-east-1.amazonaws.com/videos/yakihonne-mobile-app-promo.mp4"
+            //   "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/videos/yakihonne-mobile-app-promo.mp4"
             // }
           >
             <source
-              src="https://yakihonne.s3.ap-east-1.amazonaws.com/videos/fn-un-promo-video.mp4"
+              src="https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/videos/fn-un-promo-video.mp4"
               type="video/mp4"
             />{" "}
             Your browser does not support HTML5 video.

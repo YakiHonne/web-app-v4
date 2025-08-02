@@ -55,6 +55,8 @@ import bannedList from "../../Content/BannedList";
 import ZapAd from "../../Components/Main/ZapAd";
 import useUserProfile from "../../Hooks/useUsersProfile";
 import { saveUsers } from "../../Helpers/DB";
+import useIsMute from "../../Hooks/useIsMute";
+import EventOptions from "../../Components/ElementOptions/EventOptions";
 
 export default function Article() {
   const { t } = useTranslation();
@@ -62,16 +64,12 @@ export default function Article() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const isDarkMode = useSelector((state) => state.isDarkMode);
-  const userMutedList = useSelector((state) => state.userMutedList);
-
   const [isLoaded, setIsLoaded] = useState(false);
-  // const [author, setAuthor] = useState(false);
   const [post, setPost] = useState({});
-  const { isNip05Verified, userProfile } = useUserProfile(post?.pubkey || "");
+  const { userProfile } = useUserProfile(post?.pubkey || "");
   const [readMore, setReadMore] = useState([]);
   const [naddrData, setNaddrData] = useState("");
   const [usersList, setUsersList] = useState(false);
-  const [showAddArticleToCuration, setShowArticleToCuration] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showCommentsSection, setShowCommentsSections] = useState(false);
   const [translatedTitle, setTranslatedTitle] = useState("");
@@ -99,20 +97,7 @@ export default function Article() {
       ? postActions.zaps.zaps.find((item) => item.pubkey === userKeys.pub)
       : false;
   }, [postActions, userKeys]);
-
-  const isMuted = useMemo(() => {
-    let checkProfile = () => {
-      if (!Array.isArray(userMutedList)) return false;
-      let index = userMutedList.findIndex(
-        (item) => item === userProfile?.pubkey
-      );
-      if (index === -1) {
-        return false;
-      }
-      return { index };
-    };
-    return checkProfile();
-  }, [userMutedList, userProfile]);
+  const { muteUnmute, isMuted } = useIsMute(post.pubkey);
 
   useEffect(() => {
     const checkURL = async () => {
@@ -169,35 +154,19 @@ export default function Article() {
       try {
         if (bannedList.includes(naddrData.pubkey)) customHistory.push("/");
         straightUp();
-        let tempAuth = false;
-        let tempArt = false;
-        let lastCreatedAtInUser = 0;
         let lastCreatedAtInArticle = 0;
-
+        let tempArt;
         let sub = ndkInstance.subscribe(
           [
             {
               kinds: [30023],
               "#d": [decodeURIComponent(naddrData.identifier)],
             },
-
-            // {
-            //   kinds: [0, 10002],
-            //   authors: [naddrData.pubkey],
-            // },
           ],
           { cacheUsage: "CACHE_FIRST" }
         );
 
         sub.on("event", (event) => {
-          // if (event.kind === 0) {
-          //     console.log(event)
-          //   tempAuth = { ...event };
-          //   if (lastCreatedAtInUser < event.created_at) {
-          //     lastCreatedAtInUser = event.created_at;
-          //     setAuthor(getParsedAuthor(event));
-          //   }
-          // }
           if (event.kind === 30023) {
             saveUsers([event.pubkey]);
             tempArt = { ...event };
@@ -207,14 +176,8 @@ export default function Article() {
             }
             setIsLoaded(true);
           }
-          // if (tempArt && tempAuth) {
-          //   setIsLoaded(true);
-          // }
         });
         sub.on("close", () => {
-          // if (!tempAuth) {
-          //   setAuthor(getEmptyuserMetadata(tempArt.pubkey));
-          // }
           setIsLoaded(true);
         });
         let timeout = setTimeout(() => {
@@ -310,30 +273,6 @@ export default function Article() {
     }
   };
 
-  const muteUnmute = async () => {
-    try {
-      if (!Array.isArray(userMutedList)) return;
-      let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
-      if (isMuted) {
-        tempTags.splice(isMuted.index, 1);
-      } else {
-        tempTags.push(["p", userProfile?.pubkey]);
-      }
-
-      dispatch(
-        setToPublish({
-          userKeys: userKeys,
-          kind: 10000,
-          content: "",
-          tags: tempTags,
-          allRelays: [],
-        })
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   if (!isLoaded) return <LoadingScreen />;
   return (
     <div>
@@ -341,7 +280,7 @@ export default function Article() {
         <title>Yakihonne | {post?.title || "N/A"}</title>
         <meta name="description" content={post?.description || "N/A"} />
         <meta property="og:description" content={post?.description || "N/A"} />
-        <meta property="og:image" content={post?.image || "N/A"} />
+        <meta property="og:image" content={post?.image || "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="700" />
         <meta
@@ -360,7 +299,7 @@ export default function Article() {
           property="twitter:description"
           content={post?.description || "N/A"}
         />
-        <meta property="twitter:image" content={post?.image || "N/A"} />
+        <meta property="twitter:image" content={post?.image || "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"} />
       </Helmet>
 
       {usersList && (
@@ -372,14 +311,6 @@ export default function Article() {
           extrasType={usersList.extrasType}
         />
       )}
-      {showAddArticleToCuration && (
-        <AddArticleToCuration
-          d={`30023:${naddrData.pubkey}:${naddrData.identifier}`}
-          exit={() => setShowArticleToCuration(false)}
-          kind={30004}
-        />
-      )}
-      {}
 
       <ArrowUp />
       {post.title && (
@@ -463,28 +394,7 @@ export default function Article() {
                           borderBottom: "1px solid var(--very-dim-gray)",
                         }}
                       >
-                        {/* <div className="fx-centered">
-                                <UserProfilePic
-                                  size={48}
-                                  img={userProfile.picture}
-                                  mainAccountUser={false}
-                                  user_id={userProfile.pubkey}
-                                  allowClick={true}
-                                />
-                                <div className="fx-centered fx-col fx-start-v">
-                                  <div>
-                                    <p className="gray-c">{t("AVG3Uga")}</p>
-                                    <p className="p-big p-caps">
-                                      {userProfile.display_name ||
-                                        userProfile.name ||
-                                        minimizeKey(post.pubkey)}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div> */}
-
                         <AuthPreview pubkey={post.pubkey} />
-
                         {userKeys.pub !== post.pubkey && (
                           <div className="fx-centered">
                             <Follow
@@ -753,9 +663,7 @@ export default function Article() {
                                   )}
                                   <div>
                                     <p className="p-one-line">{post.title}</p>
-                                    {/* <p className="gray-c p-medium"> */}
                                     <DynamicIndicator item={post} />
-                                    {/* </p> */}
                                   </div>
                                 </div>
                               </Link>
@@ -936,45 +844,10 @@ export default function Article() {
                     <NumberShrink value={postActions.zaps.total} />
                   </div>
                 </div>
-                <OptionsDropdown
-                  options={[
-                    <div
-                      onClick={(e) =>
-                        copyText(post.naddr, t("ApPw14o", { item: "naddr" }), e)
-                      }
-                      className="pointer"
-                    >
-                      <p>{t("ApPw14o", { item: "naddr" })}</p>
-                    </div>,
-                    <div onClick={() => setShowArticleToCuration(true)}>
-                      {t("A89Qqmt")}
-                    </div>,
-                    <BookmarkEvent
-                      label={t("A4ZQj8F")}
-                      pubkey={post.author_pubkey}
-                      d={post.d}
-                    />,
-                    <ShareLink
-                      label={t("A6enIP3")}
-                      title={post.title}
-                      description={post.description}
-                      path={`/${post.naddr}`}
-                      kind={30023}
-                      shareImgData={{
-                        post,
-                        author: userProfile,
-                        likes: postActions.likes.likes.length,
-                      }}
-                    />,
-                    <div onClick={muteUnmute} className="pointer">
-                      {isMuted ? (
-                        <p className="red-c">{t("AKELUbQ")}</p>
-                      ) : (
-                        <p className="red-c">{t("AGMxuQ0")}</p>
-                      )}
-                    </div>,
-                  ]}
-                  displayAbove={true}
+                <EventOptions
+                  event={post}
+                  eventActions={postActions}
+                  component="repEvents"
                 />
               </div>
             </div>

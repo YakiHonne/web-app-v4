@@ -9,7 +9,6 @@ import { InitEvent } from "../../Helpers/Controlers";
 
 export default function ToDeleteGeneral({
   title,
-  kind = "event",
   aTag = "",
   eventId,
   refresh,
@@ -17,7 +16,6 @@ export default function ToDeleteGeneral({
 }) {
   const dispatch = useDispatch();
   const userRelays = useSelector((state) => state.userRelays);
-  const userKeys = useSelector((state) => state.userKeys);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
 
@@ -48,7 +46,7 @@ export default function ToDeleteGeneral({
         })
       );
       dispatch(setToast({ type: 1, desc: t("Armbzm8") }));
-      refresh();
+      refresh(eventId);
     } catch (err) {
       console.log(err);
       dispatch(
@@ -66,6 +64,7 @@ export default function ToDeleteGeneral({
       <section
         className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
         style={{ width: "450px" }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div
           className="fx-centered box-marg-s"

@@ -1,36 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import ymaQR from "../media/images/yma-qr.png";
 import { setToast } from "../Store/Slides/Publishers";
 import { useDispatch } from "react-redux";
 import DonationBoxSuggestionCards from "./SuggestionsCards/DonationBoxSuggestionCards";
+let ymaQR =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/yma-qr.png";
 
 const content = [
   {
     url: "/yakihonne-smart-widgets",
     thumbnail:
-      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-smart-widget.png",
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-thumbnails/update-smart-widget.png",
     tag: "Smart widgets",
     new: true,
   },
   {
     url: "/points-system",
     thumbnail:
-      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-points-system.png",
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-thumbnails/update-points-system.png",
     tag: "Points system",
     new: false,
   },
   {
     url: "/yakihonne-paid-notes",
     thumbnail:
-      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-flash-news.png",
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-thumbnails/update-flash-news.png",
     tag: "Paid note",
     new: false,
   },
   {
     url: "/yakihonne-mobile-app",
     thumbnail:
-      "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-thumbnails/update-mobile-app.png",
+      "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-thumbnails/update-mobile-app.png",
     tag: "Mobile app",
     new: false,
   },
@@ -189,75 +190,32 @@ const Banner = ({ exit }) => {
               </p>
             </div>
             <div className="box-pad-v-s"></div>
+
             <ul>
               <li>
-                Secure login with remote signers (nSec Bunkers) is now available
-                for safer account management.
+                Content source choices are now saved in both Home and Discover
+                for a more consistent browsing experience.
               </li>
               <li>
-                BLOSSOM is now supported, allowing you to upload, mirror, and
-                access mirrored files—with easy server setup in settings.
+                More event options added, including copying the pubkey, viewing
+                raw events, and more.
               </li>
               <li>
-                The zapping window has a brand-new design—quick wallet
-                switching, recipient previews, and a bigger, more user-friendly
-                layout make sending zaps easier than ever.
+                Curation and video content can now be edited after publishing.
               </li>
               <li>
-                Favorite relays support lets you easily access and manage your
-                go-to relay sources when browsing content.
+                Improved notes rendering for faster and smoother performance.
               </li>
               <li>
-                Smart Widget AI Assistant is live! Developers can now get
-                real-time help to build and use smart widgets more easily.
+                Link previews are now available for better content visibility.
               </li>
               <li>
-                Lightning payments through miniapps are now supported, letting
-                developers securely trigger payments via smart widgets.
+                Redesigned audio player with a cleaner and more user-friendly
+                interface.
               </li>
               <li>
-                Web of Trust is now everywhere, helping improve post stats,
-                notifications, and messaging based on who you trust.
-              </li>
-              <li>
-                Set your own trust score threshold in settings to fine-tune what
-                you see and who you interact with.
-              </li>
-              <li>
-                Custom messaging relays let you send and receive DMs through the
-                relays you choose.
-              </li>
-              <li>
-                Relay settings got a fresh redesign for a cleaner, more
-                intuitive experience.
-              </li>
-              <li>
-                Notifications now load faster, giving you a smoother experience
-                all around.
-              </li>
-              <li>
-                Search is faster and smarter—across spotlight, the main search
-                page, and mentions in notes.
-              </li>
-              <li>
-                Refined dashboard layout for a smoother and more intuitive user
-                experience.
-              </li>
-              <li>
-                See signer types at a glance in the side menu to better
-                understand each connected account.
-              </li>
-              <li>
-                Interest list added to both the search page and spotlight for
-                quicker content discovery.
-              </li>
-              <li>
-                Arabic and French language support has been added for a more
-                inclusive experience.
-              </li>
-              <li>
-                Removing selected filter now stick—your choices are remembered
-                even after refreshing the page.
+                Automatic language direction detection when editing and
+                displaying content, supporting both LTR and RTL languages.
               </li>
               <li>General improvements and bug fix</li>
             </ul>

@@ -36,7 +36,7 @@ Smart Widgets are interactive graphical components encapsulated as Nostr events,
     - Buttons (optional, maximum of six).
 - **Use Case:** Ideal for scenarios requiring a combination of visual elements and user inputs, such as forms or dashboards.
 
-![image](https://yakihonne.s3.ap-east-1.amazonaws.com/65878d2452fe7cb730dad6a94c120df6b32a21916531ee7d61d76f24f5f976aa/files/1744436557264-YAKIHONNES3.jpg)
+![image](https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/65878d2452fe7cb730dad6a94c120df6b32a21916531ee7d61d76f24f5f976aa/files/1744436557264-YAKIHONNES3.jpg)
 
 ### Action Widget
 
@@ -60,7 +60,7 @@ Smart Widgets are interactive graphical components encapsulated as Nostr events,
     - The iframe is configured to return data to the parent application upon interaction.
 - **Use Case:** Perfect for scenarios requiring data retrieval or feedback from an external tool, such as a configuration interface or a data picker.
 
-![image](https://yakihonne.s3.ap-east-1.amazonaws.com/65878d2452fe7cb730dad6a94c120df6b32a21916531ee7d61d76f24f5f976aa/files/1744437071492-YAKIHONNES3.jpg)
+![image](https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/65878d2452fe7cb730dad6a94c120df6b32a21916531ee7d61d76f24f5f976aa/files/1744437071492-YAKIHONNES3.jpg)
 
 ## Technical Notes
 

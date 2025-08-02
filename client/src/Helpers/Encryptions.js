@@ -270,6 +270,7 @@ const getParsedRepEvent = (event) => {
       client: "",
       items: [],
       tTags: [],
+      zapSplit: [],
       seenOn: event.onRelays
         ? [...new Set(event.onRelays.map((relay) => relay.url))]
         : [],
@@ -288,6 +289,9 @@ const getParsedRepEvent = (event) => {
       }
       if (tag[0] === "d") {
         content.d = encodeURIComponent(tag[1]);
+      }
+      if (tag[0] === "zap") {
+        content.zapSplit.push(tag);
       }
       if (tag[0] === "published_at") {
         content.published_at =

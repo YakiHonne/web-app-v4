@@ -9,9 +9,11 @@ export default function OptionsDropdown({
   vertical = true,
   tooltip = true,
   icon = "dots",
+  minWidth = "auto",
 }) {
   const { t } = useTranslation();
   const [showOptions, setShowOptions] = useState(false);
+  const [displayAbove_, setDisplayAbove_] = useState(displayAbove);
   const optionsRef = useRef(null);
 
   useEffect(() => {
@@ -25,6 +27,20 @@ export default function OptionsDropdown({
       document.removeEventListener("mousedown", handleOffClick);
     };
   }, [optionsRef]);
+
+  const handleDropdownToggle = (e) => {
+    e.stopPropagation();
+    setShowOptions((prev) => {
+      if (!prev) {
+        if (optionsRef.current) {
+          const rect = optionsRef.current.getBoundingClientRect();
+          const distanceFromBottom = window.innerHeight - rect.bottom;
+          setDisplayAbove_(distanceFromBottom < 37.5 * (options.length - 1));
+        }
+      }
+      return !prev;
+    });
+  };
   return (
     <div style={{ position: "relative" }} ref={optionsRef}>
       <div
@@ -33,10 +49,7 @@ export default function OptionsDropdown({
         }`}
         style={{ border: border ? "" : "none" }}
         data-tooltip={icon === "arrow" ? "" : t("A5DDopE")}
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowOptions(!showOptions);
-        }}
+        onClick={handleDropdownToggle}
       >
         {icon === "dots" && (
           <div
@@ -60,18 +73,21 @@ export default function OptionsDropdown({
         <div
           style={{
             position: "absolute",
-            [displayAbove ? "bottom" : "top"]: "110%",
+            [displayAbove_ ? "bottom" : "top"]: "110%",
             [displayLeft ? "right" : "left"]: "0",
             backgroundColor: "var(--dim-gray)",
             border: "none",
-            // minWidth: "100px",
+            minWidth: minWidth,
             width: "max-content",
             zIndex: 1000,
             rowGap: "10px",
             overflow: "visible",
           }}
-          className="box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-col fx-start-v pointer drop-down"
-          onClick={() => setShowOptions(false)}
+          className="box-pad-h-m box-pad-v-s sc-s-18 fx-centered fx-col fx-start-v pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowOptions(false);
+          }}
         >
           {options.map((option, index) => {
             return <Fragment key={index}>{option}</Fragment>;

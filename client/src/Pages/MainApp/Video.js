@@ -8,20 +8,16 @@ import {
 } from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
-import Sidebar from "../../Components/Main/Sidebar";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import NumberShrink from "../../Components/NumberShrink";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import { Link } from "react-router-dom";
 import Date_ from "../../Components/Date_";
-import BookmarkEvent from "../../Components/Main/BookmarkEvent";
 import {
-  copyText,
   getAuthPubkeyFromNip05,
   getVideoContent,
   getVideoFromURL,
 } from "../../Helpers/Helpers";
-import ShareLink from "../../Components/ShareLink";
 import Follow from "../../Components/Main/Follow";
 import AddArticleToCuration from "../../Components/Main/AddArticleToCuration";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,7 +25,6 @@ import { getUser } from "../../Helpers/Controlers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { customHistory } from "../../Helpers/History";
-import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import useRepEventStats from "../../Hooks/useRepEventStats";
 import Like from "../../Components/Reactions/Like";
 import Quote from "../../Components/Reactions/Quote";
@@ -41,6 +36,8 @@ import { useTranslation } from "react-i18next";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
 import ZapAd from "../../Components/Main/ZapAd";
+import EventOptions from "../../Components/ElementOptions/EventOptions";
+import useIsMute from "../../Hooks/useIsMute";
 
 export default function Video() {
   const { id, AuthNip05, VidIdentifier } = useParams();
@@ -48,7 +45,6 @@ export default function Video() {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
-  const userMutedList = useSelector((state) => state.userMutedList);
 
   const [video, setVideo] = useState(false);
   const [parsedAddr, setParsedAddr] = useState({});
@@ -65,6 +61,7 @@ export default function Video() {
   const [showAddArticleToCuration, setShowArticleToCuration] = useState(false);
   const [showCommentsSection, setShowCommentsSections] = useState(false);
   const { postActions } = useRepEventStats(video.aTag, video.pubkey);
+  const { muteUnmute, isMuted } = useIsMute(video.pubkey);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -81,17 +78,6 @@ export default function Video() {
       ? postActions.zaps.zaps.find((item) => item.pubkey === userKeys.pub)
       : false;
   }, [postActions, userKeys]);
-  const isMuted = useMemo(() => {
-    let checkProfile = () => {
-      if (!Array.isArray(userMutedList)) return false;
-      let index = userMutedList.findIndex((item) => item === author?.pubkey);
-      if (index === -1) {
-        return false;
-      }
-      return { index };
-    };
-    return checkProfile();
-  }, [userMutedList, author]);
 
   useEffect(() => {
     let sub;
@@ -235,30 +221,6 @@ export default function Video() {
     }
   };
 
-  const muteUnmute = async () => {
-    try {
-      if (!Array.isArray(userMutedList)) return;
-      let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
-      if (isMuted) {
-        tempTags.splice(isMuted.index, 1);
-      } else {
-        tempTags.push(["p", author.pubkey]);
-      }
-
-      dispatch(
-        setToPublish({
-          userKeys: userKeys,
-          kind: 10000,
-          content: "",
-          tags: tempTags,
-          allRelays: [],
-        })
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   if (!isLoaded) return <LoadingScreen />;
   return (
     <>
@@ -280,10 +242,18 @@ export default function Video() {
       )}
       <div>
         <Helmet>
-          <title>Yakihonne | {video.title}</title>
-          <meta name="description" content={video.content} />
-          <meta property="og:description" content={video.content} />
-          <meta property="og:picture" content={video.image} />
+          <title>Yakihonne | {video.title || "N/A"}</title>
+          <meta name="description" content={video.content || "N/A"} />
+          <meta property="og:description" content={video.content || "N/A"} />
+          <meta
+            property="og:image"
+            content={
+              video.image ||
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
           <meta
             property="og:url"
             content={`https://yakihonne.com/videos/${
@@ -292,10 +262,19 @@ export default function Video() {
           />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
-          <meta property="og:title" content={video.title} />
-          <meta property="twitter:title" content={video.title} />
-          <meta property="twitter:description" content={video.content} />
-          <meta property="twitter:image" content={video.image} />
+          <meta property="og:title" content={video.title || "N/A"} />
+          <meta property="twitter:title" content={video.title || "N/A"} />
+          <meta
+            property="twitter:description"
+            content={video.content || "N/A"}
+          />
+          <meta
+            property="twitter:image"
+            content={
+              video.image ||
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
+          />
         </Helmet>
         <ArrowUp />
         <div
@@ -585,60 +564,10 @@ export default function Video() {
                   <NumberShrink value={postActions.zaps.total} />
                 </div>
               </div>
-              <OptionsDropdown
-                options={[
-                  <div
-                    onClick={(e) =>
-                      copyText(video.naddr, t("ApPw14o", { item: "naddr" }), e)
-                    }
-                    className="pointer"
-                  >
-                    <p>{t("ApPw14o", { item: "naddr" })}</p>
-                  </div>,
-                  userKeys && userKeys.pub !== video.pubkey && (
-                    <>
-                      <div
-                        className="fit-container fx-centered fx-start-h pointer"
-                        onClick={() => setShowArticleToCuration(true)}
-                      >
-                        <p>{t("A89Qqmt")}</p>
-                      </div>
-                      <BookmarkEvent
-                        label={t("As4mP1x")}
-                        pubkey={video.pubkey}
-                        kind={video.kind}
-                        d={parsedAddr.identifier}
-                        image={video.image}
-                      />
-                    </>
-                  ),
-                  <div className="fit-container fx-centered fx-start-h pointer">
-                    <ShareLink
-                      label={t("AT9KulV")}
-                      path={`/videos/${video.naddr}`}
-                      title={author.display_name || author.name}
-                      description={video.content}
-                      kind={34235}
-                      shareImgData={{
-                        post: {
-                          ...video,
-                          description: video.content,
-                        },
-                        author,
-                        likes: postActions.likes.likes.length,
-                        views: videoViews,
-                      }}
-                    />
-                  </div>,
-                  <div onClick={muteUnmute} className="pointer">
-                    {isMuted ? (
-                      <p className="red-c">{t("AKELUbQ")}</p>
-                    ) : (
-                      <p className="red-c">{t("AGMxuQ0")}</p>
-                    )}
-                  </div>,
-                ]}
-                displayAbove={true}
+              <EventOptions
+                event={video}
+                eventActions={postActions}
+                component="repEvents"
               />
             </div>
           </div>

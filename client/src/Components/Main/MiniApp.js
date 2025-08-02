@@ -290,7 +290,7 @@ const UserPreview = ({ pubkey }) => {
         </div>
       </div>
       <Link
-        to={`/users/${nip19.nprofileEncode({ pubkey })}`}
+        to={`/profile/${nip19.nprofileEncode({ pubkey })}`}
         target="_blank"
         className="box-pad-h-s"
       >

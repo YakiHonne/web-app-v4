@@ -14,8 +14,6 @@ import {
   getEmptyuserMetadata,
   getHex,
 } from "../../Helpers/Encryptions";
-import profilePlaceholder from "../../media/images/profile-avatar.png";
-import s8e from "../../media/images/s8-e-yma.png";
 import {
   generateSecretKey,
   getPublicKey,
@@ -31,15 +29,13 @@ import {
   updateWallets,
 } from "../../Helpers/Helpers";
 import { setToast } from "../../Store/Slides/Publishers";
-import ymaHero from "../../media/images/login-yma-hero.png";
-import ymaQR from "../../media/images/yma-qr.png";
 import { useNavigate } from "react-router-dom";
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import InterestSuggestions from "../../Content/InterestSuggestions";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { saveUsers } from "../../Helpers/DB";
 import axios from "axios";
-import NDK, {
+import {
   NDKEvent,
   NDKNip46Signer,
   NDKPrivateKeySigner,
@@ -57,6 +53,15 @@ import {
 } from "nostr-tools/nip46";
 import { NostrConnect } from "nostr-tools/kinds";
 import QRCode from "react-qr-code";
+import { Helmet } from "react-helmet";
+let profilePlaceholder =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/profile-avatar.png";
+let s8e =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s8-e-yma.png";
+let ymaHero =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/login-yma-hero.png";
+let ymaQR =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/yma-qr.png";
 let stepsNumber = 4;
 let isNewAccount = getWallets().length > 0 ? true : false;
 
@@ -82,6 +87,46 @@ export default function Login() {
       className="fit-container fx-centered"
       style={{ height: "100vh", gap: 0 }}
     >
+      <Helmet>
+        <title>Yakihonne | Login</title>
+        <meta
+          name="description"
+          content={
+            "Securely access your decentralized Yakihonne identity with cryptographic keys. One login unlocks all features across web and mobile platforms."
+          }
+        />
+        <meta
+          property="og:description"
+          content={
+            "Securely access your decentralized Yakihonne identity with cryptographic keys. One login unlocks all features across web and mobile platforms."
+          }
+        />
+        <meta
+          property="og:image"
+          content={
+            "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          }
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
+        <meta property="og:url" content={`https://yakihonne.com/login`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Yakihonne" />
+        <meta property="og:title" content="Yakihonne | Login" />
+        <meta property="twitter:title" content="Yakihonne | Login" />
+        <meta
+          property="twitter:description"
+          content={
+            "Securely access your decentralized Yakihonne identity with cryptographic keys. One login unlocks all features across web and mobile platforms."
+          }
+        />
+        <meta
+          property="twitter:image"
+          content={
+            "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          }
+        />
+      </Helmet>
       <LeftSection />
       <div
         className="fx-centered fx-col box-pad-h"
@@ -118,7 +163,8 @@ const Bunker = () => {
   const localKeys = NDKPrivateKeySigner.generate();
 
   const launchBunkerWindow = () => {
-    const relay = "wss://nostr-01.yakihonne.com&relay=wss://offchain.pub&relay=wss://relay.nsec.app&relay=wss://relay.damus.io&relay=wss://relay.nostr.band";
+    const relay =
+      "wss://nostr-01.yakihonne.com&relay=wss://offchain.pub&relay=wss://relay.nsec.app&relay=wss://relay.damus.io&relay=wss://relay.nostr.band";
     const localSigner = NDKNip46Signer.nostrconnect(
       ndkInstance,
       relay,
@@ -139,7 +185,7 @@ const Bunker = () => {
         skipValidation: true,
       }
     );
-   
+
     sub.on("event", async (event) => {
       let data = "";
       let isDecrypted = false;

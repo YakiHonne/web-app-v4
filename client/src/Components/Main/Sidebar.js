@@ -24,6 +24,7 @@ import {
 } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  exportAllWallets,
   handleSwitchAccount,
   logoutAllAccounts,
   userLogout,
@@ -157,27 +158,28 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     if (showConfirmationBox === 1) {
-      let wallets = getWallets();
-      let NWCs = wallets.filter((_) => _.kind !== 1);
-      let toSave = [
-        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
-        "---",
-        `Wallets for: ${getBech32("npub", userKeys.pub)}`,
-        "-",
-        ...NWCs.map((_, index) => {
-          return [
-            `Address: ${_.entitle}`,
-            `NWC secret: ${_.data}`,
-            index === NWCs.length - 1 ? "" : "----",
-          ];
-        }),
-      ].flat();
-      downloadAsFile(
-        toSave.join("\n"),
-        "text/plain",
-        `NWCs-${userKeys.pub}.txt`,
-        t("AIzBCBb")
-      );
+      // let wallets = getWallets();
+      // let NWCs = wallets.filter((_) => _.kind !== 1);
+      // let toSave = [
+      //   "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+      //   "---",
+      //   `Wallets for: ${getBech32("npub", userKeys.pub)}`,
+      //   "-",
+      //   ...NWCs.map((_, index) => {
+      //     return [
+      //       `Address: ${_.entitle}`,
+      //       `NWC secret: ${_.data}`,
+      //       index === NWCs.length - 1 ? "" : "----",
+      //     ];
+      //   }),
+      // ].flat();
+      // downloadAsFile(
+      //   toSave.join("\n"),
+      //   "text/plain",
+      //   `NWCs-${userKeys.pub}.txt`,
+      //   t("AIzBCBb")
+      // );
+      exportAllWallets()
       setShowSettings(false);
       userLogout(userKeys.pub);
     }
@@ -236,12 +238,12 @@ export default function Sidebar() {
         ? await ndkUser.validateNip05(userMetadata.nip05)
         : false;
       if (isVer) {
-        customHistory.push(`/users/${userMetadata.nip05}`);
+        customHistory.push(`/profile/${userMetadata.nip05}`);
         return;
       }
 
       let pubkey = nip19.nprofileEncode({ pubkey: userKeys.pub });
-      customHistory.push(`/users/${pubkey}`);
+      customHistory.push(`/profile/${pubkey}`);
     } catch {
       return null;
     }
@@ -386,12 +388,12 @@ export default function Sidebar() {
                 >
                   <div
                     className={`pointer fit-container fx-scattered box-pad-h-s box-pad-v-s ${
-                      isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                      isPage("/profile/" + getBech32("npub", userKeys.pub)) ||
                       isPage(
-                        "/users/" +
+                        "/profile/" +
                           nip19.nprofileEncode({ pubkey: userKeys.pub })
                       ) ||
-                      isPage("/users/" + userMetadata.nip05)
+                      isPage("/profile/" + userMetadata.nip05)
                         ? "active-link"
                         : "inactive-link"
                     }`}
@@ -400,12 +402,12 @@ export default function Sidebar() {
                     <div className="fx-centered">
                       <div
                         className={
-                          isPage("/users/" + getBech32("npub", userKeys.pub)) ||
+                          isPage("/profile/" + getBech32("npub", userKeys.pub)) ||
                           isPage(
-                            "/users/" +
+                            "/profile/" +
                               nip19.nprofileEncode({ pubkey: userKeys.pub })
                           ) ||
-                          isPage("/users/" + userMetadata.nip05)
+                          isPage("/profile/" + userMetadata.nip05)
                             ? "user-bold-24"
                             : "user-24"
                         }

@@ -14,12 +14,18 @@ export default function Privacy() {
           <title>Yakihonne | Yakihonne privacy policies</title>
           <meta
             name="description"
-            content={"Yakihonne users' privacy policies"}
+            content={"Our commitment to protecting your data in a decentralized environment. Transparent privacy practices that prioritize user sovereignty."}
           />
           <meta
             property="og:description"
-            content={"Yakihonne users' privacy policies"}
+            content={"Our commitment to protecting your data in a decentralized environment. Transparent privacy practices that prioritize user sovereignty."}
           />
+          <meta
+            property="og:image"
+            content={"https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
 
           <meta property="og:url" content={`https://yakihonne.com/privacy`} />
           <meta property="og:type" content="website" />
@@ -34,7 +40,11 @@ export default function Privacy() {
           />
           <meta
             property="twitter:description"
-            content={"Yakihonne users' privacy policies"}
+            content={"Our commitment to protecting your data in a decentralized environment. Transparent privacy practices that prioritize user sovereignty."}
+          />
+          <meta
+            property="twitter:image"
+            content={"https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
           />
         </Helmet>
         <div

@@ -11,24 +11,28 @@ export default function Notification() {
   return (
     <div style={{ overflow: "auto" }}>
       <Helmet>
-        <title>Yakihonne | Notification</title>
+        <title>Yakihonne | Notifications</title>
         <meta
           name="description"
-          content={"Take a glimpse of all your notification"}
+          content={"Stay updated on interactions with your content and connections in real-time. Never miss important engagement from your audience."}
         />
         <meta
           property="og:description"
-          content={"Take a glimpse of all your notification"}
+          content={"Stay updated on interactions with your content and connections in real-time. Never miss important engagement from your audience."}
         />
+        <meta property="og:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
         <meta property="og:url" content={`https://yakihonne.com`} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
-        <meta property="og:title" content="Yakihonne | Notification" />
-        <meta property="twitter:title" content="Yakihonne | Notification" />
+        <meta property="og:title" content="Yakihonne | Notifications" />
+        <meta property="twitter:title" content="Yakihonne | Notifications" />
         <meta
           property="twitter:description"
-          content={"Take a glimpse of all your notification"}
+          content={"Stay updated on interactions with your content and connections in real-time. Never miss important engagement from your audience."}
         />
+        <meta property="twitter:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
       </Helmet>
 
       <ArrowUp />

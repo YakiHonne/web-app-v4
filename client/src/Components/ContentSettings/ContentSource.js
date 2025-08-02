@@ -10,6 +10,8 @@ import RelayImage from "../Main/RelayImage";
 import { DraggableComp } from "../DraggableComp";
 import { mixedContentDVMs, notesContentDVMs } from "../../Content/DVMs";
 import { copyText } from "../../Helpers/Helpers";
+import axios from "axios";
+import RelaysPicker from "../Main/RelaysPicker";
 
 const mixedContentDefaultCF = [
   ["top", true],
@@ -263,10 +265,19 @@ export default function ContentSource({
 
           setList(onlyDVMTypes);
         }
-        setSelectedCategory({
+        let categoryHistory;
+        try {
+          categoryHistory = JSON.parse(
+            localStorage.getItem(`selectedCategorySource-${type}`)
+          );
+        } catch {}
+        let selectedCategory_ = {
           group: optionsList[0].value,
           ...optionsList[0].list[0],
-        });
+        };
+        setSelectedCategory(
+          userKeys ? categoryHistory || selectedCategory_ : selectedCategory_
+        );
         let prevDVMs = optionsList.find((_) => _.value === "mf");
         prevDVMs = prevDVMs?.list || [];
         let data = await getSubData([
@@ -444,6 +455,22 @@ export default function ContentSource({
     return null;
   };
 
+  const handleSelectCategory = (e, _, option) => {
+    e.stopPropagation();
+    setSelectedCategory({
+      ..._,
+      group: option.value,
+    });
+    localStorage.setItem(
+      `selectedCategorySource-${type}`,
+      JSON.stringify({
+        ..._,
+        group: option.value,
+      })
+    );
+    setShowOptions(false);
+  };
+
   return (
     <>
       {showFeedMarketplace && (
@@ -505,13 +532,14 @@ export default function ContentSource({
               <p className="gray-c">
                 {type === 1 ? t("AuUadPD") : t("A84qogb")}
               </p>
-              {userKeys && (userKeys?.sec || userKeys?.ext || userKeys?.bunker) && (
-                <div
-                  onClick={() => setShowFeedMarketPlace(!showFeedMarketplace)}
-                >
-                  <div className="setting"></div>
-                </div>
-              )}
+              {userKeys &&
+                (userKeys?.sec || userKeys?.ext || userKeys?.bunker) && (
+                  <div
+                    onClick={() => setShowFeedMarketPlace(!showFeedMarketplace)}
+                  >
+                    <div className="setting"></div>
+                  </div>
+                )}
             </div>
             <div
               className="fx-centered fx-col fx-start-v fit-container"
@@ -546,14 +574,9 @@ export default function ContentSource({
                                 style={{
                                   borderRadius: "var(--border-r-18)",
                                 }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedCategory({
-                                    ..._,
-                                    group: option.value,
-                                  });
-                                  setShowOptions(false);
-                                }}
+                                onClick={(e) =>
+                                  handleSelectCategory(e, _, option)
+                                }
                               >
                                 {getCategoryPreview({
                                   group: option.value,
@@ -595,6 +618,7 @@ const CustomizeContentSource = ({
   const userFavRelays = useSelector((state) => state.userFavRelays);
   const [sources, setSources] = useState(optionsList);
   const [category, setCategory] = useState(1);
+  const [allRelays, setAllRelays] = useState([]);
   const [selectedDvms, setSelectedDvms] = useState(
     optionsList
       .find((_) => _.value === "mf")
@@ -649,6 +673,16 @@ const CustomizeContentSource = ({
       },
     };
   }, [userAppSettings, sources]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await axios.get("https://api.nostr.watch/v1/online");
+        setAllRelays(data.data);
+      } catch {}
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     setSources(optionsList);
@@ -856,6 +890,7 @@ const CustomizeContentSource = ({
           <RelaysFeed
             selectedRelaysFeed={selectedRelaysFeed}
             setSelectedRelaysFeed={setSelectedRelaysFeed}
+            allRelays={allRelays}
           />
         )}
         {category === 3 && (
@@ -955,18 +990,22 @@ const FeedMarketPlace = ({ list, selectedDvms, setSelectedDvms }) => {
   );
 };
 
-const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
+const RelaysFeed = ({
+  selectedRelaysFeed,
+  setSelectedRelaysFeed,
+  allRelays,
+}) => {
   const { t } = useTranslation();
   // const dispatch = useDispatch();
   // const userFavRelays = useSelector((state) => state.userFavRelays);
   const [tempRelaysFeed, setTempRelaysFeed] = useState("");
 
-  const handleAddRelaysFeed = (e) => {
-    e?.preventDefault();
-    if (!tempRelaysFeed) return;
-    let tempString = tempRelaysFeed.trim().includes("ws://")
-      ? tempRelaysFeed.trim().toLowerCase()
-      : "wss://" + tempRelaysFeed.trim().replace("wss://", "").toLowerCase();
+  const handleAddRelaysFeed = (data) => {
+    // e?.preventDefault();
+    if (!data) return;
+    let tempString = data.trim().includes("ws://")
+      ? data.trim().toLowerCase()
+      : "wss://" + data.trim().replace("wss://", "").toLowerCase();
     setSelectedRelaysFeed((prev) => {
       if (prev.find((_) => _.value === tempString)) {
         return prev;
@@ -982,7 +1021,7 @@ const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
         },
       ];
     });
-    setTempRelaysFeed("");
+    // setTempRelaysFeed("");
   };
 
   const removeRelay = (index) => {
@@ -1045,7 +1084,7 @@ const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
 
   return (
     <div className="fit-container fx-centered fx-start-h fx-start-v fx-col box-pad-h-m box-pad-v-m">
-      <form
+      {/* <form
         className="fit-container fx-scattered "
         onSubmit={handleAddRelaysFeed}
       >
@@ -1059,7 +1098,12 @@ const RelaysFeed = ({ selectedRelaysFeed, setSelectedRelaysFeed }) => {
         <div className="round-icon-small" onClick={handleAddRelaysFeed}>
           <div className="plus-sign"></div>
         </div>
-      </form>
+      </form> */}
+      <RelaysPicker
+        allRelays={allRelays}
+        addRelay={handleAddRelaysFeed}
+        showMessage={false}
+      />
       {selectedRelaysFeed.length > 0 && (
         <div className="fit-container fx-col fx-scattered fx-start-h fx-start-v">
           <p className="c1-c">{t("At4Hrf6")}</p>

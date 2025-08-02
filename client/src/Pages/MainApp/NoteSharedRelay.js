@@ -7,52 +7,30 @@ import React, {
   useMemo,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Sidebar from "../../Components/Main/Sidebar";
 import {
   filterContent,
-  getBackupWOTList,
   getParsedNote,
-  getParsedRepEvent,
   removeEventsDuplicants,
 } from "../../Helpers/Encryptions";
 import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
 import YakiIntro from "../../Components/YakiIntro";
 import KindSix from "../../Components/Main/KindSix";
-import { getFollowings, saveUsers } from "../../Helpers/DB";
-// import { ndkInstance } from "../../Helpers/NDKInstance";
+import { saveUsers } from "../../Helpers/DB";
 import {
   getDefaultFilter,
-  getDVMJobRequest,
-  getDVMJobResponse,
-  getSubData,
   InitEvent,
 } from "../../Helpers/Controlers";
-import HomeCarouselContentSuggestions from "../../Components/Main/HomeCarouselContentSuggestions";
-import UserProfilePic from "../../Components/Main/UserProfilePic";
-import InterestSuggestionsCards from "../../Components/SuggestionsCards/InterestSuggestionsCards";
-
 import {
-  getCustomSettings,
-  getDefaultSettings,
-  getKeys,
   straightUp,
 } from "../../Helpers/Helpers";
 import LoadingLogo from "../../Components/LoadingLogo";
 import KindOne from "../../Components/Main/KindOne";
-import UserToFollowSuggestionsCards from "../../Components/SuggestionsCards/UserToFollowSuggestionsCards";
-import ContentSuggestionsCards from "../../Components/SuggestionsCards/ContentSuggestionCards";
-import DonationBoxSuggestionCards from "../../Components/SuggestionsCards/DonationBoxSuggestionCards";
-import ProfileShareSuggestionCards from "../../Components/SuggestionsCards/ProfileShareSuggestionCards";
-import PostAsNote from "../../Components/Main/PostAsNote";
 import { useTranslation } from "react-i18next";
 import bannedList from "../../Content/BannedList";
-import ContentSource from "../../Components/ContentSettings/ContentSource";
-import ContentFilter from "../../Components/ContentSettings/ContentFilter";
 import { useLocation } from "react-router-dom";
 import NDK, {
   NDKPrivateKeySigner,
-  NDKRelay,
   NDKRelayAuthPolicies,
 } from "@nostr-dev-kit/ndk";
 import { setToPublish } from "../../Store/Slides/Publishers";
@@ -284,31 +262,35 @@ export default function NoteSharedRelay() {
   return (
     <>
       <div style={{ overflow: "auto" }}>
-        <Helmet>
-          <title>Yakihonne | Home</title>
+        <Helmet>  
+          <title>Yakihonne | Notes on {relay}</title>
           <meta
             name="description"
             content={
-              "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
+              "Share bite-sized insights from leading Nostr creators and thinkers. Engage with thought-provoking notes in a Lightning-enabled environment."
             }
           />
           <meta
             property="og:description"
             content={
-              "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
+              "Share bite-sized insights from leading Nostr creators and thinkers. Engage with thought-provoking notes in a Lightning-enabled environment."
             }
           />
-          <meta property="og:url" content={`https://yakihonne.com`} />
+          <meta property="og:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
+          <meta property="og:url" content={`https://yakihonne.com/r/notes?r=${relay}`} />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
-          <meta property="og:title" content="Yakihonne | Home" />
-          <meta property="twitter:title" content="Yakihonne | Home" />
+          <meta property="og:title" content={`Yakihonne | Notes on ${relay}`} />
+          <meta property="twitter:title" content={`Yakihonne | Notes on ${relay}`} />
           <meta
             property="twitter:description"
             content={
-              "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
+              "Share bite-sized insights from leading Nostr creators and thinkers. Engage with thought-provoking notes in a Lightning-enabled environment."
             }
           />
+          <meta property="twitter:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
         </Helmet>
         <YakiIntro />
         <ArrowUp />

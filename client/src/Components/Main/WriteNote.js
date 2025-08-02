@@ -521,6 +521,7 @@ export default function WriteNote({
                 ref={textareaRef}
                 onChange={handleChange}
                 autoFocus
+                dir="auto"
               />
               {showMentionSuggestions && (
                 <MentionSuggestions

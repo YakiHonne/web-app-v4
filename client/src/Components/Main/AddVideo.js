@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { nip19 } from "nostr-tools";
@@ -9,15 +9,15 @@ import { getVideoFromURL } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 import { useTranslation } from "react-i18next";
 
-export default function AddVideo({ exit }) {
+export default function AddVideo({ exit, event }) {
   const dispatch = useDispatch();
   const { t } = useTranslation();
-  const [videoURL, setVideoURL] = useState("");
-  const [videoTitle, setVideoTitle] = useState("");
-  const [videoDesc, setVideoDesc] = useState("");
+  const [videoURL, setVideoURL] = useState(event?.vUrl || "");
+  const [videoTitle, setVideoTitle] = useState(event?.title || "");
+  const [videoDesc, setVideoDesc] = useState(event?.description || "");
   const [isLoading, setIsLoading] = useState(false);
   const [videoMetadata, setVideoMetadata] = useState(false);
-  const [type, setType] = useState("");
+  const [type, setType] = useState(event ? "link" : "");
 
   const validate = async () => {
     if (type === "link") {
@@ -95,6 +95,10 @@ export default function AddVideo({ exit }) {
       }
     }
   };
+
+  useEffect(() => {
+    if(event) validate()
+  }, [])
 
   return (
     <>
@@ -233,6 +237,7 @@ export default function AddVideo({ exit }) {
             videoTitle={videoTitle}
             videoDesc={videoDesc}
             videoMetadata={videoMetadata}
+            event={event}
             exit={() => {
               exit();
             }}

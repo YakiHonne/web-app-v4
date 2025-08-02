@@ -14,7 +14,6 @@ export default function NProfilePreviewer({
   onClose,
   setMetataData = () => null,
 }) {
-  console.log(pubkey);
   const [author, setAuthor] = useState(getEmptyuserMetadata(pubkey));
 
   useEffect(() => {
@@ -69,7 +68,7 @@ export default function NProfilePreviewer({
         </div>
       </div>
       {!close && showSharing && (
-        <Link to={`/users/${nip19.nprofileEncode({ pubkey })}`} target="_blank">
+        <Link to={`/profile/${nip19.nprofileEncode({ pubkey })}`} target="_blank">
           <div className="share-icon-24"></div>
         </Link>
       )}

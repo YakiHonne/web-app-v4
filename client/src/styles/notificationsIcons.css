@@ -21,49 +21,49 @@
 }
 
 .not-articles {
-    background-image: url('../media/NotificationsIcon/articles.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/articles.svg');
 }
 
 .not-curations {
-    background-image: url('../media/NotificationsIcon/curations.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/curations.svg');
 }
 
 .not-mentions {
-    background-image: url('../media/NotificationsIcon/mentions.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/mentions.svg');
 }
 
 .not-notes {
-    background-image: url('../media/NotificationsIcon/notes.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/notes.svg');
 }
 
 .not-paid-notes {
-    background-image: url('../media/NotificationsIcon/paid-notes.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/paid-notes.svg');
 }
 
 .not-quotes {
-    background-image: url('../media/NotificationsIcon/quotes.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/quotes.svg');
 }
 
 .not-reactions {
-    background-image: url('../media/NotificationsIcon/reactions.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/reactions.svg');
 }
 
 .not-replies-comments {
-    background-image: url('../media/NotificationsIcon/replies-comments.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/replies-comments.svg');
 }
 
 .not-reposts {
-    background-image: url('../media/NotificationsIcon/reposts.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/reposts.svg');
 }
 
 .not-smart-widgets {
-    background-image: url('../media/NotificationsIcon/smart-widgets.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/smart-widgets.svg');
 }
 
 .not-videos {
-    background-image: url('../media/NotificationsIcon/videos.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/videos.svg');
 }
 
 .not-zaps {
-    background-image: url('../media/NotificationsIcon/zaps.svg');
+    background-image: url('https://yakihonne.s3.ap-east-1.amazonaws.com/media/notificationsIcon/zaps.svg');
 }

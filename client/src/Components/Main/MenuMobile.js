@@ -252,7 +252,7 @@ export default function MenuMobile({ toggleLogin, exit }) {
                 className="fit-container fx-centered fx-start-h  box-pad-v-s  box-pad-h-s"
                 onClick={() => {
                   customHistory.push(
-                    `/users/${nip19.nprofileEncode({ pubkey: userKeys.pub })}`
+                    `/profile/${nip19.nprofileEncode({ pubkey: userKeys.pub })}`
                   );
                   dismiss();
                 }}

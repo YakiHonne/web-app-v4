@@ -30,6 +30,7 @@ import MACIPollPreview from "../Components/Main/MACIPollPreview";
 import { InitEvent } from "./Controlers";
 import LinkInspector from "../Components/LinkInspector";
 import VideoLoader from "../Components/Main/VideoLoader";
+import AudioLoader from "../Components/Main/AudioLoader";
 
 const LoginToAPI = async (publicKey, userKeys) => {
   try {
@@ -208,7 +209,12 @@ const getNoteTree = (
     const el = tree[i];
     const key = `${el}-${i}`;
     if (el === "\n") {
-      finalTree.push(<br key={key} />);
+      // Check how many consecutive <br /> are already at the end
+      const last1 = finalTree[finalTree.length - 1];
+      const last2 = finalTree[finalTree.length - 2];
+      if (!(last1 && last1.type === "br" && last2 && last2.type === "br")) {
+        finalTree.push(<br key={key} />);
+      }
     } else if (
       (/(https?:\/\/)/i.test(el) || el.startsWith("data:image")) &&
       !el.includes("https://yakihonne.com/smart-widget-checker?naddr=") &&
@@ -221,6 +227,7 @@ const getNoteTree = (
           if (isURLVid.isYT) {
             finalTree.push(
               <iframe
+                loading="lazy"
                 key={key}
                 style={{
                   width: "100%",
@@ -236,6 +243,7 @@ const getNoteTree = (
           if (!isURLVid.isYT)
             finalTree.push(
               <iframe
+                loading="lazy"
                 key={key}
                 style={{
                   width: "100%",
@@ -249,30 +257,12 @@ const getNoteTree = (
             );
         }
         if (!isURLVid) {
-          // finalTree.push(
-          //   // <Fragment key={key}>
-          //   <LinkInspector el={el} key={key} />
-          //   // </Fragment>
-          // );
           const checkURL = isImageUrl(el);
           if (checkURL) {
             if (checkURL.type === "image") {
               finalTree.push(<IMGElement src={el} key={key} />);
             } else if (checkURL.type === "video") {
               finalTree.push(
-                // <video
-                //   key={key}
-                //   controls={true}
-                //   autoPlay={false}
-                //   poster="https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630"
-                //   preload="none"
-                //   name="media"
-                //   width={"100%"}
-                //   className="sc-s-18"
-                //   style={{ margin: ".5rem auto", aspectRatio: "16/9" }}
-                // >
-                //   <source src={el} type="video/mp4" />
-                // </video>
                 <VideoLoader
                   key={key}
                   src={el}
@@ -286,22 +276,23 @@ const getNoteTree = (
             el.includes(".wav")
           ) {
             finalTree.push(
-              <audio
-                controls
-                key={key}
-                className="fit-container"
-                style={{ margin: ".5rem auto", minWidth: "300px" }}
-              >
-                <source src={el} type="audio/ogg" />
-                <source src={el} type="audio/mpeg" />
-                <source src={el} type="audio/wav" />
-                Your browser does not support the audio element.
-              </audio>
+             <AudioLoader audioSrc={el} key={key} />
+              // <audio
+              //   controls
+              //   key={key}
+              //   className="fit-container"
+              //   style={{ margin: ".5rem auto", minWidth: "300px" }}
+              // >
+              //   <source src={el} type="audio/ogg" />
+              //   <source src={el} type="audio/mpeg" />
+              //   <source src={el} type="audio/wav" />
+              //   Your browser does not support the audio element.
+              // </audio>
             );
           } else {
             finalTree.push(
               <Fragment key={key}>
-                <LinkPreview url={el} />{" "}
+                <LinkPreview url={el} minimal={minimal} />{" "}
               </Fragment>
             );
           }
@@ -621,11 +612,11 @@ const getLinkFromAddr = (addr_) => {
       if (data.data.kind === 30033) return `/smart-widget/${addr}`;
     }
     if (addr.startsWith("nprofile")) {
-      return `/users/${addr}`;
+      return `/profile/${addr}`;
     }
     if (addr.startsWith("npub")) {
       let hex = getHex(addr.replace(",", "").replace(".", ""));
-      return `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
+      return `/profile/${nip19.nprofileEncode({ pubkey: hex })}`;
     }
     if (addr.startsWith("nevent")) {
       let data = nip19.decode(addr);
@@ -649,8 +640,8 @@ const getLinkFromAddr = (addr_) => {
 const getLinkPreview = async (url) => {
   try {
     const metadata = await Promise.race([
-      axiosInstance.get("/api/v1/link-preview?url=" + encodeURIComponent(url)),
-      sleepTimer(2000),
+      axiosInstance.get("https://api.yakihonne.com/link-preview?url=" + encodeURIComponent(url)),
+      sleepTimer(5000),
     ]);
     if (metadata)
       return {
@@ -1061,6 +1052,7 @@ const getVideoContent = (video) => {
     pubkey: video.pubkey,
     keywords,
     duration: formatMinutesToMMSS(duration),
+    tags: video.tags,
     minutes: duration,
     url,
     title,
@@ -1617,7 +1609,9 @@ const handleAppDirection = (toChangeLang) => {
 const getCustomServices = () => {
   let userKeys = getKeys();
   if (!userKeys) return {};
-  let customServices = localStorage.getItem(`custom-lang-services-${userKeys.pub}`);
+  let customServices = localStorage.getItem(
+    `custom-lang-services-${userKeys.pub}`
+  );
   if (!customServices) return {};
   try {
     customServices = JSON.parse(customServices);
@@ -1625,7 +1619,7 @@ const getCustomServices = () => {
   } catch (err) {
     return {};
   }
-}
+};
 
 const getDefaultSettings = (pubkey) => {
   return {
@@ -2507,5 +2501,6 @@ export {
   getWotConfig,
   getAnswerFromAIRemoteAPI,
   isImageUrl,
-  getCustomServices
+  isVid,
+  getCustomServices,
 };

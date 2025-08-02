@@ -9,7 +9,10 @@ const VideoLoader = ({ src, ...props }) => {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsLoaded(true);
-          observer.disconnect();
+        } else {
+          if (videoRef.current && !videoRef.current.paused) {
+            videoRef.current.pause();
+          }
         }
       },
       { threshold: 0.25 }
@@ -17,8 +20,10 @@ const VideoLoader = ({ src, ...props }) => {
     if (videoRef.current) {
       observer.observe(videoRef.current);
     }
-    return () => observer.disconnect();
-  }, [videoRef.current]);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <video

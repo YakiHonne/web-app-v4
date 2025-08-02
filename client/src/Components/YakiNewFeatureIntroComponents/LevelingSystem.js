@@ -1,14 +1,14 @@
 import React from "react";
-import screenOne from "../../media/images/NewFeature/Leveling/screen-1.png";
-import screenTwo from "../../media/images/NewFeature/Leveling/screen-2.png";
-import screenThreeOne from "../../media/images/NewFeature/Leveling/screen-3-1.png";
-import screenThreeTwo from "../../media/images/NewFeature/Leveling/screen-3-2.png";
-import screenFourOne from "../../media/images/NewFeature/Leveling/screen-4-1.png";
-import screenFourTwo from "../../media/images/NewFeature/Leveling/screen-4-2.png";
-import screenFive from "../../media/images/NewFeature/Leveling/screen-5.png";
-import screenSix from "../../media/images/NewFeature/Leveling/screen-6.png";
-import screenSeven from "../../media/images/NewFeature/Leveling/screen-7.png";
-import screenSevenTwo from "../../media/images/NewFeature/Leveling/screen-7-2.png";
+let screenOne = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-1.png";
+let screenTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-2.png";
+let screenThreeOne = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-3-1.png";
+let screenThreeTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-3-2.png";
+let screenFourOne = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-4-1.png";
+let screenFourTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-4-2.png";
+let screenFive = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-5.png";
+let screenSix = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-6.png";
+let screenSeven = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-7.png";
+let screenSevenTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-7-2.png";
 
 const ScreenOne = () => {
   return (

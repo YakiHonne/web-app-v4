@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { nip19 } from "nostr-tools";
 import LoadingDots from "../LoadingDots";
@@ -13,6 +13,7 @@ export default function MentionSuggestions({
   mention,
   setSelectedMention,
   setSelectedMentionMetadata,
+  displayAbove = false,
 }) {
   const { t } = useTranslation();
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
@@ -32,7 +33,7 @@ export default function MentionSuggestions({
         const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
         let data = await axios.get(
-          `${API_BASE_URL}/api/v1/users/search/${mention}`
+          `${API_BASE_URL}/api/v1/profile/search/${mention}`
         );
 
         setUsers((prev) => {
@@ -157,7 +158,7 @@ export default function MentionSuggestions({
             width: "100%",
             position: "absolute",
             left: 0,
-            top: "100%",
+            [displayAbove ? "bottom" : "top"]: "110%",
             overflow: "hidden",
             zIndex: 211,
             height: "20px",
@@ -175,7 +176,7 @@ export default function MentionSuggestions({
       <div
         style={{
           position: "absolute",
-          top: "100%",
+          [displayAbove ? "bottom" : "top"]: "110%",
           left: 0,
           width: "100%",
           maxHeight: "200px",

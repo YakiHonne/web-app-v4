@@ -1,39 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Widget } from "smart-widget-previewer";
-import SWHandler from "smart-widget-handler";
 import { customHistory } from "../../Helpers/History";
-import { useDispatch, useSelector } from "react-redux";
-import { decode } from "light-bolt11-decoder";
-import {
-  assignClientTag,
-  extractRootDomain,
-  getWallets,
-  updateWallets,
-} from "../../Helpers/Helpers";
-import { getZapEventRequest } from "../../Helpers/NostrPublisher";
-import {
-  decodeUrlOrAddress,
-  encodeLud06,
-  shortenKey,
-} from "../../Helpers/Encryptions";
-import { setToast } from "../../Store/Slides/Publishers";
-import axios from "axios";
-import { useTranslation } from "react-i18next";
-import relaysOnPlatform from "../../Content/Relays";
-import { ndkInstance } from "../../Helpers/NDKInstance";
-import { webln } from "@getalby/sdk";
-import axiosInstance from "../../Helpers/HTTP_Client";
-import { setUpdatedActionFromYakiChest } from "../../Store/Slides/YakiChest";
-import {
-  InitEvent,
-  publishEvent,
-  updateYakiChestStats,
-} from "../../Helpers/Controlers";
-import UserProfilePic from "./UserProfilePic";
-import LoadingDots from "../LoadingDots";
-import QRCode from "react-qr-code";
-import OptionsDropdown from "./OptionsDropdown";
-import PostAsNote from "./PostAsNote";
+import { useSelector } from "react-redux";
 import MiniApp from "./MiniApp";
 import PaymentGateway from "./PaymentGateway";
 
