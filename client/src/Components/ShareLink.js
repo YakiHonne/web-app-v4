@@ -245,26 +245,6 @@ export default function ShareLink({
                 >
                   <div className="twitter-logo-24"></div> {t("AroZoen")}
                 </a>
-                <button className="btn btn-gray btn-full fx-centered">
-                  <div
-                    className="fb-share-button "
-                    data-href={`${`${
-                      window.location.protocol
-                    }//${"yakihonne.com"}${path}`}`}
-                    data-layout=""
-                    data-size=""
-                  >
-                    <a
-                      target="_blank"
-                      href={`https://www.facebook.com/sharer/sharer.php?u=${`${
-                        window.location.protocol
-                      }//${"yakihonne.com"}${path}`}%2F&amp;src=sdkpreparse`}
-                      className="fb-xfbml-parse-ignore fx-centered"
-                    >
-                      <div className="fb-icon-24"></div> Facebook
-                    </a>
-                  </div>
-                </button>
                 <a
                   href={`whatsapp://send?text=${`${window.location.protocol}//${window.location.hostname}${path}`}`}
                   data-action="share/whatsapp/share"
