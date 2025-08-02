@@ -18,10 +18,10 @@ import { useTranslation } from "react-i18next";
 import useUserProfile from "../../Hooks/useUsersProfile";
 import { nip19 } from "nostr-tools";
 import Lottie from "lottie-react";
-import successJSON from "../../media/JSONs/success.json";
 import PagePlaceholder from "../PagePlaceholder";
 import { Link } from "react-router-dom";
 import { saveUsers } from "../../Helpers/DB";
+import successJSON from "../../media/JSONs/success.json";
 
 export default function PaymentGateway({
   recipientAddr,

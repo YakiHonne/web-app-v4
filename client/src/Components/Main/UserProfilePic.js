@@ -65,14 +65,14 @@ export default function UserProfilePic({
             ? await ndkUser.validateNip05(auth.nip05)
             : false;
           if (isVer) {
-            customHistory.push(`/users/${auth.nip05}`);
+            customHistory.push(`/profile/${auth.nip05}`);
             return;
           }
         }
         let pubkey = nip19.nprofileEncode({
           pubkey: mainAccountUser ? userMetadata.pubkey : user_id,
         });
-        customHistory.push(`/users/${pubkey}`);
+        customHistory.push(`/profile/${pubkey}`);
       }
       return null;
     } catch {

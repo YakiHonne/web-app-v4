@@ -11,30 +11,42 @@ export default function Terms() {
     >
       <div style={{ width: "min(100%, 1000px)",}}>
         <Helmet>
-          <title>Yakihonne | Yakihonne privacy policies</title>
+          <title>Yakihonne | Yakihonne terms</title>
           <meta
             name="description"
-            content={"Yakihonne users' privacy policies"}
+            content={"Clear guidelines for participating in the Yakihonne ecosystem on Nostr. Fair and balanced terms that respect creator rights."}
           />
           <meta
             property="og:description"
-            content={"Yakihonne users' privacy policies"}
+            content={"Clear guidelines for participating in the Yakihonne ecosystem on Nostr. Fair and balanced terms that respect creator rights."}
           />
+          <meta
+            property="og:image"
+            content={"https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
 
-          <meta property="og:url" content={`https://yakihonne.com/privacy`} />
+          <meta property="og:url" content={`https://yakihonne.com/terms`} />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
           <meta
             property="og:title"
-            content="Yakihonne | Yakihonne privacy policies"
+            content="Yakihonne | Yakihonne terms"
           />
           <meta
             property="twitter:title"
-            content="Yakihonne | Yakihonne privacy policies"
+            content="Yakihonne | Yakihonne terms"
           />
           <meta
             property="twitter:description"
-            content={"Yakihonne users' privacy policies"}
+            content={"Clear guidelines for participating in the Yakihonne ecosystem on Nostr. Fair and balanced terms that respect creator rights."}
+          />
+          <meta
+            property="twitter:image"
+            content={
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
           />
         </Helmet>
         <div

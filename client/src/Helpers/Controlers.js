@@ -33,6 +33,7 @@ import {
   getCurrentLevel,
   getCustomServices,
   getKeys,
+  getWallets,
   levelCount,
 } from "./Helpers";
 import { finalizeEvent, SimplePool } from "nostr-tools";
@@ -40,6 +41,7 @@ import { translationServicesEndpoints } from "../Content/TranslationServices";
 import axios from "axios";
 import relaysOnPlatform from "../Content/Relays";
 import { BunkerSigner, parseBunkerInput } from "nostr-tools/nip46";
+import { t } from "i18next";
 
 const ConnectNDK = async (relays) => {
   try {
@@ -264,6 +266,44 @@ const downloadAllKeys = () => {
     ].join("\n"),
     "text/plain",
     `accounts-credentials.txt`
+  );
+};
+
+const exportAllWallets = () => {
+  let wallets = getWallets();
+  let userKeys = getKeys();
+  let NWCs = wallets.filter((_) => _.kind !== 1);
+  let toSave = [
+    "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+    "---",
+    `Wallets for: ${getBech32("npub", userKeys.pub)}`,
+    "-",
+    ...NWCs.map((_, index) => {
+      return [
+        `Address: ${_.entitle}`,
+        `NWC secret: ${_.data}`,
+        index === NWCs.length - 1 ? "" : "----",
+      ];
+    }),
+  ].flat();
+  downloadAsFile(
+    toSave.join("\n"),
+    "text/plain",
+    `NWCs-${userKeys.pub}.txt`,
+    t("AIzBCBb")
+  );
+};
+
+const exportWallet = (nwc, addr) => {
+  downloadAsFile(
+    [
+      "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
+      "---",
+      `wallet secret: ${typeof nwc === "string" ? nwc : "N/A"}`,
+    ].join("\n"),
+    "text/plain",
+    `NWC-for-${addr}.txt`,
+    t("AVUlnek")
   );
 };
 
@@ -928,6 +968,15 @@ const getDVMJobResponse = async (eventId) => {
   });
 };
 
+const walletWarning = () => {
+  store.dispatch(
+    store.getState().setToast({
+      type: 3,
+      desc: t("A4R0ICw"),
+    })
+  );
+};
+
 export {
   ConnectNDK,
   aggregateUsers,
@@ -937,6 +986,8 @@ export {
   logoutAllAccounts,
   handleSwitchAccount,
   userLogout,
+  exportAllWallets,
+  exportWallet,
   updateYakiChestStats,
   initiFirstLoginStats,
   getUser,
@@ -955,4 +1006,5 @@ export {
   getDVMJobRequest,
   getDVMJobResponse,
   saveInboxRelaysListsForUsers,
+  walletWarning,
 };

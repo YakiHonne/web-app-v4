@@ -9,6 +9,7 @@ export default function UserSearchBar({
   getUserMetadata = false,
   full = false,
   placeholder,
+  displayAbove = false
 }) {
   const [keyword, setKeyword] = useState("");
   const { t } = useTranslation();
@@ -75,6 +76,7 @@ export default function UserSearchBar({
             setSelectedMentionMetadata={
               getUserMetadata && setSelectedMentionMetadata
             }
+            displayAbove={displayAbove}
           />
         )}
       </label>

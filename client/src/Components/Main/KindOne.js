@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  enableTranslation,
-  getBech32,
   getEmptyuserMetadata,
   getParsedNote,
   getParsedRepEvent,
@@ -9,13 +7,10 @@ import {
 import UserProfilePic from "../../Components/Main/UserProfilePic";
 import ShowUsersList from "../../Components/Main/ShowUsersList";
 import Date_ from "../../Components/Date_";
-import BookmarkEvent from "./BookmarkEvent";
-import ShareLink from "../ShareLink";
 import NumberShrink from "../NumberShrink";
 import { useDispatch, useSelector } from "react-redux";
-import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { setToast } from "../../Store/Slides/Publishers";
 import { getSubData, getUser, translate } from "../../Helpers/Controlers";
-import OptionsDropdown from "./OptionsDropdown";
 import useNoteStats from "../../Hooks/useNoteStats";
 import Like from "../Reactions/Like";
 import Repost from "../Reactions/Repost";
@@ -29,6 +24,8 @@ import {
   compactContent,
   getNoteTree,
   getRepliesViewSettings,
+  isImageUrl,
+  isVid,
 } from "../../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
 import LoadingDots from "../LoadingDots";
@@ -37,6 +34,7 @@ import useUserProfile from "../../Hooks/useUsersProfile";
 import RepEventPreviewCard from "./RepEventPreviewCard";
 import NotesComment from "./NotesComment";
 import { nip19 } from "nostr-tools";
+import EventOptions from "../ElementOptions/EventOptions";
 
 export default function KindOne({
   event,
@@ -47,13 +45,7 @@ export default function KindOne({
 }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
-  const userRelays = useSelector((state) => state.userRelays);
-  const nostrAuthors = useSelector((state) => state.nostrAuthors);
-  const isPublishing = useSelector((state) => state.isPublishing);
-  const userMutedList = useSelector((state) => state.userMutedList);
   const { t } = useTranslation();
-  // const [user, setUser] = useState(getEmptyuserMetadata(event.pubkey));
-  // const [isNip05Verified, setIsNip05Verified] = useState(false);
   const { isNip05Verified, userProfile } = useUserProfile(event?.pubkey);
   const [toggleComment, setToggleComment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +57,103 @@ export default function KindOne({
   const [showTranslation, setShowTranslation] = useState(false);
   const [isTransEnabled, setIsTransEnabled] = useState(true);
   const isThread = getRepliesViewSettings();
+
+  const [isClamped, setIsClamped] = useState(10000);
+  const noteRef = React.useRef(null);
+
+  useEffect(() => {
+    if (noteRef.current) {
+      const el = noteRef.current;
+      if (el.scrollHeight > 700 && el.scrollHeight <= 1000) setIsClamped(20);
+      if (el.scrollHeight > 1000) setIsClamped(checkNotes());
+    }
+  }, [showTranslation, translatedNote, event.note_tree]);
+
+  const checkNotes = () => {
+    const NOTE_PREFIXES = ["note1", "nevent", "naddr"];
+    const MAX_COMPONENTS = 5;
+    const WORD_LIMIT = 70;
+
+    const range_ = event.content
+      .trim()
+      .split(/\s+|\n/)
+    const range = range_
+      .slice(0, WORD_LIMIT);
+
+    let checkForComponents = 0;
+
+    for (let i = 0; i < range.length; i++) {
+      let cleanElement = range[i].trim().replace("nostr:", "");
+
+      for (let prefix of NOTE_PREFIXES) {
+        if (cleanElement.startsWith(prefix)) {
+          checkForComponents++;
+          break;
+        }
+      }
+
+      if (!NOTE_PREFIXES.some((prefix) => cleanElement.startsWith(prefix))) {
+        if (isImageUrl(cleanElement)?.type === "image") {
+          checkForComponents++;
+        } else if (isVid(cleanElement)) {
+          checkForComponents++;
+        }
+      }
+
+      if (checkForComponents >= MAX_COMPONENTS) break;
+    }
+
+    if (checkForComponents > 0 && checkForComponents < MAX_COMPONENTS)
+      return 15;
+    if (checkForComponents >= MAX_COMPONENTS) return 10;
+    if(checkForComponents === 0 && range_.length === range.length) return 10000
+    return 20;
+  };
+
+  // const checkNotes = () => {
+  //   let range = event.content
+  //     .trim()
+  //     .split(/(\n)/)
+  //     .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
+  //     .filter(Boolean);
+
+  //   range = range.splice(0, 150);
+  //   console.log(range);
+  //   let checkForComponents = 0;
+  //   for (let element of range) {
+  //     let cleanElement = element.trim().replace("nostr:", "");
+  //     if (
+  //       cleanElement.startsWith("note1") ||
+  //       cleanElement.startsWith("nevent") ||
+  //       cleanElement.startsWith("naddr")
+  //     )
+  //       checkForComponents++;
+  //     let isImg = isImageUrl(cleanElement);
+  //     if (isImg && isImg.type === "image") checkForComponents++;
+  //     else if (isVid(cleanElement)) checkForComponents++;
+  //   }
+  //   console.log(checkForComponents);
+  //   if (checkForComponents > 0 && checkForComponents < 5) return 15;
+  //   if (checkForComponents >= 5) return 10;
+  //   return 20;
+  // };
+
+  // useEffect(() => {
+  //   const el = noteRef.current;
+  //   if (!el) return;
+
+  //   // Create observer
+  //   const resizeObserver = new ResizeObserver(entries => {
+  //     for (let entry of entries) {
+  //       console.log(entry.contentRect.height);
+  //     }
+  //   });
+
+  //   resizeObserver.observe(el);
+
+  //   // Cleanup
+  //   return () => resizeObserver.disconnect();
+  // }, [noteRef]);
 
   const isLiked = useMemo(() => {
     return userKeys
@@ -87,20 +176,6 @@ export default function KindOne({
       ? postActions.zaps.zaps.find((item) => item.pubkey === userKeys.pub)
       : false;
   }, [postActions, userKeys]);
-
-  const isMuted = useMemo(() => {
-    let checkProfile = () => {
-      if (!Array.isArray(userMutedList)) return false;
-      let index = userMutedList.findIndex(
-        (item) => item === userProfile?.pubkey
-      );
-      if (index === -1) {
-        return false;
-      }
-      return { index };
-    };
-    return checkProfile();
-  }, [userMutedList, userProfile]);
 
   useEffect(() => {
     if (postActions && postActions?.reposts?.reposts?.length > 0)
@@ -125,41 +200,6 @@ export default function KindOne({
     if (window.location.pathname.includes("/notes/"))
       customHistory.push(`/notes/${event.nEvent}`);
     else window.location = `/notes/${event.nEvent}`;
-  };
-
-  const muteUnmute = async () => {
-    try {
-      if (!Array.isArray(userMutedList)) return;
-      let tempTags = Array.from(userMutedList.map((pubkey) => ["p", pubkey]));
-      if (isMuted) {
-        tempTags.splice(isMuted.index, 1);
-      } else {
-        tempTags.push(["p", event.pubkey]);
-      }
-
-      dispatch(
-        setToPublish({
-          userKeys: userKeys,
-          kind: 10000,
-          content: "",
-          tags: tempTags,
-          allRelays: userRelays,
-        })
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const copyID = (e) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(event.nEvent);
-    dispatch(
-      setToast({
-        type: 1,
-        desc: `${t("ARJICtS")} 👏`,
-      })
-    );
   };
 
   const translateNote = async () => {
@@ -234,12 +274,10 @@ export default function KindOne({
         style={{ borderBottom: border ? "1px solid var(--very-dim-gray)" : "" }}
       >
         {event.isComment && isThread && (
-          <RelatedEvent event={event.isComment} />
+          <RelatedEvent event={event.isComment} reactions={reactions} />
         )}
         <div
-          className={`fit-container box-pad-h-m fx-centered fx-col ${
-            !reactions ? "sc-s-18 box-pad-v-m" : ""
-          }`}
+          className={`fit-container box-pad-h-m fx-centered fx-col`}
           style={{
             backgroundColor: !toggleComment ? "" : "var(--c1-side)",
             transition: ".2s ease-in-out",
@@ -304,19 +342,30 @@ export default function KindOne({
                   <RelatedEvent event={event.isComment} />
                 )}
                 <div className="fx-centered fx-col fit-container">
-                  <div className="fit-container" onClick={onClick}>
+                  <div className="fit-container" onClick={onClick} dir="auto">
                     {!minimal ? (
-                      <>{showTranslation ? translatedNote : event.note_tree}</>
+                      <div
+                        className="p-n-lines"
+                        style={{
+                          "--lines": isClamped ? isClamped : "unset",
+                          // whiteSpace: "unset",
+                        }}
+                        ref={noteRef}
+                      >
+                        {showTranslation ? translatedNote : event.note_tree}
+                      </div>
                     ) : (
-                      <p className="p-four-lines">
-                        {compactContent(event.content, event.pubkey)}
+                      <p className="p-six-lines" ref={noteRef}>
+                        {event.note_tree}
+                        {/* {compactContent(event.content, event.pubkey)} */}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-            {event.isCollapsedNote && (
+            {isClamped !== 10000 && (
+              // {event.isCollapsedNote || isClamped && (
               <div
                 className="fit-container note-indent fx-centered fx-start-h pointer"
                 style={{ paddingTop: ".5rem" }}
@@ -350,7 +399,10 @@ export default function KindOne({
                 >
                   <div className="fx-centered" style={{ columnGap: "1rem" }}>
                     <div className="fx-centered">
-                      <div className="round-icon-tooltip" data-tooltip={t("ADHdLfJ")}>
+                      <div
+                        className="round-icon-tooltip"
+                        data-tooltip={t("ADHdLfJ")}
+                      >
                         <div
                           className="comment-24"
                           onClick={() => setToggleComment(!toggleComment)}
@@ -375,7 +427,9 @@ export default function KindOne({
                         actions={postActions}
                       />
                       <div
-                        className={`round-icon-tooltip ${isLiked ? "orange-c" : ""}`}
+                        className={`round-icon-tooltip ${
+                          isLiked ? "orange-c" : ""
+                        }`}
                         data-tooltip={t("Alz0E9Y")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -433,7 +487,9 @@ export default function KindOne({
                         actions={postActions}
                       />
                       <div
-                        className={`round-icon-tooltip ${isQuoted ? "orange-c" : ""}`}
+                        className={`round-icon-tooltip ${
+                          isQuoted ? "orange-c" : ""
+                        }`}
                         data-tooltip={t("AWmDftG")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -453,7 +509,10 @@ export default function KindOne({
                       </div>
                     </div>
                     <div className="fx-centered">
-                      <div className="round-icon-tooltip" data-tooltip={t("AtGAGPY")}>
+                      <div
+                        className="round-icon-tooltip"
+                        data-tooltip={t("AtGAGPY")}
+                      >
                         <Zap
                           user={userProfile}
                           event={event}
@@ -462,7 +521,9 @@ export default function KindOne({
                         />
                       </div>
                       <div
-                        className={`round-icon-tooltip ${isZapped ? "orange-c" : ""}`}
+                        className={`round-icon-tooltip ${
+                          isZapped ? "orange-c" : ""
+                        }`}
                         data-tooltip={t("AVDZ5cJ")}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -504,55 +565,7 @@ export default function KindOne({
                         {isNoteTranslating && <LoadingDots />}
                       </div>
                     )}
-
-                    <OptionsDropdown
-                      options={[
-                        <div onClick={copyID} className="pointer">
-                          <p>{t("AYFAFKs")}</p>
-                        </div>,
-                        userKeys && (
-                          <>
-                            <BookmarkEvent
-                              label={t("Ar5VgpT")}
-                              pubkey={event.id}
-                              kind={"1"}
-                              itemType="e"
-                            />
-                          </>
-                        ),
-                        <div className="fit-container fx-centered fx-start-h pointer">
-                          <ShareLink
-                            label={t("A1IsKJ0")}
-                            path={`/notes/${event.nEvent}`}
-                            title={userProfile.display_name || userProfile.name}
-                            description={event.content}
-                            kind={1}
-                            shareImgData={{
-                              post: event,
-                              author: userProfile,
-                              label: t("Az5ftet"),
-                            }}
-                          />
-                        </div>,
-                        event.pubkey !== userKeys.pub && (
-                          <div
-                            onClick={muteUnmute}
-                            className="fit-container fx-scattered pointer"
-                          >
-                            {isMuted ? (
-                              <p className="red-c">{t("AKELUbQ")}</p>
-                            ) : (
-                              <p className="red-c">{t("AGMxuQ0")}</p>
-                            )}
-                            {isMuted ? (
-                              <div className="unmute-24"></div>
-                            ) : (
-                              <div className="mute-24"></div>
-                            )}
-                          </div>
-                        ),
-                      ]}
-                    />
+                    <EventOptions event={event} component="notes" />
                   </div>
                 </div>
               </>
@@ -573,7 +586,7 @@ export default function KindOne({
   );
 }
 
-const RelatedEvent = ({ event }) => {
+const RelatedEvent = ({ event, reactions = true }) => {
   const nostrAuthors = useSelector((state) => state.nostrAuthors);
   const { t } = useTranslation();
   const [user, setUser] = useState(false);
@@ -651,7 +664,7 @@ const RelatedEvent = ({ event }) => {
     e.stopPropagation();
     if (!user) return;
     customHistory.push(
-      `/users/${nip19.nprofileEncode({ pubkey: user.pubkey })}`
+      `/profile/${nip19.nprofileEncode({ pubkey: user.pubkey })}`
     );
   };
 
@@ -663,6 +676,7 @@ const RelatedEvent = ({ event }) => {
             event={relatedEvent}
             hasReplies={true}
             isHistory={true}
+            noReactions={!reactions}
           />
         )}
         {relatedEvent.kind !== 1 && <RepEventPreviewCard item={relatedEvent} />}
@@ -719,7 +733,9 @@ const RelatedEvent = ({ event }) => {
           style={{ borderLeft: "1px solid var(--c1)" }}
           className="slide-down"
         >
-          {relatedEvent.kind === 1 && <KindOne event={relatedEvent} />}
+          {relatedEvent.kind === 1 && (
+            <KindOne event={relatedEvent} reactions={reactions} />
+          )}
           {relatedEvent.kind !== 1 && (
             <RepEventPreviewCard item={relatedEvent} />
           )}

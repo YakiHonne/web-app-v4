@@ -10,7 +10,7 @@
 }
 
 
-* {
+*:not(.hljs) {
     scrollbar-width: none;
     overflow: -moz-scrollbars-none;
 }
@@ -32,7 +32,8 @@
 
 /* width */
 ::-webkit-scrollbar {
-    width: 10px;
+    width:10px;
+    height: 10px;
 }
 
 /* Track */
@@ -49,7 +50,7 @@
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--c3);
+    background: var(--orange-side);
 }
 
 svg:not(:root) {
@@ -280,6 +281,14 @@ li {
 .p-six-lines {
     display: -webkit-box;
     -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.p-n-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: var(--lines, 2);
+    line-clamp: var(--lines, 2);;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

@@ -42,6 +42,7 @@ export default function LNBCInvoice({ lnbc }) {
     <div
       className="fit-container sc-s-18 box-pad-h-m box-pad-v-m bg-sp fx-centered"
       style={{ marginTop: ".5rem" }}
+      onClick={(e) => e.stopPropagation()}
     >
       <div style={{ minWidth: "50%" }}>
         <p className="gray-c">{t("AvEHTiP")}</p>

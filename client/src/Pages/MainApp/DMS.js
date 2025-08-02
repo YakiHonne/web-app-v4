@@ -324,13 +324,24 @@ export default function DMS() {
           <title>Yakihonne | Messages</title>
           <meta
             name="description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
           />
           <meta
             property="og:description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
           />
-
+          <meta
+            property="og:image"
+            content={
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
           <meta property="og:url" content={`https://yakihonne.com/messages`} />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
@@ -338,7 +349,15 @@ export default function DMS() {
           <meta property="twitter:title" content="Yakihonne | Messages" />
           <meta
             property="twitter:description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
+          />
+          <meta
+            property="twitter:image"
+            content={
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
           />
         </Helmet>
 
@@ -353,13 +372,22 @@ export default function DMS() {
           <title>Yakihonne | Messages</title>
           <meta
             name="description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
           />
           <meta
             property="og:description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
           />
-
+          <meta
+            property="og:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
           <meta property="og:url" content={`https://yakihonne.com/messages`} />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
@@ -367,7 +395,13 @@ export default function DMS() {
           <meta property="twitter:title" content="Yakihonne | Messages" />
           <meta
             property="twitter:description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
+          />
+          <meta
+            property="twitter:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
           />
         </Helmet>
 
@@ -382,13 +416,24 @@ export default function DMS() {
           <title>Yakihonne | Messages</title>
           <meta
             name="description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
           />
           <meta
             property="og:description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
           />
-
+          <meta
+            property="og:image"
+            content={
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
           <meta property="og:url" content={`https://yakihonne.com/messages`} />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
@@ -396,7 +441,13 @@ export default function DMS() {
           <meta property="twitter:title" content="Yakihonne | Messages" />
           <meta
             property="twitter:description"
-            content={"Your end-to-end encrypted inbox"}
+            content={
+              "Connect directly with other Nostr users through end-to-end encrypted messaging. Build relationships in a private communication channel free from surveillance."
+            }
+          />
+          <meta
+            property="twitter:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
           />
         </Helmet>
 

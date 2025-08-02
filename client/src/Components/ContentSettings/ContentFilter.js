@@ -922,6 +922,7 @@ const NotesFilter = ({ exit, filter, prevSettings }) => {
           getUserMetadata={(data) =>
             setPostedBy((prev) => [...new Set([...prev, data])])
           }
+          displayAbove={true}
         />
         {postedBy.length > 0 && (
           <div className="fit-container fx-centered fx-start-h fx-start-v fx-wrap">

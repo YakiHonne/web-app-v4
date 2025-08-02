@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { getNoteTree } from "../../Helpers/Helpers";
 import LoadingDots from "../LoadingDots";
 import ZapAd from "./ZapAd";
+import EventOptions from "../ElementOptions/EventOptions";
 
 export default function NotesComment({
   event,
@@ -264,9 +265,9 @@ export default function NotesComment({
           paddingBottom: 0,
         }}
       >
-        <div className="fit-container fx-scattered">
+        <div className="fit-container fx-centered fx-start-h fx-start-v">
           {!isMuted && (
-            <div className="fx-centered fx-start-h ">
+            <div className="fx-centered fx-start-h fx-start-v ">
               <UserProfilePic
                 size={isHistory ? 40 : 30}
                 mainAccountUser={false}
@@ -275,15 +276,25 @@ export default function NotesComment({
                 metadata={user}
               />
               <div>
-                <div className="fx-centered fit-container fx-start-h">
+                <div
+                  className="fx-centered fit-container fx-start-h"
+                  style={{ gap: "3px" }}
+                >
                   <p className={isHistory ? "" : "p-medium"}>
                     {user.display_name || user.name}
                   </p>
                   {isNip05Verified && <div className="checkmark-c1"></div>}
+                  <p className="gray-c p-medium">&#8226;</p>
+                  <p className="gray-c p-medium">
+                    <Date_
+                      toConvert={new Date(event.created_at * 1000)}
+                      time={true}
+                    />
+                  </p>
                 </div>
-                <p className="p-medium gray-c">
+                {/* <p className="p-medium gray-c">
                   @{user.name || user.display_name}
-                </p>
+                </p> */}
               </div>
               {isLikedByAuthor && (
                 <div className="sticker sticker-small sticker-normal sticker-gray-black">
@@ -302,15 +313,22 @@ export default function NotesComment({
                 allowClick={false}
               />
               <div>
-                <div className="fx-centered fit-container fx-start-h">
+                <div
+                  className="fx-centered fit-container fx-start-h"
+                  style={{ gap: "6px" }}
+                >
                   <p className={isHistory ? "" : "p-medium"}>{t("A8APYES")}</p>
+                  <p className="gray-c p-medium">&#8226;</p>
+                  <p className="gray-c p-medium">
+                    <Date_
+                      toConvert={new Date(event.created_at * 1000)}
+                      time={true}
+                    />
+                  </p>
                 </div>
               </div>
             </div>
           )}
-          <p className="gray-c p-medium">
-            <Date_ toConvert={new Date(event.created_at * 1000)} time={true} />
-          </p>
         </div>
 
         <div
@@ -318,13 +336,18 @@ export default function NotesComment({
             hasReplies ? "reply-side-border-2" : ""
           }`}
           style={{
-            paddingTop: "1rem",
+            // paddingTop: "1rem",
             paddingBottom: isHistory ? "1rem" : "unset",
           }}
         >
           {!isMuted && (
             <>
-              <div className="fit-container pointer" onClick={onClick}>
+              <div
+                className="fit-container pointer"
+                onClick={onClick}
+                style={{ paddingLeft: ".75rem" }}
+                dir="auto"
+              >
                 {showTranslation ? translatedNote : event.note_tree}
               </div>
               {event.isCollapsedNote && (
@@ -448,7 +471,7 @@ export default function NotesComment({
                             e.stopPropagation();
                             postActions.quotes.quotes.length > 0 &&
                               setUsersList({
-                                title: t("AO0OqWT"),
+                                title: t("AWmDftG"),
                                 list: postActions.quotes.quotes.map(
                                   (item) => item.pubkey
                                 ),
@@ -518,46 +541,7 @@ export default function NotesComment({
                           {isNoteTranslating && <LoadingDots />}
                         </div>
                       )}
-                      <OptionsDropdown
-                        options={[
-                          <div onClick={copyID} className="pointer">
-                            <p>{t("AYFAFKs")}</p>
-                          </div>,
-                          userKeys && (
-                            <>
-                              <BookmarkEvent
-                                label={t("Ar5VgpT")}
-                                pubkey={event.id}
-                                kind={"1"}
-                                itemType="e"
-                              />
-                            </>
-                          ),
-                          <div className="fit-container fx-centered fx-start-h pointer">
-                            <ShareLink
-                              label={t("A1IsKJ0")}
-                              path={`/notes/${event.nEvent}`}
-                              title={user.display_name || user.name}
-                              description={event.content}
-                              kind={1}
-                              shareImgData={{
-                                post: event,
-                                author: user,
-                                label: t("Az5ftet"),
-                              }}
-                            />
-                          </div>,
-                          event.pubkey !== userKeys.pub && (
-                            <div onClick={muteUnmute} className="pointer">
-                              {isMuted ? (
-                                <p className="red-c">{t("AKELUbQ")}</p>
-                              ) : (
-                                <p className="red-c">{t("AGMxuQ0")}</p>
-                              )}
-                            </div>
-                          ),
-                        ]}
-                      />
+                      <EventOptions event={event} component="notes"/>
                     </div>
                   </div>
                 </>

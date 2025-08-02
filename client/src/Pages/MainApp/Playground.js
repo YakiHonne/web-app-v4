@@ -39,16 +39,19 @@ export default function Playground() {
         <title>Yakihonne | Mini app playground</title>
         <meta
           name="description"
-          content={"Interact with the community smart widgets"}
+          content={"Experiment with interactive Smart Widget features in our sandbox environment. Test and refine your widget ideas before deploying to production."}
         />
         <meta
           property="og:description"
-          content={"Interact with the community smart widgets"}
+          content={"Experiment with interactive Smart Widget features in our sandbox environment. Test and refine your widget ideas before deploying to production."}
         />
         <meta
           property="og:url"
           content={`https://yakihonne.com/sw-playground`}
         />
+        <meta property="og:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
         <meta property="og:title" content="Yakihonne | Mini app playground" />
@@ -58,8 +61,9 @@ export default function Playground() {
         />
         <meta
           property="twitter:description"
-          content={"Interact with the community smart widgets"}
+          content={"Experiment with interactive Smart Widget features in our sandbox environment. Test and refine your widget ideas before deploying to production."}
         />
+        <meta property="twitter:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
       </Helmet>
       <Main />
     </div>

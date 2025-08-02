@@ -40,8 +40,8 @@ const connectWebSocket = (url) => {
   });
 };
 
-// socket = await connectWebSocket("wss://cache.yakihonne.com/ws");
-socket = await connectWebSocket("wss://cache2.primal.net/v1");
+socket = await connectWebSocket("wss://cache.yakihonne.com/ws");
+// socket = await connectWebSocket("wss://cache2.primal.net/v1");
 
 export const getMutualFollows = async (pubkey, user_pubkey) => {
   try {

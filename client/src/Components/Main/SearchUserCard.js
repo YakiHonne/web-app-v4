@@ -68,7 +68,7 @@ export default function SearchUserCard({ user, url, exit }) {
     );
   return (
     <Link
-      to={`/users/${url}`}
+      to={`/profile/${url}`}
       className="fx-scattered box-pad-v-s box-pad-h-m fit-container pointer search-bar-post"
       onClick={(e) => {
         exit();

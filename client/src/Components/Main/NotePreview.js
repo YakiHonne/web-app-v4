@@ -34,7 +34,7 @@ export default function NotePreview({
       }}
     >
       <h5 className="gray-c">{t("Ao1TlO5")}</h5>
-      <div className="fit-container">{parsedContent || content}</div>
+      <div className="fit-container" dir="auto">{parsedContent || content}</div>
       {linkedEvent && (
         <div className="fit-container">
           <LinkRepEventPreview event={linkedEvent} />

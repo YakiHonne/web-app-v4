@@ -1,14 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import icon1 from "../media/icons/no-code.svg";
-import icon2 from "../media/icons/interact-with-widgets.svg";
-import icon3 from "../media/icons/component-flexibility.svg";
-import icon4 from "../media/icons/layered-validation.svg";
-import icon5 from "../media/icons/easy-linking.svg";
-import icon6 from "../media/icons/nostr-compatible.svg";
-
 import { Helmet } from "react-helmet";
 import Footer from "../Components/Footer";
+
+let icon1 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/no-code.svg";
+let icon2 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/interact-with-widgets.svg";
+let icon3 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/component-flexibility.svg";
+let icon4 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/layered-validation.svg";
+let icon5 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/easy-linking.svg";
+let icon6 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/nostr-compatible.svg";
 
 const features = [
   {
@@ -45,22 +51,22 @@ const features = [
 
 const templates = [
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/user-engagement-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/user-engagement-template-demo.mp4",
     title: "User Engagement",
     desc: "This smart widget enhances user experiences and drive active participation with features that keep your audience engaged and invested.",
   },
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/bitcoin-finance-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/bitcoin-finance-template-demo.mp4",
     title: "Bitcoin Finance",
     desc: "This smart widget unlocks the potentials of Bitcoin finance, featuring Lightning Network transactions and Nostr-oriented actions.",
   },
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/product-growth-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/product-growth-template-demo.mp4",
     title: "Product Growth",
     desc: "This smart widget accelerates product growth, equipped with crowdfunding capabilities and instant dynamic redirections. Seamlessly direct users to key actions with real-time flexibility.",
   },
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/governance-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/governance-template-demo.mp4",
     title: "Governance",
     desc: "This smart widget empowers communities to express their collective voice, facilitating transparent decision-making and strengthening community governance.",
   },
@@ -98,13 +104,18 @@ export default function YakiSmartWidgets() {
         <title>Yakihonne | Yakihonne smart widgets</title>
         <meta
           name="description"
-          content={"Check the yakihonne smart widgets"}
+          content={"Explore our showcase of premium smart widgets designed for Nostr content creators. Discover how interactive elements can transform your articles and notes."}
         />
         <meta
           property="og:description"
-          content={"Check the yakihonne smart widgets"}
+          content={"Explore our showcase of premium smart widgets designed for Nostr content creators. Discover how interactive elements can transform your articles and notes."}
         />
-
+        <meta
+          property="og:image"
+          content={"https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
         <meta
           property="og:url"
           content={`https://yakihonne.com/yakihonne-smart-widgets`}
@@ -121,7 +132,11 @@ export default function YakiSmartWidgets() {
         />
         <meta
           property="twitter:description"
-          content={"Check the yakihonne smart widgets"}
+          content={"Explore our showcase of premium smart widgets designed for Nostr content creators. Discover how interactive elements can transform your articles and notes."}
+        />
+        <meta
+          property="twitter:image"
+          content={"https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
         />
       </Helmet>
 
@@ -174,11 +189,11 @@ export default function YakiSmartWidgets() {
           }}
           className="fit-container"
           // src={
-          //   "https://yakihonne.s3.ap-east-1.amazonaws.com/videos/yakihonne-mobile-app-promo.mp4"
+          //   "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/videos/yakihonne-mobile-app-promo.mp4"
           // }
         >
           <source
-            src="https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/smart-widgets.mp4"
+            src="https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/smart-widgets.mp4"
             type="video/mp4"
           />{" "}
           Your browser does not support HTML5 video.

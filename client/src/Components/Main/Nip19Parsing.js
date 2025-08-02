@@ -12,13 +12,11 @@ import { Link } from "react-router-dom";
 import KindOne from "./KindOne";
 import LoadingDots from "../LoadingDots";
 import MinimalPreviewWidget from "../SmartWidget/MinimalPreviewWidget";
-import WidgetCard from "./WidgetCardV2";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
 import LinkRepEventPreview from "./LinkRepEventPreview";
 import ZapPollsComp from "../SmartWidget/ZapPollsComp";
-import SWCard from "./SWCard";
 import WidgetCardV2 from "./WidgetCardV2";
 
 export default function Nip19Parsing({ addr, minimal = false }) {
@@ -57,7 +55,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           kinds: [0],
           authors: [data.data.pubkey],
         });
-        let url_ = `/users/${addr_}`;
+        let url_ = `/profile/${addr_}`;
         setUrl(url_);
       }
       if (addr_.startsWith("npub")) {
@@ -70,14 +68,13 @@ export default function Nip19Parsing({ addr, minimal = false }) {
           authors: [pubkey],
         });
         let hex = getHex(addr_.replace(",", "").replace(".", ""));
-        let url_ = `/users/${nip19.nprofileEncode({ pubkey: hex })}`;
+        let url_ = `/profile/${nip19.nprofileEncode({ pubkey: hex })}`;
         setUrl(url_);
       }
 
       if (addr_.startsWith("nevent") || addr_.startsWith("note")) {
         let data = nip19.decode(addr_);
         filter.push({
-          // kinds: [1],
           ids: [data.data.id || data.data],
         });
       }
@@ -176,7 +173,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
         {!minimal && (
           <>
             {event?.kind === 1 && (
-              <div className="fit-container" style={{ paddingTop: ".5rem" }}>
+              <div className="fit-container sc-s-18 box-pad-h-s box-pad-v-s" style={{ marginTop: ".5rem", backgroundColor: "var(--c1-side)", border:"none" }}>
                 <KindOne event={event} reactions={false} minimal={true} />
               </div>
             )}

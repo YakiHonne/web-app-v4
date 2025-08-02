@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import s1 from "../media/images/s1-yma.png";
-import s2 from "../media/images/s2-yma.png";
-import s3 from "../media/images/s3-yma.png";
-import s4 from "../media/images/s4-yma.png";
-import s5 from "../media/images/s5-yma.png";
-import s6 from "../media/images/s6-yma.png";
-import s7 from "../media/images/s7-yma.png";
-import s8 from "../media/images/s8-yma.png";
-import s8e from "../media/images/s8-e-yma.png";
 import { Helmet } from "react-helmet";
 
+let s2 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s2-yma.png";
+let s1 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s1-yma.png";
+let s3 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s3-yma.png";
+let s4 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s4-yma.png";
+let s5 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s5-yma.png";
+let s6 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s6-yma.png";
+let s7 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s7-yma.png";
+let s8 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s8-yma.png";
+let s8e =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/s8-e-yma.png";
 export default function YakiMobileApp() {
   const [showTuto, setShowTuto] = useState(false);
 
@@ -24,15 +25,23 @@ export default function YakiMobileApp() {
         <meta
           name="description"
           content={
-            "Check the yakihonne mobile app available for both Android and iOS"
+            "Access the full Yakihonne experience on your smartphone with our native mobile application. Create, publish, and engage with Nostr content on the go."
           }
         />
         <meta
           property="og:description"
           content={
-            "Check the yakihonne mobile app available for both Android and iOS"
+            "Access the full Yakihonne experience on your smartphone with our native mobile application. Create, publish, and engage with Nostr content on the go."
           }
         />
+        <meta
+          property="og:image"
+          content={
+            "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          }
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
 
         <meta
           property="og:url"
@@ -48,7 +57,13 @@ export default function YakiMobileApp() {
         <meta
           property="twitter:description"
           content={
-            "Check the yakihonne mobile app available for both Android and iOS"
+            "Access the full Yakihonne experience on your smartphone with our native mobile application. Create, publish, and engage with Nostr content on the go."
+          }
+        />
+        <meta
+          property="twitter:image"
+          content={
+            "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
           }
         />
       </Helmet>
@@ -165,11 +180,11 @@ export default function YakiMobileApp() {
           }}
           className="fit-container"
           // src={
-          //   "https://yakihonne.s3.ap-east-1.amazonaws.com/videos/yakihonne-mobile-app-promo.mp4"
+          //   "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/videos/yakihonne-mobile-app-promo.mp4"
           // }
         >
           <source
-            src="https://yakihonne.s3.ap-east-1.amazonaws.com/videos/yakihonne-mobile-app-promo.mp4"
+            src="https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/videos/yakihonne-mobile-app-promo.mp4"
             type="video/mp4"
           />{" "}
           Your browser does not support HTML5 video.

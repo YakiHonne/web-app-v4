@@ -299,6 +299,7 @@ export default function Comments({
                 disabled={isLoading}
                 autoFocus
                 ref={textareaRef}
+                dir="auto"
               />
               {showMentionSuggestions && (
                 <MentionSuggestions

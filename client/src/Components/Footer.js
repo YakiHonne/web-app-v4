@@ -38,7 +38,7 @@ export default function Footer() {
         <div className="fx-centered fx-wrap">
           <Link
             to={
-              "/users/nprofile1qqszpxr0hql8whvk6xyv5hya7yxwd4snur4hu4mg5rctz2ehekkzrvcpr3mhxue69uhkummnw3ez6vp39eukz6mfdphkumn99e3k7mgpr3mhxue69uhkummnw3ez6vpj9eukz6mfdphkumn99e3k7mgpremhxue69uhkummnw3ez6vpn9ejx7unpveskxar0wfujummjvuq3gamnwvaz7tmjv4kxz7fwv3sk6atn9e5k7qg7waehxw309ahx7um5wgknqv3wv3hhyctxv93hgmmj0yhx7un8h5udgj"
+              "/profile/nprofile1qqszpxr0hql8whvk6xyv5hya7yxwd4snur4hu4mg5rctz2ehekkzrvcpr3mhxue69uhkummnw3ez6vp39eukz6mfdphkumn99e3k7mgpr3mhxue69uhkummnw3ez6vpj9eukz6mfdphkumn99e3k7mgpremhxue69uhkummnw3ez6vpn9ejx7unpveskxar0wfujummjvuq3gamnwvaz7tmjv4kxz7fwv3sk6atn9e5k7qg7waehxw309ahx7um5wgknqv3wv3hhyctxv93hgmmj0yhx7un8h5udgj"
             }
             target="_blank"
           >

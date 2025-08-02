@@ -46,43 +46,9 @@ export default function ZapTip({
     [aTag, eTag]
   );
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (callback) return;
-  //     try {
-  //       if (!recipientLNURL) return;
-  //       if (recipientLNURL.startsWith("lnbc") && recipientLNURL.length > 24) {
-  //         try {
-  //           let decoded = decode(recipientLNURL);
-  //           let lnbc = decoded.sections.find(
-  //             (section) => section.name === "amount"
-  //           );
-
-  //           setLnbcAmount(lnbc);
-  //           return;
-  //         } catch (err) {
-  //           console.log(err);
-  //           return;
-  //         }
-  //       }
-
-  //       let url = decodeUrlOrAddress(recipientLNURL);
-  //       if (!url) return;
-  //       const data = await axios.get(url);
-
-  //       setCallback(data.data.callback);
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //   };
-  //   if (!callback) fetchData();
-  // }, [recipientLNURL]);
-
   if (custom) {
     if (
       !recipientLNURL ||
-      // (!callback && !recipientLNURL.startsWith("lnbc")) ||
-      (!lnbcAmount && recipientLNURL.startsWith("lnbc")) ||
       (!recipientPubkey && !recipientLNURL.startsWith("lnbc")) ||
       senderPubkey === recipientPubkey
     )
@@ -209,8 +175,8 @@ export default function ZapTip({
           }  round-icon-tooltip`}
           data-tooltip="Zap"
           onClick={(e) => {
-            e.stopPropagation()
-            setCashier(true)
+            e.stopPropagation();
+            setCashier(true);
           }}
         >
           <div className={smallIcon ? "lightning" : "lightning-24"}></div>

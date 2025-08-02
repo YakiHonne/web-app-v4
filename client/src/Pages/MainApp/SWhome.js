@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
-import Sidebar from "../../Components/Main/Sidebar";
 import SWActionPreview from "../../Components/Main/SWActionPreview";
 import { useTranslation } from "react-i18next";
 import { getSubData } from "../../Helpers/Controlers";
@@ -8,12 +7,12 @@ import { saveUsers } from "../../Helpers/DB";
 import { getParsedSW } from "../../Helpers/Encryptions";
 import LoadingDots from "../../Components/LoadingDots";
 import { useSelector } from "react-redux";
-import LaunchSW from "./LaunchSW";
 import axiosInstance from "../../Helpers/HTTP_Client";
 import "highlight.js/styles/github.css";
 import "highlight.js/styles/github-dark.css";
 import { Link } from "react-router-dom";
 import { t } from "i18next";
+import LaunchSW from "../../Components/Main/LaunchSW";
 
 export default function SWhome() {
   return (
@@ -22,33 +21,47 @@ export default function SWhome() {
         <title>Yakihonne | Smart widgets</title>
         <meta
           name="description"
-          content={"Interact with the community smart widgets"}
+          content={"Experience the next generation of interactive content tools on the Nostr network. Upgraded performance and new features for content creators."}
         />
         <meta
           property="og:description"
-          content={"Interact with the community smart widgets"}
+          content={"Experience the next generation of interactive content tools on the Nostr network. Upgraded performance and new features for content creators."}
+        />
+        <meta
+          property="og:image"
+          content={"https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
+        />  
+        <meta
+          property="og:image:width"
+          content="1200"
+        />
+        <meta
+          property="og:image:height"
+          content="700"
         />
         <meta
           property="og:url"
-          content={`https://yakihonne.com/smart-widget`}
+          content={`https://yakihonne.com/smart-widgets`}
         />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
-        <meta property="og:title" content="Yakihonne | Smart widget" />
-        <meta property="twitter:title" content="Yakihonne | Smart widget" />
+        <meta property="og:title" content="Yakihonne | Smart widgets" />
+        <meta property="twitter:title" content="Yakihonne | Smart widgets" />
         <meta
           property="twitter:description"
-          content={"Interact with the community smart widgets"}
+          content={"Experience the next generation of interactive content tools on the Nostr network. Upgraded performance and new features for content creators."}
+        />
+        <meta
+          property="twitter:image"
+          content={"https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
         />
       </Helmet>
-
       <Main />
     </div>
   );
 }
 
 const Main = () => {
-  const [searchType, setSearchType] = useState(0);
   const [status, setStatus] = useState(true);
   const [showTips, setShowtips] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -90,7 +103,6 @@ const Main = () => {
 
         <div
           style={{
-            // width: "min(100%, 600px)",
             paddingBottom: 0,
           }}
           className="fit-container fx-centered fx-col fx-start-v box-pad-h-m box-pad-v"
@@ -176,11 +188,6 @@ const Main = () => {
           <hr />
         </div>
         <div
-          style={
-            {
-              // width: "min(100%, 600px)",
-            }
-          }
           className="fx-centered fx-col fx-start-v box-pad-h-m fit-container"
         >
           {searchKeyword && (

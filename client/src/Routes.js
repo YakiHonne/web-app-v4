@@ -1,6 +1,4 @@
-// routes.js
 import React from "react";
-import Home from "./Pages/MainApp/Home";
 import Writing from "./Pages/MainApp/WritingArticle";
 import Article from "./Pages/MainApp/Article";
 import Settings from "./Pages/MainApp/Settings";
@@ -9,8 +7,6 @@ import Curation from "./Pages/MainApp/Curation";
 import FourOFour from "./Pages/FourOFour";
 import YakiMobileApp from "./Pages/YakiMobileApp";
 import YMARedirection from "./Pages/YMARedirection";
-import UN from "./Pages/MainApp/UncensoredNotes";
-import UNEvent from "./Pages/MainApp/UncensoredNote";
 import YakiFN from "./Pages/YakiFN";
 import Privacy from "./Pages/Privacy";
 import Terms from "./Pages/Terms";
@@ -22,72 +18,53 @@ import Note from "./Pages/MainApp/Note";
 import Wallet from "./Pages/MainApp/Wallet";
 import WalletAlby from "./Pages/MainApp/WalletAlby";
 import WalletNWC from "./Pages/MainApp/WalletNWC";
-import SmartWidget from "./Pages/MainApp/SmartWidget";
-import SmartWidgets from "./Pages/MainApp/SmartWidgets";
-import SmartWidgetChecker from "./Pages/MainApp/SmartWidgetChecker";
 import MyNotesHidden from "./Pages/MainApp/MyNotesHidden";
 import YakiSmartWidget from "./Pages/YakiSmartWidget";
 import Login from "./Pages/MainApp/Login";
 import ProfileEdit from "./Pages/MainApp/ProfileEdit";
 import Notification from "./Pages/MainApp/Notification";
-import Explore from "./Pages/MainApp/Explore";
-import Dashboard from "./Pages/MainApp/Dashboard";
 import Search from "./Pages/MainApp/Search";
 import MACIPollStarter from "./Pages/MainApp/MACIPollStarter";
-import SmartWidgetsV2 from "./Pages/MainApp/SmartWidgetsV2";
-import SmartWidgetV2 from "./Pages/MainApp/SmartWidgetV2";
-import SmartWidgetCheckerV2 from "./Pages/MainApp/SmartWidgetCheckerV2";
 import SWhome from "./Pages/MainApp/SWhome";
-import Articles from "./Pages/MainApp/Articles";
-import SWV2 from "./Pages/MainApp/SWV2";
+import SmartWidgetOne from "./Pages/MainApp/SmartWidgetOne";
 import Playground from "./Pages/MainApp/Playground";
 import Doc from "./Pages/SWGuide/Doc";
-import Explore_ from "./Pages/MainApp/Explore_";
-import Home_ from "./Pages/MainApp/Home_";
+import Explore from "./Pages/MainApp/Explore";
+import Home from "./Pages/MainApp/Home";
 import NoteSharedRelay from "./Pages/MainApp/NoteSharedRelay";
 import ExploreSharedRelay from "./Pages/MainApp/ExploreSharedRelay";
-import SWhome2 from "./Pages/MainApp/SWHome2";
-import Dashboard_ from "./Pages/MainApp/Dashboard_";
-import Home_v2 from "./Pages/MainApp/Home_v2";
+import SWhomeAI from "./Pages/MainApp/SWHomeAI";
+import Dashboard from "./Pages/MainApp/Dashboard";
+import SmartWidgetChecker from "./Pages/MainApp/SmartWidgetChecker";
+import SmartWidgetEditor from "./Pages/MainApp/SmartWidgetEditor";
 
 const routes = [
   { path: "*", element: <FourOFour /> },
   { path: "/:nevent", element: <FourOFour /> },
   { path: "/search", element: <Search /> },
   { path: "/m/maci-poll", element: <MACIPollStarter /> },
-  // { path: "/", element: <Home_v2 /> },
-  { path: "/", element: <Home_ /> },
-  // { path: "/", element: <Home /> },
+  { path: "/", element: <Home /> },
   { path: "/r/notes", element: <NoteSharedRelay /> },
   { path: "/r/discover", element: <ExploreSharedRelay /> },
   { path: "/login", element: <Login /> },
-  { path: "/dashboard", element: <Dashboard_ /> },
-  // { path: "/dashboard", element: <Dashboard /> },
-  { path: "/articles", element: <Articles /> },
-  { path: "/discover", element: <Explore_ /> },
-  // { path: "/discover", element: <Explore /> },
+  { path: "/dashboard", element: <Dashboard /> },
+  { path: "/discover", element: <Explore /> },
   { path: "/notifications", element: <Notification /> },
   { path: "/curations/:id", element: <Curation /> },
   { path: "/curations/:CurationKind/:AuthNip05/:ArtIdentifier", element: <Curation /> },
   { path: "/write-article", element: <Writing /> },
-  // { path: "/smart-widget-builder", element: <SmartWidget /> },
   { path: "/sw-playground", element: <Playground /> },
-  { path: "/smart-widget-builder", element: <SmartWidgetV2 /> },
-  // { path: "/smart-widgets", element: <SmartWidgets /> },
+  { path: "/smart-widget-builder", element: <SmartWidgetEditor /> },
   { path: "/smart-widgets", element: <SWhome /> },
-  { path: "/sw-ai", element: <SWhome2 /> },
-  { path: "/smart-widgets-v2", element: <SmartWidgetsV2 /> },
-  { path: "/smart-widget-checker", element: <SmartWidgetCheckerV2 /> },
-  { path: "/smart-widget/:id", element: <SWV2 /> },
-  { path: "/smart-widget/:nip05/:identifier", element: <SWV2 /> },
-  // { path: "/smart-widget-checker", element: <SmartWidgetChecker /> },
+  { path: "/sw-ai", element: <SWhomeAI /> },
+  { path: "/smart-widget-checker", element: <SmartWidgetChecker /> },
+  { path: "/smart-widget/:id", element: <SmartWidgetOne /> },
+  { path: "/smart-widget/:nip05/:identifier", element: <SmartWidgetOne /> },
   { path: "/settings", element: <Settings /> },
   { path: "/settings/profile", element: <ProfileEdit /> },
   { path: "/article/:id", element: <Article /> },
   { path: "/article/:AuthNip05/:ArtIdentifier", element: <Article /> },
-  { path: "/users/:user_id", element: <User /> },
-  // { path: "/verify-notes", element: <UN /> },
-  // { path: "/verify-notes/:nevent", element: <UNEvent /> },
+  { path: "/profile/:user_id", element: <User /> },
   { path: "/videos/:id", element: <Video /> },
   { path: "/videos/:AuthNip05/:VidIdentifier", element: <Video /> },
   { path: "/notes/:nevent", element: <Note /> },

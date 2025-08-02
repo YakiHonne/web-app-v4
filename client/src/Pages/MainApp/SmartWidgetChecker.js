@@ -5,17 +5,13 @@ import PagePlaceholder from "../../Components/PagePlaceholder";
 import LoadingDots from "../../Components/LoadingDots";
 import { useLocation } from "react-router-dom";
 import { nip19 } from "nostr-tools";
-import {
-  getEmptyuserMetadata,
-  getParsedRepEvent,
-} from "../../Helpers/Encryptions";
-import Date_ from "../../Components/Date_";
-import { validateWidgetValues } from "../../Helpers/Helpers";
 import WidgetCard from "../../Components/Main/WidgetCardV2";
 import { useDispatch } from "react-redux";
 import { setToast } from "../../Store/Slides/Publishers";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { useTranslation } from "react-i18next";
+import SWEventStructure from "../../Components/Main/SWEventStructure";
+import SWCard from "../../Components/Main/SWCard";
 
 const getNaddrParam = (location) => {
   let naddr = new URLSearchParams(location.search).get("naddr");
@@ -31,192 +27,6 @@ export default function SmartWidgetChecker() {
   const [isLoading, setIsLoading] = useState(false);
   const [mbHide, setMbHide] = useState(true);
   const [naddr, setNaddr] = useState(naddrParam);
-  const [componentTree, setComponentTree] = useState([]);
-
-  const checkProperty = (key, value, type, extra) => {
-    if (type === "video") {
-      let checkKey = ["url"].includes(key);
-      let checkValue = validateWidgetValues(value, key);
-      let message = t("A1FzpC8");
-      let icon = "checkmark-tt";
-
-      if (!checkValue) {
-        message = t("A3VsAhH");
-        icon = "info-tt";
-      }
-      if (!checkKey) {
-        message = t("ApJBuXY");
-        icon = "crossmark-tt";
-      }
-      return {
-        icon,
-        message,
-      };
-    }
-    if (type === "image") {
-      let checkKey = ["url", "aspect_ratio"].includes(key);
-      let checkValue = validateWidgetValues(value, key);
-      let message = t("A1FzpC8");
-      let icon = "checkmark-tt";
-
-      if (!checkValue) {
-        message = t("A3VsAhH");
-        icon = "info-tt";
-      }
-      if (!checkKey) {
-        message = t("ApJBuXY");
-        icon = "crossmark-tt";
-      }
-      return {
-        icon,
-        message,
-      };
-    }
-    if (type === "text") {
-      let checkKey = ["content", "text_color", "weight", "size"].includes(key);
-      let checkValue = validateWidgetValues(value, key);
-
-      let message = t("A1FzpC8");
-      let icon = "checkmark-tt";
-
-      if (!checkValue) {
-        message = t("A3VsAhH");
-        icon = "info-tt";
-      }
-      if (!checkKey) {
-        message = t("ApJBuXY");
-        icon = "crossmark-tt";
-      }
-      return {
-        icon,
-        message,
-      };
-    }
-    if (type === "button") {
-      let checkKey = [
-        "content",
-        "text_color",
-        "url",
-        "background_color",
-        "type",
-        "pubkey",
-      ].includes(key);
-      let checkValue = validateWidgetValues(
-        value,
-        key,
-        key === "url" ? extra : ""
-      );
-
-      let message = t("A1FzpC8");
-      let icon = "checkmark-tt";
-
-      if (!checkValue) {
-        message = t("A3VsAhH");
-        icon = "info-tt";
-      }
-      if (!checkKey) {
-        message = t("ApJBuXY");
-        icon = "crossmark-tt";
-      }
-      return {
-        icon,
-        message,
-      };
-    }
-    if (type === "zap-poll") {
-      let checkKey = [
-        "content",
-        "content_text_color",
-        "options_text_color",
-        "options_background_color",
-        "options_foreground_color",
-      ].includes(key);
-      let checkValue = validateWidgetValues(value, key);
-
-      let message = t("A1FzpC8");
-      let icon = "checkmark-tt";
-
-      if (!checkValue) {
-        message = t("A3VsAhH");
-        icon = "info-tt";
-      }
-      if (!checkKey) {
-        message = t("ApJBuXY");
-        icon = "crossmark-tt";
-      }
-      return {
-        icon,
-        message,
-      };
-    }
-    return {
-      icon: "info-tt",
-      message: "N/A type",
-    };
-  };
-  const checkType = (type, value) => {
-    let checkValue = ["video", "image", "text", "button", "zap-poll"].includes(
-      value
-    );
-    let checkKey = type === "type";
-    let message = t("A1FzpC8");
-    let icon = "checkmark-tt";
-
-    if (!checkValue) {
-      message = t("A3VsAhH");
-      icon = "info-tt";
-    }
-    if (!checkKey) {
-      message = t("ApJBuXY");
-      icon = "crossmark-tt";
-    }
-    return {
-      icon,
-      message,
-    };
-  };
-  const checkContainer = (key, value) => {
-    let checkKey = ["layout", "division"].includes(key);
-    let checkValue = validateWidgetValues(value, key);
-
-    let message = t("A1FzpC8");
-    let icon = "checkmark-tt";
-
-    if (!checkValue) {
-      message = t("A3VsAhH");
-      icon = "info-tt";
-    }
-    if (!checkKey) {
-      message = t("ApJBuXY");
-      icon = "crossmark-tt";
-    }
-    return {
-      icon,
-      message,
-    };
-  };
-
-  const checkWidget = (key, value) => {
-    let checkKey = ["border_color", "background_color"].includes(key);
-    let checkValue = validateWidgetValues(value, key);
-
-    let message = t("A1FzpC8");
-    let icon = "checkmark-tt";
-
-    if (!checkValue) {
-      message = t("A3VsAhH");
-      icon = "info-tt";
-    }
-
-    if (!checkKey) {
-      message = t("ApJBuXY");
-      icon = "crossmark-tt";
-    }
-    return {
-      icon,
-      message,
-    };
-  };
 
   useEffect(() => {
     if (naddr) {
@@ -229,7 +39,7 @@ export default function SmartWidgetChecker() {
         const sub = ndkInstance.subscribe(
           [
             {
-              kinds: [30031],
+              kinds: [30033],
               authors: [data.pubkey],
               "#d": [data.identifier],
             },
@@ -239,55 +49,14 @@ export default function SmartWidgetChecker() {
 
         sub.on("event", async (event) => {
           try {
-            if (event.created_at > event_created_at) {
-              event_created_at = event.created_at;
-              let metadata = JSON.parse(event.content);
-              let parsedContent = getParsedRepEvent(event);
-              setWidget({
-                ...parsedContent,
-                metadata,
-                metadataElements: Object.entries(metadata),
-                author: getEmptyuserMetadata(event.pubkey),
-                ...event,
-              });
-              setComponentTree(
-                metadata.components?.map((cont) => {
-                  let tempComp = { ...cont };
-                  delete tempComp.left_side;
-                  delete tempComp.right_side;
-                  let container = Object.entries(tempComp);
-                  let left_side = cont.left_side
-                    ? cont.left_side?.map((comp) => {
-                        return {
-                          metadata: comp.metadata
-                            ? Object.entries(comp.metadata)
-                            : null,
-                          properties: Object.entries(comp),
-                        };
-                      })
-                    : null;
-                  let right_side = cont.right_side
-                    ? cont.right_side?.map((comp) => {
-                        return {
-                          metadata: comp.metadata
-                            ? Object.entries(comp.metadata)
-                            : null,
-                          properties: Object.entries(comp),
-                        };
-                      })
-                    : tempComp?.layout == 1
-                    ? []
-                    : null;
+            if (event.id) {
+              if (event.created_at > event_created_at) {
+                event_created_at = event.created_at;
+                setWidget(event.rawEvent());
 
-                  return {
-                    container,
-                    left_side,
-                    right_side,
-                  };
-                }) || []
-              );
-              sub.stop();
-              setIsLoading(false);
+                sub.stop();
+                setIsLoading(false);
+              }
             }
           } catch (err) {
             console.log(err);
@@ -310,20 +79,9 @@ export default function SmartWidgetChecker() {
     }
   }, [naddr]);
 
-  const copyMetadata = () => {
-    navigator?.clipboard?.writeText(JSON.stringify(widget.metadata));
-    dispatch(
-      setToast({
-        type: 1,
-        desc: `${t("AnSVSCq")} 👏`,
-      })
-    );
-  };
-
   const clearPage = () => {
     setNaddr("");
     setWidget(false);
-    setComponentTree([]);
   };
 
   return (
@@ -332,12 +90,18 @@ export default function SmartWidgetChecker() {
         <title>Yakihonne | Smart widget checker</title>
         <meta
           name="description"
-          content={"Check the status of a smart widget"}
+          content={"Validate your custom widgets for compatibility and performance across platforms. Ensure optimal user experience with our comprehensive testing tools."}
         />
         <meta
           property="og:description"
-          content={"Check the status of a smart widget"}
+          content={"Validate your custom widgets for compatibility and performance across platforms. Ensure optimal user experience with our comprehensive testing tools."}
         />
+        <meta
+          property="og:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
         <meta
           property="og:url"
           content={`https://yakihonne.com/smart-widget-checker`}
@@ -351,9 +115,15 @@ export default function SmartWidgetChecker() {
         />
         <meta
           property="twitter:description"
-          content={"Check the status of a smart widget"}
+          content={"Validate your custom widgets for compatibility and performance across platforms. Ensure optimal user experience with our comprehensive testing tools."}
+        />
+        <meta
+          property="twitter:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
         />
       </Helmet>
+
+      {/* <PagePlaceholder page={"maintenance"}/> */}
       <div className="fx-centered fit-container fx-start-h fx-start-v">
         <div className="box-pad-h-m fit-container">
           <div className="fit-container fx-centered fx-start-h fx-start-v">
@@ -406,7 +176,12 @@ export default function SmartWidgetChecker() {
                 </div>
               </div>
               {!widget && <PagePlaceholder page={"widgets"} />}
-              {widget && <WidgetCard widget={widget} deleteWidget={null} />}
+              {widget && (
+                <SWCard
+                  onNextWidget={(data) => setWidget(data)}
+                  widget={widget}
+                />
+              )}
             </div>
             <div
               style={{
@@ -442,657 +217,7 @@ export default function SmartWidgetChecker() {
                     </div>
                     <h4>{t("AYmIvXo")}</h4>
                   </div>
-                  <div className="fx-centered fx-col fit-container">
-                    <p className="gray-c -medium fit-container p-left">
-                      {t("AlOJRQD")}
-                    </p>
-                    <div
-                      className="fit-container fx-col fx-centered fx-start-v box-pad-h-m box-pad-v-m sc-s-18"
-                      style={{
-                        borderRadius: "var(--border-r-6)",
-                        backgroundColor: "var(--c1-side)",
-                        overflow: "visible",
-                      }}
-                    >
-                      <div className="fit-container fx-scattered fx-start-v">
-                        <div className="fx-centered">
-                          <p
-                            className="gray-c"
-                            style={{
-                              minWidth: "max-content",
-                            }}
-                          >
-                            {t("AqTI7Iu")}
-                          </p>
-                          <p>
-                            {widget.title || (
-                              <span className="orange-c p-medium">N/A</span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="fx-centered fx-start-v">
-                        <p
-                          className="gray-c"
-                          style={{
-                            minWidth: "max-content",
-                          }}
-                        >
-                          {t("AM6TPts")}
-                        </p>
-                        <p>
-                          {widget.description || (
-                            <span className="orange-c p-medium">N/A</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className="fx-centered">
-                        <p
-                          className="gray-c"
-                          style={{
-                            minWidth: "max-content",
-                          }}
-                        >
-                          {t("AHMARaK", { date: "" })}
-                        </p>
-                        <p>
-                          <Date_
-                            toConvert={new Date(widget.published_at * 1000)}
-                            time={true}
-                          />
-                        </p>
-                      </div>
-                      <div className="fx-centered">
-                        <p
-                          className="gray-c"
-                          style={{
-                            minWidth: "max-content",
-                          }}
-                        >
-                          {t("AdVoc9X")}
-                        </p>
-                        <p>{widget.d}</p>
-                      </div>
-                    </div>
-                    <div className="fit-container fx-scattered">
-                      <p className="gray-c  p-left">{t("AFaMatL")}</p>
-                      <div className="round-icon-small" onClick={copyMetadata}>
-                        <div className="copy"></div>
-                      </div>
-                    </div>
-                    <div
-                      className="fit-container fx-col fx-centered box-pad-h-m box-pad-v-m sc-s-18"
-                      style={{
-                        borderRadius: "var(--border-r-6)",
-                        backgroundColor: "var(--c1-side)",
-                        overflow: "visible",
-                      }}
-                    >
-                      {widget.metadataElements.map(
-                        (containerProps, containerPropsIndex) => {
-                          let check = checkWidget(
-                            containerProps[0],
-                            containerProps[1]
-                          );
-                          if (containerProps[0] !== "components")
-                            return (
-                              <div
-                                className="fit-container fx-scattered"
-                                key={containerPropsIndex}
-                              >
-                                <div className="fx-centered">
-                                  <p className="gray-c">{containerProps[0]}</p>
-                                  <p>
-                                    {containerProps[1] || (
-                                      <span className="orange-c p-medium">
-                                        N/A
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                                <div
-                                  className={`${check.icon} round-icon-tooltip`}
-                                  data-tooltip={check.message}
-                                ></div>
-                              </div>
-                            );
-                        }
-                      )}
-                      {widget.metadata.components &&
-                        Array.isArray(widget.metadata.components) && (
-                          <div className="fit-container fx-scattered">
-                            <div className="fx-centered">
-                              <p className="gray-c">
-                                components <sub>&#8628;</sub>
-                              </p>
-                            </div>
-                            <div
-                              className={`checkmark-tt round-icon-tooltip`}
-                              data-tooltip={t("A1FzpC8")}
-                            ></div>
-                          </div>
-                        )}
-                      {!(
-                        widget.metadata.components &&
-                        Array.isArray(widget.metadata.components)
-                      ) && (
-                        <div className="fit-container fx-scattered">
-                          <div className="fx-centered">
-                            <p className="gray-c">components</p>
-                          </div>
-                          <div
-                            className={`info-tt round-icon-tooltip`}
-                            data-tooltip={t("A3VsAhH")}
-                          ></div>
-                        </div>
-                      )}
-                      <div className="fit-container fx-centered fx-start-h fx-start-v">
-                        <div style={{ width: "8px" }}></div>
-                        <div className="fit-container fx-centered fx-col">
-                          {componentTree.map((container, containerIndex) => {
-                            return (
-                              <div
-                                className="fit-container fx-col fx-centered"
-                                style={{
-                                  overflow: "visible",
-                                  borderTop: "1px solid var(--dim-gray)",
-                                  paddingTop: "1rem",
-                                }}
-                                key={containerIndex}
-                              >
-                                <div className="fit-container fx-centered fx-col fx-start-h fx-start-v">
-                                  {container.container.map(
-                                    (containerProps, containerPropsIndex) => {
-                                      let check = checkContainer(
-                                        containerProps[0],
-                                        containerProps[1]
-                                      );
-                                      return (
-                                        <div
-                                          className="fit-container fx-scattered"
-                                          key={containerPropsIndex}
-                                        >
-                                          <div className="fx-centered">
-                                            <p className="gray-c">
-                                              {containerProps[0]}
-                                            </p>
-                                            <p>
-                                              {containerProps[1] || (
-                                                <span className="orange-c p-medium">
-                                                  N/A
-                                                </span>
-                                              )}
-                                            </p>
-                                          </div>
-                                          <div
-                                            className={`${check.icon} round-icon-tooltip`}
-                                            data-tooltip={check.message}
-                                          ></div>
-                                        </div>
-                                      );
-                                    }
-                                  )}
-                                </div>
-                                {container.left_side &&
-                                  Array.isArray(container.left_side) && (
-                                    <div className="fit-container fx-scattered">
-                                      <div className="fx-centered">
-                                        <p className="gray-c">
-                                          left_side <sub>&#8628;</sub>
-                                        </p>
-                                      </div>
-                                      <div
-                                        className={`checkmark-tt round-icon-tooltip`}
-                                        data-tooltip={t("A1FzpC8")}
-                                      ></div>
-                                    </div>
-                                  )}
-                                {!(
-                                  container.left_side &&
-                                  Array.isArray(container.left_side)
-                                ) && (
-                                  <div className="fit-container fx-scattered">
-                                    <div className="fx-centered">
-                                      <p className="gray-c">left_side</p>
-                                    </div>
-                                    <div
-                                      className={`info-tt round-icon-tooltip`}
-                                      data-tooltip={t("A3VsAhH")}
-                                    ></div>
-                                  </div>
-                                )}
-                                <div className="fit-container fx-centered fx-start-h fx-start-v">
-                                  <div style={{ width: "8px" }}></div>
-                                  <div className="fit-container">
-                                    <div className="fx-centered fx-col fx-start-h fx-start-v">
-                                      {container.left_side?.map(
-                                        (compProps, compPropsIndex) => {
-                                          return (
-                                            <div
-                                              className="fit-container fx-scattered"
-                                              key={compPropsIndex}
-                                            >
-                                              <div
-                                                className="fit-container fx-col fx-centered"
-                                                style={{
-                                                  borderRadius:
-                                                    "var(--border-r-6)",
-                                                  overflow: "visible",
-                                                }}
-                                              >
-                                                {compProps.properties.map(
-                                                  (
-                                                    InnerComProps,
-                                                    InnerComPropsIndex
-                                                  ) => {
-                                                    let check = checkType(
-                                                      InnerComProps[0],
-                                                      InnerComProps[1]
-                                                    );
-                                                    if (
-                                                      InnerComProps[0] !==
-                                                      "metadata"
-                                                    )
-                                                      return (
-                                                        <div
-                                                          className="fit-container fx-scattered"
-                                                          key={
-                                                            InnerComPropsIndex
-                                                          }
-                                                        >
-                                                          <div className="fx-centered">
-                                                            <p
-                                                              className="gray-c"
-                                                              style={{
-                                                                minWidth:
-                                                                  "max-content",
-                                                              }}
-                                                            >
-                                                              {InnerComProps[0]}
-                                                            </p>
-                                                            <p className="p-one-line">
-                                                              {InnerComProps[1] || (
-                                                                <span className="orange-c p-medium">
-                                                                  N/A
-                                                                </span>
-                                                              )}
-                                                            </p>
-                                                          </div>
-                                                          <div
-                                                            className={`${check.icon} round-icon-tooltip`}
-                                                            data-tooltip={
-                                                              check.message
-                                                            }
-                                                          ></div>
-                                                        </div>
-                                                      );
-                                                  }
-                                                )}
-                                                {compProps.metadata &&
-                                                  typeof compProps.metadata ===
-                                                    "object" && (
-                                                    <div className="fit-container fx-scattered">
-                                                      <div className="fx-centered">
-                                                        <p className="gray-c">
-                                                          metadata{" "}
-                                                          <sub>&#8628;</sub>
-                                                        </p>
-                                                      </div>
-                                                      <div
-                                                        className={`checkmark-tt round-icon-tooltip`}
-                                                        data-tooltip={t(
-                                                          "A1FzpC8"
-                                                        )}
-                                                      ></div>
-                                                    </div>
-                                                  )}
-                                                {!(
-                                                  compProps.metadata &&
-                                                  typeof compProps.metadata ===
-                                                    "object"
-                                                ) && (
-                                                  <div className="fit-container fx-scattered">
-                                                    <div className="fx-centered">
-                                                      <p className="gray-c">
-                                                        metadata
-                                                      </p>
-                                                    </div>
-                                                    <div
-                                                      className={`info-tt round-icon-tooltip`}
-                                                      data-tooltip={t(
-                                                        "A3VsAhH"
-                                                      )}
-                                                    ></div>
-                                                  </div>
-                                                )}
-                                                {compProps.metadata?.length >
-                                                  0 && (
-                                                  <div className="fit-container fx-centered fx-start-h fx-start-v">
-                                                    <div
-                                                      style={{
-                                                        width: "8px",
-                                                      }}
-                                                    ></div>
-                                                    <div
-                                                      className="fit-container fx-col fx-centered"
-                                                      style={{
-                                                        borderRadius:
-                                                          "var(--border-r-6)",
-                                                        overflow: "visible",
-                                                      }}
-                                                    >
-                                                      {compProps.metadata?.map(
-                                                        (
-                                                          InnerComProps,
-                                                          InnerComPropsIndex
-                                                        ) => {
-                                                          let type =
-                                                            compProps.properties.find(
-                                                              (el) =>
-                                                                el[0] === "type"
-                                                            );
-                                                          let buttonType =
-                                                            compProps.metadata.find(
-                                                              (el) =>
-                                                                el[0] === "type"
-                                                            );
-
-                                                          let check =
-                                                            checkProperty(
-                                                              InnerComProps[0],
-                                                              InnerComProps[1],
-                                                              type
-                                                                ? type[1]
-                                                                : "",
-                                                              buttonType
-                                                                ? buttonType[1]
-                                                                : ""
-                                                            );
-                                                          if (
-                                                            InnerComProps[0] !==
-                                                            "metadata"
-                                                          )
-                                                            return (
-                                                              <div
-                                                                className="fit-container fx-scattered"
-                                                                key={
-                                                                  InnerComPropsIndex
-                                                                }
-                                                              >
-                                                                <div className="fx-centered">
-                                                                  <p
-                                                                    className="gray-c"
-                                                                    style={{
-                                                                      minWidth:
-                                                                        "max-content",
-                                                                    }}
-                                                                  >
-                                                                    {
-                                                                      InnerComProps[0]
-                                                                    }
-                                                                  </p>
-                                                                  <p className="p-one-line">
-                                                                    {InnerComProps[1] || (
-                                                                      <span className="orange-c p-medium">
-                                                                        N/A
-                                                                      </span>
-                                                                    )}
-                                                                  </p>
-                                                                </div>
-                                                                <div
-                                                                  className={`${check.icon} round-icon-tooltip`}
-                                                                  data-tooltip={
-                                                                    check.message
-                                                                  }
-                                                                ></div>
-                                                              </div>
-                                                            );
-                                                        }
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          );
-                                        }
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                {container.right_side &&
-                                  Array.isArray(container.right_side) && (
-                                    <div className="fit-container fx-scattered">
-                                      <div className="fx-centered">
-                                        <p className="gray-c">
-                                          right_side <sub>&#8628;</sub>
-                                        </p>
-                                      </div>
-                                      <div
-                                        className={`checkmark-tt round-icon-tooltip`}
-                                        data-tooltip={t("A1FzpC8")}
-                                      ></div>
-                                    </div>
-                                  )}
-                                {!(
-                                  container.right_side &&
-                                  Array.isArray(container.right_side)
-                                ) && (
-                                  <div className="fit-container fx-scattered">
-                                    <div className="fx-centered">
-                                      <p className="gray-c">right_side</p>
-                                    </div>
-                                    <div
-                                      className={`info-tt round-icon-tooltip`}
-                                      data-tooltip={t("A3VsAhH")}
-                                    ></div>
-                                  </div>
-                                )}
-                                <div className="fit-container fx-centered fx-start-h fx-start-v">
-                                  <div style={{ width: "8px" }}></div>
-                                  <div className="fit-container">
-                                    <div className="fx-centered fx-col fx-start-h fx-start-v">
-                                      {container.right_side?.map(
-                                        (compProps, compPropsIndex) => {
-                                          return (
-                                            <div
-                                              className="fit-container fx-scattered"
-                                              key={compPropsIndex}
-                                            >
-                                              <div
-                                                className="fit-container fx-col fx-centered"
-                                                style={{
-                                                  borderRadius:
-                                                    "var(--border-r-6)",
-                                                  overflow: "visible",
-                                                }}
-                                              >
-                                                {compProps.properties.map(
-                                                  (
-                                                    InnerComProps,
-                                                    InnerComPropsIndex
-                                                  ) => {
-                                                    let check = checkType(
-                                                      InnerComProps[0],
-                                                      InnerComProps[1]
-                                                    );
-                                                    if (
-                                                      InnerComProps[0] !==
-                                                      "metadata"
-                                                    )
-                                                      return (
-                                                        <div
-                                                          className="fit-container fx-scattered"
-                                                          key={
-                                                            InnerComPropsIndex
-                                                          }
-                                                        >
-                                                          <div className="fx-centered">
-                                                            <p
-                                                              className="gray-c"
-                                                              style={{
-                                                                minWidth:
-                                                                  "max-content",
-                                                              }}
-                                                            >
-                                                              {InnerComProps[0]}
-                                                            </p>
-                                                            <p className="p-one-line">
-                                                              {InnerComProps[1] || (
-                                                                <span className="orange-c p-medium">
-                                                                  N/A
-                                                                </span>
-                                                              )}
-                                                            </p>
-                                                          </div>
-                                                          <div
-                                                            className={`${check.icon} round-icon-tooltip`}
-                                                            data-tooltip={
-                                                              check.message
-                                                            }
-                                                          ></div>
-                                                        </div>
-                                                      );
-                                                  }
-                                                )}
-                                                {compProps.metadata &&
-                                                  typeof compProps.metadata ===
-                                                    "object" && (
-                                                    <div className="fit-container fx-scattered">
-                                                      <div className="fx-centered">
-                                                        <p className="gray-c">
-                                                          metadata{" "}
-                                                          <sub>&#8628;</sub>
-                                                        </p>
-                                                      </div>
-                                                      <div
-                                                        className={`checkmark-tt round-icon-tooltip`}
-                                                        data-tooltip={t(
-                                                          "A1FzpC8"
-                                                        )}
-                                                      ></div>
-                                                    </div>
-                                                  )}
-                                                {!(
-                                                  compProps.metadata &&
-                                                  typeof compProps.metadata ===
-                                                    "object"
-                                                ) && (
-                                                  <div className="fit-container fx-scattered">
-                                                    <div className="fx-centered">
-                                                      <p className="gray-c">
-                                                        metadata
-                                                      </p>
-                                                    </div>
-                                                    <div
-                                                      className={`info-tt round-icon-tooltip`}
-                                                      data-tooltip={t(
-                                                        "A3VsAhH"
-                                                      )}
-                                                    ></div>
-                                                  </div>
-                                                )}
-                                                {compProps.metadata?.length >
-                                                  0 && (
-                                                  <div className="fit-container fx-centered fx-start-h fx-start-v">
-                                                    <div
-                                                      style={{
-                                                        width: "8px",
-                                                      }}
-                                                    ></div>
-                                                    <div
-                                                      className="fit-container fx-col fx-centered"
-                                                      style={{
-                                                        borderRadius:
-                                                          "var(--border-r-6)",
-                                                        overflow: "visible",
-                                                      }}
-                                                    >
-                                                      {compProps.metadata?.map(
-                                                        (
-                                                          InnerComProps,
-                                                          InnerComPropsIndex
-                                                        ) => {
-                                                          let type =
-                                                            compProps.properties.find(
-                                                              (el) =>
-                                                                el[0] === "type"
-                                                            );
-                                                          let buttonType =
-                                                            compProps.metadata.find(
-                                                              (el) =>
-                                                                el[0] === "type"
-                                                            );
-                                                          let check =
-                                                            checkProperty(
-                                                              InnerComProps[0],
-                                                              InnerComProps[1],
-                                                              type
-                                                                ? type[1]
-                                                                : "",
-                                                              buttonType
-                                                                ? buttonType[1]
-                                                                : ""
-                                                            );
-                                                          if (
-                                                            InnerComProps[0] !==
-                                                            "metadata"
-                                                          )
-                                                            return (
-                                                              <div
-                                                                className="fit-container fx-scattered"
-                                                                key={
-                                                                  InnerComPropsIndex
-                                                                }
-                                                              >
-                                                                <div className="fx-centered">
-                                                                  <p
-                                                                    className="gray-c"
-                                                                    style={{
-                                                                      minWidth:
-                                                                        "max-content",
-                                                                    }}
-                                                                  >
-                                                                    {
-                                                                      InnerComProps[0]
-                                                                    }
-                                                                  </p>
-                                                                  <p className="p-one-line">
-                                                                    {InnerComProps[1] || (
-                                                                      <span className="orange-c p-medium">
-                                                                        N/A
-                                                                      </span>
-                                                                    )}
-                                                                  </p>
-                                                                </div>
-                                                                <div
-                                                                  className={`${check.icon} round-icon-tooltip`}
-                                                                  data-tooltip={
-                                                                    check.message
-                                                                  }
-                                                                ></div>
-                                                              </div>
-                                                            );
-                                                        }
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          );
-                                        }
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <SWEventStructure widget={widget} />
                 </>
               )}
             </div>

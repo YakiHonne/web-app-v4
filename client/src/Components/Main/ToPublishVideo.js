@@ -14,23 +14,22 @@ export default function ToPublishVideo({
   videoTitle,
   videoDesc,
   videoMetadata,
-  edit = false,
+  event,
   exit,
 }) {
   const dispatch = useDispatch();
   const userKeys = useSelector((state) => state.userKeys);
   const { t } = useTranslation();
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [thumbnail, setThumbnail] = useState("");
-  const [thumbnailPrev, setThumbnailPrev] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState(event?.tTags || []);
+  const [thumbnailPrev, setThumbnailPrev] = useState(event?.image || "");
+  const [thumbnailUrl, setThumbnailUrl] = useState(event?.image || "");
   const [tempTag, setTempTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [zapSplit, setZapSplit] = useState([]);
-  const [zapSplitEnabled, setZapSplitEnabled] = useState(false);
+  const [zapSplit, setZapSplit] = useState(event?.zapSplit ||[]);
+  const [zapSplitEnabled, setZapSplitEnabled] = useState(event?.zapSplit?.length > 1 ? true : false);
 
   useEffect(() => {
-    if (userKeys) {
+    if (userKeys && event?.zapSplit.length === 0) {
       setZapSplit([["zap", userKeys.pub, "", "100"]]);
     }
   }, [userKeys]);
@@ -46,14 +45,12 @@ export default function ToPublishVideo({
       return;
     }
     if (file) {
-      setThumbnail(file);
       setThumbnailPrev(URL.createObjectURL(file));
       setThumbnailUrl("");
     }
   };
 
   const initThumbnail = async () => {
-    setThumbnail("");
     setThumbnailPrev("");
     setThumbnailUrl("");
   };
@@ -71,7 +68,7 @@ export default function ToPublishVideo({
       }
       setIsLoading(true);
       let tags = [
-        ["d", nanoid()],
+        ["d", event.d || nanoid()],
         [
           "imeta",
           `url ${videoURL}`,
@@ -81,7 +78,7 @@ export default function ToPublishVideo({
         ["url", videoURL],
         ["title", videoTitle],
         ["summary", videoDesc],
-        ["published_at", `${Math.floor(Date.now() / 1000)}`],
+        ["published_at", event.published_at ? `${event.published_at}` : `${Math.floor(Date.now() / 1000)}`],
         [
           "client",
           "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
@@ -130,6 +127,7 @@ export default function ToPublishVideo({
       setIsLoading(false);
     }
   };
+
   const removeCategory = (cat) => {
     let index = selectedCategories.findIndex((item) => item === cat);
     let tempArray = Array.from(selectedCategories);
@@ -141,14 +139,13 @@ export default function ToPublishVideo({
     let value = e.target.value;
     setThumbnailUrl(value);
     setThumbnailPrev(value);
-    setThumbnail("");
   };
 
   const handleAddZapSplit = (pubkey, action) => {
     if (action === "add") {
       let findPubkey = zapSplit.find((item) => item[1] === pubkey);
       if (!findPubkey)
-        setZapSplit((prev) => [...prev, ["zap", pubkey, "", "1"]]);
+        setZapSplit((prev) => [...prev, ["zap", pubkey.pubkey, "", "1"]]);
     }
     if (action === "remove") {
       let findPubkeyIndex = zapSplit.findIndex((item) => item[1] === pubkey);

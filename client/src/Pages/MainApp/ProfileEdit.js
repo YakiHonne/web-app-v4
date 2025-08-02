@@ -168,6 +168,36 @@ export default function ProfileEdit() {
       <div>
         <Helmet>
           <title>Yakihonne | Profile edit</title>
+          <meta
+            name="description"
+            content="Craft your perfect decentralized digital identity on the Nostr network. Showcase your work and connect with like-minded creators and readers.ile"
+          />
+          <meta
+            property="og:description"
+            content="Craft your perfect decentralized digital identity on the Nostr network. Showcase your work and connect with like-minded creators and readers."
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
+          <meta
+            property="og:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          />
+          <meta
+            property="og:url"
+            content={`https://yakihonne.com/settings/profile`}
+          />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="Yakihonne" />
+          <meta property="og:title" content="Edit your profile" />
+          <meta property="twitter:title" content="Edit your profile" />
+          <meta
+            property="twitter:description"
+            content="Craft your perfect decentralized digital identity on the Nostr network. Showcase your work and connect with like-minded creators and readers."
+          />
+          <meta
+            property="twitter:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          />
         </Helmet>
         <div
           className={`${isLoading || isImageUploading ? "flash" : ""}`}

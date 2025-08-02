@@ -80,11 +80,7 @@ export default function WidgetCardV2({
       try {
         setIsLoading(true);
         let file = base64ToFile(swMetadata.image);
-        let uploadedFile = await FileUpload(
-          file,
-          userKeys,
-          setProgress
-        );
+        let uploadedFile = await FileUpload(file, userKeys, setProgress);
         setPostNoteWithWidget(uploadedFile);
         setIsLoading(false);
         setProgress(0);
@@ -120,7 +116,11 @@ export default function WidgetCardV2({
         className={`fx-centered fit-container fx-start-h fx-start-v ${
           header ? "box-pad-h-s box-pad-v-s sc-s-18 bg-sp" : ""
         }`}
-        style={{ overflow: "visible", flexWrap:  authPreviewPosition === "bottom" ? "wrap" : "wrap-reverse", gap: "5px" }}
+        style={{
+          overflow: "visible",
+          flexWrap: authPreviewPosition === "bottom" ? "wrap" : "wrap-reverse",
+          gap: "5px",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {header && (
@@ -469,11 +469,7 @@ const PublishWidget = ({
       try {
         setIsImageLoading(true);
         let file = base64ToFile(widget.image);
-        let uploadedFile = await FileUpload(
-          file,
-          userKeys,
-          setProgress
-        );
+        let uploadedFile = await FileUpload(file, userKeys, setProgress);
         setPostNoteWithWidget(uploadedFile);
         setIsImageLoading(false);
         setProgress(0);

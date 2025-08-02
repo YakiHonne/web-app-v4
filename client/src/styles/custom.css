@@ -10,8 +10,8 @@
 
 #login-page {
     position: relative;
-    /* background-image: url(../media/images/bg.svg); */
-    /* background-image: url(../media/images/login-bg.png); */
+    /* background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/bg.svg); */
+    /* background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/login-bg.png); */
     /* background-position: center center;
     background-repeat: no-repeat;
     background-size: cover; */
@@ -27,7 +27,7 @@
     width: 100%;
     height: 100%;
     content: '';
-    background-image: url(../media/images/bg.svg);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/bg.svg);
     background-position: center center;
     background-repeat: no-repeat;
     background-size: cover;

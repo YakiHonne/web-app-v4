@@ -37,6 +37,8 @@ import { getNoteTree } from "../../Helpers/Helpers";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
 import ZapAd from "../../Components/Main/ZapAd";
+import EventOptions from "../../Components/ElementOptions/EventOptions";
+import AudioLoader from "../../Components/Main/AudioLoader";
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
 export default function Note() {
@@ -308,7 +310,7 @@ export default function Note() {
             <meta property="og:description" content={note.content} />
             <meta
               property="og:image"
-              content={API_BASE_URL + "/event/" + note.nEvent + ".png"}
+              content={author?.picture || "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
             />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="700" />
@@ -329,7 +331,7 @@ export default function Note() {
             <meta property="twitter:description" content={note.content} />
             <meta
               property="twitter:image"
-              content={API_BASE_URL + "/event/" + note.nEvent + ".png"}
+              content={author?.picture || "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"}
             />
           </Helmet>
         )}
@@ -413,7 +415,6 @@ export default function Note() {
                         </p>
                       </div>
                     </div>
-
                     {note.isFlashNews && (
                       <div
                         className="sticker sticker-c1"
@@ -423,7 +424,7 @@ export default function Note() {
                       </div>
                     )}
                   </div>
-                  <div className="fit-container box-pad-h-m">
+                  <div className="fit-container box-pad-h-m" dir="auto">
                     {showTranslation ? translatedNote : note.note_tree}
                   </div>
                   {postActions?.zaps?.zaps?.length > 0 && (
@@ -614,46 +615,10 @@ export default function Note() {
                           {isNoteTranslating && <LoadingDots />}
                         </div>
                       )}
-                      <OptionsDropdown
-                        options={[
-                          <div onClick={copyID} className="pointer">
-                            <p>{t("AYFAFKs")}</p>
-                          </div>,
-                          userKeys && userKeys.pub !== note.pubkey && (
-                            <>
-                              <BookmarkEvent
-                                label={t("Ar5VgpT")}
-                                pubkey={note.id}
-                                kind={"1"}
-                                itemType="e"
-                              />
-                            </>
-                          ),
-                          <div className="fit-container fx-centered fx-start-h pointer">
-                            <ShareLink
-                              label={t("A1IsKJ0")}
-                              path={`/notes/${note.nEvent}`}
-                              title={author.display_name || author.name}
-                              description={note.content}
-                              kind={1}
-                              shareImgData={{
-                                post: note,
-                                author,
-                                label: t("Az5ftet"),
-                              }}
-                            />
-                          </div>,
-                          <div onClick={muteUnmute} className="pointer">
-                            {isMuted ? (
-                              <p className="red-c">{t("AKELUbQ")}</p>
-                            ) : (
-                              <p className="red-c">{t("AGMxuQ0")}</p>
-                            )}
-                          </div>,
-                        ]}
-                      />
+                      <EventOptions event={note} component={"notes"}/>
                     </div>
                   </div>
+                  {/* <AudioLoader /> */}
                   <CommentsSection
                     noteTags={note.tags}
                     id={note.id}

@@ -11,10 +11,8 @@ import {
   shortenKey,
 } from "../../Helpers/Encryptions";
 import { useLocation, useParams } from "react-router-dom";
-import Sidebar from "../../Components/Main/Sidebar";
 import { nip19 } from "nostr-tools";
 import RepEventPreviewCard from "../../Components/Main/RepEventPreviewCard";
-import UserProfilePic from "../../Components/Main/UserProfilePic";
 import ZapTip from "../../Components/Main/ZapTip";
 import Follow from "../../Components/Main/Follow";
 import ShowPeople from "../../Components/Main/ShowPeople";
@@ -28,7 +26,6 @@ import {
   straightUp,
 } from "../../Helpers/Helpers";
 import LoadingDots from "../../Components/LoadingDots";
-import ShareLink from "../../Components/ShareLink";
 import InitiConvo from "../../Components/Main/InitConvo";
 import KindOne from "../../Components/Main/KindOne";
 import KindSix from "../../Components/Main/KindSix";
@@ -40,20 +37,17 @@ import { saveFetchedUsers, saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
 import { getSubData, getUser } from "../../Helpers/Controlers";
 import { NDKUser } from "@nostr-dev-kit/ndk";
-import OptionsDropdown from "../../Components/Main/OptionsDropdown";
-import { getUserFollowers, getUserStats } from "../../Helpers/WSInstance";
+import { getUserStats } from "../../Helpers/WSInstance";
 import { customHistory } from "../../Helpers/History";
 import LoadingLogo from "../../Components/LoadingLogo";
-import QRSharing from "./QRSharing";
-import WidgetCard from "../../Components/Main/WidgetCardV2";
 import { useTranslation } from "react-i18next";
 import Carousel from "../../Components/Main/Carousel";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import bannedList from "../../Content/BannedList";
-import NotesFromPeopleYouFollow from "../../Components/Main/NotesFromPeopleYouFollow";
-import UserFollowers from "./UserFollowers";
+import UserFollowers from "../../Components/Main/UserFollowers";
 import WidgetCardV2 from "../../Components/Main/WidgetCardV2";
-import useUserProfile from "../../Hooks/useUsersProfile";
+import EventOptions from "../../Components/ElementOptions/EventOptions";
+import QRSharing from "../../Components/Main/QRSharing";
 
 const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
@@ -176,9 +170,15 @@ export default function User() {
       <div>
         <Helmet>
           <title>Yakihonne | {user?.name || "<Anonymous>"}</title>
-          <meta name="description" content={user?.about} />
-          <meta property="og:description" content={user?.about} />
-          <meta property="og:image" content={user?.picture} />
+          <meta name="description" content={user?.about || "N/A"} />
+          <meta property="og:description" content={user?.about || "N/A"} />
+          <meta
+            property="og:image"
+            content={
+              user?.picture ||
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
+          />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="700" />
           <meta
@@ -195,37 +195,36 @@ export default function User() {
             property="twitter:title"
             content={`Yakihonne | ${user?.name || "<Anonymous>"}`}
           />
-          <meta property="twitter:description" content={user?.about} />
-          <meta property="twitter:image" content={user?.picture} />
+          <meta property="twitter:description" content={user?.about || "N/A"} />
+          <meta
+            property="twitter:image"
+            content={
+              user?.picture ||
+              "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+            }
+          />
         </Helmet>
-        {/* <div className="fit-container fx-centered">
-          <div className="main-container">
-            <Sidebar />
-            <main className="main-page-nostr-container"> */}
-              <ArrowUp />
-              <div
-                className="fx-centered fit-container  fx-start-v"
-                style={{ gap: 0 }}
-              >
-                <div
-                  style={{
-                    zIndex: "11",
-                    position: "relative",
-                  }}
-                  className="main-middle"
-                >
-                  <UserMetadata refreshUser={setUser} />
-                  <div
-                    className="it-container fx-centered fx-col"
-                    style={{ position: "relative" }}
-                  >
-                    <UserFeed pubkey={id} user={user} />
-                  </div>
-                </div>
-              </div>
-            {/* </main>
+        <ArrowUp />
+        <div
+          className="fx-centered fit-container  fx-start-v"
+          style={{ gap: 0 }}
+        >
+          <div
+            style={{
+              zIndex: "11",
+              position: "relative",
+            }}
+            className="main-middle"
+          >
+            <UserMetadata refreshUser={setUser} />
+            <div
+              className="it-container fx-centered fx-col"
+              style={{ position: "relative" }}
+            >
+              <UserFeed pubkey={id} user={user} />
+            </div>
           </div>
-        </div> */}
+        </div>
       </div>
     </>
   );
@@ -435,7 +434,7 @@ const UserMetadata = ({ refreshUser }) => {
 
   const copyID = (e, pubkey) => {
     e.stopPropagation();
-    navigator?.clipboard?.writeText(getBech32("npub", pubkey));
+    navigator?.clipboard?.writeText(pubkey);
     dispatch(
       setToast({
         type: 1,
@@ -592,57 +591,10 @@ const UserMetadata = ({ refreshUser }) => {
                         </div>
                       </div>
                     )}
-                    <OptionsDropdown
+                    <EventOptions
+                      event={{ ...user, image: user?.cover }}
+                      component="user"
                       border={true}
-                      options={[
-                        <div
-                          className="fit-container fx-centered fx-start-h pointer"
-                          onClick={(e) => copyID(e, user?.pubkey)}
-                        >
-                          <p className="fx-centered">{t("AHrJpSX")}</p>
-                        </div>,
-                        // <div
-                        //   className="fit-container fx-centered fx-start-h pointer"
-                        //   onClick={() => setShowUserImpact(true)}
-                        // >
-                        //   <p className="fx-centered">{t("AP8YaBk")}</p>
-                        // </div>,
-                        <div className="fit-container fx-centered fx-start-h pointer">
-                          <ShareLink
-                            label={t("AawXy2A")}
-                            path={`/users/${user_id}`}
-                            title={user?.display_name || user?.name}
-                            description={user?.about || ""}
-                            kind={0}
-                            shareImgData={{
-                              post: { image: user?.cover },
-                              author: user,
-                              followings: following.length,
-                            }}
-                          />
-                        </div>,
-                        userKeys && userKeys.pub !== user?.pubkey && (
-                          <div
-                            className="fit-container fx-scattered  pointer"
-                            onClick={isPublishing ? null : muteUnmute}
-                          >
-                            <p
-                              className="red-c"
-                              style={{
-                                opacity: isPublishing ? 0.5 : 1,
-                              }}
-                            >
-                              {isMuted && t("AKELUbQ")}
-                              {!isMuted && t("AGMxuQ0")}
-                            </p>
-                            {isMuted ? (
-                              <div className="unmute-24"></div>
-                            ) : (
-                              <div className="mute-24"></div>
-                            )}
-                          </div>
-                        ),
-                      ]}
                     />
                   </div>
                 </div>
@@ -707,13 +659,14 @@ const UserMetadata = ({ refreshUser }) => {
               )}
             </div>
             <div
-              className="fx-centered fx-start-v "
+              className="fx-centered fx-start-v fit-container"
               style={{ columnGap: "24px" }}
             >
-              <div className="box-pad-v-s fx-centered fx-start-v fx-col">
+              <div className="box-pad-v-s fx-centered fx-start-v fx-col fit-container">
                 {user?.about && (
-                  <div>{getNoteTree(user?.about)}</div>
-                  // <p className="p-centered  p-left">{user?.about}</p>
+                  <div dir="auto" className="fit-container">
+                    {getNoteTree(user?.about, true)}
+                  </div>
                 )}
                 <div className="fx-centered">
                   <div className="fx-centered" style={{ columnGap: "10px" }}>
@@ -819,7 +772,7 @@ const UserFeed = ({ user }) => {
       {
         kinds: kinds[contentFrom],
         authors: [pubkey],
-        limit: 30,
+        limit: 50,
         until: lastEventTime,
       },
     ];
@@ -857,7 +810,7 @@ const UserFeed = ({ user }) => {
       try {
         let filter = getNotesFilter();
         const res = await getSubData(filter, 200);
-        let data = res.data.slice(0, 30);
+        let data = res.data.slice(0, 100);
         let pubkeys = res.pubkeys;
         let ev = [];
         if (data.length > 0) {

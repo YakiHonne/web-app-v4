@@ -151,22 +151,27 @@ export default function ExploreSharedRelay() {
   return (
     <div>
       <Helmet>
-        <title>Yakihonne | Discover</title>
-        <meta name="description" content={"Discover media content on nostr"} />
+        <title>Yakihonne | Discover on {relay || "relay"}</title>
+        <meta name="description" content={"Share trending topics and popular creators across the Nostr network. Personalized content recommendations based on your interests and reading habits."} />
         <meta
           property="og:description"
-          content={"Discover media content on nostr"}
+          content={"Share trending topics and popular creators across the Nostr network. Personalized content recommendations based on your interests and reading habits."}
         />
+        <meta property="og:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="700" />
-        <meta property="og:url" content={`https://yakihonne.com/discover`} />
+        <meta property="og:url" content={`https://yakihonne.com/r/discover?relay=${relay}`} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
-        <meta property="og:title" content={"Yakihonne | Discover"} />
-        <meta property="twitter:title" content={"Yakihonne | Discover"} />
+        <meta property="og:title" content={"Yakihonne | Discover on " + (relay || "relay")} />
+        <meta property="twitter:title" content={"Yakihonne | Discover on " + (relay || "relay")} />
         <meta
           property="twitter:description"
-          content={"Discover media content on nostr"}
+          content={"Share trending topics and popular creators across the Nostr network. Personalized content recommendations based on your interests and reading habits."}
+        />
+        <meta
+          property="twitter:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
         />
       </Helmet>
       <ArrowUp />

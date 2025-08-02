@@ -169,7 +169,10 @@ export default function BookmarksPicker({
             })}
             <div
               className="sc-s-d fit-container if pointer fx-centered"
-              onClick={() => setShowAddBookmark(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAddBookmark(true);
+              }}
             >
               <p className="gray-c">{t("AxGQiuq")}</p>{" "}
               <p className="gray-c p-big">&#xFF0B;</p>

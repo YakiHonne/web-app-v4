@@ -1,6 +1,6 @@
 export default [
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/freedom.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/freedom.png",
     main_tag: "Freedom",
     onboarding: true,
     pubkeys: [
@@ -22,7 +22,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/bitcoin.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/bitcoin.png",
     main_tag: "Bitcoin",
     onboarding: true,
     pubkeys: [
@@ -45,7 +45,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/news.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/news.png",
     main_tag: "News",
     onboarding: true,
     pubkeys: [
@@ -76,7 +76,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/technology.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/technology.png",
     main_tag: "Technology",
     onboarding: true,
     pubkeys: [
@@ -123,7 +123,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/travel.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/travel.png",
     main_tag: "Travel",
     onboarding: true,
     pubkeys: [
@@ -148,7 +148,7 @@ export default [
   },
 
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/social.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/social.png",
     main_tag: "Social",
     onboarding: true,
     pubkeys: [
@@ -171,7 +171,7 @@ export default [
   },
 
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/nostr.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/nostr.png",
     main_tag: "Nostr",
     onboarding: true,
     pubkeys: [
@@ -209,7 +209,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/writing.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/writing.png",
     main_tag: "Writing",
     onboarding: true,
     pubkeys: [
@@ -251,7 +251,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/food.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/food.png",
     main_tag: "Food",
     onboarding: true,
     pubkeys: [
@@ -279,7 +279,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/economy.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/economy.png",
     main_tag: "Economy",
     pubkeys: [
       "npub1mw8jj8w0jjfh8afzgpcvhm604wqtn2xngdpydt9plc6pznx9rhgqny59rj",
@@ -308,7 +308,7 @@ export default [
   },
 
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/finance.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/finance.png",
     main_tag: "Finance",
     pubkeys: [
       "npub1awr6vr8znr60cdemcte43v9qx427xvdccdh4ssrvmqfgm5fc8sqqhhjftx",
@@ -337,7 +337,7 @@ export default [
   },
 
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/gaming.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/gaming.png",
     main_tag: "Gaming",
     pubkeys: [
       "npub1wazv8zjezklg4j87utxkz4rnmfrrkhagrky8dfyee8uejg2430dsf6k7yn",
@@ -347,7 +347,7 @@ export default [
   },
 
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/entrepreneurship.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/entrepreneurship.png",
     main_tag: "Entrepreneurship",
     pubkeys: [
       "npub1sg6plzptd64u62a878hep2kev88swjh3tw00gjsfl8f237lmu63q0uf63m",
@@ -363,7 +363,7 @@ export default [
   },
 
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/self-improvement.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/self-improvement.png",
     main_tag: "Self improvement",
     pubkeys: [
       "npub1puufhwjns4742aqz5nv8e7pedszx0678muve9xxue8sd9xelzj8s8k5f6e",
@@ -381,7 +381,7 @@ export default [
   },
 
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/politics.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/politics.png",
     main_tag: "Politics",
     pubkeys: [
       "npub1v7k63c6y2vktlqhsuupywt3yc7ykursujc34at964f9cv9s9y9csjutfk0",
@@ -407,7 +407,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/health.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/health.png",
     main_tag: "Health",
     pubkeys: [
       "npub1r7lhf20deenpvavhkpasdm95x49as5c7p85ed46kvcq79aqc69zsy0j6hn",
@@ -433,7 +433,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/life.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/life.png",
     main_tag: "Life",
     pubkeys: [
       "npub1c4sgd346sl9uh7mjhn99xjsu7t8dwm54kl6hxp3k0qyl4kz6v94qh5aqv4",
@@ -460,7 +460,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/books.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/books.png",
     main_tag: "Books",
     pubkeys: [
       "npub1c80wmfpzc7dkghh93kxtrwpe5gdztynvnk2vy93ge68zmzwrm0yqq5h5s7",
@@ -474,7 +474,7 @@ export default [
     sub_tags: ["books", "#books", "bookstr"],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/marketing.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/marketing.png",
     main_tag: "Marketing",
     pubkeys: [
       "npub17mhy3dc2gctg047e7qzdk582qvrjxquj23t7r0f4hz36qm28gj0scun7vk",
@@ -487,7 +487,7 @@ export default [
     sub_tags: ["marketing", "Investment"],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/art.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/art.png",
     main_tag: "Art",
     pubkeys: [
       "npub1gwa27rpgum8mr9d30msg8cv7kwj2lhav2nvmdwh3wqnsa5vnudxqlta2sz",
@@ -513,7 +513,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/entertainment.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/entertainment.png",
     main_tag: "Entertainment",
     pubkeys: [
       "npub1v9e7n6cdc08ggc68zm06872qlyfygyz5al3jdqg5agzm2gxjjaxqp89czd",
@@ -526,12 +526,12 @@ export default [
     sub_tags: ["TFTC Podcast", "Social Media", "Podcast"],
   },
   // {
-  //   icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/music.png",
+  //   icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/music.png",
   //   main_tag: "Music",
   //   sub_tags: ["Music", "music", "MUSIC", "#music"],
   // },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/photography.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/photography.png",
     main_tag: "Photography",
     pubkeys: [
       "npub1tcqsa4k7kjg7p903z3yqj0w59lqp8r0q0re5me5p3uvn38j7qeaqkvg77h",
@@ -555,7 +555,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/sport.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/sport.png",
     main_tag: "Sport",
     pubkeys: [
       "npub1qspus6smkn8mcdxg5jflh50s69vdgtwsd5p74gmjpzp2qekn5duqfv5afj",
@@ -574,7 +574,7 @@ export default [
     ],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/industry.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/industry.png",
     main_tag: "Industry",
     pubkeys: [
       "npub1qj6u3rq7qs26wpl488wkxdk3vp855q3psxel7r45klv7d3mwv8kqkch35u",
@@ -587,7 +587,7 @@ export default [
     sub_tags: ["Energy", "industry"],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/space.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/space.png",
     main_tag: "Space",
     pubkeys: [
       "npub1mltmz29mky3zsulv5qtvzsgl5uph5tfmw8wqhaekfqxm2nf6v8psdy6fdn",
@@ -599,7 +599,7 @@ export default [
     sub_tags: ["Space", "SPACE", "space", "SpaceX", "NASA", "#astronomy"],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/history.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/history.png",
     main_tag: "History",
     pubkeys: [
       "npub1u3azxc7zmzkfnr3zvcjymm7n2x9eskp974h8j6hy7mrxsrcarysqz4lqtv",
@@ -611,7 +611,7 @@ export default [
     sub_tags: ["history", "History", "history channel", "#history"],
   },
   {
-    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/categories_imgs/animals.png",
+    icon: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/categories_imgs/animals.png",
     main_tag: "Animals",
     pubkeys: [
       "npub1skduu708hwwm22ag00azz668r47y8pnqc4xn9ugyduqvzvjmz7eq3s54aq",

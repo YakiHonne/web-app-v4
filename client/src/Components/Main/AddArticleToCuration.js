@@ -109,18 +109,25 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
           mandatoryKind={kind}
         />
       )}
-      <div className="fixed-container fx-centered box-pad-h">
+      <div
+        className="fixed-container fx-centered box-pad-h"
+        onClick={(e) => {
+          e.stopPropagation();
+          exit();
+        }}
+      >
         <section
-          className="sc-s box-pad-h box-pad-v fx-centered"
+          className="sc-s-18 bg-sp box-pad-h box-pad-v fx-centered"
           style={{ width: "min(100%, 500px)", position: "relative" }}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="close" onClick={exit}>
             <div></div>
           </div>
           <div className="fx-centered fx-col fit-container">
-            <h4>Add to curation</h4>
+            <h4 className="box-marg-s">Add to curation</h4>
             <div
-              className="fx-centered fx-col fit-container fx-start-h box-pad-h-m box-pad-v-m"
+              className="fx-centered fx-col fit-container fx-start-h "
               style={{
                 maxHeight: "60vh",
                 overflow: "scroll",
@@ -147,9 +154,7 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
                 return (
                   <div
                     key={curation.id}
-                    className={`fit-container fx-scattered box-pad-h-s box-pad-v-s sc-s fx-shrink pointer ${
-                      status ? "" : "option"
-                    }`}
+                    className={`fit-container fx-scattered box-pad-h-s box-pad-v-s sc-s-18 bg-sp fx-shrink pointer`}
                     onClick={
                       status
                         ? null
@@ -202,14 +207,14 @@ export default function AddArticleToCuration({ kind = 30004, d, exit }) {
                 );
               })}
             </div>
-            <div
+            {/* <div
               className="sc-s-d fit-container if pointer fx-centered"
               onClick={() => setShowAddCuration(true)}
             >
               {" "}
               <p className="gray-c">{t("AL8U8hq")}</p>{" "}
               <p className="gray-c p-big">&#xFF0B;</p>
-            </div>
+            </div> */}
           </div>
         </section>
       </div>

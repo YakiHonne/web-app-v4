@@ -26,7 +26,7 @@ import { getZapEventRequest } from "../../Helpers/NostrPublisher";
 import AddWallet from "../../Components/Main/AddWallet";
 import UserSearchBar from "../../Components/UserSearchBar";
 import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
-import { getWallets, updateWallets } from "../../Helpers/Helpers";
+import { copyText, getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserBalance } from "../../Store/Slides/UserData";
 import { setToast, setToPublish } from "../../Store/Slides/Publishers";
@@ -35,6 +35,8 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
+import { walletWarning } from "../../Helpers/Controlers";
+import EventOptions from "../../Components/ElementOptions/EventOptions";
 
 export default function Wallet() {
   const dispatch = useDispatch();
@@ -290,27 +292,10 @@ export default function Wallet() {
     setShowWalletList(false);
   };
 
-  const handleDelete = () => {
-    try {
-      let tempWallets = wallets.filter(
-        (wallet) => wallet.id !== showDeletionPopup.id
-      );
-      if (tempWallets.length > 0 && showDeletionPopup.active) {
-        tempWallets[0].active = true;
-        setWallets(tempWallets);
-        setSelectedWallet(tempWallets[0]);
-        setShowDeletionPopup(false);
-        updateWallets(tempWallets);
-        return;
-      }
-
-      setWallets(tempWallets);
-      setShowDeletionPopup(false);
-      if (tempWallets.length === 0) setSelectedWallet(false);
-      updateWallets(tempWallets);
-    } catch (err) {
-      console.log(err);
-    }
+  const refreshAfterDeletion = (w) => {
+    setWallets(w);
+    if (w.length === 0) setSelectedWallet(false);
+    if (w.length > 0) setSelectedWallet(w[0]);
   };
 
   let handleAddWallet = () => {
@@ -320,59 +305,6 @@ export default function Wallet() {
     setSelectedWallet(selectedWallet_);
     setShowAddWallet(false);
   };
-  const copyKey = (prefix, key) => {
-    navigator.clipboard.writeText(key);
-    dispatch(
-      setToast({
-        type: 1,
-        desc: `${prefix} 👏`,
-      })
-    );
-  };
-
-  const linkWallet = async () => {
-    if (!selectWalletToLink.includes("@")) {
-      walletWarning();
-      return;
-    }
-    let content = { ...userMetadata };
-    content.lud16 = selectWalletToLink;
-    content.lud06 = encodeLud06(selectWalletToLink);
-
-    dispatch(
-      setToPublish({
-        userKeys: userKeys,
-        kind: 0,
-        content: JSON.stringify(content),
-        tags: [],
-        allRelays: [],
-      })
-    );
-    setSelectWalletToLink(false);
-  };
-
-  const walletWarning = () => {
-    dispatch(
-      setToast({
-        type: 3,
-        desc: t("A4R0ICw"),
-      })
-    );
-  };
-
-  const exportWallet = (nwc, addr) => {
-    downloadAsFile(
-      [
-        "Important: Store this information securely. If you lose it, recovery may not be possible. Keep it private and protected at all times",
-        "---",
-        `wallet secret: ${typeof nwc === "string" ? nwc : "N/A"}`,
-      ].join("\n"),
-      "text/plain",
-      `NWC-for-${addr}.txt`,
-      t("AVUlnek")
-    );
-  };
-
   return (
     <>
       {showAddWallet && (
@@ -381,24 +313,13 @@ export default function Wallet() {
           refresh={handleAddWallet}
         />
       )}
-      {showDeletionPopup && (
-        <DeletionPopUp
-          exit={() => setShowDeletionPopup(false)}
-          handleDelete={handleDelete}
-          wallet={showDeletionPopup}
-        />
-      )}
-      {selectWalletToLink && (
-        <LinkWallet
-          exit={() => setSelectWalletToLink(false)}
-          handleLinkWallet={linkWallet}
-        />
-      )}
+
       <div>
         <Helmet>
           <title>Yakihonne | Wallet</title>
-          <meta name="description" content="Manage your wallet" />
+          <meta name="description" content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem." />
           <meta property="og:description" content="Manage your wallet" />
+          <meta property="og:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="700" />
           <meta property="og:url" content={`https://yakihonne.com/wallet`} />
@@ -406,7 +327,8 @@ export default function Wallet() {
           <meta property="og:site_name" content="Yakihonne" />
           <meta property="og:title" content="Manage your wallet" />
           <meta property="twitter:title" content="Manage your wallet" />
-          <meta property="twitter:description" content="Manage your wallet" />
+          <meta property="twitter:description" content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem." />
+          <meta property="twitter:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
         </Helmet>
         <ArrowUp />
         <div className="fx-centered fit-container  fx-start-v">
@@ -512,68 +434,10 @@ export default function Wallet() {
                                     )}
                                   </div>
                                   {wallet.kind !== 1 && (
-                                    <OptionsDropdown
-                                      options={[
-                                        !isLinked && (
-                                          <div
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectWalletToLink(
-                                                wallet.entitle
-                                              );
-                                            }}
-                                          >
-                                            {t("AmQVpu4")}
-                                          </div>
-                                        ),
-                                        wallet.entitle.includes("@") && (
-                                          <div
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              copyKey(
-                                                t("ALR84Tq"),
-                                                wallet.entitle
-                                              );
-                                            }}
-                                          >
-                                            {t("ApO1nbv")}
-                                          </div>
-                                        ),
-                                        wallet.kind === 3 && (
-                                          <div
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              copyKey(
-                                                t("A6Pj02S"),
-                                                wallet.data
-                                              );
-                                            }}
-                                          >
-                                            {t("A6ntZLW")}
-                                          </div>
-                                        ),
-                                        <div
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            exportWallet(
-                                              wallet.data,
-                                              wallet.entitle
-                                            );
-                                          }}
-                                        >
-                                          {t("A4A5psW")}
-                                        </div>,
-                                        <div
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowDeletionPopup(wallet);
-                                          }}
-                                        >
-                                          <span className="red-c">
-                                            {t("AawdN9R")}
-                                          </span>
-                                        </div>,
-                                      ]}
+                                    <EventOptions
+                                      event={wallet}
+                                      component={"wallet"}
+                                      refreshAfterDeletion={refreshAfterDeletion}
                                     />
                                   )}
                                 </div>
@@ -605,7 +469,7 @@ export default function Wallet() {
                               className="btn btn-gray btn-small fx-centered"
                               onClick={() =>
                                 selectedWallet.entitle.includes("@")
-                                  ? copyKey(
+                                  ? copyText(
                                       t("ALR84Tq"),
                                       selectedWallet.entitle
                                     )
@@ -711,14 +575,10 @@ export default function Wallet() {
                               return (
                                 <div
                                   key={transaction.id}
-                                  className="fit-container fx-scattered fx-col box-pad-v-m"
+                                  className="fit-container fx-scattered fx-col box-pad-v-s box-pad-h-s sc-s-18 bg-sp"
                                   style={{
-                                    border: "none",
+                                    // border: "none",
                                     overflow: "visible",
-                                    borderTop:
-                                      index !== 0
-                                        ? "1px solid var(--very-dim-gray)"
-                                        : "",
                                   }}
                                 >
                                   <div className="fit-container fx-scattered">
@@ -755,7 +615,7 @@ export default function Wallet() {
                                             time={true}
                                           />
                                         </p>
-                                        <p className="p-medium">
+                                        <p>
                                           {t("AdrOPfO", {
                                             name:
                                               author.display_name ||
@@ -832,7 +692,7 @@ export default function Wallet() {
                               return (
                                 <div
                                   key={transaction.identifier}
-                                  className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
+                                  className="fit-container fx-scattered fx-col sc-s-18 bg-sp box-pad-h-m box-pad-v-m"
                                   style={{
                                     border: "none",
                                     overflow: "visible",
@@ -908,7 +768,7 @@ export default function Wallet() {
                                             time={true}
                                           />
                                         </p>
-                                        <p className="p-medium">
+                                        <p>
                                           {(!isZap ||
                                             (isZap &&
                                               transaction.type ===
@@ -1011,9 +871,9 @@ export default function Wallet() {
                               return (
                                 <div
                                   key={`${transaction.invoice}-${index}`}
-                                  className="fit-container fx-scattered fx-col sc-s-18 box-pad-h-m box-pad-v-m"
+                                  className="fit-container fx-scattered fx-col sc-s-18 bg-sp box-pad-h-s box-pad-v-s"
                                   style={{
-                                    border: "none",
+                                    // border: "none",
                                     overflow: "visible",
                                   }}
                                 >
@@ -1087,7 +947,7 @@ export default function Wallet() {
                                             time={true}
                                           />
                                         </p>
-                                        <p className="p-medium">
+                                        <p>
                                           {(!isZap ||
                                             (isZap &&
                                               transaction.type ===
@@ -1605,7 +1465,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
     }
   };
 
-  const copyKey = (key) => {
+  const copyText = (key) => {
     navigator.clipboard.writeText(key);
     dispatch(
       setToast({
@@ -1632,7 +1492,7 @@ const ReceivePayment = ({ exit, wallets, selectedWallet, setWallets }) => {
               <div
                 className="fx-scattered if pointer dashed-onH fit-container"
                 style={{ borderStyle: "dashed" }}
-                onClick={() => copyKey(invoiceRequest)}
+                onClick={() => copyText(invoiceRequest)}
               >
                 <p>{shortenKey(invoiceRequest)}</p>
                 <div className="copy-24"></div>
@@ -1728,92 +1588,4 @@ const checkAlbyToken = async (wallets, activeWallet) => {
       activeWallet,
     };
   }
-};
-
-const DeletionPopUp = ({ exit, handleDelete, wallet }) => {
-  const { t } = useTranslation();
-  const dispatch = useDispatch();
-
-  const copyKey = (keyType, key) => {
-    navigator.clipboard.writeText(key);
-    dispatch(
-      setToast({
-        type: 1,
-        desc: `${keyType} 👏`,
-      })
-    );
-  };
-  return (
-    <section className="fixed-container fx-centered box-pad-h">
-      <section
-        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
-        style={{ width: "450px" }}
-      >
-        <div
-          className="fx-centered box-marg-s"
-          style={{
-            minWidth: "54px",
-            minHeight: "54px",
-            borderRadius: "var(--border-r-50)",
-            backgroundColor: "var(--red-main)",
-          }}
-        >
-          <div className="warning"></div>
-        </div>
-        <h3 className="p-centered">{t("APJU882")}</h3>
-        <p className="p-centered gray-c box-pad-v-m">{t("AOlHR1d")}</p>
-        <div
-          className={"fx-scattered if pointer fit-container dashed-onH"}
-          style={{ borderStyle: "dashed" }}
-          onClick={() => copyKey(t("A6Pj02S"), wallet.data)}
-        >
-          <p>{shortenKey(wallet.data, 40)}</p>
-          <div className="copy-24"></div>
-        </div>
-        <p className="c1-c p-medium p-centered box-pad-h-m">{t("AshEtUl")}</p>
-        <div className="fx-centered fit-container">
-          <button className="fx btn btn-gst-red" onClick={handleDelete}>
-            {t("Almq94P")}
-          </button>
-          <button className="fx btn btn-red" onClick={exit}>
-            {t("AB4BSCe")}
-          </button>
-        </div>
-      </section>
-    </section>
-  );
-};
-const LinkWallet = ({ exit, handleLinkWallet }) => {
-  const { t } = useTranslation();
-
-  return (
-    <section className="fixed-container fx-centered box-pad-h">
-      <section
-        className="fx-centered fx-col sc-s-18 bg-sp box-pad-h box-pad-v"
-        style={{ width: "450px" }}
-      >
-        <div
-          className="fx-centered box-marg-s"
-          style={{
-            minWidth: "54px",
-            minHeight: "54px",
-            borderRadius: "var(--border-r-50)",
-            backgroundColor: "var(--red-main)",
-          }}
-        >
-          <div className="warning"></div>
-        </div>
-        <h3 className="p-centered">{t("AmQVpu4")}</h3>
-        <p className="p-centered gray-c box-pad-v-m">{t("AIgKsNh")}</p>
-        <div className="fx-centered fit-container">
-          <button className="fx btn btn-gst-red" onClick={handleLinkWallet}>
-            {t("AmQVpu4")}
-          </button>
-          <button className="fx btn btn-red" onClick={exit}>
-            {t("AB4BSCe")}
-          </button>
-        </div>
-      </section>
-    </section>
-  );
 };

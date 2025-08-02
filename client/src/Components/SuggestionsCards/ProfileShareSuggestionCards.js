@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import bg from "../../media/images/leaves-bg.svg";
-import bg2 from "../../media/images/dots-bg.png";
 import UserProfilePic from "../Main/UserProfilePic";
-import QRSharing from "../../Pages/MainApp/QRSharing";
+import QRSharing from "../Main/QRSharing";
 import { useTranslation } from "react-i18next";
+let bg = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/leaves-bg.svg";
+let bg2 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/dots-bg.png";
 
 export default function ProfileShareSuggestionCards() {
   const { t } = useTranslation();

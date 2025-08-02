@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
-import screenOne from "../media/images/NewFeature/Leveling/screen-1.png";
-import screenTwo from "../media/images/NewFeature/Leveling/screen-2.png";
-import screenThreeOne from "../media/images/NewFeature/Leveling/screen-3-1.png";
-import screenThreeTwo from "../media/images/NewFeature/Leveling/screen-3-2.png";
-import screenFourOne from "../media/images/NewFeature/Leveling/screen-4-1.png";
-import screenFourTwo from "../media/images/NewFeature/Leveling/screen-4-2.png";
-import screenFive from "../media/images/NewFeature/Leveling/screen-5.png";
-import screenSix from "../media/images/NewFeature/Leveling/screen-6.png";
-import screenSeven from "../media/images/NewFeature/Leveling/screen-7.png";
-import screenSevenTwo from "../media/images/NewFeature/Leveling/screen-7-2.png";
 import ProgressBar from "../Components/ProgressBar";
+let screenOne = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-1.png";
+let screenTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-2.png";
+let screenThreeOne = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-3-1.png";
+let screenThreeTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-3-2.png";
+let screenFourOne = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-4-1.png";
+let screenFourTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-4-2.png";
+let screenFive = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-5.png";
+let screenSix = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-6.png";
+let screenSeven = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-7.png";
+let screenSevenTwo = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-7-2.png";
 
 export default function YakiLevelingFeature() {
   const [showRewards, setShowRewards] = useState(
@@ -35,12 +35,18 @@ export default function YakiLevelingFeature() {
         <Helmet>
           <title>Yakihonne | Yakihonne points system</title>
           <meta name="description" content={"Yakihonne points system"} />
-          <meta property="og:description" content={"Yakihonne points system"} />
+          <meta property="og:description" content={"Learn how our innovative points system rewards creators and readers. Transparent mechanics for earning and spending Yaki Points in our ecosystem."} />
 
           <meta
             property="og:url"
             content={`https://yakihonne.com/points-system`}
           />
+          <meta
+            property="og:image"
+            content={`https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-1.png`}
+          />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="Yakihonne" />
           <meta
@@ -53,7 +59,11 @@ export default function YakiLevelingFeature() {
           />
           <meta
             property="twitter:description"
-            content={"Yakihonne points system"}
+            content={"Learn how our innovative points system rewards creators and readers. Transparent mechanics for earning and spending Yaki Points in our ecosystem."}
+          />
+          <meta
+            property="twitter:image"
+            content={`https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/NewFeature/Leveling/screen-1.png`}
           />
         </Helmet>
         <div

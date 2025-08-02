@@ -7,7 +7,6 @@ import {
   getHex,
 } from "../../Helpers/Encryptions";
 import * as secp from "@noble/secp256k1";
-import profilePlaceholder from "../../media/images/profile-avatar.png";
 import { generateSecretKey, getPublicKey } from "nostr-tools";
 import { FilePicker } from "../FilePicker";
 import UserProfilePic from "./UserProfilePic";
@@ -21,6 +20,7 @@ import { ndkInstance } from "../../Helpers/NDKInstance";
 import relaysOnPlatform from "../../Content/Relays";
 import LoadingDots from "../LoadingDots";
 import { getUser, getUserFromNOSTR } from "../../Helpers/Controlers";
+let profilePlaceholder = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/profile-avatar.png";
 
 export default function LoginSignup({ exit }) {
   const { t } = useTranslation();

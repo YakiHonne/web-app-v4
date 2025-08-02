@@ -23,6 +23,7 @@ import Zap from "../Reactions/Zap";
 import ShowUsersList from "./ShowUsersList";
 import ZapAd from "./ZapAd";
 import RepEventCommentsSection from "./RepEventCommentsSection";
+import EventOptions from "../ElementOptions/EventOptions";
 
 const checkFollowing = (list, toFollowKey) => {
   if (!list) return false;
@@ -184,44 +185,6 @@ export default function RepEventPreviewCard({
                   </div>
                 )}
               </div>
-              {/* <OptionsDropdown
-                options={[
-                  <div
-                    onClick={(e) =>
-                      copyText(item.naddr, t("ApPw14o", { item: "naddr" }), e)
-                    }
-                    className="pointer"
-                  >
-                    <p>{t("ApPw14o", { item: "naddr" })}</p>
-                  </div>,
-                  <BookmarkEvent
-                    label={t("AtlqBGm")}
-                    pubkey={item.pubkey}
-                    kind={item.kind}
-                    d={item.d}
-                    image={item.thumbnail}
-                  />,
-                  <div className="fit-container fx-centered fx-start-h pointer">
-                    <ShareLink
-                      label={t("AGB5vpj")}
-                      path={url}
-                      title={item.title}
-                      description={item.title}
-                      kind={30023}
-                      shareImgData={{
-                        post: { ...item, image: item.thumbnail },
-                        author: {
-                          pubkey: authorData.pubkey,
-                          picture: authorData.picture,
-                          display_name:
-                            authorData.display_name || authorData.name,
-                        },
-                        label: t("AyYkCrS"),
-                      }}
-                    />
-                  </div>,
-                ]}
-              /> */}
             </div>
             <Link
               to={url}
@@ -236,7 +199,6 @@ export default function RepEventPreviewCard({
                   >
                     {item.title}
                   </h4>
-                  {/* <p className="p-two-lines p-big p-bold">{item.title}</p> */}
                 </div>
                 <div className="box-pad-v-s ">
                   <p className="p-three-lines gray-c fit-container">
@@ -502,43 +464,10 @@ const Reactions = ({ post, author, url }) => {
               </div>
             </div>
           </div>
-          <OptionsDropdown
-            vertical={false}
-            options={[
-              <div
-                onClick={(e) =>
-                  copyText(post.naddr, t("ApPw14o", { item: "naddr" }), e)
-                }
-                className="pointer"
-              >
-                <p>{t("ApPw14o", { item: "naddr" })}</p>
-              </div>,
-              <BookmarkEvent
-                label={t("AtlqBGm")}
-                pubkey={post.pubkey}
-                kind={post.kind}
-                d={post.d}
-                image={post.thumbnail}
-              />,
-              <div className="fit-container fx-centered fx-start-h pointer">
-                <ShareLink
-                  label={t("AGB5vpj")}
-                  path={url}
-                  title={post.title}
-                  description={post.title}
-                  kind={30023}
-                  shareImgData={{
-                    post: { ...post, image: post.thumbnail },
-                    author: {
-                      pubkey: author.pubkey,
-                      picture: author.picture,
-                      display_name: author.display_name || author.name,
-                    },
-                    label: t("AyYkCrS"),
-                  }}
-                />
-              </div>,
-            ]}
+          <EventOptions
+            event={post}
+            eventActions={postActions}
+            component="repEventsCard"
           />
         </div>
       </div>

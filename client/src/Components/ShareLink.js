@@ -455,10 +455,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                     name:
                       data.author.display_name ||
                       data.author.name ||
-                      getBech32("npub", data.post.author_pubkey).substring(
-                        0,
-                        10
-                      ),
+                      getBech32("npub", data.author.pubkey).substring(0, 10),
                   })}
                 </p>
               </div>
@@ -716,7 +713,7 @@ const ShareImg = ({ data, kind, path, setIsLoading }) => {
                 <QRCode value={path} size={100} />
                 {data.author.nip05 && (
                   <p className="c1-c p-medium p-centered box-pad-h-m">
-                    yakihonne.com/users/{data.author.nip05}
+                    yakihonne.com/profile/{data.author.nip05}
                   </p>
                 )}
               </div>

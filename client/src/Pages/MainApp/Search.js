@@ -142,7 +142,7 @@ export default function Search() {
       const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
 
       let data = await axios.get(
-        `${API_BASE_URL}/api/v1/users/search/${searchKeyword}`
+        `${API_BASE_URL}/api/v1/profile/search/${searchKeyword}`
       );
       saveFetchedUsers(data.data);
       setResults((prev) => {
@@ -323,20 +323,30 @@ export default function Search() {
         <title>Yakihonne | Search</title>
         <meta
           name="description"
-          content={"Search for people, notes and different content on nostr"}
+          content={"Find your favorite creators and content with our powerful search engine. Explore articles, notes, and smart widgets across the Nostr ecosystem."}
         />
         <meta
           property="og:description"
-          content={"Search for people, notes and different content on nostr"}
+          content={"Find your favorite creators and content with our powerful search engine. Explore articles, notes, and smart widgets across the Nostr ecosystem."}
         />
-        <meta property="og:url" content={`https://yakihonne.com`} />
+        <meta
+          property="og:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="700" />
+        <meta property="og:url" content={`https://yakihonne.com/search`} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Yakihonne" />
         <meta property="og:title" content="Yakihonne | Search" />
         <meta property="twitter:title" content="Yakihonne | Search" />
         <meta
           property="twitter:description"
-          content={"Search for people, notes and different content on nostr"}
+          content={"Find your favorite creators and content with our powerful search engine. Explore articles, notes, and smart widgets across the Nostr ecosystem."}
+        />
+        <meta
+          property="twitter:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
         />
       </Helmet>
       <ArrowUp />
