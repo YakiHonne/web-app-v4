@@ -209,7 +209,6 @@ export default function DMS() {
           raw_content: convo.content,
         };
       });
-      console.log(tempConvo);
       setSelectedConvo({
         ...conversation,
         convo: tempConvo,
@@ -1080,10 +1079,7 @@ const ConversationBox = ({ convo, back }) => {
             className="fx-centered round-icon-tooltip"
             data-tooltip={legacy ? t("Al6NH4U") : t("AfN9sMV")}
           >
-            {/* {!legacy && ( */}
             <p className="p-medium slide-left">{t("ATta6yb")}</p>
-            {/* )} */}
-            {/* {legacy && <p className="p-medium gray-c slide-right">Legacy encryption</p>} */}
             <div
               className={`toggle ${legacy ? "toggle-dim-gray" : ""} ${
                 !legacy ? "toggle-green" : "toggle-dim-gray"
@@ -1093,24 +1089,6 @@ const ConversationBox = ({ convo, back }) => {
           </div>
         )}
       </div>
-      {/* {legacy && (
-        <div
-          className="fit-container"
-          style={{ position: "relative", zIndex: 100 }}
-        >
-          <div
-            className="box-pad-h-s fit-container"
-            style={{ position: "absolute", left: 0, top: 0 }}
-          >
-            <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
-              <div className="info-tt-24"></div>
-              <div>
-                <p className="c1-c p-medium">{t("AakbxOk")}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
       <div
         className="fx-centered fx-start-h fx-col box-pad-h-m box-pad-v-m fit-container"
         style={{
@@ -1127,7 +1105,6 @@ const ConversationBox = ({ convo, back }) => {
           >
             <div
               className="fit-container"
-              // style={{ position: "absolute", left: 0, top: 0 }}
             >
               <div className="box-pad-h-m box-pad-v-m fx-centered fx-start-h fit-container sc-s-18">
                 <div className="info-tt-24"></div>
@@ -1225,13 +1202,14 @@ const ConversationBox = ({ convo, back }) => {
                     borderBottomLeftRadius: !convo.peer ? 0 : "inital",
                     borderBottomRightRadius: convo.peer ? 0 : "inital",
                     maxWidth: "min(90%, 500px)",
+                    minWidth: "300px",
                     border: "none",
                     overflow: "visible",
                   }}
                 >
-                  {<div>{convo.content}</div> || <LoadingDots />}
+                  {<div className="fit-container">{convo.content}</div> || <LoadingDots />}
                   <div
-                    className="fx-centered fx-start-h round-icon-tooltip pointer"
+                    className="fx-centered fx-start-h round-icon-tooltip pointer fit-container"
                     data-tooltip={
                       convo.kind === 4 ? t("ALZCVV2") : t("ATta6yb")
                     }
