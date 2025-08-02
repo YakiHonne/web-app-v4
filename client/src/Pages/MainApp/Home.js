@@ -205,7 +205,7 @@ const notesInitialState = {
   global: [],
 };
 
-export default function Home_() {
+export default function Home() {
   const [selectedFilter, setSelectedFilter] = useState(getDefaultFilter(2));
   const [selectedCategory, setSelectedCategory] = useState(false);
 
@@ -215,27 +215,27 @@ export default function Home_() {
         <Helmet>
           <title>Yakihonne | Home</title>
           <meta
-            name="description"
-            content={
-              "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
-            }
+            property="og:description"
+            content="A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
           />
           <meta
-            property="og:description"
-            content={
-              "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
-            }
+            property="og:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
           />
-          <meta property="og:url" content={`https://yakihonne.com`} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="700" />
+          <meta property="og:url" content="https://yakihonne.com" />
           <meta property="og:type" content="website" />
-          <meta property="og:site_name" content="Yakihonne" />
-          <meta property="og:title" content="Yakihonne | Home" />
-          <meta property="twitter:title" content="Yakihonne | Home" />
+          <meta property="og:site_name" content="YakiHonne" />
+          <meta property="og:title" content="YakiHonne" />
+          <meta property="twitter:title" content="YakiHonne" />
           <meta
             property="twitter:description"
-            content={
-              "A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
-            }
+            content="A censorship and data ownership free protocol, you‘ll enjoy a fully decentralized media experience."
+          />
+          <meta
+            property="twitter:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
           />
         </Helmet>
         <YakiIntro />
@@ -540,10 +540,15 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
       const algoRelay =
         selectedCategory.group === "af" ? [selectedCategory.value] : [];
 
-      const filterSpeed =
-        selectedCategory.group === "af" ? 1000 : 120;
-      
-      const data = await getSubData(filter, filterSpeed, algoRelay, undefined, 200);
+      const filterSpeed = selectedCategory.group === "af" ? 1000 : 120;
+
+      const data = await getSubData(
+        filter,
+        filterSpeed,
+        algoRelay,
+        undefined,
+        200
+      );
       events = data.data
         .splice(0, 50)
         .map((event) => {
