@@ -273,7 +273,7 @@ router.post("/", async (req, res) => {
 
     // Publish only in production (only for root widget)
     let publishedEvent;
-    if (process.env.NODE_ENV === "production") {
+    if (import.meta.env.NODE_ENV === "production") {
       publishedEvent = await SMART_WIDGET.publish(
         SWComp,
         "Weather Widget",
@@ -993,7 +993,7 @@ async function createBasicWidget() {
     const smartWidget = new SW(
       'basic', // type: 'basic' | 'action' | 'tool'
       undefined, // use default relays
-      process.env.NOSTR_SECRET_KEY // your secret key, optional
+      import.meta.env.NOSTR_SECRET_KEY // your secret key, optional
     );
     
     // Initialize connection to relays

@@ -49,7 +49,7 @@ import WidgetCardV2 from "../../Components/Main/WidgetCardV2";
 import EventOptions from "../../Components/ElementOptions/EventOptions";
 import QRSharing from "../../Components/Main/QRSharing";
 
-const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE__API_CACHE_BASE_URL;
 
 const eventsReducer = (notes, action) => {
   switch (action.type) {

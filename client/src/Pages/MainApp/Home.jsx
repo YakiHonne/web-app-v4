@@ -419,10 +419,10 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
           tempUserFollowings =
             followings?.followings?.length > 0
               ? [userKeys.pub, ...Array.from(followings.followings)]
-              : [userKeys.pub, process.env.REACT_APP_YAKI_PUBKEY];
+              : [userKeys.pub, import.meta.env.VITE__YAKI_PUBKEY];
           setUserFollowings(tempUserFollowings);
         } else {
-          tempUserFollowings = [process.env.REACT_APP_YAKI_PUBKEY];
+          tempUserFollowings = [import.meta.env.VITE__YAKI_PUBKEY];
           setUserFollowings(tempUserFollowings);
         }
       }

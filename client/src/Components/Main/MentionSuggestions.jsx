@@ -30,7 +30,7 @@ export default function MentionSuggestions({
     const getUsersFromCache = async () => {
       try {
         setIsLoading(true);
-        const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+        const API_BASE_URL = import.meta.env.VITE__API_CACHE_BASE_URL;
 
         let data = await axios.get(
           `${API_BASE_URL}/api/v1/profile/search/${mention}`

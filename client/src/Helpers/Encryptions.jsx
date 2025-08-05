@@ -347,7 +347,7 @@ const parsedMaciPoll = (poll) => {
     if (!poll)
       return { ...poll, voteOptionMap: [], results: [], resultsList: [] };
     const client = new MaciClient({
-      network: process.env.REACT_APP_NETWORK,
+      network: import.meta.env.VITE__NETWORK,
     });
     let voteOptionMap = JSON.parse(poll.voteOptionMap);
     let results = JSON.parse(poll.results);
@@ -663,12 +663,12 @@ const sortEvents = (events) => {
 const encryptEventData = (data) => {
   let enc = CryptoJS.AES.encrypt(
     data,
-    process.env.REACT_APP_ENC_SECRET
+    import.meta.env.VITE__ENC_SECRET
   ).toString();
   return enc;
 };
 const decryptEventData = (enc, data) => {
-  let dec = CryptoJS.AES.decrypt(enc, process.env.REACT_APP_ENC_SECRET);
+  let dec = CryptoJS.AES.decrypt(enc, import.meta.env.VITE__ENC_SECRET);
   return {
     dec: dec.toString(CryptoJS.enc.Utf8),
     status: dec.toString(CryptoJS.enc.Utf8) == data,
@@ -694,7 +694,7 @@ const getClaimingData = async (pubkey, event_id, kind) => {
         message: t("AZsINLj"),
       };
     const encrypted = await window.nostr.nip04.encrypt(
-      process.env.REACT_APP_YAKI_PUBKEY,
+      import.meta.env.VITE__YAKI_PUBKEY,
       JSON.stringify(message)
     );
     return { status: true, message: encrypted };
@@ -942,10 +942,10 @@ const downloadAsFile = (
 
 const getKeplrSigner = async () => {
   try {
-    const chainId = DORA_CONFIG[process.env.REACT_APP_NETWORK].chainId;
-    const rpc = DORA_CONFIG[process.env.REACT_APP_NETWORK].rpc;
+    const chainId = DORA_CONFIG[import.meta.env.VITE__NETWORK].chainId;
+    const rpc = DORA_CONFIG[import.meta.env.VITE__NETWORK].rpc;
     await window.keplr.experimentalSuggestChain(
-      DORA_CONFIG[process.env.REACT_APP_NETWORK]
+      DORA_CONFIG[import.meta.env.VITE__NETWORK]
     );
 
     await window.keplr.enable(chainId);

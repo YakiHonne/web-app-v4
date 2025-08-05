@@ -227,8 +227,8 @@ export default function WriteNote({
       let zapTags = [
         ["relays", ...userRelays],
         ["amount", sats.toString()],
-        ["lnurl", process.env.REACT_APP_YAKI_FUNDS_ADDR],
-        ["p", process.env.REACT_APP_YAKI_PUBKEY],
+        ["lnurl", import.meta.env.VITE__YAKI_FUNDS_ADDR],
+        ["p", import.meta.env.VITE__YAKI_PUBKEY],
         ["e", eventInitEx.id],
       ];
 
@@ -243,7 +243,7 @@ export default function WriteNote({
       }
 
       const res = await axios(
-        `${process.env.REACT_APP_YAKI_FUNDS_ADDR_CALLBACK}?amount=${sats}&nostr=${zapEvent}&lnurl=${process.env.REACT_APP_YAKI_FUNDS_ADDR}`
+        `${import.meta.env.VITE__YAKI_FUNDS_ADDR_CALLBACK}?amount=${sats}&nostr=${zapEvent}&lnurl=${import.meta.env.VITE__YAKI_FUNDS_ADDR}`
       );
 
       if (res.data.status === "ERROR") {
@@ -275,7 +275,7 @@ export default function WriteNote({
         [
           {
             kinds: [9735],
-            "#p": [process.env.REACT_APP_YAKI_PUBKEY],
+            "#p": [import.meta.env.VITE__YAKI_PUBKEY],
             "#e": [eventInitEx.id],
           },
         ],
