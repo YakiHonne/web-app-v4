@@ -92,7 +92,7 @@ const userMutedListSlice = createSlice({
 });
 const userBalanceSlice = createSlice({
   name: "userBalance",
-  initialState: localStorage.getItem("wallet-userBalance") || "N/A",
+  initialState: localStorage?.getItem("wallet-userBalance") || "N/A",
   reducers: {
     setUserBalance(state, action) {
       return action.payload;

@@ -378,7 +378,7 @@ export default function AppInit() {
     if (userKeys) {
       handleUseRKeys();
       dispatch(setUserMetadata(getMetadataFromCachedAccounts(userKeys.pub)));
-      localStorage.setItem("_nostruserkeys", JSON.stringify(userKeys));
+      localStorage?.setItem("_nostruserkeys", JSON.stringify(userKeys));
     }
   }, [userKeys]);
 
@@ -711,7 +711,7 @@ export default function AppInit() {
         dispatch(setIsYakiChestLoaded(true));
       } catch (err) {
         console.log(err);
-        localStorage.removeItem("connect_yc");
+        localStorage?.removeItem("connect_yc");
         dispatch(setIsYakiChestLoaded(true));
       }
     };
@@ -721,7 +721,7 @@ export default function AppInit() {
 
   useEffect(() => {
     const buildWOTList = async () => {
-      let prevData = localStorage.getItem(`network_${userKeys.pub}`);
+      let prevData = localStorage?.getItem(`network_${userKeys.pub}`);
       prevData = prevData
         ? JSON.parse(prevData)
         : {
@@ -793,7 +793,7 @@ export default function AppInit() {
       let wotPubkeys = allPubkeys.filter(
         (_) => getWOTScoreForPubkey(network, _, 5, trustingCounts).status
       );
-      localStorage.setItem(
+      localStorage?.setItem(
         `network_${userKeys.pub}`,
         JSON.stringify({
           last_updated: followings?.followings.last_timestamp,
@@ -803,7 +803,7 @@ export default function AppInit() {
       );
     };
     const buildBackupWOTList = async () => {
-      let prevData = localStorage.getItem(`backup_wot`);
+      let prevData = localStorage?.getItem(`backup_wot`);
       prevData = prevData
         ? JSON.parse(prevData)
         : {
@@ -880,7 +880,7 @@ export default function AppInit() {
         (_) => getWOTScoreForPubkey(network, _, 5, trustingCounts).status
       );
 
-      localStorage.setItem(
+      localStorage?.setItem(
         `backup_wot`,
         JSON.stringify({
           last_updated: backupFollowings.data[0].created_at + 1,
