@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const auth_data = (req, res, next) => {
   let apikey = req.headers["yakihonne-api-key"];
 
-  if (apikey && apikey === process.env.FS_API_KEY) {
+  if (apikey && apikey === import.meta.env.FS_API_KEY) {
     next();
   } else {
     if (!apikey) return res.status(401).send({ message: "Missing API KEY" });
@@ -17,7 +17,7 @@ const auth_user = (req, res, next) => {
   if (!user_token)
     return res.status(401).send({ message: "The user is logged out" });
 
-  jwt.verify(user_token, process.env.JWT_SECRET, async (err, user) => {
+  jwt.verify(user_token, import.meta.env.JWT_SECRET, async (err, user) => {
     if (err) {
       return res.status(401).send({ message: "Invalid token" });
     } else {
@@ -46,7 +46,7 @@ const user_login = (req, res, next) => {
     let cracked_password = nip44.v2.decrypt(
       password,
       nip44.v2.utils.getConversationKey(
-        process.env.PASSWORD_CRACKER_SEC,
+        import.meta.env.PASSWORD_CRACKER_SEC,
         pubkey
       )
     );
@@ -74,7 +74,7 @@ const user_tokenizing = (req, res, next) => {
   try {
     req.session.user_token = jwt.sign(
       { ...req.user, ip: req.ip, user_agent: req.get("User-Agent") },
-      process.env.JWT_SECRET
+      import.meta.env.JWT_SECRET
     );
     next();
   } catch (err) {

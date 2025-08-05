@@ -39,7 +39,7 @@ import bannedList from "../../Content/BannedList";
 import ZapAd from "../../Components/Main/ZapAd";
 import EventOptions from "../../Components/ElementOptions/EventOptions";
 import AudioLoader from "../../Components/Main/AudioLoader";
-const API_BASE_URL = process.env.REACT_APP_API_CACHE_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE__API_CACHE_BASE_URL;
 
 export default function Note() {
   const dispatch = useDispatch();

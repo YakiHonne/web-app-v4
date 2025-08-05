@@ -53,7 +53,7 @@ export default function MACIPollStarter() {
                   copyKey(
                     t("AfnTOQk"),
                     `https://vota${
-                      process.env.REACT_APP_NETWORK === "testnet" ? "-test" : ""
+                      import.meta.env.VITE__NETWORK === "testnet" ? "-test" : ""
                     }.dorafactory.org/round/${pollAddr}`
                   )
                 }
@@ -61,7 +61,7 @@ export default function MACIPollStarter() {
                 <p>
                   {shortenKey(
                     `https://vota${
-                      process.env.REACT_APP_NETWORK === "testnet" ? "-test" : ""
+                      import.meta.env.VITE__NETWORK === "testnet" ? "-test" : ""
                     }.dorafactory.org/round/${pollAddr}`,
                     40
                   )}

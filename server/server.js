@@ -12,8 +12,8 @@ const MongoStore = require("connect-mongo");
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 
-const PORT = process.env.PORT || 4000;
-mongoose.connect(process.env.DB_URL);
+const PORT = import.meta.env.PORT || 4000;
+mongoose.connect(import.meta.env.DB_URL);
 mongoose.connection.on("error", console.error.bind(console, "Error"));
 mongoose.connection.on("open", () => {
   console.log("Connection is established");
@@ -34,8 +34,8 @@ app.use(
       secure: false,
       sameSite: "strict",
     },
-    secret: process.env.SESSION_SECRET,
-    store: MongoStore.create({ mongoUrl: process.env.DB_URL }),
+    secret: import.meta.env.SESSION_SECRET,
+    store: MongoStore.create({ mongoUrl: import.meta.env.DB_URL }),
   })
 );
 app.use("/", UploadFiles);

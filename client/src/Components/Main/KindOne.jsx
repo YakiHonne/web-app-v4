@@ -201,7 +201,6 @@ export default function KindOne({
       customHistory.push(`/notes/${event.nEvent}`);
     else window.location = `/notes/${event.nEvent}`;
   };
-
   const translateNote = async () => {
     setIsNoteTranslating(true);
     if (translatedNote) {

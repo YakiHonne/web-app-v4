@@ -595,8 +595,8 @@ export default function SWCard({ widget, onNextWidget }) {
 //       fd,
 //       {
 //         auth: {
-//           username: process.env.REACT_APP_ALBY_CLIENT_ID,
-//           password: process.env.REACT_APP_ALBY_SECRET_ID,
+//           username: import.meta.env.VITE__ALBY_CLIENT_ID,
+//           password: import.meta.env.VITE__ALBY_SECRET_ID,
 //         },
 //         headers: {
 //           "Content-Type": "multipart/form-data",
