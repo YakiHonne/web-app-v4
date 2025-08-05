@@ -13,7 +13,7 @@ const initDMSSlice = createSlice({
 });
 const isDarkModeSlice = createSlice({
   name: "isDarkMode",
-  initialState: localStorage.getItem("yaki-theme") || "0",
+  initialState: localStorage?.getItem("yaki-theme") || "0",
   reducers: {
     setIsDarkMode(state, action) {
       return action.payload;

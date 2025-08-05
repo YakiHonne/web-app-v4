@@ -14,7 +14,7 @@ const userFirstLoginYakiChestSlice = createSlice({
 
 const isConnectedToYakiSlice = createSlice({
   name: "isConnectedToYaki",
-  initialState: localStorage.getItem("connect_yc") ? true : false,
+  initialState: localStorage?.getItem("connect_yc") ? true : false,
   reducers: {
     setIsConnectedToYaki(state, action) {
       return action.payload;
