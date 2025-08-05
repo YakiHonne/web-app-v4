@@ -909,7 +909,7 @@ const getDefaultFilter = (type = 1) => {
 
 const getDVMJobRequest = async (DVM_PUBKEY) => {
   try {
-    let DVM_COMMUNICATOR_SEC = import.meta.env.VITE__DVM_COMMUNICATOR_SEC;
+    let DVM_COMMUNICATOR_SEC = import.meta.env.VITE_DVM_COMMUNICATOR_SEC;
     let request_kind = 5300;
     let request_tags = [
       ["p", DVM_PUBKEY],

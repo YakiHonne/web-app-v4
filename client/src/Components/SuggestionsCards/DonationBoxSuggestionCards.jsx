@@ -35,8 +35,8 @@ export default function DonationBoxSuggestionCards({ padding = true }) {
           </p>
 
           <ZapTip
-            recipientLNURL={import.meta.env.VITE__YAKI_LUD16}
-            recipientPubkey={import.meta.env.VITE__YAKI_PUBKEY}
+            recipientLNURL={import.meta.env.VITE_YAKI_LUD16}
+            recipientPubkey={import.meta.env.VITE_YAKI_PUBKEY}
             senderPubkey={userKeys.pub}
             recipientInfo={{
               name: "Yakihonne",

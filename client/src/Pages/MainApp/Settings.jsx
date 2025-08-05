@@ -1691,11 +1691,11 @@ const SettingsFooter = ({ userKeys }) => {
       <p className="p-centered gray-c" style={{ maxWidth: "400px" }}>
         {t("AFZ1jAD")}
       </p>
-      <p className="c1-c">v{import.meta.env.VITE__APP_VERSION}</p>
+      <p className="c1-c">v{import.meta.env.VITE_APP_VERSION}</p>
       <div className="fx-centered">
         <ZapTip
-          recipientLNURL={import.meta.env.VITE__YAKI_LUD16}
-          recipientPubkey={import.meta.env.VITE__YAKI_PUBKEY}
+          recipientLNURL={import.meta.env.VITE_YAKI_LUD16}
+          recipientPubkey={import.meta.env.VITE_YAKI_PUBKEY}
           senderPubkey={userKeys.pub}
           recipientInfo={{
             name: "Yakihonne",

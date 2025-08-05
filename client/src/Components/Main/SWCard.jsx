@@ -595,8 +595,8 @@ export default function SWCard({ widget, onNextWidget }) {
 //       fd,
 //       {
 //         auth: {
-//           username: import.meta.env.VITE__ALBY_CLIENT_ID,
-//           password: import.meta.env.VITE__ALBY_SECRET_ID,
+//           username: import.meta.env.VITE_ALBY_CLIENT_ID,
+//           password: import.meta.env.VITE_ALBY_SECRET_ID,
 //         },
 //         headers: {
 //           "Content-Type": "multipart/form-data",

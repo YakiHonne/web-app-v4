@@ -53,7 +53,7 @@ const getLoginsParams = async (publicKey, userKeys) => {
 
     let password = await encrypt44(
       userKeys,
-      import.meta.env.VITE__CHECKER_PUBKEY,
+      import.meta.env.VITE_CHECKER_PUBKEY,
       content
     );
 
@@ -67,7 +67,7 @@ const getLoginsParams = async (publicKey, userKeys) => {
 const getAnswerFromAIRemoteAPI = async (pubkey_, input) => {
   try {
     let { password } = await getLoginsParams(pubkey_, {
-      sec: import.meta.env.VITE__CHECKER_SEC,
+      sec: import.meta.env.VITE_CHECKER_SEC,
     });
     const res = await axios.post(
       // "http://localhost:4700/api/v1/ai",

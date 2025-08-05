@@ -4,9 +4,9 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const s3 = new AWS.S3({
-  accessKeyId: import.meta.env.AWS_ACCESS_KEY,
-  secretAccessKey: import.meta.env.AWS_SECRET_KEY,
-  region: import.meta.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_KEY,
+  region: process.env.AWS_REGION,
 });
 
 const uploadFile = async (file, dir, subdir) => {
@@ -18,12 +18,12 @@ const uploadFile = async (file, dir, subdir) => {
     let fullFileName = `${dir}/${subdir}/${fileName}`;
     let uploadedFile = await s3
       .putObject({
-        Bucket: import.meta.env.AWS_BUCKET_NAME,
+        Bucket: process.env.AWS_BUCKET_NAME,
         Key: fullFileName,
         Body: Buffer.from(file.file.data, "binary"),
       })
       .promise();
-    return `https://${import.meta.env.AWS_BUCKET_NAME}.s3.ap-east-1.amazonaws.com/${fullFileName}`;
+    return `https://${process.env.AWS_BUCKET_NAME}.s3.ap-east-1.amazonaws.com/${fullFileName}`;
   } catch (err) {
     console.log(err);
     return false;
@@ -33,7 +33,7 @@ const deleteFile = async (path) => {
   try {
     let deletedImage = await s3
       .deleteObject({
-        Bucket: import.meta.env.AWS_BUCKET_NAME,
+        Bucket: process.env.AWS_BUCKET_NAME,
         Key: path.split("amazonaws.com/")[1],
       })
       .promise();
