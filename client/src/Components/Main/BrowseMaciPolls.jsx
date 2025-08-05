@@ -62,7 +62,7 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
     try {
       setIsLoading(true);
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
 
       let poll = await client.getRounds(cursor, 10);
@@ -146,7 +146,7 @@ export default function BrowseMaciPolls({ setPollAddr, exit }) {
                       onClick={() =>
                         setPollAddr(
                           `https://vota${
-                            import.meta.env.VITE__NETWORK === "testnet"
+                            import.meta.env.VITE_NETWORK === "testnet"
                               ? "-test"
                               : ""
                           }.dorafactory.org/round/${round.id}`

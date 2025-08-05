@@ -466,7 +466,7 @@ const ExploreFeed = ({
       });
 
       const signer = new NDKPrivateKeySigner(
-        import.meta.env.VITE__DVM_COMMUNICATOR_SEC
+        import.meta.env.VITE_DVM_COMMUNICATOR_SEC
       );
       ndkInstance_.signer = signer;
 

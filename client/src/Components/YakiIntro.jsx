@@ -186,7 +186,7 @@ const Banner = ({ exit }) => {
                 </p>
               </div>
               <p className="orange-c p-medium">
-                v{import.meta.env.VITE__APP_VERSION}
+                v{import.meta.env.VITE_APP_VERSION}
               </p>
             </div>
             <div className="box-pad-v-s"></div>

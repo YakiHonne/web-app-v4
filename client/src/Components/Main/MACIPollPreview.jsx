@@ -21,7 +21,7 @@ export default function MACIPollPreview({ url }) {
       if (!roundId.startsWith("dora")) return;
       setIsLoading(true);
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
       let poll = await client.getRoundInfo({ contractAddress: roundId });
       if (poll) {

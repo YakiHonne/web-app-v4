@@ -534,7 +534,7 @@ export const saveAppSettings = async (event, pubkey, lastTimestamp) => {
 
 export const saveUsers = async (pubkeys) => {
   try {
-    let BASE_URL = import.meta.env.VITE__API_CACHE_BASE_URL;
+    let BASE_URL = import.meta.env.VITE_API_CACHE_BASE_URL;
     const users_pubkeys = [...new Set(pubkeys)];
     const data = await getSubData(
       [{ kinds: [0], authors: users_pubkeys }],

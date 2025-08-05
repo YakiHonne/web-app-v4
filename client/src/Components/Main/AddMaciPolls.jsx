@@ -174,7 +174,7 @@ const OracleMACIPoll = ({ setPollAddr, exit }) => {
       if (!isInputValid) return;
       setIsLoading(true);
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
       let { signer } = await getKeplrSigner();
 
@@ -184,7 +184,7 @@ const OracleMACIPoll = ({ setPollAddr, exit }) => {
     console.log("contract.oracleCodeId",client.contract.oracleCodeId)
       let poll = await client.createOracleMaciRound({
         signer: signer,
-        operatorPubkey: import.meta.env.VITE__OP_PUBKEY,
+        operatorPubkey: import.meta.env.VITE_OP_PUBKEY,
         startVoting: new Date(voteStart),
         endVoting: new Date(voteEnd),
         title: roundName,
@@ -559,7 +559,7 @@ const PollGasStation = ({ poll, signer, exit }) => {
       }
 
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
 
       const oracleMaciClient = await client.oracleMaciClient({
@@ -695,12 +695,12 @@ const MACIPoll = ({ setPollAddr }) => {
       if (isLoading) return;
       setIsLoading(true);
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
       let signer = await getKeplrSigner();
       let poll = await client.contract.createMaciRound({
         signer,
-        operatorPubkey: import.meta.env.VITE__OP_PUBKEY,
+        operatorPubkey: import.meta.env.VITE_OP_PUBKEY,
         startVoting: new Date(voteStart),
         endVoting: new Date(voteEnd),
         title: roundName,
@@ -917,12 +917,12 @@ const AMACIPoll = ({ setPollAddr }) => {
       if (isLoading) return;
       setIsLoading(true);
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
       let signer = await getKeplrSigner();
       let poll = await client.createAMaciRound({
         signer,
-        operator: import.meta.env.VITE__OP_PUBKEY,
+        operator: import.meta.env.VITE_OP_PUBKEY,
         startVoting: new Date(voteStart),
         endVoting: new Date(voteEnd),
         title: roundName?.trim(),
@@ -1137,7 +1137,7 @@ const ErrorMessage = ({ message }) => {
 //     console.log("Please install keplr extension");
 //     return false;
 //   } else {
-//     const chainId = DORA_CONFIG[import.meta.env.VITE__NETWORK].chainId;
+//     const chainId = DORA_CONFIG[import.meta.env.VITE_NETWORK].chainId;
 
 //     await window.keplr.enable(chainId);
 
@@ -1153,13 +1153,13 @@ const ErrorMessage = ({ message }) => {
 //   const addMaciPoll = async () => {
 //     try {
 // const client = new MaciClient({
-//   network: import.meta.env.VITE__NETWORK,
+//   network: import.meta.env.VITE_NETWORK,
 // });
 
 //       let signer = await getKeplrSigner();
 // const newRound = await client.contract.createOracleMaciRound({
 //         signer: signer,
-//         operatorPubkey: import.meta.env.VITE__OP_PUBKEY,
+//         operatorPubkey: import.meta.env.VITE_OP_PUBKEY,
 //         startVoting: new Date(),
 //         endVoting: new Date(new Date().getTime() + 1 * 60 * 1000),
 //         title: "MaciPollTest",
@@ -1184,10 +1184,10 @@ const ErrorMessage = ({ message }) => {
 
 //   const getKeplrSigner = async () => {
 //     try {
-//       const chainId = DORA_CONFIG[import.meta.env.VITE__NETWORK].chainId;
-//       const rpc = DORA_CONFIG[import.meta.env.VITE__NETWORK].rpc;
+//       const chainId = DORA_CONFIG[import.meta.env.VITE_NETWORK].chainId;
+//       const rpc = DORA_CONFIG[import.meta.env.VITE_NETWORK].rpc;
 //       await window.keplr.experimentalSuggestChain(
-//         DORA_CONFIG[import.meta.env.VITE__NETWORK]
+//         DORA_CONFIG[import.meta.env.VITE_NETWORK]
 //       );
 
 //       await window.keplr.enable(chainId);
@@ -1209,7 +1209,7 @@ const ErrorMessage = ({ message }) => {
 //   const getPoll = async () => {
 //     try {
 //       const client = new MaciClient({
-//         network: import.meta.env.VITE__NETWORK,
+//         network: import.meta.env.VITE_NETWORK,
 //       });
 //       let poll = await client.getRoundById(
 //         "dora1695vj3dd72pklzcpaezvhw847txe057as9ttuf5ray9ze6zvacjq685qyk"

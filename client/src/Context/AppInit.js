@@ -813,7 +813,7 @@ export default function AppInit() {
         [
           {
             kinds: [3],
-            authors: [import.meta.env.VITE__YAKI_PUBKEY],
+            authors: [import.meta.env.VITE_YAKI_PUBKEY],
             until: prevData.last_updated,
           },
         ],

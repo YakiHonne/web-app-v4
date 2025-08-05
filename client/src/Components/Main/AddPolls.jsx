@@ -200,7 +200,7 @@ const CreatePoll = ({ exit, setPollAddr, switchCategory }) => {
             setPollAddr={(data) => {
               setPollAddr(
                 `https://vota${
-                  import.meta.env.VITE__NETWORK === "testnet" ? "-test" : ""
+                  import.meta.env.VITE_NETWORK === "testnet" ? "-test" : ""
                 }.dorafactory.org/round/${data}`
               );
               exit();

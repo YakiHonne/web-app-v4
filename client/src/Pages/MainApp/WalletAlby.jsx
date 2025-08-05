@@ -22,14 +22,14 @@ export default function WalletAlby() {
         let fd = new FormData();
         fd.append("code", code);
         fd.append("grant_type", "authorization_code");
-        fd.append("redirect_uri", import.meta.env.VITE__ALBY_REDIRECT_URL);
+        fd.append("redirect_uri", import.meta.env.VITE_ALBY_REDIRECT_URL);
         const access_token = await axios.post(
           "https://api.getalby.com/oauth/token",
           fd,
           {
             auth: {
-              username: import.meta.env.VITE__ALBY_CLIENT_ID,
-              password: import.meta.env.VITE__ALBY_SECRET_ID,
+              username: import.meta.env.VITE_ALBY_CLIENT_ID,
+              password: import.meta.env.VITE_ALBY_SECRET_ID,
             },
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",

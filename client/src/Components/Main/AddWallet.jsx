@@ -50,7 +50,7 @@ export default function AddWallet({ exit, refresh }) {
           className="fit-container fx-scattered sc-s-18 box-pad-h-s box-pad-v-s option pointer"
           style={{ backgroundColor: "transparent" }}
           onClick={() =>
-            (window.location.href = import.meta.env.VITE__ALBY_ALBY_CONNECT)
+            (window.location.href = import.meta.env.VITE_ALBY_ALBY_CONNECT)
           }
         >
           <div className="fx-centered">

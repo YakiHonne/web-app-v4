@@ -553,8 +553,8 @@ const getDVMJobResponse = async (eventId) => {
             let decryptedData = nip44.v2.decrypt(
               event.content,
               nip44.v2.utils.getConversationKey(
-                import.meta.env.DVM_COMMUNICATOR_SEC,
-                import.meta.env.DVM_PUBKEY
+                process.env.DVM_COMMUNICATOR_SEC,
+                process.env.DVM_PUBKEY
               )
             );
             let events = JSON.parse(decryptedData);

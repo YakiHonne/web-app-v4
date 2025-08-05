@@ -57,7 +57,7 @@ export default function MACIPollsComp({ poll, header = true, url = "" }) {
     const init = async () => {
       try {
         const client = new MaciClient({
-          network: import.meta.env.VITE__NETWORK,
+          network: import.meta.env.VITE_NETWORK,
         });
         const roundBalance_ = await client.maci.queryRoundBalance({
           contractAddress: poll.id,
@@ -439,7 +439,7 @@ const PollDetails = ({ poll, exit }) => {
   const downloadProofs = async () => {
     try {
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
       let proof = await client.getProofByContractAddress(poll.id);
       if (proof.code === 200)
@@ -808,7 +808,7 @@ const PollGasStation = ({ poll, exit }) => {
       }
 
       const client = new MaciClient({
-        network: import.meta.env.VITE__NETWORK,
+        network: import.meta.env.VITE_NETWORK,
       });
 
       const oracleMaciClient = await client.oracleMaciClient({
@@ -929,7 +929,7 @@ const PollGasStation = ({ poll, exit }) => {
 //           return;
 //         }
 //         const client = new MaciClient({
-//           network: import.meta.env.VITE__NETWORK,
+//           network: import.meta.env.VITE_NETWORK,
 //         });
 //         let { signer, address } = await getKeplrSigner();
 //         let vcBalance_ = false;
@@ -1414,7 +1414,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
         }
         let { signer, address } = await getKeplrSigner();
         const client = new MaciClient({
-          network: import.meta.env.VITE__NETWORK,
+          network: import.meta.env.VITE_NETWORK,
           signer,
         });
         let vcBalance_ = false;
@@ -1540,7 +1540,7 @@ const MACIPollVote = ({ poll, exit, onVoteSuccess }) => {
   const createMaciAccount = async (address) => {
     try {
       const sig = await window.keplr.signArbitrary(
-        DORA_CONFIG[import.meta.env.VITE__NETWORK].chainId,
+        DORA_CONFIG[import.meta.env.VITE_NETWORK].chainId,
         address,
         "Generate_MACI_Private_Key"
       );
