@@ -1040,13 +1040,13 @@ const nwTranslate = async (text, service, lang, specialContent) => {
         res: "",
       };
     }
+    console.log(path)
     let data = await axios.post(
       path,
       {
         q: text,
         source: "auto",
         target: lang,
-        format: "text",
         api_key: apikey || "",
       },
       {
@@ -1060,7 +1060,7 @@ const nwTranslate = async (text, service, lang, specialContent) => {
       res: revertContent(data.data.translatedText, specialContent, lang),
     };
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     return {
       status:
         err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
