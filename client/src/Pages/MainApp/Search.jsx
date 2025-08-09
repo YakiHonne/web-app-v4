@@ -142,7 +142,7 @@ export default function Search() {
       const API_BASE_URL = import.meta.env.VITE_API_CACHE_BASE_URL;
 
       let data = await axios.get(
-        `${API_BASE_URL}/api/v1/profile/search/${searchKeyword}`
+        `${API_BASE_URL}/api/v1/users/search/${searchKeyword}`
       );
       saveFetchedUsers(data.data);
       setResults((prev) => {
