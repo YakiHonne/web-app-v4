@@ -370,6 +370,7 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
       setNotesContentFrom(contentFromValue);
       setSelectedCategoryValue(selectedCategory.value);
       setNotesLastEventTime(undefined);
+      setIsLoading(true)
     }
   }, [selectedCategory]);
 
@@ -402,11 +403,11 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
     twoDaysPrior = notesLastEventTime
       ? notesLastEventTime - towDaysPeriod
       : twoDaysPrior;
-    let since =
-      selectedFilter.from ||
-      (["paid", "widgets"].includes(notesContentFrom)
-        ? undefined
-        : twoDaysPrior);
+    // let since = selectedFilter.from || undefined;
+    let since = selectedFilter.from || 
+    (["paid", "widgets"].includes(notesContentFrom)
+      ? undefined
+      : twoDaysPrior);
 
     let tempUserFollowings = Array.isArray(userFollowings)
       ? Array.from(userFollowings)
@@ -514,7 +515,7 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
       document
         .querySelector(".main-page-nostr-container")
         ?.removeEventListener("scroll", handleScroll);
-  }, [isLoading, selectedCategory]);
+  }, [isLoading, selectedCategory, notes]);
 
   useEffect(() => {
     if (
@@ -540,7 +541,7 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
       const algoRelay =
         selectedCategory.group === "af" ? [selectedCategory.value] : [];
 
-      const filterSpeed = selectedCategory.group === "af" ? 1000 : 120;
+      const filterSpeed = selectedCategory.group === "af" ? 1000 : 320;
 
       const data = await getSubData(
         filter,
@@ -578,7 +579,7 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
       tempEvents = filterContent(selectedFilter, tempEvents);
       dispatchNotes({ type: notesContentFrom, note: tempEvents });
       saveUsers(eventsPubkeys);
-      setIsLoading(false);
+    if(tempEvents.length === 0)  setIsLoading(false);
     };
     const contentFromDVM = async () => {
       try {
@@ -626,10 +627,12 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
         setIsLoading(false);
       }
     };
-    if (notesContentFrom && ["cf", "af"].includes(selectedCategory?.group))
-      contentFromRelays();
-    if (notesContentFrom && ["mf"].includes(selectedCategory?.group))
-      contentFromDVM();
+    if (selectedCategoryValue) {
+      if (notesContentFrom && ["cf", "af"].includes(selectedCategory?.group))
+        contentFromRelays();
+      if (notesContentFrom && ["mf"].includes(selectedCategory?.group))
+        contentFromDVM();
+    }
   }, [
     notesLastEventTime,
     selectedCategoryValue,
