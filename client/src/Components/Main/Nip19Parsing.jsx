@@ -284,7 +284,7 @@ export default function Nip19Parsing({ addr, minimal = false }) {
       <div className="fit-container box-pad-v-s">
         <WidgetCardV2
           widget={{
-            ...event,
+            ...getParsedSW(event),
             metadata: getParsedSW(event),
             author: getEmptyuserMetadata(event.pubkey),
           }}
