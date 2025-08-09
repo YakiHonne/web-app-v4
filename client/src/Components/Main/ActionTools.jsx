@@ -139,7 +139,7 @@ const Actions = ({ exit, setReturnedData }) => {
             </div>
           )}
           {!showMiniApp && (
-            <div className="box-pad-h box-pad-v">
+            <div className="box-pad-h box-pad-v"  style={{maxHeight: "65vh", overflow: "scroll"}}>
               <div className="fit-container">
                 <h3>{t("AJDWN22")}</h3>
               </div>

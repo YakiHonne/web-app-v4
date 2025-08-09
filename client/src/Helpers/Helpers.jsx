@@ -889,7 +889,8 @@ function createImageGrid(images, pubkey) {
   //     </div>
   //   );
   let images_ = images.map((image) => image.props.src);
-  return <Gallery imgs={images_} pubkey={pubkey} />;
+  const key = `gallery-${images_.length}-${images_[0]?.substring(0, 20) || 'empty'}`;
+  return <Gallery key={key} imgs={images_} pubkey={pubkey} />;
 }
 
 const getAuthPubkeyFromNip05 = async (nip05Addr) => {

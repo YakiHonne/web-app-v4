@@ -354,10 +354,10 @@ export default function KindOne({
                         {showTranslation ? translatedNote : event.note_tree}
                       </div>
                     ) : (
-                      <p className="p-six-lines" ref={noteRef}>
+                      <div className="p-six-lines" ref={noteRef}>
                         {event.note_tree}
                         {/* {compactContent(event.content, event.pubkey)} */}
-                      </p>
+                      </div>
                     )}
                   </div>
                 </div>
