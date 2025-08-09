@@ -39,7 +39,6 @@ export default function WidgetCardV2({
   const [initPublish, setInitPublish] = useState(false);
   const [progress, setProgress] = useState(0);
   const { t } = useTranslation();
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -290,6 +289,7 @@ export default function WidgetCardV2({
               {options && (
                 <OptionsDropdown
                   vertical={false}
+                  displayAbove={true}
                   options={[
                     <div
                       className="fit-container"

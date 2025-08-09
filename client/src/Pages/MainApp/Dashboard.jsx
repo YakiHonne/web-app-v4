@@ -1141,14 +1141,16 @@ const Widgets = ({ setPostToNote, localDraft }) => {
     return filter;
   };
 
-  const handleEventDeletion = () => {
+  const handleEventDeletion = (eventID) => {
     let tempArray = structuredClone(events[contentFrom]);
-    tempArray = tempArray.filter((event) => event.id !== deleteEvent.id);
-    dispatchEvents({
-      type: "remove-event",
-      toRemoveType: contentFrom,
-      events: tempArray,
-    });
+    tempArray = tempArray.filter((event) => event.id !== eventID);
+    // dispatchEvents({
+    //   type: "remove-event",
+    //   toRemoveType: contentFrom,
+    //   events: tempArray,
+    // });
+    dispatchEvents({ type: contentFrom, events: tempArray });
+
     setDeleteEvent(false);
   };
 
@@ -1158,16 +1160,6 @@ const Widgets = ({ setPostToNote, localDraft }) => {
 
   return (
     <>
-      {deleteEvent && (
-        <ToDeleteGeneral
-          eventId={deleteEvent.id}
-          title={deleteEvent.title}
-          kind={contentFrom}
-          refresh={handleEventDeletion}
-          cancel={() => setDeleteEvent(false)}
-          aTag={deleteEvent.aTag}
-        />
-      )}
       {selectedSW && (
         <LaunchSW metadata={selectedSW} exit={() => setSelectedSW("")} />
       )}
@@ -1187,7 +1179,7 @@ const Widgets = ({ setPostToNote, localDraft }) => {
                 {localDraft?.smartWidgetDraft && (
                   <>
                     <p className="c1-c">{t("A7noclE")}</p>
-                    <ContentCard event={localDraft?.smartWidgetDraft} />
+                    <ContentCard event={localDraft?.smartWidgetDraft} refreshAfterDeletion={handleEventDeletion}/>
                   </>
                 )}
               </div>
@@ -1211,6 +1203,7 @@ const Widgets = ({ setPostToNote, localDraft }) => {
                     key={event.id}
                     setDeleteEvent={setDeleteEvent}
                     setPostToNote={setPostToNote}
+                    refreshAfterDeletion={handleEventDeletion}
                   />
                 );
               })}
@@ -2086,148 +2079,6 @@ const RepCard = ({
         desc: `${t("ARJICtS")} 👏`,
       })
     );
-  };
-
-  const getOptions = () => {
-    if (event.kind === 30033) {
-      return [
-        <div
-          className="fit-container"
-          onClick={(e) => {
-            e.stopPropagation();
-            setPostToNote(
-              // `https://yakihonne.com/smart-widget-checker?naddr=${event.naddr}`
-              event
-            );
-          }}
-        >
-          <p>{t("AB8DnjO")}</p>
-        </div>,
-        <div onClick={copyID} className="pointer">
-          <p>{t("ApPw14o", { item: "naddr" })}</p>
-        </div>,
-        <Link
-          className="fit-container"
-          to={"/smart-widget-builder"}
-          state={{
-            ops: "clone",
-            metadata: { ...event },
-          }}
-        >
-          <p>{t("AyWVBDx")}</p>
-        </Link>,
-        <Link
-          className="fit-container"
-          to={`/smart-widget-checker?naddr=${event.naddr}`}
-        >
-          <p>{t("AavUrQj")}</p>
-        </Link>,
-        setDeleteEvent && (
-          <Link
-            className="fit-container"
-            to={"/smart-widget-builder"}
-            state={{
-              ops: "edit",
-              metadata: {
-                ...event,
-              },
-            }}
-          >
-            <p>{t("AsXohpb")}</p>
-          </Link>
-        ),
-        setDeleteEvent && (
-          <div className="fit-container" onClick={() => setDeleteEvent(event)}>
-            <p className="red-c">{t("Almq94P")}</p>
-          </div>
-        ),
-        <div className="fit-container fx-centered fx-start-h pointer">
-          <ShareLink
-            label={t("AGB5vpj")}
-            path={`/${event.naddr}`}
-            title={userMetadata.display_name || userMetadata.name}
-            description={event.content}
-            kind={1}
-            shareImgData={{
-              post: event,
-              author: userMetadata,
-              label: t("Az5ftet"),
-            }}
-          />
-        </div>,
-      ];
-    }
-    return [
-      <div
-        className="fit-container"
-        onClick={(e) => {
-          e.stopPropagation();
-          setPostToNote(event);
-          // setPostToNote(event.naddr);
-        }}
-      >
-        <p>{t("AB8DnjO")}</p>
-      </div>,
-      <div onClick={copyID} className="pointer">
-        <p>{t("ApPw14o", { item: "naddr" })}</p>
-      </div>,
-      setAddArtsToCur && [30004, 30005].includes(event.kind) && (
-        <div
-          className="fit-container"
-          onClick={(e) => {
-            e.stopPropagation();
-            setAddArtsToCur(event);
-          }}
-        >
-          <p>{t("Aby0Ea4")}</p>
-        </div>
-      ),
-      ([30023, 30024].includes(event.kind) ||
-        (setEditItem && event.kind !== 34235)) && (
-        <div
-          className="fit-container"
-          onClick={() => {
-            [30023, 30024].includes(event.kind)
-              ? navigate("/write-article", {
-                  state: {
-                    post_pubkey: event.pubkey,
-                    post_id: event.id,
-                    post_kind: event.kind,
-                    post_title: event.title,
-                    post_desc: event.description,
-                    post_thumbnail: event.image,
-                    post_tags: event.items,
-                    post_d: event.d,
-                    post_content: event.content,
-                    post_published_at: event.published_at,
-                  },
-                })
-              : setEditItem(event);
-          }}
-        >
-          <p>{t("AsXohpb")}</p>
-        </div>
-      ),
-      setDeleteEvent && (
-        <div className="fit-container" onClick={() => setDeleteEvent(event)}>
-          <p className="red-c">{t("Almq94P")}</p>
-        </div>
-      ),
-      <div className="fit-container fx-centered fx-start-h pointer">
-        <ShareLink
-          label={t("AGB5vpj")}
-          path={`/${event.naddr}`}
-          title={userMetadata.display_name || userMetadata.name}
-          description={event.content}
-          kind={1}
-          shareImgData={{
-            post: event,
-            author: userMetadata,
-            label: t("Az5ftet"),
-          }}
-        />
-      </div>,
-    ];
   };
 
   const navigate = useNavigate();
