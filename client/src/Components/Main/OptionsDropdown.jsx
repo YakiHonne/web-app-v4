@@ -35,7 +35,8 @@ export default function OptionsDropdown({
         if (optionsRef.current) {
           const rect = optionsRef.current.getBoundingClientRect();
           const distanceFromBottom = window.innerHeight - rect.bottom;
-          setDisplayAbove_(distanceFromBottom < 37.5 * (options.length - 1));
+          !displayAbove &&
+            setDisplayAbove_(distanceFromBottom < 37.5 * (options.length - 1));
         }
       }
       return !prev;
