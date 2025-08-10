@@ -129,7 +129,8 @@ export default function UserBalance() {
     localStorage?.setItem("isSatsHidden", ts);
   };
 
-  if (!(userKeys && (userKeys?.ext || userKeys?.sec || userKeys?.bunker))) return;
+  if (!(userKeys && (userKeys?.ext || userKeys?.sec || userKeys?.bunker)))
+    return;
   if (userKeys?.sec && userBalance == "N/A")
     return (
       <Link
@@ -146,7 +147,7 @@ export default function UserBalance() {
     );
   return (
     <div
-      className="fit-container fx-scattered box-pad-h-m userBalance-container mb-hide pointer"
+      className="fit-container fx-scattered box-pad-h-s userBalance-container mb-hide pointer"
       style={{ borderLeft: "2px solid var(--orange-main)", margin: ".75rem" }}
       onClick={(e) => {
         e.stopPropagation();
@@ -157,17 +158,16 @@ export default function UserBalance() {
         className="fx-centered  fit-container fx-start-h "
         style={{ rowGap: 0 }}
       >
-        <div className="fx-centered">
+        <div>
+          <p className="gray-c p-medium">Sats</p>
           {!isHidden && (
-            <h4>
+            <h4 style={{ minWidth: "max-content" }}>
               <NumberShrink value={userBalance} />
             </h4>
           )}
           {isHidden && <h4>***</h4>}
-          <div className="sats-24"></div>
         </div>
-
-        {/* {isLoading && <LoadingDots />} */}
+        <p className="gray-c">&#8596;</p>
         <SatsToUSD sats={userBalance} isHidden={isHidden} />
       </div>
       {!isHidden && (

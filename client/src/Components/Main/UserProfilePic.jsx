@@ -203,14 +203,14 @@ export default function UserProfilePic({
           <div
             style={{
               position: "absolute",
-
               top: "calc(100% + 2px)",
               width: "350px",
               zIndex: 200,
               overflow: "visible",
               backgroundColor: "var(--very-dim-gray)",
+              borderRadius: "18px",
             }}
-            className="fx-centered fx-col fx-start-h fx-start-v sc-s-18 box-pad-h-m box-pad-v-m drop-down-r"
+            className="fx-centered fx-col fx-start-h fx-start-v sc-s box-pad-h-m box-pad-v-m drop-down-r bg-sp"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="fit-container fx-scattered">
