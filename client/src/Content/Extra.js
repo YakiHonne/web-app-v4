@@ -1,6 +1,8 @@
 export const eventKinds = {
+    0: "metadata",
     1: "note",
     11: "note",
+    5: "deletion",
     7: "reactions",
     6: "reposts",
     30023: "article",
@@ -11,5 +13,12 @@ export const eventKinds = {
     34236: "video",
     300311: "smart widget",
     30031: "smart widget",
+    30033: "smart widget",
+    30078: "Custom",
     9734: "zaps",
+    10000: "Mute list",
+    10002: "Relay List Metadata",
+    10003: "Bookmark list",
+    10012: "Favorite relays list",
+    10015: "Interests list",
   };

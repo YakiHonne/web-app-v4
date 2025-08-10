@@ -678,9 +678,8 @@ export const getInboxRelaysForUser = async (pubkey) => {
     let userRelaysFromNOSTR = await getSubData([
       { kinds: [10050], authors: [pubkey] },
     ]);
-
     if (userRelaysFromNOSTR.data.length > 0) {
-      let relaysList = userRelaysFromNOSTR.data.tags
+      let relaysList = userRelaysFromNOSTR.data[0].tags
         .filter((_) => _[0] === "relay")
         .map((_) => _[1]);
       savefollowingsInboxRelays([{ pubkey, relays: relaysList }]);
@@ -689,6 +688,7 @@ export const getInboxRelaysForUser = async (pubkey) => {
     return [];
   } catch (err) {
     console.log(err);
+    return [];
   }
 };
 

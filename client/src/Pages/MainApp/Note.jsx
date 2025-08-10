@@ -399,6 +399,7 @@ export default function Note() {
                         size={64}
                         mainAccountUser={false}
                         user_id={note.pubkey}
+                        metadata={author}
                       />
                       <div className="box-pad-h-m fx-centered fx-col fx-start-v">
                         <div className="fx-centered">

@@ -307,7 +307,7 @@ export default function KindOne({
                   mainAccountUser={false}
                   user_id={userProfile.pubkey}
                   img={userProfile.picture}
-                  metadata={userProfile}
+                  metadata={minimal ? undefined : userProfile}
                 />
               </div>
               <div

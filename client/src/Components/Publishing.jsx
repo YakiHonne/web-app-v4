@@ -20,6 +20,7 @@ import {
 import Date_ from "./Date_";
 import ProgressCirc from "./ProgressCirc";
 import { useTranslation } from "react-i18next";
+import { eventKinds } from "../Content/Extra";
 
 const PUBLISHING_TIMEOUT = 3000;
 
@@ -564,9 +565,10 @@ export default function Publishing() {
                           }
                         >
                           <div className="fit-container fx-centered fx-start-h">
-                            <p>
+                            <p className="p-maj">
+                              {eventKinds[event.ndkEvent.kind]}{" "}
                               <span className="orange-c">
-                                {t("ARyebOH", { kind: event.ndkEvent.kind })}
+                                ({t("ARyebOH", { kind: event.ndkEvent.kind })})
                               </span>
                             </p>
                             <Date_
