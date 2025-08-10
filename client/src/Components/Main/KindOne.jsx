@@ -355,8 +355,8 @@ export default function KindOne({
                       </div>
                     ) : (
                       <div className="p-six-lines" ref={noteRef}>
-                        {event.note_tree}
-                        {/* {compactContent(event.content, event.pubkey)} */}
+                        {/* {event.note_tree} */}
+                        {compactContent(event.content, event.pubkey)}
                       </div>
                     )}
                   </div>
