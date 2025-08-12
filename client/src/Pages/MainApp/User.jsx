@@ -809,7 +809,7 @@ const UserFeed = ({ user }) => {
     const fetchData = async () => {
       try {
         let filter = getNotesFilter();
-        const res = await getSubData(filter, 200);
+        const res = await getSubData(filter, 50);
         let data = res.data.slice(0, 100);
         let pubkeys = res.pubkeys;
         let ev = [];
