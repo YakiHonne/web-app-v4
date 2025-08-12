@@ -81,12 +81,22 @@ export default function Explore() {
     <div>
       <Helmet>
         <title>Yakihonne | Discover</title>
-        <meta name="description" content={"Explore curated content tailored to your interests in the decentralized Nostr ecosystem. Discover new voices and perspectives outside traditional media channels."} />
+        <meta
+          name="description"
+          content={
+            "Explore curated content tailored to your interests in the decentralized Nostr ecosystem. Discover new voices and perspectives outside traditional media channels."
+          }
+        />
         <meta
           property="og:description"
-          content={"Explore curated content tailored to your interests in the decentralized Nostr ecosystem. Discover new voices and perspectives outside traditional media channels."}
+          content={
+            "Explore curated content tailored to your interests in the decentralized Nostr ecosystem. Discover new voices and perspectives outside traditional media channels."
+          }
         />
-        <meta property="og:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
+        <meta
+          property="og:image"
+          content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+        />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="700" />
         <meta property="og:url" content={`https://yakihonne.com/discover`} />
@@ -96,7 +106,9 @@ export default function Explore() {
         <meta property="twitter:title" content={"Yakihonne | Discover"} />
         <meta
           property="twitter:description"
-          content={"Explore curated content tailored to your interests in the decentralized Nostr ecosystem. Discover new voices and perspectives outside traditional media channels."}
+          content={
+            "Explore curated content tailored to your interests in the decentralized Nostr ecosystem. Discover new voices and perspectives outside traditional media channels."
+          }
         />
         <meta
           property="twitter:image"
@@ -210,9 +222,9 @@ const ExploreFeed = ({
       const algoRelay =
         selectedCategory.group === "af" ? [selectedCategory.value] : [];
       let [articles, curations, videos] = await Promise.all([
-        getSubData(artsFilter, 200, algoRelay),
-        getSubData(curationsFilter, 200, algoRelay),
-        getSubData(videosFilter, 200, algoRelay),
+        getSubData(artsFilter, 50, algoRelay),
+        getSubData(curationsFilter, 50, algoRelay),
+        getSubData(videosFilter, 50, algoRelay),
       ]);
 
       let articles_ = sortEvents(articles.data).filter(
