@@ -541,11 +541,11 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
       const algoRelay =
         selectedCategory.group === "af" ? [selectedCategory.value] : [];
 
-      const filterSpeed = selectedCategory.group === "af" ? 1000 : 320;
+      // const filterSpeed = selectedCategory.group === "af" ? 1000 : 320;
 
       const data = await getSubData(
         filter,
-        filterSpeed,
+        50,
         algoRelay,
         undefined,
         200
@@ -594,7 +594,7 @@ const HomeFeed = ({ selectedCategory, selectedFilter }) => {
           let events = [];
           let eventsPubkeys = [];
 
-          const res = await getSubData([{ ids: data }], 200);
+          const res = await getSubData([{ ids: data }], 50);
 
           events = res.data
             .map((event) => {
