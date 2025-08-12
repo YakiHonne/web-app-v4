@@ -3,23 +3,37 @@ import { useSelector } from "react-redux";
 import { userLogout } from "../Helpers/Controlers";
 import { redirectToLogin } from "../Helpers/Helpers";
 import { useTranslation } from "react-i18next";
-let Hero404 = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/404-hero.png";
-let HeroNostrNotConnected = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/nostr-not-connected.png";
-let HeroNostrunauthorized = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/nostr-unauthorized.png";
-let HeroNostrNoUN = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/un-hero.png";
-let HeroNostrunauthorizedMessages = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/unauthorized-messages.png";
-let HeroDMS = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/DMS.png";
-let HeroDMSWaiting = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/DMS-waiting.gif";
-let HeroYakiChest = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/trophy.png";
-let HeroWallet = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/wallet.png";
-let HeroWidgets = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/widgets.png";
-let HeroWidgetsDraft = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/draft.png";
-let HeroUnsupported = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/unsupported.png";
-let HeroMutedUser = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/muted-user.png";
-let HeroMaintenance = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/maintenance.png";
+let Hero404 =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/404-hero.png";
+let HeroNostrNotConnected =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/nostr-not-connected.png";
+let HeroNostrunauthorized =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/nostr-unauthorized.png";
+let HeroNostrNoUN =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/un-hero.png";
+let HeroNostrunauthorizedMessages =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/unauthorized-messages.png";
+let HeroDMS =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/DMS.png";
+let HeroDMSWaiting =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/DMS-waiting.gif";
+let HeroYakiChest =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/trophy.png";
+let HeroWallet =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/wallet.png";
+let HeroWidgets =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/widgets.png";
+let HeroWidgetsDraft =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/draft.png";
+let HeroUnsupported =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/unsupported.png";
+let HeroMutedUser =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/muted-user.png";
+let HeroMaintenance =
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/maintenance.png";
 let HeroAI = "https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ai.png";
-let LoginWithAPI = "./Main/LoginWithAPI";
-let AddWallet = "./Main/AddWallet";
+import LoginWithAPI from "./Main/LoginWithAPI";
+import AddWallet from "./Main/AddWallet";
 
 export default function PagePlaceholder({ page, onClick = null }) {
   const userKeys = useSelector((state) => state.userKeys);
