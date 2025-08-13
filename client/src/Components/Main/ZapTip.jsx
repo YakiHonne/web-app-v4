@@ -37,9 +37,7 @@ export default function ZapTip({
   setReceivedEvent = () => null,
   isZapped = false,
 }) {
-  const [callback, setCallback] = useState(false);
   const [showCashier, setCashier] = useState(false);
-  const [lnbcAmount, setLnbcAmount] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const nostrEventIDEncode = useMemo(
     () => getNostrEventIDEncode(aTag, eTag),
@@ -69,7 +67,7 @@ export default function ZapTip({
           <PaymentGateway
             recipientAddr={recipientLNURL}
             recipientPubkey={recipientPubkey}
-            paymentAmount={lnbcAmount}
+            paymentAmount={0}
             nostrEventIDEncode={nostrEventIDEncode}
             setReceivedEvent={setReceivedEvent}
             exit={() => setCashier(false)}
