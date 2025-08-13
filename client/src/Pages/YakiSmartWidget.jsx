@@ -51,22 +51,22 @@ const features = [
 
 const templates = [
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/user-engagement-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/user-engagement-template-demo.mp4",
     title: "User Engagement",
     desc: "This smart widget enhances user experiences and drive active participation with features that keep your audience engaged and invested.",
   },
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/bitcoin-finance-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/bitcoin-finance-template-demo.mp4",
     title: "Bitcoin Finance",
     desc: "This smart widget unlocks the potentials of Bitcoin finance, featuring Lightning Network transactions and Nostr-oriented actions.",
   },
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/product-growth-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/product-growth-template-demo.mp4",
     title: "Product Growth",
     desc: "This smart widget accelerates product growth, equipped with crowdfunding capabilities and instant dynamic redirections. Seamlessly direct users to key actions with real-time flexibility.",
   },
   {
-    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/governance-template-demo.mp4",
+    url: "https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/governance-template-demo.mp4",
     title: "Governance",
     desc: "This smart widget empowers communities to express their collective voice, facilitating transparent decision-making and strengthening community governance.",
   },
@@ -189,11 +189,11 @@ export default function YakiSmartWidgets() {
           }}
           className="fit-container"
           // src={
-          //   "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/videos/yakihonne-mobile-app-promo.mp4"
+          //   "https://yakihonne.s3.ap-east-1.amazonaws.com/videos/yakihonne-mobile-app-promo.mp4"
           // }
         >
           <source
-            src="https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/sw-videos/smart-widgets.mp4"
+            src="https://yakihonne.s3.ap-east-1.amazonaws.com/sw-videos/smart-widgets.mp4"
             type="video/mp4"
           />{" "}
           Your browser does not support HTML5 video.
