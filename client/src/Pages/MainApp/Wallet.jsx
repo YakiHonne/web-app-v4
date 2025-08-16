@@ -1,15 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { webln } from "@getalby/sdk";
-import { Helmet } from "react-helmet";
 import ArrowUp from "../../Components/ArrowUp";
-import Sidebar from "../../Components/Main/Sidebar";
 import axios from "axios";
 import PagePlaceholder from "../../Components/PagePlaceholder";
 import * as secp from "@noble/secp256k1";
 import SatsToUSD from "../../Components/Main/SatsToUSD";
 import {
   decodeUrlOrAddress,
-  downloadAsFile,
   encodeLud06,
   getBech32,
   getEmptyuserMetadata,
@@ -29,12 +26,10 @@ import NProfilePreviewer from "../../Components/Main/NProfilePreviewer";
 import { copyText, getWallets, updateWallets } from "../../Helpers/Helpers";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserBalance } from "../../Store/Slides/UserData";
-import { setToast, setToPublish } from "../../Store/Slides/Publishers";
+import { setToast } from "../../Store/Slides/Publishers";
 import { saveUsers } from "../../Helpers/DB";
 import { ndkInstance } from "../../Helpers/NDKInstance";
-import OptionsDropdown from "../../Components/Main/OptionsDropdown";
 import { useTranslation } from "react-i18next";
-import { t } from "i18next";
 import { walletWarning } from "../../Helpers/Controlers";
 import EventOptions from "../../Components/ElementOptions/EventOptions";
 
@@ -315,7 +310,7 @@ export default function Wallet() {
       )}
 
       <div>
-        <Helmet>
+        {/* <Helmet>
           <title>Yakihonne | Wallet</title>
           <meta name="description" content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem." />
           <meta property="og:description" content="Manage your wallet" />
@@ -329,7 +324,7 @@ export default function Wallet() {
           <meta property="twitter:title" content="Manage your wallet" />
           <meta property="twitter:description" content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem." />
           <meta property="twitter:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
-        </Helmet>
+        </Helmet> */}
         <ArrowUp />
         <div className="fx-centered fit-container  fx-start-v">
           <div className="box-pad-h-m main-middle">
