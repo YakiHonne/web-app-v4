@@ -6,7 +6,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   addWidgetPathToUrl,
   assignClientTag,
-  extractRootDomain,
   getWallets,
 } from "../../Helpers/Helpers";
 import { setToast } from "../../Store/Slides/Publishers";
@@ -684,6 +683,7 @@ const GenerateManifestFile = ({ exit }) => {
   useEffect(() => {
     if (developerPubkey !== developer.pubkey) {
       const data = getUser(developerPubkey);
+
       if (data) setDeveloper(data);
       else setDeveloper(getEmptyuserMetadata(developerPubkey));
     }
@@ -801,7 +801,7 @@ const GenerateManifestFile = ({ exit }) => {
                   full={true}
                   onClick={(data) => {
                     setShowUsersList(false);
-                    setDeveloperPubkey(data);
+                    setDeveloperPubkey(data.pubkey);
                   }}
                 />
                 <button
