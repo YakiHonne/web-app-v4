@@ -1360,7 +1360,6 @@ const englishTranslation = {
   ARDBNh7: "Display recommended posts and articles in your feed.",
   AXgwD7C: "Show topic and interest recommendations for discovery.",
   AKYcP6g: "Add custom translation service",
-
   AyMRcJY: "Raw event data",
   AUrrk1e: "Show raw event",
   Aq791XG: "Export all",
@@ -1371,12 +1370,12 @@ const englishTranslation = {
   Aopt3V9: "Add content",
   AZxuurd: "Posted on",
   A6VczZW: "Kind",
+  A0isRl7: "Reload app",
+  AwHZ4t1: "Developed by",
 };
 
 export default englishTranslation;
 
-// A0isRl7: "",
-// AwHZ4t1: "",
 // AHhMsNx: "",
 // ACSIT4p: "",
 // Afhjw7K: "",

@@ -1374,6 +1374,8 @@ const japaneseTranslation = {
   AyBFzxq: "アクティビティに基づいてフォローする推奨ユーザーを表示します。",
   ARDBNh7: "フィードに推奨される投稿と記事を表示します。",
   AXgwD7C: "発見のためのトピックと関心の推奨事項を表示します。",
+  A0isRl7: "リロードアプリ",
+  AwHZ4t1: "によって開発されました",
 };
 
 export default japaneseTranslation;

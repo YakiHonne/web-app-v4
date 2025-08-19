@@ -1378,6 +1378,8 @@ const spanishTranslation = {
     "Mostrar a los usuarios recomendados para seguir según su actividad.",
   ARDBNh7: "Muestre publicaciones y artículos recomendados en su feed.",
   AXgwD7C: "Mostrar tema e recomendaciones de interés para el descubrimiento.",
+  A0isRl7: "Aplicación de recarga",
+  AwHZ4t1: "Desarrollado por",
 };
 
 export default spanishTranslation;

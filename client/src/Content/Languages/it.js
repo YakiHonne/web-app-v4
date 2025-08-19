@@ -1388,6 +1388,8 @@ const italianTranslation = {
     "Mostra agli utenti consigliati di seguire in base alla tua attività.",
   ARDBNh7: "Visualizza post e articoli consigliati nel tuo feed.",
   AXgwD7C: "Mostra consigli su argomenti e interessi per la scoperta.",
+  A0isRl7: "Ricarica app",
+  AwHZ4t1: "Sviluppato da",
 };
 
 export default italianTranslation;

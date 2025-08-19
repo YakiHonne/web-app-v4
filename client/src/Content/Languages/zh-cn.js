@@ -1273,15 +1273,8 @@ const chineseTranslation = {
   AyBFzxq: "根据我的行为推荐可能关注的用户",
   ARDBNh7: "在我的动态中显示推荐的帖子和文章",
   AXgwD7C: "展示我可能感兴趣的话题和内容推荐",
+  A0isRl7: "重新加载应用",
+  AwHZ4t1: "开发",
 };
 
 export default chineseTranslation;
-// const reorderObjectByValues = (obj) => {
-//   const sortedEntries = Object.entries(obj).sort(([, valueA], [, valueB]) =>
-//     valueA.localeCompare(valueB)
-//   );
-
-//   return Object.fromEntries(sortedEntries);
-// };
-
-// console.log(JSON.stringify(reorderObjectByValues(englishTranslation), null, 2));

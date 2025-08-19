@@ -135,7 +135,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
     dispatch(
       setToast({
         type: 1,
-        desc: "Link was copied",
+        desc: t("AfnTOQk"),
       })
     );
   };
@@ -209,11 +209,11 @@ export default function MiniApp({ url, exit, setReturnedData }) {
               options={[
                 <div className="fx-centered pointer">
                   <div className="copy"></div>
-                  <p onClick={copyURL}>Copy link</p>
+                  <p onClick={copyURL}>{t("AahCFK4")}</p>
                 </div>,
                 <div className="fx-centered">
                   <div className="switch-arrows"></div>
-                  <p onClick={reloadiFrame}>Reload app</p>
+                  <p onClick={reloadiFrame}>{t("A0isRl7")}</p>
                 </div>,
               ]}
             />
@@ -267,6 +267,7 @@ export default function MiniApp({ url, exit, setReturnedData }) {
 }
 
 const UserPreview = ({ pubkey }) => {
+  const {t} = useTranslation()
   const { userProfile } = useUserProfile(pubkey);
   if (!pubkey) return null;
   return (
@@ -282,7 +283,7 @@ const UserPreview = ({ pubkey }) => {
           size={48}
         />
         <div>
-          <p className="gray-c p-medium">Developed by</p>
+          <p className="gray-c p-medium">{t("AwHZ4t1")}</p>
           <p className="p-maj p-big">
             {userProfile.display_name || userProfile.name}
           </p>
