@@ -59,11 +59,10 @@ export default function EventOptions({
     sig: event.sig,
   };
   let path = getLinkFromAddr(
-    event.nEvent || event.naddr || event.pubkey
-      ? nip19.npubEncode(event.pubkey)
-      : ""
+    event.nEvent ||
+      event.naddr ||
+      (event.pubkey ? nip19.npubEncode(event.pubkey) : "")
   );
-
   const postAsNote = (
     <div
       onClick={(e) => {
@@ -459,7 +458,7 @@ export default function EventOptions({
     setDeleteEvent(false);
     refreshAfterDeletion(event.id);
   };
-  
+
   const linkWallet = async () => {
     if (!selectWalletToLink.includes("@")) {
       walletWarning();
