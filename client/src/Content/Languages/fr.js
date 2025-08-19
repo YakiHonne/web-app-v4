@@ -52,7 +52,8 @@ const frenchTranslation = {
   AtlqBGm: "Marque-page",
   A8RA6c7: "Gérer vos centres d'intérêt",
   AI11KEH: "Commencer",
-  A70Zdvz: "Élargissez votre monde en ajoutant ce qui vous fascine. Sélectionnez vos centres d'intérêt et laissez le voyage commencer.",
+  A70Zdvz:
+    "Élargissez votre monde en ajoutant ce qui vous fascine. Sélectionnez vos centres d'intérêt et laissez le voyage commencer.",
   AIUAUcP: "Ajouter des centres d'intérêt",
   AcqUGhB: "Inscrit le {{date}}",
   A4IGG0z: "points",
@@ -106,7 +107,8 @@ const frenchTranslation = {
   ATta6yb: "DM sécurisés",
   Al6NH4U: "Activer les DM sécurisés",
   AfN9sMV: "Revenir à l'ancien système",
-  AakbxOk: "Pour plus de sécurité et de confidentialité, considérez activer les DM sécurisés.",
+  AakbxOk:
+    "Pour plus de sécurité et de confidentialité, considérez activer les DM sécurisés.",
   ARPGCjx: "Vous vous êtes répondu",
   AUvbLfk: "Vous avez répondu à",
   AyI4PnF: "Vous a répondu",
@@ -129,23 +131,30 @@ const frenchTranslation = {
   AB4BSCe: "Annuler",
   AVCdQku: "Continuer en tant qu'invité",
   AHXrr4Y: "Créer un compte",
-  AdrCWCj: "Votre nom est ce que les gens voient ! Veuillez ne pas le laisser vide",
-  AQ12OQz: "Impossible de créer votre portefeuille, réessayez plus tard dans les paramètres",
-  AfM6xbs: "Une erreur s'est produite lors du téléchargement de votre photo de profil, utilisez un format supporté avec pas plus de 5 Mo",
-  AnmPNHc: "Une erreur s'est produite lors du téléchargement de votre couverture, utilisez un format supporté avec pas plus de 5 Mo",
+  AdrCWCj:
+    "Votre nom est ce que les gens voient ! Veuillez ne pas le laisser vide",
+  AQ12OQz:
+    "Impossible de créer votre portefeuille, réessayez plus tard dans les paramètres",
+  AfM6xbs:
+    "Une erreur s'est produite lors du téléchargement de votre photo de profil, utilisez un format supporté avec pas plus de 5 Mo",
+  AnmPNHc:
+    "Une erreur s'est produite lors du téléchargement de votre couverture, utilisez un format supporté avec pas plus de 5 Mo",
   A1HsCqp: "Télécharger la couverture",
   AnD39Ci: "Ajouter une photo",
   At0Sp8H: "Donnez-vous un nom..",
   ARTqPc0: "Dites quelque chose sur vous..",
   A3fxtP2: "Découvrez ce qui vous inspire",
-  AmiGAX0: "Personnalisez votre expérience en sélectionnant vos principaux centres d'intérêt",
+  AmiGAX0:
+    "Personnalisez votre expérience en sélectionnant vos principaux centres d'intérêt",
   AZzyBMI: "+ {{count}} personnes de plus",
   AqBdu7X: "Vous n'avez pas de portefeuille ?",
   AOxmFz5: "Créez un portefeuille pour envoyer et recevoir des zaps !",
   AimqDYY: "Vous êtes prêt !",
   AvjCl1G: "Créer un portefeuille",
-  AZfj4DI: "Vous pouvez trouver votre clé secrète de compte et votre clé secrète de connexion de portefeuille dans vos paramètres. Ces clés sont essentielles pour un accès sécurisé à votre compte et portefeuille, veuillez les garder en sécurité et privées.",
-  AxGSiUc: "Vous pouvez trouver votre clé secrète de compte dans vos paramètres. Ces clés sont essentielles pour un accès sécurisé à votre compte et portefeuille, veuillez les garder en sécurité et privées.",
+  AZfj4DI:
+    "Vous pouvez trouver votre clé secrète de compte et votre clé secrète de connexion de portefeuille dans vos paramètres. Ces clés sont essentielles pour un accès sécurisé à votre compte et portefeuille, veuillez les garder en sécurité et privées.",
+  AxGSiUc:
+    "Vous pouvez trouver votre clé secrète de compte dans vos paramètres. Ces clés sont essentielles pour un accès sécurisé à votre compte et portefeuille, veuillez les garder en sécurité et privées.",
   AF7iGeG: "Précédent",
   AgGi8rh: "Suivant",
   AB0SnxL: "Commençons !",
@@ -161,10 +170,12 @@ const frenchTranslation = {
   ApSnq9V: "Masquer l'historique du fil",
   AKELUbQ: "Réactiver l'utilisateur",
   AGMxuQ0: "Masquer l'utilisateur",
-  Agge1Vg: "Nous n'avons pas pu trouver cette note, elle a peut-être été supprimée par son auteur",
+  Agge1Vg:
+    "Nous n'avons pas pu trouver cette note, elle a peut-être été supprimée par son auteur",
   AWroZQj: "Retour à l'accueil",
   AAbA1Xn: "Note non trouvée",
-  AxlGS0U: "Une erreur s'est produite lors du téléchargement de votre couverture, utilisez un format supporté avec pas plus de 5 Mo",
+  AxlGS0U:
+    "Une erreur s'est produite lors du téléchargement de votre couverture, utilisez un format supporté avec pas plus de 5 Mo",
   AmcaRMQ: "Télécharger la couverture",
   AadiJFs: "Ajouter une photo",
   ALtjgkI: "Nom d'affichage",
@@ -213,7 +224,8 @@ const frenchTranslation = {
   A8PtjSa: "Chemin du serveur",
   ALyj7Li: "Ajouter un serveur",
   A3KL0O7: "Messagerie directe sécurisée",
-  AsTdJ5U: "En activant ceci, vous utiliserez la nouvelle spécification pour la messagerie privée qui est basée sur",
+  AsTdJ5U:
+    "En activant ceci, vous utiliserez la nouvelle spécification pour la messagerie privée qui est basée sur",
   AgOr2Vf: ", donc la désactiver vous permettra d'utiliser l'ancienne version",
   ACERu54: "Portefeuilles",
   A8fEwNq: "Ajouter un portefeuille",
@@ -232,11 +244,13 @@ const frenchTranslation = {
   ACALoWH: "Coffre Yaki",
   Azb0lto: "Connecter",
   AyXwdfE: "Déconnexion",
-  AFZ1jAD: "Nous nous efforçons de tirer le meilleur parti de Nostr, soutenez-nous ci-dessous ou envoyez-nous vos précieux commentaires.",
+  AFZ1jAD:
+    "Nous nous efforçons de tirer le meilleur parti de Nostr, soutenez-nous ci-dessous ou envoyez-nous vos précieux commentaires.",
   ACzeK4g: "Aucune liste de masqués",
   Ap5S8lY: "La liste des masqués est vide",
   APJU882: "Supprimer le portefeuille ?",
-  AOlHR1d: "Vous êtes sur le point de supprimer ce portefeuille, assurez-vous de copier votre secret",
+  AOlHR1d:
+    "Vous êtes sur le point de supprimer ce portefeuille, assurez-vous de copier votre secret",
   ALPrAZz: "Rechercher ou ajouter un relais",
   AD6LbxW: "Propriétaire",
   ADSorr1: "Contact",
@@ -251,7 +265,8 @@ const frenchTranslation = {
   AM4vyRX: "widgets",
   AWj53bb: "faits saillants",
   AgnT2y8: "Constructeur de widget intelligent",
-  AG1WdKb: "Commencez à construire et personnaliser votre widget intelligent pour l'utiliser sur le réseau Nostr",
+  AG1WdKb:
+    "Commencez à construire et personnaliser votre widget intelligent pour l'utiliser sur le réseau Nostr",
   AbvONJd: "Widget vierge",
   AaXbNvT: "Mes brouillons",
   A60QDNZ: "Modèles",
@@ -268,7 +283,8 @@ const frenchTranslation = {
   AYmIvXo: "Couches",
   Ajuho3Z: "Conteneur",
   APW25Bv: "Attention !",
-  ALE9zp8: "Vous passez à une mise en page mono tout en ayant des éléments des deux côtés, cela effacera le contenu du conteneur, souhaitez-vous continuer ?",
+  ALE9zp8:
+    "Vous passez à une mise en page mono tout en ayant des éléments des deux côtés, cela effacera le contenu du conteneur, souhaitez-vous continuer ?",
   ADtXEGl: "Effacer les éléments",
   AL1bSXN: "Ajouter un composant",
   AcV4mZS: "Choisir une mise en page",
@@ -343,12 +359,14 @@ const frenchTranslation = {
   Ahy97Wm: "{{count}} caractères restants",
   A2vH1G8: "Je trouve cela trompeur",
   Ao5adkz: "Faites entendre votre voix !",
-  A7qYBVd: "Connectez-vous à votre compte maintenant et soyez un contributeur pour une meilleure communauté",
+  A7qYBVd:
+    "Connectez-vous à votre compte maintenant et soyez un contributeur pour une meilleure communauté",
   Aundnph: "Vous avez déjà contribué !",
   AtKC9kH: "Notes de la communauté",
   Ay17eyW: "Portefeuille communautaire",
   AtTBm8o: "Lire sur la vérification des notes",
-  A9YOTCh: "Nous avons fait un article pour vous aider à comprendre notre objectif",
+  A9YOTCh:
+    "Nous avons fait un article pour vous aider à comprendre notre objectif",
   Azigg0N: "Lire l'article",
   AlAlx8I: "Valeurs de vérification des notes",
   AEkp3uJ: "Contribuer à construire la compréhension",
@@ -360,12 +378,15 @@ const frenchTranslation = {
   Ak8B1oL: "A besoin de votre aide",
   ALbnctt: "Noté utile",
   AEoE8CH: "Vous n'avez aucune récompense !",
-  A5nF77W: "Commencez à noter les notes des gens ou contribuez à la communauté en écrivant des notes non censurées.",
+  A5nF77W:
+    "Commencez à noter les notes des gens ou contribuez à la communauté en écrivant des notes non censurées.",
   Aik5uGa: "Voir comment vous êtes récompensé",
   AMxTRuK: "Être récompensé !",
-  AX35a5g: "Connectez-vous à votre compte pour voir vos récompenses pour votre contribution communautaire",
+  AX35a5g:
+    "Connectez-vous à votre compte pour voir vos récompenses pour votre contribution communautaire",
   ApmJsGe: "Non autorisé !",
-  AQ3K2E1: "Vous devez vous connecter à votre compte en utilisant votre clé secrète ou en utilisant une extension pour pouvoir voir vos récompenses",
+  AQ3K2E1:
+    "Vous devez vous connecter à votre compte en utilisant votre clé secrète ou en utilisant une extension pour pouvoir voir vos récompenses",
   A34VVOo: "Voir toutes les tentatives",
   A8rd1CZ: "Note non censurée",
   Ais0q3D: "fermer",
@@ -382,14 +403,17 @@ const frenchTranslation = {
   AXjyFcp: "Mes récompenses",
   AckKGvv: "Actualiser",
   Ao1YlmX: "Lien cassé",
-  AWq8fUG: "Il y a un problème avec le lien, nous n'avons pas pu traiter votre connexion",
+  AWq8fUG:
+    "Il y a un problème avec le lien, nous n'avons pas pu traiter votre connexion",
   A4FVHJa: "Impossible d'extraire votre adresse lightning.",
   AhM21RA: "Entrée invalide, veuillez vérifier votre URL NWC",
   AO3Hd2n: "Nostr Wallet Connect",
-  Aq8tvve: "Ajouter un nouveau portefeuille en utilisant Nostr Wallet Connect (NWC)",
+  Aq8tvve:
+    "Ajouter un nouveau portefeuille en utilisant Nostr Wallet Connect (NWC)",
   ArGP8uD: "Visiter nwc.getalby.com",
   ARihsdt: "Vous utilisez Alby et voulez obtenir votre NWC ?",
-  ANFYp9V: "La taille de l'image a dépassé la limite requise, la taille maximale autorisée est de 1 Mo.",
+  ANFYp9V:
+    "La taille de l'image a dépassé la limite requise, la taille maximale autorisée est de 1 Mo.",
   Ao1TlO5: "Aperçu",
   AiUwe3v: "Sauvegarde",
   ABg9vzA: "Sauvegarder comme brouillon",
@@ -441,11 +465,14 @@ const frenchTranslation = {
   AfDrjvB: "{{level}} niveaux requis",
   AGLUuNR: "Compris !",
   AIdLWAb: "Points consommables de Yakihonne",
-  AIjkhSn: "Bientôt les utilisateurs pourront utiliser les points consommables dans l'ensemble d'activités suivant :",
+  AIjkhSn:
+    "Bientôt les utilisateurs pourront utiliser les points consommables dans l'ensemble d'activités suivant :",
   A6fM6gw: "Soumettre votre contenu pour attestation",
   AaZQAOK: "Échanger des points pour publier des notes payantes",
-  Av0e6zQ: "Échanger des points contre des SATs (Des seuils aléatoires sont sélectionnés et vous serez notifié chaque fois que l'échange sera disponible)",
-  A3moqWy: "Commencez à gagner et tirez le meilleur parti de vos points Yaki 🎉",
+  Av0e6zQ:
+    "Échanger des points contre des SATs (Des seuils aléatoires sont sélectionnés et vous serez notifié chaque fois que l'échange sera disponible)",
+  A3moqWy:
+    "Commencez à gagner et tirez le meilleur parti de vos points Yaki 🎉",
   AHrJpSX: "Copier la clé publique de l'utilisateur",
   AP8YaBk: "Impact de l'utilisateur",
   AawXy2A: "Partager le profil",
@@ -459,21 +486,30 @@ const frenchTranslation = {
   A70xEba: "{{name}} n'a encore publié aucune vidéo",
   A1MlrcU: "{{name}} n'a encore publié aucun widget intelligent",
   Aqnw40M: "Notes qui ont gagné le statut d'Utile",
-  AKWbsS4: "Ces notes sont maintenant affichées à tous ceux qui voient la publication, ajoutant du contexte et aidant à garder les gens informés.",
+  AKWbsS4:
+    "Ces notes sont maintenant affichées à tous ceux qui voient la publication, ajoutant du contexte et aidant à garder les gens informés.",
   AsC8aFW: "Notes qui ont atteint le statut de Pas Utile",
-  AniOQt4: "Ces notes ont été notées Pas Utile par suffisamment de contributeurs, y compris ceux qui ne sont parfois pas d'accord dans leurs notations passées.",
+  AniOQt4:
+    "Ces notes ont été notées Pas Utile par suffisamment de contributeurs, y compris ceux qui ne sont parfois pas d'accord dans leurs notations passées.",
   ArkRgJu: "Notes qui ont besoin de plus de notations",
   AWR7eI9: "Notes qui n'ont pas encore un statut d'Utile ou Pas Utile.",
   APnZzQa: "Notations qui ont aidé une note à gagner le statut d'Utile",
-  AFwN7DV: "Ces notations ont identifié des notes Utiles qui sont affichées comme contexte sur les publications et aident à garder les gens informés.",
+  AFwN7DV:
+    "Ces notations ont identifié des notes Utiles qui sont affichées comme contexte sur les publications et aident à garder les gens informés.",
   AYnS32k: "Notations qui ont aidé une note à atteindre le statut de Pas Utile",
-  A7oOA48: "Ces notations améliorent les Notes Communautaires en donnant des commentaires aux auteurs de notes, et permettent aux contributeurs de se concentrer sur les notes les plus prometteuses.",
-  AjCrjhx: "Notations de Pas Utile sur des notes qui ont fini avec un statut d'Utile",
-  AU1uyHU: "Ces notations sont courantes et peuvent conduire à des changements de statut si suffisamment de personnes sont d'accord qu'une note 'Utile' n'est pas suffisamment utile.",
-  ArOeceG: "Notations d'Utile sur des notes qui ont fini avec un statut de Pas Utile",
-  A41M6w5: "Ces notations sont comptées deux fois car elles indiquent souvent un soutien pour des notes que d'autres ont jugées de faible qualité.",
+  A7oOA48:
+    "Ces notations améliorent les Notes Communautaires en donnant des commentaires aux auteurs de notes, et permettent aux contributeurs de se concentrer sur les notes les plus prometteuses.",
+  AjCrjhx:
+    "Notations de Pas Utile sur des notes qui ont fini avec un statut d'Utile",
+  AU1uyHU:
+    "Ces notations sont courantes et peuvent conduire à des changements de statut si suffisamment de personnes sont d'accord qu'une note 'Utile' n'est pas suffisamment utile.",
+  ArOeceG:
+    "Notations d'Utile sur des notes qui ont fini avec un statut de Pas Utile",
+  A41M6w5:
+    "Ces notations sont comptées deux fois car elles indiquent souvent un soutien pour des notes que d'autres ont jugées de faible qualité.",
   Am1FnXt: "En attente",
-  AnvvOLs: "Notations sur des notes qui n'ont actuellement pas un statut d'Utile ou Pas Utile.",
+  AnvvOLs:
+    "Notations sur des notes qui n'ont actuellement pas un statut d'Utile ou Pas Utile.",
   AlBboNU: "Impact d'écriture",
   Ar691Yl: "Impact de notation",
   AEby39n: "Envoyer un message à {{name}}",
@@ -482,7 +518,8 @@ const frenchTranslation = {
   AtZrjns: "Aucune description.",
   As4mP1x: "Marquer la vidéo",
   AT9KulV: "Partager la vidéo",
-  A4R0ICw: "Nous n'avons pas pu récupérer votre adresse depuis votre secret NWC, veuillez vérifier votre fournisseur de service d'adresse lightning pour copier votre adresse ou pour mettre à jour votre profil en conséquence.",
+  A4R0ICw:
+    "Nous n'avons pas pu récupérer votre adresse depuis votre secret NWC, veuillez vérifier votre fournisseur de service d'adresse lightning pour copier votre adresse ou pour mettre à jour votre profil en conséquence.",
   ARXDO1q: "Sélectionnez votre portefeuille",
   AnXYtQy: "Portefeuilles connectés",
   AqlBPla: "Lié",
@@ -544,7 +581,8 @@ const frenchTranslation = {
   AA8XLSe: "URL de l'image",
   A27e02j: "Le contenu ne doit pas être vide",
   A8kBPLg: "Le sondage doit avoir au moins deux options.",
-  AGMAEDk: "L'heure de fermeture du sondage doit être supérieure à l'heure actuelle",
+  AGMAEDk:
+    "L'heure de fermeture du sondage doit être supérieure à l'heure actuelle",
   ABcXmEu: "Le satoshi maximum doit être supérieur au satoshi minimum",
   AcX6TcC: "Sondage publié avec succès",
   A5DDopE: "Options",
@@ -558,7 +596,8 @@ const frenchTranslation = {
   AW6UnXx: "Aucune URL trouvée depuis ce nEvent.",
   A01W0qK: "Erreur lors de l'analyse du nEvent.",
   Alc6XJv: "Choisissez votre vidéo",
-  AmzVdGS: "Vous pouvez télécharger, coller un lien ou choisir un événement kind 1063 pour votre vidéo",
+  AmzVdGS:
+    "Vous pouvez télécharger, coller un lien ou choisir un événement kind 1063 pour votre vidéo",
   ALzxqMa: "Local",
   AgSNaRf: "Lien",
   Awm7WWX: "Partage de fichiers",
@@ -570,7 +609,8 @@ const frenchTranslation = {
   AvVawBi: "Ou utilisez les vôtres",
   Ah0bYM3: "Connexion native de portefeuille nostr",
   AFB7e2a: "Alby Connect",
-  APcRx0f: "Note : Toutes les données liées à votre portefeuille seront stockées de manière sûre et sécurisée localement et ne sont jamais partagées en dehors des limites de l'application.",
+  APcRx0f:
+    "Note : Toutes les données liées à votre portefeuille seront stockées de manière sûre et sécurisée localement et ne sont jamais partagées en dehors des limites de l'application.",
   AXj1AXD: "NWC de Yakihonne",
   AzefMgD: "Créer un portefeuille en utilisant le canal de Yakihonne",
   AXMpXlH: "Ajouter aux Marque-pages",
@@ -604,9 +644,11 @@ const frenchTranslation = {
   Ai28b6B: "Application mobile",
   Am8bwOh: "Tous droits réservés. Yakihonne {{year}}",
   AWYdgPH: "Rechercher des GIFs",
-  AhWOujw: "Soit vous avez sélectionné un fichier corrompu, soit vous n'êtes pas connecté en utilisant votre clé secrète/extension",
+  AhWOujw:
+    "Soit vous avez sélectionné un fichier corrompu, soit vous n'êtes pas connecté en utilisant votre clé secrète/extension",
   APeFTZA: "Félicitations !",
-  AAmnVTp: "Vous avez reçu {{xp}}xp pour les actions suivantes, soyez plus actif et gagnez des récompenses !",
+  AAmnVTp:
+    "Vous avez reçu {{xp}}xp pour les actions suivantes, soyez plus actif et gagnez des récompenses !",
   AvtdLIG: "OK",
   ACVzIap: "Rechercher par nom, npub, nprofile",
   AQgPFMM: "Obtenir l'application mobile",
@@ -627,28 +669,38 @@ const frenchTranslation = {
   Aas6Xk5: "Publication d'événement",
   AUdbtv8: "Effacer",
   ABEx38g: "Vous êtes perdu !",
-  AYTKHbY: "Aucune page de ce type n'est sur notre plateforme, retournez à l'accueil principal pour profiter de nos histoires !",
+  AYTKHbY:
+    "Aucune page de ce type n'est sur notre plateforme, retournez à l'accueil principal pour profiter de nos histoires !",
   A9Un0Og: "nous sommes par ici !",
   AADL1TO: "Vous n'êtes pas connecté",
-  AD0otkO: "Il semble que vous ne soyez pas connecté au réseau NOSTR, veuillez vous connecter et rejoindre la communauté.",
+  AD0otkO:
+    "Il semble que vous ne soyez pas connecté au réseau NOSTR, veuillez vous connecter et rejoindre la communauté.",
   AEm25j4: "Clé privée requise !",
-  ApcEX6u: "Il semble que vous ne possédiez pas ce compte, veuillez vous reconnecter avec la clé secrète pour effectuer des actions sur ce compte.",
+  ApcEX6u:
+    "Il semble que vous ne possédiez pas ce compte, veuillez vous reconnecter avec la clé secrète pour effectuer des actions sur ce compte.",
   AVEtnb9: "Déconnexion",
   Ax1Hh4U: "C'est calme ici ! Aucune note communautaire pour le moment.",
-  AthLKvF: "Il semble que vous ne possédiez pas ce compte, les messages sont personnels, veuillez vous reconnecter avec la clé secrète ou l'extension pour utiliser cette page",
+  AthLKvF:
+    "Il semble que vous ne possédiez pas ce compte, les messages sont personnels, veuillez vous reconnecter avec la clé secrète ou l'extension pour utiliser cette page",
   AWEqHfP: "Voici votre salon !",
-  AzfjyGO: "Choisissez un ami à qui parler, nous promettons que vous allez adorer",
-  AVyHzwC: "Nous préparons votre boîte de réception, nous promettons de ne pas prendre longtemps...",
+  AzfjyGO:
+    "Choisissez un ami à qui parler, nous promettons que vous allez adorer",
+  AVyHzwC:
+    "Nous préparons votre boîte de réception, nous promettons de ne pas prendre longtemps...",
   AXYiu6Y: "Système de points Yakihonne",
-  ATSLvF2: "Vous devez vous connecter au système de points Yakihonne pour gagner des points et remporter des récompenses.",
+  ATSLvF2:
+    "Vous devez vous connecter au système de points Yakihonne pour gagner des points et remporter des récompenses.",
   Ag1xrtA: "Se connecter au coffre Yaki",
   ALRlj3f: "Connexion complète requise",
-  AwxZeBC: "Il semble que vous ne soyez pas connecté en utilisant une extension ni une clé secrète, veuillez vous reconnecter en utilisant l'une de ces méthodes pour accéder à cette page",
+  AwxZeBC:
+    "Il semble que vous ne soyez pas connecté en utilisant une extension ni une clé secrète, veuillez vous reconnecter en utilisant l'une de ces méthodes pour accéder à cette page",
   Ak2D1hf: "Se reconnecter",
-  AToSVHy: "Pour pouvoir envoyer des zaps, assurez-vous de connecter votre portefeuille bitcoin lightning.",
+  AToSVHy:
+    "Pour pouvoir envoyer des zaps, assurez-vous de connecter votre portefeuille bitcoin lightning.",
   AJmGVGL: "Vérificateur de widget intelligent",
   Ax7qE5o: "Entrez un naddr de widget intelligent pour vérifier sa validité",
-  A4hlacc: "Votre liste de brouillons est vide, tous les widgets créés ou clonés seront automatiquement sauvegardés ici !",
+  A4hlacc:
+    "Votre liste de brouillons est vide, tous les widgets créés ou clonés seront automatiquement sauvegardés ici !",
   AxgWICf: "Ajouter un widget",
   Ax4F7eu: "Message envoyé !",
   A4cCSy5: "Erreur lors de l'envoi du message.",
@@ -664,7 +716,8 @@ const frenchTranslation = {
   AezhEDd: "URL Nostr",
   AroZoen: "X (anciennement Twitter)",
   ABgVYCn: "Gagner des sats !",
-  ASm8U6V: "Aidez-nous à fournir plus d'aperçus décentralisés pour examiner cette actualité flash.",
+  ASm8U6V:
+    "Aidez-nous à fournir plus d'aperçus décentralisés pour examiner cette actualité flash.",
   A1RYH3h: "Communauté",
   Ak5dbF4: "Mon widget intelligent",
   AcXhvAu: "Ajouter un widget",
@@ -683,9 +736,11 @@ const frenchTranslation = {
   A2qCLTm: "Masquer les suggestions",
   ACwW9FK: "En réponse à",
   Aog1ulK: "Fil",
-  AJY8vLC: "Une erreur s'est produite lors de la connexion, veuillez réessayer.",
+  AJY8vLC:
+    "Une erreur s'est produite lors de la connexion, veuillez réessayer.",
   AzVvVt5: "Coffre de Yakihonne !",
-  AbE7B3Z: "Connectez-vous au coffre de Yakihonne, accumulez des points en étant actif sur la plateforme et gagnez de précieuses récompenses !",
+  AbE7B3Z:
+    "Connectez-vous au coffre de Yakihonne, accumulez des points en étant actif sur la plateforme et gagnez de précieuses récompenses !",
   Amdv4GO: "Se connecter",
   ATSr8gI: "Non, ça va",
   AXsKX9G: "Rejoignez-nous",
@@ -712,7 +767,8 @@ const frenchTranslation = {
   AhxSvbf: "Basculer vers",
   AT94ell: "Une erreur s'est produite lors de la suppression de l'événement",
   AQ9Wcw7: "Supprimer l'événement ?",
-  A2QosxI: "Vous êtes sur le point de supprimer un contenu publié, souhaitez-vous continuer ?",
+  A2QosxI:
+    "Vous êtes sur le point de supprimer un contenu publié, souhaitez-vous continuer ?",
   A59GAeQ: "Supprimer {{item}}",
   Armbzm8: "Suppression réussie",
   AV40SRR: "Personnaliser les flux",
@@ -720,8 +776,10 @@ const frenchTranslation = {
   AXwG7Rx: "La note est vide !",
   AXNt63U: "Une erreur s'est produite lors de la publication de cette note.",
   AZ43zpG: "Quelque chose s'est mal passé lors du traitement du paiement !",
-  AwNtfnu: "Vous êtes sur le point de quitter votre édition, souhaitez-vous continuer ?",
-  ATjCUcj: "Vous êtes sur le point de quitter votre édition, souhaitez-vous la sauvegarder comme brouillon ?",
+  AwNtfnu:
+    "Vous êtes sur le point de quitter votre édition, souhaitez-vous continuer ?",
+  ATjCUcj:
+    "Vous êtes sur le point de quitter votre édition, souhaitez-vous la sauvegarder comme brouillon ?",
   AT7NTrQ: "Rejeter",
   ACLAlFM: "Sauvegarder et quitter",
   A7hAlr2: "Continuer l'édition",
@@ -740,10 +798,12 @@ const frenchTranslation = {
   ARV3co8: "mutuel(s)",
   AmcaCBU: "Sauvegarder votre brouillon",
   A0xeQYk: "Souhaitez-vous sauvegarder votre brouillon ?",
-  AkcTysw: "Votre article contient des éléments HTML qui ne seront probablement pas rendus sur certains clients ou plateformes.",
+  AkcTysw:
+    "Votre article contient des éléments HTML qui ne seront probablement pas rendus sur certains clients ou plateformes.",
   AjbW7pt: "Sauvegarder le brouillon",
   ATPUIv2: "Publier votre article",
-  AsaVjqG: "Votre article contient des éléments HTML qui ne seront probablement pas rendus sur certains clients ou plateformes.",
+  AsaVjqG:
+    "Votre article contient des éléments HTML qui ne seront probablement pas rendus sur certains clients ou plateformes.",
   A9r2PLE: "Suggestions de sujets",
   Axk4fkj: "Votre tag ne contient que des espaces !",
   A3yqwwq: "Ajouter un tag",
@@ -766,7 +826,8 @@ const frenchTranslation = {
   AEFDTqE: "Vous avez noté cette note comme pas utile",
   Ay2FSU5: "Annuler",
   AFMqxUW: "Pourquoi pensez-vous cela ?",
-  AuXe5F6: "Changer votre notation ne sera valide que pendant 5 minutes, après cela vous n'aurez plus l'option d'annuler ou de la changer.",
+  AuXe5F6:
+    "Changer votre notation ne sera valide que pendant 5 minutes, après cela vous n'aurez plus l'option d'annuler ou de la changer.",
   A0hPAcy: "Soumettre",
   AIjRDx9: "Noté utile pour",
   Ac6NF3G: "Noté pas utile pour",
@@ -795,9 +856,11 @@ const frenchTranslation = {
   AcDgXKI: "Montant",
   Ark6BLW: "Écrire un message (optionnel)",
   AGNjoi1: "Sauvegarder le brouillon ?",
-  AdeLRrz: "Vous êtes sur le point de quitter votre édition, souhaitez-vous la sauvegarder comme brouillon ?",
+  AdeLRrz:
+    "Vous êtes sur le point de quitter votre édition, souhaitez-vous la sauvegarder comme brouillon ?",
   AYO6i7Y: "Voir",
-  A9L57eW: "Veuillez vous connecter en utilisant une clé secrète ou une extension pour voter",
+  A9L57eW:
+    "Veuillez vous connecter en utilisant une clé secrète ou une extension pour voter",
   AekHS26: "L'auteur de ce sondage n'a pas d'adresse lightning",
   AvjhH4g: "Le sondage a été fermé",
   AxcgWsO: "Vous ne pouvez pas voter sur votre propre sondage",
@@ -821,14 +884,18 @@ const frenchTranslation = {
   A2KtNoH: "Les gens parlent de {{tag}}",
   AJybDHv: "Dans {{tag}}",
   AjQoY5d: "Soutenir Yakihonne",
-  Alny3yt: "Alimentez la croissance de Yakihonne ! Votre soutien stimule de nouvelles fonctionnalités et une meilleure expérience pour tous.",
+  Alny3yt:
+    "Alimentez la croissance de Yakihonne ! Votre soutien stimule de nouvelles fonctionnalités et une meilleure expérience pour tous.",
   A1lDFjz: "❤︎ Nous soutenir",
   A5rtSRh: "Centres d'intérêt suggérés",
-  AjLZOWy: "Partagez votre profil pour atteindre plus de personnes, vous connecter avec d'autres, et développer votre réseau.",
+  AjLZOWy:
+    "Partagez votre profil pour atteindre plus de personnes, vous connecter avec d'autres, et développer votre réseau.",
   AIus9gb: "Utilisateurs tendance",
   A3fEQj5: "{{val, datetime}}",
-  AI6im93: "Vous ne semblez utiliser aucune extension, veuillez vous connecter en utilisant une extension ou utiliser l'application mobile Yakihonne.",
-  AZsINLj: "Vous n'êtes pas autorisé à réclamer cette récompense, le compte d'extension ne correspond pas à votre compte Yakihonne actuel",
+  AI6im93:
+    "Vous ne semblez utiliser aucune extension, veuillez vous connecter en utilisant une extension ou utiliser l'application mobile Yakihonne.",
+  AZsINLj:
+    "Vous n'êtes pas autorisé à réclamer cette récompense, le compte d'extension ne correspond pas à votre compte Yakihonne actuel",
   AXd65kJ: "Vous avez annulé cette opération.",
   AOKDMRt: "Erreur lors du téléchargement du fichier",
   ArG9ME2: "Maintenant",
@@ -838,7 +905,8 @@ const frenchTranslation = {
   AMukTAR: "{{name}} a publié une note",
   Aj3QSsl: "{{name}} a répondu à votre note payante",
   A3hNKTw: "{{name}} a répondu à votre note",
-  AnMEe4G: "{{name}} a répondu à une note payante dans laquelle vous étiez mentionné",
+  AnMEe4G:
+    "{{name}} a répondu à une note payante dans laquelle vous étiez mentionné",
   AAm18zd: "{{name}} a répondu à une note dans laquelle vous étiez mentionné",
   AbWsTvK: "{{name}} a cité votre note",
   ACmLZt3: "{{name}} a cité une note dans laquelle vous étiez mentionné",
@@ -853,12 +921,18 @@ const frenchTranslation = {
   Az3sitJ_34236: "{{name}} a commenté votre vidéo",
   Az3sitJ_30031: "{{name}} a commenté votre widget intelligent",
   AxGCCW4_1: "{{name}} a commenté une note dans laquelle vous étiez mentionné",
-  AxGCCW4_30023: "{{name}} a commenté un article dans lequel vous étiez mentionné",
-  AxGCCW4_30004: "{{name}} a commenté une curation dans laquelle vous étiez mentionné",
-  AxGCCW4_30005: "{{name}} a commenté une curation dans laquelle vous étiez mentionné",
-  AxGCCW4_34235: "{{name}} a commenté une vidéo dans laquelle vous étiez mentionné",
-  AxGCCW4_34236: "{{name}} a commenté une vidéo dans laquelle vous étiez mentionné",
-  AxGCCW4_30031: "{{name}} a commenté un widget intelligent dans lequel vous étiez mentionné",
+  AxGCCW4_30023:
+    "{{name}} a commenté un article dans lequel vous étiez mentionné",
+  AxGCCW4_30004:
+    "{{name}} a commenté une curation dans laquelle vous étiez mentionné",
+  AxGCCW4_30005:
+    "{{name}} a commenté une curation dans laquelle vous étiez mentionné",
+  AxGCCW4_34235:
+    "{{name}} a commenté une vidéo dans laquelle vous étiez mentionné",
+  AxGCCW4_34236:
+    "{{name}} a commenté une vidéo dans laquelle vous étiez mentionné",
+  AxGCCW4_30031:
+    "{{name}} a commenté un widget intelligent dans lequel vous étiez mentionné",
   AETny3G_30023: "{{name}} vous a mentionné dans un article",
   AETny3G_30004: "{{name}} vous a mentionné dans une curation",
   AETny3G_30005: "{{name}} vous a mentionné dans une curation",
@@ -878,13 +952,20 @@ const frenchTranslation = {
   AeOUYTy_34235: "{{name}} a réagi {{reaction}} à votre vidéo",
   AeOUYTy_34236: "{{name}} a réagi {{reaction}} à votre vidéo",
   AeOUYTy_30031: "{{name}} a réagi {{reaction}} à votre widget intelligent",
-  A5xBOLZ_1: "{{name}} a réagi {{reaction}} à une note dans laquelle vous étiez mentionné",
-  A5xBOLZ_30023: "{{name}} a réagi {{reaction}} à un article dans lequel vous étiez mentionné",
-  A5xBOLZ_30004: "{{name}} a réagi {{reaction}} à une curation dans laquelle vous étiez mentionné",
-  A5xBOLZ_30005: "{{name}} a réagi {{reaction}} à une curation dans laquelle vous étiez mentionné",
-  A5xBOLZ_34235: "{{name}} a réagi {{reaction}} à une vidéo dans laquelle vous étiez mentionné",
-  A5xBOLZ_34236: "{{name}} a réagi {{reaction}} à une vidéo dans laquelle vous étiez mentionné",
-  A5xBOLZ_30031: "{{name}} a réagi {{reaction}} à un widget intelligent dans lequel vous étiez mentionné",
+  A5xBOLZ_1:
+    "{{name}} a réagi {{reaction}} à une note dans laquelle vous étiez mentionné",
+  A5xBOLZ_30023:
+    "{{name}} a réagi {{reaction}} à un article dans lequel vous étiez mentionné",
+  A5xBOLZ_30004:
+    "{{name}} a réagi {{reaction}} à une curation dans laquelle vous étiez mentionné",
+  A5xBOLZ_30005:
+    "{{name}} a réagi {{reaction}} à une curation dans laquelle vous étiez mentionné",
+  A5xBOLZ_34235:
+    "{{name}} a réagi {{reaction}} à une vidéo dans laquelle vous étiez mentionné",
+  A5xBOLZ_34236:
+    "{{name}} a réagi {{reaction}} à une vidéo dans laquelle vous étiez mentionné",
+  A5xBOLZ_30031:
+    "{{name}} a réagi {{reaction}} à un widget intelligent dans lequel vous étiez mentionné",
   A5xBOLZ: "{{name}} vous a zappé {{amount}} sats",
   AdiWL4V_1: "{{name}} a zappé votre note {{amount}} sats",
   AdiWL4V_30023: "{{name}} a zappé votre article {{amount}} sats",
@@ -904,24 +985,28 @@ const frenchTranslation = {
   AdHV2qJ: "Voir la traduction",
   AE08Wte: "Voir l'original",
   AZ5VQXL: "Une erreur s'est produite lors de la traduction du contenu",
-  AJeHuH1: "Clé API manquante ou abonnement expiré, vérifiez Paramètres > Préférences de langue pour plus d'informations.",
+  AJeHuH1:
+    "Clé API manquante ou abonnement expiré, vérifiez Paramètres > Préférences de langue pour plus d'informations.",
   AFLFvbx: "Plan",
   AT4BU58: "Gratuit",
   AEWXA75: "Pro",
   A0sXNyM: "On vous a eu !",
   A9WT6DE: "Bientôt disponible",
   AirKalq: "Attention !",
-  ASGtOLO: "Êtes-vous sûr de vouloir continuer ? Cela effacera vos modifications actuelles.",
+  ASGtOLO:
+    "Êtes-vous sûr de vouloir continuer ? Cela effacera vos modifications actuelles.",
   AYlOMYB: "Expire le {{date}}",
   AozzmTY: "Note réduite",
   AnWFKlu: "Voir plus",
   AzhKxMs: "Les notifications sont désactivées !",
-  Aioqvbi: "Les notifications sont désactivées pour ce type, vous pouvez les activer dans les paramètres de notifications.",
+  Aioqvbi:
+    "Les notifications sont désactivées pour ce type, vous pouvez les activer dans les paramètres de notifications.",
   AcdxgMi: "Réessayer",
   A0qY0bf: "Tout lire",
   AhQtS0K: "Le nom d'utilisateur est requis",
   AgrHddv: "Le nom d'utilisateur est pris",
-  AshEtUl: "Veuillez vous assurer de sauvegarder en sécurité votre phrase de connexion NWC, car nous ne pouvons pas aider à récupérer les portefeuilles perdus.",
+  AshEtUl:
+    "Veuillez vous assurer de sauvegarder en sécurité votre phrase de connexion NWC, car nous ne pouvons pas aider à récupérer les portefeuilles perdus.",
   AcFjmGe: "Kind non supporté",
   APjAPzs: "Choisir un type de sondage",
   AfVdphT: "Sondages MACI",
@@ -954,10 +1039,13 @@ const frenchTranslation = {
   AF88iK1: "Télécharger les preuves",
   AoR0AIr: "Lier le portefeuille à votre profil",
   Ag7XtTn: "Le portefeuille lié sera utilisé pour recevoir des sats",
-  Ano2XKx: "Système de vote anti-collusion minimal, dans lequel N votes coûtent N2 crédits vocaux.",
-  AIgKsNh: "Vous êtes sur le point de remplacer votre portefeuille précédent et de lier un nouveau à votre profil, souhaitez-vous continuer ?",
+  Ano2XKx:
+    "Système de vote anti-collusion minimal, dans lequel N votes coûtent N2 crédits vocaux.",
+  AIgKsNh:
+    "Vous êtes sur le point de remplacer votre portefeuille précédent et de lier un nouveau à votre profil, souhaitez-vous continuer ?",
   ALyZwxz: "Déploiement réussi",
-  AEEVrfF: "Vous avez déployé avec succès votre sondage MACI, vous pouvez maintenant le partager sur Yakihonne !",
+  AEEVrfF:
+    "Vous avez déployé avec succès votre sondage MACI, vous pouvez maintenant le partager sur Yakihonne !",
   Asujn3G: "Créer un nouveau sondage",
   AXDHAmt: "Configurer votre tour MACI",
   AbLoljD: "Sélectionner un circuit",
@@ -973,14 +1061,17 @@ const frenchTranslation = {
   Ad8yNh4: "Heure de fin",
   A2wt07D: "L'heure de fin doit être supérieure à l'heure de début",
   AXgvwkq: "La liste d'options doit contenir au moins 2 éléments",
-  ATKheVa: "Les informations ci-dessus ne peuvent pas être modifiées après le déploiement du tour. Veuillez confirmer l'exactitude avant de continuer.",
+  ATKheVa:
+    "Les informations ci-dessus ne peuvent pas être modifiées après le déploiement du tour. Veuillez confirmer l'exactitude avant de continuer.",
   A2fvUtP: "Déployer le sondage",
-  AficTB0: "Modifier le nombre maximum d'options réinitialisera la liste d'options, souhaitez-vous continuer ?",
+  AficTB0:
+    "Modifier le nombre maximum d'options réinitialisera la liste d'options, souhaitez-vous continuer ?",
   AFfwJMh: "Réinitialiser les options",
   AIzBCBb: "Le secret NWC est sauvegardé !",
   AVUlnek: "Les secrets de portefeuille sont sauvegardés !",
   AHmZKVA: "Sauvegarder les portefeuilles et se déconnecter",
-  Ac9JSPk: "Il semble que vous ayez des portefeuilles liés à votre compte. Veuillez télécharger vos secrets de portefeuille avant de vous déconnecter.",
+  Ac9JSPk:
+    "Il semble que vous ayez des portefeuilles liés à votre compte. Veuillez télécharger vos secrets de portefeuille avant de vous déconnecter.",
   AdoWp0E: "Vos identifiants de compte sont sauvegardés !",
   AalC1o6: "Commence le {{date}}",
   AgJ47NX: "Ce fil de commentaires est masqué",
@@ -997,21 +1088,25 @@ const frenchTranslation = {
   AsYmYFX: "Connecter le portefeuille",
   AXJWSge: "Seul le créateur du tour peut ajouter un solde",
   AKU6Qm4: "Ajouter des frais de gaz",
-  AWgG7l1: "La station essence n'était pas activée, veuillez réessayer plus tard",
+  AWgG7l1:
+    "La station essence n'était pas activée, veuillez réessayer plus tard",
   AxPscQU: "Votre vote a été enregistré avec succès",
-  AybYQmE: "Une erreur s'est produite lors du traitement de votre vote, veuillez réessayer plus tard",
+  AybYQmE:
+    "Une erreur s'est produite lors du traitement de votre vote, veuillez réessayer plus tard",
   AcpuxDH: "VC consommé",
   AGRmJTe: "Solde de crédit vocal faible",
   ADv1bgl: "Exporter les clés",
   A4A5psW: "Exporter",
   AineCS4: "Contenu inaccessible",
-  Ao4Segq: "Vous avez masqué cet utilisateur, considérez le réactiver pour voir ce contenu",
+  Ao4Segq:
+    "Vous avez masqué cet utilisateur, considérez le réactiver pour voir ce contenu",
   A8APYES: "Utilisateur masqué",
   A91LHJy: "Créer un sondage",
   APi769z: "Sélectionner un écosystème",
   ATGTz9Q: "Un écosystème est requis",
   AnMoqCK: "Hauteur d'instantané (optionnel)",
-  AeyQzqu: "La hauteur d'instantané doit être entre {{lAmount}} et {{hAmount}} ou laissée vide",
+  AeyQzqu:
+    "La hauteur d'instantané doit être entre {{lAmount}} et {{hAmount}} ou laissée vide",
   ANBowSq: "À venir",
   ApXyTFX: "Options avancées",
   ANM6MSY: "Une personne, un vote",
@@ -1028,14 +1123,18 @@ const frenchTranslation = {
   AIIHmli: "Vous pouvez soumettre plusieurs fois.",
   A3cQKRh: "Seule la dernière soumission sera valide.",
   ASifSKs: "En savoir plus sur MACI.",
-  AoAc0KV: "Les frais de gaz de ce tour sont inférieurs à {{amount}} DORA, cela empêche le vote. Veuillez attendre que le créateur ajoute plus de gaz.",
+  AoAc0KV:
+    "Les frais de gaz de ce tour sont inférieurs à {{amount}} DORA, cela empêche le vote. Veuillez attendre que le créateur ajoute plus de gaz.",
   AuMrZaK: "Créer un tour MACI.",
-  Ab39qCG: "Financer le tour avec des frais de gaz (8 DORA par votant) pour couvrir l'inscription et le vote.",
+  Ab39qCG:
+    "Financer le tour avec des frais de gaz (8 DORA par votant) pour couvrir l'inscription et le vote.",
   AZa1vyS: "Choisissez une option pour voter ou resoumettre votre vote.",
-  AmWSJ4C: "Ajoutez les frais de gaz requis, sinon, le vote sera désactivé (8 DORA par votant)",
+  AmWSJ4C:
+    "Ajoutez les frais de gaz requis, sinon, le vote sera désactivé (8 DORA par votant)",
   AbhKhNW: "Impossible de s'inscrire et de voter",
   A128KIp: "Impossible de voter",
-  ALfmcyA: "Les frais de gaz de ce tour sont inférieurs à 6 DORA, cela empêche l'inscription et le vote. Veuillez attendre que le créateur ajoute plus de gaz.",
+  ALfmcyA:
+    "Les frais de gaz de ce tour sont inférieurs à 6 DORA, cela empêche l'inscription et le vote. Veuillez attendre que le créateur ajoute plus de gaz.",
   A13Btcr: "Chaque inscription consomme 6 DORA, chaque vote consomme 2 DORA",
   AroLe58: "Chaque revote consomme 2 DORA supplémentaires",
   AzpYkqp: "Aucun widget",
@@ -1045,9 +1144,12 @@ const frenchTranslation = {
   AznTfYL: "Partager l'image du widget",
   AEyQqPE: "Insérer un placeholder d'entrée..",
   AbfIPKv: "Veuillez ajouter un titre à votre widget intelligent",
-  Ar85kI3: "Une URL d'image est requise pour prévisualiser et publier votre widget",
-  AKIvtnO: "Un label de champ d'entrée est requis pour prévisualiser et publier votre widget",
-  ASEZMzR: "Un label de bouton et une URL sont requis pour prévisualiser et publier votre widget",
+  Ar85kI3:
+    "Une URL d'image est requise pour prévisualiser et publier votre widget",
+  AKIvtnO:
+    "Un label de champ d'entrée est requis pour prévisualiser et publier votre widget",
+  ASEZMzR:
+    "Un label de bouton et une URL sont requis pour prévisualiser et publier votre widget",
   AqrGbmn: "Ajouter un champ d'entrée",
   Amg4EKo: "Ajouter un bouton",
   AXNd5xs: "Cela déclenchera le zapping lors de la publication",
@@ -1075,16 +1177,20 @@ const frenchTranslation = {
   AGaizjj: "URL du bouton",
   AVLYYDh: "Adresse Lightning ou facture",
   AKKhOC2: "Fonctions personnalisées",
-  A4eRArd: "Il semble que vous utilisiez une des fonctions personnalisées qui nécessite un composant de champ d'entrée sans en intégrer un dans votre widget intelligent, veuillez ajouter un champ d'entrée pour que la fonction fonctionne correctement.",
+  A4eRArd:
+    "Il semble que vous utilisiez une des fonctions personnalisées qui nécessite un composant de champ d'entrée sans en intégrer un dans votre widget intelligent, veuillez ajouter un champ d'entrée pour que la fonction fonctionne correctement.",
   AE6wLmo: "Compte à rebours",
   AoNggMQ: "Le concours se termine le",
-  AuyfKBY: "Au moins un profil doit être ajouté pour que ce widget intelligent fonctionne.",
+  AuyfKBY:
+    "Au moins un profil doit être ajouté pour que ce widget intelligent fonctionne.",
   AawZhvj: "Brouillon sauvegardé avec succès",
-  AAMzwZn: "Sauvegarder cette version de votre widget intelligent comme brouillon",
+  AAMzwZn:
+    "Sauvegarder cette version de votre widget intelligent comme brouillon",
   AQT9kRr: "Nommez ce brouillon...",
   A84Nx8y: "Aucune réponse",
   AqSxggD: "Seules les lettres et les chiffres sont autorisés",
-  AG1GvYp: "Votre stockage local grandit en taille. Pour assurer des performances fluides, il est recommandé d'effacer les anciennes données.",
+  AG1GvYp:
+    "Votre stockage local grandit en taille. Pour assurer des performances fluides, il est recommandé d'effacer les anciennes données.",
   AAazvst: "Gérer le cache",
   AZEJWnf: "Cache de l'application",
   AfcEwqC: "Données en cache",
@@ -1100,7 +1206,8 @@ const frenchTranslation = {
   APL1UR4: "Rechercher des widgets intelligents..",
   AQ3VGVk: "Outils disponibles",
   ACdkpXG: "En maintenance",
-  AmQnhHL: "Smart Widget est en maintenance. Nous le réparons et il sera de retour bientôt !",
+  AmQnhHL:
+    "Smart Widget est en maintenance. Nous le réparons et il sera de retour bientôt !",
   ATpzz5G: "Filtrer par temps",
   AeVTLPz: "Tout le temps",
   ARlh8Zx: "1 mois",
@@ -1110,13 +1217,16 @@ const frenchTranslation = {
   AzkTxuy: "Supprimer",
   A92h87b: "Mes outils sauvegardés",
   AUexjHk: "Vous n'avez aucun outil",
-  ASl7AUI: "Découvrez les outils publiés pour vous aider dans votre création de contenu",
+  ASl7AUI:
+    "Découvrez les outils publiés pour vous aider dans votre création de contenu",
   Aa15RS4: "Ajouter des outils de widget",
   ABcc1mr: "Essayez notre méthode de recherche différente",
   AYZh36g: "Recherche de widget",
-  AiCvw1P: "recherche de widgets intelligents publiés et ce que les gens ont fait",
+  AiCvw1P:
+    "recherche de widgets intelligents publiés et ce que les gens ont fait",
   A6U9fNT: "S'inspirer",
-  AmK7zqi: "demandez à notre IA de vous aider à construire votre widget intelligent",
+  AmK7zqi:
+    "demandez à notre IA de vous aider à construire votre widget intelligent",
   Axeyl28: "Terrain de jeu",
   AWJ9AGo: "Recherche de :",
   ANA9vN0: "Aucun widget trouvé",
@@ -1126,10 +1236,12 @@ const frenchTranslation = {
   As9snfY: "Docs",
   ASfQxuq: "Testez votre mini-app avec des tests pratiques et interactifs.",
   ADuxxCf: "Vérifier les docs",
-  Afi8Kwg: "Explorez nos dépôts ou consultez notre documentation Smart Widgets.",
+  Afi8Kwg:
+    "Explorez nos dépôts ou consultez notre documentation Smart Widgets.",
   AvcFvUD: "Dépôts Github",
   AE9O5YE: "Nous apportons l'IA !",
-  AtQ0dJT: "Nous créons un assistant IA pour rationaliser votre travail avec les widgets programmables et le développement de mini-apps—gardez l'œil ouvert !",
+  AtQ0dJT:
+    "Nous créons un assistant IA pour rationaliser votre travail avec les widgets programmables et le développement de mini-apps—gardez l'œil ouvert !",
   ADAM3FJ: "Vue des réponses",
   AlwU99D: "Fil",
   ACz8zwo: "Boîte",
@@ -1137,10 +1249,13 @@ const frenchTranslation = {
   AwARx3K: "L'article que vous cherchiez n'a pas été trouvé",
   AJGu0M0: "Retour à Découvrir",
   A5BPCrj: "Aucun résultat",
-  ASpI7pT: "Rien n'a été trouvé, veuillez changer votre source de contenu ou appliquer différents paramètres de filtre",
-  AgEkYer: "Il semble que vous appliquez un filtre personnalisé, veuillez ajuster les paramètres et les dates pour acquérir plus de données",
+  ASpI7pT:
+    "Rien n'a été trouvé, veuillez changer votre source de contenu ou appliquer différents paramètres de filtre",
+  AgEkYer:
+    "Il semble que vous appliquez un filtre personnalisé, veuillez ajuster les paramètres et les dates pour acquérir plus de données",
   AZKoEWL: "Voir comme",
-  AstvJYT: "Votre flux actuel est basé sur la liste de suivi de quelqu'un d'autre, commencez à suivre des personnes pour adapter votre flux à vos préférences",
+  AstvJYT:
+    "Votre flux actuel est basé sur la liste de suivi de quelqu'un d'autre, commencez à suivre des personnes pour adapter votre flux à vos préférences",
   A8Y9rVt: "Flux communautaire",
   AZKPdUC: "Top",
   A0gGIxM: "Global",
@@ -1154,7 +1269,8 @@ const frenchTranslation = {
   AbaD7kM: "Tout flux gratuit",
   AapPcmb: "Ajouter votre flux préféré",
   AcRP9Vs: "Aucun relais",
-  AV1iUL2: "Ajoutez votre liste de relais pour profiter d'un flux propre et personnalisé",
+  AV1iUL2:
+    "Ajoutez votre liste de relais pour profiter d'un flux propre et personnalisé",
   AJYvlq1: "Ajuster votre liste de flux",
   AhWzd8L: "Partager le contenu du relais",
   A6JlaiX: "Partager l'URL du relais",
@@ -1198,7 +1314,8 @@ const frenchTranslation = {
   A2l1JgC: "URL invalide",
   AHFsFp7: "aucun serveur trouvé",
   AlNe9hu: "Les messages sont désactivés",
-  AIJ7nCM: "Vous êtes connecté avec un signataire distant. Les messages directs peuvent contenir de grandes quantités de données et pourraient ne pas fonctionner correctement. Pour la meilleure expérience, veuillez utiliser un signataire local ou une extension de navigateur pour activer la messagerie directe.",
+  AIJ7nCM:
+    "Vous êtes connecté avec un signataire distant. Les messages directs peuvent contenir de grandes quantités de données et pourraient ne pas fonctionner correctement. Pour la meilleure expérience, veuillez utiliser un signataire local ou une extension de navigateur pour activer la messagerie directe.",
   A9eQr6B: "Signataire distant",
   AJdT1m0: "Utilisez l'URL ci-dessous pour vous connecter à votre bunker",
   AB1PYvA: "URI NostrConnect copié",
@@ -1215,44 +1332,75 @@ const frenchTranslation = {
   QuotaLimit: "Vous avez dépassé votre limite de quota quotidien",
   AI8bhpw: "Paiement échoué !",
   A82pzWN: "Vous envoyez",
-  ACOXf0z: "Impossible de traiter le paiement. Veuillez vérifier l'adresse de paiement et réessayer.",
+  ACOXf0z:
+    "Impossible de traiter le paiement. Veuillez vérifier l'adresse de paiement et réessayer.",
   ANOiCGe: "Envoi vers une facture..",
-  AXq8Vb3: "Gérez vos clés Nostr pour l'identité réseau, la signature d'événements et l'authentification de publications.",
-  AUE3WRD: "Configurez les connexions de relais Nostr pour stocker et distribuer les événements.",
-  A0yvMQi: "Choisissez votre langue préférée pour l'interface YakiHonne et la traduction de contenu.",
-  Aa4zlCA: "Contrôlez les interactions de contenu, les paramètres de confidentialité, la gestion des médias et les préférences de messagerie sur Nostr.",
-  A0ZZIE7: "Connectez et gérez les portefeuilles Bitcoin Lightning pour envoyer/recevoir des zaps avec des montants personnalisables et une intégration externe.",
-  AvNq0fB: "Personnalisez l'affichage de votre flux YakiHonne, les gestes, les aperçus et les préférences pour une meilleure expérience Nostr.",
-  AHV4nwK: "Gérez la surveillance des performances de l'application et l'optimisation du stockage pour un fonctionnement fluide.",
-  Aayzo1w: "Personnalisez l'apparence visuelle de YakiHonne pour correspondre à vos préférences et votre confort de visualisation.",
-  AF2ceO1: "Votre système de récompenses et d'accomplissements personnalisé qui suit votre activité et votre engagement au sein de la plateforme YakiHonne.",
+  AXq8Vb3:
+    "Gérez vos clés Nostr pour l'identité réseau, la signature d'événements et l'authentification de publications.",
+  AUE3WRD:
+    "Configurez les connexions de relais Nostr pour stocker et distribuer les événements.",
+  A0yvMQi:
+    "Choisissez votre langue préférée pour l'interface YakiHonne et la traduction de contenu.",
+  Aa4zlCA:
+    "Contrôlez les interactions de contenu, les paramètres de confidentialité, la gestion des médias et les préférences de messagerie sur Nostr.",
+  A0ZZIE7:
+    "Connectez et gérez les portefeuilles Bitcoin Lightning pour envoyer/recevoir des zaps avec des montants personnalisables et une intégration externe.",
+  AvNq0fB:
+    "Personnalisez l'affichage de votre flux YakiHonne, les gestes, les aperçus et les préférences pour une meilleure expérience Nostr.",
+  AHV4nwK:
+    "Gérez la surveillance des performances de l'application et l'optimisation du stockage pour un fonctionnement fluide.",
+  Aayzo1w:
+    "Personnalisez l'apparence visuelle de YakiHonne pour correspondre à vos préférences et votre confort de visualisation.",
+  AF2ceO1:
+    "Votre système de récompenses et d'accomplissements personnalisé qui suit votre activité et votre engagement au sein de la plateforme YakiHonne.",
   A9pRbqh: "Sûr à partager – cela vous identifie sur Nostr.",
-  AnQpdZ9: "Gardez privé – sauvegardez en sécurité pour accéder à votre compte ailleurs.",
+  AnQpdZ9:
+    "Gardez privé – sauvegardez en sécurité pour accéder à votre compte ailleurs.",
   A2wrBnY: "Ajoutez rapidement un nouveau relais en entrant son URL",
   AcPWRJ9: "Les points verts montrent les connexions actives",
   AJQQGgT: "Les points rouges indiquent les relais hors ligne",
-  AugXNf5: "Moins de relais stables = meilleures performances et synchronisation plus rapide.",
-  AjTNn13: "Choisissez la langue pour l'interface, les menus et les boutons de YakiHonne (actuellement : Français)",
-  A21tdwK: "Sélectionnez le service de traduction pour les publications en langues étrangères (actuellement : LibreTranslate – axé sur la confidentialité et gratuit)",
-  AsYLJGY: "Votre niveau de plan de traduction actuel et vos limites d'utilisation (actuellement : Niveau gratuit avec fonctionnalités de traduction de base)",
-  AYnXPtk: "Voir et gérer les utilisateurs que vous avez bloqués pour qu'ils n'apparaissent pas dans votre flux",
-  ATtpr07: "Choisissez quel service télécharge vos images et fichiers multimédias (actuellement : nostr.build)",
-  AYKDD4g: "Connectez et gérez les portefeuilles Bitcoin Lightning pour envoyer/recevoir des zaps avec des montants personnalisables et une intégration externe.",
-  A3nTKfp: "Réduire la note : Minimisez automatiquement les longues publications pour garder votre flux propre et lisible.",
-  Ai5Sb3k: "Choisissez le style d'affichage des réponses (Boîte ou Fil) et gérez les préférences de suggestions pour les personnes, le contenu et les centres d'intérêt.",
-  A864200: "Afficher les aperçus de profil utilisateur lors du survol des noms d'utilisateur.",
-  Aaa8NMg: "Contrôlez les notifications pour les messages, mentions, réactions et autres événements Nostr.",
-  AZknCuh: "Un mécanisme de confiance décentralisé utilisant les attestations sociales pour établir une réputation au sein du protocole Nostr.",
-  AyF6bJf: "Être alerté quand quelqu'un vous mentionne ou répond à vos publications",
+  AugXNf5:
+    "Moins de relais stables = meilleures performances et synchronisation plus rapide.",
+  AjTNn13:
+    "Choisissez la langue pour l'interface, les menus et les boutons de YakiHonne (actuellement : Français)",
+  A21tdwK:
+    "Sélectionnez le service de traduction pour les publications en langues étrangères (actuellement : LibreTranslate – axé sur la confidentialité et gratuit)",
+  AsYLJGY:
+    "Votre niveau de plan de traduction actuel et vos limites d'utilisation (actuellement : Niveau gratuit avec fonctionnalités de traduction de base)",
+  AYnXPtk:
+    "Voir et gérer les utilisateurs que vous avez bloqués pour qu'ils n'apparaissent pas dans votre flux",
+  ATtpr07:
+    "Choisissez quel service télécharge vos images et fichiers multimédias (actuellement : nostr.build)",
+  AYKDD4g:
+    "Connectez et gérez les portefeuilles Bitcoin Lightning pour envoyer/recevoir des zaps avec des montants personnalisables et une intégration externe.",
+  A3nTKfp:
+    "Réduire la note : Minimisez automatiquement les longues publications pour garder votre flux propre et lisible.",
+  Ai5Sb3k:
+    "Choisissez le style d'affichage des réponses (Boîte ou Fil) et gérez les préférences de suggestions pour les personnes, le contenu et les centres d'intérêt.",
+  A864200:
+    "Afficher les aperçus de profil utilisateur lors du survol des noms d'utilisateur.",
+  Aaa8NMg:
+    "Contrôlez les notifications pour les messages, mentions, réactions et autres événements Nostr.",
+  AZknCuh:
+    "Un mécanisme de confiance décentralisé utilisant les attestations sociales pour établir une réputation au sein du protocole Nostr.",
+  AyF6bJf:
+    "Être alerté quand quelqu'un vous mentionne ou répond à vos publications",
   AjlJkCH: "Être notifié quand quelqu'un aime ou réagit à vos publications",
   A9sfGZo: "Être alerté quand quelqu'un partage ou repartage votre contenu",
-  Ae82ooM: "Être notifié quand vous recevez des pourboires Bitcoin (zaps) sur vos publications",
-  A5HyxxL: "Être notifié quand les personnes que vous suivez publient du nouveau contenu",
-  Am0PvQX: "Gérer les suggestions de contenu YakiHonne dans votre flux pour les publications, les personnes et le partage de profil",
+  Ae82ooM:
+    "Être notifié quand vous recevez des pourboires Bitcoin (zaps) sur vos publications",
+  A5HyxxL:
+    "Être notifié quand les personnes que vous suivez publient du nouveau contenu",
+  Am0PvQX:
+    "Gérer les suggestions de contenu YakiHonne dans votre flux pour les publications, les personnes et le partage de profil",
   AgBOrIx: "Afficher les recommandations de contenu général dans votre flux.",
-  AyBFzxq: "Afficher les utilisateurs recommandés à suivre basés sur votre activité.",
+  AyBFzxq:
+    "Afficher les utilisateurs recommandés à suivre basés sur votre activité.",
   ARDBNh7: "Afficher les publications et articles recommandés dans votre flux.",
-  AXgwD7C: "Afficher les recommandations de sujets et centres d'intérêt pour la découverte."
+  AXgwD7C:
+    "Afficher les recommandations de sujets et centres d'intérêt pour la découverte.",
+  A0isRl7: "Recharger l'application",
+  AwHZ4t1: "Développé par",
 };
 
 export default frenchTranslation;

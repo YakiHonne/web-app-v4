@@ -1372,5 +1372,7 @@ const portTranslation = {
   AyBFzxq: "Mostre usuários recomendados a seguir com base em sua atividade.",
   ARDBNh7: "Exiba postagens e artigos recomendados em seu feed.",
   AXgwD7C: "Mostre recomendações de tópico e interesse para descoberta.",
+  A0isRl7: "Recarregar o aplicativo",
+  AwHZ4t1: "Desenvolvido por",
 };
 export default portTranslation;
