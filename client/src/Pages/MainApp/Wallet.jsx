@@ -310,11 +310,17 @@ export default function Wallet() {
       )}
 
       <div>
-        {/* <Helmet>
+        <Helmet>
           <title>Yakihonne | Wallet</title>
-          <meta name="description" content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem." />
+          <meta
+            name="description"
+            content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem."
+          />
           <meta property="og:description" content="Manage your wallet" />
-          <meta property="og:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
+          <meta
+            property="og:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="700" />
           <meta property="og:url" content={`https://yakihonne.com/wallet`} />
@@ -322,9 +328,15 @@ export default function Wallet() {
           <meta property="og:site_name" content="Yakihonne" />
           <meta property="og:title" content="Manage your wallet" />
           <meta property="twitter:title" content="Manage your wallet" />
-          <meta property="twitter:description" content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem." />
-          <meta property="twitter:image" content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png" />
-        </Helmet> */}
+          <meta
+            property="twitter:description"
+            content="Manage your Bitcoin Lightning wallet for seamless content monetization and tips. Send and receive sats directly within the Yakihonne ecosystem."
+          />
+          <meta
+            property="twitter:image"
+            content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
+          />
+        </Helmet>
         <ArrowUp />
         <div className="fx-centered fit-container  fx-start-v">
           <div className="box-pad-h-m main-middle">
@@ -432,7 +444,9 @@ export default function Wallet() {
                                     <EventOptions
                                       event={wallet}
                                       component={"wallet"}
-                                      refreshAfterDeletion={refreshAfterDeletion}
+                                      refreshAfterDeletion={
+                                        refreshAfterDeletion
+                                      }
                                     />
                                   )}
                                 </div>
@@ -465,8 +479,8 @@ export default function Wallet() {
                               onClick={() =>
                                 selectedWallet.entitle.includes("@")
                                   ? copyText(
-                                      t("ALR84Tq"),
-                                      selectedWallet.entitle
+                                      selectedWallet.entitle,
+                                      t("ALR84Tq")
                                     )
                                   : walletWarning()
                               }
