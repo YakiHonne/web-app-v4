@@ -310,7 +310,7 @@ export default function Wallet() {
       )}
 
       <div>
-        <Helmet>
+        {/* <Helmet>
           <title>Yakihonne | Wallet</title>
           <meta
             name="description"
@@ -336,7 +336,7 @@ export default function Wallet() {
             property="twitter:image"
             content="https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/thumbnail.png"
           />
-        </Helmet>
+        </Helmet> */}
         <ArrowUp />
         <div className="fx-centered fit-container  fx-start-v">
           <div className="box-pad-h-m main-middle">
