@@ -4,18 +4,53 @@ const { utils } = require("noble-secp256k1");
 const router = express.Router();
 const topics = require("../DB/Topics");
 const OpenAI = require("openai");
+const langdetect = require("langdetect");
 const UncensoredNotes = require("../Models/UncensoredNotes");
 const UNRatings = require("../Models/UNRatings");
 const SealedNotes = require("../Models/SealedNotes");
 const UserLevels = require("../Models/UserLevels");
-const { auth_user, user_login, user_tokenizing } = require("../Helpers/Auth");
+const {
+  auth_user,
+  user_login,
+  user_tokenizing,
+  auth_data,
+} = require("../Helpers/Auth");
 const { actions_keys, levels, tiers } = require("../DB/LevelsActions");
-const MongoStore = require("connect-mongo");
+const relaysOnPlatform = [
+  "wss://nostr-01.yakihonne.com",
+  "wss://nostr-02.yakihonne.com",
+  "wss://relay.damus.io",
+  "wss://relay.nostr.band",
+];
 const Users = require("../Models/Users");
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
+const deepl = require("deepl-node");
+const {
+  useWebSocketImplementation,
+  nip44,
+  finalizeEvent,
+  SimplePool,
+} = require("nostr-tools");
+const translationServicesEndpoints = {
+  dl: {
+    free: "https://api-free.deepl.com/v2/translate",
+    pro: "https://api.deepl.com/v2/translate",
+    plans: true,
+    url: "https://deepl.com",
+  },
+  lt: {
+    free: "https://translator.yakihonne.com/translate",
+    pro: "https://libretranslate.com/translate",
+    plans: true,
+    url: "https://libretranslate.com",
+  },
+  nw: {
+    free: "",
+    pro: "https://translate.nostr.wine/translate",
+    plans: false,
+    url: "https://nostr.wine/",
+  },
+};
 const getCurrentLevel = (points) => {
   return Math.floor((1 + Math.sqrt(1 + (8 * points) / 50)) / 2);
 };
@@ -31,6 +66,7 @@ const dms_intervals = {
   "dms-10": 1,
 };
 
+useWebSocketImplementation(require("ws"));
 router.get("/api/v1/yakihonne-topics", (req, res) => {
   res.send(topics);
 });
@@ -59,24 +95,6 @@ router.post("/api/v1/url-to-base64", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).send({ message: "error" });
-  }
-});
-
-router.post("/api/v1/gpt", async (req, res) => {
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant.",
-        },
-      ],
-      model: "gpt-3.5-turbo-16k-0613",
-    });
-    res.send(completion.choices[0]);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send(err);
   }
 });
 
@@ -217,13 +235,8 @@ router.post("/api/v1/login", user_login, user_tokenizing, async (req, res) => {
 
 router.post("/api/v1/logout", auth_user, async (req, res) => {
   try {
-    // let pubkey = req.body.pubkey;
-    // if (pubkey === req.user.pubkey) {
-
     delete req.session.user_token;
     return res.send({ message: "Logged out!" });
-    // }
-    // return res.status(403).send({ message: "Cannot log out!" });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
@@ -235,8 +248,6 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
     let action_key = req.body.action_key;
     let last_updated = Math.floor(new Date().getTime() / 1000);
     let pubkey = req.user.pubkey;
-    // let pubkey =
-    //   "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
 
     if (!action_key || typeof action_key !== "string")
       return res
@@ -246,53 +257,14 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
       return res.status(403).send({ message: "unsupported action key" });
 
     let point_index = getPointsIndex(action_key);
-    // let point_index = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(
-    //   action_key
-    // )
-    //   ? zaps_intervals[action_key]
-    //   : 0;
     let action_details = getActionDetails(action_key, point_index);
-    // let action_details = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(
-    //   action_key
-    // )
-    //   ? { ...levels[action_key.split("-")[0]], point_index }
-    //   : { ...levels[action_key], point_index };
 
     action_key = getActionKey(action_key);
-    // action_key = ["zap-1", "zap-20", "zap-60", "zap-100"].includes(action_key)
-    //   ? action_key.split("-")[0]
-    //   : action_key;
+
     let [userLevels, user] = await Promise.all([
       UserLevels.findOne({ pubkey }),
       Users.findOne({ pubkey }),
     ]);
-
-    // if (!userLevels) {
-    //   let new_action = {
-    //     action: action_key,
-    //     current_points: action_details.points[0],
-    //     count: action_details.count > 0 ? 1 : 0,
-    //     extra: {},
-    //     all_time_points: action_details.points[0],
-    //     last_updated,
-    //   };
-    //   let updated_user = await UserLevels.findOneAndUpdate(
-    //     { pubkey },
-    //     {
-    //       xp:
-    //         50 + (action_key === "new_account" ? 0 : action_details.points[0]),
-    //       $push: { actions: new_action },
-    //       last_updated,
-    //     },
-    //     { upsert: true, new: true }
-    //   );
-    //   return res.send({
-    //     user_stats: updated_user,
-    //     platform_standards: levels,
-    //     is_updated: true,
-    //     tiers,
-    //   });
-    // }
 
     let currentLevel = getCurrentLevel(userLevels.xp);
     let currentVolumeTier = tiers.find((tier) => {
@@ -383,12 +355,12 @@ router.post("/api/v1/yaki-chest", auth_user, async (req, res) => {
     res.status(500).send(err);
   }
 });
+
 router.get("/api/v1/yaki-chest/stats", auth_user, async (req, res) => {
   try {
     let last_updated = Math.floor(new Date().getTime() / 1000);
     let pubkey = req.user.pubkey;
-    // let pubkey =
-    //   "28313968021dd85505275f2edf55d8feb071a88adec61a06d34923b57e036f8d";
+
     let user_impact_last_updated = req.session.user_impact_last_updated;
     let current_time = Math.floor(new Date().getTime() / 1000);
     let userLevels = await UserLevels.findOne({ pubkey }).select("-_id");
@@ -400,7 +372,7 @@ router.get("/api/v1/yaki-chest/stats", auth_user, async (req, res) => {
         tiers,
       });
     }
-    console.log(user_impact_last_updated, current_time);
+
     if (
       !user_impact_last_updated ||
       (user_impact_last_updated &&
@@ -431,6 +403,177 @@ router.get("/api/v1/user-impact", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
+
+router.post("/api/v1/translate/detect", auth_data, async (req, res) => {
+  try {
+    let { text } = req.body;
+    if (!text) return res.status(403).send({ message: "No text was provided" });
+    const lang = langdetect.detectOne(text);
+    res.send(lang);
+  } catch (err) {
+    console.log(err);
+    res.send({ status: 500, res: "" });
+  }
+});
+
+router.post("/api/v1/translate", auth_data, async (req, res) => {
+  try {
+    let { service, lang, text } = req.body;
+    let { raw, specialContent } = extractRawContent(text);
+    if (service.service === "dl") {
+      let translatedContent = await dlTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+    if (service.service === "lt") {
+      let translatedContent = await ltTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+    if (service.service === "nw") {
+      let translatedContent = await nwTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+    if (service.service.startsWith("custom-")) {
+      let translatedContent = await customTranslate(
+        raw,
+        service,
+        lang,
+        specialContent
+      );
+      res.send(translatedContent);
+    }
+  } catch (err) {
+    console.log(err);
+    res.send({ status: 500, res: "" });
+  }
+});
+
+router.post("/api/v1/dvm-query", auth_data, async (req, res) => {
+  try {
+    let message = req.body.message;
+    let type = req.body.type;
+    let { DVM_COMMUNICATOR_SEC, DVM_PUBKEY } = process.env;
+
+    if (!message) return res.send([]);
+    let eventId = getDVMJobRequest(
+      DVM_COMMUNICATOR_SEC,
+      DVM_PUBKEY,
+      type,
+      message
+    );
+    if (!eventId) return res.send([]);
+    let data = await getDVMJobResponse(eventId);
+    return res.send(data);
+  } catch (err) {
+    console.log(err);
+    res.send({ status: 500, res: "" });
+  }
+});
+
+const getDVMJobRequest = (
+  DVM_COMMUNICATOR_SEC,
+  DVM_PUBKEY,
+  swType,
+  message
+) => {
+  try {
+    let metadata = [
+      ["i", message, "text"],
+      ["param", "max_results", "100"],
+    ];
+    if (swType) metadata.push(["param", "type", swType]);
+    let request_kind = 5302;
+    let request_content = nip44.v2.encrypt(
+      JSON.stringify(metadata),
+      nip44.v2.utils.getConversationKey(DVM_COMMUNICATOR_SEC, DVM_PUBKEY)
+    );
+    let request_tags = [
+      ["p", DVM_PUBKEY],
+      ["encrypted"],
+      [
+        "client",
+        "Yakihonne",
+        "31990:20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3:1700732875747",
+      ],
+    ];
+    let request = {
+      created_at: Math.floor(Date.now() / 1000),
+      kind: request_kind,
+      tags: request_tags,
+      content: request_content,
+    };
+    let event = finalizeEvent(request, DVM_COMMUNICATOR_SEC);
+
+    let pool = new SimplePool();
+
+    Promise.all(pool.publish(relaysOnPlatform, event));
+    let eventId = event.id;
+    return eventId;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+const getDVMJobResponse = async (eventId) => {
+  if (!eventId) return [];
+  return new Promise((resolve) => {
+    try {
+      let timer = setTimeout(() => {
+        clearTimeout(timer);
+        resolve([]);
+      }, 20000);
+
+      let pool = new SimplePool();
+      let sub = pool.subscribeMany(
+        relaysOnPlatform,
+        [
+          {
+            kinds: [6302],
+            "#e": [eventId],
+          },
+        ],
+        {
+          onevent(event) {
+            clearTimeout(timer);
+            let decryptedData = nip44.v2.decrypt(
+              event.content,
+              nip44.v2.utils.getConversationKey(
+                process.env.DVM_COMMUNICATOR_SEC,
+                process.env.DVM_PUBKEY
+              )
+            );
+            let events = JSON.parse(decryptedData);
+            events = events.map((_) => JSON.parse(_[1]));
+            resolve(
+              events.filter((_, index, arr) => {
+                if (arr.findIndex((__) => __.id == _.id) === index) return _;
+              })
+            );
+            sub.close();
+          },
+        }
+      );
+    } catch (err) {
+      console.log(err);
+      resolve([]);
+    }
+  });
+};
 
 const actionToUpdate = (
   action_key,
@@ -811,4 +954,206 @@ const updateUserImpact = async (action_key, userLevels, pubkey) => {
     );
   }
 };
+
+const dlTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.plan
+      ? translationServicesEndpoints.dl.pro
+      : translationServicesEndpoints.dl.free;
+    let apikey = service.plan ? service.proApikey : service.freeApikey;
+    if (!apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    const translator = new deepl.Translator(apikey);
+    let data = await translator.translateText(
+      text,
+      null,
+      lang === "en" ? "en-US" : lang
+    );
+
+    return {
+      status: 200,
+      res: revertContent(data.text, specialContent, lang),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+
+const ltTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.plan
+      ? translationServicesEndpoints.lt.pro
+      : translationServicesEndpoints.lt.free;
+    let apikey = service.plan ? service.proApikey : service.freeApikey;
+    if (service.plan && !apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        format: "text",
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent, lang),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+
+const nwTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = translationServicesEndpoints.nw.pro;
+
+    let apikey = service.proApikey;
+    if (!apikey) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    console.log(path)
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent, lang),
+    };
+  } catch (err) {
+    // console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+
+const customTranslate = async (text, service, lang, specialContent) => {
+  try {
+    let path = service.free || service.pro;
+    let apikey = service.apiKey;
+    if (!path) {
+      return {
+        status: 400,
+        res: "",
+      };
+    }
+    let data = await axios.post(
+      path,
+      {
+        q: text,
+        source: "auto",
+        target: lang,
+        format: "text",
+        api_key: apikey || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return {
+      status: 200,
+      res: revertContent(data.data.translatedText, specialContent, lang),
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      status:
+        err?.response?.status >= 500 || !err?.response?.status ? 500 : 400,
+      res: "",
+    };
+  }
+};
+
+const extractRawContent = (text) => {
+  let raw = text
+    .split(/(\n)/)
+    .flatMap((segment) => (segment === "\n" ? "\n" : segment.split(/\s+/)))
+    .filter(Boolean);
+
+  let specialContent = [];
+  let scIndex = 0;
+  for (let i = 0; i < raw.length; i++) {
+    if (
+      /(https?:\/\/)/i.test(raw[i]) ||
+      raw[i].startsWith("npub1") ||
+      raw[i].startsWith("nprofile1") ||
+      raw[i].startsWith("nevent") ||
+      raw[i].startsWith("naddr") ||
+      raw[i].startsWith("note1") ||
+      raw[i].startsWith("nostr:") ||
+      raw[i].startsWith("#")
+    ) {
+      specialContent.push(raw[i]);
+      raw[i] = `{${scIndex}}`;
+      scIndex = scIndex + 1;
+    }
+  }
+  return {
+    raw: raw.join(" "),
+    specialContent,
+  };
+};
+
+const revertContent = (rawContent, specialContent, lang) => {
+  let raw = rawContent;
+
+  let isAsian = ["zh", "ja", "th"].includes(lang);
+
+  for (let i = 0; i < specialContent.length; i++) {
+    raw = raw.replace(
+      `{${i}}`,
+      isAsian ? ` ${specialContent[i]} ` : specialContent[i]
+    );
+    raw = raw.replace(
+      `[${i}]`,
+      isAsian ? ` ${specialContent[i]} ` : specialContent[i]
+    );
+  }
+  return raw;
+};
+
 module.exports = router;

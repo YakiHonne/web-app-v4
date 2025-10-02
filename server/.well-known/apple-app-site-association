@@ -6,15 +6,17 @@
         "appID": "JU5BUTKJC2.com.yakihonne.appyakihonne",
         "paths": [
           "/",
+          "/*",
           "/article/*",
+          "/r/note/*",
+          "/r/discover/*",
           "/notes/*",
           "/videos/*",
-          "/users/*",
+          "/profile/*",
           "/curations/*",
-          "/flash-news/*",
-          "/uncensored-notes/*",
-          "/buzz-feed/*",
-          "/wallet/*"
+          "/verify-notes/*",
+          "/wallet/*",
+          "/smart-widget-checker/*"
         ]
       }
     ]

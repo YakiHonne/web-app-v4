@@ -23,7 +23,7 @@
     background-repeat: no-repeat;
     background-size: contain;
 
-    background-image: url(../media/images/stories-hero.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/stories-hero.png);
     width: 300px;
     height: 300px;
 }
@@ -73,59 +73,59 @@
 }
 
 .login-ph-1 {
-    background-image: url(../media/images/ph1.png);
-    /* background-image: url(../media/images/login-ph-1.png); */
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph1.png);
+    /* background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/login-ph-1.png); */
 }
 
 .login-ph-2 {
-    background-image: url(../media/images/ph2.png);
-    /* background-image: url(../media/images/login-ph-2.png); */
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph2.png);
+    /* background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/login-ph-2.png); */
 }
 
 .login-ph-3 {
-    background-image: url(../media/images/ph3.png);
-    /* background-image: url(../media/images/login-ph-3.png); */
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph3.png);
+    /* background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/login-ph-3.png); */
 }
 
 .login-ph-4 {
-    background-image: url(../media/images/ph4.png);
-    /* background-image: url(../media/images/login-ph-4.png); */
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph4.png);
+    /* background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/login-ph-4.png); */
 }
 
 .avatar-1 {
-    background-image: url(../media/images/ph1.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph1.png);
 }
 
 .avatar-2 {
-    background-image: url(../media/images/ph2.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph2.png);
 }
 
 .avatar-3 {
-    background-image: url(../media/images/ph3.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph3.png);
 }
 
 .avatar-4 {
-    background-image: url(../media/images/ph4.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph4.png);
 }
 
 .avatar-5 {
-    background-image: url(../media/images/ph5.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph5.png);
 }
 
 .avatar-6 {
-    background-image: url(../media/images/ph6.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph6.png);
 }
 
 .avatar-7 {
-    background-image: url(../media/images/ph7.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph7.png);
 }
 
 .avatar-8 {
-    background-image: url(../media/images/ph8.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/ph8.png);
 }
 
 .yakihonne-logo, .yakihonne-logo-white, .yakihonne-logo-128 {
-    background-image: url(../media/icons/yakihonne_logo.svg);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/yakihonne_logo.svg);
 }
 
 .yakihonne-logo {
@@ -145,7 +145,7 @@
     .yakihonne-logo {
         width: 256px;
         height: 100px;
-        filter: invert();
+        filter: brightness(0) invert();
     }
 
     .yakihonne-logo-128 {
@@ -156,7 +156,7 @@
 }
 
 .login-hero {
-    background-image: url(../media/images/hero.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/hero.png);
     width: 450px;
     height: 450px;
 }
@@ -166,7 +166,7 @@
     background-repeat: no-repeat;
     background-size: contain;
     border-radius: 0;
-    background-image: url(../media/images/chest.webp);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/chest.png);
     width: 350px;
     aspect-ratio: 16/9;
 }
@@ -181,16 +181,16 @@
 }
 
 .platinum-tier {
-    background-image: url(../media/images/platinum-tier.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/platinum-tier.png);
 }
 .bronze-tier {
-    background-image: url(../media/images/bronze-tier.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/bronze-tier.png);
 }
 
 .silver-tier {
-    background-image: url(../media/images/silver-tier.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/silver-tier.png);
 }
 
 .gold-tier {
-    background-image: url(../media/images/gold-tier.png);
+    background-image: url(https://yakihonne.s3.ap-east-1.amazonaws.com/media/images/gold-tier.png);
 }

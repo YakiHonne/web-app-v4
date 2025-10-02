@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 
 const auth_data = (req, res, next) => {
   let apikey = req.headers["yakihonne-api-key"];
-
   if (apikey && apikey === process.env.FS_API_KEY) {
     next();
   } else {

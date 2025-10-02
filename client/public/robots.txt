@@ -1,3 +1,60 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+
+# Main content areas - explicitly allow
+Allow: /notes
+Allow: /notes/
+Allow: /articles
+Allow: /articles/
+Allow: /discover
+Allow: /search
+Allow: /profile
+Allow: /yaki-points
+Allow: /points-system
+
+# Block API endpoints and technical files
+Disallow: /api/
+Disallow: /static/js/
+Disallow: /static/css/
+Disallow: *.map
+Disallow: /manifest.json
+Disallow: /hot-update
+Disallow: /_next/
+
+# Block resource files that slow down prerender
+Disallow: /media/icons/
+Disallow: *.svg
+Disallow: *.woff
+Disallow: *.woff2
+Disallow: *.ttf
+Disallow: /favicon.ico
+
+# Block admin and private areas
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /private
+Disallow: /login
+Disallow: /register
+
+# Social media bots - optimized crawl delays
+User-agent: facebookexternalhit
+Allow: /
+Crawl-delay: 1
+
+User-agent: Twitterbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: TelegramBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# General crawl delay to protect prerender service
+Crawl-delay: 2
+
+# Sitemaps - update these URLs to match your actual sitemaps
+Sitemap: https://yakihonne.com/sitemap.xml

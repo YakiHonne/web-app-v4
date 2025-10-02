@@ -1,25 +1,15 @@
-import ph1 from "../media/images/ImagesPH/random_cover_1.png";
-import ph2 from "../media/images/ImagesPH/random_cover_2.png";
-import ph3 from "../media/images/ImagesPH/random_cover_3.png";
-import ph4 from "../media/images/ImagesPH/random_cover_4.png";
-import ph5 from "../media/images/ImagesPH/random_cover_5.png";
-import ph6 from "../media/images/ImagesPH/random_cover_6.png";
-import ph7 from "../media/images/ImagesPH/random_cover_7.png";
-import ph8 from "../media/images/ImagesPH/random_cover_8.png";
-import ph9 from "../media/images/ImagesPH/random_cover_9.png";
-import ph10 from "../media/images/ImagesPH/random_cover_10.png";
 
-const nostrThumbnailPlaceholder = [
-  ph1,
-  ph2,
-  ph3,
-  ph4,
-  ph5,
-  ph6,
-  ph7,
-  ph8,
-  ph9,
-  ph10
+const thumbnailPlaceholder = [
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_1.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_2.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_3.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_4.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_5.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_6.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_7.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_8.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_9.png",
+  "https://yakihonne.s3.ap-east-1.amazonaws.com/media/icons/profilePicPlaceholder/random_cover_10.png",
 ];
 
 const nostrPpPlaceholder = [
@@ -34,7 +24,7 @@ const nostrPpPlaceholder = [
 ];
 
 const getImagePlaceholder = () => {
-  return nostrThumbnailPlaceholder[Math.floor(Math.random() * 9)]
+  return thumbnailPlaceholder[Math.floor(Math.random() * 10)];
 };
 
 export { nostrPpPlaceholder, getImagePlaceholder };

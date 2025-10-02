@@ -1,16 +1,12 @@
 const relaysOnPlatform = [
   "wss://nostr-01.yakihonne.com",
   "wss://nostr-02.yakihonne.com",
-  "wss://nostr-03.dorafactory.org",
   "wss://relay.damus.io",
-  "wss://nostr-02.dorafactory.org",
-  // "wss://nostr-01.dorafactory.org",
+  "wss://relay.nostr.band",
+  "wss://relay.nsec.app",
   // "wss://nos.lol",
-  // "wss://nostr-pub.wellorder.net",
-  // "wss://relay.snort.social",
-  //   "wss://relay.snort.social",
-  //   "wss://arnostr.permadao.io"
-  //   "wss://nostr.nostrelay.org"
+  // "wss://relay.primal.net",
+
 ];
 
 export default relaysOnPlatform;
