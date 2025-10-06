@@ -8,8 +8,8 @@ It represents an early stage of the platform’s development and is now **fully 
 ## ⚠️ Status
 
 - **Archived:** This codebase is no longer maintained.  
-- **Technology:** ReactJS (frontend only).  
-- **Successor:** The latest multi-platform YakiHonne is built with a modern stack and includes web, iOS, Android, macOS, and iPadOS clients.
+- **Technology:** ReactJS  
+- **Successor:** The latest version is migrated to NextJS for performance and SEO
 
 ---
 
